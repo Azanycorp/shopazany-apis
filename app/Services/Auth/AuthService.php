@@ -2,7 +2,10 @@
 
 namespace App\Services\Auth;
 
+use App\Models\User;
 use App\Trait\HttpResponse;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Password;
 
 class AuthService
 {
