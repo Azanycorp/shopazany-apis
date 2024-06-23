@@ -32,9 +32,10 @@ class AuthService
     {
         $request->validated($request->all());
 
-        User::create([
+        $user = User::create([
             'name' => $request->fullname,
             'email' => $request->email,
+            'type' => 'customer',
             'password' => bcrypt($request->password)
         ]);
 
