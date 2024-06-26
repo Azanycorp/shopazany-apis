@@ -27,6 +27,16 @@ class AuthController extends Controller
         return $this->service->signup($request);
     }
 
+    public function verify(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email|exists:users,email',
+            'code' => 'required|integer',
+        ]);
+        
+        return $this->service->verify($request);
+    }
+
     public function forgot(Request $request)
     {
         $request->validate([

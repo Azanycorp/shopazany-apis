@@ -15,6 +15,7 @@ Route::prefix('connect')->controller(AuthController::class)->group(function () {
     Route::post('/forgot/password', 'forgot');
     Route::post('/reset/password', 'reset');
     Route::post('/logout', 'logout');
+    Route::post('/verify/email', 'verify');
 });
 
 Route::get('/banners', [ApiController::class, 'banner']);

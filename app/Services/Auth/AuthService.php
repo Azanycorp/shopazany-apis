@@ -2,9 +2,12 @@
 
 namespace App\Services\Auth;
 
+use App\Mail\SignUpVerifyMail;
 use App\Models\User;
 use App\Trait\HttpResponse;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
 
 class AuthService
@@ -17,6 +20,11 @@ class AuthService
 
         if (Auth::attempt($request->only(['email', 'password']))) {
             $user = User::where('email', $request->email)->first();
+
+            if($user->email_verified_at === null && $user->verification_code !== null){
+                return $this->error(null, 400, "Account not verified or inactive");
+            }
+
             $token = $user->createToken('API Token of '. $user->email);
 
             return $this->success([
@@ -32,14 +40,43 @@ class AuthService
     {
         $request->validated($request->all());
 
-        $user = User::create([
-            'name' => $request->fullname,
-            'email' => $request->email,
-            'type' => 'customer',
-            'password' => bcrypt($request->password)
+        try {
+            $code = rand(000000, 999999);
+
+            $user = User::create([
+                'name' => $request->fullname,
+                'email' => $request->email,
+                'type' => 'customer',
+                'email_verified_at' => null,
+                'verification_code' => $code,
+                'password' => bcrypt($request->password)
+            ]);
+
+            Mail::to($request->email)->send(new SignUpVerifyMail($user));
+
+            return $this->success(null, "Created successfully");
+        } catch (\Exception $e) {
+            return $this->error(null, 500, $e->getMessage());
+        }
+
+    }
+
+    public function verify($request)
+    {
+        $user = User::where('email', $request->email)
+        ->where('verification_code', $request->code)
+        ->first();
+
+        if(!$user){
+            return $this->error(null, 404, "Invalid code");
+        }
+
+        $user->update([
+            'verification_code' => null,
+            'email_verified_at' => Carbon::now()
         ]);
 
-        return $this->success(null, "Created successfully");
+        return $this->success(null, "Verified successfully");
     }
 
     public function forgot($request)
