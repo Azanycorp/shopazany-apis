@@ -26,7 +26,6 @@ class AuthService
                 return $this->error(null, 400, "Account not verified or inactive");
             }
             
-
             $code = rand(000000, 999999);
             $time = now()->addMinutes(5);
 
