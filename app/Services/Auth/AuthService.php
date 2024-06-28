@@ -61,6 +61,7 @@ class AuthService
         $token = $user->createToken('API Token of '. $user->email);
 
         return $this->success([
+            'has_signed_up' => true,
             'token' => $token->plainTextToken,
             'expires_at' => $token->accessToken->expires_at
         ]);
