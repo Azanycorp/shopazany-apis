@@ -22,6 +22,16 @@ class AuthController extends Controller
         return $this->service->login($request);
     }
 
+    public function loginVerify(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email|exists:users,email',
+            'code' => 'required|integer',
+        ]);
+        
+        return $this->service->loginVerify($request);
+    }
+
     public function signup(SignUpRequest $request)
     {
         return $this->service->signup($request);
@@ -33,7 +43,7 @@ class AuthController extends Controller
             'email' => 'required|email|exists:users,email',
             'code' => 'required|integer',
         ]);
-        
+
         return $this->service->verify($request);
     }
 
