@@ -23,9 +23,9 @@ class AuthService
             $user = User::where('email', $request->email)->first();
 
             if($user->email_verified_at === null && $user->verification_code !== null){
-                return $this->error(null, 400, "Account not verified or inactive");
+                return $this->error(null, "Account not verified or inactive", 400);
             }
-            
+
             $code = rand(000000, 999999);
             $time = now()->addMinutes(5);
 
@@ -39,7 +39,7 @@ class AuthService
             return $this->success(null, "Code has been sent to your email address.");
         }
 
-        return $this->error('', 401, 'Credentials do not match');
+        return $this->error(null, 'Credentials do not match', 401,);
     }
 
     public function loginVerify($request)
@@ -98,7 +98,7 @@ class AuthService
         ->first();
 
         if(!$user){
-            return $this->error(null, 404, "Invalid code");
+            return $this->error(null, "Invalid code", 404,);
         }
 
         $user->update([
@@ -114,7 +114,7 @@ class AuthService
         $user = User::where('email', $request->email)->first();
 
         if (!$user) {
-            return $this->error('error', 404, 'We can\'t find a user with that email address');
+            return $this->error('error', 'We can\'t find a user with that email address', 404,);
         }
 
         $status = Password::broker('users')->sendResetLink(
@@ -131,7 +131,7 @@ class AuthService
         $user = User::where('email', $request->email)->first();
 
         if (!$user) {
-            return $this->error('error', 404, 'We can\'t find a user with that email address');
+            return $this->error('error', 'We can\'t find a user with that email address', 404,);
         }
 
         $status = Password::broker('users')->reset(
