@@ -35,4 +35,6 @@ return [
         ],
     ],
 
+    'reset_password_url' => env('RESET_PASSWORD_URL'),
+
 ];
