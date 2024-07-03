@@ -32,7 +32,7 @@ rm composer-setup.php
 # Install Laravel dependencies
 echo "Installing Laravel dependencies..."
 cd /var/www/AZANY-BE-2024
-composer install --no-dev --optimize-autoloader
+/usr/local/bin/composer install --no-dev --optimize-autoloader
 
 # generate app key
 php artisan key:generate
