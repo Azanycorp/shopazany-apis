@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\AffiliateSignupRequest;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\SignUpRequest;
 use App\Services\Auth\AuthService;
@@ -26,7 +27,7 @@ class AuthController extends Controller
     {
         $request->validate([
             'email' => 'required|email|exists:users,email',
-            'code' => 'required|integer',
+            'code' => 'required|string',
         ]);
         
         return $this->service->loginVerify($request);
@@ -70,5 +71,10 @@ class AuthController extends Controller
     public function logout()
     {
         return $this->service->logout();
+    }
+
+    public function affiliateSignup(AffiliateSignupRequest $request)
+    {
+        return $this->service->affiliateSignup($request);
     }
 }

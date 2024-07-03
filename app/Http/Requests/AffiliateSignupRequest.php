@@ -5,7 +5,7 @@ namespace App\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Password;
 
-class SignUpRequest extends FormRequest
+class AffiliateSignupRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -25,9 +25,9 @@ class SignUpRequest extends FormRequest
         return [
             'first_name' => ['required', 'string'],
             'last_name' => ['required', 'string'],
-            'email' => ['required', 'email', 'email:rfc,dns', 'unique:users,email'],
-            'password' => ['required', 'string', 'max:8', 'confirmed', Password::defaults()],
-            'terms' => ['required', 'boolean']
+            'email' => ['required', 'email', 'email:rfc,dns'],
+            'password' => ['required', 'string', 'confirmed', Password::defaults()],
+            'referral_code' => ['somtimes', 'string']
         ];
     }
 }
