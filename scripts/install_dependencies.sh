@@ -4,6 +4,7 @@
 set -e
 
 echo "Updating package lists..."
+sudo su
 sudo yum update -y
 
 echo "Installing required packages..."
