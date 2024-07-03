@@ -2,7 +2,7 @@
 
 # Fail the script if any command fails
 set -e
-
+sudo su
 # update code
 cd /var/www/AZANY-BE-2024
 git pull origin deploy
