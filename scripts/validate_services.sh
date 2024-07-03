@@ -2,7 +2,7 @@
 
 # Fail the script if any command fails
 set -e
-
+sudo su
 echo "Validating PHP-FPM service..."
 if ! systemctl is-active --quiet php-fpm; then
     echo "PHP-FPM is not running. Starting PHP-FPM..."
