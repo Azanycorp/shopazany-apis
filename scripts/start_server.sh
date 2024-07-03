@@ -3,8 +3,11 @@
 # Fail the script if any command fails
 set -e
 
-# clear php cache
+# update code
 cd /var/www/AZANY-BE-2024
+git pull origin deploy
+
+# clear php cache
 php artisan cache:clear
 
 # Migrate DB tables
