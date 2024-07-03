@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Trait\HttpResponse;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
@@ -45,7 +46,7 @@ class AuthService extends Controller
                 return $this->error(null, "Please wait a few minutes before requesting a new code.", 400);
             }
 
-            $code = str_pad(mt_rand(0, 999999), 6, '0', STR_PAD_LEFT);
+            $code = $this->generateVerificationCode();
             $time = now()->addMinutes(5);
 
             $user->update([
@@ -92,7 +93,7 @@ class AuthService extends Controller
         $request->validated($request->all());
 
         try {
-            $code = str_pad(mt_rand(0, 999999), 6, '0', STR_PAD_LEFT);
+            $code = $this->generateVerificationCode();
 
             $user = User::create([
                 'first_name' => $request->first_name,
@@ -185,45 +186,81 @@ class AuthService extends Controller
     public function affiliateSignup($request)
     {
         try {
-            $initial_referrer_code = Str::random(10);
-            $check_user = User::where('referrer_code', $initial_referrer_code)->exists();
-    
-            if ($check_user) {
-                $referrer_code = $this->generateAlternateReferrerCode();
-                while (User::where('referrer_code', $referrer_code)->exists()) {
-                    $referrer_code = $this->generateAlternateReferrerCode();
-                }
-            } else {
-                $referrer_code = $initial_referrer_code;
-            }
-
-            if ($request->referrer_code) {
-                $referrer_code = $request->referrer_code;
-            }
-    
-            $referrer_link = config('services.frontend_baseurl') . '/register?referrer=' . $referrer_code;
-            $code = str_pad(mt_rand(0, 999999), 6, '0', STR_PAD_LEFT);
-
             $user = User::where('email', $request->email)->first();
-
-            $response = $this->getUserReferrer($user);
-
+            $response = $this->handleExistingUser($user);
+    
             if ($response) {
                 return $response;
             }
-
-            $this->userTriger($user, $request, $referrer_link, $referrer_code, $code);
+    
+            DB::transaction(function () use ($request, $user) {
+                $referrer_code = $this->determineReferrerCode($request);
+    
+                $referrer_link = $this->generateReferrerLink($referrer_code);
+                $code = $this->generateVerificationCode();
+    
+                $data = $this->userTrigger($user, $request, $referrer_link, $referrer_code, $code);
+    
+                if ($request->referrer_code) {
+                    $this->handleReferrer($request->referrer_code, $data);
+                }
+            });
     
             return $this->success(null, "Created successfully");
-    
         } catch (\Exception $e) {
             Log::error('User creation failed: ' . $e->getMessage());
     
             return $this->error(null, $e->getMessage(), 500);
         }
     }
+    
+    private function determineReferrerCode($request)
+    {
+        $initial_referrer_code = Str::random(10);
+    
+        if ($request->referrer_code) {
+            if (User::where('referrer_code', $request->referrer_code)->exists()) {
+                return $this->generateUniqueReferrerCode();
+            } else {
+                return $request->referrer_code;
+            }
+        }
+    
+        return $initial_referrer_code;
+    }
+    
+    private function generateReferrerLink($referrer_code)
+    {
+        return config('services.frontend_baseurl') . '/register?referrer=' . $referrer_code;
+    }
+    
+    private function generateVerificationCode()
+    {
+        return str_pad(mt_rand(0, 999999), 6, '0', STR_PAD_LEFT);
+    }
+    
+    private function handleExistingUser($user)
+    {
+        if ($user) {
+            return $this->getUserReferrer($user);
+        }
+    
+        return null;
+    }
+    
+    private function handleReferrer($referrer_code, $data)
+    {
+        $referrer = User::where('referrer_code', $referrer_code)->first();
+        if ($referrer) {
+            $commission = 0.05 * 100;
+            $referrer->wallet()->increment('balance', $commission);
+    
+            $referrer->referrer()->attach($data);
+            $referrer->save();
+        }
+    }
 
-    private function userTriger($user, $request, $referrer_link, $referrer_code, $code)
+    private function userTrigger($user, $request, $referrer_link, $referrer_code, $code)
     {
         if ($user) {
             $emailVerified = $user->email_verified_at;
@@ -234,8 +271,14 @@ class AuthService extends Controller
                 'type' => 'customer',
                 'referrer_code' => $referrer_code,
                 'referrer_link' => $referrer_link,
-                'is_verified' => 0,
+                'is_verified' => 1,
+                'is_affiliate_member' => 1,
                 'password' => bcrypt($request->password)
+            ]);
+
+            $user->wallet()->create([
+                'balance' => 0.00,
+                'reward_point' => null
             ]);
 
             if (is_null($emailVerified)) {
@@ -246,6 +289,7 @@ class AuthService extends Controller
                     return $this->error(null, 'Unable to send verification email. Please try again later', 500);
                 }
             }
+
         } else {
             $user = User::create([
                 'first_name' => $request->first_name,
@@ -257,7 +301,13 @@ class AuthService extends Controller
                 'email_verified_at' => null,
                 'verification_code' => $code,
                 'is_verified' => 0,
+                'is_affiliate_member' => 1,
                 'password' => bcrypt($request->password)
+            ]);
+
+            $user->wallet()->create([
+                'balance' => 0.00,
+                'reward_point' => null
             ]);
 
             try {
@@ -265,6 +315,8 @@ class AuthService extends Controller
             } catch (\Exception $e) {
                 return $this->error(null, 'Unable to send verification email. Please try again later', 500);
             }
+
+            return $user;
         }
     }
 }

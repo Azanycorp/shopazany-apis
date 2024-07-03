@@ -56,4 +56,19 @@ class User extends Authenticatable
         $this->notify(new ResetPasswordNotification($url));
     }
 
+    public function wallet()
+    {
+        return $this->hasOne(Wallet::class, 'user_id');
+    }
+
+    public function referrals()
+    {
+        return $this->belongsToMany(User::class, 'referral_relationships', 'referrer_id', 'referee_id');
+    }
+
+    public function referrer()
+    {
+        return $this->belongsToMany(User::class, 'referral_relationships', 'referrer_id', 'referee_id');
+    }
+
 }
