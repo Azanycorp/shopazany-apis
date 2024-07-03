@@ -37,7 +37,12 @@ class ProfileResource extends JsonResource
                 'total_income' => 0,
                 'total_withdrawal' => 0
             ],
-            "no_of_referrals" => $this->referrals->count()
+            "no_of_referrals" => $this->referrals->count(),
+            "bank_account" => (object)[
+                'account_name' => optional($this->bankAccount)->account_name,
+                'bank_name' => optional($this->bankAccount)->bank_name,
+                'account_number' => optional($this->bankAccount)->account_number,
+            ],
         ];
     }
 }

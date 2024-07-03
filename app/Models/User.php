@@ -71,4 +71,14 @@ class User extends Authenticatable
         return $this->belongsToMany(User::class, 'referral_relationships', 'referrer_id', 'referee_id');
     }
 
+    public function bankAccount()
+    {
+        return $this->hasOne(BankAccount::class, 'user_id');
+    }
+
+    public function withdrawalRequest()
+    {
+        return $this->hasMany(WithdrawalRequest::class, 'user_id');
+    }
+
 }
