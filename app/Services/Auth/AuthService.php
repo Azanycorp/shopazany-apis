@@ -192,6 +192,14 @@ class AuthService extends Controller
             if ($response) {
                 return $response;
             }
+
+            if ($request->referrer_code) {
+                $referrer = User::where('referrer_code', $request->referrer_code)->first();
+    
+                if ($referrer && (!$referrer->email_verified_at || $referrer->is_verified != 1)) {
+                    return $this->error(null, 'User with referral code has not been verified', 400);
+                }
+            }
     
             DB::transaction(function () use ($request, $user) {
                 $referrer_code = $this->determineReferrerCode($request);
