@@ -8,7 +8,7 @@ sudo yum update -y
 
 echo "Installing required packages..."
 # Install PHP and necessary extensions
-sudo amazon-linux-extras enable php7.4
+sudo amazon-linux-extras enable php8.3
 sudo yum clean metadata
 sudo yum install -y php php-fpm php-mysqlnd php-pdo php-gd php-mbstring
 
