@@ -27,7 +27,7 @@ then
 fi
 
 php composer-setup.php --install-dir=/usr/local/bin --filename=composer
-
+rm composer-setup.php
 
 # Install Laravel dependencies
 echo "Installing Laravel dependencies..."
