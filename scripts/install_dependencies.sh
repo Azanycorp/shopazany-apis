@@ -4,14 +4,14 @@
 set -e
 
 echo "Updating package lists..."
-sudo su
-sudo yum update -y
+
+yum update -y
 
 echo "Installing required packages..."
 # Install PHP and necessary extensions
-sudo amazon-linux-extras enable php8.3
-sudo yum clean metadata
-sudo yum install -y php php-fpm php-mysqlnd php-pdo php-gd php-mbstring
+amazon-linux-extras enable php8.3
+yum clean metadata
+yum install -y php php-fpm php-mysqlnd php-pdo php-gd php-mbstring
 
 echo "Installing Composer..."
 # Install Composer
@@ -33,5 +33,14 @@ rm composer-setup.php
 echo "Installing Laravel dependencies..."
 cd /var/www/AZANY-BE-2024
 composer install --no-dev --optimize-autoloader
+
+# generate app key
+php artisan key:generate
+
+# set permissions
+chown -R nginx:nginx /var/www/AZANY-BE-2024
+chmod -R 777 /var/www/AZANY-BE-2024
+chmod -R 777 /var/www/AZANY-BE-2024/storage
+chmod -R 777 /var/www/AZANY-BE-2024/bootstrap/cache
 
 echo "Dependencies installed successfully."
