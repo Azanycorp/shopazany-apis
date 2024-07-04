@@ -33,9 +33,16 @@ class ProfileResource extends JsonResource
             "is_affiliate_member" => (int)$this->is_affiliate_member === 1 ? true : false,
             "status" => (string)$this->status,
             "wallet" => (object)[
-                'balance' => optional($this->wallet)->balance
+                'available_balance' => optional($this->wallet)->balance,
+                'total_income' => 0,
+                'total_withdrawal' => 0
             ],
-            "no_of_referrals" => $this->referrals->count()
+            "no_of_referrals" => $this->referrals->count(),
+            "bank_account" => (object)[
+                'account_name' => optional($this->bankAccount)->account_name,
+                'bank_name' => optional($this->bankAccount)->bank_name,
+                'account_number' => optional($this->bankAccount)->account_number,
+            ],
         ];
     }
 }

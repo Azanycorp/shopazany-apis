@@ -10,6 +10,10 @@ use Illuminate\Support\Facades\Route;
 //     return $request->user();
 // })->middleware('auth:sanctum');
 
+Route::get('/hello', function () {
+    return "Hello";
+});
+
 Route::prefix('connect')->controller(AuthController::class)->group(function () {
     Route::post('/login', 'login');
     Route::post('/login/verify', 'loginVerify');
@@ -26,6 +30,14 @@ Route::get('/banners', [ApiController::class, 'banner']);
 Route::get('/featured/categories', [ApiController::class, 'categories']);
 
 Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
-    Route::get('/profile', [UserController::class, 'profile']);
+
+    Route::controller(UserController::class)->group(function () {
+        Route::get('/profile', 'profile');
+        Route::post('/bank/account', 'bankAccount');
+        Route::delete('/remove/account', 'removeBankAccount');
+        Route::post('/withdraw', 'withdraw')
+        ->middleware('check.wallet');
+    });
+
 });
 

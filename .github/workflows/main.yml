@@ -1,0 +1,38 @@
+on:
+  push:
+    branches:
+      - main
+name: 🚀 Deploy to Production Cpanel
+jobs:
+  web-deploy:
+    name: 🎉 Deploy
+    runs-on: ubuntu-latest
+    steps:
+    - name: 🚚 Get latest code
+      uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.3'
+
+    - name: Check if composer.json exists
+      id: check_files
+      uses: andstor/file-existence-action@v1
+      with:
+        files: 'composer.json'
+
+    - name: Run composer update
+      run: composer update
+
+    - name: 📂 Sync files
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+      with:
+        server: ftp.shopazany-v2.com
+        username: ${{ secrets.ftp_username }}
+        password: ${{ secrets.ftp_password }}
+        exclude: |
+          **/.git*
+          **/.git*/**
+          **/public*/**
+          fileToExclude.txt
