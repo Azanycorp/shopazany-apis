@@ -10,6 +10,10 @@ use Illuminate\Support\Facades\Route;
 //     return $request->user();
 // })->middleware('auth:sanctum');
 
+Route::get('/hello', function () {
+    return "Hello";
+});
+
 Route::prefix('connect')->controller(AuthController::class)->group(function () {
     Route::post('/login', 'login');
     Route::post('/login/verify', 'loginVerify');
