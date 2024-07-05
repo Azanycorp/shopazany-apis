@@ -17,6 +17,9 @@ git pull origin deploy
 # clear php cache
 php artisan cache:clear
 
+# download env from s3
+aws s3 cp s3://azany-env/prod/be.env ./.env
+
 # Migrate DB tables
 php artisan migrate --force
 
