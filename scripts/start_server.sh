@@ -23,6 +23,9 @@ aws s3 cp s3://azany-env/prod/be.env ./.env
 # Migrate DB tables
 php artisan migrate --force
 
+# activate cron jobs
+php artisan schedule:run
+
 echo "Starting PHP-FPM service..."
 sudo systemctl start php-fpm
 
