@@ -23,7 +23,7 @@ jobs:
     - name: Deploy to AWS CodeDeploy
       run: |
         aws deploy create-deployment \
-          --application-name shopazany-app \
-          --deployment-group-name shopazany-group \
+          --application-name shopazany-app-staging \
+          --deployment-group-name shopazany-group-be-staging \
           --deployment-config-name CodeDeployDefault.OneAtATime \
           --github-location repository=${{ github.repository }},commitId=${{ github.sha }}
