@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Trait\HttpResponse;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
 abstract class Controller
@@ -29,5 +30,10 @@ abstract class Controller
         if($user->referrer_code !== null){
             return $this->error(null, 'Account has been created', 400);
         }
+    }
+
+    protected function userAuth()
+    {
+        return Auth::user();
     }
 }

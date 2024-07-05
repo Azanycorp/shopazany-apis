@@ -2,7 +2,7 @@ on:
   push:
     branches:
       - main
-name: 🚀 Deploy to Production
+name: 🚀 Deploy to Production Cpanel
 jobs:
   web-deploy:
     name: 🎉 Deploy
@@ -36,4 +36,3 @@ jobs:
           **/.git*/**
           **/public*/**
           fileToExclude.txt
-
