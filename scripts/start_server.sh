@@ -12,7 +12,7 @@ git clean -fd
 echo "Stashing local changes..."
 git stash --include-untracked
 
-git pull origin deploy
+git pull origin staging
 
 # clear php cache
 php artisan cache:clear
