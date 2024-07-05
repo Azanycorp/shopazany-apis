@@ -1,9 +1,9 @@
-name: Deploy Production Backend
+name: Deploy Staging Backend
 
 on:
   push:
     branches:
-      - deploy
+      - staging
 
 jobs:
   deploy:
