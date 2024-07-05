@@ -3,7 +3,7 @@ name: Deploy Production Backend
 on:
   push:
     branches:
-      - staging
+      - deploy
 
 jobs:
   deploy:
@@ -23,7 +23,7 @@ jobs:
     - name: Deploy to AWS CodeDeploy
       run: |
         aws deploy create-deployment \
-          --application-name shopazany-app-staging \
-          --deployment-group-name shopazany-group-be-staging \
+          --application-name shopazany-app \
+          --deployment-group-name shopazany-group \
           --deployment-config-name CodeDeployDefault.OneAtATime \
           --github-location repository=${{ github.repository }},commitId=${{ github.sha }}
