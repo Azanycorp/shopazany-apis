@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Controller;
 use App\Http\Requests\BankAccountRequest;
 use App\Http\Requests\WithdrawalRequest;
 use App\Services\User\UserService;
