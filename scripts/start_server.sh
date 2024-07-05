@@ -15,7 +15,7 @@ git stash --include-untracked
 git pull origin staging
 
 # clear php cache
-php artisan cache:clear
+php artisan optimize
 
 # download env from s3
 aws s3 cp s3://azany-env/staging/be.env ./.env
