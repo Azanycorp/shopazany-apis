@@ -37,5 +37,6 @@ return [
 
     'reset_password_url' => env('RESET_PASSWORD_URL'),
     'frontend_baseurl' => env('FRONTEND_BASEURL'),
+    'baseurl' => env('BASEURL'),
 
 ];

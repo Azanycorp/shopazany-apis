@@ -1,8 +1,10 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Controller;
 use App\Http\Requests\BankAccountRequest;
+use App\Http\Requests\KycRequest;
 use App\Http\Requests\WithdrawalRequest;
 use App\Services\User\UserService;
 use Illuminate\Http\Request;
@@ -38,5 +40,10 @@ class UserController extends Controller
     public function withdraw(WithdrawalRequest $request)
     {
         return $this->service->withdraw($request);
+    }
+
+    public function userKyc(KycRequest $request)
+    {
+        return $this->service->userKyc($request);
     }
 }
