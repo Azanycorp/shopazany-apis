@@ -46,4 +46,16 @@ class UserController extends Controller
     {
         return $this->service->userKyc($request);
     }
+
+    public function earningOption(Request $request)
+    {
+        $request->validate([
+            'user_id' => ['required', 'integer', 'exists:users,id'],
+            'type' => ['required', 'in:payment,commision']
+        ], [
+            'type' => "Type should either be payment or commision"
+        ]);
+
+        return $this->service->earningOption($request);
+    }
 }

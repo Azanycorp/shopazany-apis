@@ -120,10 +120,25 @@ class UserService extends Controller
             ]);
 
             return $this->success(null, "Added successfully");
-            
+
         } catch (\Exception $e) {
             return $this->error(null, $e->getMessage(), 500);
         }
+    }
+
+    public function earningOption($request)
+    {
+        $user = User::find($request->user_id);
+
+        if(!$user){
+            return $this->error(null, "User not found", 404);
+        }
+
+        $user->update([
+            'income_type' => $request->type
+        ]);
+
+        return $this->success(null, "Added successfully");
     }
 }
 
