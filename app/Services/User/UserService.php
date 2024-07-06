@@ -120,6 +120,7 @@ class UserService extends Controller
             ]);
 
             return $this->success(null, "Added successfully");
+            
         } catch (\Exception $e) {
             return $this->error(null, $e->getMessage(), 500);
         }
