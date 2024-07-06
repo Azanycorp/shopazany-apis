@@ -39,6 +39,7 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
         ->middleware('check.wallet');
 
         Route::post('/kyc', 'userKyc');
+        Route::post('/earning-option', 'earningOption');
     });
 
 });
