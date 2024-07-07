@@ -12,16 +12,19 @@ git clean -fd
 echo "Stashing local changes..."
 git stash --include-untracked
 
-git pull origin staging
+git pull origin deploy
 
 # clear php cache
 php artisan optimize
 
 # download env from s3
-aws s3 cp s3://azany-env/staging/be.env ./.env
+aws s3 cp s3://azany-env/prod/be.env ./.env
 
 # Migrate DB tables
 php artisan migrate --force
+
+# activate cron jobs
+php artisan schedule:run
 
 echo "Starting PHP-FPM service..."
 sudo systemctl start php-fpm
