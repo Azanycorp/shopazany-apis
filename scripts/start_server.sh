@@ -14,6 +14,9 @@ git stash --include-untracked
 
 git pull origin staging
 
+# composer update
+php composer update
+
 # clear php cache
 php artisan optimize
 
