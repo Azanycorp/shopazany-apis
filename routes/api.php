@@ -27,8 +27,6 @@ Route::prefix('connect')->controller(AuthController::class)->group(function () {
     Route::post('/affiliate/signup', 'affiliateSignup');
 });
 
-Route::get('/banners', [ApiController::class, 'banner']);
-
 Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
 
     Route::controller(UserController::class)->group(function () {
@@ -49,3 +47,10 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
 
 });
 
+
+Route::group(['middleware' => ['auth:api'], 'prefix' => 'admin'], function () {
+
+    Route::post('/add/slider', [ApiController::class, 'addSlider']);
+    Route::get('/slider', [ApiController::class, 'slider']);
+
+});
