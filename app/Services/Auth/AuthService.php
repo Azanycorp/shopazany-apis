@@ -217,7 +217,6 @@ class AuthService extends Controller
             return $this->success(null, "Created successfully");
         } catch (\Exception $e) {
             Log::error('User creation failed: ' . $e->getMessage());
-
             return $this->error(null, $e->getMessage(), 500);
         }
     }
