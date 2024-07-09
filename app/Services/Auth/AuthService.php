@@ -188,11 +188,7 @@ class AuthService extends Controller
         try {
             $user = User::where('email', $request->email)->first();
             $response = $this->handleExistingUser($user);
-<<<<<<< HEAD
-    
-=======
 
->>>>>>> e78e19c74a652bbb9878c757ea5339bf71c18fe5
             if ($response) {
                 return $response;
             }
@@ -204,17 +200,6 @@ class AuthService extends Controller
                     return $this->error(null, 'User with referral code has not been verified', 400);
                 }
             }
-<<<<<<< HEAD
-    
-            DB::transaction(function () use ($request, $user) {
-                $referrer_code = $this->determineReferrerCode($request);
-    
-                $referrer_link = $this->generateReferrerLink($referrer_code);
-                $code = $this->generateVerificationCode();
-    
-                $data = $this->userTrigger($user, $request, $referrer_link, $referrer_code, $code);
-    
-=======
 
             DB::transaction(function () use ($request, $user) {
                 $referrer_code = $this->determineReferrerCode($request);
@@ -224,26 +209,10 @@ class AuthService extends Controller
 
                 $data = $this->userTrigger($user, $request, $referrer_link, $referrer_code, $code);
 
->>>>>>> e78e19c74a652bbb9878c757ea5339bf71c18fe5
                 if ($request->referrer_code) {
                     $this->handleReferrer($request->referrer_code, $data);
                 }
             });
-<<<<<<< HEAD
-    
-            return $this->success(null, "Created successfully");
-        } catch (\Exception $e) {
-            Log::error('User creation failed: ' . $e->getMessage());
-    
-            return $this->error(null, $e->getMessage(), 500);
-        }
-    }
-    
-    private function determineReferrerCode($request)
-    {
-        $initial_referrer_code = Str::random(10);
-    
-=======
 
             return $this->success(null, "Created successfully");
         } catch (\Exception $e) {
@@ -257,7 +226,6 @@ class AuthService extends Controller
     {
         $initial_referrer_code = Str::random(10);
 
->>>>>>> e78e19c74a652bbb9878c757ea5339bf71c18fe5
         if ($request->referrer_code) {
             if (User::where('referrer_code', $request->referrer_code)->exists()) {
                 return $this->generateUniqueReferrerCode();
@@ -265,62 +233,36 @@ class AuthService extends Controller
                 return $request->referrer_code;
             }
         }
-<<<<<<< HEAD
-    
-        return $initial_referrer_code;
-    }
-    
-=======
 
         return $initial_referrer_code;
     }
 
->>>>>>> e78e19c74a652bbb9878c757ea5339bf71c18fe5
     private function generateReferrerLink($referrer_code)
     {
         return config('services.frontend_baseurl') . '/register?referrer=' . $referrer_code;
     }
-<<<<<<< HEAD
-    
-=======
 
->>>>>>> e78e19c74a652bbb9878c757ea5339bf71c18fe5
     private function generateVerificationCode()
     {
         return str_pad(mt_rand(0, 999999), 6, '0', STR_PAD_LEFT);
     }
-<<<<<<< HEAD
-    
-=======
 
->>>>>>> e78e19c74a652bbb9878c757ea5339bf71c18fe5
     private function handleExistingUser($user)
     {
         if ($user) {
             return $this->getUserReferrer($user);
         }
-<<<<<<< HEAD
-    
-        return null;
-    }
-    
-=======
 
         return null;
     }
 
->>>>>>> e78e19c74a652bbb9878c757ea5339bf71c18fe5
     private function handleReferrer($referrer_code, $data)
     {
         $referrer = User::where('referrer_code', $referrer_code)->first();
         if ($referrer) {
             $commission = 0.05 * 100;
             $referrer->wallet()->increment('balance', $commission);
-<<<<<<< HEAD
-    
-=======
 
->>>>>>> e78e19c74a652bbb9878c757ea5339bf71c18fe5
             $referrer->referrer()->attach($data);
             $referrer->save();
         }
