@@ -14,6 +14,9 @@ git stash --include-untracked
 
 git pull origin staging
 
+# composer update
+composer update
+
 # clear php cache
 php artisan optimize
 
@@ -22,6 +25,9 @@ aws s3 cp s3://azany-env/staging/be.env ./.env
 
 # Migrate DB tables
 php artisan migrate --force
+
+# activate cron jobs
+php artisan schedule:run
 
 echo "Starting PHP-FPM service..."
 sudo systemctl start php-fpm

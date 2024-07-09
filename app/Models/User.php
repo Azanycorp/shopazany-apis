@@ -81,4 +81,9 @@ class User extends Authenticatable
         return $this->hasMany(WithdrawalRequest::class, 'user_id');
     }
 
+    public function kyc()
+    {
+        return $this->hasOne(Kyc::class, 'user_id');
+    }
+
 }

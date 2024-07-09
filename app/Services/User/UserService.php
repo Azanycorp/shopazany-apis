@@ -88,6 +88,58 @@ class UserService extends Controller
             return $this->error(null, "Sorry you can't withdraw above your balance", 400);
         }
     }
+
+    public function userKyc($request)
+    {
+        $user = User::with('kyc')->find($request->user_id);
+
+        if(!$user){
+            return $this->error(null, "User not found", 404);
+        }
+
+        try {
+
+            if($request->file('image')){
+                $file = $request->file('image');
+                $path = 'kyc' . '/' . $user->email;
+                $filename = time() . rand(10, 1000) . '.' . $file->extension();
+                $file->move(public_path($path), $filename, 'public');
+                $kycpath = config('services.baseurl') . '/' . $path . '/' . $filename;
+            }
+
+            $user->kyc()->create([
+                'name' => $request->fullname,
+                'date_of_birth' => $request->date_of_birth,
+                'nationality' => $request->nationality,
+                'country_of_residence' => $request->country_of_residence,
+                'city' => $request->city,
+                'phone_number' => $request->phone_number,
+                'document_number' => $request->document_number,
+                'document_type' => $request->document_type,
+                'image' => $kycpath
+            ]);
+
+            return $this->success(null, "Added successfully");
+
+        } catch (\Exception $e) {
+            return $this->error(null, $e->getMessage(), 500);
+        }
+    }
+
+    public function earningOption($request)
+    {
+        $user = User::find($request->user_id);
+
+        if(!$user){
+            return $this->error(null, "User not found", 404);
+        }
+
+        $user->update([
+            'income_type' => $request->type
+        ]);
+
+        return $this->success(null, "Added successfully");
+    }
 }
 
 
