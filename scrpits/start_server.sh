@@ -12,10 +12,7 @@ git clean -fd
 echo "Stashing local changes..."
 git stash --include-untracked
 
-git pull origin deploy
-
-# composer update
-composer update
+git pull origin staging
 
 # composer update
 composer update
@@ -24,7 +21,7 @@ composer update
 php artisan optimize
 
 # download env from s3
-aws s3 cp s3://azany-env/prod/be.env ./.env
+aws s3 cp s3://azany-env/staging/be.env ./.env
 
 # Migrate DB tables
 php artisan migrate --force
