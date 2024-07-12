@@ -12,7 +12,7 @@ git clean -fd
 echo "Stashing local changes..."
 git stash --include-untracked
 
-git pull origin deploy
+git pull origin deploy --rebase
 
 # composer update
 composer update
