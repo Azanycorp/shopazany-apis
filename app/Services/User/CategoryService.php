@@ -2,9 +2,11 @@
 
 namespace App\Services\User;
 
+use App\Http\Resources\CategoryResource;
 use App\Models\Category;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -42,6 +44,17 @@ class CategoryService
         } catch (\Exception $e) {
             return $this->error(null, $e->getMessage(), 500);
         }
+    }
+
+    public function categories()
+    {
+        $categories = Cache::rememberForever('featured_categories', function () {
+            return Category::where('featured', 1)->take(10)->get();
+        });
+
+        $data = CategoryResource::collection($categories);
+
+        return $this->success($data, "Categories");
     }
 }
 

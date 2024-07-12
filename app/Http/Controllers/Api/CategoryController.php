@@ -20,4 +20,9 @@ class CategoryController extends Controller
     {
         return $this->service->createCategory($request);
     }
+
+    public function categories()
+    {
+        return $this->service->categories();
+    }
 }

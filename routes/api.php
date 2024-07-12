@@ -27,9 +27,6 @@ Route::prefix('connect')->controller(AuthController::class)->group(function () {
     Route::post('/affiliate/signup', 'affiliateSignup');
 });
 
-Route::get('/banners', [ApiController::class, 'banner']);
-Route::get('/featured/categories', [ApiController::class, 'categories']);
-
 Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
 
     Route::controller(UserController::class)->group(function () {
@@ -45,7 +42,15 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
 
     Route::prefix('category')->controller(CategoryController::class)->group(function () {
         Route::post('/create', 'createCategory');
+        Route::get('/all', 'categories');
     });
 
 });
 
+
+Route::group(['middleware' => ['auth:api'], 'prefix' => 'admin'], function () {
+
+    Route::post('/add/slider', [ApiController::class, 'addSlider']);
+    Route::get('/slider', [ApiController::class, 'slider']);
+
+});
