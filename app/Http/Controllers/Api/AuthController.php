@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AffiliateSignupRequest;
 use App\Http\Requests\LoginRequest;
+use App\Http\Requests\SellerSignUpRequest;
 use App\Http\Requests\SignUpRequest;
 use App\Services\Auth\AuthService;
 use Illuminate\Http\Request;
@@ -48,6 +49,15 @@ class AuthController extends Controller
         return $this->service->verify($request);
     }
 
+    public function resendCode(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email|exists:users,email',
+        ]);
+
+        return $this->service->resendCode($request);
+    }
+
     public function forgot(Request $request)
     {
         $request->validate([
@@ -76,5 +86,10 @@ class AuthController extends Controller
     public function affiliateSignup(AffiliateSignupRequest $request)
     {
         return $this->service->affiliateSignup($request);
+    }
+
+    public function sellerSignup(SellerSignUpRequest $request)
+    {
+        return $this->service->sellerSignup($request);
     }
 }

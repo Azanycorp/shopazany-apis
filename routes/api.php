@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\ApiController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\SellerController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -21,11 +22,14 @@ Route::prefix('connect')->controller(AuthController::class)->group(function () {
     Route::post('/signup', 'signup');
     Route::post('/forgot/password', 'forgot');
     Route::post('/reset/password', 'reset');
+    Route::post('/signup/resend', 'resendCode');
     Route::post('/logout', 'logout');
     Route::post('/verify/email', 'verify');
+    Route::post('/seller/signup', 'sellerSignup');
 
     Route::post('/affiliate/signup', 'affiliateSignup');
 });
+
 
 Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
 
@@ -43,6 +47,10 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
     Route::prefix('category')->controller(CategoryController::class)->group(function () {
         Route::post('/create', 'createCategory');
         Route::get('/all', 'categories');
+    });
+
+    Route::prefix('seller')->controller(SellerController::class)->group(function () {
+        Route::post('/business/information', 'businessInfo');
     });
 
 });
