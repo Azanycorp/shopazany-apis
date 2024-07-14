@@ -86,4 +86,19 @@ class User extends Authenticatable
         return $this->hasOne(Kyc::class, 'user_id');
     }
 
+    public function userbusinessinfo()
+    {
+        return $this->hasOne(UserBusinessInformation::class, 'user_id');
+    }
+
+    public static function getUserEmail($email)
+    {
+        return self::where('email', $email)->first();
+    }
+
+    public static function getUserID($id)
+    {
+        return self::with('userbusinessinfo')->find('id', $id);
+    }
+
 }
