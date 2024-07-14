@@ -27,7 +27,10 @@ class SellerService
         }
 
         try {
-            $folder = $this->getStorageFolder($user->email);
+            $parts = explode('@', $user->email);
+            $name = $parts[0];
+
+            $folder = $this->getStorageFolder($name);
     
             $url = null;
             if ($request->hasFile('file')) {
@@ -74,10 +77,13 @@ class SellerService
 
             $folder = null;
 
+            $parts = explode('@', $user->email);
+            $name = $parts[0];
+
             if(App::environment('production')){
-                $folder = "/prod/product/{$user->email}";
+                $folder = "/prod/product/{$name}";
             } elseif(App::environment(['staging', 'local'])) {
-                $folder = "/stag/product/{$user->email}";
+                $folder = "/stag/product/{$name}";
             }
 
             if ($request->file('image')) {
