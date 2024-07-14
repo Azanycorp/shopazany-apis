@@ -65,6 +65,8 @@ class SellerService
             if (Product::where('slug', $slug)->exists()) {
                 $slug = $slug . '-' . uniqid();
             }
+
+            $price = $request->product_price;
             
             if($request->discount_price > 0){
                 $price = (int)$request->product_price - (int)$request->discount_price;
