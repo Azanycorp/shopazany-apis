@@ -17,4 +17,9 @@ class Category extends Model
         'meta_title',
         'meta_description'
     ];
+
+    public function subcategory()
+    {
+        return $this->hasMany(SubCategory::class, 'category_id');
+    }
 }

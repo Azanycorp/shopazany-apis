@@ -91,6 +91,11 @@ class User extends Authenticatable
         return $this->hasOne(UserBusinessInformation::class, 'user_id');
     }
 
+    public function products()
+    {
+        return $this->hasMany(Product::class, 'user_id');
+    }
+
     public static function getUserEmail($email)
     {
         return self::where('email', $email)->first();
@@ -98,7 +103,7 @@ class User extends Authenticatable
 
     public static function getUserID($id)
     {
-        return self::with('userbusinessinfo')->find('id', $id);
+        return self::with(['userbusinessinfo', 'products'])->find('id', $id);
     }
 
 }
