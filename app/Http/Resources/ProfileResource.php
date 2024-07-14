@@ -43,6 +43,13 @@ class ProfileResource extends JsonResource
                 'bank_name' => optional($this->bankAccount)->bank_name,
                 'account_number' => optional($this->bankAccount)->account_number,
             ],
+            "business_info" => (object) [
+                'business_location' => optional($this->userbusinessinfo)->business_location,
+                'business_type' => optional($this->userbusinessinfo)->business_type,
+                'identity_type' => optional($this->userbusinessinfo)->identity_type,
+                'file' => optional($this->userbusinessinfo)->file,
+                'status' => optional($this->userbusinessinfo)->status
+            ]
         ];
     }
 }

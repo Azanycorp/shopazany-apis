@@ -4,6 +4,7 @@ namespace App\Services\User;
 
 use App\Http\Resources\CategoryResource;
 use App\Models\Category;
+use App\Models\SubCategory;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
@@ -55,6 +56,48 @@ class CategoryService
         $data = CategoryResource::collection($categories);
 
         return $this->success($data, "Categories");
+    }
+
+    public function createSubCategory($request)
+    {
+        $category = Category::with('subcategory')->find($request->category_id);
+
+        if(!$category){
+            return $this->error(null, "Not found", 404);
+        }
+
+        try {
+
+            $folder = null;
+
+            if(App::environment('production')){
+                $folder = '/prod/category/subcategory';
+            } elseif(App::environment(['staging', 'local'])) {
+                $folder = '/stag/category/subcategory';
+            }
+
+            if ($request->file('image')) {
+                $path = $request->file('image')->store($folder, 's3');
+                $url = Storage::disk('s3')->url($path);
+            }
+
+            $category->subcategory()->create([
+                'name' => $request->name,
+                'slug' => Str::slug($request->name),
+                'image' => $url
+            ]);
+
+            return $this->success(null, "Created successfully");
+        } catch (\Exception $e) {
+            return $this->error(null, $e->getMessage(), 500);
+        }
+    }
+
+    public function getSubcategory($id)
+    {
+        $subcats = SubCategory::where('category_id', $id)->get(['name', 'slug', 'image']);
+
+        return $this->success($subcats, "Sub categories");
     }
 }
 
