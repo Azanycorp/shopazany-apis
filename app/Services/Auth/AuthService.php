@@ -81,6 +81,7 @@ class AuthService extends Controller
         $token = $user->createToken('API Token of '. $user->email);
 
         return $this->success([
+            'user_type' => $user->type,
             'has_signed_up' => true,
             'is_affiliate_member' => $user->is_affiliate_member === 1 ? true : false,
             'token' => $token->plainTextToken,
@@ -111,6 +112,48 @@ class AuthService extends Controller
             return $this->success(null, "Created successfully");
         } catch (\Exception $e) {
             return $this->error(null, 500, $e->getMessage());
+        }
+    }
+
+    public function resendCode($request)
+    {
+        $user = User::getUserEmail($request->email);
+
+        if(!$user){
+            return $this->error(null, "User not found", 404);
+        }
+
+        try {
+            
+            Mail::to($request->email)->send(new SignUpVerifyMail($user));
+
+            return $this->success(null, "Code resent successfully");
+        } catch (\Exception $e) {
+            return $this->error(null, 500, $e->getMessage());
+        }
+    }
+
+    public function sellerSignup($request)
+    {
+        $request->validated($request->all());
+
+        try {
+            $code = $this->generateVerificationCode();
+
+            $user = User::create([
+                'email' => $request->email,
+                'type' => 'seller',
+                'email_verified_at' => null,
+                'verification_code' => $code,
+                'is_verified' => 0,
+                'password' => bcrypt($request->password)
+            ]);
+
+            Mail::to($request->email)->send(new SignUpVerifyMail($user));
+
+            return $this->success(null, "Created successfully");
+        } catch (\Exception $e) {
+            return $this->error(null, $e->getMessage(), 500);
         }
     }
 
