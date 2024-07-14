@@ -100,9 +100,12 @@ class UserService extends Controller
 
         try {
 
+            $parts = explode('@', $user->email);
+            $name = $parts[0];
+
             if($request->file('image')){
                 $file = $request->file('image');
-                $path = 'kyc' . '/' . $user->email;
+                $path = 'kyc' . '/' . $name;
                 $filename = time() . rand(10, 1000) . '.' . $file->extension();
                 $file->move(public_path($path), $filename, 'public');
                 $kycpath = config('services.baseurl') . '/' . $path . '/' . $filename;
