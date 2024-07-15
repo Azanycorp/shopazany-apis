@@ -2,6 +2,9 @@
 
 namespace App\Providers;
 
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use Laravel\Sanctum\PersonalAccessToken;
@@ -31,6 +34,12 @@ class AppServiceProvider extends ServiceProvider
             ->numbers()
             ->symbols()
             ->uncompromised();
+        });
+
+        RateLimiter::for('apis', function (Request $request) {
+            return $request->user() ?
+                Limit::perMinute(10)->by($request->ip())
+                : Limit::perMinute(5)->by($request->ip());
         });
     }
 }

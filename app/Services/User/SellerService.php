@@ -2,10 +2,12 @@
 
 namespace App\Services\User;
 
+use App\Models\Product;
 use App\Models\User;
-use App\Models\UserBusinessInformation;
 use App\Trait\HttpResponse;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\App;
+use App\Models\UserBusinessInformation;
 use Illuminate\Support\Facades\Storage;
 
 class SellerService
@@ -25,7 +27,10 @@ class SellerService
         }
 
         try {
-            $folder = $this->getStorageFolder($user->email);
+            $parts = explode('@', $user->email);
+            $name = $parts[0];
+
+            $folder = $this->getStorageFolder($name);
     
             $url = null;
             if ($request->hasFile('file')) {
@@ -45,6 +50,70 @@ class SellerService
             return $this->success(null, "Information added successfully");
         } catch (\Exception $e) {
             return $this->error(null, $e->getMessage(), 500);
+        }
+    }
+
+    public function createProduct($request)
+    {
+        $user = User::getUserID($request->user_id);
+
+        if(!$user){
+            return $this->error(null, "User not found", 404);
+        }
+
+        try {
+
+            $slug = Str::slug($request->name);
+
+            if (Product::where('slug', $slug)->exists()) {
+                $slug = $slug . '-' . uniqid();
+            }
+
+            $price = $request->product_price;
+            
+            if($request->discount_price > 0){
+                $price = (int)$request->product_price - (int)$request->discount_price;
+            }
+
+            $folder = null;
+
+            $parts = explode('@', $user->email);
+            $name = $parts[0];
+
+            if(App::environment('production')){
+                $folder = "/prod/product/{$name}";
+            } elseif(App::environment(['staging', 'local'])) {
+                $folder = "/stag/product/{$name}";
+            }
+
+            if ($request->file('image')) {
+                $path = $request->file('image')->store($folder, 's3');
+                $url = Storage::disk('s3')->url($path);
+            }
+
+            $user->products()->create([
+                'name' => $request->name,
+                'slug' => $slug,
+                'description' => $request->description,
+                'category_id' => $request->category_id,
+                'sub_category_id' => $request->sub_category_id,
+                'brand_id' => $request->brand_id,
+                'color_id' => $request->color_id,
+                'unit_id' => $request->unit_id,
+                'size_id' => $request->size_id,
+                'product_sku' => $request->product_sku,
+                'product_price' => $request->product_price,
+                'discount_price' => $request->discount_price,
+                'price' => $price,
+                'current_stock_quantity' => $request->current_stock_quantity,
+                'minimum_order_quantity' => $request->minimum_order_quantity,
+                'image' => $url,
+                'added_by' => $user->type
+            ]);
+
+            return $this->success(null, "Added successfully");
+        } catch (\Throwable $th) {
+            throw $th;
         }
     }
 
