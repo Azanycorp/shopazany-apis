@@ -2,6 +2,7 @@
 
 namespace App\Services\User;
 
+use App\Http\Resources\SellerProductResource;
 use App\Models\Product;
 use App\Models\User;
 use App\Trait\HttpResponse;
@@ -126,7 +127,7 @@ class SellerService
             return $this->error(null, "User not found", 404);
         }
 
-        $product = Product::find('id', $id);
+        $product = Product::find($id);
 
         if(!$product){
             return $this->error(null, "Product not found", 404);
@@ -189,9 +190,41 @@ class SellerService
         }
     }
 
+    public function getProduct($userId)
+    {
+        $user = User::getUserID($userId);
+
+        if(!$user){
+            return $this->error(null, "User not found", 404);
+        }
+
+        $data = SellerProductResource::collection($user->products);
+
+        return $this->success($data, "All products");
+    }
+
+    public function getSingleProduct($productId, $userId)
+    {
+        $user = User::getUserID($userId);
+
+        if(!$user){
+            return $this->error(null, "User not found", 404);
+        }
+
+        $product = Product::find($productId);
+
+        if(!$product){
+            return $this->error(null, "Product not found", 404);
+        }
+
+        $data = new SellerProductResource($product);
+
+        return $this->success($data, "Product retrieved successfully");
+    }
+
     public function deleteProduct($id)
     {
-        $product = Product::find('id', $id);
+        $product = Product::find($id);
 
         if(!$product){
             return $this->error(null, "Product not found", 404);

@@ -36,6 +36,16 @@ class SellerController extends Controller
     {
         return $this->service->deleteProduct($id);
     }
+
+    public function getProduct($userId)
+    {
+        return $this->service->getProduct($userId);
+    }
+
+    public function getSingleProduct($productId, $userId)
+    {
+        return $this->service->getSingleProduct($productId, $userId);
+    }
 }
 
 
