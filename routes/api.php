@@ -61,6 +61,8 @@ Route::middleware(['throttle:apis'])->group(function () {
             Route::post('/business/information', 'businessInfo');
 
             Route::post('/product/create', 'createProduct');
+            Route::post('/product/edit/{product_id}/{user_id}', 'updateProduct');
+            Route::delete('/delete/product/{product_id}', 'deleteProduct');
         });
 
     });
