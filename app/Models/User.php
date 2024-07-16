@@ -114,7 +114,7 @@ class User extends Authenticatable
 
     public static function getUserID($id)
     {
-        return self::with(['userbusinessinfo', 'products'])->find('id', $id);
+        return self::with(['userbusinessinfo', 'products'])->find($id);
     }
 
 }
