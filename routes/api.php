@@ -60,7 +60,11 @@ Route::middleware(['throttle:apis'])->group(function () {
         Route::prefix('seller')->controller(SellerController::class)->group(function () {
             Route::post('/business/information', 'businessInfo');
 
+            Route::get('/product/{user_id}', 'getProduct');
+            Route::get('/get/product/{product_id}/{user_id}', 'getSingleProduct');
             Route::post('/product/create', 'createProduct');
+            Route::post('/product/edit/{product_id}/{user_id}', 'updateProduct');
+            Route::delete('/delete/product/{product_id}', 'deleteProduct');
         });
 
     });

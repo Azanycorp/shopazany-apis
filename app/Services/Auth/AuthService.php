@@ -111,7 +111,7 @@ class AuthService extends Controller
 
             return $this->success(null, "Created successfully");
         } catch (\Exception $e) {
-            return $this->error(null, 500, $e->getMessage());
+            return $this->error(null, $e->getMessage(), 500);
         }
     }
 
@@ -124,12 +124,12 @@ class AuthService extends Controller
         }
 
         try {
-            
+
             Mail::to($request->email)->send(new SignUpVerifyMail($user));
 
             return $this->success(null, "Code resent successfully");
         } catch (\Exception $e) {
-            return $this->error(null, 500, $e->getMessage());
+            return $this->error(null, $e->getMessage(), 500);
         }
     }
 
