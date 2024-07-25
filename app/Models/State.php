@@ -4,18 +4,19 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class State extends Model
 {
-    protected $table = "states";
-    
     use HasFactory;
 
-    public function country(){
-        return $this->belongsTo(Country::class);
-    }
+    protected $fillable = [
+        'country_id',
+        'name'
+    ];
 
-    public function cities(){
-        return $this->hasMany(City::class);
+    public function country(): BelongsTo
+    {
+        return $this->belongTo(Country::class, 'country_id');
     }
 }

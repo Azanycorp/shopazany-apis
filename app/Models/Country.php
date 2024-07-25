@@ -9,18 +9,9 @@ class Country extends Model
 {
     use HasFactory;
 
-    /**
-     * Get the Zone that owns the Country
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
-    public function zone()
-    {
-        return $this->belongsTo(Zone::class);
-    }
-
-    public function scopeIsEnabled($query)
-    {
-        return $query->where('status', '1');
-    }
+    protected $fillable = [
+        'sortname',
+        'name',
+        'phonecode'
+    ];
 }
