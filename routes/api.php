@@ -35,50 +35,53 @@ Route::middleware(['throttle:apis'])->group(function () {
 
         Route::post('/affiliate/signup', 'affiliateSignup');
     });
+});
 
+Route::get('/banners', [ApiController::class, 'slider']);
+Route::get('/featured/categories', [ApiController::class, 'categories']);
 
-    Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
+Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
 
-        Route::controller(UserController::class)->group(function () {
-            Route::get('/profile', 'profile');
-            Route::post('/bank/account', 'bankAccount');
-            Route::delete('/remove/account', 'removeBankAccount');
-            Route::post('/withdraw', 'withdraw')
-            ->middleware('check.wallet');
+    Route::controller(UserController::class)->group(function () {
+        Route::get('/profile', 'profile');
+        Route::post('/bank/account', 'bankAccount');
+        Route::delete('/remove/account', 'removeBankAccount');
+        Route::post('/withdraw', 'withdraw')
+        ->middleware('check.wallet');
 
-            Route::post('/kyc', 'userKyc');
-            Route::post('/earning-option', 'earningOption');
-        });
-
-        Route::prefix('category')->controller(CategoryController::class)->group(function () {
-            Route::post('/create', 'createCategory');
-            Route::get('/all', 'categories');
-            Route::post('/subcategory/create', 'createSubCategory');
-            Route::get('/subcategory/{category_id}', 'getSubcategory');
-        });
-
-        Route::prefix('seller')->controller(SellerController::class)->group(function () {
-            Route::post('/business/information', 'businessInfo');
-
-            Route::get('/product/{user_id}', 'getProduct');
-            Route::get('/get/product/{product_id}/{user_id}', 'getSingleProduct');
-            Route::post('/product/create', 'createProduct');
-            Route::post('/product/edit/{product_id}/{user_id}', 'updateProduct');
-            Route::delete('/delete/product/{product_id}', 'deleteProduct');
-        });
-
+        Route::post('/kyc', 'userKyc');
+        Route::post('/earning-option', 'earningOption');
     });
 
+    Route::prefix('category')->controller(CategoryController::class)->group(function () {
+        Route::post('/create', 'createCategory');
+        Route::get('/all', 'categories');
+        Route::post('/subcategory/create', 'createSubCategory');
+        Route::get('/subcategory/{category_id}', 'getSubcategory');
+    });
 
-    Route::group(['middleware' => ['auth:api'], 'prefix' => 'admin'], function () {
+    Route::prefix('seller')->controller(SellerController::class)->group(function () {
+        Route::post('/business/information', 'businessInfo');
 
-        Route::post('/add/slider', [ApiController::class, 'addSlider']);
-        Route::get('/slider', [ApiController::class, 'slider']);
-        Route::resource('brand', BrandController::class);
-        Route::resource('color', ColorController::class);
-        Route::resource('unit', UnitController::class);
-        Route::resource('size', SizeController::class);
-
+        Route::get('/product/{user_id}', 'getProduct');
+        Route::get('/get/product/{product_id}/{user_id}', 'getSingleProduct');
+        Route::post('/product/create', 'createProduct');
+        Route::post('/product/edit/{product_id}/{user_id}', 'updateProduct');
+        Route::delete('/delete/product/{product_id}', 'deleteProduct');
     });
 
 });
+
+
+Route::group(['middleware' => ['auth:api'], 'prefix' => 'admin'], function () {
+
+    Route::post('/add/slider', [ApiController::class, 'addSlider']);
+    Route::get('/slider', [ApiController::class, 'slider']);
+    Route::resource('brand', BrandController::class);
+    Route::resource('color', ColorController::class);
+    Route::resource('unit', UnitController::class);
+    Route::resource('size', SizeController::class);
+
+});
+
+
