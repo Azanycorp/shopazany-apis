@@ -37,6 +37,9 @@ Route::middleware(['throttle:apis'])->group(function () {
     });
 });
 
+Route::get('/country', [ApiController::class, 'country']);
+Route::get('/states/{country_id}', [ApiController::class, 'states']);
+
 Route::get('/banners', [ApiController::class, 'slider']);
 Route::get('/featured/categories', [ApiController::class, 'categories']);
 

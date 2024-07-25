@@ -2,8 +2,14 @@
 
 namespace App\Services\Admin;
 
+use App\Http\Resources\CategoryResource;
+use App\Http\Resources\CountryResource;
 use App\Http\Resources\SliderResource;
+use App\Http\Resources\StateResource;
+use App\Models\Category;
+use App\Models\Country;
 use App\Models\SliderImage;
+use App\Models\State;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
@@ -50,6 +56,37 @@ class AdminService
         $data = SliderResource::collection($sliders);
 
         return $this->success($data, "Sliders");
+    }
+
+    public function categories()
+    {
+        $categories = Category::where('featured', 1)
+        ->where('status', 'active')
+        ->get();
+
+        $data = CategoryResource::collection($categories);
+
+        return $this->success($data, "Categories");
+    }
+
+    public function country()
+    {
+        $country = Cache::rememberForever('country', function () {
+            return Country::get();
+        });
+
+        $data = CountryResource::collection($country);
+
+        return $this->success($data, "All Country");
+    }
+
+    public function states($id)
+    {
+        $states = State::where('country_id', $id)->get();
+
+        $data = StateResource::collection($states);
+
+        return $this->success($data, "States");
     }
 }
 

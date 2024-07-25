@@ -30,4 +30,19 @@ class ApiController extends Controller
     {
         return $this->service->slider();
     }
+
+    public function categories()
+    {
+        return $this->service->categories();
+    }
+
+    public function country()
+    {
+        return $this->service->country();
+    }
+
+    public function states($id)
+    {
+        return $this->service->states($id);
+    }
 }
