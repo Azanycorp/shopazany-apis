@@ -141,7 +141,13 @@ class AuthService extends Controller
             $code = $this->generateVerificationCode();
 
             $user = User::create([
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'middlename' => $request->other_name,
                 'email' => $request->email,
+                'address' => $request->address,
+                'country' => $request->country_id,
+                'state_id' => $request->state_id,
                 'type' => 'seller',
                 'email_verified_at' => null,
                 'verification_code' => $code,
