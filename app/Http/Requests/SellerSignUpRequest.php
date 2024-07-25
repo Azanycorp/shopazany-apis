@@ -23,7 +23,12 @@ class SellerSignUpRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'first_name' => ['required', 'string', 'max:255'],
+            'last_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'email:rfc,dns', 'unique:users,email'],
+            'address' => ['required', 'string'],
+            'country_id' => ['required', 'integer', 'exists:countries,id'],
+            'state_id' => ['required', 'integer', 'exists:states,id'],
             'password' => ['required', 'string', 'confirmed', Password::defaults()]
         ];
     }
