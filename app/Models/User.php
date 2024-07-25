@@ -22,7 +22,7 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
-        'uuid', 'first_name', 'last_name', 'email', 'password', 'address', 'city', 'postal_code', 'phone', 'country', 'provider_id', 'email_verified_at', 'verification_code', 'login_code', 'login_code_expires_at', 'is_affiliate_member', 'referrer_code', 'referrer_link', 'date_of_birth', 'is_verified', 'income_type', 'image', 'is_affiliate_member', 'status', 'type'
+        'uuid', 'first_name', 'last_name', 'email', 'password', 'address', 'city', 'postal_code', 'phone', 'country', 'provider_id', 'email_verified_at', 'verification_code', 'login_code', 'login_code_expires_at', 'is_affiliate_member', 'referrer_code', 'referrer_link', 'date_of_birth', 'is_verified', 'income_type', 'image', 'is_affiliate_member', 'status', 'type', 'middlename', 'state_id'
     ];
 
     /**
