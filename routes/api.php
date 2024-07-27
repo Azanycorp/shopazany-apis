@@ -64,14 +64,30 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
     });
 
     Route::prefix('seller')->controller(SellerController::class)->group(function () {
+        // Business Information
         Route::post('/business/information', 'businessInfo');
-
-        Route::get('/product/{user_id}', 'getProduct');
-        Route::get('/get/product/{product_id}/{user_id}', 'getSingleProduct');
-        Route::post('/product/create', 'createProduct');
-        Route::post('/product/edit/{product_id}/{user_id}', 'updateProduct');
-        Route::delete('/delete/product/{product_id}', 'deleteProduct');
+    
+        // Product Routes
+        Route::prefix('product')->group(function () {
+            Route::post('/create', 'createProduct');
+            Route::post('/edit/{product_id}/{user_id}', 'updateProduct');
+            Route::delete('/delete/{product_id}', 'deleteProduct');
+            Route::get('/{user_id}', 'getProduct');
+            Route::get('/{product_id}/{user_id}', 'getSingleProduct');
+        });
+    
+        // Orders Routes
+        Route::prefix('orders/{user_id}')->group(function () {
+            Route::get('/', 'getAllOrders');
+            Route::get('/confirmed', 'getConfirmedOrders');
+            Route::get('/cancelled', 'getCancelledOrders');
+            Route::get('/delivered', 'getDeliveredOrders');
+            Route::get('/pending', 'getPendingOrders');
+            Route::get('/processing', 'getProcessingOrders');
+            Route::get('/shipped', 'getShippedOrders');
+        });
     });
+    
 
 });
 
