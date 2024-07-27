@@ -2,15 +2,18 @@
 
 namespace App\Services\User;
 
-use App\Http\Resources\SellerProductResource;
-use App\Models\Product;
+use App\Enum\OrderStatus;
 use App\Models\User;
+use App\Models\Order;
+use App\Models\Product;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\App;
-use App\Models\UserBusinessInformation;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Resources\OrderResource;
+use App\Models\UserBusinessInformation;
 use Illuminate\Support\Facades\Storage;
+use App\Http\Resources\SellerProductResource;
 
 class SellerService
 {
@@ -235,6 +238,88 @@ class SellerService
         ]);
 
         return $this->success(null, "Deleted successfully");
+    }
+
+    public function getAllOrders($id)
+    {
+        $orders = Order::where('seller_id', $id)->get();
+
+        $data = OrderResource::collection($orders);
+
+        return $this->success($data, "All Orders");
+
+    }
+
+    public function getConfirmedOrders($id)
+    {
+        $orders = Order::where('seller_id', $id)
+        ->where('status', OrderStatus::CONFIRMED)
+        ->get();
+
+        $data = OrderResource::collection($orders);
+
+        return $this->success($data, "Confirmed Orders");
+
+    }
+
+    public function getCancelledOrders($id)
+    {
+        $orders = Order::where('seller_id', $id)
+        ->where('status', OrderStatus::CANCELLED)
+        ->get();
+
+        $data = OrderResource::collection($orders);
+
+        return $this->success($data, "Cancelled Orders");
+
+    }
+
+    public function getDeliveredOrders($id)
+    {
+        $orders = Order::where('seller_id', $id)
+        ->where('status', OrderStatus::DELIVERED)
+        ->get();
+
+        $data = OrderResource::collection($orders);
+
+        return $this->success($data, "Delivered Orders");
+
+    }
+
+    public function getPendingOrders($id)
+    {
+        $orders = Order::where('seller_id', $id)
+        ->where('status', OrderStatus::PENDING)
+        ->get();
+
+        $data = OrderResource::collection($orders);
+
+        return $this->success($data, "Pending Orders");
+
+    }
+
+    public function getProcessingOrders($id)
+    {
+        $orders = Order::where('seller_id', $id)
+        ->where('status', OrderStatus::PROCESSING)
+        ->get();
+
+        $data = OrderResource::collection($orders);
+
+        return $this->success($data, "Processing Orders");
+
+    }
+
+    public function getShippedOrders($id)
+    {
+        $orders = Order::where('seller_id', $id)
+        ->where('status', OrderStatus::SHIPPED)
+        ->get();
+
+        $data = OrderResource::collection($orders);
+
+        return $this->success($data, "Shipped Orders");
+
     }
 
     private function getStorageFolder(string $email): string
