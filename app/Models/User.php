@@ -9,6 +9,7 @@ use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Notifications\ResetPasswordNotification;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
@@ -114,7 +115,17 @@ class User extends Authenticatable
 
     public static function getUserID($id)
     {
-        return self::with(['userbusinessinfo', 'products'])->find($id);
+        return self::with(['userbusinessinfo', 'products', 'userOrders', 'sellerOrders'])->find($id);
+    }
+
+    public function userOrders(): HasMany
+    {
+        return $this->hasMany(User::class, 'user_id');
+    }
+
+    public function sellerOrders(): HasMany
+    {
+        return $this->hasMany(User::class, 'seller_id');
     }
 
 }

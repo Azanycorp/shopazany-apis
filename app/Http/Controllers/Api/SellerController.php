@@ -46,6 +46,41 @@ class SellerController extends Controller
     {
         return $this->service->getSingleProduct($productId, $userId);
     }
+
+    public function getAllOrders($userId)
+    {
+        return $this->service->getAllOrders($userId);
+    }
+
+    public function getConfirmedOrders($userId)
+    {
+        return $this->service->getConfirmedOrders($userId);
+    }
+
+    public function getCancelledOrders($userId)
+    {
+        return $this->service->getCancelledOrders($userId);
+    }
+
+    public function getDeliveredOrders($userId)
+    {
+        return $this->service->getDeliveredOrders($userId);
+    }
+
+    public function getPendingOrders($userId)
+    {
+        return $this->service->getPendingOrders($userId);
+    }
+
+    public function getProcessingOrders($userId)
+    {
+        return $this->service->getProcessingOrders($userId);
+    }
+
+    public function getShippedOrders($userId)
+    {
+        return $this->service->getShippedOrders($userId);
+    }
 }
 
 
