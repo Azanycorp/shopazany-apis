@@ -2,6 +2,7 @@
 
 namespace App\Services\Auth;
 
+use App\Enum\UserStatus;
 use App\Http\Controllers\Controller;
 use App\Mail\LoginVerifyMail;
 use App\Mail\SignUpVerifyMail;
@@ -27,19 +28,31 @@ class AuthService extends Controller
             $user = User::where('email', $request->email)->first();
 
             if($user->email_verified_at === null && $user->verification_code !== null){
-                return $this->error(null, "Account not verified or inactive", 400);
+                return $this->error([
+                    'id' => $user->id,
+                    'status' => "pending"
+                ], "Account not verified or inactive", 400);
             }
 
-            if($user->status === "pending"){
-                return $this->error(null, "Account not verified or inactive", 400);
+            if($user->status === UserStatus::PENDING){
+                return $this->error([
+                    'id' => $user->id,
+                    'status' => UserStatus::PENDING
+                ], "Account not verified or inactive", 400);
             }
 
-            if($user->status === "suspended"){
-                return $this->error(null, "Account is suspended, contact support", 400);
+            if($user->status === UserStatus::SUSPENDED){
+                return $this->error([
+                    'id' => $user->id,
+                    'status' => UserStatus::SUSPENDED
+                ], "Account is suspended, contact support", 400);
             }
 
-            if($user->status === "blocked"){
-                return $this->error(null, "Account is blocked, contact support", 400);
+            if($user->status === UserStatus::BLOCKED){
+                return $this->error([
+                    'id' => $user->id,
+                    'status' => UserStatus::BLOCKED
+                ], "Account is blocked, contact support", 400);
             }
 
             if($user->login_code_expires_at > now()) {
