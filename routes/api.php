@@ -66,7 +66,7 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
     Route::prefix('seller')->controller(SellerController::class)->group(function () {
         // Business Information
         Route::post('/business/information', 'businessInfo');
-    
+
         // Product Routes
         Route::prefix('product')->group(function () {
             Route::post('/create', 'createProduct');
@@ -74,8 +74,10 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
             Route::delete('/delete/{product_id}', 'deleteProduct');
             Route::get('/{user_id}', 'getProduct');
             Route::get('/{product_id}/{user_id}', 'getSingleProduct');
+            Route::get('template', 'getTemplate');
+            Route::post('import', 'productImport');
         });
-    
+
         // Orders Routes
         Route::prefix('orders/{user_id}')->group(function () {
             Route::get('/', 'getAllOrders');
@@ -87,7 +89,7 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
             Route::get('/shipped', 'getShippedOrders');
         });
     });
-    
+
 
 });
 
