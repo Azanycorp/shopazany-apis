@@ -3,6 +3,7 @@
 namespace App\Services\User;
 
 use App\Enum\OrderStatus;
+use App\Exports\ProductExport;
 use App\Models\User;
 use App\Models\Order;
 use App\Models\Product;
@@ -349,6 +350,29 @@ class SellerService
         }
     }
 
+    public function export($userId, $type)
+    {
+        $user = User::getUserID($userId);
+
+        if(!$user){
+            return $this->error(null, "User not found", 404);
+        }
+
+        switch ($type) {
+            case 'product':
+                return $this->exportProduct();
+                break;
+
+            case 'order':
+                return "None yet";
+                break;
+            
+            default:
+                return "Type not found";
+                break;
+        }
+    }
+
     private function getStorageFolder(string $email): string
     {
         if (App::environment('production')) {
@@ -362,6 +386,13 @@ class SellerService
     {
         $path = $file->store($folder, 's3');
         return Storage::disk('s3')->url($path);
+    }
+
+    private function exportProduct()
+    {
+        $data = Excel::download(new ProductExport, 'products.xlsx');
+        
+        return $this->success($data, "data");
     }
 }
 

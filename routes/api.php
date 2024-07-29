@@ -76,6 +76,7 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
             Route::get('/{product_id}/{user_id}', 'getSingleProduct');
             Route::get('template', 'getTemplate');
             Route::post('import', 'productImport');
+            Route::get('export/{user_id}/{type}', 'export');
         });
 
         // Orders Routes
