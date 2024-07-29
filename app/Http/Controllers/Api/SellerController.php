@@ -92,6 +92,11 @@ class SellerController extends Controller
     {
         return $this->service->productImport($request);
     }
+
+    public function export($userId, $type)
+    {
+        return $this->service->export($userId, $type);
+    }
 }
 
 
