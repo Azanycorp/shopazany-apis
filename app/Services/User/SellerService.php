@@ -9,11 +9,11 @@ use App\Models\Product;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Auth;
 use App\Http\Resources\OrderResource;
-use App\Models\UserBusinessInformation;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Resources\SellerProductResource;
+use App\Imports\ProductImport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class SellerService
 {
@@ -320,6 +320,33 @@ class SellerService
 
         return $this->success($data, "Shipped Orders");
 
+    }
+
+    public function getTemplate()
+    {
+        if (App::environment('production')){
+
+            $data = "https://azany-uploads.s3.amazonaws.com/prod/product-template/product-template.xlsx";
+
+        } elseif (App::environment(['local', 'staging'])) {
+
+            $data = "https://azany-uploads.s3.amazonaws.com/stag/product-template/product-template.xlsx";
+        }
+
+        return $this->success($data, "Product template");
+    }
+
+    public function productImport($request)
+    {
+        $user = $request->user_id;
+
+        try {
+            Excel::import(new ProductImport($user, $request->file('file')));
+
+            return $this->success(null, "Imported successfully");
+        } catch (\Exception $e) {
+            return $this->error(null, $e->getMessage(), 500);
+        }
     }
 
     private function getStorageFolder(string $email): string
