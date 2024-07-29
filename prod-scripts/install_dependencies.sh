@@ -11,7 +11,7 @@ echo "Installing required packages..."
 # Install PHP and necessary extensions
 sudo dnf install php8.3
 yum clean metadata
-yum install -y php php-fpm php-mysqlnd php-pdo php-gd php-mbstring
+yum install -y php php-fpm php-mysqlnd php-pdo php-gd php-mbstring php-xml php-zip
 
 echo "Installing Composer..."
 # Install Composer
