@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\BusinessInfoRequest;
+use App\Http\Requests\ProductImportRequest;
 use App\Http\Requests\ProductRequest;
 use App\Services\User\SellerService;
 use Illuminate\Http\Request;
@@ -80,6 +81,16 @@ class SellerController extends Controller
     public function getShippedOrders($userId)
     {
         return $this->service->getShippedOrders($userId);
+    }
+
+    public function getTemplate()
+    {
+        return $this->service->getTemplate();
+    }
+
+    public function productImport(ProductImportRequest $request)
+    {
+        return $this->service->productImport($request);
     }
 }
 
