@@ -360,7 +360,7 @@ class SellerService
 
         switch ($type) {
             case 'product':
-                return $this->exportProduct();
+                return $this->exportProduct($userId);
                 break;
 
             case 'order':
@@ -388,9 +388,9 @@ class SellerService
         return Storage::disk('s3')->url($path);
     }
 
-    private function exportProduct()
+    private function exportProduct($userId)
     {
-        $data = Excel::download(new ProductExport, 'products.xlsx');
+        $data = Excel::download(new ProductExport($userId), 'products.xlsx');
         
         return $this->success($data, "data");
     }
