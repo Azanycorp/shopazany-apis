@@ -2,12 +2,8 @@
 
 use App\Http\Controllers\Api\ApiController;
 use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\BrandController;
 use App\Http\Controllers\Api\CategoryController;
-use App\Http\Controllers\Api\ColorController;
 use App\Http\Controllers\Api\SellerController;
-use App\Http\Controllers\Api\SizeController;
-use App\Http\Controllers\Api\UnitController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -76,6 +72,7 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
             Route::get('/{product_id}/{user_id}', 'getSingleProduct');
             Route::get('template', 'getTemplate');
             Route::post('import', 'productImport');
+            Route::get('export/{user_id}/{type}', 'export');
         });
 
         // Orders Routes
@@ -94,15 +91,5 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
 });
 
 
-Route::group(['middleware' => ['auth:api'], 'prefix' => 'admin'], function () {
-
-    Route::post('/add/slider', [ApiController::class, 'addSlider']);
-    Route::get('/slider', [ApiController::class, 'slider']);
-    Route::resource('brand', BrandController::class);
-    Route::resource('color', ColorController::class);
-    Route::resource('unit', UnitController::class);
-    Route::resource('size', SizeController::class);
-
-});
 
 

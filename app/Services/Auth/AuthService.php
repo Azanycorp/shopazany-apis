@@ -94,6 +94,7 @@ class AuthService extends Controller
         $token = $user->createToken('API Token of '. $user->email);
 
         return $this->success([
+            'user_id' => $user->id,
             'user_type' => $user->type,
             'has_signed_up' => true,
             'is_affiliate_member' => $user->is_affiliate_member === 1 ? true : false,
