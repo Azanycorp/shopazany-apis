@@ -196,7 +196,7 @@ class SellerService
 
     public function getProduct($userId)
     {
-        $user = User::getUserID($userId);
+        $user = User::where('id', $userId)->first();
 
         if(!$user){
             return $this->error(null, "User not found", 404);
@@ -209,7 +209,7 @@ class SellerService
 
     public function getSingleProduct($productId, $userId)
     {
-        $user = User::getUserID($userId);
+        $user = User::where('id', $userId)->first();
 
         if(!$user){
             return $this->error(null, "User not found", 404);
@@ -366,7 +366,7 @@ class SellerService
             case 'order':
                 return "None yet";
                 break;
-            
+
             default:
                 return "Type not found";
                 break;
@@ -391,7 +391,7 @@ class SellerService
     private function exportProduct($userId)
     {
         $data = Excel::download(new ProductExport($userId), 'products.xlsx');
-        
+
         return $this->success($data, "data");
     }
 }
