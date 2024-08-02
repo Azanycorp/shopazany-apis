@@ -29,6 +29,9 @@ php artisan migrate --force
 # activate cron jobs
 php artisan schedule:run
 
+# run seeder
+php artisan db:seed
+
 echo "Starting PHP-FPM service..."
 sudo systemctl start php-fpm
 
