@@ -115,7 +115,9 @@ class User extends Authenticatable
 
     public static function getUserID($id)
     {
-        return self::with(['userbusinessinfo', 'products', 'userOrders', 'sellerOrders'])->find($id);
+        return self::with(['userbusinessinfo', 'products', 'userOrders', 'sellerOrders'])
+        ->where('id', $id)
+        ->first();
     }
 
     public function userOrders(): HasMany
