@@ -31,6 +31,8 @@ class BrandController extends Controller
 
         try {
 
+            $path = null;
+            
             if($request->hasFile('image')) {
                 $file = $request->file('image');
                 $filename = time() . rand(10, 1000) . '.' . $file->extension();
