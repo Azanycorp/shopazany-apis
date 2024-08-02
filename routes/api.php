@@ -39,6 +39,11 @@ Route::get('/states/{country_id}', [ApiController::class, 'states']);
 Route::get('/banners', [ApiController::class, 'slider']);
 Route::get('/featured/categories', [ApiController::class, 'categories']);
 
+Route::prefix('user/category')->controller(CategoryController::class)->group(function () {
+    Route::get('/all', 'categories');
+    Route::get('/subcategory/{category_id}', 'getSubcategory');
+});
+
 Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
 
     Route::controller(UserController::class)->group(function () {
