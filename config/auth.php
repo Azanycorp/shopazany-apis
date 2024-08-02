@@ -48,9 +48,8 @@ return [
         ],
 
         'admin' => [
-            'driver' => 'session',
-            'provider' => 'admins',
-            'hash' => false,
+            'driver' => 'sanctum',
+            'provider' => 'admins'
         ],
     ],
 
