@@ -23,9 +23,15 @@ class SellerService
 
     public function businessInfo($request)
     {
-        $user = User::getUserID($request->user_id);
+        $currentUserId = Auth::id();
 
-        if(!$user){
+        if ($currentUserId != $request->user_id) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+
+        $user = User::find($request->user_id);
+
+        if (!$user) {
             return $this->error(null, "User not found", 404);
         }
 
@@ -62,11 +68,16 @@ class SellerService
 
     public function createProduct($request)
     {
-        $user = User::where('id', $request->user_id)
-                ->first();
+        $currentUserId = Auth::id();
 
-        if(!$user){
-            return $this->error(null, "Unauthorized", 401);
+        if ($currentUserId != $request->user_id) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+
+        $user = User::find($request->user_id);
+
+        if (!$user) {
+            return $this->error(null, "User not found", 404);
         }
 
         try {
@@ -127,11 +138,16 @@ class SellerService
 
     public function updateProduct($request, $id, $userId)
     {
-        $user = User::where('id', $userId)
-        ->first();
+        $currentUserId = Auth::id();
 
-        if(!$user){
-            return $this->error(null, "Unauthorized", 401);
+        if ($currentUserId != $userId) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+
+        $user = User::find($userId);
+
+        if (!$user) {
+            return $this->error(null, "User not found", 404);
         }
 
         $product = Product::find($id);
@@ -218,9 +234,15 @@ class SellerService
 
     public function getSingleProduct($productId, $userId)
     {
-        $user = User::where('id', $userId)->first();
+        $currentUserId = Auth::id();
 
-        if(!$user){
+        if ($currentUserId != $userId) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+
+        $user = User::find($userId);
+
+        if (!$user) {
             return $this->error(null, "User not found", 404);
         }
 
@@ -235,8 +257,14 @@ class SellerService
         return $this->success($data, "Product retrieved successfully");
     }
 
-    public function deleteProduct($id)
+    public function deleteProduct($id, $userId)
     {
+        $currentUserId = Auth::id();
+
+        if ($currentUserId != $userId) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+
         $product = Product::find($id);
 
         if(!$product){
@@ -252,6 +280,12 @@ class SellerService
 
     public function getAllOrders($id)
     {
+        $currentUserId = Auth::id();
+
+        if ($currentUserId != $id) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+
         $orders = Order::where('seller_id', $id)->get();
 
         $data = OrderResource::collection($orders);
@@ -262,6 +296,12 @@ class SellerService
 
     public function getConfirmedOrders($id)
     {
+        $currentUserId = Auth::id();
+
+        if ($currentUserId != $id) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+
         $orders = Order::where('seller_id', $id)
         ->where('status', OrderStatus::CONFIRMED)
         ->get();
@@ -274,6 +314,12 @@ class SellerService
 
     public function getCancelledOrders($id)
     {
+        $currentUserId = Auth::id();
+
+        if ($currentUserId != $id) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+
         $orders = Order::where('seller_id', $id)
         ->where('status', OrderStatus::CANCELLED)
         ->get();
@@ -286,6 +332,12 @@ class SellerService
 
     public function getDeliveredOrders($id)
     {
+        $currentUserId = Auth::id();
+
+        if ($currentUserId != $id) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+
         $orders = Order::where('seller_id', $id)
         ->where('status', OrderStatus::DELIVERED)
         ->get();
@@ -298,6 +350,12 @@ class SellerService
 
     public function getPendingOrders($id)
     {
+        $currentUserId = Auth::id();
+
+        if ($currentUserId != $id) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+
         $orders = Order::where('seller_id', $id)
         ->where('status', OrderStatus::PENDING)
         ->get();
@@ -310,6 +368,12 @@ class SellerService
 
     public function getProcessingOrders($id)
     {
+        $currentUserId = Auth::id();
+
+        if ($currentUserId != $id) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+
         $orders = Order::where('seller_id', $id)
         ->where('status', OrderStatus::PROCESSING)
         ->get();
@@ -322,6 +386,12 @@ class SellerService
 
     public function getShippedOrders($id)
     {
+        $currentUserId = Auth::id();
+
+        if ($currentUserId != $id) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+
         $orders = Order::where('seller_id', $id)
         ->where('status', OrderStatus::SHIPPED)
         ->get();
@@ -348,10 +418,16 @@ class SellerService
 
     public function productImport($request)
     {
-        $user = $request->user_id;
+        $currentUserId = Auth::id();
+
+        if ($currentUserId != $request->user_id) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+
+        $sellerId = $request->user_id;
 
         try {
-            Excel::import(new ProductImport($user, $request->file('file')));
+            Excel::import(new ProductImport($sellerId, $request->file('file')));
 
             return $this->success(null, "Imported successfully");
         } catch (\Exception $e) {
@@ -361,10 +437,10 @@ class SellerService
 
     public function export($userId, $type)
     {
-        $user = User::getUserID($userId);
+        $currentUserId = Auth::id();
 
-        if(!$user){
-            return $this->error(null, "User not found", 404);
+        if ($currentUserId != $userId) {
+            return $this->error(null, "Unauthorized action.", 401);
         }
 
         switch ($type) {
