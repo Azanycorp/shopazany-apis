@@ -59,9 +59,7 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
 
     Route::prefix('category')->controller(CategoryController::class)->group(function () {
         Route::post('/create', 'createCategory');
-        Route::get('/all', 'categories');
         Route::post('/subcategory/create', 'createSubCategory');
-        Route::get('/subcategory/{category_id}', 'getSubcategory');
     });
 
     Route::prefix('seller')->controller(SellerController::class)->group(function () {
