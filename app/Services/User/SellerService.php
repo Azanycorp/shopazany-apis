@@ -61,7 +61,8 @@ class SellerService
 
     public function createProduct($request)
     {
-        $user = User::getUserID($request->user_id);
+        $user = User::where('id', $request->user_id)
+                ->first();
 
         if(!$user){
             return $this->error(null, "User not found", 404);
@@ -125,7 +126,8 @@ class SellerService
 
     public function updateProduct($request, $id, $userId)
     {
-        $user = User::getUserID($userId);
+        $user = User::where('id', $userId)
+        ->first();
 
         if(!$user){
             return $this->error(null, "User not found", 404);
