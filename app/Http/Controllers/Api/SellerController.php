@@ -28,14 +28,14 @@ class SellerController extends Controller
         return $this->service->createProduct($request);
     }
 
-    public function updateProduct(ProductRequest $request, $id, $userId)
+    public function updateProduct(Request $request, $id, $userId)
     {
         return $this->service->updateProduct($request, $id, $userId);
     }
 
-    public function deleteProduct($id)
+    public function deleteProduct($id, $userId)
     {
-        return $this->service->deleteProduct($id);
+        return $this->service->deleteProduct($id, $userId);
     }
 
     public function getProduct($userId)
