@@ -255,6 +255,8 @@ class SellerService
             return $this->error(null, "User not found", 404);
         }
 
+        $user->load('products.productimages');
+
         $data = SellerProductResource::collection($user->products);
 
         return $this->success($data, "All products");
