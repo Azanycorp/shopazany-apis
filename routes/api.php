@@ -87,7 +87,6 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
         });
     });
 
-
 });
 
 

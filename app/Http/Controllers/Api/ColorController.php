@@ -16,9 +16,7 @@ class ColorController extends Controller
      */
     public function index()
     {
-        $colors = Color::where('status', 'active')->get(['name', 'code']);
-
-        return $this->success($colors, "All colors");
+        //
     }
 
     /**

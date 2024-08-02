@@ -16,6 +16,13 @@ Route::prefix('connect')->controller(AdminAuthController::class)->group(function
     Route::post('/verify/email', 'verify');
 });
 
+Route::controller(ApiController::class)->group(function () {
+    Route::get('brands', 'brands');
+    Route::get('colors', 'colors');
+    Route::get('units', 'units');
+    Route::get('sizes', 'sizes');
+});
+
 Route::group(['middleware' => ['auth:admin']], function () {
 
     Route::post('/add/slider', [ApiController::class, 'addSlider']);
@@ -24,7 +31,6 @@ Route::group(['middleware' => ['auth:admin']], function () {
     Route::resource('color', ColorController::class);
     Route::resource('unit', UnitController::class);
     Route::resource('size', SizeController::class);
-
 });
 
 

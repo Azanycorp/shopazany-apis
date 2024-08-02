@@ -3,10 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Category;
 use App\Services\Admin\AdminService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 
 class ApiController extends Controller
 {
@@ -44,5 +42,25 @@ class ApiController extends Controller
     public function states($id)
     {
         return $this->service->states($id);
+    }
+
+    public function brands()
+    {
+        return $this->service->brands();
+    }
+
+    public function colors()
+    {
+        return $this->service->colors();
+    }
+
+    public function units()
+    {
+        return $this->service->units();
+    }
+
+    public function sizes()
+    {
+        return $this->service->sizes();
     }
 }
