@@ -95,22 +95,25 @@ class SellerService
             }
 
             $folder = null;
+            $frontImage = null;
 
             $parts = explode('@', $user->email);
             $name = $parts[0];
 
             if(App::environment('production')){
                 $folder = "/prod/product/{$name}";
+                $frontImage = "/prod/product/{$name}/front_image";
             } elseif(App::environment(['staging', 'local'])) {
                 $folder = "/stag/product/{$name}";
+                $frontImage = "/stag/product/{$name}/front_image";
             }
 
-            if ($request->file('image')) {
-                $path = $request->file('image')->store($folder, 's3');
+            if ($request->hasFile('front_image')) {
+                $path = $request->file('front_image')->store($frontImage, 's3');
                 $url = Storage::disk('s3')->url($path);
             }
 
-            $user->products()->create([
+            $product = $user->products()->create([
                 'name' => $request->name,
                 'slug' => $slug,
                 'description' => $request->description,
@@ -129,6 +132,17 @@ class SellerService
                 'image' => $url,
                 'added_by' => $user->type
             ]);
+
+            if ($request->hasFile('images')) {
+                foreach ($request->file('images') as $image) {
+                    $path = $image->store($folder, 's3');
+                    $url = Storage::disk('s3')->url($path);
+
+                    $product->productimages()->create([
+                        'image' => $url,
+                    ]);
+                }
+            }
 
             return $this->success(null, "Added successfully");
         } catch (\Throwable $th) {
@@ -181,8 +195,8 @@ class SellerService
                 $folder = "/stag/product/{$name}";
             }
 
-            if ($request->file('image')) {
-                $path = $request->file('image')->store($folder, 's3');
+            if ($request->hasFile('front_image')) {
+                $path = $request->file('front_image')->store($folder, 's3');
                 $url = Storage::disk('s3')->url($path);
             } else {
                 $url = $product->image;
@@ -207,6 +221,20 @@ class SellerService
                 'image' => $url
             ]);
 
+
+            if ($request->hasFile('images')) {
+                $product->productimages()->delete();
+
+                foreach ($request->file('images') as $image) {
+                    $path = $image->store($folder, 's3');
+                    $url = Storage::disk('s3')->url($path);
+
+                    $product->productimages()->create([
+                        'image' => $url,
+                    ]);
+                }
+            }
+
             return $this->success(null, "Updated successfully");
         } catch (\Throwable $th) {
             throw $th;
@@ -226,6 +254,8 @@ class SellerService
         if (!$user) {
             return $this->error(null, "User not found", 404);
         }
+
+        $user->load('products.productimages');
 
         $data = SellerProductResource::collection($user->products);
 

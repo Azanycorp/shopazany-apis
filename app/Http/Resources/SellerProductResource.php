@@ -14,6 +14,8 @@ class SellerProductResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $this->load('productimages');
+
         return [
             'id' => (int)$this->id,
             'name' => (string)$this->name,
@@ -31,7 +33,14 @@ class SellerProductResource extends JsonResource
             'price' => (string)$this->price,
             'current_stock_quantity' => (string)$this->current_stock_quantity,
             'minimum_order_quantity' => (string)$this->minimum_order_quantity,
-            'image' => (string)$this->image,
+            'front_image' => (string)$this->image,
+            'images' => $this->whenLoaded('productimages', function () {
+                return $this->productimages->map(function ($image) {
+                    return [
+                        'image' => $image->image
+                    ];
+                })->toArray();
+            }),
             'status' => (string)$this->status
         ];
     }

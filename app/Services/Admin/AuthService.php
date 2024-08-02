@@ -16,7 +16,7 @@ class AuthService
     {
         $request->validated();
 
-        if (Auth::guard('admins')->attempt($request->only(['email', 'password']))) {
+        if (Auth::guard('admin')->attempt($request->only(['email', 'password']))) {
             $user = Admin::where('email', $request->email)->first();
 
             if($user->status === LoginStatus::INACTIVE){
