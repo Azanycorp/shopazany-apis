@@ -67,7 +67,7 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
         Route::prefix('product')->group(function () {
             Route::post('/create', 'createProduct');
             Route::post('/edit/{product_id}/{user_id}', 'updateProduct');
-            Route::delete('/delete/{product_id}', 'deleteProduct');
+            Route::delete('/delete/{product_id}/{user_id}', 'deleteProduct');
             Route::get('/{user_id}', 'getProduct');
             Route::get('/{product_id}/{user_id}', 'getSingleProduct');
             Route::get('template', 'getTemplate');
