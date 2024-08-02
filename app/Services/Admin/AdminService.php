@@ -6,10 +6,14 @@ use App\Http\Resources\CategoryResource;
 use App\Http\Resources\CountryResource;
 use App\Http\Resources\SliderResource;
 use App\Http\Resources\StateResource;
+use App\Models\Brand;
 use App\Models\Category;
+use App\Models\Color;
 use App\Models\Country;
+use App\Models\Size;
 use App\Models\SliderImage;
 use App\Models\State;
+use App\Models\Unit;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
@@ -87,6 +91,34 @@ class AdminService
         $data = StateResource::collection($states);
 
         return $this->success($data, "States");
+    }
+
+    public function brands()
+    {
+        $brands = Brand::where('status', 'active')->get(['id', 'name', 'slug', 'image']);
+
+        return $this->success($brands, "All brands");
+    }
+
+    public function colors()
+    {
+        $colors = Color::where('status', 'active')->get(['id', 'name', 'code']);
+
+        return $this->success($colors, "All colors");
+    }
+
+    public function units()
+    {
+        $units = Unit::where('status', 'active')->get(['id', 'name']);
+
+        return $this->success($units, "All units");
+    }
+
+    public function sizes()
+    {
+        $sizes = Size::where('status', 'active')->get(['id', 'name']);
+
+        return $this->success($sizes, "All sizes");
     }
 }
 

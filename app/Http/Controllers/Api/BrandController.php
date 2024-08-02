@@ -17,9 +17,7 @@ class BrandController extends Controller
      */
     public function index()
     {
-        $brands = Brand::where('status', 'active')->get(['name', 'slug', 'image']);
-
-        return $this->success($brands, "All brands");
+        //
     }
 
     /**
