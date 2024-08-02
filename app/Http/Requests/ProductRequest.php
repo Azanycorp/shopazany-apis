@@ -30,7 +30,9 @@ class ProductRequest extends FormRequest
             'product_price' => ['required', 'integer'],
             'current_stock_quantity' => ['required', 'integer'],
             'minimum_order_quantity' => ['required', 'integer'],
-            'image' => ['required', 'image', 'mimes:png,jpg,jpeg']
+            'front_image' => ['required', 'image', 'mimes:png,jpg,jpeg'],
+            'images' => ['required', 'array'],
+            'images.*' => ['required', 'image'],
         ];
     }
 }
