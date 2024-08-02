@@ -14,6 +14,7 @@ use App\Http\Resources\OrderResource;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Resources\SellerProductResource;
 use App\Imports\ProductImport;
+use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
 
 class SellerService
@@ -65,7 +66,7 @@ class SellerService
                 ->first();
 
         if(!$user){
-            return $this->error(null, "User not found", 404);
+            return $this->error(null, "Unauthorized", 401);
         }
 
         try {
@@ -130,7 +131,7 @@ class SellerService
         ->first();
 
         if(!$user){
-            return $this->error(null, "User not found", 404);
+            return $this->error(null, "Unauthorized", 401);
         }
 
         $product = Product::find($id);
@@ -198,9 +199,15 @@ class SellerService
 
     public function getProduct($userId)
     {
-        $user = User::where('id', $userId)->first();
+        $currentUserId = Auth::id();
 
-        if(!$user){
+        if ($currentUserId != $userId) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+
+        $user = User::find($userId);
+
+        if (!$user) {
             return $this->error(null, "User not found", 404);
         }
 
