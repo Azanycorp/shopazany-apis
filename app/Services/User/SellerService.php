@@ -130,7 +130,8 @@ class SellerService
                 'current_stock_quantity' => $request->current_stock_quantity,
                 'minimum_order_quantity' => $request->minimum_order_quantity,
                 'image' => $url,
-                'added_by' => $user->type
+                'added_by' => $user->type,
+                'country_id' => $user->country ?? 160,
             ]);
 
             if ($request->hasFile('images')) {
@@ -218,7 +219,8 @@ class SellerService
                 'price' => $price,
                 'current_stock_quantity' => $request->current_stock_quantity,
                 'minimum_order_quantity' => $request->minimum_order_quantity,
-                'image' => $url
+                'image' => $url,
+                'country_id' => $user->country ?? 160,
             ]);
 
 
