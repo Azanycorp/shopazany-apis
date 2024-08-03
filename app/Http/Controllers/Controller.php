@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\UserLogAction;
 use App\Models\User;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Facades\Auth;
@@ -35,5 +36,10 @@ abstract class Controller
     protected function userAuth()
     {
         return Auth::user();
+    }
+
+    public function logUserAction($request, $action, $description, $response, $user = null)
+    {
+        (new UserLogAction($request, $action, $description, $response, $user))->run();
     }
 }
