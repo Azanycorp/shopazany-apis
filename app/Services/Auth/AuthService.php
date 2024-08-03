@@ -2,6 +2,8 @@
 
 namespace App\Services\Auth;
 
+use App\Actions\UserLogAction;
+use App\Enum\UserLog;
 use App\Enum\UserStatus;
 use App\Http\Controllers\Controller;
 use App\Mail\LoginVerifyMail;
@@ -28,31 +30,55 @@ class AuthService extends Controller
             $user = User::where('email', $request->email)->first();
 
             if($user->email_verified_at === null && $user->verification_code !== null){
-                return $this->error([
+                $description = "Account not verified, user {$request->email}";
+                $response = $this->error([
                     'id' => $user->id,
                     'status' => "pending"
                 ], "Account not verified or inactive", 400);
+                $action = UserLog::LOGIN_ATTEMPT;
+
+                $this->logUserAction($request, $action, $description, $response, $user);
+
+                return $response;
             }
 
             if($user->status === UserStatus::PENDING){
-                return $this->error([
+                $description = "Account is pending, user {$request->email}";
+                $response = $this->error([
                     'id' => $user->id,
                     'status' => UserStatus::PENDING
                 ], "Account not verified or inactive", 400);
+                $action = UserLog::LOGIN_ATTEMPT;
+
+                $this->logUserAction($request, $action, $description, $response, $user);
+
+                return $response;
             }
 
             if($user->status === UserStatus::SUSPENDED){
-                return $this->error([
+                $description = "Account is suspended, user {$request->email}";
+                $response = $this->error([
                     'id' => $user->id,
                     'status' => UserStatus::SUSPENDED
                 ], "Account is suspended, contact support", 400);
+                $action = UserLog::LOGIN_ATTEMPT;
+
+                $this->logUserAction($request, $action, $description, $response, $user);
+
+                return $response;
             }
 
             if($user->status === UserStatus::BLOCKED){
-                return $this->error([
+
+                $description = "Account is blocked, user {$request->email}";
+                $response = $this->error([
                     'id' => $user->id,
                     'status' => UserStatus::BLOCKED
                 ], "Account is blocked, contact support", 400);
+                $action = UserLog::LOGIN_ATTEMPT;
+
+                $this->logUserAction($request, $action, $description, $response, $user);
+                return $response;
             }
 
             if($user->login_code_expires_at > now()) {
@@ -69,10 +95,21 @@ class AuthService extends Controller
 
             Mail::to($request->email)->send(new LoginVerifyMail($user));
 
-            return $this->success(null, "Code has been sent to your email address.");
+            $description = "Attempt to login by {$request->email}";
+            $response = $this->success(null, "Code has been sent to your email address.");
+            $action = UserLog::LOGIN_ATTEMPT;
+
+            $this->logUserAction($request, $action, $description, $response, $user);
+
+            return $response;
         }
 
-        return $this->error(null, 'Credentials do not match', 401);
+        $description = "Login OTP sent to {$request->email}";
+        $action = UserLog::LOGIN_ATTEMPT;
+        $response = $this->error(null, 'Credentials do not match', 401);
+
+        $this->logUserAction($request, $action, $description, $response);
+        return $response;
     }
 
     public function loginVerify($request)
@@ -93,14 +130,20 @@ class AuthService extends Controller
 
         $token = $user->createToken('API Token of '. $user->email);
 
-        return $this->success([
+        $description = "User with email {$request->email} logged in";
+        $action = UserLog::LOGGED_IN;
+        $response = $this->success([
             'user_id' => $user->id,
             'user_type' => $user->type,
             'has_signed_up' => true,
             'is_affiliate_member' => $user->is_affiliate_member === 1 ? true : false,
             'token' => $token->plainTextToken,
-            'expires_at' => $token->accessToken->expires_at
+            'expires_at' => $token->accessToken->expires_at,
         ]);
+
+        $this->logUserAction($request, $action, $description, $response, $user);
+
+        return $response;
     }
 
     public function signup($request)
@@ -123,9 +166,21 @@ class AuthService extends Controller
 
             Mail::to($request->email)->send(new SignUpVerifyMail($user));
 
-            return $this->success(null, "Created successfully");
+            $description = "User with email: {$request->email} signed up";
+            $response = $this->success(null, "Created successfully");
+            $action = UserLog::CREATED;
+
+            $this->logUserAction($request, $action, $description, $response, $user);
+
+            return $response;
         } catch (\Exception $e) {
-            return $this->error(null, $e->getMessage(), 500);
+            $description = "Sign up failed: {$request->email}";
+            $response = $this->error(null, $e->getMessage(), 500);
+            $action = UserLog::CREATED;
+
+            $this->logUserAction($request, $action, $description, $response, $user);
+
+            return $response;
         }
     }
 
@@ -141,9 +196,20 @@ class AuthService extends Controller
 
             Mail::to($request->email)->send(new SignUpVerifyMail($user));
 
-            return $this->success(null, "Code resent successfully");
+            $description = "User with email address {$request->email} has requested a code to be resent.";
+            $action = UserLog::CODE_RESENT;
+            $response = $this->success(null, "Code resent successfully");
+
+            $this->logUserAction($request, $action, $description, $response, $user);
+
+            return $response;
         } catch (\Exception $e) {
-            return $this->error(null, $e->getMessage(), 500);
+            $description = "An error occured during the request email: {$request->email}";
+            $action = UserLog::CODE_RESENT;
+            $response = $this->error(null, $e->getMessage(), 500);
+
+            $this->logUserAction($request, $action, $description, $response, $user);
+            return $response;
         }
     }
 
@@ -171,9 +237,21 @@ class AuthService extends Controller
 
             Mail::to($request->email)->send(new SignUpVerifyMail($user));
 
+            $description = "Seller with email address {$request->email} just signed up";
+            $action = UserLog::CREATED;
+            $response = $this->success(null, "Created successfully");
+
+            $this->logUserAction($request, $action, $description, $response, $user);
+
             return $this->success(null, "Created successfully");
         } catch (\Exception $e) {
-            return $this->error(null, $e->getMessage(), 500);
+            $description = "Sign up error for user with email {$request->email}";
+            $action = UserLog::CREATED;
+            $response = $this->error(null, $e->getMessage(), 500);
+
+            $this->logUserAction($request, $action, $description, $response, $user);
+
+            return $response;
         }
     }
 
@@ -194,7 +272,13 @@ class AuthService extends Controller
             'status' => 'active'
         ]);
 
-        return $this->success(null, "Verified successfully");
+        $description = "User with email address {$request->email} verified OTP";
+        $action = UserLog::CREATED;
+        $response = $this->success(null, "Verified successfully");
+
+        $this->logUserAction($request, $action, $description, $response, $user);
+
+        return $response;
     }
 
     public function forgot($request)
@@ -208,6 +292,12 @@ class AuthService extends Controller
         $status = Password::broker('users')->sendResetLink(
             $request->only('email')
         );
+
+        $description = "User with email address {$request->email} requested for password change";
+        $action = UserLog::PASSWORD_FORGOT;
+        $response = $this->success(null, "Request successfully");
+
+        $this->logUserAction($request, $action, $description, $response, $user);
 
         return $status === Password::RESET_LINK_SENT
             ? response()->json(['message' => __($status)])
@@ -231,6 +321,12 @@ class AuthService extends Controller
             }
         );
 
+        $description = "User with email address {$request->email} changed password successfully";
+        $action = UserLog::PASSWORD_RESET;
+        $response = $this->success(null, "Reset successfully");
+
+        $this->logUserAction($request, $action, $description, $response, $user);
+
         return $status == Password::PASSWORD_RESET
             ? response()->json(['message' => __($status)])
             : response()->json(['message' => __($status)], 500);
@@ -241,9 +337,15 @@ class AuthService extends Controller
         $user = request()->user();
         $user->tokens()->where('id', $user->currentAccessToken()->id)->delete();
 
-        return $this->success([
+        $description = "User with email address {$user->email} logged out";
+        $action = UserLog::LOGOUT;
+        $response = $this->success([
             'message' => 'You have successfully logged out and your token has been deleted'
         ]);
+
+        $this->logUserAction(request(), $action, $description, $response, $user);
+
+        return $response;
     }
 
     public function affiliateSignup($request)
@@ -260,7 +362,12 @@ class AuthService extends Controller
                 $referrer = User::where('referrer_code', $request->referrer_code)->first();
 
                 if ($referrer && (!$referrer->email_verified_at || $referrer->is_verified != 1)) {
-                    return $this->error(null, 'User with referral code has not been verified', 400);
+                    $description = "User with referral code and email {$referrer->email} has not been verified";
+                    $action = UserLog::CREATED;
+                    $response = $this->error(null, 'User with referral code has not been verified', 400);
+
+                    $this->logUserAction($request, $action, $description, $response, $user);
+                    return $response;
                 }
             }
 
@@ -277,10 +384,20 @@ class AuthService extends Controller
                 }
             });
 
-            return $this->success(null, "Created successfully");
+            $description = "User with email {$referrer->email} signed up";
+            $action = UserLog::CREATED;
+            $response = $this->success(null, "Created successfully");
+
+            $this->logUserAction($request, $action, $description, $response, $user);
+
+            return $response;
         } catch (\Exception $e) {
-            Log::error('User creation failed: ' . $e->getMessage());
-            return $this->error(null, $e->getMessage(), 500);
+            $description = "User creation failed";
+            $action = UserLog::CREATED;
+            $response = $this->error(null, $e->getMessage(), 500);
+
+            $this->logUserAction($request, $action, $description, $response, $user);
+            return $response;
         }
     }
 
