@@ -29,9 +29,7 @@ class AuthService
             $token = $user->createToken('API Token of '. $user->email);
 
             return $this->success([
-                'user_type' => $user->type,
-                'has_signed_up' => true,
-                'is_affiliate_member' => $user->is_affiliate_member === 1 ? true : false,
+                'id' => $user->id,
                 'token' => $token->plainTextToken,
                 'expires_at' => $token->accessToken->expires_at
             ]);

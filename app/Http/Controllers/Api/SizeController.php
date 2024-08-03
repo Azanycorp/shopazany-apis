@@ -16,9 +16,7 @@ class SizeController extends Controller
      */
     public function index()
     {
-        $units = Size::where('status', 'active')->get('name');
-
-        return $this->success($units, "All units");
+        //
     }
 
     /**

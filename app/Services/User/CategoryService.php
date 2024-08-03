@@ -69,6 +69,7 @@ class CategoryService
         try {
 
             $folder = null;
+            $url = null;
 
             if(App::environment('production')){
                 $folder = '/prod/category/subcategory';
@@ -76,7 +77,7 @@ class CategoryService
                 $folder = '/stag/category/subcategory';
             }
 
-            if ($request->file('image')) {
+            if ($request->hasFile('image')) {
                 $path = $request->file('image')->store($folder, 's3');
                 $url = Storage::disk('s3')->url($path);
             }

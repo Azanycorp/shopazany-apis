@@ -17,9 +17,7 @@ class BrandController extends Controller
      */
     public function index()
     {
-        $brands = Brand::where('status', 'active')->get(['name', 'slug', 'image']);
-
-        return $this->success($brands, "All brands");
+        //
     }
 
     /**
@@ -33,6 +31,8 @@ class BrandController extends Controller
 
         try {
 
+            $path = null;
+            
             if($request->hasFile('image')) {
                 $file = $request->file('image');
                 $filename = time() . rand(10, 1000) . '.' . $file->extension();

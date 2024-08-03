@@ -16,9 +16,7 @@ class UnitController extends Controller
      */
     public function index()
     {
-        $units = Unit::where('status', 'active')->get('name');
-
-        return $this->success($units, "All units");
+        //
     }
 
     /**
