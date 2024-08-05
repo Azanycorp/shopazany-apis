@@ -384,7 +384,7 @@ class AuthService extends Controller
                 }
             });
 
-            $description = "User with email {$referrer->email} signed up";
+            $description = "User with email {$request->email} signed up";
             $action = UserLog::CREATED;
             $response = $this->success(null, "Created successfully");
 
