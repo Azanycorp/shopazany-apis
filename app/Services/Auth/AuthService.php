@@ -384,13 +384,7 @@ class AuthService extends Controller
                 }
             });
 
-            $description = "User with email {$request->email} signed up";
-            $action = UserLog::CREATED;
-            $response = $this->success(null, "Created successfully");
-
-            $this->logUserAction($request, $action, $description, $response, $user);
-
-            return $response;
+            return $this->success(null, "Created successfully");
         } catch (\Exception $e) {
             $description = "User creation failed";
             $action = UserLog::CREATED;
@@ -468,6 +462,12 @@ class AuthService extends Controller
                 'reward_point' => null
             ]);
 
+            $description = "User with email {$request->email} signed up as an affiliate";
+            $action = UserLog::CREATED;
+            $response = $this->success(null, "Created successfully");
+
+            $this->logUserAction($request, $action, $description, $response, $user);
+
             if (is_null($emailVerified)) {
                 $user->update(['email_verified_at' => null, 'verification_code' => $code,]);
                 try {
@@ -502,6 +502,12 @@ class AuthService extends Controller
             } catch (\Exception $e) {
                 return $this->error(null, 'Unable to send verification email. Please try again later', 500);
             }
+
+            $description = "User with email {$request->email} signed up as an affiliate";
+            $action = UserLog::CREATED;
+            $response = $this->success(null, "Created successfully");
+
+            $this->logUserAction($request, $action, $description, $response, $user);
 
             return $user;
         }
