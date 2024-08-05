@@ -6,9 +6,6 @@ sudo su
 # update code
 cd /var/www/AZANY-BE-2024
 
-echo "Updating Git remote URL to use PAT..."
-git remote set-url origin https://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@github.com/Azanycorp/shopazany-apis.git
-
 echo "Cleaning up untracked files..."
 git clean -fd
 
