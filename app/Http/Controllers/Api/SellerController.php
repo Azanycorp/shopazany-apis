@@ -97,6 +97,26 @@ class SellerController extends Controller
     {
         return $this->service->export($userId, $type);
     }
+
+    public function updateProfile(Request $request, $userId)
+    {
+        return $this->service->updateProfile($request, $userId);
+    }
+
+    public function dashboardAnalytics($userId)
+    {
+        return $this->service->dashboardAnalytics($userId);
+    }
+
+    public function getOrderSummary($userId)
+    {
+        return $this->service->getOrderSummary($userId);
+    }
+
+    public function topSelling($userId)
+    {
+        return $this->service->topSelling($userId);
+    }
 }
 
 

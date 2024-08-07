@@ -44,6 +44,8 @@ Route::prefix('user/category')->controller(CategoryController::class)->group(fun
     Route::get('/subcategory/{category_id}', 'getSubcategory');
 });
 
+Route::get('/user/seller/template', [SellerController::class, 'getTemplate']);
+
 Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
 
     Route::controller(UserController::class)->group(function () {
@@ -65,15 +67,18 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
     Route::prefix('seller')->controller(SellerController::class)->group(function () {
         // Business Information
         Route::post('/business/information', 'businessInfo');
+        Route::post('/update-profile/{user_id}', 'updateProfile');
+        Route::get('/dashboard/analytic/{user_id}', 'dashboardAnalytics');
 
         // Product Routes
         Route::prefix('product')->group(function () {
             Route::post('/create', 'createProduct');
             Route::post('/edit/{product_id}/{user_id}', 'updateProduct');
             Route::delete('/delete/{product_id}/{user_id}', 'deleteProduct');
+            Route::get('/top-selling/{user_id}', 'topSelling');
             Route::get('/{user_id}', 'getProduct');
             Route::get('/{product_id}/{user_id}', 'getSingleProduct');
-            Route::get('template', 'getTemplate');
+
             Route::post('import', 'productImport');
             Route::get('export/{user_id}/{type}', 'export');
         });
@@ -87,6 +92,7 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
             Route::get('/pending', 'getPendingOrders');
             Route::get('/processing', 'getProcessingOrders');
             Route::get('/shipped', 'getShippedOrders');
+            Route::get('/summary', 'getOrderSummary');
         });
     });
 
