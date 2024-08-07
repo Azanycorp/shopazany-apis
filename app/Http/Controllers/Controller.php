@@ -3,10 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Actions\UserLogAction;
+use App\Exports\ProductExport;
 use App\Models\User;
 use App\Trait\HttpResponse;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Maatwebsite\Excel\Facades\Excel;
 
 abstract class Controller
 {
@@ -41,5 +45,27 @@ abstract class Controller
     public function logUserAction($request, $action, $description, $response, $user = null)
     {
         (new UserLogAction($request, $action, $description, $response, $user))->run();
+    }
+
+    protected function getStorageFolder(string $email): string
+    {
+        if (App::environment('production')) {
+            return "/prod/document/{$email}";
+        }
+
+        return "/stag/document/{$email}";
+    }
+
+    protected function storeFile($file, string $folder): string
+    {
+        $path = $file->store($folder, 's3');
+        return Storage::disk('s3')->url($path);
+    }
+
+    protected function exportProduct($userId)
+    {
+        $data = Excel::download(new ProductExport($userId), 'products.xlsx');
+
+        return $this->success($data, "data");
     }
 }
