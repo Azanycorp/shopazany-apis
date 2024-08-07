@@ -3,7 +3,7 @@
 namespace App\Services\User;
 
 use App\Enum\OrderStatus;
-use App\Exports\ProductExport;
+use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Order;
 use App\Models\Product;
@@ -15,9 +15,10 @@ use Illuminate\Support\Facades\Storage;
 use App\Http\Resources\SellerProductResource;
 use App\Imports\ProductImport;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 
-class SellerService
+class SellerService extends Controller
 {
     use HttpResponse;
 
@@ -186,22 +187,20 @@ class SellerService
             }
 
             $folder = null;
+            $frontImage = null;
 
             $parts = explode('@', $user->email);
             $name = $parts[0];
 
             if(App::environment('production')){
                 $folder = "/prod/product/{$name}";
+                $frontImage = "/prod/product/{$name}/front_image";
             } elseif(App::environment(['staging', 'local'])) {
                 $folder = "/stag/product/{$name}";
+                $frontImage = "/stag/product/{$name}/front_image";
             }
 
-            if ($request->hasFile('front_image')) {
-                $path = $request->file('front_image')->store($folder, 's3');
-                $url = Storage::disk('s3')->url($path);
-            } else {
-                $url = $product->image;
-            }
+            $image = uploadSingleProductImage($request, 'front_image', $frontImage, $product);
 
             $product->update([
                 'name' => $request->name,
@@ -219,23 +218,11 @@ class SellerService
                 'price' => $price,
                 'current_stock_quantity' => $request->current_stock_quantity,
                 'minimum_order_quantity' => $request->minimum_order_quantity,
-                'image' => $url,
+                'image' => $image,
                 'country_id' => $user->country ?? 160,
             ]);
 
-
-            if ($request->hasFile('images')) {
-                $product->productimages()->delete();
-
-                foreach ($request->file('images') as $image) {
-                    $path = $image->store($folder, 's3');
-                    $url = Storage::disk('s3')->url($path);
-
-                    $product->productimages()->create([
-                        'image' => $url,
-                    ]);
-                }
-            }
+            uploadMultipleProductImage($request, 'images', $folder, $product);
 
             return $this->success(null, "Updated successfully");
         } catch (\Throwable $th) {
@@ -436,14 +423,7 @@ class SellerService
 
     public function getTemplate()
     {
-        if (App::environment('production')){
-
-            $data = "https://azany-uploads.s3.amazonaws.com/prod/product-template/product-template.xlsx";
-
-        } elseif (App::environment(['local', 'staging'])) {
-
-            $data = "https://azany-uploads.s3.amazonaws.com/stag/product-template/product-template.xlsx";
-        }
+        $data = getImportTemplate();
 
         return $this->success($data, "Product template");
     }
@@ -490,26 +470,134 @@ class SellerService
         }
     }
 
-    private function getStorageFolder(string $email): string
+    public function updateProfile($request, $userId)
     {
-        if (App::environment('production')) {
-            return "/prod/document/{$email}";
+        $currentUserId = Auth::id();
+
+        if ($currentUserId != $userId) {
+            return $this->error(null, "Unauthorized action.", 401);
         }
 
-        return "/stag/document/{$email}";
+        $user = User::find($userId);
+
+        if (!$user) {
+            return $this->error(null, "User not found", 404);
+        }
+
+        $image = uploadUserImage($request, 'image', $user);
+
+        $user->update([
+            'first_name' => $request->first_name,
+            'last_name' => $request->last_name,
+            'middlename' => $request->middlename,
+            'address' => $request->address,
+            'phone' => $request->phone_number,
+            'country' => $request->country_id,
+            'state_id' => $request->state_id,
+            'date_of_birth' => $request->date_of_birth,
+            'image' => $image,
+        ]);
+
+        return $this->success([
+            'user_id' => $user->id
+        ], "Updated successfully");
+
     }
 
-    private function storeFile($file, string $folder): string
+    public function dashboardAnalytics($userId)
     {
-        $path = $file->store($folder, 's3');
-        return Storage::disk('s3')->url($path);
+        $currentUserId = Auth::id();
+
+        if ($currentUserId != $userId) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+
+        $totalProducts = Product::where('user_id', $userId)->count();
+
+        $totalOrders = Order::where('seller_id', $userId)->count();
+
+        $orderCounts = Order::where('seller_id', $userId)
+            ->selectRaw('
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as pending_count,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as confirmed_count,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as processing_count,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as shipped_count,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as delivered_count,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as cancelled_count,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as completed_sales
+            ', [
+                OrderStatus::PENDING,
+                OrderStatus::CONFIRMED,
+                OrderStatus::PROCESSING,
+                OrderStatus::SHIPPED,
+                OrderStatus::DELIVERED,
+                OrderStatus::CANCELLED,
+                OrderStatus::DELIVERED
+            ])
+            ->first();
+
+        return $this->success([
+            'total_products' => $totalProducts,
+            'total_orders' => $totalOrders,
+            'completed_sales' => $orderCounts->completed_sales ?? 0,
+            'pending_count' => $orderCounts->pending_count ?? 0,
+            'confirmed_count' => $orderCounts->confirmed_count ?? 0,
+            'processing_count' => $orderCounts->processing_count ?? 0,
+            'shipped_count' => $orderCounts->shipped_count ?? 0,
+            'delivered_count' => $orderCounts->delivered_count ?? 0,
+            'cancelled_count' => $orderCounts->cancelled_count ?? 0,
+        ], "Analytics");
     }
 
-    private function exportProduct($userId)
+    public function getOrderSummary($userId)
     {
-        $data = Excel::download(new ProductExport($userId), 'products.xlsx');
+        $currentUserId = Auth::id();
 
-        return $this->success($data, "data");
+        if ($currentUserId != $userId) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+
+        $orders = Order::where('seller_id', $userId)
+        ->orderBy('created_at', 'desc')
+        ->take(8)
+        ->get();
+
+        $data = OrderResource::collection($orders);
+
+        return $this->success($data, "Order Summary");
     }
+
+    public function topSelling($userId)
+    {
+        $currentUserId = Auth::id();
+
+        if ($currentUserId != $userId) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+
+        $topSellingProducts = DB::table('orders')
+        ->select('product_id', DB::raw('SUM(product_quantity) as total_quantity'))
+        ->groupBy('product_id')
+        ->orderBy('total_quantity', 'desc')
+        ->limit(8)
+        ->get();
+
+        $productIds = $topSellingProducts->pluck('product_id');
+        $products = Product::whereIn('id', $productIds)->get();
+        
+        $topSellingProductsWithDetails = $topSellingProducts->map(function ($item) use ($products) {
+            $product = $products->firstWhere('id', $item->product_id);
+            return [
+                'id' => $product->id,
+                'name' => $product->name,
+                'slug' => $product->slug,
+                'front_image' => $product->front_image,
+                'sold' => $item->total_quantity
+            ];
+        });
+        
+        return $this->success($topSellingProductsWithDetails, "Top Selling Products");
+    }
+    
 }
 
