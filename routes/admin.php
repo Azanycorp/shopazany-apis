@@ -1,12 +1,15 @@
 <?php
 
-use App\Http\Controllers\Api\AdminAuthController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ApiController;
-use App\Http\Controllers\Api\BrandController;
-use App\Http\Controllers\Api\ColorController;
 use App\Http\Controllers\Api\SizeController;
 use App\Http\Controllers\Api\UnitController;
+use App\Http\Controllers\Api\BrandController;
+use App\Http\Controllers\Api\ColorController;
+use App\Http\Controllers\Api\AdminAuthController;
+use App\Http\Controllers\Api\AdminSellerController;
+use App\Http\Controllers\Api\DashboardController;
 
 Route::prefix('connect')->controller(AdminAuthController::class)->group(function () {
     Route::post('/login', 'login');
@@ -31,6 +34,24 @@ Route::group(['middleware' => ['auth:admin']], function () {
     Route::resource('color', ColorController::class);
     Route::resource('unit', UnitController::class);
     Route::resource('size', SizeController::class);
+
+    Route::prefix('dashboard')->controller(DashboardController::class)->group(function () {
+        Route::get('/analytic', 'dashboardAnalytics');
+        Route::get('/best-sellers', 'bestSellers');
+        Route::get('/best-selling-categories', 'bestSellingCat');
+    });
+
+    Route::prefix('order')->controller(OrderController::class)->group(function () {
+        Route::get('/analytic', 'orderAnalytics');
+        Route::get('/local', 'localOrder');
+        Route::get('/international', 'intOrder');
+        Route::get('/detail/{id}', 'orderDetail');
+        Route::get('/search', 'searchOrder');
+    });
+
+    Route::prefix('seller')->controller(AdminSellerController::class)->group(function () {
+        Route::get('/', 'allSellers');
+    });
 });
 
 
