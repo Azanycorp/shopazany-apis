@@ -26,7 +26,7 @@ Route::controller(ApiController::class)->group(function () {
     Route::get('sizes', 'sizes');
 });
 
-Route::group(['middleware' => ['auth:admin']], function () {
+Route::group(['middleware' => ['auth:sanctum']], function () {
 
     Route::post('/add/slider', [ApiController::class, 'addSlider']);
     Route::get('/slider', [ApiController::class, 'slider']);
@@ -51,6 +51,11 @@ Route::group(['middleware' => ['auth:admin']], function () {
 
     Route::prefix('seller')->controller(AdminSellerController::class)->group(function () {
         Route::get('/', 'allSellers');
+        Route::get('/{user_id}', 'viewSeller');
+        Route::patch('/approve', 'approveSeller');
+        Route::patch('/ban', 'banSeller');
+        Route::patch('/{user_id}/edit', 'editSeller');
+        Route::delete('/remove/{user_id}', 'removeSeller');
     });
 });
 
