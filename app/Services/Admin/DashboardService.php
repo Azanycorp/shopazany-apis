@@ -4,9 +4,16 @@ namespace App\Services\Admin;
 
 use App\Enum\OrderStatus;
 use App\Enum\UserStatus;
+use App\Models\Category;
+use App\Models\Order;
+use App\Models\User;
+use App\Trait\HttpResponse;
+use Illuminate\Support\Facades\DB;
 
 class DashboardService
 {
+    use HttpResponse;
+
     public function dashboardAnalytics()
     {
         $total_sales = Order::where('status', OrderStatus::DELIVERED)

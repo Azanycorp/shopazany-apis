@@ -14,4 +14,5 @@ enum UserLog
     const PASSWORD_FORGOT = 'password forgot';
     const PASSWORD_RESET = 'password reset';
     const LOGOUT = 'logged out';
+    const FAILED = 'failed';
 }
