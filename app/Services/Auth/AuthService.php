@@ -2,12 +2,14 @@
 
 namespace App\Services\Auth;
 
+use App\Actions\SendEmailAction;
 use App\Actions\UserLogAction;
 use App\Enum\UserLog;
 use App\Enum\UserStatus;
 use App\Http\Controllers\Controller;
 use App\Mail\LoginVerifyMail;
 use App\Mail\SignUpVerifyMail;
+use App\Mail\UserWelcomeMail;
 use App\Models\User;
 use App\Trait\HttpResponse;
 use Carbon\Carbon;
@@ -277,10 +279,13 @@ class AuthService extends Controller
 
         $user->update([
             'is_verified' => 1,
+            'is_admin_approve' => 1,
             'verification_code' => null,
             'email_verified_at' => Carbon::now(),
             'status' => 'active'
         ]);
+
+        (new SendEmailAction($user->email, new UserWelcomeMail($user)))->run();
 
         $description = "User with email address {$request->email} verified OTP";
         $action = UserLog::CREATED;
