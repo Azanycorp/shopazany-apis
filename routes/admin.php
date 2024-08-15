@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\UnitController;
 use App\Http\Controllers\Api\BrandController;
 use App\Http\Controllers\Api\ColorController;
 use App\Http\Controllers\Api\AdminAuthController;
+use App\Http\Controllers\Api\AdminCustomerController;
 use App\Http\Controllers\Api\AdminSellerController;
 use App\Http\Controllers\Api\DashboardController;
 
@@ -49,13 +50,30 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::get('/search', 'searchOrder');
     });
 
+    Route::prefix('customer')->controller(AdminCustomerController::class)->group(function () {
+        Route::get('/', 'allCustomers');
+        Route::get('/filter', 'filter');
+        Route::get('/search', 'search');
+    
+        Route::get('/{user_id}', 'viewCustomer');
+        Route::patch('/{user_id}/edit', 'editCustomer');
+        Route::delete('/remove/{user_id}', 'removeCustomer');
+    
+        Route::patch('/approve', 'approveCustomer');
+        Route::patch('/ban', 'banCustomer');
+    });
+
     Route::prefix('seller')->controller(AdminSellerController::class)->group(function () {
         Route::get('/', 'allSellers');
+        Route::get('/filter', 'filter');
+        Route::get('/search', 'search');
+    
         Route::get('/{user_id}', 'viewSeller');
-        Route::patch('/approve', 'approveSeller');
-        Route::patch('/ban', 'banSeller');
         Route::patch('/{user_id}/edit', 'editSeller');
         Route::delete('/remove/{user_id}', 'removeSeller');
+    
+        Route::patch('/approve', 'approveSeller');
+        Route::patch('/ban', 'banSeller');
     });
 });
 
