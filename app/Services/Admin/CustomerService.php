@@ -2,25 +2,24 @@
 
 namespace App\Services\Admin;
 
-use App\Http\Resources\SellerResource;
+use App\Http\Resources\CustomerResource;
 use App\Models\User;
 use App\Trait\HttpResponse;
 
-class SellerService
+class CustomerService
 {
     use HttpResponse;
 
-    public function allSellers()
+    public function allCustomers()
     {
-        $users = User::with(['products'])
-        ->where('type', 'seller')
+        $users = User::where('type', 'customer')
         ->paginate(25);
 
-        $data = SellerResource::collection($users);
+        $data = CustomerResource::collection($users);
 
         return [
             'status' => 'true',
-            'message' => 'All Sellers',
+            'message' => 'All Customers',
             'data' => $data,
             'pagination' => [
                 'current_page' => $users->currentPage(),
@@ -32,69 +31,30 @@ class SellerService
         ];
     }
 
-    public function approveSeller($request)
+    public function viewCustomer($id)
     {
-        $user = User::find($request->user_id);
-
-        if (!$user) {
-            return $this->error(null, "User not found", 404);
-        }
-
-        $user->is_admin_approve = !$user->is_admin_approve;
-        $user->status = $user->is_admin_approve ? 'active' : 'blocked';
-
-        $user->save();
-
-        $status = $user->is_admin_approve ? "Approved successfully" : "Disapproved successfully";
-
-        return $this->success(null, $status);
-    }
-
-    public function viewSeller($id)
-    {
-        $user = User::with(['products'])->where('id', $id)
-        ->where('type', 'seller')
+        $user = User::where('id', $id)
+        ->where('type', 'customer')
         ->first();
 
         if (!$user) {
             return $this->error(null, "User not found", 404);
         }
 
-        $data = new SellerResource($user);
+        $data = new CustomerResource($user);
 
         return [
             'status' => 'true',
-            'message' => 'Seller details',
+            'message' => 'Customer details',
             'data' => $data,
         ];
     }
 
-    public function editSeller($request, $id)
+    public function banCustomer($request)
     {
-        $user = User::find($id);
-
-        if (!$user) {
-            return $this->error(null, "User not found", 404);
-        }
-
-        $user->update([
-            'first_name' => $request->first_name,
-            'last_name' => $request->last_name,
-            'email' => $request->email_address,
-            'phone' => $request->phone_number,
-            'password' => bcrypt($request->passowrd),
-        ]);
-
-        $data = [
-            'user_id' => $user->id
-        ];
-
-        return $this->success($data, "Updated successfully");
-    }
-
-    public function banSeller($request)
-    {
-        $user = User::find($request->user_id);
+        $user = User::where('id', $request->user_id)
+        ->where('type', 'customer')
+        ->first();
 
         if (!$user) {
             return $this->error(null, "User not found", 404);
@@ -108,9 +68,11 @@ class SellerService
         return $this->success(null, "User has been blocked successfully");
     }
 
-    public function removeSeller($id)
+    public function removeCustomer($id)
     {
-        $user = User::find($id);
+        $user = User::where('id', $id)
+        ->where('type', 'customer')
+        ->first();
 
         if (!$user) {
             return $this->error(null, "User not found", 404);
@@ -125,14 +87,13 @@ class SellerService
     {
         $query = request()->query('approved');
 
-        $users = User::with(['products'])
-            ->where('type', 'seller')
+        $users = User::where('type', 'customer')
             ->when($query !== null, function ($queryBuilder) use ($query) {
                 $queryBuilder->where('is_admin_approve', $query);
             })
             ->paginate(25);
 
-        $data = SellerResource::collection($users);
+        $data = CustomerResource::collection($users);
 
         return [
             'status' => 'true',
@@ -152,7 +113,7 @@ class SellerService
     {
         $query = request()->input('query');
 
-        $users = User::where('type', 'seller')
+        $users = User::where('type', 'customer')
         ->where(function($queryBuilder) use ($query) {
             $queryBuilder->where('first_name', 'LIKE', '%' . $query . '%')
                          ->orWhere('last_name', 'LIKE', '%' . $query . '%')
@@ -161,7 +122,7 @@ class SellerService
         })
         ->paginate(25);
 
-        $data = SellerResource::collection($users);
+        $data = CustomerResource::collection($users);
 
         return [
             'status' => 'true',
@@ -177,7 +138,4 @@ class SellerService
         ];
     }
 }
-
-
-
 

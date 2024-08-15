@@ -61,4 +61,14 @@ class AdminSellerController extends Controller
     {
         return $this->service->removeSeller($id);
     }
+
+    public function filter()
+    {
+        return $this->service->filter();
+    }
+
+    public function search()
+    {
+        return $this->service->search();
+    }
 }
