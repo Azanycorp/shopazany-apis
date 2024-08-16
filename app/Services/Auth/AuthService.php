@@ -2,12 +2,14 @@
 
 namespace App\Services\Auth;
 
+use App\Actions\SendEmailAction;
 use App\Actions\UserLogAction;
 use App\Enum\UserLog;
 use App\Enum\UserStatus;
 use App\Http\Controllers\Controller;
 use App\Mail\LoginVerifyMail;
 use App\Mail\SignUpVerifyMail;
+use App\Mail\UserWelcomeMail;
 use App\Models\User;
 use App\Trait\HttpResponse;
 use Carbon\Carbon;
@@ -75,6 +77,18 @@ class AuthService extends Controller
                     'id' => $user->id,
                     'status' => UserStatus::BLOCKED
                 ], "Account is blocked, contact support", 400);
+                $action = UserLog::LOGIN_ATTEMPT;
+
+                $this->logUserAction($request, $action, $description, $response, $user);
+                return $response;
+            }
+
+            if(! $user->is_admin_approve){
+                $description = "Account not approved, user {$request->email}";
+                $response = $this->error([
+                    'id' => $user->id,
+                    'status' => UserStatus::BLOCKED
+                ], "Account not approved, contact support", 400);
                 $action = UserLog::LOGIN_ATTEMPT;
 
                 $this->logUserAction($request, $action, $description, $response, $user);
@@ -149,6 +163,7 @@ class AuthService extends Controller
     public function signup($request)
     {
         $request->validated($request->all());
+        $user = null;
 
         try {
             $code = $this->generateVerificationCode();
@@ -164,8 +179,6 @@ class AuthService extends Controller
                 'password' => bcrypt($request->password)
             ]);
 
-            Mail::to($request->email)->send(new SignUpVerifyMail($user));
-
             $description = "User with email: {$request->email} signed up";
             $response = $this->success(null, "Created successfully");
             $action = UserLog::CREATED;
@@ -176,7 +189,7 @@ class AuthService extends Controller
         } catch (\Exception $e) {
             $description = "Sign up failed: {$request->email}";
             $response = $this->error(null, $e->getMessage(), 500);
-            $action = UserLog::CREATED;
+            $action = UserLog::FAILED;
 
             $this->logUserAction($request, $action, $description, $response, $user);
 
@@ -205,7 +218,7 @@ class AuthService extends Controller
             return $response;
         } catch (\Exception $e) {
             $description = "An error occured during the request email: {$request->email}";
-            $action = UserLog::CODE_RESENT;
+            $action = UserLog::FAILED;
             $response = $this->error(null, $e->getMessage(), 500);
 
             $this->logUserAction($request, $action, $description, $response, $user);
@@ -216,6 +229,7 @@ class AuthService extends Controller
     public function sellerSignup($request)
     {
         $request->validated($request->all());
+        $user = null;
 
         try {
             $code = $this->generateVerificationCode();
@@ -235,8 +249,6 @@ class AuthService extends Controller
                 'password' => bcrypt($request->password)
             ]);
 
-            Mail::to($request->email)->send(new SignUpVerifyMail($user));
-
             $description = "Seller with email address {$request->email} just signed up";
             $action = UserLog::CREATED;
             $response = $this->success(null, "Created successfully");
@@ -246,7 +258,7 @@ class AuthService extends Controller
             return $this->success(null, "Created successfully");
         } catch (\Exception $e) {
             $description = "Sign up error for user with email {$request->email}";
-            $action = UserLog::CREATED;
+            $action = UserLog::FAILED;
             $response = $this->error(null, $e->getMessage(), 500);
 
             $this->logUserAction($request, $action, $description, $response, $user);
@@ -267,10 +279,13 @@ class AuthService extends Controller
 
         $user->update([
             'is_verified' => 1,
+            'is_admin_approve' => 1,
             'verification_code' => null,
             'email_verified_at' => Carbon::now(),
             'status' => 'active'
         ]);
+
+        (new SendEmailAction($user->email, new UserWelcomeMail($user)))->run();
 
         $description = "User with email address {$request->email} verified OTP";
         $action = UserLog::CREATED;
@@ -350,6 +365,8 @@ class AuthService extends Controller
 
     public function affiliateSignup($request)
     {
+        $user = null;
+
         try {
             $user = User::where('email', $request->email)->first();
             $response = $this->handleExistingUser($user);
@@ -387,7 +404,7 @@ class AuthService extends Controller
             return $this->success(null, "Created successfully");
         } catch (\Exception $e) {
             $description = "User creation failed";
-            $action = UserLog::CREATED;
+            $action = UserLog::FAILED;
             $response = $this->error(null, $e->getMessage(), 500);
 
             $this->logUserAction($request, $action, $description, $response, $user);
@@ -496,12 +513,6 @@ class AuthService extends Controller
                 'balance' => 0.00,
                 'reward_point' => null
             ]);
-
-            try {
-                Mail::to($request->email)->send(new SignUpVerifyMail($user));
-            } catch (\Exception $e) {
-                return $this->error(null, 'Unable to send verification email. Please try again later', 500);
-            }
 
             $description = "User with email {$request->email} signed up as an affiliate";
             $action = UserLog::CREATED;

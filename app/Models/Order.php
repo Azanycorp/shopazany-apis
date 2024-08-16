@@ -21,11 +21,22 @@ class Order extends Model
         'total_amount',
         'payment_method',
         'payment_status',
-        'status'
+        'status',
+        'country_id',
     ];
 
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id')->where('type', 'customer');
+    }
+
+    public function seller(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id')->where('type', 'seller');
+    }
+
+    public function product(): BelongsTo
+    {
+        return $this->belongsTo(Product::class, 'product_id');
     }
 }
