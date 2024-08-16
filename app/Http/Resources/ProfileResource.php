@@ -33,6 +33,7 @@ class ProfileResource extends JsonResource
             "is_verified" => (int)$this->is_verified,
             "income_type" => (string)$this->income_type,
             "image" => (string)$this->image,
+            "type" => (string)$this->type,
             "is_affiliate_member" => (int)$this->is_affiliate_member === 1 ? true : false,
             "status" => (string)$this->status,
             "wallet" => (object)[
