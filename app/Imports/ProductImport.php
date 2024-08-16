@@ -2,24 +2,25 @@
 
 namespace App\Imports;
 
-use App\Models\Category;
-use App\Models\Product;
-use App\Models\SubCategory;
 use Carbon\Carbon;
+use App\Models\Product;
+use App\Models\Category;
+use App\Models\SubCategory;
+use Illuminate\Support\Str;
 use Illuminate\Support\Collection;
-use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
 use Maatwebsite\Excel\Concerns\ToCollection;
+use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
+use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithBatchInserts;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
-use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
 class ProductImport implements ToCollection, WithHeadingRow, WithChunkReading, WithBatchInserts, SkipsEmptyRows
 {
-    protected $sellerId;
+    protected $seller;
 
-    public function __construct($sellerId)
+    public function __construct($seller)
     {
-        $this->sellerId = $sellerId;
+        $this->seller = $seller;
     }
 
     /**
@@ -32,9 +33,16 @@ class ProductImport implements ToCollection, WithHeadingRow, WithChunkReading, W
             $category = $this->getCategory($row['category']);
             $subCategory = $this->getSubCategory($row['sub_category']);
 
+            $slug = Str::slug($row['product_name']);
+
+            if (Product::where('slug', $slug)->exists()) {
+                $slug = $slug . '-' . uniqid();
+            }
+
             Product::create([
-                'user_id' => $this->sellerId,
+                'user_id' => $this->seller->id,
                 'name' => $row['product_name'],
+                'slug' => $slug,
                 'description' => $row['description'],
                 'category_id' => $category ? $category->id : 1,
                 'sub_category_id' => $subCategory ? $subCategory->id : 1,
@@ -43,8 +51,10 @@ class ProductImport implements ToCollection, WithHeadingRow, WithChunkReading, W
                 'current_stock_quantity' => $row['stock_quantity'],
                 'minimum_order_quantity' => $row['minimum_order_quantity'],
                 'status' => 'pending',
+                'added_by' => $this->seller?->type,
+                'country_id' => $this->seller?->country,
                 'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now()
+                'updated_at' => Carbon::now(),
             ]);
         }
     }
