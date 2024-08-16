@@ -142,12 +142,12 @@
                             <table cellpadding="0" cellspacing="0" border="0" style="width: 100%; max-width: 36rem; margin: 0 auto;">
                                 <tr>
                                     <td style="text-align: center; padding-right: 1.25rem;">
-                                        <img src="start.png" alt="Start" style="max-height: 8rem;">
+                                        <img src="https://azany-uploads.s3.amazonaws.com/assets/start.png" alt="Start" style="max-height: 8rem;">
                                     </td>
                                     <td style="text-align: left;">
                                         <h3 style="font-weight: bold; font-size: 0.875rem;">Let's get Started</h3>
                                         <p style="font-size: 0.875rem;">Head over to your dashboard and complete your user profile.</p>
-                                        <a href="#" style="background-color: #3B82F6; color: white; padding: 0.25rem 0.75rem; border-radius: 0.25rem; margin-top: 0.5rem; display: inline-block;">Complete Profile</a>
+                                        <a href="{{ $loginUrl }}" style="background-color: #3B82F6; color: white; padding: 0.25rem 0.75rem; border-radius: 0.25rem; margin-top: 0.5rem; display: inline-block;">Complete Profile</a>
                                     </td>
                                 </tr>
                             </table>
@@ -158,12 +158,12 @@
                             <table cellpadding="0" cellspacing="0" border="0" style="width: 100%; max-width: 36rem; margin: 0 auto;">
                                 <tr>
                                     <td style="text-align: center; padding-right: 1.25rem;">
-                                        <img src="verify.png" alt="Verify" style="max-height: 8rem;">
+                                        <img src="https://azany-uploads.s3.amazonaws.com/assets/verify.png" alt="Verify" style="max-height: 8rem;">
                                     </td>
                                     <td style="text-align: left;">
                                         <h3 style="font-weight: bold; font-size: 0.875rem;">Verify your information</h3>
                                         <p style="font-size: 0.875rem;">Upload the necessary verification documents to verify your provided information.</p>
-                                        <a href="#" style="background-color: #3B82F6; color: white; padding: 0.25rem 0.75rem; border-radius: 0.25rem; margin-top: 0.5rem; display: inline-block;">Add Verifications</a>
+                                        <a href="{{ $loginUrl }}" style="background-color: #3B82F6; color: white; padding: 0.25rem 0.75rem; border-radius: 0.25rem; margin-top: 0.5rem; display: inline-block;">Add Verifications</a>
                                     </td>
                                 </tr>
                             </table>
@@ -174,12 +174,12 @@
                             <table cellpadding="0" cellspacing="0" border="0" style="width: 100%; max-width: 36rem; margin: 0 auto;">
                                 <tr>
                                     <td style="text-align: center; padding-right: 1.25rem;">
-                                        <img src="explore.png" alt="Explore" style="max-height: 8rem;">
+                                        <img src="https://azany-uploads.s3.amazonaws.com/assets/explore.png" alt="Explore" style="max-height: 8rem;">
                                     </td>
                                     <td style="text-align: left;">
                                         <h3 style="font-weight: bold; font-size: 0.875rem;">Get Going</h3>
                                         <p style="font-size: 0.875rem;">Explore Azany and all the great benefits we have to offer.</p>
-                                        <a href="#" style="background-color: #3B82F6; color: white; padding: 0.25rem 0.75rem; border-radius: 0.25rem; margin-top: 0.5rem; display: inline-block;">Start Exploring</a>
+                                        <a href="{{ $baseUrl }}" style="background-color: #3B82F6; color: white; padding: 0.25rem 0.75rem; border-radius: 0.25rem; margin-top: 0.5rem; display: inline-block;">Start Exploring</a>
                                     </td>
                                 </tr>
                             </table>

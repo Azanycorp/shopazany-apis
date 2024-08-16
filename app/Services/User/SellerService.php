@@ -244,11 +244,42 @@ class SellerService extends Controller
             return $this->error(null, "User not found", 404);
         }
 
-        $user->load('products.productimages');
+        $query = $user->products();
 
-        $data = SellerProductResource::collection($user->products);
+        if (request()->filled('category')) {
+            $query->where('category_id', request('category'));
+        }
 
-        return $this->success($data, "All products");
+        if (request()->filled('brand')) {
+            $query->where('brand_id', request('brand'));
+        }
+
+        if (request()->filled('color')) {
+            $query->where('color_id', request('color'));
+        }
+
+        if (request()->filled('search')) {
+            $query->where('name', 'like', '%' . request('search') . '%');
+        }
+
+        $query->with('productimages');
+
+        $products = $query->paginate(25);
+
+        $data = SellerProductResource::collection($products);
+
+        return [
+            'status' => 'true',
+            'message' => 'All products',
+            'data' => $data,
+            'pagination' => [
+                'current_page' => $products->currentPage(),
+                'last_page' => $products->lastPage(),
+                'per_page' => $products->perPage(),
+                'prev_page_url' => $products->previousPageUrl(),
+                'next_page_url' => $products->nextPageUrl(),
+            ],
+        ];
     }
 
     public function getSingleProduct($productId, $userId)
@@ -436,10 +467,10 @@ class SellerService extends Controller
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $sellerId = $request->user_id;
+        $seller = auth()->user();
 
         try {
-            Excel::import(new ProductImport($sellerId, $request->file('file')));
+            Excel::import(new ProductImport($seller), $request->file('file'));
 
             return $this->success(null, "Imported successfully");
         } catch (\Exception $e) {
@@ -584,7 +615,7 @@ class SellerService extends Controller
 
         $productIds = $topSellingProducts->pluck('product_id');
         $products = Product::whereIn('id', $productIds)->get();
-        
+
         $topSellingProductsWithDetails = $topSellingProducts->map(function ($item) use ($products) {
             $product = $products->firstWhere('id', $item->product_id);
             return [
@@ -595,9 +626,9 @@ class SellerService extends Controller
                 'sold' => $item->total_quantity
             ];
         });
-        
+
         return $this->success($topSellingProductsWithDetails, "Top Selling Products");
     }
-    
+
 }
 
