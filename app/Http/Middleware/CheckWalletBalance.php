@@ -20,7 +20,11 @@ class CheckWalletBalance
     {
         $user = $request?->user()?->load('wallet');
 
-        if ($user && $user->wallet->balance < 100.00) {
+        if (!$user || !$user->wallet) {
+            return $this->error(null, 'Wallet not found.', 403);
+        }
+
+        if ($user && $user?->wallet?->balance < 100.00) {
             return $this->error(null, 'Insufficient balance.', 403);
         }
 

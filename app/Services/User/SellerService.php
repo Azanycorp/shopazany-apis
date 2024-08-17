@@ -413,7 +413,6 @@ class SellerService extends Controller
         $data = OrderResource::collection($orders);
 
         return $this->success($data, "Pending Orders");
-
     }
 
     public function getProcessingOrders($id)

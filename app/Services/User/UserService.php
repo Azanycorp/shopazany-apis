@@ -2,12 +2,18 @@
 
 namespace App\Services\User;
 
+use App\Enum\TransactionStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\PaymentMethodResource;
 use App\Http\Resources\ProfileResource;
+use App\Http\Resources\TransactionResource;
 use App\Models\BankAccount;
+use App\Models\PaymentMethod;
+use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Wallet;
 use App\Models\WithdrawalRequest;
+use App\Services\TransactionService;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Facades\Auth;
 
@@ -76,13 +82,15 @@ class UserService extends Controller
             WithdrawalRequest::create([
                 'user_id' => $request->user_id,
                 'amount' => $request->amount,
-                'previous_balance' => $wallet->balance,
+                'previous_balance' => $wallet?->balance,
                 'current_balance' => $current
             ]);
 
             $wallet->update([
                 'balance' => $current
             ]);
+
+            (new TransactionService($user, 'withdrawal', $request->amount))->logTransaction();
 
             return $this->success(null, "Request sent successfully");
         } else {
@@ -144,6 +152,111 @@ class UserService extends Controller
 
         return $this->success(null, "Added successfully");
     }
+
+    public function dashboardAnalytic($id)
+    {
+        $currentUserId = Auth::id();
+
+        if ($currentUserId != $id) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+
+        $user = User::with(['wallet', 'withdrawalRequest'])
+        ->find($id);
+
+        if(! $user) {
+            return $this->error(null, "User not found", 404);
+        }
+
+        $pending = $user->withdrawalRequest->where('status', 'pending')->sum('amount');
+
+        $data = [
+            'current_balance' => $user?->wallet?->balance,
+            'pending_withdrawals' => $pending,
+        ];
+
+        return $this->success($data, "Dashboard analytics");
+    }
+
+    public function transactionHistory($userId)
+    {
+        $currentUserId = Auth::id();
+
+        if ($currentUserId != $userId) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+
+        $status = request()->query('status');
+        $query = Transaction::where('user_id', $userId);
+
+        if ($status) {
+            if (!in_array($status, [TransactionStatus::SUCCESSFUL, TransactionStatus::PENDING, TransactionStatus::REJECTED])) {
+                return $this->error(null, "Invalid status", 400);
+            }
+
+            $query->where('status', $status);
+        }
+
+        $trnx = $query->get();
+        $data = TransactionResource::collection($trnx);
+
+        return $this->success($data, "Transaction history");
+    }
+
+    public function addPaymentMethod($request)
+    {
+        $currentUserId = Auth::id();
+
+        if ($currentUserId != $request->user_id) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+
+        $user = User::with('paymentMethods')->find($request->user_id);
+
+        if(! $user){
+            return $this->error(null, "User not found", 404);
+        }
+
+        switch ($request->type) {
+            case 'bank_transfer':
+                $methodAdded = $this->addBankTransfer($request, $user);
+                break;
+    
+            case 'paypal':
+                $methodAdded = $this->addPayPal($request, $user);
+                break;
+    
+            default:
+                return $this->error(null, "Invalid type", 400);
+        }
+    
+        if ($methodAdded) {
+            return $this->success(null, "Added successfully");
+        } else {
+            return $this->error(null, "Failed to add payment method", 500);
+        }
+    }
+
+    public function getPaymentMethod($userId)
+    {
+        $currentUserId = Auth::id();
+
+        if ($currentUserId != $userId) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+
+        $user = User::with('paymentMethods')->find($userId);
+
+        if(! $user){
+            return $this->error(null, "User not found", 404);
+        }
+
+        $data = PaymentMethodResource::collection($user->paymentMethods);
+
+        return $this->success($data, "Payment methods");
+    }
+
+
 }
 
 
