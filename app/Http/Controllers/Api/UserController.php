@@ -58,4 +58,29 @@ class UserController extends Controller
 
         return $this->service->earningOption($request);
     }
+
+    public function dashboardAnalytic($id)
+    {
+        return $this->service->dashboardAnalytic($id);
+    }
+
+    public function transactionHistory($userId)
+    {
+        return $this->service->transactionHistory($userId);
+    }
+
+    public function addPaymentMethod(Request $request)
+    {
+        $request->validate([
+            'user_id' => ['required', 'integer', 'exists:users,id'],
+            'type' => ['required']
+        ]);
+
+        return $this->service->addPaymentMethod($request);
+    }
+
+    public function getPaymentMethod($userId)
+    {
+        return $this->service->getPaymentMethod($userId);
+    }
 }

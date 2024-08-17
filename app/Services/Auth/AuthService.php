@@ -3,7 +3,6 @@
 namespace App\Services\Auth;
 
 use App\Actions\SendEmailAction;
-use App\Actions\UserLogAction;
 use App\Enum\UserLog;
 use App\Enum\UserStatus;
 use App\Http\Controllers\Controller;
@@ -15,7 +14,6 @@ use App\Trait\HttpResponse;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
@@ -39,7 +37,7 @@ class AuthService extends Controller
                 ], "Account not verified or inactive", 400);
                 $action = UserLog::LOGIN_ATTEMPT;
 
-                $this->logUserAction($request, $action, $description, $response, $user);
+                logUserAction($request, $action, $description, $response, $user);
 
                 return $response;
             }
@@ -52,7 +50,7 @@ class AuthService extends Controller
                 ], "Account not verified or inactive", 400);
                 $action = UserLog::LOGIN_ATTEMPT;
 
-                $this->logUserAction($request, $action, $description, $response, $user);
+                logUserAction($request, $action, $description, $response, $user);
 
                 return $response;
             }
@@ -65,7 +63,7 @@ class AuthService extends Controller
                 ], "Account is suspended, contact support", 400);
                 $action = UserLog::LOGIN_ATTEMPT;
 
-                $this->logUserAction($request, $action, $description, $response, $user);
+                logUserAction($request, $action, $description, $response, $user);
 
                 return $response;
             }
@@ -79,7 +77,7 @@ class AuthService extends Controller
                 ], "Account is blocked, contact support", 400);
                 $action = UserLog::LOGIN_ATTEMPT;
 
-                $this->logUserAction($request, $action, $description, $response, $user);
+                logUserAction($request, $action, $description, $response, $user);
                 return $response;
             }
 
@@ -91,7 +89,7 @@ class AuthService extends Controller
                 ], "Account not approved, contact support", 400);
                 $action = UserLog::LOGIN_ATTEMPT;
 
-                $this->logUserAction($request, $action, $description, $response, $user);
+                logUserAction($request, $action, $description, $response, $user);
                 return $response;
             }
 
@@ -113,7 +111,7 @@ class AuthService extends Controller
             $response = $this->success(null, "Code has been sent to your email address.");
             $action = UserLog::LOGIN_ATTEMPT;
 
-            $this->logUserAction($request, $action, $description, $response, $user);
+            logUserAction($request, $action, $description, $response, $user);
 
             return $response;
         }
@@ -122,7 +120,7 @@ class AuthService extends Controller
         $action = UserLog::LOGIN_ATTEMPT;
         $response = $this->error(null, 'Credentials do not match', 401);
 
-        $this->logUserAction($request, $action, $description, $response);
+        logUserAction($request, $action, $description, $response);
         return $response;
     }
 
@@ -155,7 +153,7 @@ class AuthService extends Controller
             'expires_at' => $token->accessToken->expires_at,
         ]);
 
-        $this->logUserAction($request, $action, $description, $response, $user);
+        logUserAction($request, $action, $description, $response, $user);
 
         return $response;
     }
@@ -183,7 +181,7 @@ class AuthService extends Controller
             $response = $this->success(null, "Created successfully");
             $action = UserLog::CREATED;
 
-            $this->logUserAction($request, $action, $description, $response, $user);
+            logUserAction($request, $action, $description, $response, $user);
 
             return $response;
         } catch (\Exception $e) {
@@ -191,7 +189,7 @@ class AuthService extends Controller
             $response = $this->error(null, $e->getMessage(), 500);
             $action = UserLog::FAILED;
 
-            $this->logUserAction($request, $action, $description, $response, $user);
+            logUserAction($request, $action, $description, $response, $user);
 
             return $response;
         }
@@ -213,7 +211,7 @@ class AuthService extends Controller
             $action = UserLog::CODE_RESENT;
             $response = $this->success(null, "Code resent successfully");
 
-            $this->logUserAction($request, $action, $description, $response, $user);
+            logUserAction($request, $action, $description, $response, $user);
 
             return $response;
         } catch (\Exception $e) {
@@ -221,7 +219,7 @@ class AuthService extends Controller
             $action = UserLog::FAILED;
             $response = $this->error(null, $e->getMessage(), 500);
 
-            $this->logUserAction($request, $action, $description, $response, $user);
+            logUserAction($request, $action, $description, $response, $user);
             return $response;
         }
     }
@@ -253,7 +251,7 @@ class AuthService extends Controller
             $action = UserLog::CREATED;
             $response = $this->success(null, "Created successfully");
 
-            $this->logUserAction($request, $action, $description, $response, $user);
+            logUserAction($request, $action, $description, $response, $user);
 
             return $this->success(null, "Created successfully");
         } catch (\Exception $e) {
@@ -261,7 +259,7 @@ class AuthService extends Controller
             $action = UserLog::FAILED;
             $response = $this->error(null, $e->getMessage(), 500);
 
-            $this->logUserAction($request, $action, $description, $response, $user);
+            logUserAction($request, $action, $description, $response, $user);
 
             return $response;
         }
@@ -291,7 +289,7 @@ class AuthService extends Controller
         $action = UserLog::CREATED;
         $response = $this->success(null, "Verified successfully");
 
-        $this->logUserAction($request, $action, $description, $response, $user);
+        logUserAction($request, $action, $description, $response, $user);
 
         return $response;
     }
@@ -312,7 +310,7 @@ class AuthService extends Controller
         $action = UserLog::PASSWORD_FORGOT;
         $response = $this->success(null, "Request successfully");
 
-        $this->logUserAction($request, $action, $description, $response, $user);
+        logUserAction($request, $action, $description, $response, $user);
 
         return $status === Password::RESET_LINK_SENT
             ? response()->json(['message' => __($status)])
@@ -340,7 +338,7 @@ class AuthService extends Controller
         $action = UserLog::PASSWORD_RESET;
         $response = $this->success(null, "Reset successfully");
 
-        $this->logUserAction($request, $action, $description, $response, $user);
+        logUserAction($request, $action, $description, $response, $user);
 
         return $status == Password::PASSWORD_RESET
             ? response()->json(['message' => __($status)])
@@ -358,7 +356,7 @@ class AuthService extends Controller
             'message' => 'You have successfully logged out and your token has been deleted'
         ]);
 
-        $this->logUserAction(request(), $action, $description, $response, $user);
+        logUserAction(request(), $action, $description, $response, $user);
 
         return $response;
     }
@@ -383,7 +381,7 @@ class AuthService extends Controller
                     $action = UserLog::CREATED;
                     $response = $this->error(null, 'User with referral code has not been verified', 400);
 
-                    $this->logUserAction($request, $action, $description, $response, $user);
+                    logUserAction($request, $action, $description, $response, $user);
                     return $response;
                 }
             }
@@ -407,7 +405,7 @@ class AuthService extends Controller
             $action = UserLog::FAILED;
             $response = $this->error(null, $e->getMessage(), 500);
 
-            $this->logUserAction($request, $action, $description, $response, $user);
+            logUserAction($request, $action, $description, $response, $user);
             return $response;
         }
     }
@@ -483,7 +481,7 @@ class AuthService extends Controller
             $action = UserLog::CREATED;
             $response = $this->success(null, "Created successfully");
 
-            $this->logUserAction($request, $action, $description, $response, $user);
+            logUserAction($request, $action, $description, $response, $user);
 
             if (is_null($emailVerified)) {
                 $user->update(['email_verified_at' => null, 'verification_code' => $code,]);
@@ -518,7 +516,7 @@ class AuthService extends Controller
             $action = UserLog::CREATED;
             $response = $this->success(null, "Created successfully");
 
-            $this->logUserAction($request, $action, $description, $response, $user);
+            logUserAction($request, $action, $description, $response, $user);
 
             return $user;
         }

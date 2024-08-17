@@ -144,4 +144,14 @@ class User extends Authenticatable
         return $this->belongsTo(State::class, 'state_id');
     }
 
+    public function transactions(): HasMany
+    {
+        return $this->hasMany(Transaction::class, 'user_id');
+    }
+
+    public function paymentMethods(): HasMany
+    {
+        return $this->hasMany(PaymentMethod::class, 'user_id');
+    }
+
 }

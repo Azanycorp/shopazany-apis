@@ -57,6 +57,13 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
 
         Route::post('/kyc', 'userKyc');
         Route::post('/earning-option', 'earningOption');
+
+        Route::prefix('affiliate')->group(function () {
+            Route::get('/dashboard-analytic/{user_id}', 'dashboardAnalytic');
+            Route::get('/transaction/{user_id}', 'transactionHistory');
+            Route::post('/payment-method', 'addPaymentMethod');
+            Route::get('/payment-method/{user_id}', 'getPaymentMethod');
+        });
     });
 
     Route::prefix('category')->controller(CategoryController::class)->group(function () {
