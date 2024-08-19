@@ -63,6 +63,7 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
             Route::get('/transaction/{user_id}', 'transactionHistory');
             Route::post('/payment-method', 'addPaymentMethod');
             Route::get('/payment-method/{user_id}', 'getPaymentMethod');
+            Route::post('/settings/{user_id}', 'changeSettings');
         });
     });
 

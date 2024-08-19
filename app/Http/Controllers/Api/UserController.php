@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\AffiliateSettingsRequest;
 use App\Http\Requests\BankAccountRequest;
 use App\Http\Requests\KycRequest;
 use App\Http\Requests\WithdrawalRequest;
@@ -82,5 +83,10 @@ class UserController extends Controller
     public function getPaymentMethod($userId)
     {
         return $this->service->getPaymentMethod($userId);
+    }
+
+    public function changeSettings(AffiliateSettingsRequest $request, $userId)
+    {
+        return $this->service->changeSettings($request, $userId);
     }
 }
