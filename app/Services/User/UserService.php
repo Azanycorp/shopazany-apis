@@ -256,6 +256,27 @@ class UserService extends Controller
         return $this->success($data, "Payment methods");
     }
 
+    public function changeSettings($request, $userId)
+    {
+        $currentUserId = Auth::id();
+
+        if ($currentUserId != $userId) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+
+        $user = User::find($userId);
+
+        if(! $user){
+            return $this->error(null, "User not found", 404);
+        }
+
+        $user->update([
+            'two_factor_enabled' => $request->two_factor_enabled,
+            'password' => bcrypt($request->password)
+        ]);
+
+        return $this->success(null, "Settings changed successfully");
+    }
 
 }
 
