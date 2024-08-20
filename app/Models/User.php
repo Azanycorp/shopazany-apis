@@ -126,12 +126,12 @@ class User extends Authenticatable
 
     public function userOrders(): HasMany
     {
-        return $this->hasMany(User::class, 'user_id');
+        return $this->hasMany(Order::class, 'user_id');
     }
 
     public function sellerOrders(): HasMany
     {
-        return $this->hasMany(User::class, 'seller_id');
+        return $this->hasMany(Order::class, 'seller_id');
     }
 
     public function country(): BelongsTo

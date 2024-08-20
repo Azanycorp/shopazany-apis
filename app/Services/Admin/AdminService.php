@@ -4,12 +4,14 @@ namespace App\Services\Admin;
 
 use App\Http\Resources\CategoryResource;
 use App\Http\Resources\CountryResource;
+use App\Http\Resources\ShopCountryResource;
 use App\Http\Resources\SliderResource;
 use App\Http\Resources\StateResource;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Color;
 use App\Models\Country;
+use App\Models\ShopCountry;
 use App\Models\Size;
 use App\Models\SliderImage;
 use App\Models\State;
@@ -119,6 +121,48 @@ class AdminService
         $sizes = Size::where('status', 'active')->get(['id', 'name']);
 
         return $this->success($sizes, "All sizes");
+    }
+
+    public function shopByCountry($request)
+    {
+        $country = Country::find($request->country_id);
+
+        if(!$country) {
+            return $this->error(null, "Not found", 404);
+        }
+
+        $folder = null;
+
+        if(App::environment('production')){
+            $folder = '/prod/shopcountryflag';
+        } elseif(App::environment(['staging', 'local'])) {
+            $folder = '/stag/shopcountryflag';
+        }
+
+        $url = uploadImage($request, 'flag', $folder);
+        
+        try {
+
+            ShopCountry::create([
+                'country_id' => $country->id,
+                'name' => $country->name,
+                'flag' => $url,
+                'currency' => $request->currency,
+            ]);
+
+            return $this->success(null, "Added successfully");
+
+        } catch (\Throwable $th) {
+            throw $th;
+        }
+    }
+
+    public function getShopByCountry()
+    {
+        $shopbycountries = ShopCountry::get();
+        $data = ShopCountryResource::collection($shopbycountries);
+
+        return $this->success($data, "List");
     }
 }
 

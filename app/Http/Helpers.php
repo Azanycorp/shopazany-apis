@@ -102,6 +102,31 @@ if(!function_exists('uploadSingleProductImage')){
     }
 }
 
+if(!function_exists('uploadImage')){
+    function uploadImage($request, $file, $folder, $country = null)
+    {
+        $url = $country?->image;
+
+        if ($request->hasFile($file)) {
+            $fileSize = $request->file($file)->getSize();
+            if ($fileSize > 3000000) {
+                return json_encode(["status" => false, "message" => "File size is larger than 3MB.", "status_code" => 422]);
+            }
+
+            $image = $country?->image ? getRelativePath($country->image) : null;
+
+            if ($image && Storage::disk('s3')->exists($image)) {
+                Storage::disk('s3')->delete($image);
+            }
+
+            $path = $request->file($file)->store($folder, 's3');
+            $url = Storage::disk('s3')->url($path);
+        }
+
+        return $url;
+    }
+}
+
 if(!function_exists('uploadMultipleProductImage')){
     function uploadMultipleProductImage($request, $file, $folder, $product)
     {
