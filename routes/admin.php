@@ -35,6 +35,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::resource('color', ColorController::class);
     Route::resource('unit', UnitController::class);
     Route::resource('size', SizeController::class);
+    Route::post('/shop/country', [ApiController::class, 'shopByCountry']);
 
     Route::prefix('dashboard')->controller(DashboardController::class)->group(function () {
         Route::get('/analytic', 'dashboardAnalytics');
@@ -75,6 +76,8 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::patch('/approve', 'approveSeller');
         Route::patch('/ban', 'banSeller');
     });
+
+
 });
 
 

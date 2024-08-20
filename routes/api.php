@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\ApiController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\SellerController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Http\Request;
@@ -45,6 +46,8 @@ Route::prefix('user/category')->controller(CategoryController::class)->group(fun
 });
 
 Route::get('/user/seller/template', [SellerController::class, 'getTemplate']);
+Route::get('/shop/country', [ApiController::class, 'getShopByCountry']);
+Route::get('/shop-by/country/{shop_country_id}', [ApiController::class, 'userShopByCountry']);
 
 Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
 
@@ -65,6 +68,11 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
             Route::get('/payment-method/{user_id}', 'getPaymentMethod');
             Route::post('/settings/{user_id}', 'changeSettings');
         });
+    });
+
+    Route::prefix('customer')->controller(CustomerController::class)->group(function () {
+        Route::get('/dashboard/analytic/{user_id}', 'dashboardAnalytics');
+        Route::post('/subcategory/create', 'createSubCategory');
     });
 
     Route::prefix('category')->controller(CategoryController::class)->group(function () {
