@@ -2,6 +2,7 @@
 
 namespace App\Services\Admin;
 
+use App\Enum\UserType;
 use App\Http\Resources\SellerResource;
 use App\Models\User;
 use App\Trait\HttpResponse;
@@ -13,7 +14,7 @@ class SellerService
     public function allSellers()
     {
         $users = User::with(['products'])
-        ->where('type', 'seller')
+        ->where('type', UserType::SELLER)
         ->paginate(25);
 
         $data = SellerResource::collection($users);
@@ -53,7 +54,7 @@ class SellerService
     public function viewSeller($id)
     {
         $user = User::with(['products'])->where('id', $id)
-        ->where('type', 'seller')
+        ->where('type', UserType::SELLER)
         ->first();
 
         if (!$user) {
@@ -126,7 +127,7 @@ class SellerService
         $query = request()->query('approved');
 
         $users = User::with(['products'])
-            ->where('type', 'seller')
+            ->where('type', UserType::SELLER)
             ->when($query !== null, function ($queryBuilder) use ($query) {
                 $queryBuilder->where('is_admin_approve', $query);
             })
@@ -152,7 +153,7 @@ class SellerService
     {
         $query = request()->input('query');
 
-        $users = User::where('type', 'seller')
+        $users = User::where('type', UserType::SELLER)
         ->where(function($queryBuilder) use ($query) {
             $queryBuilder->where('first_name', 'LIKE', '%' . $query . '%')
                          ->orWhere('last_name', 'LIKE', '%' . $query . '%')

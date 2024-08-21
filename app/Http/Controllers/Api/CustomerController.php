@@ -19,4 +19,19 @@ class CustomerController extends Controller
     {
         return $this->service->dashboardAnalytics($userId);
     }
+
+    public function acountOverview($userId)
+    {
+        return $this->service->acountOverview($userId);
+    }
+
+    public function recentOrders($userId)
+    {
+        return $this->service->recentOrders($userId);
+    }
+
+    public function getOrders($userId)
+    {
+        return $this->service->getOrders($userId);
+    }
 }

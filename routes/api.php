@@ -71,8 +71,10 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
     });
 
     Route::prefix('customer')->controller(CustomerController::class)->group(function () {
+        Route::get('/account-overview/{user_id}', 'acountOverview');
         Route::get('/dashboard/analytic/{user_id}', 'dashboardAnalytics');
-        Route::post('/subcategory/create', 'createSubCategory');
+        Route::get('/recent-orders/{user_id}', 'recentOrders');
+        Route::get('/orders/{user_id}', 'getOrders');
     });
 
     Route::prefix('category')->controller(CategoryController::class)->group(function () {
