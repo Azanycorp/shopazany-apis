@@ -336,12 +336,24 @@ class SellerService extends Controller
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $orders = Order::where('seller_id', $id)->get();
+        $orders = Order::where('seller_id', $id)
+        ->orderBy('created_at', 'desc')
+        ->paginate(25);
 
         $data = OrderResource::collection($orders);
 
-        return $this->success($data, "All Orders");
-
+        return [
+            'status' => 'true',
+            'message' => 'All Orders',
+            'data' => $data,
+            'pagination' => [
+                'current_page' => $orders->currentPage(),
+                'last_page' => $orders->lastPage(),
+                'per_page' => $orders->perPage(),
+                'prev_page_url' => $orders->previousPageUrl(),
+                'next_page_url' => $orders->nextPageUrl(),
+            ],
+        ];
     }
 
     public function getConfirmedOrders($id)
@@ -354,6 +366,7 @@ class SellerService extends Controller
 
         $orders = Order::where('seller_id', $id)
         ->where('status', OrderStatus::CONFIRMED)
+        ->orderBy('created_at', 'desc')
         ->get();
 
         $data = OrderResource::collection($orders);
@@ -372,6 +385,7 @@ class SellerService extends Controller
 
         $orders = Order::where('seller_id', $id)
         ->where('status', OrderStatus::CANCELLED)
+        ->orderBy('created_at', 'desc')
         ->get();
 
         $data = OrderResource::collection($orders);
@@ -390,6 +404,7 @@ class SellerService extends Controller
 
         $orders = Order::where('seller_id', $id)
         ->where('status', OrderStatus::DELIVERED)
+        ->orderBy('created_at', 'desc')
         ->get();
 
         $data = OrderResource::collection($orders);
@@ -408,6 +423,7 @@ class SellerService extends Controller
 
         $orders = Order::where('seller_id', $id)
         ->where('status', OrderStatus::PENDING)
+        ->orderBy('created_at', 'desc')
         ->get();
 
         $data = OrderResource::collection($orders);
@@ -425,6 +441,7 @@ class SellerService extends Controller
 
         $orders = Order::where('seller_id', $id)
         ->where('status', OrderStatus::PROCESSING)
+        ->orderBy('created_at', 'desc')
         ->get();
 
         $data = OrderResource::collection($orders);
@@ -443,6 +460,7 @@ class SellerService extends Controller
 
         $orders = Order::where('seller_id', $id)
         ->where('status', OrderStatus::SHIPPED)
+        ->orderBy('created_at', 'desc')
         ->get();
 
         $data = OrderResource::collection($orders);
