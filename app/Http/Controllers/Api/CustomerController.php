@@ -34,4 +34,9 @@ class CustomerController extends Controller
     {
         return $this->service->getOrders($userId);
     }
+
+    public function getOrderDetail($orderNo)
+    {
+        return $this->service->getOrderDetail($orderNo);
+    }
 }

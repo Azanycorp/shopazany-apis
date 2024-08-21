@@ -4,6 +4,7 @@ namespace App\Services\User;
 
 use App\Enum\UserType;
 use App\Http\Resources\AccountOverviewResource;
+use App\Http\Resources\OrderDetailResource;
 use App\Http\Resources\OrderResource;
 use App\Http\Resources\SellerProductResource;
 use App\Models\Country;
@@ -131,6 +132,17 @@ class CustomerService
                 'next_page_url' => $orders->nextPageUrl(),
             ],
         ];
+    }
+
+    public function getOrderDetail($orderNo)
+    {
+        $order = Order::with(['product', 'user'])
+        ->where('order_no', $orderNo)
+        ->get();
+
+        $data = OrderDetailResource::collection($order);
+
+        return $this->success($data, "Order detail");
     }
 }
 
