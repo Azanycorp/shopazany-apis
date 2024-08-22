@@ -154,4 +154,14 @@ class User extends Authenticatable
         return $this->hasMany(PaymentMethod::class, 'user_id');
     }
 
+    public function orderRate(): HasMany
+    {
+        return $this->hasMany(OrderRate::class, 'user_id');
+    }
+
+    public function wishlist()
+    {
+        return $this->hasMany(Wishlist::class, 'user_id');
+    }
+
 }

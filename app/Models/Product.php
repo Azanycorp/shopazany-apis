@@ -53,4 +53,9 @@ class Product extends Model
     {
         return $this->belongsTo(Country::class, 'country_id');
     }
+
+    public function wishlists()
+    {
+        return $this->hasMany(Wishlist::class, 'product_id');
+    }
 }
