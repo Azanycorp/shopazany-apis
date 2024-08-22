@@ -71,12 +71,26 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
     });
 
     Route::prefix('customer')->controller(CustomerController::class)->group(function () {
+        // Account and Dashboard Routes
         Route::get('/account-overview/{user_id}', 'acountOverview');
         Route::get('/dashboard/analytic/{user_id}', 'dashboardAnalytics');
+    
+        // Order Routes
         Route::get('/recent-orders/{user_id}', 'recentOrders');
         Route::get('/orders/{user_id}', 'getOrders');
         Route::get('/order/detail/{order_no}', 'getOrderDetail');
+        Route::post('/rate/order', 'rateOrder');
+    
+        // Support Route
+        Route::post('/support', 'support');
+    
+        // Wishlist Routes
+        Route::post('/wishlist', 'wishlist');
+        Route::get('/wishlist/{user_id}', 'getWishlist');
+        Route::get('/wishlist/single/{user_id}/{wishlist_id}', 'getSingleWishlist');
+        Route::delete('/wishlist/remove/{user_id}/{wishlist_id}', 'removeWishlist');
     });
+    
 
     Route::prefix('category')->controller(CategoryController::class)->group(function () {
         Route::post('/create', 'createCategory');

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\CustomerSupportRequest;
+use App\Http\Requests\OrderRateRequest;
 use App\Services\User\CustomerService;
 use Illuminate\Http\Request;
 
@@ -38,5 +40,40 @@ class CustomerController extends Controller
     public function getOrderDetail($orderNo)
     {
         return $this->service->getOrderDetail($orderNo);
+    }
+
+    public function rateOrder(OrderRateRequest $request)
+    {
+        return $this->service->rateOrder($request);
+    }
+
+    public function support(CustomerSupportRequest $request)
+    {
+        return $this->service->support($request);
+    }
+
+    public function wishlist(Request $request)
+    {
+        $request->validate([
+            'user_id' => ['required', 'integer', 'exists:users,id'],
+            'product_id' => ['required', 'integer']
+        ]);
+
+        return $this->service->wishlist($request);
+    }
+
+    public function getWishlist($userId)
+    {
+        return $this->service->getWishlist($userId);
+    }
+
+    public function getSingleWishlist($userId, $id)
+    {
+        return $this->service->getSingleWishlist($userId, $id);
+    }
+
+    public function removeWishlist($userId, $id)
+    {
+        return $this->service->removeWishlist($userId, $id);
     }
 }

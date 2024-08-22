@@ -12,6 +12,13 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 
+
+if (!function_exists('userAuth')) {
+    function userAuth() {
+        return auth()->user();
+    }
+}
+
 if (!function_exists('getSetting')) {
     function getSetting($key, $default = null, $lang = false)
     {
