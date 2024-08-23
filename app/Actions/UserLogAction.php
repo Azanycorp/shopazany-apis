@@ -29,9 +29,9 @@ class UserLogAction
     {
         try {
             UserLog::create([
-                'user_id' => $this->user->id,
-                'email' => $this->request->email,
-                'user_type' => $this->user->type,
+                'user_id' => $this->user?->id,
+                'email' => $this->request?->email,
+                'user_type' => $this->user?->type,
                 'action' => $this->action,
                 'description' => $this->description,
                 'ip' => $this->request->ip(),

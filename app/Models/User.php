@@ -27,7 +27,7 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
-        'uuid', 'first_name', 'last_name', 'email', 'password', 'address', 'city', 'postal_code', 'phone', 'country', 'provider_id', 'email_verified_at', 'verification_code', 'login_code', 'login_code_expires_at', 'is_affiliate_member', 'referrer_code', 'referrer_link', 'date_of_birth', 'is_verified', 'income_type', 'image', 'is_affiliate_member', 'status', 'type', 'middlename', 'state_id', 'is_admin_approve',
+        'uuid', 'first_name', 'last_name', 'email', 'password', 'address', 'city', 'postal_code', 'phone', 'country', 'provider_id', 'email_verified_at', 'verification_code', 'login_code', 'login_code_expires_at', 'is_affiliate_member', 'referrer_code', 'referrer_link', 'date_of_birth', 'is_verified', 'income_type', 'image', 'is_affiliate_member', 'status', 'type', 'middlename', 'state_id', 'is_admin_approve', 'two_factor_enabled',
     ];
 
     /**
@@ -126,12 +126,12 @@ class User extends Authenticatable
 
     public function userOrders(): HasMany
     {
-        return $this->hasMany(User::class, 'user_id');
+        return $this->hasMany(Order::class, 'user_id');
     }
 
     public function sellerOrders(): HasMany
     {
-        return $this->hasMany(User::class, 'seller_id');
+        return $this->hasMany(Order::class, 'seller_id');
     }
 
     public function country(): BelongsTo
@@ -142,6 +142,31 @@ class User extends Authenticatable
     public function state(): BelongsTo
     {
         return $this->belongsTo(State::class, 'state_id');
+    }
+
+    public function transactions(): HasMany
+    {
+        return $this->hasMany(Transaction::class, 'user_id');
+    }
+
+    public function paymentMethods(): HasMany
+    {
+        return $this->hasMany(PaymentMethod::class, 'user_id');
+    }
+
+    public function orderRate(): HasMany
+    {
+        return $this->hasMany(OrderRate::class, 'user_id');
+    }
+
+    public function wishlist()
+    {
+        return $this->hasMany(Wishlist::class, 'user_id');
+    }
+
+    public function userActions()
+    {
+        return $this->hasMany(UserAction::class, 'user_id');
     }
 
 }

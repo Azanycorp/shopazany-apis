@@ -3,7 +3,6 @@
 namespace App\Services\Auth;
 
 use App\Actions\SendEmailAction;
-use App\Actions\UserLogAction;
 use App\Enum\UserLog;
 use App\Enum\UserStatus;
 use App\Http\Controllers\Controller;
@@ -15,7 +14,6 @@ use App\Trait\HttpResponse;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
@@ -31,99 +29,34 @@ class AuthService extends Controller
         if (Auth::attempt($request->only(['email', 'password']))) {
             $user = User::where('email', $request->email)->first();
 
-            if($user->email_verified_at === null && $user->verification_code !== null){
-                $description = "Account not verified, user {$request->email}";
-                $response = $this->error([
-                    'id' => $user->id,
-                    'status' => "pending"
-                ], "Account not verified or inactive", 400);
-                $action = UserLog::LOGIN_ATTEMPT;
-
-                $this->logUserAction($request, $action, $description, $response, $user);
-
-                return $response;
+            if ($this->isAccountUnverifiedOrInactive($user, $request)) {
+                return $this->handleAccountIssues($user, $request, "Account not verified or inactive", UserLog::LOGIN_ATTEMPT);
             }
 
-            if($user->status === UserStatus::PENDING){
-                $description = "Account is pending, user {$request->email}";
-                $response = $this->error([
-                    'id' => $user->id,
-                    'status' => UserStatus::PENDING
-                ], "Account not verified or inactive", 400);
-                $action = UserLog::LOGIN_ATTEMPT;
-
-                $this->logUserAction($request, $action, $description, $response, $user);
-
-                return $response;
+            if ($this->isAccountPending($user, $request)) {
+                return $this->handleAccountIssues($user, $request, "Account not verified or inactive", UserLog::LOGIN_ATTEMPT, UserStatus::PENDING);
             }
 
-            if($user->status === UserStatus::SUSPENDED){
-                $description = "Account is suspended, user {$request->email}";
-                $response = $this->error([
-                    'id' => $user->id,
-                    'status' => UserStatus::SUSPENDED
-                ], "Account is suspended, contact support", 400);
-                $action = UserLog::LOGIN_ATTEMPT;
-
-                $this->logUserAction($request, $action, $description, $response, $user);
-
-                return $response;
+            if ($this->isAccountSuspended($user, $request)) {
+                return $this->handleAccountIssues($user, $request, "Account is suspended, contact support", UserLog::LOGIN_ATTEMPT, UserStatus::SUSPENDED);
             }
 
-            if($user->status === UserStatus::BLOCKED){
-
-                $description = "Account is blocked, user {$request->email}";
-                $response = $this->error([
-                    'id' => $user->id,
-                    'status' => UserStatus::BLOCKED
-                ], "Account is blocked, contact support", 400);
-                $action = UserLog::LOGIN_ATTEMPT;
-
-                $this->logUserAction($request, $action, $description, $response, $user);
-                return $response;
+            if ($this->isAccountBlocked($user, $request)) {
+                return $this->handleAccountIssues($user, $request, "Account is blocked, contact support", UserLog::LOGIN_ATTEMPT, UserStatus::BLOCKED);
             }
 
-            if(! $user->is_admin_approve){
-                $description = "Account not approved, user {$request->email}";
-                $response = $this->error([
-                    'id' => $user->id,
-                    'status' => UserStatus::BLOCKED
-                ], "Account not approved, contact support", 400);
-                $action = UserLog::LOGIN_ATTEMPT;
-
-                $this->logUserAction($request, $action, $description, $response, $user);
-                return $response;
+            if (!$user->is_admin_approve) {
+                return $this->handleAccountIssues($user, $request, "Account not approved, contact support", UserLog::LOGIN_ATTEMPT, UserStatus::BLOCKED);
             }
 
-            if($user->login_code_expires_at > now()) {
-                return $this->error(null, "Please wait a few minutes before requesting a new code.", 400);
+            if ($user->two_factor_enabled) {
+                return $this->handleTwoFactorAuthentication($user, $request);
+            } else {
+                return $this->logUserIn($user, $request);
             }
-
-            $code = $this->generateVerificationCode();
-            $time = now()->addMinutes(5);
-
-            $user->update([
-                'login_code' => $code,
-                'login_code_expires_at' => $time
-            ]);
-
-            Mail::to($request->email)->send(new LoginVerifyMail($user));
-
-            $description = "Attempt to login by {$request->email}";
-            $response = $this->success(null, "Code has been sent to your email address.");
-            $action = UserLog::LOGIN_ATTEMPT;
-
-            $this->logUserAction($request, $action, $description, $response, $user);
-
-            return $response;
         }
 
-        $description = "Login OTP sent to {$request->email}";
-        $action = UserLog::LOGIN_ATTEMPT;
-        $response = $this->error(null, 'Credentials do not match', 401);
-
-        $this->logUserAction($request, $action, $description, $response);
-        return $response;
+        return $this->handleInvalidCredentials($request);
     }
 
     public function loginVerify($request)
@@ -155,7 +88,7 @@ class AuthService extends Controller
             'expires_at' => $token->accessToken->expires_at,
         ]);
 
-        $this->logUserAction($request, $action, $description, $response, $user);
+        logUserAction($request, $action, $description, $response, $user);
 
         return $response;
     }
@@ -166,7 +99,7 @@ class AuthService extends Controller
         $user = null;
 
         try {
-            $code = $this->generateVerificationCode();
+            $code = generateVerificationCode();
 
             $user = User::create([
                 'first_name' => $request->first_name,
@@ -183,7 +116,7 @@ class AuthService extends Controller
             $response = $this->success(null, "Created successfully");
             $action = UserLog::CREATED;
 
-            $this->logUserAction($request, $action, $description, $response, $user);
+            logUserAction($request, $action, $description, $response, $user);
 
             return $response;
         } catch (\Exception $e) {
@@ -191,7 +124,7 @@ class AuthService extends Controller
             $response = $this->error(null, $e->getMessage(), 500);
             $action = UserLog::FAILED;
 
-            $this->logUserAction($request, $action, $description, $response, $user);
+            logUserAction($request, $action, $description, $response, $user);
 
             return $response;
         }
@@ -213,7 +146,7 @@ class AuthService extends Controller
             $action = UserLog::CODE_RESENT;
             $response = $this->success(null, "Code resent successfully");
 
-            $this->logUserAction($request, $action, $description, $response, $user);
+            logUserAction($request, $action, $description, $response, $user);
 
             return $response;
         } catch (\Exception $e) {
@@ -221,7 +154,7 @@ class AuthService extends Controller
             $action = UserLog::FAILED;
             $response = $this->error(null, $e->getMessage(), 500);
 
-            $this->logUserAction($request, $action, $description, $response, $user);
+            logUserAction($request, $action, $description, $response, $user);
             return $response;
         }
     }
@@ -232,7 +165,7 @@ class AuthService extends Controller
         $user = null;
 
         try {
-            $code = $this->generateVerificationCode();
+            $code = generateVerificationCode();
 
             $user = User::create([
                 'first_name' => $request->first_name,
@@ -253,7 +186,7 @@ class AuthService extends Controller
             $action = UserLog::CREATED;
             $response = $this->success(null, "Created successfully");
 
-            $this->logUserAction($request, $action, $description, $response, $user);
+            logUserAction($request, $action, $description, $response, $user);
 
             return $this->success(null, "Created successfully");
         } catch (\Exception $e) {
@@ -261,7 +194,7 @@ class AuthService extends Controller
             $action = UserLog::FAILED;
             $response = $this->error(null, $e->getMessage(), 500);
 
-            $this->logUserAction($request, $action, $description, $response, $user);
+            logUserAction($request, $action, $description, $response, $user);
 
             return $response;
         }
@@ -291,7 +224,7 @@ class AuthService extends Controller
         $action = UserLog::CREATED;
         $response = $this->success(null, "Verified successfully");
 
-        $this->logUserAction($request, $action, $description, $response, $user);
+        logUserAction($request, $action, $description, $response, $user);
 
         return $response;
     }
@@ -312,7 +245,7 @@ class AuthService extends Controller
         $action = UserLog::PASSWORD_FORGOT;
         $response = $this->success(null, "Request successfully");
 
-        $this->logUserAction($request, $action, $description, $response, $user);
+        logUserAction($request, $action, $description, $response, $user);
 
         return $status === Password::RESET_LINK_SENT
             ? response()->json(['message' => __($status)])
@@ -340,7 +273,7 @@ class AuthService extends Controller
         $action = UserLog::PASSWORD_RESET;
         $response = $this->success(null, "Reset successfully");
 
-        $this->logUserAction($request, $action, $description, $response, $user);
+        logUserAction($request, $action, $description, $response, $user);
 
         return $status == Password::PASSWORD_RESET
             ? response()->json(['message' => __($status)])
@@ -358,7 +291,7 @@ class AuthService extends Controller
             'message' => 'You have successfully logged out and your token has been deleted'
         ]);
 
-        $this->logUserAction(request(), $action, $description, $response, $user);
+        logUserAction(request(), $action, $description, $response, $user);
 
         return $response;
     }
@@ -383,7 +316,7 @@ class AuthService extends Controller
                     $action = UserLog::CREATED;
                     $response = $this->error(null, 'User with referral code has not been verified', 400);
 
-                    $this->logUserAction($request, $action, $description, $response, $user);
+                    logUserAction($request, $action, $description, $response, $user);
                     return $response;
                 }
             }
@@ -392,7 +325,7 @@ class AuthService extends Controller
                 $referrer_code = $this->determineReferrerCode($request);
 
                 $referrer_link = $this->generateReferrerLink($referrer_code);
-                $code = $this->generateVerificationCode();
+                $code = generateVerificationCode();
 
                 $data = $this->userTrigger($user, $request, $referrer_link, $referrer_code, $code);
 
@@ -407,7 +340,7 @@ class AuthService extends Controller
             $action = UserLog::FAILED;
             $response = $this->error(null, $e->getMessage(), 500);
 
-            $this->logUserAction($request, $action, $description, $response, $user);
+            logUserAction($request, $action, $description, $response, $user);
             return $response;
         }
     }
@@ -432,10 +365,6 @@ class AuthService extends Controller
         return config('services.frontend_baseurl') . '/register?referrer=' . $referrer_code;
     }
 
-    private function generateVerificationCode()
-    {
-        return str_pad(mt_rand(0, 999999), 6, '0', STR_PAD_LEFT);
-    }
 
     private function handleExistingUser($user)
     {
@@ -483,7 +412,7 @@ class AuthService extends Controller
             $action = UserLog::CREATED;
             $response = $this->success(null, "Created successfully");
 
-            $this->logUserAction($request, $action, $description, $response, $user);
+            logUserAction($request, $action, $description, $response, $user);
 
             if (is_null($emailVerified)) {
                 $user->update(['email_verified_at' => null, 'verification_code' => $code,]);
@@ -518,7 +447,7 @@ class AuthService extends Controller
             $action = UserLog::CREATED;
             $response = $this->success(null, "Created successfully");
 
-            $this->logUserAction($request, $action, $description, $response, $user);
+            logUserAction($request, $action, $description, $response, $user);
 
             return $user;
         }
