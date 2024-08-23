@@ -164,4 +164,9 @@ class User extends Authenticatable
         return $this->hasMany(Wishlist::class, 'user_id');
     }
 
+    public function userActions()
+    {
+        return $this->hasMany(UserAction::class, 'user_id');
+    }
+
 }
