@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\AdminAuthController;
 use App\Http\Controllers\Api\AdminCustomerController;
 use App\Http\Controllers\Api\AdminSellerController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\RewardPointController;
 
 Route::prefix('connect')->controller(AdminAuthController::class)->group(function () {
     Route::post('/login', 'login');
@@ -55,11 +56,11 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::get('/', 'allCustomers');
         Route::get('/filter', 'filter');
         Route::get('/search', 'search');
-    
+
         Route::get('/{user_id}', 'viewCustomer');
         Route::patch('/{user_id}/edit', 'editCustomer');
         Route::delete('/remove/{user_id}', 'removeCustomer');
-    
+
         Route::patch('/approve', 'approveCustomer');
         Route::patch('/ban', 'banCustomer');
     });
@@ -68,13 +69,21 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::get('/', 'allSellers');
         Route::get('/filter', 'filter');
         Route::get('/search', 'search');
-    
+
         Route::get('/{user_id}', 'viewSeller');
         Route::patch('/{user_id}/edit', 'editSeller');
         Route::delete('/remove/{user_id}', 'removeSeller');
-    
+
         Route::patch('/approve', 'approveSeller');
         Route::patch('/ban', 'banSeller');
+    });
+
+    Route::prefix('reward')->controller(RewardPointController::class)->group(function () {
+        Route::post('/action', 'addPoints');
+        Route::get('/action', 'getPoints');
+        Route::get('/action/{id}', 'getOnePoints');
+        Route::patch('/action/{id}', 'editPoints');
+        Route::delete('/action/{id}', 'getPoints');
     });
 
 
