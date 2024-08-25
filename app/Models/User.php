@@ -16,7 +16,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 
-#[ObservedBy([UserObserver::class])]
 class User extends Authenticatable
 {
     use HasFactory, Notifiable, HasApiTokens, SoftDeletes;
@@ -159,14 +158,19 @@ class User extends Authenticatable
         return $this->hasMany(OrderRate::class, 'user_id');
     }
 
-    public function wishlist()
+    public function wishlist(): HasMany
     {
         return $this->hasMany(Wishlist::class, 'user_id');
     }
 
-    public function userActions()
+    public function userActions(): HasMany
     {
         return $this->hasMany(UserAction::class, 'user_id');
+    }
+
+    public function userActivityLog(): HasMany
+    {
+        return $this->hasMany(UserActivityLog::class, 'user_id');
     }
 
 }

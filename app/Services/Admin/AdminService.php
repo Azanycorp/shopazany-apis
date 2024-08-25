@@ -16,6 +16,7 @@ use App\Models\Size;
 use App\Models\SliderImage;
 use App\Models\State;
 use App\Models\Unit;
+use App\Models\User;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
@@ -163,6 +164,27 @@ class AdminService
         $data = ShopCountryResource::collection($shopbycountries);
 
         return $this->success($data, "List");
+    }
+
+    public function referralGenerate()
+    {
+        $users = User::whereNull('referrer_code')
+            ->orWhereNull('referrer_link')
+            ->get();
+
+        foreach($users as $user) {
+            if (!$user->referrer_code) {
+                $user->referrer_code = generate_referral_code();
+            }
+
+            if (!$user->referral_link) {
+                $user->referrer_link = generate_referrer_link($user->referrer_code);
+            }
+
+            $user->save();
+        }
+
+        return $this->success(null, "Generated successfully");
     }
 }
 

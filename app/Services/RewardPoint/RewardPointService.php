@@ -22,7 +22,8 @@ class RewardPointService
             }
 
             Action::create([
-                'name' => $name,
+                'name' => $request->name,
+                'slug' => $name,
                 'points' => $request->points
             ]);
 
@@ -39,7 +40,8 @@ class RewardPointService
         $data = $actions->map(function($action) {
             return [
                 'id' => $action->id,
-                'name' => ucfirst(str_replace('_', ' ', $action->name)),
+                'name' => $action->name,
+                'slug' => $action->slug,
                 'points' => $action->points,
             ];
         });
@@ -57,7 +59,8 @@ class RewardPointService
 
         $data = [
             'id' => $action->id,
-            'name' => ucfirst(str_replace('_', ' ', $action->name)),
+            'name' => $action->name,
+            'slug' => $action->slug,
             'points' => $action->points,
         ];
 
@@ -75,7 +78,8 @@ class RewardPointService
         $name = strtolower(str_replace(' ', '_', $request->name));
 
         $action->update([
-            'name' => $name,
+            'name' => $request->name,
+            'slug' => $name,
             'points' => $request->points
         ]);
 

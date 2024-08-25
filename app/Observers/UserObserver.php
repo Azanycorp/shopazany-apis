@@ -2,6 +2,7 @@
 
 namespace App\Observers;
 
+use App\Enum\UserType;
 use App\Mail\SignUpVerifyMail;
 use App\Models\User;
 use Illuminate\Contracts\Events\ShouldHandleEventsAfterCommit;
@@ -15,6 +16,14 @@ class UserObserver implements ShouldHandleEventsAfterCommit
     public function created(User $user): void
     {
         Mail::to($user->email)->send(new SignUpVerifyMail($user));
+
+        if($user->type === UserType::CUSTOMER) {
+            reward_user($user, 'create_account', 'completed');
+
+            $user->referrer_code = generate_referral_code();
+            $user->referrer_link = generate_referrer_link($user->referrer_code);
+            $user->save();
+        }
     }
 
     /**
