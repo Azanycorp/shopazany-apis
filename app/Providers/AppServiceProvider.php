@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Models\User;
+use App\Observers\UserObserver;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -38,8 +40,10 @@ class AppServiceProvider extends ServiceProvider
 
         RateLimiter::for('apis', function (Request $request) {
             return $request->user() ?
-                Limit::perMinute(10)->by($request->ip())
-                : Limit::perMinute(5)->by($request->ip());
+                Limit::perMinute(60)->by($request->ip())
+                : Limit::perMinute(20)->by($request->ip());
         });
+
+        User::observe(UserObserver::class);
     }
 }

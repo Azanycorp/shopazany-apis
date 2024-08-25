@@ -20,7 +20,7 @@ class CustomerService
 {
     use HttpResponse;
 
-    public function dashboardAnalytics($userId)
+    public function dashboardAnalytics(int $userId)
     {
         $currentUser = userAuth();
 
@@ -60,7 +60,7 @@ class CustomerService
         return $this->success($data, "You are now shopping in {$country->name}");
     }
 
-    public function acountOverview($userId)
+    public function acountOverview(int $userId)
     {
         $currentUser = userAuth();
 
@@ -79,7 +79,7 @@ class CustomerService
         return $this->success($data, "Account overview");
     }
 
-    public function recentOrders($userId)
+    public function recentOrders(int $userId)
     {
         $currentUser = userAuth();
 
@@ -223,7 +223,7 @@ class CustomerService
         return $this->success(null, "Product added to wishlist!");
     }
 
-    public function getWishlist($userId)
+    public function getWishlist(int $userId)
     {
         $currentUser = userAuth();
 
@@ -243,7 +243,7 @@ class CustomerService
         return $this->success($data, "Wishlists");
     }
 
-    public function getSingleWishlist($userId, $id)
+    public function getSingleWishlist(int $userId, $id)
     {
         $currentUser = userAuth();
 
@@ -291,6 +291,57 @@ class CustomerService
         }
 
         return $this->success(null, "Product removed from wishlist!");
+    }
+
+    public function rewardDashboard(int $userId)
+    {
+        $currentUser = userAuth();
+
+        if ($currentUser->id != $userId || $currentUser->type != UserType::CUSTOMER) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+
+        $user = User::with('userActions')->find($userId);
+
+        if (!$user) {
+            return $this->error(null, "User not found", 404);
+        }
+
+        $points = $user->userActions()->sum('points');
+
+        $data = (object) [
+            'points_earned' => (int)$points,
+            'points_cleared' => 0,
+        ];
+
+        return $this->success($data, "Points");
+    }
+
+    public function activity(int $userId)
+    {
+        $currentUser = userAuth();
+
+        if ($currentUser->id != $userId || $currentUser->type != UserType::CUSTOMER) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+
+        $user = User::with('userActivityLog')->find($userId);
+
+        if (!$user) {
+            return $this->error(null, "User not found", 404);
+        }
+
+        $data = $user->userActivityLog->map(function ($log) {
+            return [
+                'id' => $log->id,
+                'description' => $log->description,
+                'points' => $log->points_awarded,
+                'status' => $log->status,
+                'date' => $log->created_at,
+            ];
+        });
+
+        return $this->success($data, "User activity");
     }
 }
 

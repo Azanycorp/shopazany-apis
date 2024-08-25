@@ -86,4 +86,9 @@ class ApiController extends Controller
     {
         return $this->customerService->userShopByCountry($countryId);
     }
+
+    public function referralGenerate()
+    {
+        return $this->service->referralGenerate();
+    }
 }
