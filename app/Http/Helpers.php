@@ -27,13 +27,7 @@ if (!function_exists('reward_user')) {
 if (!function_exists('log_user_activity')) {
     function log_user_activity($user, $action, $status, $description = null)
     {
-        UserActivityLog::create([
-            'user_id' => $user->id,
-            'action' => $action->slug,
-            'points_awarded' => $action->points,
-            'description' => $description ?? "Activity bonus ($action->name)",
-            'status' => $status,
-        ]);
+        UserActivityLog::logAction($user, $action, $status, $description);
     }
 }
 
