@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
-use App\Http\Requests\CustomerSupportRequest;
-use App\Http\Requests\OrderRateRequest;
-use App\Services\User\CustomerService;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use App\Services\User\CustomerService;
+use App\Http\Requests\OrderRateRequest;
+use App\Http\Requests\CustomerSupportRequest;
+use App\Http\Controllers\Api\MailingListController;
 
 class CustomerController extends Controller
 {
@@ -76,4 +77,15 @@ class CustomerController extends Controller
     {
         return $this->service->removeWishlist($userId, $id);
     }
+
+    public function rewardDashboard($userId)
+    {
+        return $this->service->rewardDashboard($userId);
+    }
+
+    public function activity($userId)
+    {
+        return $this->service->activity($userId);
+    }
+    
 }

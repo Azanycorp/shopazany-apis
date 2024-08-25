@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\ApiController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\CustomerController;
+use App\Http\Controllers\Api\MailingListController;
 use App\Http\Controllers\Api\SellerController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Http\Request;
@@ -73,24 +74,30 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
     Route::prefix('customer')->controller(CustomerController::class)->group(function () {
         // Account and Dashboard Routes
         Route::get('/account-overview/{user_id}', 'acountOverview');
+        Route::get('/activity/{user_id}', 'activity');
         Route::get('/dashboard/analytic/{user_id}', 'dashboardAnalytics');
-    
+
         // Order Routes
         Route::get('/recent-orders/{user_id}', 'recentOrders');
         Route::get('/orders/{user_id}', 'getOrders');
         Route::get('/order/detail/{order_no}', 'getOrderDetail');
         Route::post('/rate/order', 'rateOrder');
-    
+
+        //Reward Point
+        Route::get('/reward/dashboard/{user_id}', 'rewardDashboard');
+
         // Support Route
         Route::post('/support', 'support');
-    
+
         // Wishlist Routes
         Route::post('/wishlist', 'wishlist');
         Route::get('/wishlist/{user_id}', 'getWishlist');
         Route::get('/wishlist/single/{user_id}/{wishlist_id}', 'getSingleWishlist');
         Route::delete('/wishlist/remove/{user_id}/{wishlist_id}', 'removeWishlist');
     });
-    
+
+    Route::post('customer/mailing/subscribe', [MailingListController::class, 'signup']);
+
 
     Route::prefix('category')->controller(CategoryController::class)->group(function () {
         Route::post('/create', 'createCategory');

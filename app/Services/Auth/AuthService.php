@@ -6,7 +6,6 @@ use App\Actions\SendEmailAction;
 use App\Enum\UserLog;
 use App\Enum\UserStatus;
 use App\Http\Controllers\Controller;
-use App\Mail\LoginVerifyMail;
 use App\Mail\SignUpVerifyMail;
 use App\Mail\UserWelcomeMail;
 use App\Models\User;
@@ -99,7 +98,15 @@ class AuthService extends Controller
         $user = null;
 
         try {
+            
             $code = generateVerificationCode();
+            $query = request()->query('referrer');
+
+            $referrer = null;
+            
+            if ($query) {
+                $referrer = User::where('referrer_code', $query)->first();
+            }
 
             $user = User::create([
                 'first_name' => $request->first_name,
@@ -112,12 +119,16 @@ class AuthService extends Controller
                 'password' => bcrypt($request->password)
             ]);
 
+            if ($referrer) {
+                reward_user($referrer, 'referral', 'completed');
+            }
+
             $description = "User with email: {$request->email} signed up";
             $response = $this->success(null, "Created successfully");
             $action = UserLog::CREATED;
 
             logUserAction($request, $action, $description, $response, $user);
-
+            
             return $response;
         } catch (\Exception $e) {
             $description = "Sign up failed: {$request->email}";
@@ -324,7 +335,7 @@ class AuthService extends Controller
             DB::transaction(function () use ($request, $user) {
                 $referrer_code = $this->determineReferrerCode($request);
 
-                $referrer_link = $this->generateReferrerLink($referrer_code);
+                $referrer_link = generate_referrer_link($referrer_code);
                 $code = generateVerificationCode();
 
                 $data = $this->userTrigger($user, $request, $referrer_link, $referrer_code, $code);
@@ -359,12 +370,6 @@ class AuthService extends Controller
 
         return $initial_referrer_code;
     }
-
-    private function generateReferrerLink($referrer_code)
-    {
-        return config('services.frontend_baseurl') . '/register?referrer=' . $referrer_code;
-    }
-
 
     private function handleExistingUser($user)
     {

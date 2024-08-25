@@ -7,9 +7,10 @@ use App\Models\UserAction;
 
 class RewardService
 {
-    public function rewardUser($user, $actionName)
+    public function rewardUser($user, $actionName, $status)
     {
-        $action = Action::where('name', $actionName)->firstOrFail();
+        $action = Action::where('slug', $actionName)->firstOrFail();
+
         $userAction = UserAction::firstOrNew([
             'user_id' => $user->id,
             'action_id' => $action->id,
@@ -17,10 +18,12 @@ class RewardService
 
         if (!$userAction->is_rewarded) {
             $userAction->is_rewarded = true;
-            $userAction->save();
+            $userAction->points = $action->points;
+            $userAction->status = $status;
 
-            $user->points += $action->points;
-            $user->save();
+            log_user_activity($user, $action, $status);
+
+            $userAction->save();
 
             return $action->points;
         }

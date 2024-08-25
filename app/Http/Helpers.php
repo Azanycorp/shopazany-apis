@@ -6,12 +6,30 @@ use App\Models\Language;
 use App\Models\Transaction;
 use Illuminate\Support\Str;
 use App\Models\BusinessSetting;
+use App\Models\User;
+use App\Models\UserActivityLog;
+use App\Services\RewardPoint\RewardService;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 
+
+if (!function_exists('reward_user')) {
+    function reward_user($user, $actionName, $status)
+    {
+        $rewardService = app(RewardService::class);
+        return $rewardService->rewardUser($user, $actionName, $status);
+    }
+}
+
+if (!function_exists('log_user_activity')) {
+    function log_user_activity($user, $action, $status, $description = null)
+    {
+        UserActivityLog::logAction($user, $action, $status, $description);
+    }
+}
 
 if (!function_exists('userAuth')) {
     function userAuth() {
@@ -51,7 +69,6 @@ if (!function_exists('getSystemLanguage')) {
         return $language_query->first();
     }
 }
-
 
 if (!function_exists('getSliderImages')) {
     function getSliderImages($ids)
@@ -214,9 +231,29 @@ if(!function_exists('generateVerificationCode')) {
     }
 }
 
+if(!function_exists('generate_referral_code')) {
+    function generate_referral_code()
+    {
+        do {
+            $code = strtoupper(Str::random(10));
+        } while (User::where('referrer_code', $code)->exists());
 
+        return $code;
+    }
+}
 
+if(!function_exists('generate_referrer_link')) {
+    function generate_referrer_link($referrer_code)
+    {
+        if(App::environment('production')) {
+            $url = config('services.frontend_baseurl') . '/register?referrer=' . $referrer_code;
+        } else {
+            $url = config('services.local_frontend_baseurl') . '/register?referrer=' . $referrer_code;
+        }
 
+        return $url;
+    }
+}
 
 
 

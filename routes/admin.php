@@ -86,6 +86,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::delete('/action/{id}', 'getPoints');
     });
 
+    Route::get('/generate/users/link', [ApiController::class, 'referralGenerate']);
 
 });
 
