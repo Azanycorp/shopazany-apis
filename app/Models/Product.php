@@ -31,6 +31,7 @@ class Product extends Model
         'image',
         'added_by',
         'country_id',
+        'is_featured',
         'status'
     ];
 
@@ -57,5 +58,10 @@ class Product extends Model
     public function wishlists()
     {
         return $this->hasMany(Wishlist::class, 'product_id');
+    }
+
+    public function orders()
+    {
+        return $this->hasMany(Order::class, 'product_id');
     }
 }

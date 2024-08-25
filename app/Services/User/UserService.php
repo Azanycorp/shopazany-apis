@@ -270,9 +270,15 @@ class UserService extends Controller
             return $this->error(null, "User not found", 404);
         }
 
+        $password = $user->password;
+        
+        if($request->password) {
+            $password = bcrypt($request->password);
+        }
+
         $user->update([
             'two_factor_enabled' => $request->two_factor_enabled,
-            'password' => bcrypt($request->password)
+            'password' => $password,
         ]);
 
         return $this->success(null, "Settings changed successfully");
