@@ -518,40 +518,6 @@ class SellerService extends Controller
         }
     }
 
-    public function updateProfile($request, $userId)
-    {
-        $currentUserId = Auth::id();
-
-        if ($currentUserId != $userId) {
-            return $this->error(null, "Unauthorized action.", 401);
-        }
-
-        $user = User::find($userId);
-
-        if (!$user) {
-            return $this->error(null, "User not found", 404);
-        }
-
-        $image = uploadUserImage($request, 'image', $user);
-
-        $user->update([
-            'first_name' => $request->first_name,
-            'last_name' => $request->last_name,
-            'middlename' => $request->middlename,
-            'address' => $request->address,
-            'phone' => $request->phone_number,
-            'country' => $request->country_id,
-            'state_id' => $request->state_id,
-            'date_of_birth' => $request->date_of_birth,
-            'image' => $image,
-        ]);
-
-        return $this->success([
-            'user_id' => $user->id
-        ], "Updated successfully");
-
-    }
-
     public function dashboardAnalytics($userId)
     {
         $currentUserId = Auth::id();
