@@ -76,6 +76,8 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
             Route::get('/payment-method/{user_id}', 'getPaymentMethod');
         });
 
+        Route::post('/update-profile/{user_id}', 'updateProfile');
+
         Route::post('/settings/{user_id}', 'changeSettings');
     });
 
@@ -115,7 +117,6 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
     Route::prefix('seller')->controller(SellerController::class)->group(function () {
         // Business Information
         Route::post('/business/information', 'businessInfo');
-        Route::post('/update-profile/{user_id}', 'updateProfile');
         Route::get('/dashboard/analytic/{user_id}', 'dashboardAnalytics');
 
         // Product Routes

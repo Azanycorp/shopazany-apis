@@ -31,6 +31,40 @@ class UserService extends Controller
         return $this->success($data, "Profile");
     }
 
+    public function updateProfile($request, $userId)
+    {
+        $currentUserId = Auth::id();
+
+        if ($currentUserId != $userId) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+
+        $user = User::find($userId);
+
+        if (!$user) {
+            return $this->error(null, "User not found", 404);
+        }
+
+        $image = $request->hasFile('image') ? uploadUserImage($request, 'image', $user) : $user->image;
+
+        $user->update([
+            'first_name' => $request->first_name ?? $user->first_name,
+            'last_name' => $request->last_name ?? $user->last_name,
+            'middlename' => $request->middlename ?? $user->middlename,
+            'address' => $request->address ?? $user->address,
+            'phone' => $request->phone_number ?? $user->phone,
+            'country' => $request->country_id ?? $user->country,
+            'state_id' => $request->state_id ?? $user->state_id,
+            'date_of_birth' => $request->date_of_birth ?? $user->date_of_birth,
+            'image' => $image,
+        ]);
+
+        return $this->success([
+            'user_id' => $user->id
+        ], "Updated successfully");
+
+    }
+
     public function bankAccount($request)
     {
         $user = User::with(['bankAccount'])
