@@ -35,7 +35,7 @@ class HomeService
     {
         $countryId = request()->query('country_id');
 
-        $query = Product::where('featured', true);
+        $query = Product::where('is_featured', true);
 
         if ($countryId) {
             $query->where('country_id', $countryId);
