@@ -248,7 +248,7 @@ if(!function_exists('generate_referrer_link')) {
         if(App::environment('production')) {
             $url = config('services.frontend_baseurl') . '/register?referrer=' . $referrer_code;
         } else {
-            $url = config('services.local_frontend_baseurl') . '/register?referrer=' . $referrer_code;
+            $url = config('services.staging_frontend_baseurl') . '/register?referrer=' . $referrer_code;
         }
 
         return $url;
