@@ -42,7 +42,7 @@ class OrderSeeder extends Seeder
                 'order_no' => Str::random(10),
                 'shipping_address' => 'Lagos',
                 'order_date' => now(),
-                'total_amount' => 20000,
+                'total_amount' => 40000,
                 'payment_method' => 'card',
                 'payment_status' => 'success',
                 'status' => 'delivered',
@@ -59,7 +59,7 @@ class OrderSeeder extends Seeder
                 'order_no' => Str::random(10),
                 'shipping_address' => 'Lagos',
                 'order_date' => now(),
-                'total_amount' => 20000,
+                'total_amount' => 28000,
                 'payment_method' => 'card',
                 'payment_status' => 'success',
                 'status' => 'delivered',
@@ -69,6 +69,11 @@ class OrderSeeder extends Seeder
             ]
         ];
 
-        Order::insert($data);
+        foreach ($data as $orderData) {
+            Order::updateOrCreate(
+                ['order_no' => $orderData['order_no']],
+                $orderData
+            );
+        }
     }
 }
