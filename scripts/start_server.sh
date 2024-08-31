@@ -26,9 +26,6 @@ aws s3 cp s3://azany-env/staging/be.env ./.env
 # Migrate DB tables
 php artisan migrate --force
 
-# Seed Order data
-php artisan db:seed
-
 # activate cron jobs
 php artisan schedule:run
 
