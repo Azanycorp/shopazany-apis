@@ -14,13 +14,21 @@ class HomeService
     {
         $countryId = request()->query('country_id');
 
-        $query = Product::with('orders')
-                        ->select('products.id', DB::raw('COUNT(orders.id) as total_orders'))
-                        ->join('orders', 'orders.product_id', '=', 'products.id')
-                        ->where('orders.status', 'completed')
-                        ->groupBy('products.id')
-                        ->orderBy('total_orders', 'DESC')
-                        ->take(10);
+        $query = Product::select(
+            'products.id',
+            'products.name',
+            'products.slug',
+            'products.image',
+            'products.price',
+            'products.description',
+            'products.category_id',
+            DB::raw('COUNT(orders.id) as total_orders'))
+            ->leftJoin('orders', 'orders.product_id', '=', 'products.id')
+            ->where('orders.status', 'delivered')
+            ->groupBy('products.id', 'products.name', 'products.price', 'products.slug', 'products.image', 'products.description',
+            'products.category_id')
+            ->orderBy('total_orders', 'DESC')
+            ->take(10);
 
         if ($countryId) {
             $query->where('orders.country_id', $countryId);
@@ -30,6 +38,7 @@ class HomeService
 
         return $this->success($products, "Best selling products");
     }
+
 
     public function featuredProduct()
     {
