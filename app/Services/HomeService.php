@@ -17,7 +17,7 @@ class HomeService
         $query = Product::with('orders')
                         ->select('products.id', DB::raw('COUNT(orders.id) as total_orders'))
                         ->join('orders', 'orders.product_id', '=', 'products.id')
-                        ->where('orders.status', 'completed')
+                        ->where('orders.status', 'delivered')
                         ->groupBy('products.id')
                         ->orderBy('total_orders', 'DESC')
                         ->take(10);
