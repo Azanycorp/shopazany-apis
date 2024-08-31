@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Http\Resources\SellerProductResource;
 use App\Models\Product;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Facades\DB;
@@ -52,7 +53,9 @@ class HomeService
 
         $featuredProducts = $query->limit(8)->get();
 
-        return $this->success($featuredProducts, "Featured products");
+        $data = SellerProductResource::collection($featuredProducts);
+
+        return $this->success($data, "Featured products");
     }
 
     public function pocketFriendly()
@@ -71,7 +74,9 @@ class HomeService
 
         $products = $query->get();
 
-        return $this->success($products, "Pocket friendly products");
+        $data = SellerProductResource::collection($products);
+
+        return $this->success($data, "Pocket friendly products");
     }
 }
 
