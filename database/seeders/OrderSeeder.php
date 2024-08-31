@@ -17,6 +17,7 @@ class OrderSeeder extends Seeder
     {
         $data = [
             [
+                'id' => 1,
                 'user_id' => 6,
                 'seller_id' => 9,
                 'product_id' => 1,
@@ -33,6 +34,7 @@ class OrderSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
+                'id' => 2,
                 'user_id' => 7,
                 'seller_id' => 9,
                 'product_id' => 1,
@@ -49,6 +51,7 @@ class OrderSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
+                'id' => 3,
                 'user_id' => 11,
                 'seller_id' => 9,
                 'product_id' => 1,
