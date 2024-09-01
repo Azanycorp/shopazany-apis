@@ -11,7 +11,9 @@ use App\Http\Controllers\Api\AdminAuthController;
 use App\Http\Controllers\Api\AdminCustomerController;
 use App\Http\Controllers\Api\AdminSellerController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\FaqController;
 use App\Http\Controllers\Api\RewardPointController;
+use App\Http\Controllers\Api\SettingsController;
 
 Route::prefix('connect')->controller(AdminAuthController::class)->group(function () {
     Route::post('/login', 'login');
@@ -85,6 +87,24 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::patch('/action/{id}', 'editPoints');
         Route::delete('/action/{id}', 'getPoints');
     });
+
+    Route::prefix('settings')->controller(SettingsController::class)->group(function () {
+        Route::post('/seo', 'addSeo');
+        Route::get('/seo', 'getSeo');
+        Route::post('/terms-service', 'addTermsService');
+        Route::get('/terms-service', 'getTermsService');
+        Route::post('/cookie-policy', 'addCookiePolicy');
+        Route::get('/cookie-policy', 'getCookiePolicy');
+        Route::post('/about-us', 'addAboutUs');
+        Route::get('/about-us', 'getAboutUs');
+        Route::post('/contact-info', 'addContactInfo');
+        Route::get('/contact-info', 'getContactInfo');
+
+        Route::post('/social', 'addSocial');
+        Route::get('/social', 'getSocial');
+    });
+
+    Route::resource('settings/faq', FaqController::class);
 
     Route::get('/generate/users/link', [ApiController::class, 'referralGenerate']);
 
