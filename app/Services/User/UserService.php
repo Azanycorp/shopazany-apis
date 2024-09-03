@@ -255,15 +255,15 @@ class UserService extends Controller
             case 'bank_transfer':
                 $methodAdded = $this->addBankTransfer($request, $user);
                 break;
-    
+
             case 'paypal':
                 $methodAdded = $this->addPayPal($request, $user);
                 break;
-    
+
             default:
                 return $this->error(null, "Invalid type", 400);
         }
-    
+
         if ($methodAdded) {
             return $this->success(null, "Added successfully");
         } else {
@@ -305,7 +305,7 @@ class UserService extends Controller
         }
 
         $password = $user->password;
-        
+
         if($request->password) {
             $password = bcrypt($request->password);
         }

@@ -19,4 +19,9 @@ class Admin extends Authenticatable
         'password',
         'status'
     ];
+
+    public function products()
+    {
+        return $this->hasMany(Product::class, 'admin_id');
+    }
 }
