@@ -44,9 +44,4 @@ class AdminCustomerController extends Controller
         return $this->service->filter();
     }
 
-    public function search()
-    {
-        return $this->service->search();
-    }
-    
 }

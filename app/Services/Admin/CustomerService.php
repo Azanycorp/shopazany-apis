@@ -12,7 +12,15 @@ class CustomerService
 
     public function allCustomers()
     {
+        $query = request()->input('search');
+
         $users = User::where('type', 'customer')
+        ->where(function($queryBuilder) use ($query) {
+            $queryBuilder->where('first_name', 'LIKE', '%' . $query . '%')
+                         ->orWhere('last_name', 'LIKE', '%' . $query . '%')
+                         ->orWhere('middlename', 'LIKE', '%' . $query . '%')
+                         ->orWhere('email', 'LIKE', '%' . $query . '%');
+        })
         ->paginate(25);
 
         $data = CustomerResource::collection($users);
@@ -109,33 +117,5 @@ class CustomerService
         ];
     }
 
-    public function search()
-    {
-        $query = request()->input('query');
-
-        $users = User::where('type', 'customer')
-        ->where(function($queryBuilder) use ($query) {
-            $queryBuilder->where('first_name', 'LIKE', '%' . $query . '%')
-                         ->orWhere('last_name', 'LIKE', '%' . $query . '%')
-                         ->orWhere('middlename', 'LIKE', '%' . $query . '%')
-                         ->orWhere('email', 'LIKE', '%' . $query . '%');
-        })
-        ->paginate(25);
-
-        $data = CustomerResource::collection($users);
-
-        return [
-            'status' => 'true',
-            'message' => 'Filter by approval',
-            'data' => $data,
-            'pagination' => [
-                'current_page' => $users->currentPage(),
-                'last_page' => $users->lastPage(),
-                'per_page' => $users->perPage(),
-                'prev_page_url' => $users->previousPageUrl(),
-                'next_page_url' => $users->nextPageUrl(),
-            ],
-        ];
-    }
 }
 

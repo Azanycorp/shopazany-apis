@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Http\Resources\SellerProductResource;
+use App\Http\Resources\SingleProductResource;
 use App\Models\Product;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Facades\DB;
@@ -77,6 +78,15 @@ class HomeService
         $data = SellerProductResource::collection($products);
 
         return $this->success($data, "Pocket friendly products");
+    }
+
+    public function productSlug($slug)
+    {
+        $product = Product::where('slug', $slug)->firstOrFail();
+
+        $data = new SingleProductResource($product);
+
+        return $this->success($data, "Product detail");
     }
 }
 

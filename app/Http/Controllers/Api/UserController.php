@@ -39,7 +39,7 @@ class UserController extends Controller
         $request->validate([
             'user_id' => ['required', 'integer', 'exists:users,id']
         ]);
-        
+
         return $this->service->removeBankAccount($request);
     }
 

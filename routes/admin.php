@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\BrandController;
 use App\Http\Controllers\Api\ColorController;
 use App\Http\Controllers\Api\AdminAuthController;
 use App\Http\Controllers\Api\AdminCustomerController;
+use App\Http\Controllers\Api\AdminProductController;
 use App\Http\Controllers\Api\AdminSellerController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\FaqController;
@@ -57,7 +58,6 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::prefix('customer')->controller(AdminCustomerController::class)->group(function () {
         Route::get('/', 'allCustomers');
         Route::get('/filter', 'filter');
-        Route::get('/search', 'search');
 
         Route::get('/{user_id}', 'viewCustomer');
         Route::patch('/{user_id}/edit', 'editCustomer');
@@ -69,8 +69,6 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
     Route::prefix('seller')->controller(AdminSellerController::class)->group(function () {
         Route::get('/', 'allSellers');
-        Route::get('/filter', 'filter');
-        Route::get('/search', 'search');
 
         Route::get('/{user_id}', 'viewSeller');
         Route::patch('/{user_id}/edit', 'editSeller');
@@ -78,6 +76,12 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
         Route::patch('/approve', 'approveSeller');
         Route::patch('/ban', 'banSeller');
+    });
+
+    Route::prefix('product')->controller(AdminProductController::class)->group(function () {
+        Route::post('/add', 'addProduct');
+        Route::get('/', 'getProduct');
+        Route::get('/{slug}', 'getOneProduct');
     });
 
     Route::prefix('reward')->controller(RewardPointController::class)->group(function () {
