@@ -29,4 +29,9 @@ class HomeController extends Controller
     {
         return $this->service->pocketFriendly();
     }
+
+    public function productSlug($slug)
+    {
+        return $this->service->productSlug($slug);
+    }
 }

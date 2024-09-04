@@ -55,6 +55,8 @@ Route::controller(HomeController::class)->group(function () {
     Route::get('/best/selling', 'bestSelling');
     Route::get('/featured/products', 'featuredProduct');
     Route::get('/pocket/friendly', 'pocketFriendly');
+
+    Route::get('/single/product/{slug}', 'productSlug');
 });
 
 Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {

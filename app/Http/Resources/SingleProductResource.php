@@ -5,7 +5,7 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class SellerProductResource extends JsonResource
+class SingleProductResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -14,7 +14,7 @@ class SellerProductResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $this->load('productimages');
+        $this->load('productimages', 'user.userCountry');
 
         return [
             'id' => (int)$this->id,
@@ -23,10 +23,6 @@ class SellerProductResource extends JsonResource
             'description' => (string)$this->description,
             'category_id' => (string)$this->category_id,
             'sub_category_id' => (string)$this->sub_category_id,
-            'brand_id' => (string)$this->brand_id,
-            'color_id' => (string)$this->color_id,
-            'unit_id' => (string)$this->unit_id,
-            'size_id' => (string)$this->size_id,
             'brand' => (string)$this->brand?->name,
             'color' => (string)$this->color?->name,
             'unit' => (string)$this->unit?->name,
@@ -45,7 +41,13 @@ class SellerProductResource extends JsonResource
                     ];
                 })->toArray();
             }),
-            'status' => (string)$this->status
+            'seller' => $this->whenLoaded('user', function () {
+                return (object) [
+                    'id' => optional($this->user)->id,
+                    'name' => $this->user->first_name . ' '. optional($this->user)->last_name,
+                    'country' => optional($this->user)->userCountry?->name,
+                ];
+            }),
         ];
     }
 }

@@ -70,4 +70,24 @@ class Product extends Model
     {
         return $this->hasMany(Order::class, 'product_id');
     }
+
+    public function size(): BelongsTo
+    {
+        return $this->belongsTo(Size::class, 'size_id');
+    }
+
+    public function brand(): BelongsTo
+    {
+        return $this->belongsTo(Brand::class, 'brand_id');
+    }
+
+    public function color(): BelongsTo
+    {
+        return $this->belongsTo(Color::class, 'color_id');
+    }
+
+    public function unit(): BelongsTo
+    {
+        return $this->belongsTo(Unit::class, 'unit_id');
+    }
 }

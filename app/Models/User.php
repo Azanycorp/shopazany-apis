@@ -133,7 +133,7 @@ class User extends Authenticatable
         return $this->hasMany(Order::class, 'seller_id');
     }
 
-    public function country(): BelongsTo
+    public function userCountry(): BelongsTo
     {
         return $this->belongsTo(Country::class, 'country');
     }
