@@ -30,7 +30,7 @@ class AuthController extends Controller
             'email' => 'required|email|exists:users,email',
             'code' => 'required|string',
         ]);
-        
+
         return $this->service->loginVerify($request);
     }
 
@@ -43,7 +43,7 @@ class AuthController extends Controller
     {
         $request->validate([
             'email' => 'required|email|exists:users,email',
-            'code' => 'required|integer',
+            'code' => 'required|string',
         ]);
 
         return $this->service->verify($request);
