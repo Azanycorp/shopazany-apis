@@ -86,9 +86,9 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
 
     Route::prefix('cart')->controller(CartController::class)->group(function () {
         Route::get('/{user_id}', 'getCartItems');
-        Route::post('/add', 'addToCart');
-        Route::delete('/{user_id}/remove/{cart_id}', 'removeCartItem');
+        Route::post('/{user_id}/add', 'addToCart');
         Route::delete('/{user_id}/clear', 'clearCart');
+        Route::delete('/{user_id}/remove/{cart_id}', 'removeCartItem');
     });
 
     Route::prefix('customer')->controller(CustomerController::class)->group(function () {
