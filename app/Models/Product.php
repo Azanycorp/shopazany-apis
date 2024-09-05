@@ -51,6 +51,11 @@ class Product extends Model
         return $this->belongsTo(Category::class, 'category_id');
     }
 
+    public function subCategory(): BelongsTo
+    {
+        return $this->belongsTo(SubCategory::class, 'sub_category_id');
+    }
+
     public function productimages(): HasMany
     {
         return $this->hasMany(ProductImage::class, 'product_id');
@@ -66,7 +71,7 @@ class Product extends Model
         return $this->hasMany(Wishlist::class, 'product_id');
     }
 
-    public function orders()
+    public function orders(): HasMany
     {
         return $this->hasMany(Order::class, 'product_id');
     }
@@ -89,5 +94,10 @@ class Product extends Model
     public function unit(): BelongsTo
     {
         return $this->belongsTo(Unit::class, 'unit_id');
+    }
+
+    public function carts(): HasMany
+    {
+        return $this->hasMany(Cart::class, 'product_id');
     }
 }

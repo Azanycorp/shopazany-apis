@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\ApiController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\HomeController;
@@ -81,6 +82,13 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
         Route::post('/update-profile/{user_id}', 'updateProfile');
 
         Route::post('/settings/{user_id}', 'changeSettings');
+    });
+
+    Route::prefix('cart')->controller(CartController::class)->group(function () {
+        Route::get('/{user_id}', 'getCartItems');
+        Route::post('/{user_id}/add', 'addToCart');
+        Route::delete('/{user_id}/clear', 'clearCart');
+        Route::delete('/{user_id}/remove/{cart_id}', 'removeCartItem');
     });
 
     Route::prefix('customer')->controller(CustomerController::class)->group(function () {
