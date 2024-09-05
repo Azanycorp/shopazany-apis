@@ -59,16 +59,27 @@ class CartService
             ->get();
         }
 
-        $totalCartPrice = $cartItems->sum(function($cartItem) {
-            $pricePerItem = $cartItem->product->price;
-            return $pricePerItem * $cartItem->quantity;
+        $localItems = $cartItems->filter(function ($cartItem) {
+            return $cartItem->product->country_id == 160;
+        });
+    
+        $internationalItems = $cartItems->filter(function ($cartItem) {
+            return $cartItem->product->country_id != 160;
+        });
+    
+        $totalLocalPrice = $localItems->sum(function ($item) {
+            return ($item->product?->price) * $item->quantity;
+        });
+    
+        $totalInternationalPrice = $internationalItems->sum(function ($item) {
+            return ($item->product?->price) * $item->quantity;
         });
 
-        $data = CartResource::collection($cartItems);
-
         return $this->success([
-            'cart_items' => $data,
-            'total_cart_price' => $totalCartPrice,
+            'local_items' => CartResource::collection($localItems),
+            'international_items' => CartResource::collection($internationalItems),
+            'total_local_price' => $totalLocalPrice,
+            'total_international_price' => $totalInternationalPrice,
         ], "Cart items");
     }
 
