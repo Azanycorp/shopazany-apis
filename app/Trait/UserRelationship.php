@@ -7,6 +7,7 @@ use App\Models\Country;
 use App\Models\Kyc;
 use App\Models\Order;
 use App\Models\OrderRate;
+use App\Models\Payment;
 use App\Models\PaymentMethod;
 use App\Models\Product;
 use App\Models\State;
@@ -119,5 +120,10 @@ trait UserRelationship
     public function userShippingAddress(): HasMany
     {
         return $this->hasMany(UserShippingAddress::class, 'user_id');
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class, 'user_id');
     }
 }
