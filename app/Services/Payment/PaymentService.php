@@ -48,7 +48,7 @@ class PaymentService
                 'items' => $request->input('items'),
                 'payment_method' => $request->input('payment_method'),
             ]),
-            'callback_url' => $request->input('payment_redirect_url')
+            'frontend_url' => $request->input('payment_redirect_url')
         ];
 
         $paystackInstance = Paystack::getAuthorizationUrl($paymentDetails);
