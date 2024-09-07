@@ -57,26 +57,38 @@ class PaymentService
 
     public function webhook($request)
     {
-        $secretKey = config('paystack.secretKey');
-        $signature = $request->header('x-paystack-signature');
-        $payload = $request->getContent();
 
-        if (!$signature || $signature !== hash_hmac('sha512', $payload, $secretKey)) {
-            return $this->error(null, 'Invalid signature', 400);
+        if (!$request->hasHeader("x-paystack-signature")){
+            exit("No header present");
         }
 
-        $event = json_decode($payload, true);
+        $secretKey = config('paystack.secretKey');
 
-        if ($event['event'] === 'charge.success') {
-            $this->handlePaymentSuccess($event, $event['event']);
+        if ($request->header("x-paystack-signature") !== hash_hmac("sha512", $request->getContent(), $secretKey)){
+            exit("Invalid signatute");
+        }
+
+        $event = $request->event;
+        $data = $request->data;
+        // $signature = $request->header('x-paystack-signature');
+        // $payload = $request->getContent();
+
+        // if (!$signature || $signature !== hash_hmac('sha512', $payload, $secretKey)) {
+        //     return $this->error(null, 'Invalid signature', 400);
+        // }
+
+        // $event = json_decode($payload, true);
+
+        if ($event === "charge.success") {
+            $this->handlePaymentSuccess($data, 'success');
         }
 
         return response()->json(['status' => true], 200);
     }
 
-    protected function handlePaymentSuccess($event, $status)
+    protected function handlePaymentSuccess($data, $status)
     {
-        $paymentData = $event['data'];
+        $paymentData = $data;
 
         PaymentLog::create([
             'data' => $paymentData,
