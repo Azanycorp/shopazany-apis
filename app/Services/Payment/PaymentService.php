@@ -2,6 +2,7 @@
 
 namespace App\Services\Payment;
 
+use App\Models\PaymentLog;
 use App\Models\User;
 use App\Trait\HttpResponse;
 use Unicodeveloper\Paystack\Facades\Paystack;
@@ -67,17 +68,20 @@ class PaymentService
         $event = json_decode($payload, true);
 
         if ($event['event'] === 'charge.success') {
-            $this->handlePaymentSuccess($event);
+            $this->handlePaymentSuccess($event, $event['event']);
         }
 
         return response()->json(['status' => true], 200);
     }
 
-    protected function handlePaymentSuccess($event)
+    protected function handlePaymentSuccess($event, $status)
     {
         $paymentData = $event['data'];
 
-        dd($paymentData);
+        PaymentLog::create([
+            'data' => $paymentData,
+            'status' => $status,
+        ]);
     }
     
 }
