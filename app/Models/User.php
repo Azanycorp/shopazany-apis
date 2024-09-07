@@ -9,16 +9,13 @@ use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Notifications\ResetPasswordNotification;
-use App\Observers\UserObserver;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Trait\UserRelationship;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, HasApiTokens, SoftDeletes;
+    use HasFactory, Notifiable, HasApiTokens, SoftDeletes, UserRelationship;
 
     /**
      * The attributes that are mass assignable.
@@ -71,46 +68,6 @@ class User extends Authenticatable
         $this->notify(new ResetPasswordNotification($url));
     }
 
-    public function wallet()
-    {
-        return $this->hasOne(Wallet::class, 'user_id');
-    }
-
-    public function referrals()
-    {
-        return $this->belongsToMany(User::class, 'referral_relationships', 'referrer_id', 'referee_id');
-    }
-
-    public function referrer()
-    {
-        return $this->belongsToMany(User::class, 'referral_relationships', 'referrer_id', 'referee_id');
-    }
-
-    public function bankAccount()
-    {
-        return $this->hasOne(BankAccount::class, 'user_id');
-    }
-
-    public function withdrawalRequest()
-    {
-        return $this->hasMany(WithdrawalRequest::class, 'user_id');
-    }
-
-    public function kyc()
-    {
-        return $this->hasOne(Kyc::class, 'user_id');
-    }
-
-    public function userbusinessinfo()
-    {
-        return $this->hasOne(UserBusinessInformation::class, 'user_id');
-    }
-
-    public function products()
-    {
-        return $this->hasMany(Product::class, 'user_id');
-    }
-
     public static function getUserEmail($email)
     {
         return self::where('email', $email)->first();
@@ -121,56 +78,6 @@ class User extends Authenticatable
         return self::with(['userbusinessinfo', 'products', 'userOrders', 'sellerOrders'])
         ->where('id', $id)
         ->first();
-    }
-
-    public function userOrders(): HasMany
-    {
-        return $this->hasMany(Order::class, 'user_id');
-    }
-
-    public function sellerOrders(): HasMany
-    {
-        return $this->hasMany(Order::class, 'seller_id');
-    }
-
-    public function userCountry(): BelongsTo
-    {
-        return $this->belongsTo(Country::class, 'country');
-    }
-
-    public function state(): BelongsTo
-    {
-        return $this->belongsTo(State::class, 'state_id');
-    }
-
-    public function transactions(): HasMany
-    {
-        return $this->hasMany(Transaction::class, 'user_id');
-    }
-
-    public function paymentMethods(): HasMany
-    {
-        return $this->hasMany(PaymentMethod::class, 'user_id');
-    }
-
-    public function orderRate(): HasMany
-    {
-        return $this->hasMany(OrderRate::class, 'user_id');
-    }
-
-    public function wishlist(): HasMany
-    {
-        return $this->hasMany(Wishlist::class, 'user_id');
-    }
-
-    public function userActions(): HasMany
-    {
-        return $this->hasMany(UserAction::class, 'user_id');
-    }
-
-    public function userActivityLog(): HasMany
-    {
-        return $this->hasMany(UserActivityLog::class, 'user_id');
     }
 
 }

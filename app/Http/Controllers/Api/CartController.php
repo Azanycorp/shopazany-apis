@@ -35,4 +35,9 @@ class CartController extends Controller
     {
         return $this->service->clearCart($userId);
     }
+
+    public function updateCart(Request $request)
+    {
+        return $this->service->updateCart($request);
+    }
 }

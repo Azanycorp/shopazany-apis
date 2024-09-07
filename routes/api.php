@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\HomeController;
 use App\Http\Controllers\Api\MailingListController;
+use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\SellerController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Http\Request;
@@ -62,6 +63,9 @@ Route::controller(HomeController::class)->group(function () {
 
 Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
 
+    Route::post('/checkout', [PaymentController::class, 'processPayment']);
+    Route::post('/payment/webhook', [PaymentController::class, 'webhook']);
+
     Route::controller(UserController::class)->group(function () {
         Route::get('/profile', 'profile');
         Route::post('/bank/account', 'bankAccount');
@@ -80,7 +84,6 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
         });
 
         Route::post('/update-profile/{user_id}', 'updateProfile');
-
         Route::post('/settings/{user_id}', 'changeSettings');
     });
 
@@ -89,6 +92,7 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
         Route::post('/{user_id}/add', 'addToCart');
         Route::delete('/{user_id}/clear', 'clearCart');
         Route::delete('/{user_id}/remove/{cart_id}', 'removeCartItem');
+        Route::patch('/update-cart', [CartController::class, 'updateCart']);
     });
 
     Route::prefix('customer')->controller(CustomerController::class)->group(function () {
