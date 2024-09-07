@@ -61,11 +61,12 @@ Route::controller(HomeController::class)->group(function () {
     Route::get('/single/product/{slug}', 'productSlug');
 });
 
+Route::post('/payment/webhook', [PaymentController::class, 'webhook']);
+
 Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
 
     Route::post('/checkout', [PaymentController::class, 'processPayment']);
-    Route::post('/payment/webhook', [PaymentController::class, 'webhook']);
-    
+
     Route::controller(UserController::class)->group(function () {
         Route::get('/profile', 'profile');
         Route::post('/bank/account', 'bankAccount');

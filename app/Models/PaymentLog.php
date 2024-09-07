@@ -10,7 +10,9 @@ class PaymentLog extends Model
     use HasFactory;
 
     protected $fillable = [
+        'payment_id',
         'data',
+        'method',
         'status',
     ];
 
