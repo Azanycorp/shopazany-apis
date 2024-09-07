@@ -33,6 +33,11 @@ class PaymentService
             $address = $addr;
         }
 
+        $callbackUrl = $request->input('payment_redirect_url');
+        if (!filter_var($callbackUrl, FILTER_VALIDATE_URL)) {
+            return response()->json(['error' => 'Invalid callback URL'], 400);
+        }
+
         $paymentDetails = [
             'email' => $request->input('email'),
             'amount' => $amount,
@@ -46,7 +51,6 @@ class PaymentService
         ];
 
         $paystackInstance = Paystack::getAuthorizationUrl($paymentDetails);
-
         return response()->json($paystackInstance);
     }
 
