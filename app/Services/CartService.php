@@ -62,15 +62,15 @@ class CartService
         $localItems = $cartItems->filter(function ($cartItem) {
             return $cartItem->product->country_id == 160;
         });
-    
+
         $internationalItems = $cartItems->filter(function ($cartItem) {
             return $cartItem->product->country_id != 160;
         });
-    
+
         $totalLocalPrice = $localItems->sum(function ($item) {
             return ($item->product?->price) * $item->quantity;
         });
-    
+
         $totalInternationalPrice = $internationalItems->sum(function ($item) {
             return ($item->product?->price) * $item->quantity;
         });
@@ -94,7 +94,7 @@ class CartService
         Cart::where('user_id', $userId)
         ->where('id', $cartId)
         ->delete();
-        
+
         return $this->success(null, "Item removed from cart");
     }
 
@@ -121,14 +121,19 @@ class CartService
 
     public function updateCart(Request $request)
     {
+        $currentUserId = userAuth()->id;
+
+        if ($currentUserId != $request->user_id) {
+            return $this->error(null, 'Unauthorized action.', 401);
+        }
+        
         $productId = $request->input('product_id');
         $quantity = $request->input('quantity');
-        $size = $request->input('size');
 
         $cartItem = Cart::where('product_id', $productId)->firstOrFail();
-        $cartItem->update(['quantity' => $quantity, 'size' => $size]);
+        $cartItem->update(['quantity' => $quantity]);
 
-        return response()->json(['message' => 'Cart quantity updated successfully']);
+        return $this->success(null, 'Cart quantity updated successfully');
     }
 }
 
