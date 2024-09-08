@@ -25,4 +25,9 @@ class PaymentController extends Controller
     {
         return $this->service->webhook($request);
     }
+
+    public function verifyPayment($userId, $ref)
+    {
+        return $this->service->verifyPayment($userId, $ref);
+    }
 }

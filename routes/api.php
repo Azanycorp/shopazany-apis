@@ -66,6 +66,7 @@ Route::post('/payment/webhook', [PaymentController::class, 'webhook']);
 Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
 
     Route::post('/checkout', [PaymentController::class, 'processPayment']);
+    Route::get('/verify/payment/{user_id}/{reference}', [PaymentController::class, 'verifyPayment']);
 
     Route::controller(UserController::class)->group(function () {
         Route::get('/profile', 'profile');

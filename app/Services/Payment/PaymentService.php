@@ -2,13 +2,16 @@
 
 namespace App\Services\Payment;
 
+use App\Http\Resources\PaymentVerifyResource;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\User;
 use App\Models\PaymentLog;
 use App\Models\Product;
 use App\Models\UserShippingAddress;
+use App\Services\Curl\GetCurlService;
 use App\Trait\HttpResponse;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Unicodeveloper\Paystack\Facades\Paystack;
@@ -79,6 +82,20 @@ class PaymentService
         }
 
         return response()->json(['status' => true], 200);
+    }
+
+    public function verifyPayment($userId, $ref)
+    {
+        $currentUserId = Auth::id();
+
+        if ($currentUserId != $userId) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+
+        $verify = (new GetCurlService($ref))->run();
+        $data = new PaymentVerifyResource($verify);
+
+        return $this->success($data, "Payment verify status");
     }
 
     protected function handlePaymentSuccess($event, $status)
