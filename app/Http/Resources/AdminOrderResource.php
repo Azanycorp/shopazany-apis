@@ -26,7 +26,7 @@ class AdminOrderResource extends JsonResource
             'product' => (object) [
                 'name' => optional($this->product)->name,
                 'category' => optional($this->product)->category?->name,
-                'image' => $this->product->image,
+                'image' => optional($this->product)->image,
             ],
             'seller' => (object) [
                 'name' => optional($this->seller)->first_name . ' ' . optional($this->seller)->last_name,
