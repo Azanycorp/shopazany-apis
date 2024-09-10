@@ -6,6 +6,7 @@ use App\Http\Resources\CartResource;
 use App\Models\Cart;
 use App\Trait\HttpResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class CartService
@@ -49,7 +50,7 @@ class CartService
 
         $sessionId = session('cart_id');
 
-        if (auth()->check()) {
+        if (Auth::check()) {
             $cartItems = Cart::with('product.user')
             ->where('user_id', $userId)
             ->get();
@@ -108,7 +109,7 @@ class CartService
 
         $sessionId = session('cart_id');
 
-        if (auth()->check()) {
+        if (Auth::check()) {
             Cart::where('user_id', $userId)->delete();
         } else {
             Cart::where('session_id', $sessionId)->delete();
@@ -126,7 +127,7 @@ class CartService
         if ($currentUserId != $request->user_id) {
             return $this->error(null, 'Unauthorized action.', 401);
         }
-        
+
         $productId = $request->input('product_id');
         $quantity = $request->input('quantity');
 

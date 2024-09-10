@@ -53,7 +53,7 @@ class Order extends Model
     public static function saveOrder($user, $payment, $seller, $item, $orderNo, $address, $method, $status)
     {
         $data = new self();
-        
+
         $data->user_id = $user->id;
         $data->seller_id = $seller->id;
         $data->product_id = $item['product_id'];
@@ -72,5 +72,5 @@ class Order extends Model
 
         return $data;
     }
-    
+
 }

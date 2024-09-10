@@ -3,14 +3,16 @@
 namespace App\Providers;
 
 use App\Models\User;
-use App\Observers\UserObserver;
-use Illuminate\Cache\RateLimiting\Limit;
+use App\Models\Order;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\ServiceProvider;
-use Illuminate\Validation\Rules\Password;
-use Laravel\Sanctum\PersonalAccessToken;
 use Laravel\Sanctum\Sanctum;
+use App\Observers\UserObserver;
+use App\Observers\OrderObserver;
+use Illuminate\Support\ServiceProvider;
+use Illuminate\Cache\RateLimiting\Limit;
+use Laravel\Sanctum\PersonalAccessToken;
+use Illuminate\Validation\Rules\Password;
+use Illuminate\Support\Facades\RateLimiter;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -45,5 +47,6 @@ class AppServiceProvider extends ServiceProvider
         });
 
         User::observe(UserObserver::class);
+        Order::observe(OrderObserver::class);
     }
 }
