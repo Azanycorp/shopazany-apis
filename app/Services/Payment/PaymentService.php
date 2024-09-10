@@ -159,11 +159,11 @@ class PaymentService
                     $orderNo,
                     $address,
                     $method,
-                    $payStatus
+                    $payStatus,
                 );
             }
 
-            if (!$user->userShippingAddress()->exists()) {
+            if (!empty($address)) {
                 UserShippingAddress::create([
                     'user_id' => $userId,
                     'first_name' => $address['first_name'],
@@ -177,12 +177,7 @@ class PaymentService
                 ]);
             }
 
-            if (auth()->check()) {
-                Cart::where('user_id', $userId)->delete();
-            } else {
-                Cart::where('session_id', $sessionId)->delete();
-            }
-            session()->forget('cart_id');
+            Cart::where('user_id', $userId)->delete();
         });
     }
 
