@@ -2,18 +2,18 @@
 
 namespace App\Services\Payment;
 
-use App\Http\Resources\PaymentVerifyResource;
+use App\Models\Cart;
+use App\Models\User;
 use App\Models\Order;
 use App\Models\Payment;
-use App\Models\User;
-use App\Models\PaymentLog;
 use App\Models\Product;
-use App\Models\UserShippingAddress;
-use App\Services\Curl\GetCurlService;
+use App\Models\PaymentLog;
 use App\Trait\HttpResponse;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
+use App\Models\UserShippingAddress;
+use Illuminate\Support\Facades\Auth;
+use App\Services\Curl\GetCurlService;
+use App\Http\Resources\PaymentVerifyResource;
 use Unicodeveloper\Paystack\Facades\Paystack;
 
 class PaymentService
@@ -26,7 +26,7 @@ class PaymentService
 
         $amount = $request->input('amount') * 100;
         $user_shipping = $request->input('user_shipping_address_id');
-        
+
         if (!$user_shipping) {
             $address = (object) [
                 'first_name' => $request->shipping_address['first_name'],
@@ -176,6 +176,13 @@ class PaymentService
                     'zip' => $address['zip'],
                 ]);
             }
+
+            if (auth()->check()) {
+                Cart::where('user_id', $userId)->delete();
+            } else {
+                Cart::where('session_id', $sessionId)->delete();
+            }
+            session()->forget('cart_id');
         });
     }
 
@@ -183,14 +190,14 @@ class PaymentService
     {
         $timestamp = now()->timestamp;
         $randomNumber = mt_rand(100000, 999999);
-    
+
         $uniqueOrderNumber = 'ORD-' . $timestamp . '-' . $randomNumber;
 
         while (Order::where('order_no', $uniqueOrderNumber)->exists()) {
             $randomNumber = mt_rand(100000, 999999);
             $uniqueOrderNumber = 'ORD-' . $timestamp . '-' . $randomNumber;
         }
-    
+
         return $uniqueOrderNumber;
     }
 }

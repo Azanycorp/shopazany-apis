@@ -126,7 +126,7 @@ class CartService
         if ($currentUserId != $request->user_id) {
             return $this->error(null, 'Unauthorized action.', 401);
         }
-        
+
         $productId = $request->input('product_id');
         $quantity = $request->input('quantity');
 
