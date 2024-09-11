@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\SubscriptionPlanRequest;
 use App\Services\Admin\SettingsService;
 use Illuminate\Http\Request;
 
@@ -77,5 +78,30 @@ class SettingsController extends Controller
     public function getSocial()
     {
         return $this->service->getSocial();
+    }
+
+    public function addPlan(SubscriptionPlanRequest $request)
+    {
+        return $this->service->addPlan($request);
+    }
+
+    public function getPlanById($id)
+    {
+        return $this->service->getPlanById($id);
+    }
+
+    public function getPlanByCountry($countryId)
+    {
+        return $this->service->getPlanByCountry($countryId);
+    }
+
+    public function updatePlan(Request $request, $id)
+    {
+        return $this->service->updatePlan($request, $id);
+    }
+
+    public function deletePlan($id)
+    {
+        return $this->service->deletePlan($id);
     }
 }

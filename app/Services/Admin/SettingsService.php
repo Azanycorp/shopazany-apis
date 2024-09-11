@@ -2,6 +2,7 @@
 
 namespace App\Services\Admin;
 
+use App\Http\Resources\SubscriptionPlanResource;
 use App\Models\AboutUs;
 use App\Models\ContactInfo;
 use App\Models\CookiePolicy;
@@ -9,6 +10,7 @@ use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
 use App\Models\TermsService;
 use App\Models\SeoConfiguration;
+use App\Models\SubscriptionPlan;
 use Illuminate\Support\Facades\App;
 
 class SettingsService
@@ -260,7 +262,68 @@ class SettingsService
 
         return $this->success($data, "Social");
     }
+
+    public function addPlan($request)
+    {
+        try {
+
+            SubscriptionPlan::create([
+                'title' => $request->title,
+                'cost' => $request->cost,
+                'country_id' => $request->country_id,
+                'period' => $request->period,
+                'tagline' => $request->tagline,
+                'details' => $request->details,
+                'status' => 'active'
+            ]);
+
+            return $this->success(null, 'Plan added successfully');
+
+        } catch (\Throwable $th) {
+            throw $th;
+        }
+    }
     
+    public function getPlanById($id)
+    {
+        $plan = SubscriptionPlan::findOrFail($id);
+        $data = new SubscriptionPlanResource($plan);
+
+        return $this->success($data, "Subscription plan detail");
+    }
+
+    public function getPlanByCountry($countryId)
+    {
+        $plan = SubscriptionPlan::where('country_id', $countryId)->get();
+        $data = SubscriptionPlanResource::collection($plan);
+
+        return $this->success($data, "Subscription plan");
+    }
+
+    public function updatePlan($request, $id)
+    {
+        $plan = SubscriptionPlan::findOrFail($id);
+        
+        $plan->update([
+            'title' => $request->title,
+            'cost' => $request->cost,
+            'country_id' => $request->country_id,
+            'period' => $request->period,
+            'tagline' => $request->tagline,
+            'details' => $request->details,
+            'status' => 'active'
+        ]);
+
+        return $this->success(null, 'Plan updated successfully');
+    }
+
+    public function deletePlan($id)
+    {
+        $plan = SubscriptionPlan::findOrFail($id);
+        $plan->delete();
+
+        return $this->success(null, 'Plan deleted successfully');
+    }
 }
 
 

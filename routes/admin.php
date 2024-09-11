@@ -108,6 +108,15 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::get('/social', 'getSocial');
     });
 
+    Route::prefix('subscription')->controller(SettingsController::class)->group(function () {
+        Route::post('/', 'addPlan');
+        Route::get('/country/{country_id}', 'getPlanByCountry');
+        Route::get('/{id}', 'getPlanById');
+        Route::patch('/update/{id}', 'updatePlan');
+        Route::delete('/remove/{id}', 'deletePlan');
+    });
+    
+
     Route::resource('settings/faq', FaqController::class);
 
     Route::get('/generate/users/link', [ApiController::class, 'referralGenerate']);
