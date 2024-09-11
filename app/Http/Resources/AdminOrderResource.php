@@ -23,16 +23,18 @@ class AdminOrderResource extends JsonResource
             'total_amount' => (string)$this->total_amount,
             'payment_method' => (string)$this->payment_method,
             'status' => (string)$this->status,
-            'product' => (object) [
-                'name' => optional($this->product)->name,
-                'category' => optional($this->product)->category?->name,
-                'image' => optional($this->product)->image,
-            ],
+            'products' => $this->products ? $this->products->map(function ($product) {
+                return [
+                    'name' => $product?->name,
+                    'category' => $product?->category?->name,
+                    'image' => $product?->image,
+                ];
+            })->toArray() : [],
             'seller' => (object) [
                 'name' => optional($this->seller)->first_name . ' ' . optional($this->seller)->last_name,
                 'location' => optional($this->seller)->address,
                 'state' => $this->seller?->state?->name,
-                'country' => $this->seller?->country?->name,
+                'country' => $this->seller?->userCountry?->name,
             ],
             'customer' => (object) [
                 'name' => optional($this->user)->first_name . ' ' . optional($this->user)->last_name,
