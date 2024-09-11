@@ -55,7 +55,18 @@ class OrderService
 
     public function localOrder()
     {
-        $orders = Order::where('country_id', 160)->paginate(25);
+        $orders = Order::with(['user', 'seller', 'products'])
+            ->where('country_id', 160)
+            ->get()
+            ->groupBy('order_no')
+            ->map(function ($group) {
+                $firstOrder = $group->first();
+                $firstOrder->products = $group->pluck('products')->flatten();
+                return $firstOrder;
+            })
+            ->values();
+
+        $orders = $orders->forPage(request()->input('page', 1), 25);
 
         $data = AdminOrderResource::collection($orders);
 
@@ -64,18 +75,30 @@ class OrderService
             'message' => 'Local Orders',
             'data' => $data,
             'pagination' => [
-                'current_page' => $orders->currentPage(),
-                'last_page' => $orders->lastPage(),
-                'per_page' => $orders->perPage(),
-                'prev_page_url' => $orders->previousPageUrl(),
-                'next_page_url' => $orders->nextPageUrl(),
+                'current_page' => request()->input('page', 1),
+                'last_page' => ceil($orders->count() / 25),
+                'per_page' => 25,
+                'prev_page_url' => url()->previous(),
+                'next_page_url' => url()->current() . '?page=' . (request()->input('page', 1) + 1),
             ],
         ];
     }
 
+
     public function intOrder()
     {
-        $orders = Order::where('country_id', '!=', 160)->paginate(25);
+        $orders = Order::with(['user', 'seller', 'products'])
+            ->where('country_id', '!=', 160)
+            ->get()
+            ->groupBy('order_no')
+            ->map(function ($group) {
+                $firstOrder = $group->first();
+                $firstOrder->products = $group->pluck('products')->flatten();
+                return $firstOrder;
+            })
+            ->values();
+
+        $orders = $orders->forPage(request()->input('page', 1), 25);
 
         $data = AdminOrderResource::collection($orders);
 
@@ -84,11 +107,11 @@ class OrderService
             'message' => 'International Orders',
             'data' => $data,
             'pagination' => [
-                'current_page' => $orders->currentPage(),
-                'last_page' => $orders->lastPage(),
-                'per_page' => $orders->perPage(),
-                'prev_page_url' => $orders->previousPageUrl(),
-                'next_page_url' => $orders->nextPageUrl(),
+                'current_page' => request()->input('page', 1),
+                'last_page' => ceil($orders->count() / 25),
+                'per_page' => 25,
+                'prev_page_url' => url()->previous(),
+                'next_page_url' => url()->current() . '?page=' . (request()->input('page', 1) + 1),
             ],
         ];
     }
