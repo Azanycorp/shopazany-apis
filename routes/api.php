@@ -124,12 +124,6 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
 
     Route::post('customer/mailing/subscribe', [MailingListController::class, 'signup']);
 
-
-    Route::prefix('category')->controller(CategoryController::class)->group(function () {
-        Route::post('/create', 'createCategory');
-        Route::post('/subcategory/create', 'createSubCategory');
-    });
-
     Route::prefix('seller')->controller(SellerController::class)->group(function () {
         // Business Information
         Route::post('/business/information', 'businessInfo');
