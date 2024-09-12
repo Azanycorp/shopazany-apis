@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ApiController;
 use App\Http\Controllers\Api\SizeController;
@@ -45,6 +46,13 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::get('/analytic', 'dashboardAnalytics');
         Route::get('/best-sellers', 'bestSellers');
         Route::get('/best-selling-categories', 'bestSellingCat');
+    });
+
+    Route::prefix('category')->controller(CategoryController::class)->group(function () {
+        Route::post('/create', 'createCategory');
+        Route::post('/create/subcategory', 'createSubCategory');
+        Route::get('/all', 'categories');
+        Route::get('/{category_id}/subcategory', 'getSubcategory');
     });
 
     Route::prefix('order')->controller(OrderController::class)->group(function () {
