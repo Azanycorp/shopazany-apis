@@ -50,9 +50,14 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
     Route::prefix('category')->controller(CategoryController::class)->group(function () {
         Route::post('/create', 'createCategory');
+        Route::get('/all', 'adminCategories');
+        Route::get('/analytics', 'categoryAnalytic');
+        Route::patch('/change/{category_id}', 'featuredStatus');
+    
         Route::post('/create/subcategory', 'createSubCategory');
-        Route::get('/all', 'categories');
+        Route::get('/subcategory', 'getAdminSubcategory');
         Route::get('/{category_id}/subcategory', 'getSubcategory');
+        Route::patch('/subcategory/status/{sub_category_id}', 'subStatus');
     });
 
     Route::prefix('order')->controller(OrderController::class)->group(function () {
@@ -123,7 +128,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::patch('/update/{id}', 'updatePlan');
         Route::delete('/remove/{id}', 'deletePlan');
     });
-    
+
 
     Route::resource('settings/faq', FaqController::class);
 
