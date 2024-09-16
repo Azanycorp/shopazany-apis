@@ -2,7 +2,7 @@
 
 namespace App\Enum;
 
-enum BannerStatus
+enum BannerStatus: string
 {
     const ACTIVE = 'active';
     const INACTIVE = 'inactive';

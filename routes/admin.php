@@ -50,6 +50,12 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::delete('/delete/{id}', 'deleteBanner');
     });
 
+    Route::prefix('promo')->controller(BannerPromoController::class)->group(function () {
+        Route::post('/add', 'addPromo');
+        Route::get('/', 'promos');
+        Route::delete('/delete/{id}', 'deletePromo');
+    });
+
     Route::prefix('dashboard')->controller(DashboardController::class)->group(function () {
         Route::get('/analytic', 'dashboardAnalytics');
         Route::get('/best-sellers', 'bestSellers');

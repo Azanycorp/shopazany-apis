@@ -2,9 +2,9 @@
 
 namespace App\Enum;
 
-enum TransactionStatus
+enum TransactionStatus: string
 {
-    const PENDING = "pending";
-    const SUCCESSFUL = "successful";
-    const REJECTED = "rejected";
+    const PENDING = 'pending';
+    const SUCCESSFUL = 'successful';
+    const REJECTED = 'rejected';
 }
