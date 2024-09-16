@@ -10,6 +10,7 @@ use App\Models\OrderRate;
 use App\Models\Payment;
 use App\Models\PaymentMethod;
 use App\Models\Product;
+use App\Models\RedeemPoint;
 use App\Models\State;
 use App\Models\Transaction;
 use App\Models\User;
@@ -125,5 +126,10 @@ trait UserRelationship
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class, 'user_id');
+    }
+
+    public function reedemPoints(): HasMany
+    {
+        return $this->hasMany(RedeemPoint::class, 'user_id');
     }
 }

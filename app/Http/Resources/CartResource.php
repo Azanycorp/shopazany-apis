@@ -21,6 +21,7 @@ class CartResource extends JsonResource
             'id' => (int)$this->id,
             'quantity' => (int)$this->quantity,
             'product' => (object) [
+                'id' => optional($this->product)->id,
                 'name' => optional($this->product)->name,
                 'slug' => optional($this->product)->slug,
                 'description' => optional($this->product)->description,
