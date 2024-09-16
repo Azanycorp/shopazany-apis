@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enum\UserStatus;
 use App\Http\Controllers\Controller;
 use App\Services\Admin\CustomerService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class AdminCustomerController extends Controller
 {
@@ -42,6 +44,29 @@ class AdminCustomerController extends Controller
     public function filter()
     {
         return $this->service->filter();
+    }
+
+    public function addCustomer(Request $request)
+    {
+        $request->validate([
+            'status' => [Rule::in(array_column(UserStatus::cases(), 'value'))],
+        ]);
+
+        return $this->service->addCustomer($request);
+    }
+
+    public function editCustomer(Request $request)
+    {
+        $request->validate([
+            'status' => [Rule::in(array_column(UserStatus::cases(), 'value'))],
+        ]);
+
+        return $this->service->editCustomer($request);
+    }
+
+    public function getPayment($id)
+    {
+        return $this->service->getPayment($id);
     }
 
 }

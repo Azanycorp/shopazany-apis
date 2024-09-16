@@ -3,6 +3,8 @@
 namespace App\Services\Admin;
 
 use App\Http\Resources\CustomerResource;
+use App\Http\Resources\PaymentResource;
+use App\Models\Payment;
 use App\Models\User;
 use App\Trait\HttpResponse;
 
@@ -115,6 +117,64 @@ class CustomerService
                 'next_page_url' => $users->nextPageUrl(),
             ],
         ];
+    }
+
+    public function addCustomer($request)
+    {
+        try {
+            $user = User::create([
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'middlename' => $request->middlename,
+                'email' => $request->email,
+                'phone' => $request->phone,
+                'date_of_birth' => $request->date_of_birth,
+                'status' => $request->status,
+            ]);
+
+            $image = $request->hasFile('image') ? uploadUserImage($request, 'image', $user) : null;
+
+            $user->update(['image' => $image]);
+
+        } catch (\Throwable $th) {
+            throw $th;
+        }
+
+        return $this->success(null, "User has been created successfully");
+    }
+
+    public function editCustomer($request)
+    {
+        $user = User::where('id', $request->user_id)
+        ->where('type', 'customer')
+        ->first();
+
+        if (!$user) {
+            return $this->error(null, "User not found", 404);
+        }
+
+        $image = $request->hasFile('image') ? uploadUserImage($request, 'image', $user) : $user->image;
+
+        $user->update([
+            'first_name' => $request->first_name,
+            'last_name' => $request->last_name,
+            'middlename' => $request->middlename,
+            'email' => $request->email,
+            'phone' => $request->phone,
+            'date_of_birth' => $request->date_of_birth,
+            'image' => $image,
+            'status' => $request->status,
+        ]);
+
+        return $this->success(null, "User has been updated successfully");
+    }
+
+    public function getPayment($id)
+    {
+        $payment = Payment::with(['user', 'order'])->findOrFail($id);
+        $data = new PaymentResource($payment);
+
+        return $this->success($data, "Payment detail");
     }
 
 }

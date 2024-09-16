@@ -128,21 +128,39 @@ if(!function_exists('uploadSingleProductImage')){
     }
 }
 
-if(!function_exists('uploadImage')){
-    function uploadImage($request, $file, $folder, $country = null)
+if (!function_exists('uploadImage')) {
+    function uploadImage($request, $file, $folder, $country = null, $banner = null)
     {
-        $url = $country?->image;
+        $url = null;
+
+        if (!is_null($country)) {
+            $url = $country->image;
+        }
+
+        if (!is_null($banner)) {
+            $url = $banner->image;
+        }
 
         if ($request->hasFile($file)) {
             $fileSize = $request->file($file)->getSize();
+
             if ($fileSize > 3000000) {
-                return json_encode(["status" => false, "message" => "File size is larger than 3MB.", "status_code" => 422]);
+                return json_encode([
+                    "status" => false,
+                    "message" => "File size is larger than 3MB.",
+                    "status_code" => 422
+                ]);
             }
 
-            $image = $country?->image ? getRelativePath($country->image) : null;
+            $existingImage = $country?->image ? getRelativePath($country->image) : null;
+            $existingBanner = $banner?->image ? getRelativePath($banner->image) : null;
 
-            if ($image && Storage::disk('s3')->exists($image)) {
-                Storage::disk('s3')->delete($image);
+            if ($existingImage && Storage::disk('s3')->exists($existingImage)) {
+                Storage::disk('s3')->delete($existingImage);
+            }
+
+            if ($existingBanner && Storage::disk('s3')->exists($existingBanner)) {
+                Storage::disk('s3')->delete($existingBanner);
             }
 
             $path = $request->file($file)->store($folder, 's3');
@@ -258,8 +276,6 @@ if(!function_exists('generate_referrer_link')) {
         return $url;
     }
 }
-
-
 
 
 
