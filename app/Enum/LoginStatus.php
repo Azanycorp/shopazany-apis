@@ -2,8 +2,8 @@
 
 namespace App\Enum;
 
-enum LoginStatus
+enum LoginStatus: string
 {
-    const ACTIVE = "active";
-    const INACTIVE = "inactive";
+    const ACTIVE = 'active';
+    const INACTIVE = 'inactive';
 }

@@ -2,7 +2,7 @@
 
 namespace App\Enum;
 
-enum UserLog
+enum UserLog: string
 {
     const LOGIN_ATTEMPT = 'login attempt';
     const LOGGED_IN = 'logged in';

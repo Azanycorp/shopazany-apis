@@ -2,7 +2,7 @@
 
 namespace App\Enum;
 
-enum RedeemPointStatus
+enum RedeemPointStatus: string
 {
     const REDEEMED = 'redeemed';
     const USED = 'used';

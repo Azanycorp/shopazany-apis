@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\AddBannerRequest;
+use App\Http\Requests\Admin\AddPromoRequest;
 use App\Services\Admin\BannerPromoService;
 use Illuminate\Http\Request;
 
@@ -35,4 +36,20 @@ class BannerPromoController extends Controller
     {
         return $this->service->deleteBanner($id);
     }
+
+    public function addPromo(AddPromoRequest $request)
+    {
+        return $this->service->addPromo($request);
+    }
+
+    public function promos()
+    {
+        return $this->service->promos();
+    }
+
+    public function deletePromo($id)
+    {
+        return $this->service->deletePromo($id);
+    }
+    
 }
