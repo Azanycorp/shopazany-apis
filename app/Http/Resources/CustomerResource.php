@@ -22,6 +22,7 @@ class CustomerResource extends JsonResource
             "middlename" => (string)$this->middlename,
             "phone" => (string)$this->phone,
             "email" => (string)$this->email,
+            "date_of_birth" => (string)$this->date_of_birth,
             "image" => (string)$this->image,
             "address" => (object)[
                 "address" => (string)$this->address,
@@ -44,6 +45,7 @@ class CustomerResource extends JsonResource
             })->toArray() : [],
             'payments' => $this->payments ? $this->payments->map(function ($payment) {
                 return [
+                    'id' => $payment->id,
                     'order_no' => $payment?->order->order_no,
                     'amount' => $payment->amount,
                     'payment_method' => $payment?->order->payment_method,

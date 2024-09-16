@@ -73,4 +73,9 @@ class Order extends Model
         return $data;
     }
 
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class,  'payment_id');
+    }
+
 }

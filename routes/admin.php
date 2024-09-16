@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\AdminAuthController;
 use App\Http\Controllers\Api\AdminCustomerController;
 use App\Http\Controllers\Api\AdminProductController;
 use App\Http\Controllers\Api\AdminSellerController;
+use App\Http\Controllers\Api\BannerPromoController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\FaqController;
 use App\Http\Controllers\Api\RewardPointController;
@@ -42,6 +43,13 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::resource('size', SizeController::class);
     Route::post('/shop/country', [ApiController::class, 'shopByCountry']);
 
+    Route::prefix('banner')->controller(BannerPromoController::class)->group(function () {
+        Route::post('/add', 'addBanner');
+        Route::get('/', 'banners');
+        Route::post('/edit/{id}', 'editBanner');
+        Route::delete('/delete/{id}', 'deleteBanner');
+    });
+
     Route::prefix('dashboard')->controller(DashboardController::class)->group(function () {
         Route::get('/analytic', 'dashboardAnalytics');
         Route::get('/best-sellers', 'bestSellers');
@@ -69,21 +77,26 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     });
 
     Route::prefix('customer')->controller(AdminCustomerController::class)->group(function () {
+        // GET routes
         Route::get('/', 'allCustomers');
         Route::get('/filter', 'filter');
-
         Route::get('/{user_id}', 'viewCustomer');
-        Route::patch('/{user_id}/edit', 'editCustomer');
-        Route::delete('/remove/{user_id}', 'removeCustomer');
-
+        Route::get('/payment/{id}', 'getPayment');
+    
+        Route::post('/add', 'addCustomer');
+        Route::post('/edit', 'editCustomer');
+    
         Route::patch('/approve', 'approveCustomer');
         Route::patch('/ban', 'banCustomer');
+    
+        Route::delete('/remove/{user_id}', 'removeCustomer');
     });
 
     Route::prefix('seller')->controller(AdminSellerController::class)->group(function () {
         Route::get('/', 'allSellers');
-
         Route::get('/{user_id}', 'viewSeller');
+        Route::get('/payment-history/{user_id}', 'paymentHistory');
+
         Route::patch('/{user_id}/edit', 'editSeller');
         Route::delete('/remove/{user_id}', 'removeSeller');
 

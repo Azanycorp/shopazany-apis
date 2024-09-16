@@ -3,6 +3,7 @@
 namespace App\Services\Admin;
 
 use App\Enum\UserType;
+use App\Http\Resources\PaymentResource;
 use App\Http\Resources\SellerResource;
 use App\Models\User;
 use App\Trait\HttpResponse;
@@ -135,6 +136,21 @@ class SellerService
         $user->delete();
 
         return $this->success(null, "User has been removed successfully");
+    }
+
+    public function paymentHistory($id)
+    {
+        $user = User::with('sellerOrders.payments')->find($id);
+
+        if (!$user) {
+            return $this->error(null, "User not found", 404);
+        }
+
+        $payments = $user->sellerOrders->flatMap->payments;
+
+        $data = PaymentResource::collection($payments);
+
+        return $this->success($data, "Payment history");
     }
 
 }
