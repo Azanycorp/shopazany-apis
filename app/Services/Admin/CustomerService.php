@@ -41,7 +41,7 @@ class CustomerService
 
     public function viewCustomer($id)
     {
-        $user = User::where('id', $id)
+        $user = User::with(['userCountry', 'state', 'wishlist.product', 'payments.order'])->where('id', $id)
         ->where('type', 'customer')
         ->first();
 

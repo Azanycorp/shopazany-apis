@@ -111,6 +111,7 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
 
         //Reward Point
         Route::get('/reward/dashboard/{user_id}', 'rewardDashboard');
+        Route::post('/redeem/point', 'redeemPoint');
 
         // Support Route
         Route::post('/support', 'support');

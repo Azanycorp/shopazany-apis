@@ -23,10 +23,12 @@ class CustomerResource extends JsonResource
             "phone" => (string)$this->phone,
             "email" => (string)$this->email,
             "image" => (string)$this->image,
-            "address" => (string)$this->address,
-            "city" => (string)$this->city,
-            "country_id" => (string)$this->country,
-            "state_id" => (string)$this->state_id,
+            "address" => (object)[
+                "address" => (string)$this->address,
+                "city" => (string)$this->city,
+                "country" => (string)optional($this->userCountry)->name,
+                "state" => (string)optional($this->state)->name,
+            ],
             "is_approved" => $this->is_admin_approve,
             "status" => (string)$this->status,
             "wallet" => (object)[
@@ -34,6 +36,22 @@ class CustomerResource extends JsonResource
                 'total_income' => 0,
                 'total_withdrawal' => 0
             ],
+            'wishlist' => $this->wishlist ? $this->wishlist->map(function ($list) {
+                return [
+                    'product_name' => $list->product?->name,
+                    'created_at' => $list->product?->created_at,
+                ];
+            })->toArray() : [],
+            'payments' => $this->payments ? $this->payments->map(function ($payment) {
+                return [
+                    'order_no' => $payment?->order->order_no,
+                    'amount' => $payment->amount,
+                    'payment_method' => $payment?->order->payment_method,
+                    'status' => $payment->status,
+                    'reference' => $payment->reference,
+                    'created_at' => $payment->created_at,
+                ];
+            })->toArray() : [],
         ];
     }
 }

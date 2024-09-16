@@ -7,7 +7,6 @@ use App\Http\Controllers\Controller;
 use App\Services\User\CustomerService;
 use App\Http\Requests\OrderRateRequest;
 use App\Http\Requests\CustomerSupportRequest;
-use App\Http\Controllers\Api\MailingListController;
 
 class CustomerController extends Controller
 {
@@ -88,4 +87,8 @@ class CustomerController extends Controller
         return $this->service->activity($userId);
     }
     
+    public function redeemPoint(Request $request)
+    {
+        return $this->service->redeemPoint($request);
+    }
 }
