@@ -21,17 +21,17 @@ class CartController extends Controller
         return $this->service->addToCart($request);
     }
 
-    public function getCartItems(int $userId)
+    public function getCartItems($userId)
     {
         return $this->service->getCartItems($userId);
     }
 
-    public function removeCartItem(int $userId, int $cartId)
+    public function removeCartItem($userId, $cartId)
     {
         return $this->service->removeCartItem($userId, $cartId);
     }
 
-    public function clearCart(int $userId)
+    public function clearCart($userId)
     {
         return $this->service->clearCart($userId);
     }

@@ -46,7 +46,7 @@ class CustomerResource extends JsonResource
             'payments' => $this->payments ? $this->payments->map(function ($payment) {
                 return [
                     'id' => $payment->id,
-                    'order_no' => $payment?->order->order_no,
+                    'order_no' => $payment?->order?->order_no,
                     'amount' => $payment->amount,
                     'payment_method' => $payment?->order->payment_method,
                     'status' => $payment->status,
