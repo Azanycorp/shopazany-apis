@@ -2,11 +2,11 @@
 
 namespace App\Enum;
 
-enum UserStatus
+enum UserStatus: string
 {
-    const ACTIVE = "active";
-    const BLOCKED = "blocked";
-    const DELETED = "deleted";
-    const PENDING = "pending";
-    const SUSPENDED = "suspended";
+    const ACTIVE = 'active';
+    const BLOCKED = 'blocked';
+    const DELETED = 'deleted';
+    const PENDING = 'pending';
+    const SUSPENDED = 'suspended';
 }

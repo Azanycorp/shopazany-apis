@@ -141,7 +141,7 @@ class AdminService
         }
 
         $url = uploadImage($request, 'flag', $folder);
-        
+
         try {
 
             ShopCountry::create([
@@ -169,8 +169,10 @@ class AdminService
     public function referralGenerate()
     {
         $users = User::whereNull('referrer_code')
-            ->orWhereNull('referrer_link')
-            ->get();
+        ->orWhere('referrer_code', '')
+        ->orWhereNull('referrer_link')
+        ->orWhere('referrer_link', '')
+        ->get();
 
         foreach($users as $user) {
             if (!$user->referrer_code) {

@@ -2,7 +2,7 @@
 
 namespace App\Enum;
 
-enum UserType
+enum UserType: string
 {
     const CUSTOMER = 'customer';
     const SELLER = 'seller';

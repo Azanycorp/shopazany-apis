@@ -3,6 +3,7 @@
 namespace App\Services\Admin;
 
 use App\Enum\UserType;
+use App\Http\Resources\PaymentResource;
 use App\Http\Resources\SellerResource;
 use App\Models\User;
 use App\Trait\HttpResponse;
@@ -13,15 +14,29 @@ class SellerService
 
     public function allSellers()
     {
+        $searchQuery = request()->input('search');
+        $approvedQuery = request()->query('approved');
+
         $users = User::with(['products'])
-        ->where('type', UserType::SELLER)
-        ->paginate(25);
+            ->where('type', UserType::SELLER)
+            ->when($searchQuery, function ($queryBuilder) use ($searchQuery) {
+                $queryBuilder->where(function($subQuery) use ($searchQuery) {
+                    $subQuery->where('first_name', 'LIKE', '%' . $searchQuery . '%')
+                            ->orWhere('last_name', 'LIKE', '%' . $searchQuery . '%')
+                            ->orWhere('middlename', 'LIKE', '%' . $searchQuery . '%')
+                            ->orWhere('email', 'LIKE', '%' . $searchQuery . '%');
+                });
+            })
+            ->when($approvedQuery !== null, function ($queryBuilder) use ($approvedQuery) {
+                $queryBuilder->where('is_admin_approve', $approvedQuery);
+            })
+            ->paginate(25);
 
         $data = SellerResource::collection($users);
 
         return [
             'status' => 'true',
-            'message' => 'All Sellers',
+            'message' => 'Sellers filtered',
             'data' => $data,
             'pagination' => [
                 'current_page' => $users->currentPage(),
@@ -32,6 +47,7 @@ class SellerService
             ],
         ];
     }
+
 
     public function approveSeller($request)
     {
@@ -122,61 +138,21 @@ class SellerService
         return $this->success(null, "User has been removed successfully");
     }
 
-    public function filter()
+    public function paymentHistory($id)
     {
-        $query = request()->query('approved');
+        $user = User::with('sellerOrders.payments')->find($id);
 
-        $users = User::with(['products'])
-            ->where('type', UserType::SELLER)
-            ->when($query !== null, function ($queryBuilder) use ($query) {
-                $queryBuilder->where('is_admin_approve', $query);
-            })
-            ->paginate(25);
+        if (!$user) {
+            return $this->error(null, "User not found", 404);
+        }
 
-        $data = SellerResource::collection($users);
+        $payments = $user->sellerOrders->flatMap->payments;
 
-        return [
-            'status' => 'true',
-            'message' => 'Filter by approval',
-            'data' => $data,
-            'pagination' => [
-                'current_page' => $users->currentPage(),
-                'last_page' => $users->lastPage(),
-                'per_page' => $users->perPage(),
-                'prev_page_url' => $users->previousPageUrl(),
-                'next_page_url' => $users->nextPageUrl(),
-            ],
-        ];
+        $data = PaymentResource::collection($payments);
+
+        return $this->success($data, "Payment history");
     }
 
-    public function search()
-    {
-        $query = request()->input('query');
-
-        $users = User::where('type', UserType::SELLER)
-        ->where(function($queryBuilder) use ($query) {
-            $queryBuilder->where('first_name', 'LIKE', '%' . $query . '%')
-                         ->orWhere('last_name', 'LIKE', '%' . $query . '%')
-                         ->orWhere('middlename', 'LIKE', '%' . $query . '%')
-                         ->orWhere('email', 'LIKE', '%' . $query . '%');
-        })
-        ->paginate(25);
-
-        $data = SellerResource::collection($users);
-
-        return [
-            'status' => 'true',
-            'message' => 'Filter by approval',
-            'data' => $data,
-            'pagination' => [
-                'current_page' => $users->currentPage(),
-                'last_page' => $users->lastPage(),
-                'per_page' => $users->perPage(),
-                'prev_page_url' => $users->previousPageUrl(),
-                'next_page_url' => $users->nextPageUrl(),
-            ],
-        ];
-    }
 }
 
 

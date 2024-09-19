@@ -2,9 +2,12 @@
 
 use App\Http\Controllers\Api\ApiController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\CustomerController;
+use App\Http\Controllers\Api\HomeController;
 use App\Http\Controllers\Api\MailingListController;
+use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\SellerController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Http\Request;
@@ -50,7 +53,20 @@ Route::get('/user/seller/template', [SellerController::class, 'getTemplate']);
 Route::get('/shop/country', [ApiController::class, 'getShopByCountry']);
 Route::get('/shop-by/country/{shop_country_id}', [ApiController::class, 'userShopByCountry']);
 
+Route::controller(HomeController::class)->group(function () {
+    Route::get('/best/selling', 'bestSelling');
+    Route::get('/featured/products', 'featuredProduct');
+    Route::get('/pocket/friendly', 'pocketFriendly');
+
+    Route::get('/single/product/{slug}', 'productSlug');
+});
+
+Route::post('/payment/webhook', [PaymentController::class, 'webhook']);
+
 Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
+
+    Route::post('/checkout', [PaymentController::class, 'processPayment']);
+    Route::get('/verify/payment/{user_id}/{reference}', [PaymentController::class, 'verifyPayment']);
 
     Route::controller(UserController::class)->group(function () {
         Route::get('/profile', 'profile');
@@ -67,8 +83,18 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
             Route::get('/transaction/{user_id}', 'transactionHistory');
             Route::post('/payment-method', 'addPaymentMethod');
             Route::get('/payment-method/{user_id}', 'getPaymentMethod');
-            Route::post('/settings/{user_id}', 'changeSettings');
         });
+
+        Route::post('/update-profile/{user_id}', 'updateProfile');
+        Route::post('/settings/{user_id}', 'changeSettings');
+    });
+
+    Route::prefix('cart')->controller(CartController::class)->group(function () {
+        Route::get('/{user_id}', 'getCartItems');
+        Route::post('/add', 'addToCart');
+        Route::delete('/{user_id}/clear', 'clearCart');
+        Route::delete('/{user_id}/remove/{cart_id}', 'removeCartItem');
+        Route::patch('/update-cart', [CartController::class, 'updateCart']);
     });
 
     Route::prefix('customer')->controller(CustomerController::class)->group(function () {
@@ -85,6 +111,7 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
 
         //Reward Point
         Route::get('/reward/dashboard/{user_id}', 'rewardDashboard');
+        Route::post('/redeem/point', 'redeemPoint');
 
         // Support Route
         Route::post('/support', 'support');
@@ -98,16 +125,9 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
 
     Route::post('customer/mailing/subscribe', [MailingListController::class, 'signup']);
 
-
-    Route::prefix('category')->controller(CategoryController::class)->group(function () {
-        Route::post('/create', 'createCategory');
-        Route::post('/subcategory/create', 'createSubCategory');
-    });
-
     Route::prefix('seller')->controller(SellerController::class)->group(function () {
         // Business Information
         Route::post('/business/information', 'businessInfo');
-        Route::post('/update-profile/{user_id}', 'updateProfile');
         Route::get('/dashboard/analytic/{user_id}', 'dashboardAnalytics');
 
         // Product Routes

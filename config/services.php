@@ -40,4 +40,13 @@ return [
     'staging_frontend_baseurl' => env('STAGING_FRONTEND_BASEURL'),
     'baseurl' => env('BASEURL'),
 
+    'paystack' => [
+        'mode' => env('PAYSTACK'),
+        'live_sk' => env('LIVE_PAYSTACK_SECRET_KEY'),
+        'test_sk' => env('PAYSTACK_SECRET_KEY'),
+        
+        'test_pk' => env('PAYSTACK_TEST_PK'),
+        'live_pk' => env('PAYSTACK_PK'),
+    ]
+
 ];

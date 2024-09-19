@@ -55,7 +55,31 @@ class OrderService
 
     public function localOrder()
     {
-        $orders = Order::where('country_id', 160)->paginate(25);
+        $search = request()->input('search');
+
+        $orders = Order::with(['user', 'seller', 'products'])
+            ->where('country_id', 160)
+            ->when($search, function ($query, $search) {
+                $query->where(function ($query) use ($search) {
+                    $query->whereHas('user', function ($query) use ($search) {
+                        $query->where('first_name', 'like', "%{$search}%")
+                          ->orWhere('last_name', 'like', "%{$search}%");
+                    })->orWhereHas('seller', function ($query) use ($search) {
+                        $query->where('first_name', 'like', "%{$search}%")
+                          ->orWhere('last_name', 'like', "%{$search}%");
+                    })->orWhere('order_no', 'like', "%{$search}%");
+                });
+            })
+            ->get()
+            ->groupBy('order_no')
+            ->map(function ($group) {
+                $firstOrder = $group->first();
+                $firstOrder->products = $group->pluck('products')->flatten();
+                return $firstOrder;
+            })
+            ->values();
+
+        $orders = $orders->forPage(request()->input('page', 1), 25);
 
         $data = AdminOrderResource::collection($orders);
 
@@ -64,18 +88,43 @@ class OrderService
             'message' => 'Local Orders',
             'data' => $data,
             'pagination' => [
-                'current_page' => $orders->currentPage(),
-                'last_page' => $orders->lastPage(),
-                'per_page' => $orders->perPage(),
-                'prev_page_url' => $orders->previousPageUrl(),
-                'next_page_url' => $orders->nextPageUrl(),
+                'current_page' => request()->input('page', 1),
+                'last_page' => ceil($orders->count() / 25),
+                'per_page' => 25,
+                'prev_page_url' => url()->previous(),
+                'next_page_url' => url()->current() . '?page=' . (request()->input('page', 1) + 1),
             ],
         ];
     }
 
+
     public function intOrder()
     {
-        $orders = Order::where('country_id', '!=', 160)->paginate(25);
+        $search = request()->input('search');
+
+        $orders = Order::with(['user', 'seller', 'products'])
+            ->where('country_id', '!=', 160)
+            ->when($search, function ($query, $search) {
+                $query->where(function ($query) use ($search) {
+                    $query->whereHas('user', function ($query) use ($search) {
+                        $query->where('first_name', 'like', "%{$search}%")
+                          ->orWhere('last_name', 'like', "%{$search}%");
+                    })->orWhereHas('seller', function ($query) use ($search) {
+                        $query->where('first_name', 'like', "%{$search}%")
+                          ->orWhere('last_name', 'like', "%{$search}%");
+                    })->orWhere('order_no', 'like', "%{$search}%");
+                });
+            })
+            ->get()
+            ->groupBy('order_no')
+            ->map(function ($group) {
+                $firstOrder = $group->first();
+                $firstOrder->products = $group->pluck('products')->flatten();
+                return $firstOrder;
+            })
+            ->values();
+
+        $orders = $orders->forPage(request()->input('page', 1), 25);
 
         $data = AdminOrderResource::collection($orders);
 
@@ -84,11 +133,11 @@ class OrderService
             'message' => 'International Orders',
             'data' => $data,
             'pagination' => [
-                'current_page' => $orders->currentPage(),
-                'last_page' => $orders->lastPage(),
-                'per_page' => $orders->perPage(),
-                'prev_page_url' => $orders->previousPageUrl(),
-                'next_page_url' => $orders->nextPageUrl(),
+                'current_page' => request()->input('page', 1),
+                'last_page' => ceil($orders->count() / 25),
+                'per_page' => 25,
+                'prev_page_url' => url()->previous(),
+                'next_page_url' => url()->current() . '?page=' . (request()->input('page', 1) + 1),
             ],
         ];
     }

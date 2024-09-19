@@ -2,12 +2,12 @@
 
 namespace App\Enum;
 
-enum OrderStatus
+enum OrderStatus: string
 {
-    const CONFIRMED = "confirmed";
-    const CANCELLED = "cancelled";
-    const DELIVERED = "delivered";
-    const PENDING = "pending";
-    const PROCESSING = "processing";
-    const SHIPPED = "shipped";
+    const CONFIRMED = 'confirmed';
+    const CANCELLED = 'cancelled';
+    const DELIVERED = 'delivered';
+    const PENDING = 'pending';
+    const PROCESSING = 'processing';
+    const SHIPPED = 'shipped';
 }

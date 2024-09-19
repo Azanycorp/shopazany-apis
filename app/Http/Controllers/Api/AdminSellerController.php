@@ -62,13 +62,9 @@ class AdminSellerController extends Controller
         return $this->service->removeSeller($id);
     }
 
-    public function filter()
+    public function paymentHistory($id)
     {
-        return $this->service->filter();
+        return $this->service->paymentHistory($id);
     }
 
-    public function search()
-    {
-        return $this->service->search();
-    }
 }

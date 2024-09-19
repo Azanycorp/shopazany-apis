@@ -31,6 +31,40 @@ class UserService extends Controller
         return $this->success($data, "Profile");
     }
 
+    public function updateProfile($request, $userId)
+    {
+        $currentUserId = Auth::id();
+
+        if ($currentUserId != $userId) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+
+        $user = User::find($userId);
+
+        if (!$user) {
+            return $this->error(null, "User not found", 404);
+        }
+
+        $image = $request->hasFile('image') ? uploadUserImage($request, 'image', $user) : $user->image;
+
+        $user->update([
+            'first_name' => $request->first_name ?? $user->first_name,
+            'last_name' => $request->last_name ?? $user->last_name,
+            'middlename' => $request->middlename ?? $user->middlename,
+            'address' => $request->address ?? $user->address,
+            'phone' => $request->phone_number ?? $user->phone,
+            'country' => $request->country_id ?? $user->country,
+            'state_id' => $request->state_id ?? $user->state_id,
+            'date_of_birth' => $request->date_of_birth ?? $user->date_of_birth,
+            'image' => $image,
+        ]);
+
+        return $this->success([
+            'user_id' => $user->id
+        ], "Updated successfully");
+
+    }
+
     public function bankAccount($request)
     {
         $user = User::with(['bankAccount'])
@@ -221,15 +255,15 @@ class UserService extends Controller
             case 'bank_transfer':
                 $methodAdded = $this->addBankTransfer($request, $user);
                 break;
-    
+
             case 'paypal':
                 $methodAdded = $this->addPayPal($request, $user);
                 break;
-    
+
             default:
                 return $this->error(null, "Invalid type", 400);
         }
-    
+
         if ($methodAdded) {
             return $this->success(null, "Added successfully");
         } else {
@@ -270,9 +304,15 @@ class UserService extends Controller
             return $this->error(null, "User not found", 404);
         }
 
+        $password = $user->password;
+
+        if($request->password) {
+            $password = bcrypt($request->password);
+        }
+
         $user->update([
             'two_factor_enabled' => $request->two_factor_enabled,
-            'password' => bcrypt($request->password)
+            'password' => $password,
         ]);
 
         return $this->success(null, "Settings changed successfully");

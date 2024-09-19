@@ -2,6 +2,7 @@
 
 namespace App\Services\User;
 
+use App\Enum\RedeemPointStatus;
 use App\Enum\UserType;
 use App\Http\Resources\AccountOverviewResource;
 use App\Http\Resources\OrderDetailResource;
@@ -342,6 +343,25 @@ class CustomerService
         });
 
         return $this->success($data, "User activity");
+    }
+
+    public function redeemPoint($request)
+    {
+        $currentUser = userAuth();
+
+        if ($currentUser->id != $request->user_id || $currentUser->type != UserType::CUSTOMER) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+
+        $user = User::with('reedemPoints')->findOrFail($request->user_id);
+
+        $user->reedemPoints()->create([
+            'name' => $request->name,
+            'name' => $request->name,
+            'status' => RedeemPointStatus::REDEEMED
+        ]);
+
+        return $this->success(null, "Points redeemed successfully");
     }
 }
 

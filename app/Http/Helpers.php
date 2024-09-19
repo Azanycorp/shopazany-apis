@@ -105,15 +105,17 @@ if(!function_exists('uploadSingleProductImage')){
     {
         if ($request->hasFile($file)) {
 
-            $image = getRelativePath($product->image);
+            if (!empty($product->image)) {
+                $image = getRelativePath($product->image);
+
+                if (Storage::disk('s3')->exists($image)) {
+                    Storage::disk('s3')->delete($image);
+                }
+            }
 
             $fileSize = $request->file($file)->getSize();
             if ($fileSize > 3000000) {
                 return json_encode(["status" => false, "message" => "file size is larger than 3MB.", "status_code" => 422]);
-            }
-
-            if (Storage::disk('s3')->exists($image)) {
-                Storage::disk('s3')->delete($image);
             }
 
             $path = $request->file($file)->store($frontImage, 's3');
@@ -126,21 +128,39 @@ if(!function_exists('uploadSingleProductImage')){
     }
 }
 
-if(!function_exists('uploadImage')){
-    function uploadImage($request, $file, $folder, $country = null)
+if (!function_exists('uploadImage')) {
+    function uploadImage($request, $file, $folder, $country = null, $banner = null)
     {
-        $url = $country?->image;
+        $url = null;
+
+        if (!is_null($country)) {
+            $url = $country->image;
+        }
+
+        if (!is_null($banner)) {
+            $url = $banner->image;
+        }
 
         if ($request->hasFile($file)) {
             $fileSize = $request->file($file)->getSize();
+
             if ($fileSize > 3000000) {
-                return json_encode(["status" => false, "message" => "File size is larger than 3MB.", "status_code" => 422]);
+                return json_encode([
+                    "status" => false,
+                    "message" => "File size is larger than 3MB.",
+                    "status_code" => 422
+                ]);
             }
 
-            $image = $country?->image ? getRelativePath($country->image) : null;
+            $existingImage = $country?->image ? getRelativePath($country->image) : null;
+            $existingBanner = $banner?->image ? getRelativePath($banner->image) : null;
 
-            if ($image && Storage::disk('s3')->exists($image)) {
-                Storage::disk('s3')->delete($image);
+            if ($existingImage && Storage::disk('s3')->exists($existingImage)) {
+                Storage::disk('s3')->delete($existingImage);
+            }
+
+            if ($existingBanner && Storage::disk('s3')->exists($existingBanner)) {
+                Storage::disk('s3')->delete($existingBanner);
             }
 
             $path = $request->file($file)->store($folder, 's3');
@@ -185,15 +205,17 @@ if(!function_exists('uploadUserImage')){
 
         if ($request->hasFile($file)) {
 
-            $image = getRelativePath($user->image);
+            if (!empty($user->image)) {
+                $image = getRelativePath($user->image);
+
+                if (Storage::disk('s3')->exists($image)) {
+                    Storage::disk('s3')->delete($image);
+                }
+            }
 
             $fileSize = $request->file($file)->getSize();
             if ($fileSize > 3000000) {
                 return json_encode(["status" => false, "message" => "file size is larger than 3MB.", "status_code" => 422]);
-            }
-
-            if (Storage::disk('s3')->exists($image)) {
-                Storage::disk('s3')->delete($image);
             }
 
             $path = $request->file($file)->store($folder, 's3');
@@ -248,14 +270,12 @@ if(!function_exists('generate_referrer_link')) {
         if(App::environment('production')) {
             $url = config('services.frontend_baseurl') . '/register?referrer=' . $referrer_code;
         } else {
-            $url = config('services.local_frontend_baseurl') . '/register?referrer=' . $referrer_code;
+            $url = config('services.staging_frontend_baseurl') . '/register?referrer=' . $referrer_code;
         }
 
         return $url;
     }
 }
-
-
 
 
 

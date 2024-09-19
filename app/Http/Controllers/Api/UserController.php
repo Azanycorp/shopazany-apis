@@ -24,6 +24,11 @@ class UserController extends Controller
         return $this->service->profile();
     }
 
+    public function updateProfile(Request $request, $userId)
+    {
+        return $this->service->updateProfile($request, $userId);
+    }
+
     public function bankAccount(BankAccountRequest $request)
     {
         return $this->service->bankAccount($request);
@@ -34,7 +39,7 @@ class UserController extends Controller
         $request->validate([
             'user_id' => ['required', 'integer', 'exists:users,id']
         ]);
-        
+
         return $this->service->removeBankAccount($request);
     }
 
