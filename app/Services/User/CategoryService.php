@@ -113,7 +113,9 @@ class CategoryService
 
     public function getSubcategory($id)
     {
-        $subcats = SubCategory::where('category_id', $id)->get(['name', 'slug', 'image']);
+        $subcats = SubCategory::where('category_id', $id)
+        ->select(['id', 'name', 'slug', 'image', 'status'])
+        ->get();
 
         return $this->success($subcats, "Sub categories");
     }
