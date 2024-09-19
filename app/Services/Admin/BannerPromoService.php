@@ -19,7 +19,7 @@ class BannerPromoService
         try {
 
             $image = uploadImage($request, 'image', 'banner');
-            
+
             Banner::create([
                 'title' => $request->title,
                 'image' => $image,
@@ -43,6 +43,14 @@ class BannerPromoService
         return $this->success($data, "Banners");
     }
 
+    public function getOneBanner($id)
+    {
+        $banners = Banner::findOrFail($id);
+        $data = new BannerResource($banners);
+
+        return $this->success($data, "Banner detail");
+    }
+
     public function editBanner($request, $id)
     {
         $banner = Banner::findOrFail($id);
@@ -50,7 +58,7 @@ class BannerPromoService
         try {
 
             $image = uploadImage($request, 'image', 'banner', null, $banner);
-            
+
             $banner->update([
                 'title' => $request->title,
                 'image' => $image,
@@ -89,7 +97,7 @@ class BannerPromoService
             case CouponType::WELCOME_COUPON:
                 return $this->welcomeCoupon($type, $request);
                 break;
-            
+
             default:
                 # code...
                 break;
