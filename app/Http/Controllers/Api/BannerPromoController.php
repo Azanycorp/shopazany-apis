@@ -27,6 +27,11 @@ class BannerPromoController extends Controller
         return $this->service->banners();
     }
 
+    public function getOneBanner($id)
+    {
+        return $this->service->getOneBanner($id);
+    }
+
     public function editBanner(Request $request, $id)
     {
         return $this->service->editBanner($request, $id);
@@ -51,5 +56,5 @@ class BannerPromoController extends Controller
     {
         return $this->service->deletePromo($id);
     }
-    
+
 }

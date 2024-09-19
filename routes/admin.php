@@ -46,6 +46,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::prefix('banner')->controller(BannerPromoController::class)->group(function () {
         Route::post('/add', 'addBanner');
         Route::get('/', 'banners');
+        Route::get('/{id}', 'getOneBanner');
         Route::post('/edit/{id}', 'editBanner');
         Route::delete('/delete/{id}', 'deleteBanner');
     });
@@ -67,7 +68,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::get('/all', 'adminCategories');
         Route::get('/analytics', 'categoryAnalytic');
         Route::patch('/change/{category_id}', 'featuredStatus');
-    
+
         Route::post('/create/subcategory', 'createSubCategory');
         Route::get('/subcategory', 'getAdminSubcategory');
         Route::get('/{category_id}/subcategory', 'getSubcategory');
@@ -88,13 +89,13 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::get('/filter', 'filter');
         Route::get('/{user_id}', 'viewCustomer');
         Route::get('/payment/{id}', 'getPayment');
-    
+
         Route::post('/add', 'addCustomer');
         Route::post('/edit', 'editCustomer');
-    
+
         Route::patch('/approve', 'approveCustomer');
         Route::patch('/ban', 'banCustomer');
-    
+
         Route::delete('/remove/{user_id}', 'removeCustomer');
     });
 

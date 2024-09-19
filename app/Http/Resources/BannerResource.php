@@ -18,7 +18,8 @@ class BannerResource extends JsonResource
         $productIds = json_decode($this->products, true);
 
         $products = Product::whereIn('id', $productIds)
-            ->get(['name', 'product_price', 'description', 'discount_price'])
+            ->select(['id', 'name', 'product_price', 'description', 'discount_price'])
+            ->get()
             ->toArray();
 
         return [
