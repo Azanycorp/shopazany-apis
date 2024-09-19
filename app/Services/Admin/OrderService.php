@@ -55,8 +55,21 @@ class OrderService
 
     public function localOrder()
     {
+        $search = request()->input('search');
+
         $orders = Order::with(['user', 'seller', 'products'])
             ->where('country_id', 160)
+            ->when($search, function ($query, $search) {
+                $query->where(function ($query) use ($search) {
+                    $query->whereHas('user', function ($query) use ($search) {
+                        $query->where('first_name', 'like', "%{$search}%")
+                          ->orWhere('last_name', 'like', "%{$search}%");
+                    })->orWhereHas('seller', function ($query) use ($search) {
+                        $query->where('first_name', 'like', "%{$search}%")
+                          ->orWhere('last_name', 'like', "%{$search}%");
+                    })->orWhere('order_no', 'like', "%{$search}%");
+                });
+            })
             ->get()
             ->groupBy('order_no')
             ->map(function ($group) {
@@ -87,8 +100,21 @@ class OrderService
 
     public function intOrder()
     {
+        $search = request()->input('search');
+
         $orders = Order::with(['user', 'seller', 'products'])
             ->where('country_id', '!=', 160)
+            ->when($search, function ($query, $search) {
+                $query->where(function ($query) use ($search) {
+                    $query->whereHas('user', function ($query) use ($search) {
+                        $query->where('first_name', 'like', "%{$search}%")
+                          ->orWhere('last_name', 'like', "%{$search}%");
+                    })->orWhereHas('seller', function ($query) use ($search) {
+                        $query->where('first_name', 'like', "%{$search}%")
+                          ->orWhere('last_name', 'like', "%{$search}%");
+                    })->orWhere('order_no', 'like', "%{$search}%");
+                });
+            })
             ->get()
             ->groupBy('order_no')
             ->map(function ($group) {
