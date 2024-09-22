@@ -12,6 +12,7 @@ use App\Services\RewardPoint\RewardService;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 
@@ -277,7 +278,11 @@ if(!function_exists('generate_referrer_link')) {
     }
 }
 
-
+if(!function_exists('send_email')) {
+    function send_email($email, $action) {
+        Mail::to($email)->send($action);
+    }
+}
 
 
 

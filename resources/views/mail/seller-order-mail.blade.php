@@ -3,129 +3,239 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title></title>
+    <title>Azany Order Confirmation</title>
     <style>
         body {
-            background-color: white;
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
+            background-color: #f4f4f4;
         }
         .container {
-            max-width: 32rem;
-            margin: 0 auto;
-            padding: 1rem;
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: white;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
-        .text-center {
+        .logo {
             text-align: center;
+            margin-bottom: 20px;
         }
-        .mb-8 {
-            margin-bottom: 2rem;
+        .logo img {
+            max-width: 150px;
         }
-        .mb-4 {
-            margin-bottom: 1rem;
+        h1, h2 {
+            text-align: center;
+            color: #333;
         }
-        .mb-12 {
-            margin-bottom: 3rem;
+        .subtitle {
+            text-align: left;
+            color: #666;
+            margin-bottom: 20px;
         }
-        .mx-auto {
-            margin-left: auto;
-            margin-right: auto;
+        .banner {
+            color: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
         }
-        .max-h-24 {
-            max-height: 6rem;
-        }
-        .max-h-36 {
-            max-height: 9rem;
-        }
-        h1 {
-            font-size: 1.25rem;
+        .banner-text {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background-color: white;
+            color: black;
+            padding: 10px;
             font-weight: bold;
         }
-        .text-gray-600 {
-            color: #4B5563;
+        .banner img {
+            max-width: 100%;
+            height: auto;
         }
-        .inline-block {
-            display: inline-block;
+        .message {
+            text-align: center;
+            margin-bottom: 20px;
         }
-        .bg-gray-100 {
-            background-color: #F3F4F6;
-        }
-        .border-dashed {
-            border-style: dashed;
-        }
-        .border-2 {
-            border-width: 2px;
-        }
-        .border-gray-300 {
-            border-color: #D1D5DB;
-        }
-        .py-2 {
-            padding-top: 0.5rem;
-            padding-bottom: 0.5rem;
-        }
-        .px-4 {
-            padding-left: 1rem;
-            padding-right: 1rem;
-        }
-        .rounded {
-            border-radius: 0.25rem;
-        }
-        .text-xl {
-            font-size: 1.25rem;
-        }
-        .font-mono {
-            font-family: monospace;
-        }
-        .bg-blue-500 {
-            background-color: #3B82F6;
-        }
-        .text-white {
+        .btn {
+            display: block;
+            width: 200px;
+            margin: 20px auto;
+            padding: 10px;
+            background-color: #007bff;
             color: white;
-        }
-        a {
+            text-align: center;
             text-decoration: none;
+            border-radius: 5px;
+        }
+        .purchase-details {
+            background-color: #f9f9f9;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .product {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 20px;
+        }
+        .product img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            margin-right: 20px;
+        }
+        .product-info h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .product-info p {
+            color: #666;
+            margin: 5px 0;
+        }
+        .price {
+            color: #007bff;
+            font-weight: bold;
+        }
+        .total {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            font-weight: bold;
         }
         .footer {
-            max-width: 72rem;
-            margin: 2rem auto; /* Added top and bottom margins */
-            padding: 1rem;
-        }
-        .footer-content {
             display: flex;
-            flex-wrap: wrap;
             justify-content: space-between;
-            align-items: flex-start;
-            margin-top: 2rem; /* Added margin-top */
+            margin-top: 20px;
+            font-size: 0.9em;
         }
-        .footer-item {
+        .footer-logo {
             flex: 1;
-            margin: 0 1rem; /* Added horizontal spacing between columns */
-            text-align: center;
-            box-sizing: border-box;
         }
-        .max-h-18 {
-            max-height: 4.5rem;
+        .footer-logo img {
+            max-width: 150px;
         }
-        .text-red {
-            color: #E02014;
+        .footer-info {
+            flex: 1;
+            display: flex;
+            justify-content: space-between;
         }
-        address {
-            font-style: normal;
+        .footer-info div {
+            flex: 1;
         }
-        ul {
-            list-style-type: none;
-            padding: 0;
+        .footer h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .footer p {
+            color: #666;
+            margin: 5px 0;
+        }
+        @media (max-width: 600px) {
+            .container {
+                margin: 10px;
+                padding: 10px;
+            }
+            .product {
+                flex-direction: column;
+            }
+            .product img {
+                width: 100%;
+                height: auto;
+                margin-right: 0;
+                margin-bottom: 10px;
+            }
+            .footer, .footer-info {
+                flex-direction: column;
+            }
+            .footer-logo {
+                margin-bottom: 20px;
+            }
+
         }
     </style>
 </head>
-<body style="background-color: white; font-family: Arial, sans-serif; margin: 0; padding: 0;">
-    <div>
-        <h5>Dear {{ $seller->first_name }} {{ $seller->last_name }},</h5>
-        <p>
-            A customer placed an order
-        </p>
-        <p>Order No: {{ $order->order_no }}</p>
+<body>
+<div class="container">
+    <div class="logo">
+        <img src="https://azany-uploads.s3.amazonaws.com/assets/logo.png" alt="Azany Logo">
     </div>
+    <h1>Hi {{ $user->first_name }},</h1>
+    <h2>Order {{ $orderNo }} Has been Placed.</h2>
+    <p class="subtitle">Your #1 Global E-commerce Platform</p>
+
+    <div class="banner">
+        <div class="banner-text">ORDER CONFIRMED</div>
+        <img src="https://azany-uploads.s3.amazonaws.com/assets/orderconfirmed.png" alt="Order Confirmed Banner">
+    </div>
+
+    <div class="message">
+        <h2>Order has been placed</h2>
+        <p>Hello {{ $user->first_name }}, an order has been placed</p>
+        <p>— Azany Team</p>
+    </div>
+
+    <div class="purchase-details">
+        <h2>Purchase Details</h2>
+
+        @php
+            $subtotal = 0;
+        @endphp
+        @foreach ($items as $order)
+            <div class="product">
+                <img src="{{ $order['image'] }}" alt="{{ $order['product_name'] }}">
+                <div class="product-info">
+                    <h3>{{ $order['product_name'] }}</h3>
+                    <p class="price">${{ number_format($order['price']) }}</p>
+                    {{-- <p>COLOUR: PURPLE</p>
+                    <p>SIZE: XL</p> --}}
+                    <p>QTY: {{ $order['quantity'] }}</p>
+                </div>
+            </div>
+
+            @php
+                $subtotal += $order['price'] * $order['quantity'];
+            @endphp
+        @endforeach
+        <div class="total">
+            <span>Subtotal</span>
+            <span>${{ number_format($subtotal) }}</span>
+        </div>
+        <div class="total">
+            <span>Tax</span>
+            <span>$00.00</span>
+        </div>
+        <div class="total">
+            <span>Shipping</span>
+            <span>$00.00</span>
+        </div>
+        <div class="total">
+            <span>Total</span>
+            <span>${{ number_format($totalAmount) }}</span>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="footer-logo">
+            <img src="https://azany-uploads.s3.amazonaws.com/assets/logo.png" alt="Azany Logo">
+        </div>
+        <div class="footer-info">
+            <div>
+                <h3>Support</h3>
+                <p>333 Freemont Street, California</p>
+                <p>support@azany.com</p>
+                <p>+88015-88888-9999</p>
+            </div>
+            <div>
+                <h3>Quick Links</h3>
+                <p>Privacy Policy</p>
+                <p>Terms Of Use</p>
+                <p>FAQ</p>
+                <p>Contact</p>
+            </div>
+        </div>
+    </div>
+</div>
 </body>
 </html>
