@@ -9,20 +9,24 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class SellerOrderMail extends Mailable implements ShouldQueue
+class SellerOrderMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    protected $seller;
-    protected $order;
+    protected $user;
+    protected $items;
+    protected $orderNo;
+    protected $totalAmount;
 
     /**
      * Create a new message instance.
      */
-    public function __construct($seller, $order)
+    public function __construct($user, $items, $orderNo, $totalAmount)
     {
-        $this->seller = $seller;
-        $this->order = $order;
+        $this->user = $user;
+        $this->items = $items;
+        $this->orderNo = $orderNo;
+        $this->totalAmount = $totalAmount;
     }
 
     /**
@@ -43,8 +47,10 @@ class SellerOrderMail extends Mailable implements ShouldQueue
         return new Content(
             markdown: 'mail.seller-order-mail',
             with: [
-                'seller' => $this->seller,
-                'order' => $this->order,
+                'user' => $this->user,
+                'items' => $this->items,
+                'orderNo' => $this->orderNo,
+                'totalAmount' => $this->totalAmount,
             ],
         );
     }

@@ -14,6 +14,8 @@ use App\Models\UserShippingAddress;
 use Illuminate\Support\Facades\Auth;
 use App\Services\Curl\GetCurlService;
 use App\Http\Resources\PaymentVerifyResource;
+use App\Mail\CustomerOrderMail;
+use App\Mail\SellerOrderMail;
 use Unicodeveloper\Paystack\Facades\Paystack;
 
 class PaymentService
@@ -145,7 +147,11 @@ class PaymentService
                 'status' => $status,
             ]);
 
+            $orderedItems = [];
+            $seller = [];
             foreach ($items as $item) {
+
+                $product = Product::find($item['product_id']);
 
                 $seller = Product::with('user')
                 ->where('id', $item['product_id'])
@@ -161,6 +167,13 @@ class PaymentService
                     $method,
                     $payStatus,
                 );
+
+                $orderedItems[] = [
+                    'product_name' => $product->name,
+                    'image' => $product->image,
+                    'quantity' => $item['product_quantity'],
+                    'price' => $item['total_amount'],
+                ];
             }
 
             if (!empty($address)) {
@@ -178,6 +191,9 @@ class PaymentService
             }
 
             Cart::where('user_id', $userId)->delete();
+
+            $this->sendOrderConfirmationEmail($user, $orderedItems, $orderNo, $formattedAmount);
+            $this->sendSellerOrderEmail($seller->user, $orderedItems, $orderNo, $formattedAmount);
         });
     }
 
@@ -194,6 +210,16 @@ class PaymentService
         }
 
         return $uniqueOrderNumber;
+    }
+
+    private function sendSellerOrderEmail($seller, $order, $orderNo, $totalAmount)
+    {
+        defer(fn() => send_email($seller->email, new SellerOrderMail($seller, $order, $orderNo, $totalAmount)));
+    }
+
+    private function sendOrderConfirmationEmail($user, $orderedItems, $orderNo, $totalAmount)
+    {
+        defer(fn() => send_email($user->email, new CustomerOrderMail($user, $orderedItems, $orderNo, $totalAmount)));
     }
 }
 

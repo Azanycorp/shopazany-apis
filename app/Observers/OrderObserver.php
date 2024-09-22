@@ -16,19 +16,20 @@ class OrderObserver implements ShouldHandleEventsAfterCommit
      */
     public function created(Order $order): void
     {
-        if ($order->user_id) {
-            $user = User::find($order->user_id);
-            if ($user) {
-                Mail::to($user->email)->send(new CustomerOrderMail($user, $order));
-            }
-        }
+        // if ($order->user_id) {
+        //     $user = User::find($order->user_id);
+        //     if ($user) {
+        //         Mail::to($user->email)->send(new CustomerOrderMail($user, $order));
+        //         //defer(fn() => send_email($user->email, new CustomerOrderMail($user, $order)));
+        //     }
+        // }
 
-        if ($order->seller_id) {
-            $seller = User::find($order->seller_id);
-            if ($seller) {
-                Mail::to($seller->email)->send(new SellerOrderMail($seller, $order));
-            }
-        }
+        // if ($order->seller_id) {
+        //     $seller = User::find($order->seller_id);
+        //     if ($seller) {
+        //         Mail::to($seller->email)->send(new SellerOrderMail($seller, $order));
+        //     }
+        // }
     }
 
     /**
