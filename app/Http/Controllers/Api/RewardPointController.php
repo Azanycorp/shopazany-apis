@@ -35,4 +35,9 @@ class RewardPointController extends Controller
     {
         return $this->service->editPoints($request, $id);
     }
+
+    public function deletePoints($id)
+    {
+        return $this->service->deletePoints($id);
+    }
 }
