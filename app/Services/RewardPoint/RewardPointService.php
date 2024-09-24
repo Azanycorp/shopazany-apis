@@ -85,5 +85,12 @@ class RewardPointService
 
         return $this->success(null, "Updated successfully");
     }
+
+    public function deletePoints($id)
+    {
+        Action::findOrFail($id)->delete();
+
+        return $this->success(null, "Deleted successfully");
+    }
 }
 

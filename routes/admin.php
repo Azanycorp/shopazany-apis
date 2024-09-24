@@ -122,7 +122,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::get('/action', 'getPoints');
         Route::get('/action/{id}', 'getOnePoints');
         Route::patch('/action/{id}', 'editPoints');
-        Route::delete('/action/{id}', 'getPoints');
+        Route::delete('/delete/{id}', 'deletePoints');
     });
 
     Route::prefix('settings')->controller(SettingsController::class)->group(function () {
