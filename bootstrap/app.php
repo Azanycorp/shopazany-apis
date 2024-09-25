@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\AuthGates;
 use App\Http\Middleware\CheckWalletBalance;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -19,6 +20,10 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->appendToGroup('auth-gates', [
+            AuthGates::class,
+        ]);
+
         $middleware->alias([
             'check.wallet' => CheckWalletBalance::class,
         ]);

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\AddAdminUserRequest;
 use App\Http\Requests\Admin\SubscriptionPlanRequest;
 use App\Services\Admin\SettingsService;
 use Illuminate\Http\Request;
@@ -103,5 +104,10 @@ class SettingsController extends Controller
     public function deletePlan($id)
     {
         return $this->service->deletePlan($id);
+    }
+
+    public function addUser(AddAdminUserRequest $request)
+    {
+        return $this->service->addUser($request);
     }
 }
