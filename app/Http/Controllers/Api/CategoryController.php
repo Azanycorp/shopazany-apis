@@ -7,9 +7,13 @@ use App\Http\Requests\CategoryRequest;
 use App\Http\Requests\SubCategoryRequest;
 use App\Services\User\CategoryService;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Gate;
 
 class CategoryController extends Controller
 {
+    const MESSAGE = '403 Forbidden';
+
     protected $service;
 
     public function __construct(CategoryService $categoryService)
@@ -19,6 +23,8 @@ class CategoryController extends Controller
 
     public function createCategory(CategoryRequest $request)
     {
+        abort_if(Gate::denies('category_create'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+
         return $this->service->createCategory($request);
     }
 
@@ -29,11 +35,15 @@ class CategoryController extends Controller
 
     public function adminCategories()
     {
+        abort_if(Gate::denies('categories'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+
         return $this->service->adminCategories();
     }
 
     public function createSubCategory(SubCategoryRequest $request)
     {
+        abort_if(Gate::denies('sub_category_create'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+
         return $this->service->createSubCategory($request);
     }
 
@@ -44,6 +54,8 @@ class CategoryController extends Controller
 
     public function featuredStatus(Request $request, $id)
     {
+        abort_if(Gate::denies('category_featured_status'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+
         return $this->service->featuredStatus($request, $id);
     }
 
@@ -54,6 +66,8 @@ class CategoryController extends Controller
 
     public function getAdminSubcategory()
     {
+        abort_if(Gate::denies('sub_category'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+        
         return $this->service->getAdminSubcategory();
     }
 

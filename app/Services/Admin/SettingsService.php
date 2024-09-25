@@ -3,7 +3,9 @@
 namespace App\Services\Admin;
 
 use App\Http\Resources\SubscriptionPlanResource;
+use App\Mail\AdminUserMail;
 use App\Models\AboutUs;
+use App\Models\Admin;
 use App\Models\ContactInfo;
 use App\Models\CookiePolicy;
 use App\Trait\HttpResponse;
@@ -12,6 +14,7 @@ use App\Models\TermsService;
 use App\Models\SeoConfiguration;
 use App\Models\SubscriptionPlan;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\DB;
 
 class SettingsService
 {
@@ -323,6 +326,36 @@ class SettingsService
         $plan->delete();
 
         return $this->success(null, 'Plan deleted successfully');
+    }
+
+    public function addUser($request)
+    {
+        try {
+            $password = generateRandomString();
+
+            DB::beginTransaction();
+
+            $admin = Admin::create([
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'email' => $request->email,
+                'phone_number' => $request->phone_number,
+                'password' => bcrypt($password),
+                'status' => 'active'
+            ]);
+
+            $admin->roles()->sync($request->role_id);
+
+            DB::commit();
+
+            defer(fn() => send_email($request->email, new AdminUserMail($admin, $password)));
+            
+            return $this->success(null, 'Created successfully');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+
+            throw $th;
+        }
     }
 }
 
