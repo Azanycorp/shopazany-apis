@@ -286,7 +286,7 @@ class SettingsService
             throw $th;
         }
     }
-    
+
     public function getPlanById($id)
     {
         $plan = SubscriptionPlan::findOrFail($id);
@@ -306,7 +306,7 @@ class SettingsService
     public function updatePlan($request, $id)
     {
         $plan = SubscriptionPlan::findOrFail($id);
-        
+
         $plan->update([
             'title' => $request->title,
             'cost' => $request->cost,
@@ -349,7 +349,7 @@ class SettingsService
             DB::commit();
 
             defer(fn() => send_email($request->email, new AdminUserMail($admin, $password)));
-            
+
             return $this->success(null, 'Created successfully');
         } catch (\Throwable $th) {
             DB::rollBack();

@@ -18,4 +18,11 @@ class SubscriptionPlan extends Model
         'details',
         'status',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'tagline' => 'array'
+        ];
+    }
 }
