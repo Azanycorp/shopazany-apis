@@ -17,10 +17,6 @@ use Illuminate\Support\Facades\Route;
 //     return $request->user();
 // })->middleware('auth:sanctum');
 
-Route::get('/hello', function () {
-    return "Hello";
-});
-
 Route::middleware(['throttle:apis'])->group(function () {
 
     Route::prefix('connect')->controller(AuthController::class)->group(function () {

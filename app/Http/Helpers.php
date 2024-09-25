@@ -12,6 +12,7 @@ use App\Services\RewardPoint\RewardService;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 
@@ -277,9 +278,23 @@ if(!function_exists('generate_referrer_link')) {
     }
 }
 
+if(!function_exists('send_email')) {
+    function send_email($email, $action) {
+        Mail::to($email)->send($action);
+    }
+}
 
-
-
+if (!function_exists('generateRandomString')) {
+    function generateRandomString($length = 15)
+    {
+        $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $randomString = '';
+        for ($i = 0; $i < $length; $i++) {
+            $randomString .= $characters[mt_rand(0, strlen($characters) - 1)];
+        }
+        return $randomString;
+    }
+}
 
 
 

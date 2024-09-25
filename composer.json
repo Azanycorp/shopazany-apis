@@ -7,7 +7,7 @@
     "require": {
         "php": "^8.2",
         "jenssegers/agent": "^2.6",
-        "laravel/framework": "^11.22.0",
+        "laravel/framework": "^11.23.5",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.9",
         "league/flysystem-aws-s3-v3": "^3.0",

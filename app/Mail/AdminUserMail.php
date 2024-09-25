@@ -9,24 +9,20 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class CustomerOrderMail extends Mailable
+class AdminUserMail extends Mailable
 {
     use Queueable, SerializesModels;
 
     protected $user;
-    protected $items;
-    protected $orderNo;
-    protected $totalAmount;
+    protected $pass;
 
     /**
      * Create a new message instance.
      */
-    public function __construct($user, $items, $orderNo, $totalAmount)
+    public function __construct($user, $pass)
     {
         $this->user = $user;
-        $this->items = $items;
-        $this->orderNo = $orderNo;
-        $this->totalAmount = $totalAmount;
+        $this->pass = $pass;
     }
 
     /**
@@ -35,7 +31,7 @@ class CustomerOrderMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Order Placed Successfully',
+            subject: 'Admin User Mail',
         );
     }
 
@@ -45,13 +41,11 @@ class CustomerOrderMail extends Mailable
     public function content(): Content
     {
         return new Content(
-            markdown: 'mail.customer-order-mail',
+            markdown: 'mail.admin-user-mail',
             with: [
                 'user' => $this->user,
-                'items' => $this->items,
-                'orderNo' => $this->orderNo,
-                'totalAmount' => $this->totalAmount,
-            ],
+                'pass' => $this->pass,
+            ]
         );
     }
 

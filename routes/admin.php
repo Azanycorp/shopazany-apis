@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\BannerPromoController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\FaqController;
 use App\Http\Controllers\Api\RewardPointController;
+use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\SettingsController;
 
 Route::prefix('connect')->controller(AdminAuthController::class)->group(function () {
@@ -33,7 +34,8 @@ Route::controller(ApiController::class)->group(function () {
     Route::get('sizes', 'sizes');
 });
 
-Route::group(['middleware' => ['auth:sanctum']], function () {
+
+Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function () {
 
     Route::post('/add/slider', [ApiController::class, 'addSlider']);
     Route::get('/slider', [ApiController::class, 'slider']);
@@ -122,10 +124,22 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::get('/action', 'getPoints');
         Route::get('/action/{id}', 'getOnePoints');
         Route::patch('/action/{id}', 'editPoints');
-        Route::delete('/action/{id}', 'getPoints');
+        Route::delete('/delete/{id}', 'deletePoints');
+    });
+
+    Route::prefix('role')->controller(RoleController::class)->group(function () {
+        Route::post('/', 'addRole');
+        Route::get('/', 'getRole');
+        Route::post('/assign/permission', 'assignPermission');
+    });
+
+    Route::prefix('permission')->controller(RoleController::class)->group(function () {
+        Route::post('/', 'addPermission');
+        Route::get('/', 'getPermission');
     });
 
     Route::prefix('settings')->controller(SettingsController::class)->group(function () {
+        Route::post('/add-user', 'addUser');
         Route::post('/seo', 'addSeo');
         Route::get('/seo', 'getSeo');
         Route::post('/terms-service', 'addTermsService');
@@ -149,12 +163,12 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::delete('/remove/{id}', 'deletePlan');
     });
 
-
     Route::resource('settings/faq', FaqController::class);
 
     Route::get('/generate/users/link', [ApiController::class, 'referralGenerate']);
 
 });
+
 
 
 

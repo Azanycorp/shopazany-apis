@@ -17,7 +17,7 @@ class AuthService
         $request->validated();
 
         if (Auth::guard('admin')->attempt($request->only(['email', 'password']))) {
-            $user = Admin::where('email', $request->email)->first();
+            $user = Admin::with('roles.permissions')->where('email', $request->email)->first();
 
             if($user->status === LoginStatus::INACTIVE){
                 return $this->error([
@@ -31,7 +31,15 @@ class AuthService
             return $this->success([
                 'id' => $user->id,
                 'token' => $token->plainTextToken,
-                'expires_at' => $token->accessToken->expires_at
+                'expires_at' => $token->accessToken->expires_at,
+                'role' => $user?->roles->map(function ($role) {
+                    return [
+                        'name' => $role->name,
+                        'permissions' => $role?->permissions->flatMap(function ($permission) {
+                            return [$permission->name];
+                        })->toArray()
+                    ];
+                })->toArray(),
             ]);
         }
 
