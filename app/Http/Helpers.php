@@ -296,6 +296,20 @@ if (!function_exists('generateRandomString')) {
     }
 }
 
+if (!function_exists('abbreviateNumber')) {
+    function abbreviateNumber($number)
+    {
+        if ($number >= 1000000000) {
+            return number_format($number / 1000000000, 1) . 'B';
+        } elseif ($number >= 1000000) {
+            return number_format($number / 1000000, 1) . 'M';
+        } elseif ($number >= 1000) {
+            return number_format($number / 1000, 1) . 'K';
+        }
+
+        return $number;
+    }
+}
 
 
 

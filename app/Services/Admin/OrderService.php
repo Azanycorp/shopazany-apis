@@ -3,7 +3,6 @@
 namespace App\Services\Admin;
 
 use App\Enum\OrderStatus;
-use Illuminate\Support\Number;
 use App\Http\Resources\AdminOrderResource;
 use App\Models\Order;
 use App\Trait\HttpResponse;
@@ -20,10 +19,10 @@ class OrderService
         $shippedorder_amount = Order::where('status', OrderStatus::SHIPPED)->sum('total_amount');
         $deliveredorder_amount = Order::where('status', OrderStatus::DELIVERED)->sum('total_amount');
 
-        $all_order_amount = Number::abbreviate($orders);
-        $pending_order_amount = Number::abbreviate($pendingorder_amount);
-        $shipped_order_amount = Number::abbreviate($shippedorder_amount);
-        $delivered_order_amount = Number::abbreviate($deliveredorder_amount);
+        $all_order_amount = abbreviateNumber($orders);
+        $pending_order_amount = abbreviateNumber($pendingorder_amount);
+        $shipped_order_amount = abbreviateNumber($shippedorder_amount);
+        $delivered_order_amount = abbreviateNumber($deliveredorder_amount);
 
         $cancelled_order = Order::where('status', OrderStatus::CANCELLED)->count();
         $pending_order = Order::where('status', OrderStatus::PENDING)->count();
