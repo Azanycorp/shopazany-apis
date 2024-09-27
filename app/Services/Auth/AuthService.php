@@ -119,7 +119,7 @@ class AuthService extends Controller
                 'password' => bcrypt($request->password)
             ]);
 
-            if ($referrer) {
+            if ($referrer !== null) {
                 reward_user($referrer, 'referral', 'completed');
             }
 

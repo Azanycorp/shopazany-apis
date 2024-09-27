@@ -143,7 +143,7 @@ class OrderService
 
     public function orderDetail($id)
     {
-        $order = Order::with(['user', 'product'])->findOrFail($id);
+        $order = Order::with(['user', 'products'])->findOrFail($id);
 
         $data = new AdminOrderResource($order);
 
