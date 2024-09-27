@@ -15,7 +15,7 @@ class UserObserver implements ShouldHandleEventsAfterCommit
      */
     public function created(User $user): void
     {
-        Mail::to($user->email)->send(new SignUpVerifyMail($user));
+        defer(fn() => send_email($user->email, new SignUpVerifyMail($user)));
 
         if($user->type === UserType::CUSTOMER) {
             reward_user($user, 'create_account', 'completed');
