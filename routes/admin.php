@@ -70,11 +70,13 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function () {
         Route::get('/all', 'adminCategories');
         Route::get('/analytics', 'categoryAnalytic');
         Route::patch('/change/{category_id}', 'featuredStatus');
+        Route::delete('/delete/{id}', 'deleteCategory');
 
         Route::post('/create/subcategory', 'createSubCategory');
         Route::get('/subcategory', 'getAdminSubcategory');
         Route::get('/{category_id}/subcategory', 'getSubcategory');
         Route::patch('/subcategory/status/{sub_category_id}', 'subStatus');
+        Route::delete('/subcategory/delete/{id}', 'deleteSubCategory');
     });
 
     Route::prefix('order')->controller(OrderController::class)->group(function () {
@@ -111,6 +113,8 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function () {
 
         Route::patch('/approve', 'approveSeller');
         Route::patch('/ban', 'banSeller');
+
+        Route::delete('/bulk/remove', 'bulkRemove');
     });
 
     Route::prefix('product')->controller(AdminProductController::class)->group(function () {

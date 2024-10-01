@@ -2,6 +2,7 @@
 
 namespace App\Services\Admin;
 
+use App\Enum\UserType;
 use App\Http\Resources\CustomerResource;
 use App\Http\Resources\PaymentResource;
 use App\Models\Payment;
@@ -127,8 +128,12 @@ class CustomerService
                 'last_name' => $request->last_name,
                 'middlename' => $request->middlename,
                 'email' => $request->email,
+                'password' => bcrypt('12345678'),
                 'phone' => $request->phone,
                 'date_of_birth' => $request->date_of_birth,
+                'type' => UserType::CUSTOMER,
+                'is_verified' => 1,
+                'is_admin_approve' => 1,
                 'status' => $request->status,
             ]);
 
