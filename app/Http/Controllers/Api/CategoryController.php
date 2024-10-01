@@ -75,4 +75,14 @@ class CategoryController extends Controller
     {
         return $this->service->subStatus($request, $id);
     }
+
+    public function deleteCategory($id)
+    {
+        return $this->service->deleteCategory($id);
+    }
+
+    public function deleteSubCategory($id)
+    {
+        return $this->service->deleteSubCategory($id);
+    }
 }

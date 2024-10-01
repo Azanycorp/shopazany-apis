@@ -49,7 +49,13 @@ class AdminCustomerController extends Controller
     public function addCustomer(Request $request)
     {
         $request->validate([
-            'status' => [Rule::in(array_column(UserStatus::cases(), 'value'))],
+            'status' => [Rule::in([
+                UserStatus::ACTIVE,
+                UserStatus::BLOCKED,
+                UserStatus::DELETED,
+                UserStatus::PENDING,
+                UserStatus::SUSPENDED
+            ])],
         ]);
 
         return $this->service->addCustomer($request);
@@ -58,7 +64,13 @@ class AdminCustomerController extends Controller
     public function editCustomer(Request $request)
     {
         $request->validate([
-            'status' => [Rule::in(array_column(UserStatus::cases(), 'value'))],
+            'status' => [Rule::in([
+                UserStatus::ACTIVE,
+                UserStatus::BLOCKED,
+                UserStatus::DELETED,
+                UserStatus::PENDING,
+                UserStatus::SUSPENDED
+            ])],
         ]);
 
         return $this->service->editCustomer($request);

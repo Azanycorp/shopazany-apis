@@ -187,6 +187,22 @@ class CategoryService
 
         return $this->success(null, "Category updated successfully");
     }
+
+    public function deleteCategory($id)
+    {
+        $category = Category::findOrFail($id);
+        $category->delete();
+        
+        return $this->success(null, 'Deleted successfully');
+    }
+
+    public function deleteSubCategory($id)
+    {
+        $subcat = SubCategory::findOrFail($id);
+        $subcat->delete();
+        
+        return $this->success(null, 'Deleted successfully');
+    }
 }
 
 

@@ -48,7 +48,6 @@ class SellerService
         ];
     }
 
-
     public function approveSeller($request)
     {
         $user = User::find($request->user_id);
@@ -151,6 +150,13 @@ class SellerService
         $data = PaymentResource::collection($payments);
 
         return $this->success($data, "Payment history");
+    }
+
+    public function bulkRemove($request)
+    {
+        User::whereIn('id', $request->user_ids)->delete();
+
+        return $this->success(null, 'Users deleted successfully.');
     }
 
 }
