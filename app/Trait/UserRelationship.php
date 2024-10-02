@@ -18,6 +18,7 @@ use App\Models\UserAction;
 use App\Models\UserActivityLog;
 use App\Models\UserBusinessInformation;
 use App\Models\UserShippingAddress;
+use App\Models\UserSubcription;
 use App\Models\Wallet;
 use App\Models\Wishlist;
 use App\Models\WithdrawalRequest;
@@ -131,5 +132,10 @@ trait UserRelationship
     public function reedemPoints(): HasMany
     {
         return $this->hasMany(RedeemPoint::class, 'user_id');
+    }
+
+    public function userSubscription(): HasOne
+    {
+        return $this->hasOne(UserSubcription::class, 'user_id');
     }
 }

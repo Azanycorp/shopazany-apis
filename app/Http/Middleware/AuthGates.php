@@ -20,6 +20,8 @@ class AuthGates
 
         if($user){
             
+            $permissions = [];
+
             foreach($user->permissions as $singlePermission){
                 $permissions[] = $singlePermission->name;
             }
