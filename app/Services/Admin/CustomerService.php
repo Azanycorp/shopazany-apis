@@ -15,7 +15,7 @@ class CustomerService
 
     public function allCustomers()
     {
-        $query = request()->input('search');
+        $query = trim(request()->input('search'));
 
         $users = User::where('type', 'customer')
         ->where(function($queryBuilder) use ($query) {
@@ -79,24 +79,16 @@ class CustomerService
         return $this->success(null, "User has been blocked successfully");
     }
 
-    public function removeCustomer($id)
+    public function removeCustomer($request)
     {
-        $user = User::where('id', $id)
-        ->where('type', 'customer')
-        ->first();
-
-        if (!$user) {
-            return $this->error(null, "User not found", 404);
-        }
-
-        $user->delete();
+        User::whereIn('id', $request->user_ids)->delete();
 
         return $this->success(null, "User has been removed successfully");
     }
 
     public function filter()
     {
-        $query = request()->query('approved');
+        $query = trim(request()->query('approved'));
 
         $users = User::where('type', 'customer')
             ->when($query !== null, function ($queryBuilder) use ($query) {

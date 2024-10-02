@@ -110,4 +110,9 @@ class SettingsController extends Controller
     {
         return $this->service->addUser($request);
     }
+
+    public function allUsers()
+    {
+        return $this->service->allUsers();
+    }
 }

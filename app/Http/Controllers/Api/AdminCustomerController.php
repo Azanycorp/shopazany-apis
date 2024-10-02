@@ -36,9 +36,14 @@ class AdminCustomerController extends Controller
         return $this->service->banCustomer($request);
     }
 
-    public function removeCustomer($id)
+    public function removeCustomer(Request $request)
     {
-        return $this->service->removeCustomer($id);
+        $request->validate([
+            'user_ids' => 'required|array',
+            'user_ids.*' => 'exists:users,id',
+        ]);
+        
+        return $this->service->removeCustomer($request);
     }
 
     public function filter()

@@ -2,6 +2,7 @@
 
 namespace App\Services\Admin;
 
+use App\Http\Resources\AdminUserResource;
 use App\Http\Resources\SubscriptionPlanResource;
 use App\Mail\AdminUserMail;
 use App\Models\AboutUs;
@@ -344,7 +345,8 @@ class SettingsService
                 'status' => 'active'
             ]);
 
-            $admin->roles()->sync($request->role_id);
+            // $admin->roles()->sync($request->role_id);
+            $admin->permissions()->sync($request->permissions);
 
             DB::commit();
 
@@ -356,6 +358,34 @@ class SettingsService
 
             throw $th;
         }
+    }
+
+    public function allUsers()
+    {
+        $search = trim(request()->input('search'));
+
+        $users = Admin::with('permissions')
+        ->where(function ($query) use($search) {
+            $query->where('first_name', 'LIKE', '%' . $search . '%')
+            ->orWhere('last_name', 'LIKE', '%' . $search . '%')
+            ->orWhere('email', 'LIKE', '%' . $search . '%');
+        })
+        ->paginate(25);
+
+        $data = AdminUserResource::collection($users);
+
+        return [
+            'status' => 'true',
+            'message' => 'All Admin Users',
+            'data' => $data,
+            'pagination' => [
+                'current_page' => $users->currentPage(),
+                'last_page' => $users->lastPage(),
+                'per_page' => $users->perPage(),
+                'prev_page_url' => $users->previousPageUrl(),
+                'next_page_url' => $users->nextPageUrl(),
+            ],
+        ];
     }
 }
 
