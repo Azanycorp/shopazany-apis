@@ -100,7 +100,7 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function () {
         Route::patch('/approve', 'approveCustomer');
         Route::patch('/ban', 'banCustomer');
 
-        Route::delete('/remove/{user_id}', 'removeCustomer');
+        Route::delete('/remove', 'removeCustomer');
     });
 
     Route::prefix('seller')->controller(AdminSellerController::class)->group(function () {
@@ -144,6 +144,7 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function () {
 
     Route::prefix('settings')->controller(SettingsController::class)->group(function () {
         Route::post('/add-user', 'addUser');
+        Route::get('/all-users', 'allUsers');
         Route::post('/seo', 'addSeo');
         Route::get('/seo', 'getSeo');
         Route::post('/terms-service', 'addTermsService');

@@ -16,16 +16,14 @@ class AuthGates
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $user = $request?->user()?->load('roles.permissions');
+        $user = $request?->user()?->load('permissions');
 
         if($user){
             
-            foreach($user->roles as $role){
-                foreach($role->permissions as $singlePermission){
-                    $permissions[] = $singlePermission->name;
-                }
+            foreach($user->permissions as $singlePermission){
+                $permissions[] = $singlePermission->name;
             }
-
+            
             collect($permissions)->unique()->each(function ($permission) {
                 Gate::define($permission, function($user) {
                     return true;
