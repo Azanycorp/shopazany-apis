@@ -116,7 +116,7 @@ class SettingsController extends Controller
         return $this->service->allUsers();
     }
 
-    public function updateUser(AddAdminUserRequest $request, $id)
+    public function updateUser(Request $request, $id)
     {
         return $this->service->updateUser($request, $id);
     }
