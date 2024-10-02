@@ -3,6 +3,7 @@
 namespace App\Services\Payment;
 
 use App\Enum\PaymentType;
+use App\Enum\PaystackEvent;
 use App\Models\Payment;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Facades\Auth;
@@ -74,7 +75,7 @@ class PaymentService
 
         $event = json_decode($payload, true);
 
-        if (isset($event['event']) && $event['event'] === 'charge.success') {
+        if (isset($event['event']) && $event['event'] === PaystackEvent::CHARGE_SUCCESS) {
             $data = $event['data'];
             $paymentType = $data['metadata']['payment_type'];
 
