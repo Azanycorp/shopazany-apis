@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\HomeController;
 use App\Http\Controllers\Api\MailingListController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\SellerController;
+use App\Http\Controllers\Api\SubscriptionController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -61,8 +62,17 @@ Route::post('/payment/webhook', [PaymentController::class, 'webhook']);
 
 Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
 
+    // Payment
     Route::post('/checkout', [PaymentController::class, 'processPayment']);
     Route::get('/verify/payment/{user_id}/{reference}', [PaymentController::class, 'verifyPayment']);
+
+    // Subscription
+    Route::prefix('subscription')
+        ->controller(SubscriptionController::class)
+        ->group(function () {
+            Route::get('/country/{country_id}', 'getPlanByCountry');
+            Route::post('/payment', 'subscriptionPayment');
+    });
 
     Route::controller(UserController::class)->group(function () {
         Route::get('/profile', 'profile');

@@ -30,4 +30,5 @@ class PaymentController extends Controller
     {
         return $this->service->verifyPayment($userId, $ref);
     }
+
 }
