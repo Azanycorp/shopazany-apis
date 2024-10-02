@@ -387,6 +387,32 @@ class SettingsService
             ],
         ];
     }
+
+    public function updateUser($request, $id)
+    {
+        try {
+            DB::beginTransaction();
+
+            $admin = Admin::findOrFail($id);
+
+            $admin->update([
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'email' => $request->email,
+                'phone_number' => $request->phone_number
+            ]);
+
+            // $admin->roles()->sync($request->role_id);
+            $admin->permissions()->sync($request->permissions);
+
+            DB::commit();
+
+            return $this->success(null, 'Updated successfully');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            throw $th;
+        }
+    }
 }
 
 
