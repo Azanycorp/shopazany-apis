@@ -37,6 +37,8 @@ Route::controller(ApiController::class)->group(function () {
 
 Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function () {
 
+    Route::get('/profile', [ApiController::class, 'adminProfile']);
+
     Route::post('/add/slider', [ApiController::class, 'addSlider']);
     Route::get('/slider', [ApiController::class, 'slider']);
     Route::resource('brand', BrandController::class);
