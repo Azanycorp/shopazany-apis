@@ -402,9 +402,9 @@ class SettingsService
                 'phone_number' => $request->phone_number
             ]);
 
-            // $admin->roles()->sync($request->role_id);
-            $admin->permissions()->sync($request->permissions);
-
+            $admin->roles()->sync($request->role_id);
+            //$admin->permissions()->sync($request->permissions);
+            
             DB::commit();
 
             return $this->success(null, 'Updated successfully');

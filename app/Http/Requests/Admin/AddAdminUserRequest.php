@@ -24,8 +24,9 @@ class AddAdminUserRequest extends FormRequest
         return [
             'first_name' => ['required', 'string'],
             'email' => ['required', 'email', 'unique:admins,email'],
-            'permissions' => ['required', 'array'],
-            'permissions.*' => ['required', 'exists:permissions,id']
+            'role_id' => ['required', 'integer', 'exists:roles,id']
+            // 'permissions' => ['required', 'array'],
+            // 'permissions.*' => ['required', 'exists:permissions,id']
         ];
     }
 }
