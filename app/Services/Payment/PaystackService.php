@@ -14,7 +14,6 @@ use App\Models\User;
 use App\Models\UserShippingAddress;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-
 class PaystackService
 {
     public static function handleRecurringCharge($event, $status)
@@ -68,10 +67,6 @@ class PaystackService
                     'type' => PaymentType::RECURRINGCHARGE,
                 ]);
 
-                if($user->user_subscribe) {
-                    Log::info(`User - {$user} subscription is active`);
-                }
-
                 $user->userSubscription()->create([
                     'subscription_plan_id' => $planId,
                     'payment_id' => $payment->id,
@@ -79,8 +74,9 @@ class PaystackService
                     'plan_end' => now()->addDays(30),
                     'authorization_data' => $authData,
                     'status' => 'active',
+                    'expired_at' => null,
                 ]);
-                
+
             });
         } catch (\Exception $e) {
             Log::error('Error in handleRecurringCharge: ' . $e->getMessage());

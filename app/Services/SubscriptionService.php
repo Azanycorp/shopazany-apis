@@ -27,7 +27,13 @@ class SubscriptionService
 
         $callbackUrl = $request->input('redirect_url');
         if (!filter_var($callbackUrl, FILTER_VALIDATE_URL)) {
-            return response()->json(['error' => 'Invalid callback URL'], 400);
+            return $this->error(null, 'Invalid callback URL', 400);
+        }
+
+        $user = User::findOrFail($request->user_id);
+
+        if($user->user_subscribe) {
+            return $this->error(null, 'Subscription is active', 403);
         }
 
         $paymentDetails = [

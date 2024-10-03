@@ -10,3 +10,7 @@ Artisan::command('inspire', function () {
 
 Schedule::command('queue:work --stop-when-empty')->everyMinute();
 Schedule::command('queue:prune-batches --hours=48 --unfinished=72')->daily();
+Schedule::command('usersubscriptions:expire')->monthlyOn(1, '00:00');
+Schedule::command('usersubscriptions:charge')->monthlyOn(1, '00:30');
+
+
