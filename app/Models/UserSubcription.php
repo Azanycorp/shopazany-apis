@@ -17,6 +17,7 @@ class UserSubcription extends Model
         'plan_end',
         'status',
         'authorization_data',
+        'expired_at',
     ];
 
     protected function casts(): array
@@ -29,5 +30,10 @@ class UserSubcription extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function subscriptionPlan()
+    {
+        return $this->belongsTo(SubscriptionPlan::class, 'subscription_plan_id');
     }
 }
