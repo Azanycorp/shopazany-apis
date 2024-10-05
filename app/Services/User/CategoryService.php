@@ -63,8 +63,8 @@ class CategoryService
     {
         $search = request()->query('search');
 
-        $categories = Category::with(['product', 'subcategory'])
-            ->withCount(['product', 'subcategory'])
+        $categories = Category::with(['products', 'subcategory'])
+            ->withCount(['products', 'subcategory'])
             ->when($search, function ($query, $search) {
                 $query->where('name', 'like', '%' . $search . '%');
             })
@@ -139,7 +139,7 @@ class CategoryService
 
     public function categoryAnalytic()
     {
-        $categories = Category::withCount(['subcategory', 'product'])
+        $categories = Category::withCount(['subcategory', 'products'])
             ->get();
 
         $totalActive = $categories->where('status', 'active')->count();
@@ -192,7 +192,7 @@ class CategoryService
     {
         $category = Category::findOrFail($id);
         $category->delete();
-        
+
         return $this->success(null, 'Deleted successfully');
     }
 
@@ -200,7 +200,7 @@ class CategoryService
     {
         $subcat = SubCategory::findOrFail($id);
         $subcat->delete();
-        
+
         return $this->success(null, 'Deleted successfully');
     }
 }

@@ -34,7 +34,6 @@ Route::controller(ApiController::class)->group(function () {
     Route::get('sizes', 'sizes');
 });
 
-
 Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function () {
 
     Route::get('/profile', [ApiController::class, 'adminProfile']);

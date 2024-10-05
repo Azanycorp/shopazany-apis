@@ -54,6 +54,9 @@ Route::controller(HomeController::class)->group(function () {
     Route::get('/best/selling', 'bestSelling');
     Route::get('/featured/products', 'featuredProduct');
     Route::get('/pocket/friendly', 'pocketFriendly');
+    Route::get('/top-brands', 'topBrands');
+    Route::get('/top-sellers', 'topSellers');
+    Route::get('/category/{slug}', 'categorySlug');
 
     Route::get('/single/product/{slug}', 'productSlug');
 });

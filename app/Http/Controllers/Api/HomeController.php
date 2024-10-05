@@ -34,4 +34,19 @@ class HomeController extends Controller
     {
         return $this->service->productSlug($slug);
     }
+
+    public function topBrands()
+    {
+        return $this->service->topBrands();
+    }
+
+    public function topSellers()
+    {
+        return $this->service->topSellers();
+    }
+
+    public function categorySlug($slug)
+    {
+        return $this->service->categorySlug($slug);
+    }
 }
