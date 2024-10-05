@@ -74,7 +74,7 @@ class DashboardService
         return $this->success($bestSellingCategories, "Best selling categories");
     }
 
-    
+
 }
 
 

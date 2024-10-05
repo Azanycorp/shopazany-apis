@@ -2,11 +2,14 @@
 
 namespace App\Services;
 
-use App\Http\Resources\SellerProductResource;
-use App\Http\Resources\SingleProductResource;
+use App\Models\User;
 use App\Models\Product;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Facades\DB;
+use App\Http\Resources\SellerProductResource;
+use App\Http\Resources\SingleProductResource;
+use App\Models\Brand;
+use App\Models\Category;
 
 class HomeService
 {
@@ -87,6 +90,46 @@ class HomeService
         $data = new SingleProductResource($product);
 
         return $this->success($data, "Product detail");
+    }
+
+    public function topBrands()
+    {
+        $brands = Brand::select(['id', 'name', 'slug', 'image'])
+        ->where('status', 'active')
+        ->latest()
+        ->take(8)
+        ->get();
+
+        return $this->success($brands, "Top brands");
+    }
+
+    public function topSellers()
+    {
+        $countryId = request()->input('country_id');
+
+        $topSellersQuery = User::select(DB::raw('users.id as user_id, CONCAT(users.first_name, " ", users.last_name) as name, users.image as image, COUNT(orders.id) as total_sales'))
+            ->join('orders', 'users.id', '=', 'orders.seller_id')
+            ->where('orders.status', 'delivered')
+            ->groupBy('users.id', 'users.first_name', 'users.last_name', 'users.image')
+            ->orderByDesc('total_sales');
+
+        if ($countryId) {
+            $topSellersQuery->where('orders.country_id', $countryId);
+        } else {
+            $topSellersQuery->limit(8);
+        }
+
+        $topSellers = $topSellersQuery->get();
+
+        return $this->success($topSellers, "Top sellers");
+    }
+
+    public function categorySlug($slug)
+    {
+        $category = Category::with('products')->where('slug', $slug)->firstOrFail();
+        $products = SellerProductResource::collection($category->products);
+
+        return $this->success($products, 'Products by category');
     }
 }
 
