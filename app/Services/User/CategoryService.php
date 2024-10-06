@@ -2,6 +2,7 @@
 
 namespace App\Services\User;
 
+use App\Enum\CategoryStatus;
 use App\Http\Resources\AdminCategoryResource;
 use App\Http\Resources\AdminSubCategoryResource;
 use App\Http\Resources\CategoryResource;
@@ -129,7 +130,7 @@ class CategoryService
         }
 
         if ($request->has('status')) {
-            $category->status = $request->input('status') == 1 ? 'active' : 'inactive';
+            $category->status = $request->input('status') == 1 ? CategoryStatus::ACTIVE : CategoryStatus::INACTIVE;
         }
 
         $category->save();
@@ -142,10 +143,10 @@ class CategoryService
         $categories = Category::withCount(['subcategory', 'products'])
             ->get();
 
-        $totalActive = $categories->where('status', 'active')->count();
-        $subCategoryActiveCount = Subcategory::where('status', 'active')->count();
-        $productActiveCount = Product::where('status', 'active')->count();
-        $productInactiveCount = Product::where('status', 'inactive')->count();
+        $totalActive = $categories->where('status', CategoryStatus::ACTIVE)->count();
+        $subCategoryActiveCount = Subcategory::where('status', CategoryStatus::ACTIVE)->count();
+        $productActiveCount = Product::where('status', CategoryStatus::ACTIVE)->count();
+        $productInactiveCount = Product::where('status', CategoryStatus::INACTIVE)->count();
 
         $data = [
             'total_count' => $categories->count(),
@@ -180,7 +181,7 @@ class CategoryService
         $sub = SubCategory::findOrFail($id);
 
         if ($request->has('status')) {
-            $sub->status = $request->input('status') == 1 ? 'active' : 'inactive';
+            $sub->status = $request->input('status') == 1 ? CategoryStatus::ACTIVE : CategoryStatus::INACTIVE;
         }
 
         $sub->save();

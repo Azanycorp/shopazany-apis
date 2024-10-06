@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Enum\OrderStatus;
+use App\Enum\ProductStatus;
 use App\Models\User;
 use App\Models\Product;
 use App\Trait\HttpResponse;
@@ -29,7 +31,7 @@ class HomeService
             'products.category_id',
             DB::raw('COUNT(orders.id) as total_orders'))
             ->leftJoin('orders', 'orders.product_id', '=', 'products.id')
-            ->where('orders.status', 'delivered')
+            ->where('orders.status', OrderStatus::DELIVERED)
             ->groupBy('products.id', 'products.name', 'products.price', 'products.slug', 'products.image', 'products.description',
             'products.category_id')
             ->orderBy('total_orders', 'DESC')
@@ -109,7 +111,7 @@ class HomeService
 
         $topSellersQuery = User::select(DB::raw('users.id as user_id, CONCAT(users.first_name, " ", users.last_name) as name, users.image as image, COUNT(orders.id) as total_sales'))
             ->join('orders', 'users.id', '=', 'orders.seller_id')
-            ->where('orders.status', 'delivered')
+            ->where('orders.status', OrderStatus::DELIVERED)
             ->groupBy('users.id', 'users.first_name', 'users.last_name', 'users.image')
             ->orderByDesc('total_sales');
 
@@ -126,10 +128,24 @@ class HomeService
 
     public function categorySlug($slug)
     {
-        $category = Category::with('products')->where('slug', $slug)->firstOrFail();
+        $category = Category::with('products')
+        ->where('slug', $slug)
+        ->firstOrFail();
         $products = SellerProductResource::collection($category->products);
 
         return $this->success($products, 'Products by category');
+    }
+
+    public function recommendedProducts()
+    {
+        $products = Product::where('status', ProductStatus::ACTIVE)
+        ->select(['id', 'name', 'slug', 'description', 'discount_price', 'price', 'image'])
+        ->take(50)
+        ->get()
+        ->shuffle()
+        ->take(6);
+
+        return $this->success($products, "Recommended products");
     }
 }
 

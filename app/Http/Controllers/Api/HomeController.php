@@ -49,4 +49,9 @@ class HomeController extends Controller
     {
         return $this->service->categorySlug($slug);
     }
+
+    public function recommendedProducts()
+    {
+        return $this->service->recommendedProducts();
+    }
 }
