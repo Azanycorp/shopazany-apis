@@ -3,6 +3,7 @@
 namespace App\Services\User;
 
 use App\Enum\OrderStatus;
+use App\Enum\ProductStatus;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Order;
@@ -322,7 +323,7 @@ class SellerService extends Controller
         }
 
         $product->update([
-            'status' => "deleted"
+            'status' => ProductStatus::DELETED
         ]);
 
         return $this->success(null, "Deleted successfully");
