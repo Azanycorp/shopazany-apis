@@ -413,6 +413,14 @@ class SettingsService
             throw $th;
         }
     }
+
+    public function deleteUser($id)
+    {
+        $user = Admin::findOrFail($id);
+        $user->delete();
+
+        return $this->success(null, 'Deleted successfully');
+    }
 }
 
 
