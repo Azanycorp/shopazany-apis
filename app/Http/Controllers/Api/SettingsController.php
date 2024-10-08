@@ -120,4 +120,9 @@ class SettingsController extends Controller
     {
         return $this->service->updateUser($request, $id);
     }
+
+    public function deleteUser($id)
+    {
+        return $this->service->deleteUser($id);
+    }
 }

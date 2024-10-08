@@ -144,9 +144,12 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function () {
     });
 
     Route::prefix('settings')->controller(SettingsController::class)->group(function () {
+        // Admin User
         Route::post('/add-user', 'addUser');
-        Route::patch('/update-user/{id}', 'updateUser');
         Route::get('/all-users', 'allUsers');
+        Route::patch('/update-user/{id}', 'updateUser');
+        Route::delete('/delete-user/{id}', 'deleteUser');
+
         Route::post('/seo', 'addSeo');
         Route::get('/seo', 'getSeo');
         Route::post('/terms-service', 'addTermsService');
