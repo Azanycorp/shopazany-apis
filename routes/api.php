@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\ApiController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\B2BController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\CustomerController;
@@ -59,7 +60,6 @@ Route::controller(HomeController::class)->group(function () {
     Route::get('/single/product/{slug}', 'productSlug');
     Route::get('/top-brands', 'topBrands');
     Route::get('/top-sellers', 'topSellers');
-
 });
 
 Route::post('/payment/webhook', [PaymentController::class, 'webhook']);
@@ -169,5 +169,18 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
 });
 
 
+// B2B
+Route::middleware(['throttle:apis'])->group(function () {
+    Route::prefix('b2b/connect')->controller(B2BController::class)->group(function () {
+        Route::post('/login', 'login');
+        Route::post('/login/verify', 'loginVerify');
+        Route::post('/signup', 'signup');
+        Route::post('/forgot/password', 'forgot');
+        Route::post('/reset/password', 'reset');
+        Route::post('/signup/resend', 'resendCode');
+        Route::post('/logout', 'logout');
+        Route::post('/verify', 'verify');
+    });
+});
 
 

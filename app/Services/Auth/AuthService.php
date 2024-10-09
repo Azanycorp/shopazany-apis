@@ -5,6 +5,7 @@ namespace App\Services\Auth;
 use App\Actions\SendEmailAction;
 use App\Enum\UserLog;
 use App\Enum\UserStatus;
+use App\Enum\UserType;
 use App\Http\Controllers\Controller;
 use App\Mail\SignUpVerifyMail;
 use App\Mail\UserWelcomeMail;
@@ -23,39 +24,7 @@ class AuthService extends Controller
 
     public function login($request)
     {
-        $request->validated();
-
-        if (Auth::attempt($request->only(['email', 'password']))) {
-            $user = User::where('email', $request->email)->first();
-
-            if ($this->isAccountUnverifiedOrInactive($user, $request)) {
-                return $this->handleAccountIssues($user, $request, "Account not verified or inactive", UserLog::LOGIN_ATTEMPT);
-            }
-
-            if ($this->isAccountPending($user, $request)) {
-                return $this->handleAccountIssues($user, $request, "Account not verified or inactive", UserLog::LOGIN_ATTEMPT, UserStatus::PENDING);
-            }
-
-            if ($this->isAccountSuspended($user, $request)) {
-                return $this->handleAccountIssues($user, $request, "Account is suspended, contact support", UserLog::LOGIN_ATTEMPT, UserStatus::SUSPENDED);
-            }
-
-            if ($this->isAccountBlocked($user, $request)) {
-                return $this->handleAccountIssues($user, $request, "Account is blocked, contact support", UserLog::LOGIN_ATTEMPT, UserStatus::BLOCKED);
-            }
-
-            if (!$user->is_admin_approve) {
-                return $this->handleAccountIssues($user, $request, "Account not approved, contact support", UserLog::LOGIN_ATTEMPT, UserStatus::BLOCKED);
-            }
-
-            if ($user->two_factor_enabled) {
-                return $this->handleTwoFactorAuthentication($user, $request);
-            } else {
-                return $this->logUserIn($user, $request);
-            }
-        }
-
-        return $this->handleInvalidCredentials($request);
+        return LoginService::AuthLogin($request);
     }
 
     public function loginVerify($request)
@@ -112,7 +81,7 @@ class AuthService extends Controller
                 'first_name' => $request->first_name,
                 'last_name' => $request->last_name,
                 'email' => $request->email,
-                'type' => 'customer',
+                'type' => UserType::CUSTOMER,
                 'email_verified_at' => null,
                 'verification_code' => $code,
                 'is_verified' => 0,
@@ -149,9 +118,20 @@ class AuthService extends Controller
             return $this->error(null, "User not found", 404);
         }
 
+        if($user->email_verified_at !== null && $user->status === UserStatus::ACTIVE) {
+            return $this->error(null, "Account has been verified", 400);
+        }
+
         try {
 
-            Mail::to($request->email)->send(new SignUpVerifyMail($user));
+            $code = generateVerificationCode();
+
+            $user->update([
+                'email_verified_at' => null,
+                'verification_code' => $code,
+            ]);
+
+            defer(fn() => send_email($request->email, new SignUpVerifyMail($user)));
 
             $description = "User with email address {$request->email} has requested a code to be resent.";
             $action = UserLog::CODE_RESENT;
@@ -186,7 +166,7 @@ class AuthService extends Controller
                 'address' => $request->address,
                 'country' => $request->country_id,
                 'state_id' => $request->state_id,
-                'type' => 'seller',
+                'type' => UserType::SELLER,
                 'email_verified_at' => null,
                 'verification_code' => $code,
                 'is_verified' => 0,
@@ -226,7 +206,7 @@ class AuthService extends Controller
             'is_admin_approve' => 1,
             'verification_code' => null,
             'email_verified_at' => Carbon::now(),
-            'status' => 'active'
+            'status' => UserStatus::ACTIVE
         ]);
 
         (new SendEmailAction($user->email, new UserWelcomeMail($user)))->run();

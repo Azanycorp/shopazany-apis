@@ -2,8 +2,6 @@
 
 namespace App\Actions;
 
-use Illuminate\Support\Facades\Mail;
-
 class SendEmailAction
 {
     protected $email;
@@ -17,7 +15,7 @@ class SendEmailAction
 
     public function run()
     {
-        Mail::to($this->email)->send($this->action);
+        defer(fn() => send_email($this->email, $this->action));
     }
 }
 
