@@ -266,8 +266,7 @@ if(!function_exists('generate_referral_code')) {
 }
 
 if(!function_exists('generate_referrer_link')) {
-    function generate_referrer_link($referrer_code)
-    {
+    function generate_referrer_link($referrer_code) {
         if(App::environment('production')) {
             $url = config('services.frontend_baseurl') . '/register?referrer=' . $referrer_code;
         } else {
@@ -311,6 +310,16 @@ if (!function_exists('abbreviateNumber')) {
     }
 }
 
+if (!function_exists('folderName')) {
+    function folderName($name) {
+        $environment = App::environment();
+        return match ($environment) {
+            'production' => "/prod/{$name}",
+            'staging', 'local' => "/stag/{$name}",
+            default => null,
+        };
+    }
+}
 
 
 
