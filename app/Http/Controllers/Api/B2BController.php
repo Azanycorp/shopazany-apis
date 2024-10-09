@@ -3,18 +3,22 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\B2B\BusinessInformationRequest;
 use App\Http\Requests\B2B\SignupRequest;
 use App\Http\Requests\LoginRequest;
 use App\Services\B2B\Auth\AuthService;
+use App\Services\B2B\SellerService;
 use Illuminate\Http\Request;
 
 class B2BController extends Controller
 {
     protected $service;
+    protected $sellerService;
 
-    public function __construct(AuthService $service)
+    public function __construct(AuthService $service, SellerService $sellerService)
     {
         $this->service = $service;
+        $this->sellerService = $sellerService;
     }
 
     public function login(LoginRequest $request)
@@ -44,5 +48,10 @@ class B2BController extends Controller
         ]);
 
         return $this->service->resendCode($request);
+    }
+
+    public function businessInformation(BusinessInformationRequest $request)
+    {
+        return $this->sellerService->businessInformation($request);
     }
 }

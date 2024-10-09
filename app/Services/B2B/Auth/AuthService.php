@@ -78,7 +78,7 @@ class AuthService
 
         $description = "User with email address {$request->email} verified OTP";
         $action = UserLog::CREATED;
-        $response = $this->success(null, "Verified successfully");
+        $response = $this->success(['user_id' => $user->id], "Verified successfully");
 
         logUserAction($request, $action, $description, $response, $user);
 

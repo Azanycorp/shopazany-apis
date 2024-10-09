@@ -181,6 +181,10 @@ Route::middleware(['throttle:apis'])->group(function () {
         Route::post('/logout', 'logout');
         Route::post('/verify', 'verify');
     });
+
+    Route::prefix('b2b')->controller(B2BController::class)->group(function () {
+        Route::post('/business/information', 'businessInformation');
+    });
 });
 
 

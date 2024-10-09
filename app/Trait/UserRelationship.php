@@ -3,6 +3,7 @@
 namespace App\Trait;
 
 use App\Models\BankAccount;
+use App\Models\BusinessInformation;
 use App\Models\Country;
 use App\Models\Kyc;
 use App\Models\Order;
@@ -137,5 +138,10 @@ trait UserRelationship
     public function userSubscription(): HasMany
     {
         return $this->hasMany(UserSubcription::class, 'user_id');
+    }
+
+    public function businessInformation(): HasOne
+    {
+        return $this->hasOne(BusinessInformation::class, 'user_id');
     }
 }
