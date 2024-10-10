@@ -6,6 +6,7 @@ use App\Enum\CategoryStatus;
 use App\Http\Resources\AdminCategoryResource;
 use App\Http\Resources\AdminSubCategoryResource;
 use App\Http\Resources\CategoryResource;
+use App\Http\Resources\SubCategoryResource;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\SubCategory;
@@ -114,11 +115,13 @@ class CategoryService
 
     public function getSubcategory($id)
     {
-        $subcats = SubCategory::where('category_id', $id)
-        ->select(['id', 'name', 'slug', 'image', 'status'])
+        $subcats = SubCategory::with(['products', 'category'])
+        ->where('category_id', $id)
         ->get();
 
-        return $this->success($subcats, "Sub categories");
+        $data = SubCategoryResource::collection($subcats);
+
+        return $this->success($data, "Sub categories");
     }
 
     public function featuredStatus($request, $id)
