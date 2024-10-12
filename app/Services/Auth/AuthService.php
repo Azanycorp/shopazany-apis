@@ -34,8 +34,8 @@ class AuthService extends Controller
         ->where('login_code_expires_at', '>', now())
         ->first();
 
-        if(!$user){
-            return $this->error(null, "Data not found.", 404);
+        if(! $user){
+            return $this->error(null, "User doesn't exist or Code has expired.", 404);
         }
 
         $user->update([
@@ -67,12 +67,12 @@ class AuthService extends Controller
         $user = null;
 
         try {
-            
+
             $code = generateVerificationCode();
             $query = request()->query('referrer');
 
             $referrer = null;
-            
+
             if ($query) {
                 $referrer = User::where('referrer_code', $query)->first();
             }
@@ -97,7 +97,7 @@ class AuthService extends Controller
             $action = UserLog::CREATED;
 
             logUserAction($request, $action, $description, $response, $user);
-            
+
             return $response;
         } catch (\Exception $e) {
             $description = "Sign up failed: {$request->email}";
