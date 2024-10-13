@@ -137,7 +137,7 @@ class PaystackService
                 $seller = [];
                 foreach ($items as $item) {
 
-                    $product = Product::find($item['product_id']);
+                    $product = Product::findOrFail($item['product_id']);
 
                     $seller = Product::with('user')
                     ->where('id', $item['product_id'])
@@ -160,6 +160,8 @@ class PaystackService
                         'quantity' => $item['product_quantity'],
                         'price' => $item['total_amount'],
                     ];
+
+                    $product->decrement('current_stock_quantity', $item['product_quantity']);
                 }
 
                 if (!empty($address)) {
