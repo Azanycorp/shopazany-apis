@@ -131,7 +131,9 @@ class CartService
         $productId = $request->product_id;
         $quantity = $request->quantity;
 
-        $cartItem = Cart::where('product_id', $productId)->firstOrFail();
+        $cartItem = Cart::where('user_id', $currentUserId)
+        ->where('product_id', $productId)
+        ->firstOrFail();
         $cartItem->update(['quantity' => $quantity]);
 
         return $this->success(null, 'Cart quantity updated successfully');
