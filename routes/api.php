@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\ApiController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\B2BController;
+use App\Http\Controllers\Api\B2BSellerController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\CustomerController;
@@ -168,7 +169,6 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
 
 });
 
-
 // B2B
 Route::middleware(['throttle:apis'])->group(function () {
     Route::prefix('b2b/connect')->controller(B2BController::class)->group(function () {
@@ -187,4 +187,12 @@ Route::middleware(['throttle:apis'])->group(function () {
     });
 });
 
-
+Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function () {
+    // Seller
+    Route::group(['middleware' => 'seller.auth', 'prefix' => 'seller', 'controller' => B2BSellerController::class], function () {
+        Route::get('/profile', 'profile');
+        Route::post('/edit-account', 'editAccount');
+        Route::patch('/change-password', 'changePassword');
+        Route::post('/edit-company', 'editCompany');
+    });
+});

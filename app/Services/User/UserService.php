@@ -41,7 +41,7 @@ class UserService extends Controller
 
         $user = User::find($userId);
 
-        if (!$user) {
+        if (! $user) {
             return $this->error(null, "User not found", 404);
         }
 
@@ -62,7 +62,6 @@ class UserService extends Controller
         return $this->success([
             'user_id' => $user->id
         ], "Updated successfully");
-
     }
 
     public function bankAccount($request)
