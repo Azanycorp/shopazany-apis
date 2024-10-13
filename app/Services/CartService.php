@@ -26,7 +26,7 @@ class CartService
         $quantity = $request->quantity;
 
         if($quantity <= 0){
-            return $this->error(null, 'Quantity should be 1 or more.');
+            return $this->error(null, 'Quantity should be 1 or more.', 403);
         }
 
         Cart::updateOrCreate([
@@ -130,6 +130,10 @@ class CartService
 
         $productId = $request->product_id;
         $quantity = $request->quantity;
+
+        if($quantity <= 0) {
+            return $this->error(null, 'Quantity should be 1 or more.', 403);
+        }
 
         $cartItem = Cart::where('user_id', $currentUserId)
         ->where('product_id', $productId)
