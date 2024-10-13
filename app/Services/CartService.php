@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Http\Resources\CartResource;
 use App\Models\Cart;
+use App\Models\Product;
 use App\Trait\HttpResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -29,12 +30,18 @@ class CartService
             return $this->error(null, 'Quantity should be 1 or more.', 403);
         }
 
+        $product = Product::findOrFail($request->product_id);
+
+        if($quantity > $product->minimum_order_quantity) {
+            return $this->error(null, 'You have exceeded the minimum order quantity', 400);
+        }
+
         Cart::updateOrCreate([
             'user_id' => $currentUserId ?: null,
             'session_id' => $sessionId,
             'product_id' => $request->product_id,
         ], [
-            'quantity' => DB::raw('quantity + ' . $quantity),
+            'quantity' => $quantity,
         ]);
 
         return $this->success(null, "Item added to cart");
@@ -133,6 +140,12 @@ class CartService
 
         if($quantity <= 0) {
             return $this->error(null, 'Quantity should be 1 or more.', 403);
+        }
+
+        $product = Product::findOrFail($request->product_id);
+
+        if($quantity > $product->minimum_order_quantity) {
+            return $this->error(null, 'You have exceeded the minimum order quantity', 400);
         }
 
         $cartItem = Cart::where('user_id', $currentUserId)

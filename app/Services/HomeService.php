@@ -51,7 +51,8 @@ class HomeService
     {
         $countryId = request()->query('country_id');
 
-        $query = Product::where('is_featured', true);
+        $query = Product::where('is_featured', true)
+            ->where('status', ProductStatus::ACTIVE);
 
         if ($countryId) {
             $query->where('country_id', $countryId);
@@ -75,8 +76,9 @@ class HomeService
         }
 
         $query->whereBetween('price', [1000, 10000])
-              ->orderBy('price', 'asc')
-              ->limit(4);
+            ->where('status', ProductStatus::ACTIVE)
+            ->orderBy('price', 'asc')
+            ->limit(4);
 
         $products = $query->get();
 
@@ -128,9 +130,11 @@ class HomeService
 
     public function categorySlug($slug)
     {
-        $category = Category::with('products')
-        ->where('slug', $slug)
+        $category = Category::with(['products' => function ($query) {
+            $query->where('status', ProductStatus::ACTIVE);
+        }])->where('slug', $slug)
         ->firstOrFail();
+
         $products = SellerProductResource::collection($category->products);
 
         return $this->success($products, 'Products by category');
