@@ -128,8 +128,8 @@ class CartService
             return $this->error(null, 'Unauthorized action.', 401);
         }
 
-        $productId = $request->input('product_id');
-        $quantity = $request->input('quantity');
+        $productId = $request->product_id;
+        $quantity = $request->quantity;
 
         $cartItem = Cart::where('product_id', $productId)->firstOrFail();
         $cartItem->update(['quantity' => $quantity]);
