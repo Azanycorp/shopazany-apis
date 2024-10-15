@@ -63,6 +63,11 @@ class HomeController extends Controller
 
     public function saveForLater(Request $request)
     {
+        $request->validate([
+            'user_id' => ['required', 'integer', 'exists:users,id'],
+            'product_id' => ['required', 'integer']
+        ]);
+        
         return $this->service->saveForLater($request);
     }
 
