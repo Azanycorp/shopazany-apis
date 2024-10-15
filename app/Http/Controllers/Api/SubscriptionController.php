@@ -25,4 +25,9 @@ class SubscriptionController extends Controller
         return $this->service->subscriptionPayment($request);
     }
 
+    public function subscriptionHistory($userId)
+    {
+        return $this->service->subscriptionHistory($userId);
+    }
+
 }

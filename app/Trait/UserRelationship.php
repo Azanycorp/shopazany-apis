@@ -135,7 +135,7 @@ trait UserRelationship
         return $this->hasMany(RedeemPoint::class, 'user_id');
     }
 
-    public function userSubscription(): HasMany
+    public function userSubscriptions(): HasMany
     {
         return $this->hasMany(UserSubcription::class, 'user_id');
     }

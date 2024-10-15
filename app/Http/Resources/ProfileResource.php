@@ -63,6 +63,7 @@ class ProfileResource extends JsonResource
                     'city' => $addr->city,
                 ];
             })->toArray() : [],
+            'subscribed' => $this->is_subscribed,
         ];
     }
 }

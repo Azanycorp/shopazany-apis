@@ -83,6 +83,7 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
         ->group(function () {
             Route::get('/country/{country_id}', 'getPlanByCountry');
             Route::post('/payment', 'subscriptionPayment');
+            Route::get('/history/{user_id}', 'subscriptionHistory');
     });
 
     Route::controller(UserController::class)->group(function () {
