@@ -100,4 +100,9 @@ class Product extends Model
     {
         return $this->hasMany(Cart::class, 'product_id');
     }
+
+    public function productReviews(): HasMany
+    {
+        return $this->hasMany(ProductReview::class, 'product_id');
+    }
 }

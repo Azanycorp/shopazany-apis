@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ProductReviewRequest;
 use App\Services\HomeService;
 use Illuminate\Http\Request;
 
@@ -53,5 +54,25 @@ class HomeController extends Controller
     public function recommendedProducts()
     {
         return $this->service->recommendedProducts();
+    }
+
+    public function productReview(ProductReviewRequest $request)
+    {
+        return $this->service->productReview($request);
+    }
+
+    public function saveForLater(Request $request)
+    {
+        $request->validate([
+            'user_id' => ['required', 'integer', 'exists:users,id'],
+            'product_id' => ['required', 'integer']
+        ]);
+        
+        return $this->service->saveForLater($request);
+    }
+
+    public function sellerInfo($uuid)
+    {
+        return $this->service->sellerInfo($uuid);
     }
 }
