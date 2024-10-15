@@ -38,7 +38,7 @@ class PaystackService
                 $planId = $paymentData['metadata']['subscription_plan_id'];
                 $authData = $paymentData['authorization'];
 
-                $user = User::with('userSubscription')
+                $user = User::with('userSubscriptions')
                 ->findOrFail($userId);
 
                 $payment = Payment::create([
@@ -67,7 +67,7 @@ class PaystackService
                     'type' => PaymentType::RECURRINGCHARGE,
                 ]);
 
-                $user->userSubscription()->create([
+                $user->userSubscriptions()->create([
                     'subscription_plan_id' => $planId,
                     'payment_id' => $payment->id,
                     'plan_start' => now(),

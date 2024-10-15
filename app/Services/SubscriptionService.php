@@ -3,10 +3,12 @@
 namespace App\Services;
 
 use App\Enum\PaymentType;
+use App\Http\Resources\SubscriptionHistoryResource;
 use App\Http\Resources\SubscriptionPlanResource;
 use App\Models\SubscriptionPlan;
 use App\Models\User;
 use App\Trait\HttpResponse;
+use Illuminate\Support\Facades\Auth;
 use Unicodeveloper\Paystack\Facades\Paystack;
 
 class SubscriptionService
@@ -51,6 +53,23 @@ class SubscriptionService
 
         $paystackInstance = Paystack::getAuthorizationUrl($paymentDetails);
         return response()->json($paystackInstance);
+    }
+
+    public function subscriptionHistory($userId)
+    {
+        $currentUserId = Auth::id();
+
+        if ($currentUserId != $userId) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+
+        $user = User::with(['userSubscriptions.subscriptionPlan'])
+        ->findOrFail($userId)
+        ->append('subscription_history');
+
+        $data = SubscriptionHistoryResource::collection($user->subscription_history);
+
+        return $this->success($data, "Subscription history");
     }
 }
 

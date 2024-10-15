@@ -80,11 +80,16 @@ class User extends Authenticatable
         ->first();
     }
 
-    public function getUserSubscribeAttribute()
+    public function getIsSubscribedAttribute()
     {
-        return $this->userSubscription()
+        return $this->userSubscriptions()
                 ->where('status', 'active')
                 ->exists();
+    }
+
+    public function getSubscriptionHistoryAttribute()
+    {
+        return $this->userSubscriptions()->where('status', 'active')->get();
     }
 
 }

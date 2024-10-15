@@ -24,8 +24,10 @@ class UserService extends Controller
     public function profile()
     {
         $auth = $this->userAuth();
-        $user = User::with(['wallet', 'referrals', 'bankAccount', 'userbusinessinfo'])
-        ->findOrFail($auth->id);
+        $user = User::with(['wallet', 'referrals', 'bankAccount', 'userbusinessinfo', 'userSubscriptions'])
+        ->findOrFail($auth->id)
+        ->append(['is_subscribed']);
+
         $data = new ProfileResource($user);
 
         return $this->success($data, "Profile");
