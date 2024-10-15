@@ -61,11 +61,17 @@ Route::controller(HomeController::class)->group(function () {
     Route::get('/single/product/{slug}', 'productSlug');
     Route::get('/top-brands', 'topBrands');
     Route::get('/top-sellers', 'topSellers');
+    Route::get('/seller/{uuid}', 'sellerInfo');
 });
 
 Route::post('/payment/webhook', [PaymentController::class, 'webhook']);
 
 Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
+
+    // Product
+    Route::post('product-review', [HomeController::class, 'productReview']);
+    Route::post('/product/save-for-later', [HomeController::class, 'saveForLater']);
+
 
     // Payment
     Route::post('/checkout', [PaymentController::class, 'processPayment']);

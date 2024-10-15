@@ -3,7 +3,10 @@
 namespace App\Services;
 
 use App\Enum\OrderStatus;
+use App\Enum\ProductReviewStatus;
 use App\Enum\ProductStatus;
+use App\Enum\UserType;
+use App\Http\Resources\SellerDetailResource;
 use App\Models\User;
 use App\Models\Product;
 use App\Trait\HttpResponse;
@@ -89,7 +92,10 @@ class HomeService
 
     public function productSlug($slug)
     {
-        $product = Product::where('slug', $slug)->firstOrFail();
+        $product = Product::with(['brand', 'category', 'subCategory', 'color', 'unit', 'size', 'productReviews'])
+        ->withCount('productReviews')
+        ->where('slug', $slug)
+        ->firstOrFail();
 
         $data = new SingleProductResource($product);
 
@@ -150,6 +156,74 @@ class HomeService
         ->take(6);
 
         return $this->success($products, "Recommended products");
+    }
+
+    public function productReview($request)
+    {
+        $product = Product::with('productReviews')
+        ->findOrFail($request->product_id);
+
+        $product->productReviews()->create([
+            'user_id' => $request->user_id,
+            'rating' => $request->rating,
+            'review' => $request->review,
+            'status' => ProductReviewStatus::APPROVED,
+        ]);
+
+        return $this->success(null, "Review added successfully");
+    }
+
+    public function saveForLater($request)
+    {
+        $currentUser = userAuth();
+
+        if ($currentUser->id != $request->user_id) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+
+        $user = User::findOrFail($request->user_id);
+        $product = Product::findOrFail($request->product_id);
+
+        if ($user->wishlist()->where('product_id', $product->id)->exists()) {
+            return $this->error(null, "Product already in wishlist", 409);
+        }
+
+        $user->wishlist()->create([
+            'product_id' => $product->id,
+        ]);
+
+        return $this->success(null, "Product saved for later");
+    }
+
+    public function sellerInfo($uuid)
+    {
+        $search = request()->input('search');
+
+        $user = User::with([
+            'products' => function ($query) use ($search) {
+                if ($search) {
+                    $query->where(function ($q) use ($search) {
+                        $q->where('name', 'like', '%' . $search . '%')
+                          ->orWhere('description', 'like', '%' . $search . '%');
+                    });
+                }
+                $query->with(['category', 'subCategory']);
+                $query->withCount(['productReviews']);
+                $query->withCount(['orders as item_sold' => function ($query) {
+                    $query->where('status', OrderStatus::DELIVERED);
+                }]);
+            }
+        ])->where('uuid', $uuid)
+        ->withCount('products')
+        ->first();
+
+        if(! $user) {
+            return $this->error(null, 'Not found', 400);
+        }
+
+        $data = new SellerDetailResource($user);
+
+        return $this->success($data, 'Seller details');
     }
 }
 
