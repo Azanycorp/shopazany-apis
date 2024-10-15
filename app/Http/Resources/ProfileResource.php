@@ -64,6 +64,14 @@ class ProfileResource extends JsonResource
                 ];
             })->toArray() : [],
             'subscribed' => $this->is_subscribed,
+            'subscription_plan' => (object)[
+                'id' => (int)$this->subscription_plan->id,
+                'plan' => (string)$this->subscription_plan->subscriptionPlan->title,
+                'plan_start' => (string)$this->subscription_plan->plan_start,
+                'plan_end' => (string)$this->subscription_plan->plan_end,
+                'expired_at' => (string)$this->subscription_plan->expired_at,
+                'status' => (string)$this->subscription_plan->status,
+            ]
         ];
     }
 }
