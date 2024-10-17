@@ -109,10 +109,12 @@ class HomeService
         ])
         ->withCount('productReviews')
         ->where('slug', $slug)
-        ->firstOrFail();
+        ->first();
 
-        dd($product);
-    
+        if(! $product) {
+            return $this->error(null, 'Product not found', 404);
+        }
+
         $data = new SingleProductResource($product);
     
         return $this->success($data, "Product detail");
