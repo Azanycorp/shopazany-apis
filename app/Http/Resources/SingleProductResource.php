@@ -66,7 +66,7 @@ class SingleProductResource extends JsonResource
                 'id' => $this->user?->id,
                 'uuid' => $this->user?->uuid,
                 'name' => $this->user?->first_name . ' '. $this->user?->last_name,
-                //'flag' => $this->user?->userCountry?->shopCountry?->flag,
+                'flag' => $this->user?->userCountry?->shopCountry?->flag,
                 'country' => $this->user?->userCountry?->name,
             ],
             
