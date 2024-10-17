@@ -61,7 +61,12 @@ Route::controller(HomeController::class)->group(function () {
     Route::get('/single/product/{slug}', 'productSlug');
     Route::get('/top-brands', 'topBrands');
     Route::get('/top-sellers', 'topSellers');
-    Route::get('/seller/{uuid}', 'sellerInfo');
+
+    Route::prefix('seller')->group(function () {
+        Route::get('/{uuid}', 'sellerInfo');
+        Route::get('/{uuid}/category', 'sellerCategory');
+        Route::get('/{uuid}/reviews', 'sellerReviews');
+    });
 });
 
 Route::post('/payment/webhook', [PaymentController::class, 'webhook']);

@@ -75,4 +75,14 @@ class HomeController extends Controller
     {
         return $this->service->sellerInfo($uuid);
     }
+
+    public function sellerCategory($uuid)
+    {
+        return $this->service->sellerCategory($uuid);
+    }
+
+    public function sellerReviews($uuid)
+    {
+        return $this->service->sellerReviews($uuid);
+    }
 }
