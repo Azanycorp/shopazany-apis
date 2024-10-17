@@ -64,11 +64,11 @@ class SingleProductResource extends JsonResource
             'item_sold' => $item_sold,
             'seller' => $this->whenLoaded('user', function () {
                 return (object) [
-                    'id' => optional($this->user)->id,
-                    'uuid' => optional($this->user)->uuid,
-                    'name' => $this->user->first_name . ' '. optional($this->user)->last_name,
-                    'flag' => optional($this->user->userCountry->shopCountry)->flag,
-                    'country' => optional($this->user)->userCountry?->name,
+                    'id' => $this->user?->id,
+                    'uuid' => $this->user?->uuid,
+                    'name' => $this->user?->first_name . ' '. $this->user?->last_name,
+                    'flag' => $this->user?->userCountry?->shopCountry?->flag,
+                    'country' => $this->user?->userCountry?->name,
                 ];
             }),
         ];
