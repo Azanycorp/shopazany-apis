@@ -6,6 +6,7 @@ use App\Enum\OrderStatus;
 use App\Enum\ProductReviewStatus;
 use App\Enum\ProductStatus;
 use App\Enum\UserType;
+use App\Http\Resources\ReviewResource;
 use App\Http\Resources\SellerDetailResource;
 use App\Models\User;
 use App\Models\Product;
@@ -15,6 +16,7 @@ use App\Http\Resources\SellerProductResource;
 use App\Http\Resources\SingleProductResource;
 use App\Models\Brand;
 use App\Models\Category;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class HomeService
 {
@@ -225,5 +227,104 @@ class HomeService
 
         return $this->success($data, 'Seller details');
     }
+
+    public function sellerCategory($uuid)
+    {
+        $search = request()->input('search');
+
+        $user = User::where('uuid', $uuid)
+            ->with([
+                'products' => function ($query) use ($search) {
+                    $query->with(['category' => function ($q) use($search) {
+                        $q->select(['id', 'name', 'slug', 'image']);
+
+                        if ($search) {
+                            $q->where('name', 'like', '%' . $search . '%');
+                        }
+                    }]);
+                }
+            ])
+            ->first();
+
+        if (!$user) {
+            return $this->error(null, 'Category not found', 404);
+        }
+
+        $categories = $user->products
+        ->pluck('category')
+        ->filter()
+        ->unique('id')
+        ->values();
+
+        if ($categories->isEmpty()) {
+            return $this->error(null, 'No categories found for this seller', 404);
+        }
+
+        return $this->success($categories, 'Seller categories');
+    }
+
+    public function sellerReviews($uuid)
+    {
+        $search = request()->input('search');
+        $perPage = request()->input('per_page', 4);
+        $currentPage = request()->input('page', 1);
+
+        $user = User::where('uuid', $uuid)
+            ->with(['products' => function ($query) use ($search) {
+                $query->with(['productReviews' => function ($q) use ($search) {
+                    if ($search) {
+                        $q->where('review', 'like', '%' . $search . '%');
+                    }
+
+                    $q->with(['user' => function ($userQuery) {
+                        $userQuery->select('id', 'first_name', 'last_name');
+                    }]);
+
+                    $q->select('id', 'user_id', 'product_id', 'rating', 'review', 'created_at');
+                }]);
+            }])
+            ->first();
+
+        if (!$user) {
+            return $this->error(null, 'Seller not found', 404);
+        }
+
+        $reviews = $user->products->pluck('productReviews')->flatten();
+
+        if ($reviews->isEmpty()) {
+            return $this->error(null, 'No reviews found for this seller', 404);
+        }
+
+        $overallRating = $reviews->avg('rating');
+
+        $currentPageReviews = $reviews->slice(($currentPage - 1) * $perPage, $perPage)->all();
+
+        $paginatedReviews = new LengthAwarePaginator(
+            $currentPageReviews,
+            $reviews->count(),
+            $perPage,
+            $currentPage,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
+
+        $reviewResources = ReviewResource::collection($paginatedReviews);
+
+        $responseData = [
+            'reviews' => $reviewResources,
+            'overall_rating' => (float)number_format($overallRating, 1),
+            'pagination' => [
+                'current_page' => $paginatedReviews->currentPage(),
+                'last_page' => $paginatedReviews->lastPage(),
+                'per_page' => $paginatedReviews->perPage(),
+                'prev_page_url' => $paginatedReviews->previousPageUrl(),
+                'next_page_url' => $paginatedReviews->nextPageUrl(),
+                'total' => $paginatedReviews->total(),
+            ],
+        ];
+
+        return $this->success($responseData, 'Seller reviews');
+    }
+
+
 }
 
