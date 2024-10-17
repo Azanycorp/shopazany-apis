@@ -4,6 +4,7 @@ namespace App\Services\User;
 
 use App\Enum\OrderStatus;
 use App\Enum\ProductStatus;
+use App\Enum\UserType;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Order;
@@ -70,9 +71,9 @@ class SellerService extends Controller
 
     public function createProduct($request)
     {
-        $currentUserId = Auth::id();
+        $currentUser = userAuth();
 
-        if ($currentUserId != $request->user_id) {
+        if ($currentUser->id != $request->user_id || $currentUser->type != UserType::SELLER) {
             return $this->error(null, "Unauthorized action.", 401);
         }
 
