@@ -103,9 +103,10 @@ class HomeService
             'size', 
             'productReviews', 
             'productimages',
-            'user.userCountry' => function($query) {
-                $query->with('shopCountry:country_id,flag');
-            }
+            'user'
+            // 'user.userCountry' => function($query) {
+            //     $query->with('shopCountry:country_id,flag');
+            // }
         ])
         ->withCount('productReviews')
         ->where('slug', $slug)
