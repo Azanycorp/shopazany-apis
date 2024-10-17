@@ -182,11 +182,18 @@ class HomeService
     public function categorySlug($slug)
     {
         $category = Category::with(['products' => function ($query) {
-            $query->where('status', ProductStatus::ACTIVE);
+            $query->where('status', ProductStatus::ACTIVE)
+                  ->select('id', 'name', 'slug', 'price', 'image', 'category_id')
+                  ->withCount('productReviews as total_reviews')
+                  ->withAvg('productReviews as average_rating', 'rating');
         }])->where('slug', $slug)
-        ->firstOrFail();
+          ->select('id', 'name', 'slug', 'image')
+          ->firstOrFail();
 
-        $products = SellerProductResource::collection($category->products);
+        $products = $category->products->map(function ($product) {
+            $product->average_rating = $product->average_rating ? round($product->average_rating, 1) : 0;
+            return $product;
+        });
 
         return $this->success($products, 'Products by category');
     }
