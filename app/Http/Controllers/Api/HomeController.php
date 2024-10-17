@@ -21,6 +21,11 @@ class HomeController extends Controller
         return $this->service->bestSelling();
     }
 
+    public function allProducts()
+    {
+        return $this->service->allProducts();
+    }
+
     public function featuredProduct()
     {
         return $this->service->featuredProduct();

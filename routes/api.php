@@ -55,6 +55,7 @@ Route::get('/shop-by/country/{shop_country_id}', [ApiController::class, 'userSho
 Route::controller(HomeController::class)->group(function () {
     Route::get('/best/selling', 'bestSelling');
     Route::get('/category/{slug}', 'categorySlug');
+    Route::get('/all/products', 'allProducts');
     Route::get('/featured/products', 'featuredProduct');
     Route::get('/pocket/friendly', 'pocketFriendly');
     Route::get('/recommended/products', 'recommendedProducts');

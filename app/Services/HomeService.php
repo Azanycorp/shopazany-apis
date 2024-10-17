@@ -51,6 +51,33 @@ class HomeService
         return $this->success($products, "Best selling products");
     }
 
+    public function allProducts()
+    {
+        $countryId = request()->query('country_id');
+
+        $query = Product::where('status', ProductStatus::ACTIVE);
+
+        if ($countryId) {
+            $query->where('country_id', $countryId);
+        }
+
+        $allProducts = $query->paginate(25);
+
+        $data = SellerProductResource::collection($allProducts);
+
+        return [
+            'status' => 'true',
+            'message' => 'All products',
+            'data' => $data,
+            'pagination' => [
+                'current_page' => $allProducts->currentPage(),
+                'last_page' => $allProducts->lastPage(),
+                'per_page' => $allProducts->perPage(),
+                'prev_page_url' => $allProducts->previousPageUrl(),
+                'next_page_url' => $allProducts->nextPageUrl(),
+            ],
+        ];
+    }
 
     public function featuredProduct()
     {

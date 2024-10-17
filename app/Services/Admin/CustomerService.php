@@ -2,6 +2,7 @@
 
 namespace App\Services\Admin;
 
+use App\Enum\UserStatus;
 use App\Enum\UserType;
 use App\Http\Resources\CustomerResource;
 use App\Http\Resources\PaymentResource;
@@ -81,9 +82,18 @@ class CustomerService
 
     public function removeCustomer($request)
     {
-        User::whereIn('id', $request->user_ids)->delete();
+        $users = User::whereIn('id', $request->user_ids)->get();
 
-        return $this->success(null, "User has been removed successfully");
+        foreach ($users as $user) {
+            $user->status = UserStatus::DELETED;
+            $user->is_verified = 0;
+            $user->is_admin_approve = 0;
+            $user->save();
+
+            $user->delete();
+        }
+
+        return $this->success(null, "User(s) have been removed successfully");
     }
 
     public function filter()

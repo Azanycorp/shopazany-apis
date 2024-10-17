@@ -2,8 +2,10 @@
 
 namespace App\Observers;
 
+use App\Enum\ProductStatus;
 use App\Enum\UserType;
 use App\Mail\SignUpVerifyMail;
+use App\Models\Product;
 use App\Models\User;
 use Illuminate\Contracts\Events\ShouldHandleEventsAfterCommit;
 use Illuminate\Support\Facades\Mail;
@@ -39,7 +41,8 @@ class UserObserver implements ShouldHandleEventsAfterCommit
      */
     public function deleted(User $user): void
     {
-        //
+        Product::where('user_id', $user->id)
+        ->update(['status' => ProductStatus::DELETED]);
     }
 
     /**
