@@ -122,13 +122,13 @@ class HomeService
     public function productSlug($slug)
     {
         $product = Product::with([
-            'brand', 
-            'category', 
-            'subCategory', 
-            'color', 
-            'unit', 
-            'size', 
-            'productReviews', 
+            'brand',
+            'category',
+            'subCategory',
+            'color',
+            'unit',
+            'size',
+            'productReviews',
             'productimages',
             'user.userCountry' => function($query) {
                 $query->with('shopCountry:country_id,flag');
