@@ -94,13 +94,25 @@ class HomeService
 
     public function productSlug($slug)
     {
-        $product = Product::with(['brand', 'category', 'subCategory', 'color', 'unit', 'size', 'productReviews'])
+        $product = Product::with([
+            'brand', 
+            'category', 
+            'subCategory', 
+            'color', 
+            'unit', 
+            'size', 
+            'productReviews', 
+            'productimages', 
+            'user.userCountry' => function($query) {
+                $query->with('shopCountry:country_id,flag');
+            }
+        ])
         ->withCount('productReviews')
         ->where('slug', $slug)
         ->firstOrFail();
-
+    
         $data = new SingleProductResource($product);
-
+    
         return $this->success($data, "Product detail");
     }
 
@@ -311,7 +323,7 @@ class HomeService
 
         $responseData = [
             'reviews' => $reviewResources,
-            'overall_rating' => (float)number_format($overallRating, 1),
+            'overall_rating' => round($overallRating, 1),
             'pagination' => [
                 'current_page' => $paginatedReviews->currentPage(),
                 'last_page' => $paginatedReviews->lastPage(),
