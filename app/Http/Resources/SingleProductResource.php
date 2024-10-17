@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use App\Enum\OrderStatus;
 use App\Models\Order;
+use App\Models\ShopCountry;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -16,10 +17,11 @@ class SingleProductResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $this->load('productimages', 'user.userCountry');
         $item_sold = Order::where('product_id', $this->id)
-        ->where('status', OrderStatus::DELIVERED)
-        ->count();
+            ->where('status', OrderStatus::DELIVERED)
+            ->count();
+
+        $average_rating = $this->productReviews->avg('rating');
 
         return [
             'id' => (int)$this->id,
@@ -58,12 +60,14 @@ class SingleProductResource extends JsonResource
                 ];
             })->toArray() : [],
             'total_reviews' => $this->product_reviews_count,
+            'average_rating' => round($average_rating, 1),
             'item_sold' => $item_sold,
             'seller' => $this->whenLoaded('user', function () {
                 return (object) [
                     'id' => optional($this->user)->id,
                     'uuid' => optional($this->user)->uuid,
                     'name' => $this->user->first_name . ' '. optional($this->user)->last_name,
+                    'flag' => optional($this->user->userCountry->shopCountry)->flag,
                     'country' => optional($this->user)->userCountry?->name,
                 ];
             }),
