@@ -103,14 +103,15 @@ class HomeService
             'size', 
             'productReviews', 
             'productimages',
-            'user'
-            // 'user.userCountry' => function($query) {
-            //     $query->with('shopCountry:country_id,flag');
-            // }
+            'user.userCountry' => function($query) {
+                $query->with('shopCountry:country_id,flag');
+            }
         ])
         ->withCount('productReviews')
         ->where('slug', $slug)
         ->firstOrFail();
+
+        dd($product);
     
         $data = new SingleProductResource($product);
     
