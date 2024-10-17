@@ -63,11 +63,11 @@ class SingleProductResource extends JsonResource
             'average_rating' => round($average_rating, 1),
             'item_sold' => $item_sold,
             'seller' => (object) [
-                    'id' => $this->user?->id,
-                    'uuid' => $this->user?->uuid,
-                    'name' => $this->user?->first_name . ' '. $this->user?->last_name,
-                    'flag' => $this->user?->userCountry?->shopCountry?->flag,
-                    'country' => $this->user?->userCountry?->name,
+                'id' => $this->user?->id,
+                'uuid' => $this->user?->uuid,
+                'name' => $this->user?->first_name . ' '. $this->user?->last_name,
+                //'flag' => $this->user?->userCountry?->shopCountry?->flag,
+                'country' => $this->user?->userCountry?->name,
             ],
             
         ];
