@@ -276,6 +276,7 @@ class SettingsService
                 'cost' => $request->cost,
                 'country_id' => $request->country_id,
                 'period' => $request->period,
+                'tier' => $request->tier,
                 'tagline' => $request->tagline,
                 'details' => $request->details,
                 'status' => 'active'
@@ -313,9 +314,10 @@ class SettingsService
             'cost' => $request->cost,
             'country_id' => $request->country_id,
             'period' => $request->period,
+            'tier' => $request->tier,
             'tagline' => $request->tagline,
             'details' => $request->details,
-            'status' => 'active'
+            'status' => 'active',
         ]);
 
         return $this->success(null, 'Plan updated successfully');
@@ -404,7 +406,7 @@ class SettingsService
 
             $admin->roles()->sync($request->role_id);
             //$admin->permissions()->sync($request->permissions);
-            
+
             DB::commit();
 
             return $this->success(null, 'Updated successfully');

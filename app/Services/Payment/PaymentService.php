@@ -87,12 +87,12 @@ class PaymentService
                 case PaymentType::USERORDER:
                     PaystackService::handlePaymentSuccess($event, $event['event']);
                     break;
-                
+
                 default:
                     Log::warning('Unknown payment type', ['payment_type' => $paymentType]);
                     break;
             }
-            
+
         }
 
         return response()->json(['status' => true], 200);
@@ -104,6 +104,10 @@ class PaymentService
 
         if ($currentUserId != $userId) {
             return $this->error(null, "Unauthorized action.", 401);
+        }
+
+        if (!preg_match('/^[A-Za-z0-9]{10,30}$/', $ref)) {
+            return $this->error(null, 400, "Invalid payment reference.");
         }
 
         $verify = (new GetCurlService($ref))->run();

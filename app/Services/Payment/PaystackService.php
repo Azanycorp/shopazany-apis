@@ -3,6 +3,7 @@
 namespace App\Services\Payment;
 
 use App\Enum\PaymentType;
+use App\Enum\SubscriptionType;
 use App\Mail\CustomerOrderMail;
 use App\Mail\SellerOrderMail;
 use App\Models\Cart;
@@ -38,8 +39,15 @@ class PaystackService
                 $planId = $paymentData['metadata']['subscription_plan_id'];
                 $authData = $paymentData['authorization'];
 
-                $user = User::with('userSubscriptions')
-                ->findOrFail($userId);
+                $user = User::findOrFail($userId);
+
+                $activeSubscription = $user->subscription_plan;
+                if ($activeSubscription) {
+                    $activeSubscription->update([
+                        'status' => SubscriptionType::EXPIRED,
+                        'expired_at' => now(),
+                    ]);
+                }
 
                 $payment = Payment::create([
                     'user_id' => $userId,
@@ -73,7 +81,7 @@ class PaystackService
                     'plan_start' => now(),
                     'plan_end' => now()->addDays(30),
                     'authorization_data' => $authData,
-                    'status' => 'active',
+                    'status' => SubscriptionType::ACTIVE,
                     'expired_at' => null,
                 ]);
 
