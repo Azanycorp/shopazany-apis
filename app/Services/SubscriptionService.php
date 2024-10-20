@@ -32,10 +32,22 @@ class SubscriptionService
             return $this->error(null, 'Invalid callback URL', 400);
         }
 
-        $user = User::findOrFail($request->user_id);
+        $user = User::with(['userSubscriptions' => function ($query) {
+            $query->where('status', 'active');
+        }])->findOrFail($request->user_id);
 
-        if($user->user_subscribe) {
-            return $this->error(null, 'Subscription is active', 403);
+        if($user->is_subscribed) {
+            $currentPlan = $user?->subscription_plan?->subscriptionPlan;
+
+            $newPlan = SubscriptionPlan::findOrFail($request->input('subscription_plan_id'));
+
+            if ($newPlan->tier < $currentPlan->tier) {
+                return $this->error(null, 'You cannot downgrade your subscription plan', 403);
+            }
+
+            if ($newPlan->id == $currentPlan->id) {
+                return $this->error(null, 'You are already subscribed to this plan', 403);
+            }
         }
 
         $paymentDetails = [
