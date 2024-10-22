@@ -57,15 +57,23 @@ class CartService
 
         $sessionId = session('cart_id');
 
+        $cartItemsQuery = Cart::with([
+            'product.user',
+            'product.category',
+            'product.subCategory',
+            'product.color',
+            'product.size',
+            'product.unit',
+            'product.brand'
+        ]);
+
         if (Auth::check()) {
-            $cartItems = Cart::with('product.user')
-            ->where('user_id', $userId)
-            ->get();
+            $cartItemsQuery->where('user_id', $userId);
         } else {
-            $cartItems = Cart::with('product.user')
-            ->where('session_id', $sessionId)
-            ->get();
+            $cartItemsQuery->where('session_id', $sessionId);
         }
+
+        $cartItems = $cartItemsQuery->get();
 
         $localItems = $cartItems->filter(function ($cartItem) {
             return $cartItem->product->country_id == 160;
@@ -75,13 +83,8 @@ class CartService
             return $cartItem->product->country_id != 160;
         });
 
-        $totalLocalPrice = $localItems->sum(function ($item) {
-            return ($item->product?->price) * $item->quantity;
-        });
-
-        $totalInternationalPrice = $internationalItems->sum(function ($item) {
-            return ($item->product?->price) * $item->quantity;
-        });
+        $totalLocalPrice = $localItems->sum(fn($item) => optional($item->product)->price * $item->quantity);
+        $totalInternationalPrice = $internationalItems->sum(fn($item) => optional($item->product)->price * $item->quantity);
 
         return $this->success([
             'local_items' => CartResource::collection($localItems),
