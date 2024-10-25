@@ -15,7 +15,9 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Resources\SellerProductResource;
 use App\Http\Resources\SingleProductResource;
 use App\Models\Brand;
+use App\Models\Cart;
 use App\Models\Category;
+use App\Models\Wishlist;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class HomeService
@@ -374,6 +376,34 @@ class HomeService
 
         return $this->success($responseData, 'Seller reviews');
     }
+
+    public function moveToCart($request)
+    {
+        $itemId = $request->product_id;
+        $userId = $request->user_id;
+
+        $wishlistItem = Wishlist::where('user_id', $userId)
+                                ->where('product_id', $itemId)
+                                ->first();
+
+        if ($wishlistItem) {
+            Cart::updateOrCreate(
+                [
+                    'user_id' => $userId,
+                    'product_id' => $itemId,
+                ],
+                [
+                    'quantity' => 1,
+                ]
+            );
+            $wishlistItem->delete();
+
+            return $this->success(null, 'Item moved to cart successfully');
+        }
+
+        return $this->error(null, 'Item not found in wishlist', 404);
+    }
+
 
 
 }
