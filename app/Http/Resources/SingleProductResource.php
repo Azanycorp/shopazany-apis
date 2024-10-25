@@ -55,8 +55,10 @@ class SingleProductResource extends JsonResource
             'reviews' => $this->productReviews ? $this->productReviews->map(function ($review) {
                 return [
                     'id' => $review->id,
+                    'user' => $review?->user?->full_name,
                     'rating' => $review->rating,
                     'review' => $review->review,
+                    'date' => $review->created_at,
                 ];
             })->toArray() : [],
             'total_reviews' => $this->product_reviews_count,
@@ -69,7 +71,7 @@ class SingleProductResource extends JsonResource
                 'flag' => $this->user?->userCountry?->shopCountry?->flag,
                 'country' => $this->user?->userCountry?->name,
             ],
-            
+
         ];
     }
 }

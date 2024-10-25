@@ -128,7 +128,7 @@ class HomeService
             'color',
             'unit',
             'size',
-            'productReviews',
+            'productReviews.user',
             'productimages',
             'user.userCountry' => function($query) {
                 $query->with('shopCountry:country_id,flag');
@@ -143,7 +143,7 @@ class HomeService
         }
 
         $data = new SingleProductResource($product);
-    
+
         return $this->success($data, "Product detail");
     }
 
