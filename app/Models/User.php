@@ -104,4 +104,9 @@ class User extends Authenticatable
         return $this->attributes['subscription_plan'];
     }
 
+    public function getFullNameAttribute()
+    {
+        return "{$this->first_name} {$this->last_name}";
+    }
+
 }
