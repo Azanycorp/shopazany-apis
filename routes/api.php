@@ -77,6 +77,8 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
     // Product
     Route::post('product-review', [HomeController::class, 'productReview']);
     Route::post('/product/save-for-later', [HomeController::class, 'saveForLater']);
+    // Move to Cart
+    Route::post('/product/cart', [HomeController::class, 'moveToCart']);
 
 
     // Payment

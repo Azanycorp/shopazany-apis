@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\MoveToCartRequest;
 use App\Http\Requests\ProductReviewRequest;
 use App\Services\HomeService;
 use Illuminate\Http\Request;
@@ -72,7 +73,7 @@ class HomeController extends Controller
             'user_id' => ['required', 'integer', 'exists:users,id'],
             'product_id' => ['required', 'integer']
         ]);
-        
+
         return $this->service->saveForLater($request);
     }
 
@@ -89,5 +90,10 @@ class HomeController extends Controller
     public function sellerReviews($uuid)
     {
         return $this->service->sellerReviews($uuid);
+    }
+
+    public function moveToCart(MoveToCartRequest $request)
+    {
+        return $this->service->moveToCart($request);
     }
 }
