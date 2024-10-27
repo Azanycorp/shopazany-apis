@@ -35,4 +35,9 @@ class B2BSellerController extends Controller
     {
         return $this->service->editCompany($request);
     }
+
+    public function addProduct(Request $request)
+    {
+        return $this->service->addProduct($request);
+    }
 }

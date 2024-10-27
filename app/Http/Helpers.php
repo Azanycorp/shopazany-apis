@@ -321,5 +321,22 @@ if (!function_exists('folderName')) {
     }
 }
 
+if (!function_exists('folderNames')) {
+    function folderNames($folderName, $user, $subFolder) {
+        if(App::environment('production')) {
+            $folder = "/prod/{$folderName}/{$user}";
+            $frontImage = "/prod/{$folderName}/{$user}/{$subFolder}";
+        } elseif(App::environment(['staging', 'local'])) {
+            $folder = "/stag/{$folderName}/{$user}";
+            $frontImage = "/stag/{$folderName}/{$user}/{$subFolder}";
+        }
+
+        return (object)[
+            'folder' => $folder,
+            'frontImage' => $frontImage
+        ];
+    }
+}
+
 
 
