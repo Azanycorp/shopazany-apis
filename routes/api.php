@@ -209,5 +209,10 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function () {
         Route::post('/edit-account', 'editAccount');
         Route::patch('/change-password', 'changePassword');
         Route::post('/edit-company', 'editCompany');
+
+        // Product
+        Route::prefix('product')->group(function () {
+            Route::post('/', 'addProduct');
+        });
     });
 });
