@@ -4,7 +4,7 @@ namespace App\Contracts;
 
 interface B2BRepositoryInterface
 {
-    public function all();
+    public function all(int $user);
 
     public function create(array $data);
 

@@ -213,6 +213,21 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function () {
         // Product
         Route::prefix('product')->group(function () {
             Route::post('/', 'addProduct');
+            Route::get('/{user_id}', 'getAllProduct');
+            Route::get('/analytic/{user_id}', 'getAnalytics');
+            Route::get('/{user_id}/{product_id}', 'getProductById');
+            Route::post('/update', 'updateProduct');
+            Route::delete('/delete/{user_id}/{product_id}', 'deleteProduct');
+        });
+
+        // Shipping
+        Route::prefix('shipping')->group(function () {
+            Route::post('/', 'addShipping');
+            Route::get('/{user_id}', 'getAllShipping');
+            Route::get('/{user_id}/{shipping_id}', 'getShippingById');
+            Route::patch('/update/{shipping_id}', 'updateShipping');
+            Route::patch('/default/{user_id}/{shipping_id}', 'setDefault');
+            Route::delete('/delete/{user_id}/{shipping_id}', 'deleteShipping');
         });
     });
 });
