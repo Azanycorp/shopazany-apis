@@ -2,6 +2,8 @@
 
 namespace App\Trait;
 
+use App\Models\B2BProduct;
+use App\Models\B2BSellerShippingAddress;
 use App\Models\BankAccount;
 use App\Models\BusinessInformation;
 use App\Models\Country;
@@ -143,5 +145,15 @@ trait UserRelationship
     public function businessInformation(): HasOne
     {
         return $this->hasOne(BusinessInformation::class, 'user_id');
+    }
+
+    public function b2bProducts(): HasMany
+    {
+        return $this->hasMany(B2BProduct::class, 'user_id');
+    }
+
+    public function b2bSellerShippingAddresses(): HasMany
+    {
+        return $this->hasMany(B2BSellerShippingAddress::class, 'user_id');
     }
 }

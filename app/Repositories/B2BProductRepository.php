@@ -4,13 +4,22 @@ namespace App\Repositories;
 
 use App\Contracts\B2BRepositoryInterface;
 use App\Models\B2BProduct;
-use App\Models\Post;
 
-class B2BRepository implements B2BRepositoryInterface
+class B2BProductRepository implements B2BRepositoryInterface
 {
-    public function all()
+    public function all(int $user, string $search = null)
     {
-        return B2BProduct::all();
+        $query = B2BProduct::with(['b2bProductImages', 'category', 'country', 'user'])
+            ->where('user_id', $user);
+
+        if (!empty($search)) {
+            $query->where('name', 'like', '%' . $search . '%')
+                ->orWhereHas('category', function ($q) use ($search) {
+                    $q->where('name', 'like', '%' . $search . '%');
+                });
+        }
+
+        return $query->orderByDesc('created_at')->get();
     }
 
     public function create(array $data)

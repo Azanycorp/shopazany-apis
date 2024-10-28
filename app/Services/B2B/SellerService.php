@@ -3,24 +3,32 @@
 namespace App\Services\B2B;
 
 use App\Models\User;
-use App\Enum\UserType;
 use App\Models\B2BProduct;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
-use App\Contracts\B2BRepositoryInterface;
+use App\Http\Resources\B2BProductResource;
+use App\Http\Resources\B2BSellerShippingAddressResource;
 use App\Http\Resources\SellerProfileResource;
+use App\Models\B2BSellerShippingAddress;
+use App\Repositories\B2BProductRepository;
+use App\Repositories\B2BSellerShippingRepository;
 
 class SellerService
 {
     use HttpResponse;
 
-    protected $b2bRepository;
+    protected $b2bProductRepository;
+    protected $b2bSellerShippingRepository;
 
-    public function __construct(B2BRepositoryInterface $b2bRepository)
+    public function __construct(
+        B2BProductRepository $b2bProductRepository,
+        B2BSellerShippingRepository $b2bSellerShippingRepository
+    )
     {
-        $this->b2bRepository = $b2bRepository;
+        $this->b2bProductRepository = $b2bProductRepository;
+        $this->b2bSellerShippingRepository = $b2bSellerShippingRepository;
     }
 
     public function businessInformation($request)
@@ -141,24 +149,125 @@ class SellerService
             return $this->error(null, "User not found", 404);
         }
 
+        try {
+
+            $parts = explode('@', $user->email);
+            $name = $parts[0];
+
+            $res = folderNames('b2bproduct', $name, 'front_image');
+
+            $slug = Str::slug($request->name);
+
+            if (B2BProduct::where('slug', $slug)->exists()) {
+                $slug = $slug . '-' . uniqid();
+            }
+
+            if ($request->hasFile('front_image')) {
+                $path = $request->file('front_image')->store($res->frontImage, 's3');
+                $url = Storage::disk('s3')->url($path);
+            }
+
+            $data = (array)[
+                'user_id' => $user->id,
+                'name' => $request->name,
+                'slug' => $slug,
+                'category_id' => $request->category_id,
+                'sub_category_id' => $request->sub_category_id,
+                'keywords' => $request->keywords,
+                'description' => $request->description,
+                'front_image' => $url,
+                'minimum_order_quantity' => $request->minimum_order_quantity,
+                'unit' => $request->unit,
+                'fob_price' => $request->fob_price,
+                'country_id' => $user->country ?? 160,
+            ];
+
+            $product = $this->b2bProductRepository->create($data);
+
+            if($request->hasFile('images')) {
+                foreach ($request->file('images') as $image) {
+                    $path = $image->store($res->folder, 's3');
+                    $url = Storage::disk('s3')->url($path);
+
+                    $product->b2bProductImages()->create([
+                        'image' => $url,
+                    ]);
+                }
+            }
+
+            return $this->success(null, 'Product added successfully', 201);
+        } catch (\Throwable $th) {
+            throw $th;
+        }
+    }
+
+    public function getAllProduct($request)
+    {
+        $currentUserId = auth()->id();
+
+        if ($currentUserId != $request->user_id) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+
+        $user = User::select('id')->findOrFail($request->user_id)->id;
+        $search = request()->input('search');
+
+        $products = $this->b2bProductRepository->all($user, $search);
+        $data = B2BProductResource::collection($products);
+
+        return $this->success($data, 'All products');
+    }
+
+    public function getProductById($user_id, $product_id)
+    {
+        $currentUserId = auth()->id();
+
+        if ($currentUserId != $user_id) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+
+        $prod = $this->b2bProductRepository->find($product_id);
+        $data = new B2BProductResource($prod);
+
+        return $this->success($data, 'Product detail');
+    }
+
+    public function updateProduct($request)
+    {
+        $currentUserId = auth()->id();
+
+        if ($currentUserId != $request->user_id) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+
+        $user = User::findOrFail($request->user_id);
+        $prod = B2BProduct::findOrFail($request->product_id);
+
         $parts = explode('@', $user->email);
         $name = $parts[0];
 
         $res = folderNames('b2bproduct', $name, 'front_image');
 
-        $slug = Str::slug($request->name);
+        if ($request->name) {
+            $slug = Str::slug($request->name);
 
-        if (B2BProduct::where('slug', $slug)->exists()) {
-            $slug = $slug . '-' . uniqid();
+            if (B2BProduct::where('slug', $slug)->exists()) {
+                $slug = $slug . '-' . uniqid();
+            }
+        } else {
+            $slug = $prod->slug;
         }
 
         if ($request->hasFile('front_image')) {
             $path = $request->file('front_image')->store($res->frontImage, 's3');
             $url = Storage::disk('s3')->url($path);
+        } else {
+            $url = $prod->front_image;
         }
 
         $data = (array)[
-            'name' => $request->name,
+            'user_id' => $user->id,
+            'name' => $request->name ?? $prod->name,
             'slug' => $slug,
             'category_id' => $request->category_id,
             'sub_category_id' => $request->sub_category_id,
@@ -171,9 +280,10 @@ class SellerService
             'country_id' => $user->country ?? 160,
         ];
 
-        $product = $this->b2bRepository->create($data);
+        $product = $this->b2bProductRepository->update($request->product_id, $data);
 
         if($request->hasFile('images')) {
+            $product->b2bProductImages()->delete();
             foreach ($request->file('images') as $image) {
                 $path = $image->store($res->folder, 's3');
                 $url = Storage::disk('s3')->url($path);
@@ -183,6 +293,168 @@ class SellerService
                 ]);
             }
         }
+
+        return $this->success(null, 'Product updated successfully');
+    }
+
+    public function deleteProduct($user_id, $product_id)
+    {
+        $currentUserId = auth()->id();
+
+        if ($currentUserId != $user_id) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+
+        $this->b2bProductRepository->delete($product_id);
+
+        return $this->success(null, 'Deleted successfully');
+    }
+
+    public function getAnalytics($user_id)
+    {
+        $currentUserId = auth()->id();
+
+        if ($currentUserId != $user_id) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+
+        $user = User::with(['b2bProducts.category'])
+            ->withCount(['b2bProducts', 'b2bProducts as category_count' => function ($query) {
+                $query->distinct('category_id');
+            }])
+            ->findOrFail($user_id);
+
+        $data = [
+            'product_count' => $user->b2b_products_count,
+            'category_count' => $user->category_count
+        ];
+
+        return $this->success($data, 'Analytics');
+    }
+
+    public function addShipping($request)
+    {
+        $currentUserId = auth()->id();
+
+        if ($currentUserId != $request->user_id) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+
+        $user = User::with('b2bSellerShippingAddresses')->find($request->user_id);
+
+        if (! $user) {
+            return $this->error(null, "User not found", 404);
+        }
+
+        $data = (array)[
+            'user_id' => $request->user_id,
+            'address_name' => $request->address_name,
+            'name' => $request->name,
+            'surname' => $request->surname,
+            'email' => $request->email,
+            'phone' => $request->phone,
+            'street' => $request->street,
+            'city' => $request->city,
+            'postal_code' => $request->postal_code,
+            'state_id' => $request->state_id,
+            'country_id' => $request->country_id,
+        ];
+
+        $this->b2bSellerShippingRepository->create($data);
+
+        return $this->success(null, 'Added successfully');
+    }
+
+    public function getAllShipping($user_id)
+    {
+        $currentUserId = auth()->id();
+
+        if ($currentUserId != $user_id) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+
+        $address = $this->b2bSellerShippingRepository->all($user_id);
+        $data = B2BSellerShippingAddressResource::collection($address);
+
+        return $this->success($data, 'All address');
+    }
+
+    public function getShippingById($user_id, $shipping_id)
+    {
+        $currentUserId = auth()->id();
+
+        if ($currentUserId != $user_id) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+
+        $shipping = $this->b2bSellerShippingRepository->find($shipping_id);
+        $data = new B2BSellerShippingAddressResource($shipping);
+
+        return $this->success($data, 'Address detail');
+    }
+
+    public function updateShipping($request, $shipping_id)
+    {
+        $currentUserId = auth()->id();
+
+        if ($currentUserId != $request->user_id) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+
+        $data = (array)[
+            'address_name' => $request->address_name,
+            'name' => $request->name,
+            'surname' => $request->surname,
+            'email' => $request->email,
+            'phone' => $request->phone,
+            'street' => $request->street,
+            'city' => $request->city,
+            'postal_code' => $request->postal_code,
+            'state_id' => $request->state_id,
+            'country_id' => $request->country_id,
+        ];
+
+        $this->b2bSellerShippingRepository->update($shipping_id, $data);
+
+        return $this->success(null, 'Updated successfully');
+    }
+
+    public function deleteShipping($user_id, $shipping_id)
+    {
+        $currentUserId = auth()->id();
+
+        if ($currentUserId != $user_id) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+
+        $this->b2bSellerShippingRepository->delete($shipping_id);
+
+        return $this->success(null, 'Deleted successfully');
+    }
+
+    public function setDefault($user_id, $shipping_id)
+    {
+        $currentUserId = auth()->id();
+
+        if ($currentUserId != $user_id) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+
+        $shipping = B2BSellerShippingAddress::where('user_id', $user_id)
+            ->where('id', $shipping_id)
+            ->firstOrFail();
+
+        if($shipping->is_default) {
+            return $this->error(null, 'Already set at default', 400);
+        }
+
+        B2BSellerShippingAddress::where('user_id', $user_id)->update(['is_default' => 0]);
+
+        $shipping->update([
+            'is_default' => 1
+        ]);
+
+        return $this->success(null, 'Set successfully');
     }
 }
 
