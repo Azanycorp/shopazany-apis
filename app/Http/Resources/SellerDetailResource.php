@@ -2,8 +2,6 @@
 
 namespace App\Http\Resources;
 
-use App\Enum\OrderStatus;
-use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -36,7 +34,7 @@ class SellerDetailResource extends JsonResource
                         'sub_category_id' => (int)$product?->sub_category_id,
                         'sub_category_name' => (string)$product?->subCategory?->name,
                     ],
-                    'front_image' => (string)$product?->front_image,
+                    'front_image' => (string)$product?->image,
                     'product_sku' => (string)$product?->product_sku,
                     'product_price' => (string)$product?->product_price,
                     'discount_price' => (string)$product?->discount_price,

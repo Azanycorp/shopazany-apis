@@ -113,6 +113,7 @@ class PaystackService
 
                 $user = User::findOrFail($userId);
                 $address = $paymentData['metadata']['shipping_address'];
+                $userShippingId = $paymentData['metadata']['user_shipping_address_id'];
                 $orderNo = self::orderNo();
 
                 $payment = Payment::create([
@@ -172,7 +173,7 @@ class PaystackService
                     $product->decrement('current_stock_quantity', $item['product_quantity']);
                 }
 
-                if (!empty($address)) {
+                if ($userShippingId === 0) {
                     UserShippingAddress::create([
                         'user_id' => $userId,
                         'first_name' => $address['first_name'],
