@@ -3,7 +3,6 @@
 namespace App\Actions;
 
 use App\Models\UserLog;
-use Carbon\Carbon;
 use Jenssegers\Agent\Agent;
 
 class UserLogAction
@@ -44,7 +43,7 @@ class UserLogAction
                 ]),
                 'request' => $this->request->getContent(),
                 'response' => $this->response->getContent(),
-                'performed_at' => Carbon::now()
+                'performed_at' => now()
             ]);
         } catch (\Throwable $th) {
             throw $th;

@@ -14,8 +14,6 @@ class SellerProductResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $this->load('productimages');
-
         return [
             'id' => (int)$this->id,
             'name' => (string)$this->name,
@@ -49,6 +47,8 @@ class SellerProductResource extends JsonResource
                     ];
                 })->toArray();
             }),
+            'currency' => $this->shopCountry?->currency,
+            'country_id' => (int)$this->country_id,
             'status' => (string)$this->status
         ];
     }

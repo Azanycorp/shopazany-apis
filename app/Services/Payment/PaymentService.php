@@ -19,6 +19,10 @@ class PaymentService
 
     public function processPayment($request)
     {
+        if($request->input('currency') === 'USD') {
+            return $this->error(null, 'Currrency not available at the moment', 400);
+        }
+
         $user = User::findOrFail($request->user_id);
 
         $amount = $request->input('amount') * 100;
@@ -48,7 +52,7 @@ class PaymentService
         $paymentDetails = [
             'email' => $request->input('email'),
             'amount' => $amount,
-            'currency' => 'NGN',
+            'currency' => $request->input('currency'),
             'metadata' => json_encode([
                 'user_id' => $request->input('user_id'),
                 'shipping_address' => $address,

@@ -45,6 +45,8 @@ class SingleProductResource extends JsonResource
             'current_stock_quantity' => (string)$this->current_stock_quantity,
             'minimum_order_quantity' => (string)$this->minimum_order_quantity,
             'front_image' => (string)$this->image,
+            'currency' => $this->shopCountry?->currency,
+            'country_id' => (int)$this->country_id,
             'images' => $this->whenLoaded('productimages', function () {
                 return $this->productimages->map(function ($image) {
                     return [

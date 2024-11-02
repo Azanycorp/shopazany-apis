@@ -36,11 +36,12 @@ class HomeService
             'products.price',
             'products.description',
             'products.category_id',
+            'products.country_id',
             DB::raw('COUNT(orders.id) as total_orders'))
             ->leftJoin('orders', 'orders.product_id', '=', 'products.id')
             ->where('orders.status', OrderStatus::DELIVERED)
             ->groupBy('products.id', 'products.name', 'products.price', 'products.slug', 'products.image', 'products.description',
-            'products.category_id')
+            'products.category_id', 'products.country_id')
             ->orderBy('total_orders', 'DESC')
             ->take(10);
 
@@ -50,6 +51,11 @@ class HomeService
 
         $products = $query->get();
 
+        $products->each(function ($product) {
+            $product->currency = $product->shopCountry->currency ?? null;
+            unset($product->shopCountry);
+        });
+
         return $this->success($products, "Best selling products");
     }
 
@@ -57,7 +63,8 @@ class HomeService
     {
         $countryId = request()->query('country_id');
 
-        $query = Product::where('status', ProductStatus::ACTIVE);
+        $query = Product::with(['shopCountry', 'productimages', 'category', 'subCategory'])
+            ->where('status', ProductStatus::ACTIVE);
 
         if ($countryId) {
             $query->where('country_id', $countryId);
@@ -132,6 +139,7 @@ class HomeService
             'size',
             'productReviews.user',
             'productimages',
+            'shopCountry',
             'user.userCountry' => function($query) {
                 $query->with('shopCountry:country_id,flag');
             }
@@ -203,11 +211,19 @@ class HomeService
     public function recommendedProducts()
     {
         $products = Product::where('status', ProductStatus::ACTIVE)
-        ->select(['id', 'name', 'slug', 'description', 'discount_price', 'price', 'image'])
+        ->select(['id', 'name', 'slug', 'description', 'discount_price', 'price', 'image', 'country_id'])
+        ->with(['shopCountry' => function ($query) {
+            $query->select('country_id', 'currency');
+        }])
         ->take(50)
         ->get()
         ->shuffle()
         ->take(6);
+
+        $products->each(function ($product) {
+            $product->currency = $product->shopCountry->currency ?? null;
+            unset($product->shopCountry);
+        });
 
         return $this->success($products, "Recommended products");
     }
