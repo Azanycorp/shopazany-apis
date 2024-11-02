@@ -19,9 +19,8 @@ class PaymentService
 
     public function processPayment($request)
     {
-
         if($request->input('currency') === 'USD') {
-            return $this->error(null, 'Currrency not available at the moment');
+            return $this->error(null, 'Currrency not available at the moment', 400);
         }
 
         $user = User::findOrFail($request->user_id);
