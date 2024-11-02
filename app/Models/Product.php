@@ -66,6 +66,11 @@ class Product extends Model
         return $this->belongsTo(Country::class, 'country_id');
     }
 
+    public function shopCountry(): BelongsTo
+    {
+        return $this->belongsTo(ShopCountry::class, 'country_id', 'country_id');
+    }
+
     public function wishlists()
     {
         return $this->hasMany(Wishlist::class, 'product_id');

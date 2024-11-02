@@ -57,7 +57,8 @@ class HomeService
     {
         $countryId = request()->query('country_id');
 
-        $query = Product::where('status', ProductStatus::ACTIVE);
+        $query = Product::with(['shopCountry', 'productimages', 'category', 'subCategory'])
+            ->where('status', ProductStatus::ACTIVE);
 
         if ($countryId) {
             $query->where('country_id', $countryId);

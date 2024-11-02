@@ -8,7 +8,6 @@ use App\Models\Product;
 use App\Trait\HttpResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 
 class CartService
 {
@@ -33,7 +32,7 @@ class CartService
         $product = Product::findOrFail($request->product_id);
 
         if($quantity > $product->minimum_order_quantity) {
-            return $this->error(null, 'You have exceeded the minimum order quantity', 400);
+            return $this->error(null, "You can only order a maximum of {$product->minimum_order_quantity} of this product.", 400);
         }
 
         Cart::updateOrCreate([
