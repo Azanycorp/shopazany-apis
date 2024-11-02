@@ -23,24 +23,26 @@ class PaymentService
             return $this->error(null, 'Currrency not available at the moment', 400);
         }
 
-        $user = User::findOrFail($request->user_id);
+        $user = User::findOrFail($request->input('user_id'));
 
         $amount = $request->input('amount') * 100;
-        $user_shipping = $request->input('user_shipping_address_id');
+        $userShippingId = $request->input('user_shipping_address_id');
+        $address = null;
 
-        if (!$user_shipping) {
+        if ($userShippingId === 0 && $request->input('shipping_address')) {
+            $shippingAddress = $request->input('shipping_address');
             $address = (object) [
-                'first_name' => $request->shipping_address['first_name'],
-                'last_name' => $request->shipping_address['last_name'],
-                'email' => $request->shipping_address['email'],
-                'phone' => $request->shipping_address['phone'],
-                'street_address' => $request->shipping_address['street_address'],
-                'state' => $request->shipping_address['state'],
-                'city' => $request->shipping_address['city'],
-                'zip' => $request->shipping_address['zip'],
+                'first_name' => $shippingAddress['first_name'] ?? '',
+                'last_name' => $shippingAddress['last_name'] ?? '',
+                'email' => $shippingAddress['email'] ?? '',
+                'phone' => $shippingAddress['phone'] ?? '',
+                'street_address' => $shippingAddress['street_address'] ?? '',
+                'state' => $shippingAddress['state'] ?? '',
+                'city' => $shippingAddress['city'] ?? '',
+                'zip' => $shippingAddress['zip'] ?? '',
             ];
         } else {
-            $addr = $user->userShippingAddress()->where('id', $user_shipping)->first();
+            $addr = $user->userShippingAddress()->where('id', $userShippingId)->first();
             $address = $addr;
         }
 
@@ -56,6 +58,7 @@ class PaymentService
             'metadata' => json_encode([
                 'user_id' => $request->input('user_id'),
                 'shipping_address' => $address,
+                'user_shipping_address_id' => $userShippingId,
                 'items' => $request->input('items'),
                 'payment_method' => $request->input('payment_method'),
                 'payment_type' => PaymentType::USERORDER,
@@ -63,8 +66,12 @@ class PaymentService
             'callback_url' => $request->input('payment_redirect_url')
         ];
 
-        $paystackInstance = Paystack::getAuthorizationUrl($paymentDetails);
-        return response()->json($paystackInstance);
+        try {
+            $paystackInstance = Paystack::getAuthorizationUrl($paymentDetails);
+            return response()->json($paystackInstance);
+        } catch (\Exception $e) {
+            return $this->error(null, 'Payment processing failed, please try again later');
+        }
     }
 
     public function webhook($request)

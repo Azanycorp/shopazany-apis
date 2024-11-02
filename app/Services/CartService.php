@@ -63,7 +63,8 @@ class CartService
             'product.color',
             'product.size',
             'product.unit',
-            'product.brand'
+            'product.brand',
+            'product.shopCountry',
         ]);
 
         if (Auth::check()) {

@@ -47,6 +47,8 @@ class CartResource extends JsonResource
             'size' => optional($this->product->size)->name,
             'unit' => optional($this->product->unit)->name,
             'brand' => optional($this->product->brand)->name,
+            'country_id' => (int)optional($this->product)->country_id,
+            'currency' => optional($this->product->shopCountry)->currency,
         ];
     }
 
