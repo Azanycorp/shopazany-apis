@@ -12,7 +12,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        DB::statement("ALTER TABLE products MODIFY COLUMN status ENUM('active', 'pending', 'out-of-stock', 'deleted') NOT NULL");
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE products MODIFY COLUMN status ENUM('active', 'pending', 'out-of-stock', 'deleted') NOT NULL");
+        }
     }
 
     /**
@@ -20,6 +22,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        DB::statement("ALTER TABLE products MODIFY COLUMN status ENUM('active', 'pending', 'out-of-stock') NOT NULL");
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE products MODIFY COLUMN status ENUM('active', 'pending', 'out-of-stock') NOT NULL");
+        }
     }
 };

@@ -192,7 +192,7 @@ abstract class Controller
             'two_factor_enabled' => $user->two_factor_enabled === 1 ? true : false,
             'token' => $token->plainTextToken,
             'expires_at' => $token->accessToken->expires_at,
-        ]);
+        ], 'Login successful.');
 
         logUserAction($request, $action, $description, $response, $user);
 
