@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
+use App\Enum\SubscriptionType;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Notifications\Notifiable;
@@ -78,6 +79,34 @@ class User extends Authenticatable
         return self::with(['userbusinessinfo', 'products', 'userOrders', 'sellerOrders'])
         ->where('id', $id)
         ->first();
+    }
+
+    public function getIsSubscribedAttribute()
+    {
+        return $this->userSubscriptions()
+            ->where('status', SubscriptionType::ACTIVE)
+            ->exists();
+    }
+
+    public function getSubscriptionHistoryAttribute()
+    {
+        return $this->userSubscriptions()->where('status', SubscriptionType::ACTIVE)->get();
+    }
+
+    public function getSubscriptionPlanAttribute()
+    {
+        if (!array_key_exists('subscription_plan', $this->attributes)) {
+            $this->attributes['subscription_plan'] = $this->userSubscriptions()
+                ->where('status', SubscriptionType::ACTIVE)
+                ->first();
+        }
+
+        return $this->attributes['subscription_plan'];
+    }
+
+    public function getFullNameAttribute()
+    {
+        return "{$this->first_name} {$this->last_name}";
     }
 
 }

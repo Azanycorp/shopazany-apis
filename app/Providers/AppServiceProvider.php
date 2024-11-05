@@ -2,12 +2,15 @@
 
 namespace App\Providers;
 
+use App\Contracts\B2BRepositoryInterface;
 use App\Models\User;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use Laravel\Sanctum\Sanctum;
 use App\Observers\UserObserver;
 use App\Observers\OrderObserver;
+use App\Repositories\B2BProductRepository;
+use App\Repositories\B2BSellerShippingRepository;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Cache\RateLimiting\Limit;
 use Laravel\Sanctum\PersonalAccessToken;
@@ -21,7 +24,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(B2BRepositoryInterface::class, B2BProductRepository::class);
+        $this->app->bind(B2BRepositoryInterface::class, B2BSellerShippingRepository::class);
     }
 
     /**

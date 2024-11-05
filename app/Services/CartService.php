@@ -4,10 +4,10 @@ namespace App\Services;
 
 use App\Http\Resources\CartResource;
 use App\Models\Cart;
+use App\Models\Product;
 use App\Trait\HttpResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 
 class CartService
 {
@@ -26,7 +26,13 @@ class CartService
         $quantity = $request->quantity;
 
         if($quantity <= 0){
-            return $this->error(null, 'Quantity should be 1 or more.');
+            return $this->error(null, 'Quantity should be 1 or more.', 403);
+        }
+
+        $product = Product::findOrFail($request->product_id);
+
+        if($quantity > $product->minimum_order_quantity) {
+            return $this->error(null, "You can only order a maximum of {$product->minimum_order_quantity} of this product.", 400);
         }
 
         Cart::updateOrCreate([
@@ -34,7 +40,7 @@ class CartService
             'session_id' => $sessionId,
             'product_id' => $request->product_id,
         ], [
-            'quantity' => DB::raw('quantity + ' . $quantity),
+            'quantity' => $quantity,
         ]);
 
         return $this->success(null, "Item added to cart");
@@ -50,15 +56,24 @@ class CartService
 
         $sessionId = session('cart_id');
 
+        $cartItemsQuery = Cart::with([
+            'product.user',
+            'product.category',
+            'product.subCategory',
+            'product.color',
+            'product.size',
+            'product.unit',
+            'product.brand',
+            'product.shopCountry',
+        ]);
+
         if (Auth::check()) {
-            $cartItems = Cart::with('product.user')
-            ->where('user_id', $userId)
-            ->get();
+            $cartItemsQuery->where('user_id', $userId);
         } else {
-            $cartItems = Cart::with('product.user')
-            ->where('session_id', $sessionId)
-            ->get();
+            $cartItemsQuery->where('session_id', $sessionId);
         }
+
+        $cartItems = $cartItemsQuery->get();
 
         $localItems = $cartItems->filter(function ($cartItem) {
             return $cartItem->product->country_id == 160;
@@ -68,13 +83,8 @@ class CartService
             return $cartItem->product->country_id != 160;
         });
 
-        $totalLocalPrice = $localItems->sum(function ($item) {
-            return ($item->product?->price) * $item->quantity;
-        });
-
-        $totalInternationalPrice = $internationalItems->sum(function ($item) {
-            return ($item->product?->price) * $item->quantity;
-        });
+        $totalLocalPrice = $localItems->sum(fn($item) => optional($item->product)->price * $item->quantity);
+        $totalInternationalPrice = $internationalItems->sum(fn($item) => optional($item->product)->price * $item->quantity);
 
         return $this->success([
             'local_items' => CartResource::collection($localItems),
@@ -128,10 +138,22 @@ class CartService
             return $this->error(null, 'Unauthorized action.', 401);
         }
 
-        $productId = $request->input('product_id');
-        $quantity = $request->input('quantity');
+        $productId = $request->product_id;
+        $quantity = $request->quantity;
 
-        $cartItem = Cart::where('product_id', $productId)->firstOrFail();
+        if($quantity <= 0) {
+            return $this->error(null, 'Quantity should be 1 or more.', 403);
+        }
+
+        $product = Product::findOrFail($request->product_id);
+
+        if($quantity > $product->minimum_order_quantity) {
+            return $this->error(null, 'You have exceeded the minimum order quantity', 400);
+        }
+
+        $cartItem = Cart::where('user_id', $currentUserId)
+        ->where('product_id', $productId)
+        ->firstOrFail();
         $cartItem->update(['quantity' => $quantity]);
 
         return $this->success(null, 'Cart quantity updated successfully');

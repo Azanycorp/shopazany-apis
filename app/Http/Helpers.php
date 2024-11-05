@@ -266,8 +266,7 @@ if(!function_exists('generate_referral_code')) {
 }
 
 if(!function_exists('generate_referrer_link')) {
-    function generate_referrer_link($referrer_code)
-    {
+    function generate_referrer_link($referrer_code) {
         if(App::environment('production')) {
             $url = config('services.frontend_baseurl') . '/register?referrer=' . $referrer_code;
         } else {
@@ -296,7 +295,48 @@ if (!function_exists('generateRandomString')) {
     }
 }
 
+if (!function_exists('abbreviateNumber')) {
+    function abbreviateNumber($number)
+    {
+        if ($number >= 1000000000) {
+            return number_format($number / 1000000000, 1) . 'B';
+        } elseif ($number >= 1000000) {
+            return number_format($number / 1000000, 1) . 'M';
+        } elseif ($number >= 1000) {
+            return number_format($number / 1000, 1) . 'K';
+        }
 
+        return $number;
+    }
+}
+
+if (!function_exists('folderName')) {
+    function folderName($name) {
+        $environment = App::environment();
+        return match ($environment) {
+            'production' => "/prod/{$name}",
+            'staging', 'local' => "/stag/{$name}",
+            default => null,
+        };
+    }
+}
+
+if (!function_exists('folderNames')) {
+    function folderNames($folderName, $user, $subFolder) {
+        if(App::environment('production')) {
+            $folder = "/prod/{$folderName}/{$user}";
+            $frontImage = "/prod/{$folderName}/{$user}/{$subFolder}";
+        } elseif(App::environment(['staging', 'local'])) {
+            $folder = "/stag/{$folderName}/{$user}";
+            $frontImage = "/stag/{$folderName}/{$user}/{$subFolder}";
+        }
+
+        return (object)[
+            'folder' => $folder,
+            'frontImage' => $frontImage
+        ];
+    }
+}
 
 
 

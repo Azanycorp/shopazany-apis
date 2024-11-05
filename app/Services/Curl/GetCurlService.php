@@ -6,12 +6,14 @@ use Exception;
 
 class GetCurlService
 {
+    protected $baseUrl;
     protected $refrence;
     private static $secret_key;
 
     public function __construct($refrence)
     {
         $this->refrence = $refrence;
+        $this->baseUrl = config('paystack.paymentUrl');
 
         if (config('services.paystack.mode') == 'live') {
             self::$secret_key = config('services.paystack.live_sk');
@@ -23,9 +25,9 @@ class GetCurlService
     public function run()
     {
         $curl = curl_init();
-  
+
         curl_setopt_array($curl, array(
-            CURLOPT_URL => "https://api.paystack.co/transaction/verify/".$this->refrence,
+            CURLOPT_URL => $this->baseUrl . "/transaction/verify/" . $this->refrence,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING => "",
             CURLOPT_MAXREDIRS => 10,
@@ -37,7 +39,7 @@ class GetCurlService
             "Cache-Control: no-cache",
             ),
         ));
-        
+
         $response = curl_exec($curl);
         $err = curl_error($curl);
         curl_close($curl);

@@ -353,7 +353,8 @@ class CustomerService
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $user = User::with('reedemPoints')->findOrFail($request->user_id);
+        $user = User::with('reedemPoints')
+        ->findOrFail($request->user_id);
 
         $user->reedemPoints()->create([
             'name' => $request->name,

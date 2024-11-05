@@ -91,4 +91,9 @@ class ApiController extends Controller
     {
         return $this->service->referralGenerate();
     }
+
+    public function adminProfile()
+    {
+        return $this->service->adminProfile();
+    }
 }

@@ -36,9 +36,14 @@ class AdminCustomerController extends Controller
         return $this->service->banCustomer($request);
     }
 
-    public function removeCustomer($id)
+    public function removeCustomer(Request $request)
     {
-        return $this->service->removeCustomer($id);
+        $request->validate([
+            'user_ids' => 'required|array',
+            'user_ids.*' => 'exists:users,id',
+        ]);
+        
+        return $this->service->removeCustomer($request);
     }
 
     public function filter()
@@ -49,7 +54,13 @@ class AdminCustomerController extends Controller
     public function addCustomer(Request $request)
     {
         $request->validate([
-            'status' => [Rule::in(array_column(UserStatus::cases(), 'value'))],
+            'status' => [Rule::in([
+                UserStatus::ACTIVE,
+                UserStatus::BLOCKED,
+                UserStatus::DELETED,
+                UserStatus::PENDING,
+                UserStatus::SUSPENDED
+            ])],
         ]);
 
         return $this->service->addCustomer($request);
@@ -58,7 +69,13 @@ class AdminCustomerController extends Controller
     public function editCustomer(Request $request)
     {
         $request->validate([
-            'status' => [Rule::in(array_column(UserStatus::cases(), 'value'))],
+            'status' => [Rule::in([
+                UserStatus::ACTIVE,
+                UserStatus::BLOCKED,
+                UserStatus::DELETED,
+                UserStatus::PENDING,
+                UserStatus::SUSPENDED
+            ])],
         ]);
 
         return $this->service->editCustomer($request);
