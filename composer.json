@@ -7,9 +7,9 @@
     "require": {
         "php": "^8.2",
         "jenssegers/agent": "^2.6",
-        "laravel/framework": "^11.30.0",
+        "laravel/framework": "^11.31.0",
         "laravel/sanctum": "^4.0",
-        "laravel/tinker": "^2.9",
+        "laravel/tinker": "^2.10",
         "league/flysystem-aws-s3-v3": "^3.0",
         "maatwebsite/excel": "^3.1",
         "unicodeveloper/laravel-paystack": "^1.2"
