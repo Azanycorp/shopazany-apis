@@ -27,13 +27,15 @@ class Product extends Model
         'product_price',
         'discount_price',
         'price',
+        'usd_price',
+        'default_currency',
         'current_stock_quantity',
         'minimum_order_quantity',
         'image',
         'added_by',
         'country_id',
         'is_featured',
-        'status'
+        'status',
     ];
 
     public function user(): BelongsTo

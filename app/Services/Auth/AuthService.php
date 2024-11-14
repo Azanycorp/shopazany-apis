@@ -9,6 +9,7 @@ use App\Enum\UserType;
 use App\Http\Controllers\Controller;
 use App\Mail\SignUpVerifyMail;
 use App\Mail\UserWelcomeMail;
+use App\Models\Country;
 use App\Models\User;
 use App\Trait\HttpResponse;
 use Carbon\Carbon;
@@ -155,6 +156,12 @@ class AuthService extends Controller
         $request->validated($request->all());
         $user = null;
 
+        $currencyCode = 'NGN';
+        if($request->country_id) {
+            $country = Country::findOrFail($request->country_id);
+            $currencyCode = getCurrencyCode($country->sortname);
+        }
+
         try {
             $code = generateVerificationCode();
 
@@ -167,6 +174,7 @@ class AuthService extends Controller
                 'country' => $request->country_id,
                 'state_id' => $request->state_id,
                 'type' => UserType::SELLER,
+                'default_currency' => $currencyCode,
                 'email_verified_at' => null,
                 'verification_code' => $code,
                 'is_verified' => 0,
