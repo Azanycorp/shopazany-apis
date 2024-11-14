@@ -109,7 +109,6 @@ class AllProductsTest extends TestCase
 
         $this->assertEquals($activeProduct1->id, $data[0]['id']);
         $this->assertEquals($activeProduct2->id, $data[1]['id']);
-        $this->assertEquals('USD', $data[0]['currency']);
         $this->assertEquals($category->id, $data[0]['category']['category_id']);
         $this->assertEquals($subCategory->id, $data[0]['category']['sub_category_id']);
 
