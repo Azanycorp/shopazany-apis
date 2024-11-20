@@ -162,8 +162,8 @@ class AdminService
 
     public function getShopByCountry()
     {
-        $shopbycountries = ShopCountry::get();
-        $data = ShopCountryResource::collection($shopbycountries);
+        $shopByCountries = ShopCountry::orderBy('name', 'asc')->get();
+        $data = ShopCountryResource::collection($shopByCountries);
 
         return $this->success($data, "List");
     }
