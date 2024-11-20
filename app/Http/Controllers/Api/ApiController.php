@@ -70,7 +70,7 @@ class ApiController extends Controller
     public function shopByCountry(Request $request)
     {
         $request->validate([
-            'country_id' => ['required', 'integer', 'exists:countries,id'],
+            'country_id' => ['required', 'integer', 'exists:shop_countries,country_id'],
             'flag' => ['required', 'mimes:png,jpg,jpeg,svg']
         ]);
 
