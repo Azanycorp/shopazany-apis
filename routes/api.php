@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\ApiController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\B2BBuyerController;
 use App\Http\Controllers\Api\B2BController;
 use App\Http\Controllers\Api\B2BSellerController;
 use App\Http\Controllers\Api\CartController;
@@ -230,4 +231,10 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function () {
             Route::delete('/delete/{user_id}/{shipping_id}', 'deleteShipping');
         });
     });
+
+    // Buyer
+    Route::group(['middleware' => 'buyer.auth', 'prefix' => 'buyer', 'controller' => B2BBuyerController::class], function () {
+        Route::post('request/refund', 'requestRefund');
+    });
+
 });
