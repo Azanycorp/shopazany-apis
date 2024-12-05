@@ -9,6 +9,7 @@ use App\Http\Requests\LoginRequest;
 use App\Services\B2B\Auth\AuthService;
 use App\Services\B2B\SellerService;
 use Illuminate\Http\Request;
+use App\Http\Requests\B2B\BuyerOnboardingRequest;
 
 class B2BController extends Controller
 {
@@ -55,7 +56,7 @@ class B2BController extends Controller
         return $this->sellerService->businessInformation($request);
     }
     
-    public function buyerOnboarding(Request $request)
+    public function buyerOnboarding(BuyerOnboardingRequest $request)
     {
         return $this->service->buyerOnboarding($request);
     }
