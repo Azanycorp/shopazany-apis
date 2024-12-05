@@ -40,7 +40,7 @@ class AdminSellerController extends Controller
         $request->validate([
             'first_name' => ['string', 'max:255'],
             'last_name' => ['string', 'max:255'],
-            'email_address' => ['email', 'email:rfc,dns', 'unique:users,email'],
+            'email_address' => ['email', 'email:rfc,dns'],
             'phone_number' => ['string'],
             'password' => ['string', 'confirmed', Password::defaults()],
         ]);
@@ -65,6 +65,16 @@ class AdminSellerController extends Controller
     public function paymentHistory($id)
     {
         return $this->service->paymentHistory($id);
+    }
+
+    public function bulkRemove(Request $request)
+    {
+        $request->validate([
+            'user_ids' => 'required|array',
+            'user_ids.*' => 'exists:users,id',
+        ]);
+
+        return $this->service->bulkRemove($request);
     }
 
 }

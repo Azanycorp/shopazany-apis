@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enum\TransactionStatus;
 use App\Models\Transaction;
 
 class TransactionService
@@ -27,7 +28,7 @@ class TransactionService
                 'type' => $this->type,
                 'date' => now(),
                 'amount' => $this->amount,
-                'status' => 'pending'
+                'status' => TransactionStatus::PENDING,
             ]);
 
         } catch (\Throwable $th) {
