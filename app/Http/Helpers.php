@@ -81,19 +81,35 @@ if (!function_exists('getSliderImages')) {
 }
 
 if(!function_exists('getImportTemplate')){
-    function getImportTemplate()
-    {
-        if (App::environment('production')){
+  function getImportTemplate()
+  {
+    if (App::environment('production')){
 
-            $data = "https://azany-uploads.s3.amazonaws.com/prod/product-template/product-template.xlsx";
+      $data = "https://azany-uploads.s3.amazonaws.com/prod/product-template/product-template.xlsx";
 
-        } elseif (App::environment(['local', 'staging'])) {
+    } elseif (App::environment(['local', 'staging'])) {
 
-            $data = "https://azany-uploads.s3.amazonaws.com/stag/product-template/product-template.xlsx";
-        }
-
-        return $data;
+      $data = "https://azany-uploads.s3.amazonaws.com/stag/product-template/product-template.xlsx";
     }
+
+    return $data;
+  }
+}
+
+if(!function_exists('getB2BProductTemplate')){
+  function getB2BProductTemplate()
+  {
+    if (App::environment('production')){
+
+      $data = "https://azany-uploads.s3.us-east-1.amazonaws.com/prod/product-template/b2b/seller-product-template.xlsx";
+
+    } elseif (App::environment(['local', 'staging'])) {
+
+      $data = "https://azany-uploads.s3.us-east-1.amazonaws.com/prod/product-template/b2b/seller-product-template.xlsx";
+    }
+
+    return $data;
+  }
 }
 
 if(!function_exists('getRelativePath')){

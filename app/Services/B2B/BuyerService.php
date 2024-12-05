@@ -2,7 +2,9 @@
 
 namespace App\Services\B2B;
 
+use App\Enum\ProductStatus;
 use App\Enum\RefundRequestStatus;
+use App\Models\B2BProduct;
 use App\Models\B2BRequestRefund;
 use App\Trait\HttpResponse;
 
@@ -26,6 +28,16 @@ class BuyerService
         ]);
 
         return $this->success(null, 'Request sent successful', 201);
+    }
+
+    public function getProducts()
+    {
+        $products = B2BProduct::where('status', ProductStatus::ACTIVE)
+            ->get();
+
+        $data = B2BProductResource::collection($products);
+
+        return $this->success($data, 'Products');
     }
 }
 

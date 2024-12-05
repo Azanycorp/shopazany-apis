@@ -2,6 +2,7 @@
 
 namespace App\Services\B2B;
 
+use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\B2BProduct;
 use App\Trait\HttpResponse;
@@ -15,7 +16,7 @@ use App\Models\B2BSellerShippingAddress;
 use App\Repositories\B2BProductRepository;
 use App\Repositories\B2BSellerShippingRepository;
 
-class SellerService
+class SellerService extends Controller
 {
     use HttpResponse;
 
@@ -455,6 +456,104 @@ class SellerService
         ]);
 
         return $this->success(null, 'Set successfully');
+    }
+
+    public function getComplaints($user_id)
+    {
+        $user = User::with(['b2bProducts.b2bRequestRefunds'])->findOrFail($user_id);
+
+        $refunds = $user->b2bProducts->flatMap(function ($product) {
+            return $product->b2bRequestRefunds;
+        });
+
+        if ($complaintNumber = request()->query('complaint_number')) {
+            $refunds = $refunds->where('complaint_number', $complaintNumber);
+        }
+
+        if ($type = request()->query('type')) {
+            $refunds = $refunds->where('type', $type);
+        }
+
+        if ($status = request()->query('status')) {
+            $refunds = $refunds->where('status', $status);
+        }
+
+        if ($fromDate = request()->query('from') && $toDate = request()->query('to')) {
+            $refunds = $refunds->whereBetween('created_at', [$fromDate, $toDate]);
+        }
+
+        if ($orderNo = request()->query('order_number')) {
+            $refunds = $refunds->where('order_number', $orderNo);
+        }
+
+        return $refunds;
+    }
+
+    public function getTemplate()
+    {
+        $data = getB2BProductTemplate();
+
+        return $this->success($data, "Product template");
+    }
+
+    public function productImport($request)
+    {
+        $currentUserId = Auth::id();
+
+        if ($currentUserId != $request->user_id) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+
+        $seller = auth()->user();
+
+        try {
+            Excel::import(new ProductImport($seller), $request->file('file'));
+
+            return $this->success(null, "Imported successfully");
+        } catch (\Exception $e) {
+            return $this->error(null, $e->getMessage(), 500);
+        }
+    }
+
+    public function export($userId, $type)
+    {
+        $currentUserId = Auth::id();
+
+        if ($currentUserId != $userId) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+
+        switch ($type) {
+            case 'product':
+                return $this->b2bExportProduct($userId);
+                break;
+
+            case 'order':
+                return "None yet";
+                break;
+
+            default:
+                return "Type not found";
+                break;
+        }
+    }
+
+    public function getEarningReport($userId)
+    {
+        $currentUserId = Auth::id();
+
+        if ($currentUserId != $userId) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+
+        $data = (object) [
+            'total_sales_alltime' => 0,
+            'sales_this_month' => 0,
+            'total_payout' => 0,
+            'payout_this_month' => 0,
+            'total_category' => 0,
+            'total_brand' => 0,
+        ];
     }
 }
 
