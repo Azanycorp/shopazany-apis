@@ -192,7 +192,6 @@ Route::middleware(['throttle:apis'])->group(function () {
         Route::post('/login', 'login');
         Route::post('/login/verify', 'loginVerify');
         Route::post('/seller/signup', 'signup');
-        Route::post('/buyer/signup', 'buyerSignup');
         Route::post('/forgot/password', 'forgot');
         Route::post('/reset/password', 'reset');
         Route::post('/signup/resend', 'resendCode');
