@@ -204,6 +204,8 @@ Route::middleware(['throttle:apis'])->group(function () {
 
     Route::prefix('b2b')->controller(B2BController::class)->group(function () {
         Route::post('/business/information', 'businessInformation');
+        Route::get('/products', 'getProducts');
+        Route::get('/product/{slug}', 'getProductDetail');
     });
 });
 
@@ -245,7 +247,7 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function () {
     Route::group(['middleware' => 'buyer.auth', 'prefix' => 'buyer', 'controller' => B2BBuyerController::class], function () {
         Route::post('request/refund', 'requestRefund');
 
-        Route::get('/products', 'getProducts');
+
     });
 
 });

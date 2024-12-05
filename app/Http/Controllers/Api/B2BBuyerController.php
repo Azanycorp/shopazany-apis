@@ -19,9 +19,4 @@ class B2BBuyerController extends Controller
     {
         return $this->buyerService->requestRefund($request);
     }
-
-    public function getProducts()
-    {
-        return $this->buyerService->getProducts();
-    }
 }
