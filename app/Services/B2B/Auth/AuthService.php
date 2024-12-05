@@ -24,6 +24,7 @@ class AuthService
     public function signup($request)
     {
         $request->validated($request->all());
+        $user = null;
 
         try {
             
@@ -127,6 +128,8 @@ class AuthService
     
     public function buyerOnboarding($request)
     {
+        $user = null;
+        
         try {
             $code = generateVerificationCode();
             
