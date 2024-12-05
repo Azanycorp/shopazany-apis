@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\AuthGates;
+use App\Http\Middleware\BuyerAuthMiddleware;
 use App\Http\Middleware\CheckWalletBalance;
 use App\Http\Middleware\SellerAuthMiddleware;
 use Illuminate\Foundation\Application;
@@ -28,6 +29,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'check.wallet' => CheckWalletBalance::class,
             'seller.auth' => SellerAuthMiddleware::class,
+            'buyer.auth' => BuyerAuthMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

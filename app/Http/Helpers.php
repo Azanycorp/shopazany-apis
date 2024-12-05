@@ -1,6 +1,7 @@
 <?php
 
 use App\Actions\UserLogAction;
+use App\Models\B2BRequestRefund;
 use App\Models\Upload;
 use App\Models\Language;
 use App\Models\Transaction;
@@ -80,19 +81,35 @@ if (!function_exists('getSliderImages')) {
 }
 
 if(!function_exists('getImportTemplate')){
-    function getImportTemplate()
-    {
-        if (App::environment('production')){
+  function getImportTemplate()
+  {
+    if (App::environment('production')){
 
-            $data = "https://azany-uploads.s3.amazonaws.com/prod/product-template/product-template.xlsx";
+      $data = "https://azany-uploads.s3.amazonaws.com/prod/product-template/product-template.xlsx";
 
-        } elseif (App::environment(['local', 'staging'])) {
+    } elseif (App::environment(['local', 'staging'])) {
 
-            $data = "https://azany-uploads.s3.amazonaws.com/stag/product-template/product-template.xlsx";
-        }
-
-        return $data;
+      $data = "https://azany-uploads.s3.amazonaws.com/stag/product-template/product-template.xlsx";
     }
+
+    return $data;
+  }
+}
+
+if(!function_exists('getB2BProductTemplate')){
+  function getB2BProductTemplate()
+  {
+    if (App::environment('production')){
+
+      $data = "https://azany-uploads.s3.us-east-1.amazonaws.com/prod/product-template/b2b/seller-product-template.xlsx";
+
+    } elseif (App::environment(['local', 'staging'])) {
+
+      $data = "https://azany-uploads.s3.us-east-1.amazonaws.com/prod/product-template/b2b/seller-product-template.xlsx";
+    }
+
+    return $data;
+  }
 }
 
 if(!function_exists('getRelativePath')){
@@ -429,7 +446,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Pago Pago',
               'continentName' => 'Oceania',
             ],
-            'AT' => 
+            'AT' =>
             [
               'countryName' => 'Austria',
               'currencyCode' => 'EUR',
@@ -437,7 +454,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Vienna',
               'continentName' => 'Europe',
             ],
-            'AU' => 
+            'AU' =>
             [
               'countryName' => 'Australia',
               'currencyCode' => 'AUD',
@@ -445,7 +462,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Canberra',
               'continentName' => 'Oceania',
             ],
-            'AW' => 
+            'AW' =>
             [
               'countryName' => 'Aruba',
               'currencyCode' => 'AWG',
@@ -453,7 +470,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Oranjestad',
               'continentName' => 'North America',
             ],
-            'AX' => 
+            'AX' =>
             [
               'countryName' => 'Åland',
               'currencyCode' => 'EUR',
@@ -461,7 +478,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Mariehamn',
               'continentName' => 'Europe',
             ],
-            'AZ' => 
+            'AZ' =>
             [
               'countryName' => 'Azerbaijan',
               'currencyCode' => 'AZN',
@@ -469,7 +486,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Baku',
               'continentName' => 'Asia',
             ],
-            'BA' => 
+            'BA' =>
             [
               'countryName' => 'Bosnia and Herzegovina',
               'currencyCode' => 'BAM',
@@ -477,7 +494,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Sarajevo',
               'continentName' => 'Europe',
             ],
-            'BB' => 
+            'BB' =>
             [
               'countryName' => 'Barbados',
               'currencyCode' => 'BBD',
@@ -485,7 +502,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Bridgetown',
               'continentName' => 'North America',
             ],
-            'BD' => 
+            'BD' =>
             [
               'countryName' => 'Bangladesh',
               'currencyCode' => 'BDT',
@@ -493,7 +510,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Dhaka',
               'continentName' => 'Asia',
             ],
-            'BE' => 
+            'BE' =>
             [
               'countryName' => 'Belgium',
               'currencyCode' => 'EUR',
@@ -501,7 +518,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Brussels',
               'continentName' => 'Europe',
             ],
-            'BF' => 
+            'BF' =>
             [
               'countryName' => 'Burkina Faso',
               'currencyCode' => 'XOF',
@@ -509,7 +526,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Ouagadougou',
               'continentName' => 'Africa',
             ],
-            'BG' => 
+            'BG' =>
             [
               'countryName' => 'Bulgaria',
               'currencyCode' => 'BGN',
@@ -517,7 +534,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Sofia',
               'continentName' => 'Europe',
             ],
-            'BH' => 
+            'BH' =>
             [
               'countryName' => 'Bahrain',
               'currencyCode' => 'BHD',
@@ -525,7 +542,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Manama',
               'continentName' => 'Asia',
             ],
-            'BI' => 
+            'BI' =>
             [
               'countryName' => 'Burundi',
               'currencyCode' => 'BIF',
@@ -533,7 +550,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Bujumbura',
               'continentName' => 'Africa',
             ],
-            'BJ' => 
+            'BJ' =>
             [
               'countryName' => 'Benin',
               'currencyCode' => 'XOF',
@@ -541,7 +558,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Porto-Novo',
               'continentName' => 'Africa',
             ],
-            'BL' => 
+            'BL' =>
             [
               'countryName' => 'Saint Barthélemy',
               'currencyCode' => 'EUR',
@@ -549,7 +566,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Gustavia',
               'continentName' => 'North America',
             ],
-            'BM' => 
+            'BM' =>
             [
               'countryName' => 'Bermuda',
               'currencyCode' => 'BMD',
@@ -557,7 +574,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Hamilton',
               'continentName' => 'North America',
             ],
-            'BN' => 
+            'BN' =>
             [
               'countryName' => 'Brunei',
               'currencyCode' => 'BND',
@@ -565,7 +582,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Bandar Seri Begawan',
               'continentName' => 'Asia',
             ],
-            'BO' => 
+            'BO' =>
             [
               'countryName' => 'Bolivia',
               'currencyCode' => 'BOB',
@@ -573,7 +590,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Sucre',
               'continentName' => 'South America',
             ],
-            'BQ' => 
+            'BQ' =>
             [
               'countryName' => 'Bonaire',
               'currencyCode' => 'USD',
@@ -581,7 +598,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Kralendijk',
               'continentName' => 'North America',
             ],
-            'BR' => 
+            'BR' =>
             [
               'countryName' => 'Brazil',
               'currencyCode' => 'BRL',
@@ -589,7 +606,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Brasília',
               'continentName' => 'South America',
             ],
-            'BS' => 
+            'BS' =>
             [
               'countryName' => 'Bahamas',
               'currencyCode' => 'BSD',
@@ -597,7 +614,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Nassau',
               'continentName' => 'North America',
             ],
-            'BT' => 
+            'BT' =>
             [
               'countryName' => 'Bhutan',
               'currencyCode' => 'BTN',
@@ -605,7 +622,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Thimphu',
               'continentName' => 'Asia',
             ],
-            'BV' => 
+            'BV' =>
             [
               'countryName' => 'Bouvet Island',
               'currencyCode' => 'NOK',
@@ -613,7 +630,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => '',
               'continentName' => 'Antarctica',
             ],
-            'BW' => 
+            'BW' =>
             [
               'countryName' => 'Botswana',
               'currencyCode' => 'BWP',
@@ -621,7 +638,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Gaborone',
               'continentName' => 'Africa',
             ],
-            'BY' => 
+            'BY' =>
             [
               'countryName' => 'Belarus',
               'currencyCode' => 'BYR',
@@ -629,7 +646,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Minsk',
               'continentName' => 'Europe',
             ],
-            'BZ' => 
+            'BZ' =>
             [
               'countryName' => 'Belize',
               'currencyCode' => 'BZD',
@@ -637,7 +654,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Belmopan',
               'continentName' => 'North America',
             ],
-            'CA' => 
+            'CA' =>
             [
               'countryName' => 'Canada',
               'currencyCode' => 'CAD',
@@ -645,7 +662,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Ottawa',
               'continentName' => 'North America',
             ],
-            'CC' => 
+            'CC' =>
             [
               'countryName' => 'Cocos [Keeling] Islands',
               'currencyCode' => 'AUD',
@@ -653,7 +670,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'West Island',
               'continentName' => 'Asia',
             ],
-            'CD' => 
+            'CD' =>
             [
               'countryName' => 'Democratic Republic of the Congo',
               'currencyCode' => 'CDF',
@@ -661,7 +678,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Kinshasa',
               'continentName' => 'Africa',
             ],
-            'CF' => 
+            'CF' =>
             [
               'countryName' => 'Central African Republic',
               'currencyCode' => 'XAF',
@@ -669,7 +686,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Bangui',
               'continentName' => 'Africa',
             ],
-            'CG' => 
+            'CG' =>
             [
               'countryName' => 'Republic of the Congo',
               'currencyCode' => 'XAF',
@@ -677,7 +694,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Brazzaville',
               'continentName' => 'Africa',
             ],
-            'CH' => 
+            'CH' =>
             [
               'countryName' => 'Switzerland',
               'currencyCode' => 'CHF',
@@ -685,7 +702,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Bern',
               'continentName' => 'Europe',
             ],
-            'CI' => 
+            'CI' =>
             [
               'countryName' => 'Ivory Coast',
               'currencyCode' => 'XOF',
@@ -693,7 +710,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Yamoussoukro',
               'continentName' => 'Africa',
             ],
-            'CK' => 
+            'CK' =>
             [
               'countryName' => 'Cook Islands',
               'currencyCode' => 'NZD',
@@ -701,7 +718,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Avarua',
               'continentName' => 'Oceania',
             ],
-            'CL' => 
+            'CL' =>
             [
               'countryName' => 'Chile',
               'currencyCode' => 'CLP',
@@ -709,7 +726,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Santiago',
               'continentName' => 'South America',
             ],
-            'CM' => 
+            'CM' =>
             [
               'countryName' => 'Cameroon',
               'currencyCode' => 'XAF',
@@ -717,7 +734,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Yaoundé',
               'continentName' => 'Africa',
             ],
-            'CN' => 
+            'CN' =>
             [
               'countryName' => 'China',
               'currencyCode' => 'CNY',
@@ -725,7 +742,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Beijing',
               'continentName' => 'Asia',
             ],
-            'CO' => 
+            'CO' =>
             [
               'countryName' => 'Colombia',
               'currencyCode' => 'COP',
@@ -733,7 +750,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Bogotá',
               'continentName' => 'South America',
             ],
-            'CR' => 
+            'CR' =>
             [
               'countryName' => 'Costa Rica',
               'currencyCode' => 'CRC',
@@ -741,7 +758,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'San José',
               'continentName' => 'North America',
             ],
-            'CU' => 
+            'CU' =>
             [
               'countryName' => 'Cuba',
               'currencyCode' => 'CUP',
@@ -749,7 +766,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Havana',
               'continentName' => 'North America',
             ],
-            'CV' => 
+            'CV' =>
             [
               'countryName' => 'Cape Verde',
               'currencyCode' => 'CVE',
@@ -757,7 +774,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Praia',
               'continentName' => 'Africa',
             ],
-            'CW' => 
+            'CW' =>
             [
               'countryName' => 'Curacao',
               'currencyCode' => 'ANG',
@@ -765,7 +782,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Willemstad',
               'continentName' => 'North America',
             ],
-            'CX' => 
+            'CX' =>
             [
               'countryName' => 'Christmas Island',
               'currencyCode' => 'AUD',
@@ -773,7 +790,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Flying Fish Cove',
               'continentName' => 'Asia',
             ],
-            'CY' => 
+            'CY' =>
             [
               'countryName' => 'Cyprus',
               'currencyCode' => 'EUR',
@@ -781,7 +798,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Nicosia',
               'continentName' => 'Europe',
             ],
-            'CZ' => 
+            'CZ' =>
             [
               'countryName' => 'Czechia',
               'currencyCode' => 'CZK',
@@ -789,7 +806,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Prague',
               'continentName' => 'Europe',
             ],
-            'DE' => 
+            'DE' =>
             [
               'countryName' => 'Germany',
               'currencyCode' => 'EUR',
@@ -797,7 +814,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Berlin',
               'continentName' => 'Europe',
             ],
-            'DJ' => 
+            'DJ' =>
             [
               'countryName' => 'Djibouti',
               'currencyCode' => 'DJF',
@@ -805,7 +822,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Djibouti',
               'continentName' => 'Africa',
             ],
-            'DK' => 
+            'DK' =>
             [
               'countryName' => 'Denmark',
               'currencyCode' => 'DKK',
@@ -813,7 +830,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Copenhagen',
               'continentName' => 'Europe',
             ],
-            'DM' => 
+            'DM' =>
             [
               'countryName' => 'Dominica',
               'currencyCode' => 'XCD',
@@ -821,7 +838,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Roseau',
               'continentName' => 'North America',
             ],
-            'DO' => 
+            'DO' =>
             [
               'countryName' => 'Dominican Republic',
               'currencyCode' => 'DOP',
@@ -829,7 +846,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Santo Domingo',
               'continentName' => 'North America',
             ],
-            'DZ' => 
+            'DZ' =>
             [
               'countryName' => 'Algeria',
               'currencyCode' => 'DZD',
@@ -837,7 +854,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Algiers',
               'continentName' => 'Africa',
             ],
-            'EC' => 
+            'EC' =>
             [
               'countryName' => 'Ecuador',
               'currencyCode' => 'USD',
@@ -845,7 +862,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Quito',
               'continentName' => 'South America',
             ],
-            'EE' => 
+            'EE' =>
             [
               'countryName' => 'Estonia',
               'currencyCode' => 'EUR',
@@ -853,7 +870,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Tallinn',
               'continentName' => 'Europe',
             ],
-            'EG' => 
+            'EG' =>
             [
               'countryName' => 'Egypt',
               'currencyCode' => 'EGP',
@@ -861,7 +878,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Cairo',
               'continentName' => 'Africa',
             ],
-            'EH' => 
+            'EH' =>
             [
               'countryName' => 'Western Sahara',
               'currencyCode' => 'MAD',
@@ -869,7 +886,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Laâyoune / El Aaiún',
               'continentName' => 'Africa',
             ],
-            'ER' => 
+            'ER' =>
             [
               'countryName' => 'Eritrea',
               'currencyCode' => 'ERN',
@@ -877,7 +894,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Asmara',
               'continentName' => 'Africa',
             ],
-            'ES' => 
+            'ES' =>
             [
               'countryName' => 'Spain',
               'currencyCode' => 'EUR',
@@ -885,7 +902,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Madrid',
               'continentName' => 'Europe',
             ],
-            'ET' => 
+            'ET' =>
             [
               'countryName' => 'Ethiopia',
               'currencyCode' => 'ETB',
@@ -893,7 +910,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Addis Ababa',
               'continentName' => 'Africa',
             ],
-            'FI' => 
+            'FI' =>
             [
               'countryName' => 'Finland',
               'currencyCode' => 'EUR',
@@ -901,7 +918,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Helsinki',
               'continentName' => 'Europe',
             ],
-            'FJ' => 
+            'FJ' =>
             [
               'countryName' => 'Fiji',
               'currencyCode' => 'FJD',
@@ -909,7 +926,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Suva',
               'continentName' => 'Oceania',
             ],
-            'FK' => 
+            'FK' =>
             [
               'countryName' => 'Falkland Islands',
               'currencyCode' => 'FKP',
@@ -917,7 +934,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Stanley',
               'continentName' => 'South America',
             ],
-            'FM' => 
+            'FM' =>
             [
               'countryName' => 'Micronesia',
               'currencyCode' => 'USD',
@@ -925,7 +942,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Palikir',
               'continentName' => 'Oceania',
             ],
-            'FO' => 
+            'FO' =>
             [
               'countryName' => 'Faroe Islands',
               'currencyCode' => 'DKK',
@@ -933,7 +950,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Tórshavn',
               'continentName' => 'Europe',
             ],
-            'FR' => 
+            'FR' =>
             [
               'countryName' => 'France',
               'currencyCode' => 'EUR',
@@ -941,7 +958,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Paris',
               'continentName' => 'Europe',
             ],
-            'GA' => 
+            'GA' =>
             [
               'countryName' => 'Gabon',
               'currencyCode' => 'XAF',
@@ -949,7 +966,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Libreville',
               'continentName' => 'Africa',
             ],
-            'GB' => 
+            'GB' =>
             [
               'countryName' => 'United Kingdom',
               'currencyCode' => 'GBP',
@@ -957,7 +974,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'London',
               'continentName' => 'Europe',
             ],
-            'GD' => 
+            'GD' =>
             [
               'countryName' => 'Grenada',
               'currencyCode' => 'XCD',
@@ -965,7 +982,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'St. George\'s',
               'continentName' => 'North America',
             ],
-            'GE' => 
+            'GE' =>
             [
               'countryName' => 'Georgia',
               'currencyCode' => 'GEL',
@@ -973,7 +990,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Tbilisi',
               'continentName' => 'Asia',
             ],
-            'GF' => 
+            'GF' =>
             [
               'countryName' => 'French Guiana',
               'currencyCode' => 'EUR',
@@ -981,7 +998,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Cayenne',
               'continentName' => 'South America',
             ],
-            'GG' => 
+            'GG' =>
             [
               'countryName' => 'Guernsey',
               'currencyCode' => 'GBP',
@@ -989,7 +1006,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'St Peter Port',
               'continentName' => 'Europe',
             ],
-            'GH' => 
+            'GH' =>
             [
               'countryName' => 'Ghana',
               'currencyCode' => 'GHS',
@@ -997,7 +1014,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Accra',
               'continentName' => 'Africa',
             ],
-            'GI' => 
+            'GI' =>
             [
               'countryName' => 'Gibraltar',
               'currencyCode' => 'GIP',
@@ -1005,7 +1022,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Gibraltar',
               'continentName' => 'Europe',
             ],
-            'GL' => 
+            'GL' =>
             [
               'countryName' => 'Greenland',
               'currencyCode' => 'DKK',
@@ -1013,7 +1030,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Nuuk',
               'continentName' => 'North America',
             ],
-            'GM' => 
+            'GM' =>
             [
               'countryName' => 'Gambia',
               'currencyCode' => 'GMD',
@@ -1021,7 +1038,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Bathurst',
               'continentName' => 'Africa',
             ],
-            'GN' => 
+            'GN' =>
             [
               'countryName' => 'Guinea',
               'currencyCode' => 'GNF',
@@ -1029,7 +1046,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Conakry',
               'continentName' => 'Africa',
             ],
-            'GP' => 
+            'GP' =>
             [
               'countryName' => 'Guadeloupe',
               'currencyCode' => 'EUR',
@@ -1037,7 +1054,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Basse-Terre',
               'continentName' => 'North America',
             ],
-            'GQ' => 
+            'GQ' =>
             [
               'countryName' => 'Equatorial Guinea',
               'currencyCode' => 'XAF',
@@ -1045,7 +1062,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Malabo',
               'continentName' => 'Africa',
             ],
-            'GR' => 
+            'GR' =>
             [
               'countryName' => 'Greece',
               'currencyCode' => 'EUR',
@@ -1053,7 +1070,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Athens',
               'continentName' => 'Europe',
             ],
-            'GS' => 
+            'GS' =>
             [
               'countryName' => 'South Georgia and the South Sandwich Islands',
               'currencyCode' => 'GBP',
@@ -1061,7 +1078,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Grytviken',
               'continentName' => 'Antarctica',
             ],
-            'GT' => 
+            'GT' =>
             [
               'countryName' => 'Guatemala',
               'currencyCode' => 'GTQ',
@@ -1069,7 +1086,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Guatemala City',
               'continentName' => 'North America',
             ],
-            'GU' => 
+            'GU' =>
             [
               'countryName' => 'Guam',
               'currencyCode' => 'USD',
@@ -1077,7 +1094,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Hagåtña',
               'continentName' => 'Oceania',
             ],
-            'GW' => 
+            'GW' =>
             [
               'countryName' => 'Guinea-Bissau',
               'currencyCode' => 'XOF',
@@ -1085,7 +1102,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Bissau',
               'continentName' => 'Africa',
             ],
-            'GY' => 
+            'GY' =>
             [
               'countryName' => 'Guyana',
               'currencyCode' => 'GYD',
@@ -1093,7 +1110,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Georgetown',
               'continentName' => 'South America',
             ],
-            'HK' => 
+            'HK' =>
             [
               'countryName' => 'Hong Kong',
               'currencyCode' => 'HKD',
@@ -1101,7 +1118,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Hong Kong',
               'continentName' => 'Asia',
             ],
-            'HM' => 
+            'HM' =>
             [
               'countryName' => 'Heard Island and McDonald Islands',
               'currencyCode' => 'AUD',
@@ -1109,7 +1126,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => '',
               'continentName' => 'Antarctica',
             ],
-            'HN' => 
+            'HN' =>
             [
               'countryName' => 'Honduras',
               'currencyCode' => 'HNL',
@@ -1117,7 +1134,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Tegucigalpa',
               'continentName' => 'North America',
             ],
-            'HR' => 
+            'HR' =>
             [
               'countryName' => 'Croatia',
               'currencyCode' => 'HRK',
@@ -1125,7 +1142,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Zagreb',
               'continentName' => 'Europe',
             ],
-            'HT' => 
+            'HT' =>
             [
               'countryName' => 'Haiti',
               'currencyCode' => 'HTG',
@@ -1133,7 +1150,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Port-au-Prince',
               'continentName' => 'North America',
             ],
-            'HU' => 
+            'HU' =>
             [
               'countryName' => 'Hungary',
               'currencyCode' => 'HUF',
@@ -1141,7 +1158,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Budapest',
               'continentName' => 'Europe',
             ],
-            'ID' => 
+            'ID' =>
             [
               'countryName' => 'Indonesia',
               'currencyCode' => 'IDR',
@@ -1149,7 +1166,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Jakarta',
               'continentName' => 'Asia',
             ],
-            'IE' => 
+            'IE' =>
             [
               'countryName' => 'Ireland',
               'currencyCode' => 'EUR',
@@ -1157,7 +1174,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Dublin',
               'continentName' => 'Europe',
             ],
-            'IL' => 
+            'IL' =>
             [
               'countryName' => 'Israel',
               'currencyCode' => 'ILS',
@@ -1165,7 +1182,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => '',
               'continentName' => 'Asia',
             ],
-            'IM' => 
+            'IM' =>
             [
               'countryName' => 'Isle of Man',
               'currencyCode' => 'GBP',
@@ -1173,7 +1190,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Douglas',
               'continentName' => 'Europe',
             ],
-            'IN' => 
+            'IN' =>
             [
               'countryName' => 'India',
               'currencyCode' => 'INR',
@@ -1181,7 +1198,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'New Delhi',
               'continentName' => 'Asia',
             ],
-            'IO' => 
+            'IO' =>
             [
               'countryName' => 'British Indian Ocean Territory',
               'currencyCode' => 'USD',
@@ -1189,7 +1206,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => '',
               'continentName' => 'Asia',
             ],
-            'IQ' => 
+            'IQ' =>
             [
               'countryName' => 'Iraq',
               'currencyCode' => 'IQD',
@@ -1197,7 +1214,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Baghdad',
               'continentName' => 'Asia',
             ],
-            'IR' => 
+            'IR' =>
             [
               'countryName' => 'Iran',
               'currencyCode' => 'IRR',
@@ -1205,7 +1222,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Tehran',
               'continentName' => 'Asia',
             ],
-            'IS' => 
+            'IS' =>
             [
               'countryName' => 'Iceland',
               'currencyCode' => 'ISK',
@@ -1213,7 +1230,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Reykjavik',
               'continentName' => 'Europe',
             ],
-            'IT' => 
+            'IT' =>
             [
               'countryName' => 'Italy',
               'currencyCode' => 'EUR',
@@ -1221,7 +1238,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Rome',
               'continentName' => 'Europe',
             ],
-            'JE' => 
+            'JE' =>
             [
               'countryName' => 'Jersey',
               'currencyCode' => 'GBP',
@@ -1229,7 +1246,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Saint Helier',
               'continentName' => 'Europe',
             ],
-            'JM' => 
+            'JM' =>
             [
               'countryName' => 'Jamaica',
               'currencyCode' => 'JMD',
@@ -1237,7 +1254,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Kingston',
               'continentName' => 'North America',
             ],
-            'JO' => 
+            'JO' =>
             [
               'countryName' => 'Jordan',
               'currencyCode' => 'JOD',
@@ -1245,7 +1262,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Amman',
               'continentName' => 'Asia',
             ],
-            'JP' => 
+            'JP' =>
             [
               'countryName' => 'Japan',
               'currencyCode' => 'JPY',
@@ -1253,7 +1270,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Tokyo',
               'continentName' => 'Asia',
             ],
-            'KE' => 
+            'KE' =>
             [
               'countryName' => 'Kenya',
               'currencyCode' => 'KES',
@@ -1261,7 +1278,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Nairobi',
               'continentName' => 'Africa',
             ],
-            'KG' => 
+            'KG' =>
             [
               'countryName' => 'Kyrgyzstan',
               'currencyCode' => 'KGS',
@@ -1269,7 +1286,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Bishkek',
               'continentName' => 'Asia',
             ],
-            'KH' => 
+            'KH' =>
             [
               'countryName' => 'Cambodia',
               'currencyCode' => 'KHR',
@@ -1277,7 +1294,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Phnom Penh',
               'continentName' => 'Asia',
             ],
-            'KI' => 
+            'KI' =>
             [
               'countryName' => 'Kiribati',
               'currencyCode' => 'AUD',
@@ -1285,7 +1302,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Tarawa',
               'continentName' => 'Oceania',
             ],
-            'KM' => 
+            'KM' =>
             [
               'countryName' => 'Comoros',
               'currencyCode' => 'KMF',
@@ -1293,7 +1310,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Moroni',
               'continentName' => 'Africa',
             ],
-            'KN' => 
+            'KN' =>
             [
               'countryName' => 'Saint Kitts and Nevis',
               'currencyCode' => 'XCD',
@@ -1301,7 +1318,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Basseterre',
               'continentName' => 'North America',
             ],
-            'KP' => 
+            'KP' =>
             [
               'countryName' => 'North Korea',
               'currencyCode' => 'KPW',
@@ -1309,7 +1326,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Pyongyang',
               'continentName' => 'Asia',
             ],
-            'KR' => 
+            'KR' =>
             [
               'countryName' => 'South Korea',
               'currencyCode' => 'KRW',
@@ -1317,7 +1334,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Seoul',
               'continentName' => 'Asia',
             ],
-            'KW' => 
+            'KW' =>
             [
               'countryName' => 'Kuwait',
               'currencyCode' => 'KWD',
@@ -1325,7 +1342,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Kuwait City',
               'continentName' => 'Asia',
             ],
-            'KY' => 
+            'KY' =>
             [
               'countryName' => 'Cayman Islands',
               'currencyCode' => 'KYD',
@@ -1333,7 +1350,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'George Town',
               'continentName' => 'North America',
             ],
-            'KZ' => 
+            'KZ' =>
             [
               'countryName' => 'Kazakhstan',
               'currencyCode' => 'KZT',
@@ -1341,7 +1358,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Astana',
               'continentName' => 'Asia',
             ],
-            'LA' => 
+            'LA' =>
             [
               'countryName' => 'Laos',
               'currencyCode' => 'LAK',
@@ -1349,7 +1366,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Vientiane',
               'continentName' => 'Asia',
             ],
-            'LB' => 
+            'LB' =>
             [
               'countryName' => 'Lebanon',
               'currencyCode' => 'LBP',
@@ -1357,7 +1374,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Beirut',
               'continentName' => 'Asia',
             ],
-            'LC' => 
+            'LC' =>
             [
               'countryName' => 'Saint Lucia',
               'currencyCode' => 'XCD',
@@ -1365,7 +1382,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Castries',
               'continentName' => 'North America',
             ],
-            'LI' => 
+            'LI' =>
             [
               'countryName' => 'Liechtenstein',
               'currencyCode' => 'CHF',
@@ -1373,7 +1390,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Vaduz',
               'continentName' => 'Europe',
             ],
-            'LK' => 
+            'LK' =>
             [
               'countryName' => 'Sri Lanka',
               'currencyCode' => 'LKR',
@@ -1381,7 +1398,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Colombo',
               'continentName' => 'Asia',
             ],
-            'LR' => 
+            'LR' =>
             [
               'countryName' => 'Liberia',
               'currencyCode' => 'LRD',
@@ -1389,7 +1406,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Monrovia',
               'continentName' => 'Africa',
             ],
-            'LS' => 
+            'LS' =>
             [
               'countryName' => 'Lesotho',
               'currencyCode' => 'LSL',
@@ -1397,7 +1414,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Maseru',
               'continentName' => 'Africa',
             ],
-            'LT' => 
+            'LT' =>
             [
               'countryName' => 'Lithuania',
               'currencyCode' => 'EUR',
@@ -1405,7 +1422,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Vilnius',
               'continentName' => 'Europe',
             ],
-            'LU' => 
+            'LU' =>
             [
               'countryName' => 'Luxembourg',
               'currencyCode' => 'EUR',
@@ -1413,7 +1430,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Luxembourg',
               'continentName' => 'Europe',
             ],
-            'LV' => 
+            'LV' =>
             [
               'countryName' => 'Latvia',
               'currencyCode' => 'EUR',
@@ -1421,7 +1438,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Riga',
               'continentName' => 'Europe',
             ],
-            'LY' => 
+            'LY' =>
             [
               'countryName' => 'Libya',
               'currencyCode' => 'LYD',
@@ -1429,7 +1446,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Tripoli',
               'continentName' => 'Africa',
             ],
-            'MA' => 
+            'MA' =>
             [
               'countryName' => 'Morocco',
               'currencyCode' => 'MAD',
@@ -1437,7 +1454,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Rabat',
               'continentName' => 'Africa',
             ],
-            'MC' => 
+            'MC' =>
             [
               'countryName' => 'Monaco',
               'currencyCode' => 'EUR',
@@ -1445,7 +1462,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Monaco',
               'continentName' => 'Europe',
             ],
-            'MD' => 
+            'MD' =>
             [
               'countryName' => 'Moldova',
               'currencyCode' => 'MDL',
@@ -1453,7 +1470,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Chişinău',
               'continentName' => 'Europe',
             ],
-            'ME' => 
+            'ME' =>
             [
               'countryName' => 'Montenegro',
               'currencyCode' => 'EUR',
@@ -1461,7 +1478,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Podgorica',
               'continentName' => 'Europe',
             ],
-            'MF' => 
+            'MF' =>
             [
               'countryName' => 'Saint Martin',
               'currencyCode' => 'EUR',
@@ -1469,7 +1486,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Marigot',
               'continentName' => 'North America',
             ],
-            'MG' => 
+            'MG' =>
             [
               'countryName' => 'Madagascar',
               'currencyCode' => 'MGA',
@@ -1477,7 +1494,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Antananarivo',
               'continentName' => 'Africa',
             ],
-            'MH' => 
+            'MH' =>
             [
               'countryName' => 'Marshall Islands',
               'currencyCode' => 'USD',
@@ -1485,7 +1502,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Majuro',
               'continentName' => 'Oceania',
             ],
-            'MK' => 
+            'MK' =>
             [
               'countryName' => 'Macedonia',
               'currencyCode' => 'MKD',
@@ -1493,7 +1510,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Skopje',
               'continentName' => 'Europe',
             ],
-            'ML' => 
+            'ML' =>
             [
               'countryName' => 'Mali',
               'currencyCode' => 'XOF',
@@ -1501,7 +1518,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Bamako',
               'continentName' => 'Africa',
             ],
-            'MM' => 
+            'MM' =>
             [
               'countryName' => 'Myanmar [Burma]',
               'currencyCode' => 'MMK',
@@ -1509,7 +1526,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Naypyitaw',
               'continentName' => 'Asia',
             ],
-            'MN' => 
+            'MN' =>
             [
               'countryName' => 'Mongolia',
               'currencyCode' => 'MNT',
@@ -1517,7 +1534,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Ulan Bator',
               'continentName' => 'Asia',
             ],
-            'MO' => 
+            'MO' =>
             [
               'countryName' => 'Macao',
               'currencyCode' => 'MOP',
@@ -1525,7 +1542,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Macao',
               'continentName' => 'Asia',
             ],
-            'MP' => 
+            'MP' =>
             [
               'countryName' => 'Northern Mariana Islands',
               'currencyCode' => 'USD',
@@ -1533,7 +1550,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Saipan',
               'continentName' => 'Oceania',
             ],
-            'MQ' => 
+            'MQ' =>
             [
               'countryName' => 'Martinique',
               'currencyCode' => 'EUR',
@@ -1541,7 +1558,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Fort-de-France',
               'continentName' => 'North America',
             ],
-            'MR' => 
+            'MR' =>
             [
               'countryName' => 'Mauritania',
               'currencyCode' => 'MRO',
@@ -1549,7 +1566,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Nouakchott',
               'continentName' => 'Africa',
             ],
-            'MS' => 
+            'MS' =>
             [
               'countryName' => 'Montserrat',
               'currencyCode' => 'XCD',
@@ -1557,7 +1574,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Plymouth',
               'continentName' => 'North America',
             ],
-            'MT' => 
+            'MT' =>
             [
               'countryName' => 'Malta',
               'currencyCode' => 'EUR',
@@ -1565,7 +1582,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Valletta',
               'continentName' => 'Europe',
             ],
-            'MU' => 
+            'MU' =>
             [
               'countryName' => 'Mauritius',
               'currencyCode' => 'MUR',
@@ -1573,7 +1590,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Port Louis',
               'continentName' => 'Africa',
             ],
-            'MV' => 
+            'MV' =>
             [
               'countryName' => 'Maldives',
               'currencyCode' => 'MVR',
@@ -1581,7 +1598,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Malé',
               'continentName' => 'Asia',
             ],
-            'MW' => 
+            'MW' =>
             [
               'countryName' => 'Malawi',
               'currencyCode' => 'MWK',
@@ -1589,7 +1606,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Lilongwe',
               'continentName' => 'Africa',
             ],
-            'MX' => 
+            'MX' =>
             [
               'countryName' => 'Mexico',
               'currencyCode' => 'MXN',
@@ -1597,7 +1614,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Mexico City',
               'continentName' => 'North America',
             ],
-            'MY' => 
+            'MY' =>
             [
               'countryName' => 'Malaysia',
               'currencyCode' => 'MYR',
@@ -1605,7 +1622,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Kuala Lumpur',
               'continentName' => 'Asia',
             ],
-            'MZ' => 
+            'MZ' =>
             [
               'countryName' => 'Mozambique',
               'currencyCode' => 'MZN',
@@ -1613,7 +1630,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Maputo',
               'continentName' => 'Africa',
             ],
-            'NA' => 
+            'NA' =>
             [
               'countryName' => 'Namibia',
               'currencyCode' => 'NAD',
@@ -1621,7 +1638,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Windhoek',
               'continentName' => 'Africa',
             ],
-            'NC' => 
+            'NC' =>
             [
               'countryName' => 'New Caledonia',
               'currencyCode' => 'XPF',
@@ -1629,7 +1646,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Noumea',
               'continentName' => 'Oceania',
             ],
-            'NE' => 
+            'NE' =>
             [
               'countryName' => 'Niger',
               'currencyCode' => 'XOF',
@@ -1637,7 +1654,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Niamey',
               'continentName' => 'Africa',
             ],
-            'NF' => 
+            'NF' =>
             [
               'countryName' => 'Norfolk Island',
               'currencyCode' => 'AUD',
@@ -1645,7 +1662,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Kingston',
               'continentName' => 'Oceania',
             ],
-            'NG' => 
+            'NG' =>
             [
               'countryName' => 'Nigeria',
               'currencyCode' => 'NGN',
@@ -1653,7 +1670,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Abuja',
               'continentName' => 'Africa',
             ],
-            'NI' => 
+            'NI' =>
             [
               'countryName' => 'Nicaragua',
               'currencyCode' => 'NIO',
@@ -1661,7 +1678,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Managua',
               'continentName' => 'North America',
             ],
-            'NL' => 
+            'NL' =>
             [
               'countryName' => 'Netherlands',
               'currencyCode' => 'EUR',
@@ -1669,7 +1686,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Amsterdam',
               'continentName' => 'Europe',
             ],
-            'NO' => 
+            'NO' =>
             [
               'countryName' => 'Norway',
               'currencyCode' => 'NOK',
@@ -1677,7 +1694,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Oslo',
               'continentName' => 'Europe',
             ],
-            'NP' => 
+            'NP' =>
             [
               'countryName' => 'Nepal',
               'currencyCode' => 'NPR',
@@ -1685,7 +1702,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Kathmandu',
               'continentName' => 'Asia',
             ],
-            'NR' => 
+            'NR' =>
             [
               'countryName' => 'Nauru',
               'currencyCode' => 'AUD',
@@ -1693,7 +1710,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Yaren',
               'continentName' => 'Oceania',
             ],
-            'NU' => 
+            'NU' =>
             [
               'countryName' => 'Niue',
               'currencyCode' => 'NZD',
@@ -1701,7 +1718,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Alofi',
               'continentName' => 'Oceania',
             ],
-            'NZ' => 
+            'NZ' =>
             [
               'countryName' => 'New Zealand',
               'currencyCode' => 'NZD',
@@ -1709,7 +1726,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Wellington',
               'continentName' => 'Oceania',
             ],
-            'OM' => 
+            'OM' =>
             [
               'countryName' => 'Oman',
               'currencyCode' => 'OMR',
@@ -1717,7 +1734,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Muscat',
               'continentName' => 'Asia',
             ],
-            'PA' => 
+            'PA' =>
             [
               'countryName' => 'Panama',
               'currencyCode' => 'PAB',
@@ -1725,7 +1742,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Panama City',
               'continentName' => 'North America',
             ],
-            'PE' => 
+            'PE' =>
             [
               'countryName' => 'Peru',
               'currencyCode' => 'PEN',
@@ -1733,7 +1750,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Lima',
               'continentName' => 'South America',
             ],
-            'PF' => 
+            'PF' =>
             [
               'countryName' => 'French Polynesia',
               'currencyCode' => 'XPF',
@@ -1741,7 +1758,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Papeete',
               'continentName' => 'Oceania',
             ],
-            'PG' => 
+            'PG' =>
             [
               'countryName' => 'Papua New Guinea',
               'currencyCode' => 'PGK',
@@ -1749,7 +1766,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Port Moresby',
               'continentName' => 'Oceania',
             ],
-            'PH' => 
+            'PH' =>
             [
               'countryName' => 'Philippines',
               'currencyCode' => 'PHP',
@@ -1757,7 +1774,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Manila',
               'continentName' => 'Asia',
             ],
-            'PK' => 
+            'PK' =>
             [
               'countryName' => 'Pakistan',
               'currencyCode' => 'PKR',
@@ -1765,7 +1782,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Islamabad',
               'continentName' => 'Asia',
             ],
-            'PL' => 
+            'PL' =>
             [
               'countryName' => 'Poland',
               'currencyCode' => 'PLN',
@@ -1773,7 +1790,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Warsaw',
               'continentName' => 'Europe',
             ],
-            'PM' => 
+            'PM' =>
             [
               'countryName' => 'Saint Pierre and Miquelon',
               'currencyCode' => 'EUR',
@@ -1781,7 +1798,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Saint-Pierre',
               'continentName' => 'North America',
             ],
-            'PN' => 
+            'PN' =>
             [
               'countryName' => 'Pitcairn Islands',
               'currencyCode' => 'NZD',
@@ -1789,7 +1806,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Adamstown',
               'continentName' => 'Oceania',
             ],
-            'PR' => 
+            'PR' =>
             [
               'countryName' => 'Puerto Rico',
               'currencyCode' => 'USD',
@@ -1797,7 +1814,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'San Juan',
               'continentName' => 'North America',
             ],
-            'PS' => 
+            'PS' =>
             [
               'countryName' => 'Palestine',
               'currencyCode' => 'ILS',
@@ -1805,7 +1822,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => '',
               'continentName' => 'Asia',
             ],
-            'PT' => 
+            'PT' =>
             [
               'countryName' => 'Portugal',
               'currencyCode' => 'EUR',
@@ -1813,7 +1830,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Lisbon',
               'continentName' => 'Europe',
             ],
-            'PW' => 
+            'PW' =>
             [
               'countryName' => 'Palau',
               'currencyCode' => 'USD',
@@ -1821,7 +1838,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Melekeok',
               'continentName' => 'Oceania',
             ],
-            'PY' => 
+            'PY' =>
             [
               'countryName' => 'Paraguay',
               'currencyCode' => 'PYG',
@@ -1829,7 +1846,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Asunción',
               'continentName' => 'South America',
             ],
-            'QA' => 
+            'QA' =>
             [
               'countryName' => 'Qatar',
               'currencyCode' => 'QAR',
@@ -1837,7 +1854,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Doha',
               'continentName' => 'Asia',
             ],
-            'RE' => 
+            'RE' =>
             [
               'countryName' => 'Réunion',
               'currencyCode' => 'EUR',
@@ -1845,7 +1862,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Saint-Denis',
               'continentName' => 'Africa',
             ],
-            'RO' => 
+            'RO' =>
             [
               'countryName' => 'Romania',
               'currencyCode' => 'RON',
@@ -1853,7 +1870,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Bucharest',
               'continentName' => 'Europe',
             ],
-            'RS' => 
+            'RS' =>
             [
               'countryName' => 'Serbia',
               'currencyCode' => 'RSD',
@@ -1861,7 +1878,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Belgrade',
               'continentName' => 'Europe',
             ],
-            'RU' => 
+            'RU' =>
             [
               'countryName' => 'Russia',
               'currencyCode' => 'RUB',
@@ -1869,7 +1886,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Moscow',
               'continentName' => 'Europe',
             ],
-            'RW' => 
+            'RW' =>
             [
               'countryName' => 'Rwanda',
               'currencyCode' => 'RWF',
@@ -1877,7 +1894,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Kigali',
               'continentName' => 'Africa',
             ],
-            'SA' => 
+            'SA' =>
             [
               'countryName' => 'Saudi Arabia',
               'currencyCode' => 'SAR',
@@ -1885,7 +1902,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Riyadh',
               'continentName' => 'Asia',
             ],
-            'SB' => 
+            'SB' =>
             [
               'countryName' => 'Solomon Islands',
               'currencyCode' => 'SBD',
@@ -1893,7 +1910,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Honiara',
               'continentName' => 'Oceania',
             ],
-            'SC' => 
+            'SC' =>
             [
               'countryName' => 'Seychelles',
               'currencyCode' => 'SCR',
@@ -1901,7 +1918,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Victoria',
               'continentName' => 'Africa',
             ],
-            'SD' => 
+            'SD' =>
             [
               'countryName' => 'Sudan',
               'currencyCode' => 'SDG',
@@ -1909,7 +1926,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Khartoum',
               'continentName' => 'Africa',
             ],
-            'SE' => 
+            'SE' =>
             [
               'countryName' => 'Sweden',
               'currencyCode' => 'SEK',
@@ -1917,7 +1934,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Stockholm',
               'continentName' => 'Europe',
             ],
-            'SG' => 
+            'SG' =>
             [
               'countryName' => 'Singapore',
               'currencyCode' => 'SGD',
@@ -1925,7 +1942,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Singapore',
               'continentName' => 'Asia',
             ],
-            'SH' => 
+            'SH' =>
             [
               'countryName' => 'Saint Helena',
               'currencyCode' => 'SHP',
@@ -1933,7 +1950,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Jamestown',
               'continentName' => 'Africa',
             ],
-            'SI' => 
+            'SI' =>
             [
               'countryName' => 'Slovenia',
               'currencyCode' => 'EUR',
@@ -1941,7 +1958,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Ljubljana',
               'continentName' => 'Europe',
             ],
-            'SJ' => 
+            'SJ' =>
             [
               'countryName' => 'Svalbard and Jan Mayen',
               'currencyCode' => 'NOK',
@@ -1949,7 +1966,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Longyearbyen',
               'continentName' => 'Europe',
             ],
-            'SK' => 
+            'SK' =>
             [
               'countryName' => 'Slovakia',
               'currencyCode' => 'EUR',
@@ -1957,7 +1974,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Bratislava',
               'continentName' => 'Europe',
             ],
-            'SL' => 
+            'SL' =>
             [
               'countryName' => 'Sierra Leone',
               'currencyCode' => 'SLL',
@@ -1965,7 +1982,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Freetown',
               'continentName' => 'Africa',
             ],
-            'SM' => 
+            'SM' =>
             [
               'countryName' => 'San Marino',
               'currencyCode' => 'EUR',
@@ -1973,7 +1990,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'San Marino',
               'continentName' => 'Europe',
             ],
-            'SN' => 
+            'SN' =>
             [
               'countryName' => 'Senegal',
               'currencyCode' => 'XOF',
@@ -1981,7 +1998,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Dakar',
               'continentName' => 'Africa',
             ],
-            'SO' => 
+            'SO' =>
             [
               'countryName' => 'Somalia',
               'currencyCode' => 'SOS',
@@ -1989,7 +2006,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Mogadishu',
               'continentName' => 'Africa',
             ],
-            'SR' => 
+            'SR' =>
             [
               'countryName' => 'Suriname',
               'currencyCode' => 'SRD',
@@ -1997,7 +2014,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Paramaribo',
               'continentName' => 'South America',
             ],
-            'SS' => 
+            'SS' =>
             [
               'countryName' => 'South Sudan',
               'currencyCode' => 'SSP',
@@ -2005,7 +2022,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Juba',
               'continentName' => 'Africa',
             ],
-            'ST' => 
+            'ST' =>
             [
               'countryName' => 'São Tomé and Príncipe',
               'currencyCode' => 'STD',
@@ -2013,7 +2030,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'São Tomé',
               'continentName' => 'Africa',
             ],
-            'SV' => 
+            'SV' =>
             [
               'countryName' => 'El Salvador',
               'currencyCode' => 'USD',
@@ -2021,7 +2038,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'San Salvador',
               'continentName' => 'North America',
             ],
-            'SX' => 
+            'SX' =>
             [
               'countryName' => 'Sint Maarten',
               'currencyCode' => 'ANG',
@@ -2029,7 +2046,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Philipsburg',
               'continentName' => 'North America',
             ],
-            'SY' => 
+            'SY' =>
             [
               'countryName' => 'Syria',
               'currencyCode' => 'SYP',
@@ -2037,7 +2054,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Damascus',
               'continentName' => 'Asia',
             ],
-            'SZ' => 
+            'SZ' =>
             [
               'countryName' => 'Swaziland',
               'currencyCode' => 'SZL',
@@ -2045,7 +2062,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Mbabane',
               'continentName' => 'Africa',
             ],
-            'TC' => 
+            'TC' =>
             [
               'countryName' => 'Turks and Caicos Islands',
               'currencyCode' => 'USD',
@@ -2053,7 +2070,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Cockburn Town',
               'continentName' => 'North America',
             ],
-            'TD' => 
+            'TD' =>
             [
               'countryName' => 'Chad',
               'currencyCode' => 'XAF',
@@ -2061,7 +2078,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'N\'Djamena',
               'continentName' => 'Africa',
             ],
-            'TF' => 
+            'TF' =>
             [
               'countryName' => 'French Southern Territories',
               'currencyCode' => 'EUR',
@@ -2069,7 +2086,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Port-aux-Français',
               'continentName' => 'Antarctica',
             ],
-            'TG' => 
+            'TG' =>
             [
               'countryName' => 'Togo',
               'currencyCode' => 'XOF',
@@ -2077,7 +2094,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Lomé',
               'continentName' => 'Africa',
             ],
-            'TH' => 
+            'TH' =>
             [
               'countryName' => 'Thailand',
               'currencyCode' => 'THB',
@@ -2085,7 +2102,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Bangkok',
               'continentName' => 'Asia',
             ],
-            'TJ' => 
+            'TJ' =>
             [
               'countryName' => 'Tajikistan',
               'currencyCode' => 'TJS',
@@ -2093,7 +2110,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Dushanbe',
               'continentName' => 'Asia',
             ],
-            'TK' => 
+            'TK' =>
             [
               'countryName' => 'Tokelau',
               'currencyCode' => 'NZD',
@@ -2101,7 +2118,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => '',
               'continentName' => 'Oceania',
             ],
-            'TL' => 
+            'TL' =>
             [
               'countryName' => 'East Timor',
               'currencyCode' => 'USD',
@@ -2109,7 +2126,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Dili',
               'continentName' => 'Oceania',
             ],
-            'TM' => 
+            'TM' =>
             [
               'countryName' => 'Turkmenistan',
               'currencyCode' => 'TMT',
@@ -2117,7 +2134,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Ashgabat',
               'continentName' => 'Asia',
             ],
-            'TN' => 
+            'TN' =>
             [
               'countryName' => 'Tunisia',
               'currencyCode' => 'TND',
@@ -2125,7 +2142,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Tunis',
               'continentName' => 'Africa',
             ],
-            'TO' => 
+            'TO' =>
             [
               'countryName' => 'Tonga',
               'currencyCode' => 'TOP',
@@ -2133,7 +2150,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Nuku\'alofa',
               'continentName' => 'Oceania',
             ],
-            'TR' => 
+            'TR' =>
             [
               'countryName' => 'Turkey',
               'currencyCode' => 'TRY',
@@ -2141,7 +2158,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Ankara',
               'continentName' => 'Asia',
             ],
-            'TT' => 
+            'TT' =>
             [
               'countryName' => 'Trinidad and Tobago',
               'currencyCode' => 'TTD',
@@ -2149,7 +2166,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Port of Spain',
               'continentName' => 'North America',
             ],
-            'TV' => 
+            'TV' =>
             [
               'countryName' => 'Tuvalu',
               'currencyCode' => 'AUD',
@@ -2157,7 +2174,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Funafuti',
               'continentName' => 'Oceania',
             ],
-            'TW' => 
+            'TW' =>
             [
               'countryName' => 'Taiwan',
               'currencyCode' => 'TWD',
@@ -2165,7 +2182,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Taipei',
               'continentName' => 'Asia',
             ],
-            'TZ' => 
+            'TZ' =>
             [
               'countryName' => 'Tanzania',
               'currencyCode' => 'TZS',
@@ -2173,7 +2190,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Dodoma',
               'continentName' => 'Africa',
             ],
-            'UA' => 
+            'UA' =>
             [
               'countryName' => 'Ukraine',
               'currencyCode' => 'UAH',
@@ -2181,7 +2198,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Kiev',
               'continentName' => 'Europe',
             ],
-            'UG' => 
+            'UG' =>
             [
               'countryName' => 'Uganda',
               'currencyCode' => 'UGX',
@@ -2189,7 +2206,7 @@ if (!function_exists('getCurrencyCode')) {
               'capital' => 'Kampala',
               'continentName' => 'Africa',
             ],
-            'UM' => 
+            'UM' =>
             [
               'countryName' => 'U.S. Minor Outlying Islands',
               'currencyCode' => 'USD',
@@ -2344,6 +2361,18 @@ if (!function_exists('getCurrencyCode')) {
         ];
 
         return isset($countries[$code]) ? $countries[$code]['currencyCode'] : 'NGN';
+    }
+}
+
+if (!function_exists('generateRefundComplaintNumber')) {
+    function generateRefundComplaintNumber($prefix = 'RFC') {
+        $uniqueNumber = $prefix . '-' . strtoupper(Str::random(8)) . '-' . time();
+
+        while (B2BRequestRefund::where('complaint_number', $uniqueNumber)->exists()) {
+            $uniqueNumber = $prefix . '-' . strtoupper(Str::random(8)) . '-' . time();
+        }
+
+        return $uniqueNumber;
     }
 }
 

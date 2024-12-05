@@ -124,6 +124,45 @@ class AuthService
             return $response;
         }
     }
+    
+    public function buyerOnboarding($request)
+    {
+        try {
+            $code = generateVerificationCode();
+            
+            $user = User::create([
+                'first_name' => $request->name,
+                'email' => $request->email,
+                'type' => UserType::B2B_BUYER,
+                'service_type' => $request->service_type,
+                'average_spend' => $request->average_spend,
+                'company_name' => $request->company_name,
+                'company_size' => $request->company_size,
+                'website' => $request->website,
+                'country' => $request->country_id,
+                'email_verified_at' => null,
+                'verification_code' => $code,
+                'is_verified' => 0,
+                'password' => bcrypt($request->password)
+            ]);
+            
+            $description = "User with email: {$request->email} signed up as b2b buyer";
+            $response = $this->success(null, "Created successfully");
+            $action = UserLog::CREATED;
+            
+            logUserAction($request, $action, $description, $response, $user);
+            
+            return $response;
+        } catch (\Exception $e) {
+            $description = "Sign up failed: {$request->email}";
+            $response = $this->error(null, $e->getMessage(), 500);
+            $action = UserLog::FAILED;
+            
+            logUserAction($request, $action, $description, $response, $user);
+            
+            return $response;
+        }
+    }
 }
 
 

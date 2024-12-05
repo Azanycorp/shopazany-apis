@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\ApiController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\B2BBuyerController;
 use App\Http\Controllers\Api\B2BController;
 use App\Http\Controllers\Api\B2BSellerController;
 use App\Http\Controllers\Api\CartController;
@@ -49,6 +50,7 @@ Route::prefix('user/category')->controller(CategoryController::class)->group(fun
 });
 
 Route::get('/user/seller/template', [SellerController::class, 'getTemplate']);
+Route::get('/b2b/seller/template', [B2BSellerController::class, 'getTemplate']);
 Route::get('/shop/country', [ApiController::class, 'getShopByCountry']);
 Route::get('/shop-by/country/{shop_country_id}', [ApiController::class, 'userShopByCountry']);
 
@@ -189,12 +191,16 @@ Route::middleware(['throttle:apis'])->group(function () {
     Route::prefix('b2b/connect')->controller(B2BController::class)->group(function () {
         Route::post('/login', 'login');
         Route::post('/login/verify', 'loginVerify');
-        Route::post('/signup', 'signup');
+        Route::post('/seller/signup', 'signup');
+        Route::post('/buyer/signup', 'buyerSignup');
         Route::post('/forgot/password', 'forgot');
         Route::post('/reset/password', 'reset');
         Route::post('/signup/resend', 'resendCode');
         Route::post('/logout', 'logout');
         Route::post('/verify', 'verify');
+        
+        // Buyer Onboarding
+        Route::post('/buyer', 'buyerOnboarding');
     });
 
     Route::prefix('b2b')->controller(B2BController::class)->group(function () {
@@ -209,6 +215,8 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function () {
         Route::post('/edit-account', 'editAccount');
         Route::patch('/change-password', 'changePassword');
         Route::post('/edit-company', 'editCompany');
+        Route::get('/refund/request', 'getComplaints');
+        Route::get('/earning-report/{user_id}', 'getEarningReport');
 
         // Product
         Route::prefix('product')->group(function () {
@@ -218,6 +226,9 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function () {
             Route::get('/{user_id}/{product_id}', 'getProductById');
             Route::post('/update', 'updateProduct');
             Route::delete('/delete/{user_id}/{product_id}', 'deleteProduct');
+
+            Route::post('import', 'productImport');
+            Route::get('export/{user_id}/{type}', 'export');
         });
 
         // Shipping
@@ -230,4 +241,12 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function () {
             Route::delete('/delete/{user_id}/{shipping_id}', 'deleteShipping');
         });
     });
+
+    // Buyer
+    Route::group(['middleware' => 'buyer.auth', 'prefix' => 'buyer', 'controller' => B2BBuyerController::class], function () {
+        Route::post('request/refund', 'requestRefund');
+
+        Route::get('/products', 'getProducts');
+    });
+
 });

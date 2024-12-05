@@ -2,19 +2,20 @@
 
 namespace App\Http\Controllers;
 
-use App\Actions\UserLogAction;
+use App\Models\User;
 use App\Enum\UserLog;
 use App\Enum\UserStatus;
-use App\Exports\ProductExport;
-use App\Mail\LoginVerifyMail;
-use App\Models\User;
 use App\Trait\HttpResponse;
+use Illuminate\Support\Str;
+use App\Mail\LoginVerifyMail;
+use App\Actions\UserLogAction;
+use App\Exports\ProductExport;
+use App\Exports\B2BProductExport;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Storage;
 
 abstract class Controller
 {
@@ -207,6 +208,29 @@ abstract class Controller
 
         logUserAction($request, $action, $description, $response);
         return $response;
+    }
+
+    protected function b2bExportProduct($userId)
+    {
+        $fileName = 'products_' . time() . '.xlsx';
+        $path = 'public';
+
+        if(App::environment('production')) {
+            $folderPath = 'prod/exports/' . 'user_'. $userId . '/';
+            $fileName = $folderPath . 'products_' . time() . '.xlsx';
+            $path = 's3';
+
+        } elseif(App::environment('staging')) {
+            $folderPath = 'stag/exports/' . 'user_'. $userId . '/';
+            $fileName = $folderPath . 'products_' . time() . '.xlsx';
+            $path = 's3';
+        }
+
+        Excel::store(new B2BProductExport($userId), $fileName, $path);
+
+        $fileUrl = ($path === 's3') ? Storage::disk('s3')->url($fileName) : asset('storage/' . $fileName);
+
+        return $this->success(['file_url' => $fileUrl], "Product export successful.");
     }
 
 }

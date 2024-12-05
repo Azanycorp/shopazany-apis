@@ -60,4 +60,9 @@ class B2BProduct extends Model
     {
         return $this->belongsTo(Country::class, 'country_id');
     }
+
+    public function b2bRequestRefunds(): HasMany
+    {
+        return $this->hasMany(B2BRequestRefund::class, 'b2b_product_id');
+    }
 }

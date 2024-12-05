@@ -97,5 +97,20 @@ class B2BSellerController extends Controller
     {
         return $this->service->setDefault($user_id, $shipping_id);
     }
-    
+
+    public function getComplaints($user_id)
+    {
+        return $this->service->getComplaints($user_id);
+    }
+
+    public function getTemplate()
+    {
+        return $this->service->getTemplate();
+    }
+
+    public function getEarningReport($userId)
+    {
+        return $this->service->getEarningReport($userId);
+    }
+
 }
