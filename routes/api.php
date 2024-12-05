@@ -200,7 +200,7 @@ Route::middleware(['throttle:apis'])->group(function () {
         Route::post('/verify', 'verify');
         
         // Buyer Onboarding
-        Route::post('/buyer', 'buyerOnboarding');
+        Route::post('/buyer/signup', 'buyerOnboarding');
     });
 
     Route::prefix('b2b')->controller(B2BController::class)->group(function () {
