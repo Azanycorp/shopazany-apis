@@ -16,6 +16,9 @@ use Illuminate\Cache\RateLimiting\Limit;
 use Laravel\Sanctum\PersonalAccessToken;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\URL;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -52,5 +55,39 @@ class AppServiceProvider extends ServiceProvider
 
         User::observe(UserObserver::class);
         Order::observe(OrderObserver::class);
+        
+        $this->configureCommands();
+        $this->configureModels();
+        $this->configureUrl();
     }
+    
+    /**
+     * Configure the application's command.
+     */
+    private function configureCommands(): void
+    {
+        DB::prohibitDestructiveCommands(
+            $this->app->isProduction(),
+        );
+    }
+    
+    /**
+     * Configure the application's models.
+     */
+    private function configureModels(): void
+    {
+        Model::shouldBeStrict();
+        Model::unguard();
+    }
+    
+    /**
+     * Configure the application's URL.
+     */
+    private function configureUrl(): void
+    {
+        URL::formatScheme('https');
+    }
+    
+    
+    
 }
