@@ -2,11 +2,13 @@
 
 namespace App\Services\Admin;
 
+use App\Http\Resources\AdminUserResource;
 use App\Http\Resources\CategoryResource;
 use App\Http\Resources\CountryResource;
 use App\Http\Resources\ShopCountryResource;
 use App\Http\Resources\SliderResource;
 use App\Http\Resources\StateResource;
+use App\Models\Admin;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Color;
@@ -160,8 +162,8 @@ class AdminService
 
     public function getShopByCountry()
     {
-        $shopbycountries = ShopCountry::get();
-        $data = ShopCountryResource::collection($shopbycountries);
+        $shopByCountries = ShopCountry::orderBy('name', 'asc')->get();
+        $data = ShopCountryResource::collection($shopByCountries);
 
         return $this->success($data, "List");
     }
@@ -187,6 +189,15 @@ class AdminService
         }
 
         return $this->success(null, "Generated successfully");
+    }
+
+    public function adminProfile()
+    {
+        $authUser = userAuth();
+        $user = Admin::findOrFail($authUser->id);
+        $data = new AdminUserResource($user);
+
+        return $this->success($data, 'Profile detail');
     }
 }
 

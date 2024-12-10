@@ -24,7 +24,7 @@ class AdminAuthController extends Controller
     public function forgot(Request $request)
     {
         $request->validate([
-            'email' => ['required', 'email', 'email:rfc:dns']
+            'email' => ['required', 'email', 'exists:admins,email']
         ]);
 
         return $this->service->forgot($request);

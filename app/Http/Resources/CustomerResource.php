@@ -48,7 +48,7 @@ class CustomerResource extends JsonResource
                     'id' => $payment->id,
                     'order_no' => $payment?->order?->order_no,
                     'amount' => $payment->amount,
-                    'payment_method' => $payment?->order->payment_method,
+                    'payment_method' => $payment?->order?->payment_method,
                     'status' => $payment->status,
                     'reference' => $payment->reference,
                     'created_at' => $payment->created_at,
