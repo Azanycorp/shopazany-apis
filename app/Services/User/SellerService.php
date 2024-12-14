@@ -32,7 +32,7 @@ class SellerService extends Controller
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $user = User::find($request->user_id);
+        $user = User::with('userbusinessinfo')->find($request->user_id);
 
         if (!$user) {
             return $this->error(null, "User not found", 404);
@@ -77,7 +77,7 @@ class SellerService extends Controller
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $user = User::find($request->user_id);
+        $user = User::with('products')->find($request->user_id);
 
         if (!$user) {
             return $this->error(null, "User not found", 404);
@@ -240,7 +240,7 @@ class SellerService extends Controller
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $user = User::find($userId);
+        $user = User::with(['category'])->find($userId);
 
         if (!$user) {
             return $this->error(null, "User not found", 404);
@@ -264,7 +264,7 @@ class SellerService extends Controller
             $query->where('name', 'like', '%' . request('search') . '%');
         }
 
-        $query->with('productimages');
+        $query->with(['category', 'subCategory', 'shopCountry', 'productimages']);
 
         $products = $query->paginate(25);
 
@@ -298,7 +298,8 @@ class SellerService extends Controller
             return $this->error(null, "User not found", 404);
         }
 
-        $product = Product::find($productId);
+        $product = Product::with(['category', 'subCategory', 'shopCountry', 'productimages'])
+            ->find($productId);
 
         if(!$product){
             return $this->error(null, "Product not found", 404);
@@ -338,9 +339,10 @@ class SellerService extends Controller
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $orders = Order::where('seller_id', $id)
-        ->orderBy('created_at', 'desc')
-        ->paginate(25);
+        $orders = Order::with('user')
+            ->where('seller_id', $id)
+            ->orderBy('created_at', 'desc')
+            ->paginate(25);
 
         $data = OrderResource::collection($orders);
 
@@ -366,10 +368,11 @@ class SellerService extends Controller
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $orders = Order::where('seller_id', $id)
-        ->where('status', OrderStatus::CONFIRMED)
-        ->orderBy('created_at', 'desc')
-        ->get();
+        $orders = Order::with('user')
+            ->where('seller_id', $id)
+            ->where('status', OrderStatus::CONFIRMED)
+            ->orderBy('created_at', 'desc')
+            ->get();
 
         $data = OrderResource::collection($orders);
 
@@ -385,10 +388,11 @@ class SellerService extends Controller
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $orders = Order::where('seller_id', $id)
-        ->where('status', OrderStatus::CANCELLED)
-        ->orderBy('created_at', 'desc')
-        ->get();
+        $orders = Order::with('user')
+            ->where('seller_id', $id)
+            ->where('status', OrderStatus::CANCELLED)
+            ->orderBy('created_at', 'desc')
+            ->get();
 
         $data = OrderResource::collection($orders);
 
@@ -404,10 +408,11 @@ class SellerService extends Controller
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $orders = Order::where('seller_id', $id)
-        ->where('status', OrderStatus::DELIVERED)
-        ->orderBy('created_at', 'desc')
-        ->get();
+        $orders = Order::with('user')
+            ->where('seller_id', $id)
+            ->where('status', OrderStatus::DELIVERED)
+            ->orderBy('created_at', 'desc')
+            ->get();
 
         $data = OrderResource::collection($orders);
 
@@ -423,10 +428,11 @@ class SellerService extends Controller
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $orders = Order::where('seller_id', $id)
-        ->where('status', OrderStatus::PENDING)
-        ->orderBy('created_at', 'desc')
-        ->get();
+        $orders = Order::with('user')
+            ->where('seller_id', $id)
+            ->where('status', OrderStatus::PENDING)
+            ->orderBy('created_at', 'desc')
+            ->get();
 
         $data = OrderResource::collection($orders);
 
@@ -441,15 +447,15 @@ class SellerService extends Controller
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $orders = Order::where('seller_id', $id)
-        ->where('status', OrderStatus::PROCESSING)
-        ->orderBy('created_at', 'desc')
-        ->get();
+        $orders = Order::with('user')
+            ->where('seller_id', $id)
+            ->where('status', OrderStatus::PROCESSING)
+            ->orderBy('created_at', 'desc')
+            ->get();
 
         $data = OrderResource::collection($orders);
 
         return $this->success($data, "Processing Orders");
-
     }
 
     public function getShippedOrders($id)
@@ -460,15 +466,15 @@ class SellerService extends Controller
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $orders = Order::where('seller_id', $id)
-        ->where('status', OrderStatus::SHIPPED)
-        ->orderBy('created_at', 'desc')
-        ->get();
+        $orders = Order::with('user')
+            ->where('seller_id', $id)
+            ->where('status', OrderStatus::SHIPPED)
+            ->orderBy('created_at', 'desc')
+            ->get();
 
         $data = OrderResource::collection($orders);
 
         return $this->success($data, "Shipped Orders");
-
     }
 
     public function getTemplate()
@@ -573,10 +579,11 @@ class SellerService extends Controller
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $orders = Order::where('seller_id', $userId)
-        ->orderBy('created_at', 'desc')
-        ->take(8)
-        ->get();
+        $orders = Order::with('user')
+            ->where('seller_id', $userId)
+            ->orderBy('created_at', 'desc')
+            ->take(8)
+            ->get();
 
         $data = OrderResource::collection($orders);
 
@@ -614,6 +621,5 @@ class SellerService extends Controller
 
         return $this->success($topSellingProductsWithDetails, "Top Selling Products");
     }
-
 }
 

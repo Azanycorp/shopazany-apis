@@ -28,7 +28,7 @@ class HomeService
     {
         $countryId = request()->query('country_id');
 
-        $query = Product::select(
+        $query = Product::with('shopCountry')->select(
             'products.id',
             'products.name',
             'products.slug',
@@ -92,7 +92,8 @@ class HomeService
     {
         $countryId = request()->query('country_id');
 
-        $query = Product::where('is_featured', true)
+        $query = Product::with(['category', 'subCategory', 'shopCountry'])
+            ->where('is_featured', true)
             ->where('status', ProductStatus::ACTIVE);
 
         if ($countryId) {
@@ -110,7 +111,8 @@ class HomeService
     {
         $countryId = request()->query('country_id');
 
-        $query = Product::query();
+        $query = Product::with(['category', 'subCategory', 'shopCountry'])
+            ->query();
 
         if ($countryId) {
             $query->where('country_id', $countryId);
@@ -251,7 +253,7 @@ class HomeService
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $user = User::findOrFail($request->user_id);
+        $user = User::with('wishlist')->findOrFail($request->user_id);
         $product = Product::findOrFail($request->product_id);
 
         if ($user->wishlist()->where('product_id', $product->id)->exists()) {
@@ -419,8 +421,5 @@ class HomeService
 
         return $this->error(null, 'Item not found in wishlist', 404);
     }
-
-
-
 }
 

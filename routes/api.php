@@ -197,7 +197,7 @@ Route::middleware(['throttle:apis'])->group(function () {
         Route::post('/signup/resend', 'resendCode');
         Route::post('/logout', 'logout');
         Route::post('/verify', 'verify');
-        
+
         // Buyer Onboarding
         Route::post('/buyer/signup', 'buyerOnboarding');
     });
