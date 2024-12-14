@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('user_actions', function (Blueprint $table) {
             $table->integer('points')->after('action_id')->default(0);
-            $table->enum('status', ['pending', 'completed'])->after('is_rewarded');
+            $table->enum('status', ['pending', 'completed'])->after('is_rewarded')->default('pending');
         });
     }
 
