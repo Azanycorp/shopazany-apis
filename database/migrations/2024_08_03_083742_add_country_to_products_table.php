@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('products', function (Blueprint $table) {
-            $table->bigInteger('country_id')->after('added_by');
+            $table->bigInteger('country_id')->after('added_by')->default(160);
 
             $table->index('country_id');
         });
