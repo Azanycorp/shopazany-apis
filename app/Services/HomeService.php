@@ -63,7 +63,16 @@ class HomeService
     {
         $countryId = request()->query('country_id');
 
-        $query = Product::with(['shopCountry', 'productimages', 'category', 'subCategory'])
+        $query = Product::with([
+                'shopCountry',
+                'productimages',
+                'category',
+                'subCategory',
+                'brand',
+                'color',
+                'unit',
+                'size',
+            ])
             ->where('status', ProductStatus::ACTIVE);
 
         if ($countryId) {
@@ -92,7 +101,15 @@ class HomeService
     {
         $countryId = request()->query('country_id');
 
-        $query = Product::with(['category', 'subCategory', 'shopCountry'])
+        $query = Product::with([
+                'category',
+                'subCategory',
+                'shopCountry',
+                'brand',
+                'color',
+                'unit',
+                'size',
+            ])
             ->where('is_featured', true)
             ->where('status', ProductStatus::ACTIVE);
 
@@ -111,7 +128,15 @@ class HomeService
     {
         $countryId = request()->query('country_id');
 
-        $query = Product::with(['category', 'subCategory', 'shopCountry'])
+        $query = Product::with([
+                'category',
+                'subCategory',
+                'shopCountry',
+                'brand',
+                'color',
+                'unit',
+                'size',
+            ])
             ->query();
 
         if ($countryId) {
