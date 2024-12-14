@@ -136,8 +136,7 @@ class HomeService
                 'color',
                 'unit',
                 'size',
-            ])
-            ->query();
+            ]);
 
         if ($countryId) {
             $query->where('country_id', $countryId);

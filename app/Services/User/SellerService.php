@@ -240,7 +240,7 @@ class SellerService extends Controller
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $user = User::with(['category'])->find($userId);
+        $user = User::with(['products'])->find($userId);
 
         if (!$user) {
             return $this->error(null, "User not found", 404);
@@ -264,7 +264,16 @@ class SellerService extends Controller
             $query->where('name', 'like', '%' . request('search') . '%');
         }
 
-        $query->with(['category', 'subCategory', 'shopCountry', 'productimages']);
+        $query->with([
+            'category',
+            'subCategory',
+            'shopCountry',
+            'productimages',
+            'brand',
+            'color',
+            'unit',
+            'size',
+        ]);
 
         $products = $query->paginate(25);
 
@@ -298,7 +307,16 @@ class SellerService extends Controller
             return $this->error(null, "User not found", 404);
         }
 
-        $product = Product::with(['category', 'subCategory', 'shopCountry', 'productimages'])
+        $product = Product::with([
+                'category',
+                'subCategory',
+                'shopCountry',
+                'productimages',
+                'brand',
+                'color',
+                'unit',
+                'size',
+            ])
             ->find($productId);
 
         if(!$product){
