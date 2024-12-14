@@ -24,9 +24,9 @@ class UserService extends Controller
     public function profile()
     {
         $auth = $this->userAuth();
-        $user = User::with(['wallet', 'referrals', 'bankAccount', 'userbusinessinfo', 'userSubscriptions'])
-        ->findOrFail($auth->id)
-        ->append(['is_subscribed', 'subscription_plan']);
+        $user = User::with(['wallet', 'referrals', 'bankAccount', 'userbusinessinfo', 'userSubscriptions', 'userShippingAddress'])
+            ->findOrFail($auth->id)
+            ->append(['is_subscribed', 'subscription_plan']);
 
         $data = new ProfileResource($user);
 
@@ -318,7 +318,6 @@ class UserService extends Controller
 
         return $this->success(null, "Settings changed successfully");
     }
-
 }
 
 

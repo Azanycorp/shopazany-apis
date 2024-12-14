@@ -23,7 +23,6 @@ class CategoryService
     public function createCategory($request)
     {
         try {
-
             $folder = null;
 
             if(App::environment('production')){
@@ -86,7 +85,6 @@ class CategoryService
         }
 
         try {
-
             $folder = null;
             $url = null;
 
