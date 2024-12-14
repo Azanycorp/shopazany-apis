@@ -24,7 +24,8 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['throttle:apis'])->group(function () {
 
     Route::prefix('connect')->controller(AuthController::class)->group(function () {
-        Route::post('/login', 'login');
+        Route::post('/login', 'login')
+            ->middleware('login.attempt');
         Route::post('/login/verify', 'loginVerify');
         Route::post('/signup', 'signup');
         Route::post('/forgot/password', 'forgot');

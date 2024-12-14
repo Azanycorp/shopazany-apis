@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\AuthGates;
+use App\Http\Middleware\BlockUserAfterFailedAttempts;
 use App\Http\Middleware\BuyerAuthMiddleware;
 use App\Http\Middleware\CheckWalletBalance;
 use App\Http\Middleware\SellerAuthMiddleware;
@@ -30,6 +31,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'check.wallet' => CheckWalletBalance::class,
             'seller.auth' => SellerAuthMiddleware::class,
             'buyer.auth' => BuyerAuthMiddleware::class,
+            'login.attempt' => BlockUserAfterFailedAttempts::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
