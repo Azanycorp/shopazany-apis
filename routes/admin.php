@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\AdminSellerController;
 use App\Http\Controllers\Api\BannerPromoController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\FaqController;
+use App\Http\Controllers\Api\FinanceController;
 use App\Http\Controllers\Api\RewardPointController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\SettingsController;
@@ -171,6 +172,14 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function () {
         Route::get('/{id}', 'getPlanById');
         Route::patch('/update/{id}', 'updatePlan');
         Route::delete('/remove/{id}', 'deletePlan');
+    });
+
+    Route::prefix('finance')->controller(FinanceController::class)->group(function () {
+        Route::post('/payment/service', 'addPaymentService');
+        Route::get('/payment/service', 'getPaymentService');
+        Route::get('/payment/service/{id}', 'getSinglePaymentService');
+        Route::patch('/payment/service/{id}', 'updatePaymentService');
+        Route::delete('/payment/service/{id}', 'deletePaymentService');
     });
 
     Route::resource('settings/faq', FaqController::class);

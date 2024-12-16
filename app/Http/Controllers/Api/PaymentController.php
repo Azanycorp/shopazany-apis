@@ -31,4 +31,16 @@ class PaymentController extends Controller
         return $this->service->verifyPayment($userId, $ref);
     }
 
+    public function authorizeNetCard(Request $request)
+    {
+        $request->validate([
+            'card_number' => 'required',
+            'expiration_date' => 'required',
+            'cvv' => 'required',
+            'amount' => 'required'
+        ]);
+
+        return $this->service->authorizeNetCard($request);
+    }
+
 }

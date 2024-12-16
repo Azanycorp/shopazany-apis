@@ -74,6 +74,7 @@ Route::controller(HomeController::class)->group(function () {
 });
 
 Route::post('/payment/webhook', [PaymentController::class, 'webhook']);
+Route::post('/authorize/payment', [PaymentController::class, 'authorizeNetCard']);
 
 Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
 
@@ -87,6 +88,7 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
     // Payment
     Route::post('/checkout', [PaymentController::class, 'processPayment']);
     Route::get('/verify/payment/{user_id}/{reference}', [PaymentController::class, 'verifyPayment']);
+
 
     // Subscription
     Route::prefix('subscription')

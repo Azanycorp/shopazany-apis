@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Services\Curl\GetCurlService;
 use App\Http\Resources\PaymentVerifyResource;
 use App\Models\User;
+use App\Services\Payment\AuthorizeNet\ChargeCardService;
 use Illuminate\Support\Facades\Log;
 use Unicodeveloper\Paystack\Facades\Paystack;
 
@@ -125,6 +126,11 @@ class PaymentService
         $data = new PaymentVerifyResource($verify);
 
         return $this->success($data, "Payment verify status");
+    }
+
+    public function authorizeNetCard($request)
+    {
+        return (new ChargeCardService($request))->run();
     }
 
 }
