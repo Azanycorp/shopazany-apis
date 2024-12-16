@@ -26,4 +26,9 @@ class Country extends Model
     {
         return $this->hasOne(ShopCountry::class, 'country_id');
     }
+
+    public function paymentServices()
+    {
+        return $this->belongsToMany(PaymentService::class, 'payment_service_country');
+    }
 }

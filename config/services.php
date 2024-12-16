@@ -44,9 +44,14 @@ return [
         'mode' => env('PAYSTACK'),
         'live_sk' => env('LIVE_PAYSTACK_SECRET_KEY'),
         'test_sk' => env('PAYSTACK_SECRET_KEY'),
-        
+
         'test_pk' => env('PAYSTACK_TEST_PK'),
         'live_pk' => env('PAYSTACK_PK'),
-    ]
+    ],
+
+    'authorizenet' => [
+        'api_login_id' => env('AUTHORIZENET_API_LOGIN_ID'),
+        'transaction_key' => env('AUTHORIZENET_TRANSACTION_KEY'),
+    ],
 
 ];
