@@ -84,11 +84,12 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
     // Move to Cart
     Route::post('/product/cart', [HomeController::class, 'moveToCart']);
 
-
     // Payment
     Route::post('/checkout', [PaymentController::class, 'processPayment']);
     Route::get('/verify/payment/{user_id}/{reference}', [PaymentController::class, 'verifyPayment']);
 
+    // Payment Method
+    Route::get('/payment/method/{country_id}', [PaymentController::class, 'getPaymentMethod']);
 
     // Subscription
     Route::prefix('subscription')

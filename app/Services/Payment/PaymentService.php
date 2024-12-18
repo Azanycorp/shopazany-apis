@@ -9,6 +9,7 @@ use App\Trait\HttpResponse;
 use Illuminate\Support\Facades\Auth;
 use App\Services\Curl\GetCurlService;
 use App\Http\Resources\PaymentVerifyResource;
+use App\Models\PaymentService as ModelPaymentService;
 use App\Models\User;
 use App\Services\Payment\AuthorizeNet\ChargeCardService;
 use Illuminate\Support\Facades\Log;
@@ -132,6 +133,24 @@ class PaymentService
     {
         return (new ChargeCardService($request))->run();
     }
+
+    public function getPaymentMethod($countryId)
+    {
+        $services = ModelPaymentService::whereHas('countries', function ($q) use ($countryId) {
+            $q->where('country_id', $countryId);
+        })->with('countries')->get();
+
+        $data = $services->map(function ($service) {
+            return [
+                'id' => $service->id,
+                'name' => $service->name,
+                'slug' => $service->slug,
+            ];
+        });
+
+        return $this->success($data, "Payment methods");
+    }
+
 
 }
 
