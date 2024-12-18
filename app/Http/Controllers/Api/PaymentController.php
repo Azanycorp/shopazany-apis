@@ -43,4 +43,9 @@ class PaymentController extends Controller
         return $this->service->authorizeNetCard($request);
     }
 
+    public function getPaymentMethod($countryId)
+    {
+        return $this->service->getPaymentMethod($countryId);
+    }
+
 }

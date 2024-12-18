@@ -20,14 +20,14 @@ class ChargeCardService
 
     public function run()
     {
-        $merchantAuthentication = new AnetAPI\MerchantAuthenticationType();
-        $merchantAuthentication->setName(config('services.authorizenet.api_login_id'));
-        $merchantAuthentication->setTransactionKey(config('services.authorizenet.transaction_key'));
-
         $cardNumber = $this->request->input('card_number');
         $expirationDate = $this->request->input('expiration_date');
         $cvv = $this->request->input('cvv');
         $amount = $this->request->input('amount');
+
+        $merchantAuthentication = new AnetAPI\MerchantAuthenticationType();
+        $merchantAuthentication->setName(config('services.authorizenet.api_login_id'));
+        $merchantAuthentication->setTransactionKey(config('services.authorizenet.transaction_key'));
 
         $creditCard = new AnetAPI\CreditCardType();
         $creditCard->setCardNumber($cardNumber);
