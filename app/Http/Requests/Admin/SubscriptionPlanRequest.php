@@ -25,7 +25,8 @@ class SubscriptionPlanRequest extends FormRequest
             'title' => ['required', 'string', 'max:255'],
             'cost' => ['required'],
             'country_id' => ['required'],
-            'period' => ['required', 'string', 'in:monthly,yearly']
+            'period' => ['required', 'string', 'in:monthly,yearly'],
+            'tier' => ['required', 'integer']
         ];
     }
 

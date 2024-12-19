@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('payment_logs', function (Blueprint $table) {
-            $table->bigInteger('payment_id')->after('id');
-            $table->string('method')->after('data');
+            $table->bigInteger('payment_id')->after('id')->nullable();
+            $table->string('method')->after('data')->nullable();
         });
     }
 

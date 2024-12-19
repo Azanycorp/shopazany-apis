@@ -2,8 +2,10 @@
 
 namespace App\Observers;
 
+use App\Enum\ProductStatus;
 use App\Enum\UserType;
 use App\Mail\SignUpVerifyMail;
+use App\Models\Product;
 use App\Models\User;
 use Illuminate\Contracts\Events\ShouldHandleEventsAfterCommit;
 use Illuminate\Support\Facades\Mail;
@@ -15,7 +17,7 @@ class UserObserver implements ShouldHandleEventsAfterCommit
      */
     public function created(User $user): void
     {
-        Mail::to($user->email)->send(new SignUpVerifyMail($user));
+        defer(fn() => send_email($user->email, new SignUpVerifyMail($user)));
 
         if($user->type === UserType::CUSTOMER) {
             reward_user($user, 'create_account', 'completed');
@@ -39,7 +41,8 @@ class UserObserver implements ShouldHandleEventsAfterCommit
      */
     public function deleted(User $user): void
     {
-        //
+        Product::where('user_id', $user->id)
+        ->update(['status' => ProductStatus::DELETED]);
     }
 
     /**

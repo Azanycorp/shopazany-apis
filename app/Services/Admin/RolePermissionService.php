@@ -12,9 +12,11 @@ class RolePermissionService
 
     public function addRole($request)
     {
-        Role::create([
+        $role = Role::create([
             'name' => $request->name
         ]);
+
+        $role->permissions()->sync($request->permissions);
 
         return $this->success(null, 'Role created successfully');
     }

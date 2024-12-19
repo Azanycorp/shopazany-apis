@@ -16,6 +16,7 @@ class WishlistResource extends JsonResource
     {
         return [
             'id' => (int)$this->id,
+            'product_id' => $this->product?->id,
             'product_image' => $this->product?->image,
             'product_name' => $this->product?->name,
             'product_category' => $this->product?->category?->name,
