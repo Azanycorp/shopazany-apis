@@ -44,20 +44,16 @@ class ChargeCardService implements PaymentStrategy
 
         $controller = new AnetController\CreateTransactionController($request);
 
-        if(App::environment('production')) {
-            $response = $controller->executeWithApiResponse(\net\authorize\api\constants\ANetEnvironment::PRODUCTION);
-        } else {
-            $response = $controller->executeWithApiResponse(\net\authorize\api\constants\ANetEnvironment::SANDBOX);
-        }
+        $response = $controller->executeWithApiResponse(\net\authorize\api\constants\ANetEnvironment::PRODUCTION);
 
         if ($response != null) {
             if ($response->getMessages()->getResultCode() == "Ok") {
                 $tresponse = $response->getTransactionResponse();
 
                 if ($tresponse != null && $tresponse->getMessages() != null) {
-                    return $this->success($tresponse, "Payment successful");
+                    return $this->success(null, $tresponse->getMessages()[0]->getDescription());
                 } else {
-                    $msg = "Payment failed: " . $tresponse->getResponseReasonText();
+                    $msg = "Payment failed: " . $tresponse->getErrors()[0]->getErrorText();
                     return $this->error(null, $msg, 403);
                 }
             } else {
