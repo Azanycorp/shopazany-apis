@@ -18,7 +18,9 @@ class PaymentController extends Controller
 
     public function processPayment(PaymentRequest $request)
     {
-        return $this->service->processPayment($request);
+        $paymentDetails = $this->paystackPayDetails($request);
+        
+        return $this->service->processPayment($paymentDetails);
     }
 
     public function webhook(Request $request)

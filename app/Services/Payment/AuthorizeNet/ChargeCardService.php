@@ -3,27 +3,22 @@
 namespace App\Services\Payment\AuthorizeNet;
 
 use App\Trait\HttpResponse;
+use Illuminate\Http\JsonResponse;
+use App\Contracts\PaymentStrategy;
 use Illuminate\Support\Facades\App;
 use net\authorize\api\contract\v1 as AnetAPI;
 use net\authorize\api\controller as AnetController;
 
-class ChargeCardService
+class ChargeCardService implements PaymentStrategy
 {
     use HttpResponse;
 
-    protected $request;
-
-    public function __construct($request)
+    public function processPayment(array $paymentDetails): JsonResponse
     {
-        $this->request = $request;
-    }
-
-    public function run()
-    {
-        $cardNumber = $this->request->input('card_number');
-        $expirationDate = $this->request->input('expiration_date');
-        $cvv = $this->request->input('cvv');
-        $amount = $this->request->input('amount');
+        $cardNumber = $paymentDetails['card_number'];
+        $expirationDate = $paymentDetails['expiration_date'];
+        $cvv = $paymentDetails['cvv'];
+        $amount = $paymentDetails['amount'];
 
         $merchantAuthentication = new AnetAPI\MerchantAuthenticationType();
         $merchantAuthentication->setName(config('services.authorizenet.api_login_id'));

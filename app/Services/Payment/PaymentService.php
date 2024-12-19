@@ -2,75 +2,39 @@
 
 namespace App\Services\Payment;
 
+use App\Models\User;
+use App\Models\Payment;
 use App\Enum\PaymentType;
 use App\Enum\PaystackEvent;
-use App\Models\Payment;
 use App\Trait\HttpResponse;
+use App\Contracts\PaymentStrategy;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use App\Services\Curl\GetCurlService;
 use App\Http\Resources\PaymentVerifyResource;
-use App\Models\PaymentService as ModelPaymentService;
-use App\Models\User;
-use App\Services\Payment\AuthorizeNet\ChargeCardService;
-use Illuminate\Support\Facades\Log;
 use Unicodeveloper\Paystack\Facades\Paystack;
+use App\Models\PaymentService as ModelPaymentService;
+use App\Services\Payment\AuthorizeNet\ChargeCardService;
 
-class PaymentService
+class PaymentService implements PaymentStrategy
 {
     use HttpResponse;
 
-    public function processPayment($request)
+    protected $chargeCardService;
+
+    public function __construct(ChargeCardService $chargeCardService)
     {
-        if($request->input('currency') === 'USD') {
-            return $this->error(null, 'Currrency not available at the moment', 400);
-        }
+        $this->chargeCardService = $chargeCardService;
+    }
 
-        $user = User::findOrFail($request->input('user_id'));
-
-        $amount = $request->input('amount') * 100;
-        $userShippingId = $request->input('user_shipping_address_id');
-        $address = null;
-
-        if ($userShippingId === 0 && $request->input('shipping_address')) {
-            $shippingAddress = $request->input('shipping_address');
-            $address = (object) [
-                'first_name' => $shippingAddress['first_name'] ?? '',
-                'last_name' => $shippingAddress['last_name'] ?? '',
-                'email' => $shippingAddress['email'] ?? '',
-                'phone' => $shippingAddress['phone'] ?? '',
-                'street_address' => $shippingAddress['street_address'] ?? '',
-                'state' => $shippingAddress['state'] ?? '',
-                'city' => $shippingAddress['city'] ?? '',
-                'zip' => $shippingAddress['zip'] ?? '',
-            ];
-        } else {
-            $addr = $user->userShippingAddress()->where('id', $userShippingId)->first();
-            $address = $addr;
-        }
-
-        $callbackUrl = $request->input('payment_redirect_url');
-        if (!filter_var($callbackUrl, FILTER_VALIDATE_URL)) {
-            return response()->json(['error' => 'Invalid callback URL'], 400);
-        }
-
-        $paymentDetails = [
-            'email' => $request->input('email'),
-            'amount' => $amount,
-            'currency' => $request->input('currency'),
-            'metadata' => json_encode([
-                'user_id' => $request->input('user_id'),
-                'shipping_address' => $address,
-                'user_shipping_address_id' => $userShippingId,
-                'items' => $request->input('items'),
-                'payment_method' => $request->input('payment_method'),
-                'payment_type' => PaymentType::USERORDER,
-            ]),
-            'callback_url' => $request->input('payment_redirect_url')
-        ];
-
+    public function processPayment(array $paymentDetails): array
+    {
         try {
             $paystackInstance = Paystack::getAuthorizationUrl($paymentDetails);
-            return response()->json($paystackInstance);
+            return [
+                'status' => 'success',
+                'data' => $paystackInstance,
+            ];
         } catch (\Exception $e) {
             return $this->error(null, 'Payment processing failed, please try again later');
         }
@@ -131,7 +95,7 @@ class PaymentService
 
     public function authorizeNetCard($request)
     {
-        return (new ChargeCardService($request))->run();
+        return $this->chargeCardService->processPayment($request->all());
     }
 
     public function getPaymentMethod($countryId)

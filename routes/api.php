@@ -74,10 +74,8 @@ Route::controller(HomeController::class)->group(function () {
 });
 
 Route::post('/payment/webhook', [PaymentController::class, 'webhook']);
-Route::post('/authorize/payment', [PaymentController::class, 'authorizeNetCard']);
 
 Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
-
     // Product
     Route::post('product-review', [HomeController::class, 'productReview']);
     Route::post('/product/save-for-later', [HomeController::class, 'saveForLater']);
@@ -85,11 +83,19 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
     Route::post('/product/cart', [HomeController::class, 'moveToCart']);
 
     // Payment
-    Route::post('/checkout', [PaymentController::class, 'processPayment']);
-    Route::get('/verify/payment/{user_id}/{reference}', [PaymentController::class, 'verifyPayment']);
+    Route::prefix('payment')
+        ->controller(PaymentController::class)
+        ->group(function () {
+            // Paystack
+            Route::post('/paystack', 'processPayment');
+            Route::get('/verify/paystack/{user_id}/{reference}', 'verifyPayment');
 
-    // Payment Method
-    Route::get('/payment/method/{country_id}', [PaymentController::class, 'getPaymentMethod']);
+            // Authorize.net
+            Route::post('/authorize', 'authorizeNetCard');
+
+            // Payment Method
+            Route::get('/method/{country_id}', 'getPaymentMethod');
+    });
 
     // Subscription
     Route::prefix('subscription')

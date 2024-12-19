@@ -9,7 +9,9 @@ class B2BSellerShippingRepository implements B2BRepositoryInterface
 {
     public function all(int $user)
     {
-        return B2BSellerShippingAddress::with(['state', 'country', 'user'])->get();
+        return B2BSellerShippingAddress::with(['state', 'country', 'user'])
+            ->where('user_id', $user)
+            ->get();
     }
 
     public function create(array $data)
