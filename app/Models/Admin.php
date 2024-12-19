@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Notifications\ResetPasswordNotification;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -20,6 +21,15 @@ class Admin extends Authenticatable
         'status'
     ];
 
+    public function sendPasswordResetNotification($token): void
+    {
+        $email = $this->email;
+
+        $url = config('services.reset_password_url').'?token='.$token.'&email='.$email;
+
+        $this->notify(new ResetPasswordNotification($url));
+    }
+
     public function products()
     {
         return $this->hasMany(Product::class, 'admin_id');
@@ -28,5 +38,10 @@ class Admin extends Authenticatable
     public function roles()
     {
         return $this->belongsToMany(Role::class);
+    }
+
+    public function permissions()
+    {
+        return $this->belongsToMany(Permission::class);
     }
 }

@@ -32,14 +32,15 @@ class AuthService
                 'id' => $user->id,
                 'token' => $token->plainTextToken,
                 'expires_at' => $token->accessToken->expires_at,
-                'role' => $user?->roles->map(function ($role) {
+                'role' => $user->roles ? $user->roles->map(function ($role) {
                     return [
-                        'name' => $role->name,
+                        'id' => $role?->id,
+                        'name' => $role?->name,
                         'permissions' => $role?->permissions->flatMap(function ($permission) {
                             return [$permission->name];
                         })->toArray()
                     ];
-                })->toArray(),
+                })->toArray() : [],
             ]);
         }
 

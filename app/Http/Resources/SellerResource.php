@@ -15,8 +15,8 @@ class SellerResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => (int)$this->id,
-            'uuid' => (string)$this->uuid,
+            "id" => (int)$this->id,
+            "uuid" => (string)$this->uuid,
             "first_name" => (string)$this->first_name,
             "last_name" => (string)$this->last_name,
             "middlename" => (string)$this->middlename,
