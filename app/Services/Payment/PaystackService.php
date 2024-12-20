@@ -2,6 +2,7 @@
 
 namespace App\Services\Payment;
 
+use App\Actions\PaymentLogAction;
 use App\Enum\PaymentType;
 use App\Enum\SubscriptionType;
 use App\Mail\CustomerOrderMail;
@@ -116,12 +117,12 @@ class PaystackService
                 $userShippingId = $paymentData['metadata']['user_shipping_address_id'];
                 $orderNo = self::orderNo();
 
-                $payment = Payment::create([
+                $data = (object)[
                     'user_id' => $userId,
                     'first_name' => $user->first_name,
                     'last_name' => $user->last_name,
                     'email' => $user->email,
-                    'phone_number' => $user->phone,
+                    'phone' => $user->phone,
                     'amount' => $formattedAmount,
                     'reference' => $ref,
                     'channel' => $channel,
@@ -132,30 +133,46 @@ class PaystackService
                     'transaction_date' => $transaction_date,
                     'status' => $payStatus,
                     'type' => PaymentType::USERORDER,
-                ]);
+                ];
 
-                PaymentLog::create([
-                    'payment_id' => $payment->id,
-                    'data' => $paymentData,
-                    'method' => $method,
-                    'status' => $status,
-                    'type' => PaymentType::USERORDER,
-                ]);
+                $payment = (new PaymentLogAction($data, $paymentData, $method, $status))->execute();
+
+                // $payment = Payment::create([
+                //     'user_id' => $userId,
+                //     'first_name' => $user->first_name,
+                //     'last_name' => $user->last_name,
+                //     'email' => $user->email,
+                //     'phone_number' => $user->phone,
+                //     'amount' => $formattedAmount,
+                //     'reference' => $ref,
+                //     'channel' => $channel,
+                //     'currency' => $currency,
+                //     'ip_address' => $ip_address,
+                //     'paid_at' => $paid_at,
+                //     'createdAt' => $createdAt,
+                //     'transaction_date' => $transaction_date,
+                //     'status' => $payStatus,
+                //     'type' => PaymentType::USERORDER,
+                // ]);
+
+                // PaymentLog::create([
+                //     'payment_id' => $payment->id,
+                //     'data' => $paymentData,
+                //     'method' => $method,
+                //     'status' => $status,
+                //     'type' => PaymentType::USERORDER,
+                // ]);
 
                 $orderedItems = [];
-                $seller = [];
                 foreach ($items as $item) {
 
-                    $product = Product::findOrFail($item['product_id']);
-
-                    $seller = Product::with('user')
-                    ->where('id', $item['product_id'])
-                    ->first();
+                    $product = Product::with('user')
+                        ->findOrFail($item['product_id']);
 
                     Order::saveOrder(
                         $user,
                         $payment,
-                        $seller->user,
+                        $product->user,
                         $item,
                         $orderNo,
                         $address,
@@ -190,7 +207,7 @@ class PaystackService
                 Cart::where('user_id', $userId)->delete();
 
                 self::sendOrderConfirmationEmail($user, $orderedItems, $orderNo, $formattedAmount);
-                self::sendSellerOrderEmail($seller->user, $orderedItems, $orderNo, $formattedAmount);
+                self::sendSellerOrderEmail($product->user, $orderedItems, $orderNo, $formattedAmount);
             });
         } catch (\Exception $e) {
             Log::error('Error in handlePaymentSuccess: ' . $e->getMessage());

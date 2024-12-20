@@ -19,7 +19,7 @@ class PaymentController extends Controller
     public function processPayment(PaymentRequest $request)
     {
         $paymentDetails = $this->paystackPayDetails($request);
-        
+
         return $this->service->processPayment($paymentDetails);
     }
 
@@ -35,12 +35,12 @@ class PaymentController extends Controller
 
     public function authorizeNetCard(Request $request)
     {
-        $request->validate([
-            'card_number' => 'required',
-            'expiration_date' => 'required',
-            'cvv' => 'required',
-            'amount' => 'required'
-        ]);
+        // $request->validate([
+        //     'card_number' => 'required',
+        //     'expiration_date' => 'required',
+        //     'cvv' => 'required',
+        //     'amount' => 'required'
+        // ]);
 
         return $this->service->authorizeNetCard($request);
     }
