@@ -2,6 +2,8 @@
 
 namespace App\Services\Admin;
 
+use App\Enum\UserStatus;
+use App\Enum\UserType;
 use App\Http\Resources\CustomerResource;
 use App\Http\Resources\PaymentResource;
 use App\Models\Payment;
@@ -14,7 +16,7 @@ class CustomerService
 
     public function allCustomers()
     {
-        $query = request()->input('search');
+        $query = trim(request()->input('search'));
 
         $users = User::where('type', 'customer')
         ->where(function($queryBuilder) use ($query) {
@@ -78,24 +80,25 @@ class CustomerService
         return $this->success(null, "User has been blocked successfully");
     }
 
-    public function removeCustomer($id)
+    public function removeCustomer($request)
     {
-        $user = User::where('id', $id)
-        ->where('type', 'customer')
-        ->first();
+        $users = User::whereIn('id', $request->user_ids)->get();
 
-        if (!$user) {
-            return $this->error(null, "User not found", 404);
+        foreach ($users as $user) {
+            $user->status = UserStatus::DELETED;
+            $user->is_verified = 0;
+            $user->is_admin_approve = 0;
+            $user->save();
+
+            $user->delete();
         }
 
-        $user->delete();
-
-        return $this->success(null, "User has been removed successfully");
+        return $this->success(null, "User(s) have been removed successfully");
     }
 
     public function filter()
     {
-        $query = request()->query('approved');
+        $query = trim(request()->query('approved'));
 
         $users = User::where('type', 'customer')
             ->when($query !== null, function ($queryBuilder) use ($query) {
@@ -127,8 +130,12 @@ class CustomerService
                 'last_name' => $request->last_name,
                 'middlename' => $request->middlename,
                 'email' => $request->email,
+                'password' => bcrypt('12345678'),
                 'phone' => $request->phone,
                 'date_of_birth' => $request->date_of_birth,
+                'type' => UserType::CUSTOMER,
+                'is_verified' => 1,
+                'is_admin_approve' => 1,
                 'status' => $request->status,
             ]);
 

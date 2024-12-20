@@ -27,13 +27,15 @@ class Product extends Model
         'product_price',
         'discount_price',
         'price',
+        'usd_price',
+        'default_currency',
         'current_stock_quantity',
         'minimum_order_quantity',
         'image',
         'added_by',
         'country_id',
         'is_featured',
-        'status'
+        'status',
     ];
 
     public function user(): BelongsTo
@@ -64,6 +66,11 @@ class Product extends Model
     public function country(): BelongsTo
     {
         return $this->belongsTo(Country::class, 'country_id');
+    }
+
+    public function shopCountry(): BelongsTo
+    {
+        return $this->belongsTo(ShopCountry::class, 'country_id', 'country_id');
     }
 
     public function wishlists()
@@ -99,5 +106,10 @@ class Product extends Model
     public function carts(): HasMany
     {
         return $this->hasMany(Cart::class, 'product_id');
+    }
+
+    public function productReviews(): HasMany
+    {
+        return $this->hasMany(ProductReview::class, 'product_id');
     }
 }

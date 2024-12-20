@@ -20,12 +20,14 @@ class AuthGates
 
         if($user){
             
-            foreach($user->roles as $role){
+            $permissions = [];
+
+            foreach($user->roles as $role) {
                 foreach($role->permissions as $singlePermission){
                     $permissions[] = $singlePermission->name;
                 }
             }
-
+            
             collect($permissions)->unique()->each(function ($permission) {
                 Gate::define($permission, function($user) {
                     return true;

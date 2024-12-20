@@ -2,7 +2,10 @@
 
 namespace App\Trait;
 
+use App\Models\B2BProduct;
+use App\Models\B2BSellerShippingAddress;
 use App\Models\BankAccount;
+use App\Models\BusinessInformation;
 use App\Models\Country;
 use App\Models\Kyc;
 use App\Models\Order;
@@ -18,6 +21,7 @@ use App\Models\UserAction;
 use App\Models\UserActivityLog;
 use App\Models\UserBusinessInformation;
 use App\Models\UserShippingAddress;
+use App\Models\UserSubcription;
 use App\Models\Wallet;
 use App\Models\Wishlist;
 use App\Models\WithdrawalRequest;
@@ -131,5 +135,25 @@ trait UserRelationship
     public function reedemPoints(): HasMany
     {
         return $this->hasMany(RedeemPoint::class, 'user_id');
+    }
+
+    public function userSubscriptions(): HasMany
+    {
+        return $this->hasMany(UserSubcription::class, 'user_id');
+    }
+
+    public function businessInformation(): HasOne
+    {
+        return $this->hasOne(BusinessInformation::class, 'user_id');
+    }
+
+    public function b2bProducts(): HasMany
+    {
+        return $this->hasMany(B2BProduct::class, 'user_id');
+    }
+
+    public function b2bSellerShippingAddresses(): HasMany
+    {
+        return $this->hasMany(B2BSellerShippingAddress::class, 'user_id');
     }
 }

@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\AdminSellerController;
 use App\Http\Controllers\Api\BannerPromoController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\FaqController;
+use App\Http\Controllers\Api\FinanceController;
 use App\Http\Controllers\Api\RewardPointController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\SettingsController;
@@ -34,8 +35,9 @@ Route::controller(ApiController::class)->group(function () {
     Route::get('sizes', 'sizes');
 });
 
-
 Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function () {
+
+    Route::get('/profile', [ApiController::class, 'adminProfile']);
 
     Route::post('/add/slider', [ApiController::class, 'addSlider']);
     Route::get('/slider', [ApiController::class, 'slider']);
@@ -70,11 +72,13 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function () {
         Route::get('/all', 'adminCategories');
         Route::get('/analytics', 'categoryAnalytic');
         Route::patch('/change/{category_id}', 'featuredStatus');
+        Route::delete('/delete/{id}', 'deleteCategory');
 
         Route::post('/create/subcategory', 'createSubCategory');
         Route::get('/subcategory', 'getAdminSubcategory');
         Route::get('/{category_id}/subcategory', 'getSubcategory');
         Route::patch('/subcategory/status/{sub_category_id}', 'subStatus');
+        Route::delete('/subcategory/delete/{id}', 'deleteSubCategory');
     });
 
     Route::prefix('order')->controller(OrderController::class)->group(function () {
@@ -98,7 +102,7 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function () {
         Route::patch('/approve', 'approveCustomer');
         Route::patch('/ban', 'banCustomer');
 
-        Route::delete('/remove/{user_id}', 'removeCustomer');
+        Route::delete('/remove', 'removeCustomer');
     });
 
     Route::prefix('seller')->controller(AdminSellerController::class)->group(function () {
@@ -111,6 +115,8 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function () {
 
         Route::patch('/approve', 'approveSeller');
         Route::patch('/ban', 'banSeller');
+
+        Route::delete('/bulk/remove', 'bulkRemove');
     });
 
     Route::prefix('product')->controller(AdminProductController::class)->group(function () {
@@ -139,7 +145,12 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function () {
     });
 
     Route::prefix('settings')->controller(SettingsController::class)->group(function () {
+        // Admin User
         Route::post('/add-user', 'addUser');
+        Route::get('/all-users', 'allUsers');
+        Route::patch('/update-user/{id}', 'updateUser');
+        Route::delete('/delete-user/{id}', 'deleteUser');
+
         Route::post('/seo', 'addSeo');
         Route::get('/seo', 'getSeo');
         Route::post('/terms-service', 'addTermsService');
@@ -161,6 +172,14 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function () {
         Route::get('/{id}', 'getPlanById');
         Route::patch('/update/{id}', 'updatePlan');
         Route::delete('/remove/{id}', 'deletePlan');
+    });
+
+    Route::prefix('finance')->controller(FinanceController::class)->group(function () {
+        Route::post('/payment/service', 'addPaymentService');
+        Route::get('/payment/service', 'getPaymentService');
+        Route::get('/payment/service/{id}', 'getSinglePaymentService');
+        Route::patch('/payment/service/{id}', 'updatePaymentService');
+        Route::delete('/payment/service/{id}', 'deletePaymentService');
     });
 
     Route::resource('settings/faq', FaqController::class);
