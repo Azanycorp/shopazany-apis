@@ -7,6 +7,7 @@ use App\Models\Language;
 use App\Models\Transaction;
 use Illuminate\Support\Str;
 use App\Models\BusinessSetting;
+use App\Models\Order;
 use App\Models\User;
 use App\Models\UserActivityLog;
 use App\Services\RewardPoint\RewardService;
@@ -2375,4 +2376,23 @@ if (!function_exists('generateRefundComplaintNumber')) {
         return $uniqueNumber;
     }
 }
+
+if (!function_exists('orderNo')) {
+    function orderNo () {
+        $timestamp = now()->timestamp;
+        $randomNumber = mt_rand(100000, 999999);
+
+        $uniqueOrderNumber = 'ORD-' . $timestamp . '-' . $randomNumber;
+
+        while (Order::where('order_no', $uniqueOrderNumber)->exists()) {
+            $randomNumber = mt_rand(100000, 999999);
+            $uniqueOrderNumber = 'ORD-' . $timestamp . '-' . $randomNumber;
+        }
+
+        return $uniqueOrderNumber;
+    }
+}
+
+
+
 
