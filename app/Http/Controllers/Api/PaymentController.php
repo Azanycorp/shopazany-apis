@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\AuthorizeNetCardRequest;
 use App\Http\Requests\PaymentRequest;
 use App\Services\Payment\PaymentService;
 use Illuminate\Http\Request;
@@ -33,15 +34,8 @@ class PaymentController extends Controller
         return $this->service->verifyPayment($userId, $ref);
     }
 
-    public function authorizeNetCard(Request $request)
+    public function authorizeNetCard(AuthorizeNetCardRequest $request)
     {
-        // $request->validate([
-        //     'card_number' => 'required',
-        //     'expiration_date' => 'required',
-        //     'cvv' => 'required',
-        //     'amount' => 'required'
-        // ]);
-
         return $this->service->authorizeNetCard($request);
     }
 

@@ -10,7 +10,6 @@ use App\Mail\SellerOrderMail;
 use App\Models\Cart;
 use App\Models\Order;
 use App\Models\Payment;
-use App\Models\PaymentLog;
 use App\Models\Product;
 use App\Models\User;
 use App\Models\UserShippingAddress;
@@ -50,12 +49,12 @@ class PaystackService
                     ]);
                 }
 
-                $payment = Payment::create([
+                $data = (object)[
                     'user_id' => $userId,
                     'first_name' => $user->first_name,
                     'last_name' => $user->last_name,
                     'email' => $user->email,
-                    'phone_number' => $user->phone,
+                    'phone' => $user->phone,
                     'amount' => $formattedAmount,
                     'reference' => $ref,
                     'channel' => $channel,
@@ -66,15 +65,9 @@ class PaystackService
                     'transaction_date' => $transaction_date,
                     'status' => $payStatus,
                     'type' => PaymentType::RECURRINGCHARGE,
-                ]);
+                ];
 
-                PaymentLog::create([
-                    'payment_id' => $payment->id,
-                    'data' => $paymentData,
-                    'method' => $method,
-                    'status' => $status,
-                    'type' => PaymentType::RECURRINGCHARGE,
-                ]);
+                $payment = (new PaymentLogAction($data, $paymentData, $method, $status))->execute();
 
                 $user->userSubscriptions()->create([
                     'subscription_plan_id' => $planId,
@@ -136,32 +129,6 @@ class PaystackService
                 ];
 
                 $payment = (new PaymentLogAction($data, $paymentData, $method, $status))->execute();
-
-                // $payment = Payment::create([
-                //     'user_id' => $userId,
-                //     'first_name' => $user->first_name,
-                //     'last_name' => $user->last_name,
-                //     'email' => $user->email,
-                //     'phone_number' => $user->phone,
-                //     'amount' => $formattedAmount,
-                //     'reference' => $ref,
-                //     'channel' => $channel,
-                //     'currency' => $currency,
-                //     'ip_address' => $ip_address,
-                //     'paid_at' => $paid_at,
-                //     'createdAt' => $createdAt,
-                //     'transaction_date' => $transaction_date,
-                //     'status' => $payStatus,
-                //     'type' => PaymentType::USERORDER,
-                // ]);
-
-                // PaymentLog::create([
-                //     'payment_id' => $payment->id,
-                //     'data' => $paymentData,
-                //     'method' => $method,
-                //     'status' => $status,
-                //     'type' => PaymentType::USERORDER,
-                // ]);
 
                 $orderedItems = [];
                 foreach ($items as $item) {
