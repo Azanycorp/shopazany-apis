@@ -62,6 +62,7 @@ class ProfileResource extends JsonResource
                     'street_address' => $addr?->street_address,
                     'state' => $addr?->state,
                     'city' => $addr?->city,
+                    'zip' => $addr?->zip,
                 ];
             })->toArray() : [],
             'subscribed' => $this->is_subscribed,
