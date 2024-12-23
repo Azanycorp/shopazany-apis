@@ -27,6 +27,7 @@ class ProfileResource extends JsonResource
             "phone" => (string)$this->phone,
             "country_id" => (string)$this->country,
             "state_id" => (string)$this->state_id,
+            "default_currency" => (string)$this->default_currency,
             "referrer_code" => (string)$this->referrer_code,
             "referrer_link" => (string)$this->referrer_link,
             "date_of_birth" => (string)$this->date_of_birth,
@@ -57,12 +58,23 @@ class ProfileResource extends JsonResource
             ],
             "shipping_address" => $this->userShippingAddress ? $this->userShippingAddress->map(function ($addr) {
                 return [
-                    'id' => $addr->id,
-                    'street_address' => $addr->street_address,
-                    'state' => $addr->state,
-                    'city' => $addr->city,
+                    'id' => $addr?->id,
+                    'street_address' => $addr?->street_address,
+                    'state' => $addr?->state,
+                    'city' => $addr?->city,
+                    'zip' => $addr?->zip,
                 ];
             })->toArray() : [],
+            'subscribed' => $this->is_subscribed,
+            'user_subscription_plan' => (object)[
+                'id' => (int)$this->subscription_plan?->id,
+                'subscription_plan_id' => (int)$this->subscription_plan?->subscriptionPlan?->id,
+                'plan' => (string)$this->subscription_plan?->subscriptionPlan?->title,
+                'plan_start' => (string)$this->subscription_plan?->plan_start,
+                'plan_end' => (string)$this->subscription_plan?->plan_end,
+                'expired_at' => (string)$this->subscription_plan?->expired_at,
+                'status' => (string)$this->subscription_plan?->status,
+            ],
         ];
     }
 }
