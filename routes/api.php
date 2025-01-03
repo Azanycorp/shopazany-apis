@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\B2BSellerController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\CustomerController;
+use App\Http\Controllers\Api\GoogleAuthController;
 use App\Http\Controllers\Api\HomeController;
 use App\Http\Controllers\Api\MailingListController;
 use App\Http\Controllers\Api\PaymentController;
@@ -40,6 +41,13 @@ Route::middleware(['throttle:apis'])->group(function () {
 
     Route::get('/country', [ApiController::class, 'country']);
     Route::get('/states/{country_id}', [ApiController::class, 'states']);
+
+    // Google Auth
+    Route::controller(GoogleAuthController::class)
+        ->group(function () {
+            Route::get('auth/google', 'redirectToGoogle');
+            Route::get('auth/google/callback', 'handleCallback');
+        });
 });
 
 Route::get('/banners', [ApiController::class, 'slider']);

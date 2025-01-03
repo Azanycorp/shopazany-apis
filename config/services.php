@@ -35,6 +35,18 @@ return [
         ],
     ],
 
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect' => env('GOOGLE_REDIRECT'),
+    ],
+
+    'apple' => [
+        'client_id' => env('APPLE_CLIENT_ID'),
+        'client_secret' => env('APPLE_CLIENT_SECRET'),
+        'redirect' => env('APPLE_REDIRECT'),
+    ],
+
     'reset_password_url' => env('RESET_PASSWORD_URL'),
     'frontend_baseurl' => env('FRONTEND_BASEURL'),
     'staging_frontend_baseurl' => env('STAGING_FRONTEND_BASEURL'),
