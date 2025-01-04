@@ -15,4 +15,5 @@ enum UserLog: string
     const PASSWORD_RESET = 'password reset';
     const LOGOUT = 'logged out';
     const FAILED = 'failed';
+    const PAYMENT = 'payment';
 }

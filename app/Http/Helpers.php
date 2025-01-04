@@ -272,6 +272,13 @@ if(!function_exists('generateVerificationCode')) {
     }
 }
 
+if(!function_exists('generateRefCode')) {
+    function generateRefCode()
+    {
+        return 'AZY-' . sprintf("%06d", mt_rand(1, 999999));
+    }
+}
+
 if(!function_exists('generate_referral_code')) {
     function generate_referral_code()
     {

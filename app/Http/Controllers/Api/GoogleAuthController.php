@@ -12,7 +12,7 @@ use Laravel\Socialite\Facades\Socialite;
 class GoogleAuthController extends Controller
 {
     protected $frontendBaseUrl;
-    
+
     public function __construct()
     {
         if (app()->environment('production')) {
@@ -46,6 +46,8 @@ class GoogleAuthController extends Controller
                     'type' => UserType::CUSTOMER,
                     'status' => UserStatus::ACTIVE,
                     'email_verified_at' => now(),
+                    'is_verified' => 1,
+                    'is_admin_approve' => 1,
                 ]);
             } else {
                 $user->update([
