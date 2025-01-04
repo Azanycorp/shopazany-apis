@@ -57,6 +57,7 @@ class GoogleAuthController extends Controller
                 ]);
             }
 
+            $user->tokens()->delete();
             $token = $user->createToken('token-name')->plainTextToken;
 
             return redirect($this->frontendBaseUrl . '/auth/callback?' . http_build_query([
