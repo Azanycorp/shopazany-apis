@@ -15,5 +15,7 @@ prod-scripts/install_dependencies.sh merge=ours
 prod-scripts/validate_services.sh merge=ours
 prod-scripts/start_server.sh merge=ours
 
+appspec.yml merge=ours
+
 # Set the merge strategy for the GitHub Actions deploy script to 'ours'
 .github/workflows/staging_ec2_deploy.yml merge=ours
