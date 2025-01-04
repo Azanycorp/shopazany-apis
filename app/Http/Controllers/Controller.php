@@ -182,6 +182,7 @@ abstract class Controller
 
     protected function logUserIn($user, $request)
     {
+        $user->tokens()->delete();
         $token = $user->createToken('API Token of ' . $user->email);
 
         $description = "User with email {$request->email} logged in";
