@@ -197,7 +197,7 @@ class ChargeCardService implements PaymentStrategy
         $pay = (new PaymentLogAction($data, $payment, 'authorizenet', 'success'))->execute();
 
         $orderedItems = [];
-        $orderedItems = [];
+        $product = null;
 
         foreach ($paymentDetails['lineItems'] as $item) {
             try {
@@ -237,8 +237,10 @@ class ChargeCardService implements PaymentStrategy
 
         Cart::where('user_id', $user->id)->delete();
 
+        if ($product) {
+            self::sendSellerOrderEmail($product->user, $orderedItems, $orderNo, $amount);
+        }
         self::sendOrderConfirmationEmail($user, $orderedItems, $orderNo, $amount);
-        self::sendSellerOrderEmail($product->user, $orderedItems, $orderNo, $amount);
 
         (new UserLogAction(
             request(),
