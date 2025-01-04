@@ -197,28 +197,42 @@ class ChargeCardService implements PaymentStrategy
         $pay = (new PaymentLogAction($data, $payment, 'authorizenet', 'success'))->execute();
 
         $orderedItems = [];
+        $orderedItems = [];
+
         foreach ($paymentDetails['lineItems'] as $item) {
-            $product = Product::with('user')->findOrFail($item['itemId']);
+            try {
+                $product = Product::with('user')->findOrFail($item['itemId']);
 
-            Order::saveOrder(
-                $user,
-                $pay,
-                $product->user,
-                $item,
-                $orderNo,
-                $paymentDetails['billTo']['address'],
-                "authorizenet",
-                "success",
-            );
+                Order::saveOrder(
+                    $user,
+                    $pay,
+                    $product->user,
+                    $item,
+                    $orderNo,
+                    $paymentDetails['billTo']['address'],
+                    "authorizenet",
+                    "success",
+                );
 
-            $orderedItems[] = [
-                'product_name' => $product->name,
-                'image' => $product->image,
-                'quantity' => $item['quantity'],
-                'price' => $item['unitPrice'],
-            ];
+                $orderedItems[] = [
+                    'product_name' => $product->name,
+                    'image' => $product->image,
+                    'quantity' => $item['quantity'],
+                    'price' => $item['unitPrice'],
+                ];
 
-            $product->decrement('current_stock_quantity', $item['quantity']);
+                $product->decrement('current_stock_quantity', $item['quantity']);
+            } catch (\Exception $e) {
+                (new UserLogAction(
+                    request(),
+                    UserLog::PAYMENT,
+                    "Order Processing Error for Item ID {$item['itemId']}: " . $e->getMessage(),
+                    json_encode($paymentDetails),
+                    $user
+                ))->run();
+
+                continue;
+            }
         }
 
         Cart::where('user_id', $user->id)->delete();
