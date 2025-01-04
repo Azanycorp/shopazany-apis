@@ -8,7 +8,6 @@ use App\Mail\SignUpVerifyMail;
 use App\Models\Product;
 use App\Models\User;
 use Illuminate\Contracts\Events\ShouldHandleEventsAfterCommit;
-use Illuminate\Support\Facades\Mail;
 
 class UserObserver implements ShouldHandleEventsAfterCommit
 {

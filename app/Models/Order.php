@@ -56,13 +56,13 @@ class Order extends Model
 
         $data->user_id = $user->id;
         $data->seller_id = $seller->id;
-        $data->product_id = $item['product_id'];
+        $data->product_id = $item['product_id'] ?? $item['itemId'];
         $data->payment_id = $payment->id;
-        $data->product_quantity = $item['product_quantity'];
+        $data->product_quantity = $item['product_quantity'] ?? $item['quantity'];
         $data->order_no = $orderNo;
         $data->shipping_address = $address;
         $data->order_date = now();
-        $data->total_amount = $item['total_amount'];
+        $data->total_amount = $item['total_amount'] ?? $item['unitPrice'];
         $data->payment_method = $method;
         $data->payment_status = $status;
         $data->status = OrderStatus::PENDING;

@@ -29,7 +29,7 @@ class UserLogAction
         try {
             UserLog::create([
                 'user_id' => $this->user?->id,
-                'email' => $this->request?->email,
+                'email' => $this->user?->email,
                 'user_type' => $this->user?->type,
                 'action' => $this->action,
                 'description' => $this->description,
@@ -42,7 +42,9 @@ class UserLogAction
                     'is_robot' => $this->agent->robot()
                 ]),
                 'request' => $this->request->getContent(),
-                'response' => $this->response->getContent(),
+                'response' => is_object($this->response) && method_exists($this->response, 'getContent')
+                ? $this->response->getContent()
+                : $this->response,
                 'performed_at' => now()
             ]);
         } catch (\Throwable $th) {
