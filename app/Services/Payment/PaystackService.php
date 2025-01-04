@@ -2,19 +2,23 @@
 
 namespace App\Services\Payment;
 
-use App\Actions\PaymentLogAction;
-use App\Enum\PaymentType;
-use App\Enum\SubscriptionType;
-use App\Mail\CustomerOrderMail;
-use App\Mail\SellerOrderMail;
 use App\Models\Cart;
+use App\Models\User;
+use App\Enum\UserLog;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\Product;
-use App\Models\User;
-use App\Models\UserShippingAddress;
+use App\Enum\PaymentType;
+use Illuminate\Support\Str;
+use App\Mail\SellerOrderMail;
+use App\Actions\UserLogAction;
+use App\Enum\SubscriptionType;
+use App\Mail\CustomerOrderMail;
+use App\Actions\PaymentLogAction;
 use Illuminate\Support\Facades\DB;
+use App\Models\UserShippingAddress;
 use Illuminate\Support\Facades\Log;
+
 class PaystackService
 {
     public static function handleRecurringCharge($event, $status)
@@ -175,23 +179,35 @@ class PaystackService
 
                 self::sendOrderConfirmationEmail($user, $orderedItems, $orderNo, $formattedAmount);
                 self::sendSellerOrderEmail($product->user, $orderedItems, $orderNo, $formattedAmount);
+
+                (new UserLogAction(
+                    request(),
+                    UserLog::PAYMENT,
+                    "Payment successful",
+                    json_encode($paymentData),
+                    $user
+                ))->run();
             });
         } catch (\Exception $e) {
+            $msg = 'Error in handlePaymentSuccess: ' . $e->getMessage();
+
+            (new UserLogAction(
+                request(),
+                UserLog::PAYMENT,
+                $msg,
+                json_encode($paymentData),
+                $user
+            ))->run();
+
             Log::error('Error in handlePaymentSuccess: ' . $e->getMessage());
         }
     }
 
     private static function orderNo()
     {
-        $timestamp = now()->timestamp;
-        $randomNumber = mt_rand(100000, 999999);
-
-        $uniqueOrderNumber = 'ORD-' . $timestamp . '-' . $randomNumber;
-
-        while (Order::where('order_no', $uniqueOrderNumber)->exists()) {
-            $randomNumber = mt_rand(100000, 999999);
-            $uniqueOrderNumber = 'ORD-' . $timestamp . '-' . $randomNumber;
-        }
+        do {
+            $uniqueOrderNumber = 'ORD-' . now()->timestamp . '-' . Str::random(8);
+        } while (Order::where('order_no', $uniqueOrderNumber)->exists());
 
         return $uniqueOrderNumber;
     }

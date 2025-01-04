@@ -213,7 +213,7 @@ class AuthService extends Controller
             'is_verified' => 1,
             'is_admin_approve' => 1,
             'verification_code' => null,
-            'email_verified_at' => Carbon::now(),
+            'email_verified_at' => now(),
             'status' => UserStatus::ACTIVE
         ]);
 
