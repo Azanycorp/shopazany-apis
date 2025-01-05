@@ -85,7 +85,6 @@ class SellerService extends Controller
         $auth = userAuth();
 
         $user = User::findOrFail($auth->id);
-
         $data = new SellerProfileResource($user);
 
         return $this->success($data, 'Seller profile');

@@ -2,12 +2,14 @@
 
 namespace App\Services\B2B;
 
-use App\Enum\ProductStatus;
-use App\Enum\RefundRequestStatus;
+use App\Models\User;
 use App\Models\B2BProduct;
-use App\Models\B2BRequestRefund;
+use App\Enum\ProductStatus;
 use App\Trait\HttpResponse;
+use App\Models\B2BRequestRefund;
+use App\Enum\RefundRequestStatus;
 use App\Http\Resources\B2BProductResource;
+use App\Http\Resources\SellerProfileResource;
 
 class BuyerService
 {
@@ -40,36 +42,46 @@ class BuyerService
 
         return $this->success($data, 'Products');
     }
-    
+
     public function getProductDetail($slug)
     {
         $product = B2BProduct::where('slug', $slug)->firstOrFail();
-        
+
         $moreFromSeller = B2BProduct::select('id', 'name', 'slug', 'category_id', 'description', 'front_image', 'fob_price')
             ->where('user_id', $product->user_id)
             ->where('id', '!=', $product->id)
             ->inRandomOrder()
             ->limit(4)
             ->get();
-        
+
             $relatedProducts = B2BProduct::select('id', 'name', 'slug', 'category_id', 'description', 'front_image', 'fob_price')
             ->where('category_id', $product->category_id)
             ->where('id', '!=', $product->id)
             ->inRandomOrder()
             ->limit(4)
             ->get();
-        
+
         $data = new B2BProductResource($product);
-        
+
         $response = [
             'data' => $data,
             'more_from_seller' => B2BProductResource::collection($moreFromSeller),
             'related_products' => B2BProductResource::collection($relatedProducts),
         ];
-        
+
         return $this->success($response, 'Product Detail');
     }
-    
+
+    public function profile()
+    {
+        $auth = userAuth();
+
+        $user = User::findOrFail($auth->id);
+        $data = new SellerProfileResource($user);
+
+        return $this->success($data, 'Seller profile');
+    }
+
 }
 
 
