@@ -2,16 +2,15 @@
 
 namespace App\Http\Middleware;
 
+use Closure;
 use App\Enum\UserType;
 use App\Trait\HttpResponse;
-use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class BuyerAuthMiddleware
+class B2BBuyer
 {
     use HttpResponse;
-
     /**
      * Handle an incoming request.
      *
@@ -21,14 +20,13 @@ class BuyerAuthMiddleware
     {
         $user = $request->user();
 
-        if (! $user) {
+        if (!$user) {
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        if ($user && $user->type !== UserType::CUSTOMER) {
+        if ($user && $user->type !== UserType::B2B_BUYER) {
             return $this->error(null, "Unauthorized action.", 401);
         }
-
         return $next($request);
     }
 }

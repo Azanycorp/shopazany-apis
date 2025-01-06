@@ -51,8 +51,9 @@ class ChargeUserSubscriptions extends Command
     private function chargeSubscription($subscription)
     {
         DB::beginTransaction();
-        
+
         try {
+            
             $response = (new ChargeUserService($subscription))->run();
 
             if ($response['status'] === true) {

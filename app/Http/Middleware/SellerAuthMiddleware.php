@@ -22,11 +22,11 @@ class SellerAuthMiddleware
     {
         $user = $request->user();
 
-        if (! $user) {
+        if (!$user) {
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        if ($user && $user->type !== UserType::B2B_SELLER) {
+        if ($user && $user->type !== UserType::SELLER) {
             return $this->error(null, "Unauthorized action.", 401);
         }
 
