@@ -55,12 +55,12 @@ class AppServiceProvider extends ServiceProvider
 
         User::observe(UserObserver::class);
         Order::observe(OrderObserver::class);
-        
+
         $this->configureCommands();
         $this->configureModels();
         $this->configureUrl();
     }
-    
+
     /**
      * Configure the application's command.
      */
@@ -70,7 +70,7 @@ class AppServiceProvider extends ServiceProvider
             $this->app->isProduction(),
         );
     }
-    
+
     /**
      * Configure the application's models.
      */
@@ -79,7 +79,7 @@ class AppServiceProvider extends ServiceProvider
         Model::shouldBeStrict();
         Model::unguard();
     }
-    
+
     /**
      * Configure the application's URL.
      */
@@ -87,7 +87,6 @@ class AppServiceProvider extends ServiceProvider
     {
         URL::formatScheme('https');
     }
-    
-    
-    
+
+
 }

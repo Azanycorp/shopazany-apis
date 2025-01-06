@@ -16,11 +16,13 @@ use App\Repositories\B2BProductRepository;
 use App\Http\Resources\SellerProfileResource;
 use App\Repositories\B2BSellerShippingRepository;
 use App\Http\Resources\B2BSellerShippingAddressResource;
+use App\Imports\ProductImport;
 use App\Models\B2bOrder;
 use App\Models\Payout;
 use App\Models\Rfq;
 use App\Models\RfqMessage;
 use App\Models\UserWallet;
+use Maatwebsite\Excel\Facades\Excel;
 
 class SellerService extends Controller
 {
@@ -206,7 +208,7 @@ class SellerService extends Controller
 
     public function getAllProduct($request)
     {
-        $currentUserId = auth()->id();
+        $currentUserId = userAuthId();
 
         if ($currentUserId != $request->user_id) {
             return $this->error(null, "Unauthorized action.", 401);
@@ -223,7 +225,7 @@ class SellerService extends Controller
 
     public function getProductById($user_id, $product_id)
     {
-        $currentUserId = auth()->id();
+        $currentUserId = userAuthId();
 
         if ($currentUserId != $user_id) {
             return $this->error(null, "Unauthorized action.", 401);
@@ -237,7 +239,7 @@ class SellerService extends Controller
 
     public function updateProduct($request)
     {
-        $currentUserId = auth()->id();
+        $currentUserId = userAuthId();
 
         if ($currentUserId != $request->user_id) {
             return $this->error(null, "Unauthorized action.", 401);
@@ -302,7 +304,7 @@ class SellerService extends Controller
 
     public function deleteProduct($user_id, $product_id)
     {
-        $currentUserId = auth()->id();
+        $currentUserId = userAuthId();
 
         if ($currentUserId != $user_id) {
             return $this->error(null, "Unauthorized action.", 401);
@@ -315,7 +317,7 @@ class SellerService extends Controller
 
     public function getAnalytics($user_id)
     {
-        $currentUserId = auth()->id();
+        $currentUserId = userAuthId();
 
         if ($currentUserId != $user_id) {
             return $this->error(null, "Unauthorized action.", 401);
@@ -337,7 +339,7 @@ class SellerService extends Controller
 
     public function addShipping($request)
     {
-        $currentUserId = auth()->id();
+        $currentUserId = userAuthId();
 
         if ($currentUserId != $request->user_id) {
             return $this->error(null, "Unauthorized action.", 401);
@@ -370,7 +372,7 @@ class SellerService extends Controller
 
     public function getAllShipping($user_id)
     {
-        $currentUserId = auth()->id();
+        $currentUserId = userAuthId();
 
         if ($currentUserId != $user_id) {
             return $this->error(null, "Unauthorized action.", 401);
@@ -384,7 +386,7 @@ class SellerService extends Controller
 
     public function getShippingById($user_id, $shipping_id)
     {
-        $currentUserId = auth()->id();
+        $currentUserId = userAuthId();
 
         if ($currentUserId != $user_id) {
             return $this->error(null, "Unauthorized action.", 401);
@@ -398,7 +400,7 @@ class SellerService extends Controller
 
     public function updateShipping($request, $shipping_id)
     {
-        $currentUserId = auth()->id();
+        $currentUserId = userAuthId();
 
         if ($currentUserId != $request->user_id) {
             return $this->error(null, "Unauthorized action.", 401);
@@ -424,7 +426,7 @@ class SellerService extends Controller
 
     public function deleteShipping($user_id, $shipping_id)
     {
-        $currentUserId = auth()->id();
+        $currentUserId = userAuthId();
 
         if ($currentUserId != $user_id) {
             return $this->error(null, "Unauthorized action.", 401);
@@ -437,7 +439,7 @@ class SellerService extends Controller
 
     public function setDefault($user_id, $shipping_id)
     {
-        $currentUserId = auth()->id();
+        $currentUserId = userAuthId();
 
         if ($currentUserId != $user_id) {
             return $this->error(null, "Unauthorized action.", 401);
@@ -500,13 +502,13 @@ class SellerService extends Controller
 
     public function productImport($request)
     {
-        $currentUserId = Auth::id();
+        $currentUserId = userAuthId();
 
         if ($currentUserId != $request->user_id) {
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $seller = auth()->user();
+        $seller = userAuth();
 
         try {
             Excel::import(new ProductImport($seller), $request->file('file'));
@@ -519,7 +521,7 @@ class SellerService extends Controller
 
     public function export($userId, $type)
     {
-        $currentUserId = Auth::id();
+        $currentUserId = userAuthId();
 
         if ($currentUserId != $userId) {
             return $this->error(null, "Unauthorized action.", 401);
@@ -542,12 +544,12 @@ class SellerService extends Controller
 
     public function getEarningReport()
     {
-        $currentUserId = Auth::id();
+        $currentUserId = userAuthId();
 
         if (!$currentUserId) {
             return $this->error(null, "Unauthorized action.", 401);
         }
-        $currentUserId = Auth::id();
+        $currentUserId = userAuthId();
         $orderStats =  B2bOrder::stats();
         $payoutStats =  Payout::stats();
         $payouts =  Payout::where('seller_id', $currentUserId)->get();
@@ -566,7 +568,7 @@ class SellerService extends Controller
     //orders
     public function getAllOrders()
     {
-        $currentUserId = Auth::id();
+        $currentUserId = userAuthId();
 
         $orders =  B2bOrder::with('buyer')->where('seller_id', $currentUserId)->get();
         $rfqs =  Rfq::with('buyer')->where('seller_id', $currentUserId)->get();
@@ -595,7 +597,7 @@ class SellerService extends Controller
     //Rfq
     public function getAllRfq()
     {
-        $currentUserId = Auth::id();
+        $currentUserId = userAuthId();
         $rfqs =  Rfq::with('buyer')->where('seller_id', $currentUserId)->get();
         return $this->success($rfqs, "rfqs");
     }
@@ -609,23 +611,28 @@ class SellerService extends Controller
         return $this->success($order, "Rfq details");
     }
 
-    public function reviewRequest($id,$data)
+    public function reviewRequest($id, $data)
     {
-        $rfq = Rfq::where('id',$id)->first();
+        $rfq = Rfq::findOrFail($id);
+
         RfqMessage::create([
             'rfq_id' => $rfq->id,
             'preferred_unit_price' => $data->preferred_unit_price,
             'note' => $data->note
         ]);
-        return $this->success($order, "Rfq details");
+
+        return $this->success($rfq, "Rfq details");
     }
 
     //dasboard
     public function getDashboardDetails()
     {
-        $currentUserId = Auth::id();
+        $currentUserId = userAuthId();
 
-        $orders =  B2bOrder::with('buyer')->where('seller_id', $currentUserId)->get();
+        $orders =  B2bOrder::with('buyer')
+            ->where('seller_id', $currentUserId)
+            ->get();
+
         $orderStats =  B2bOrder::stats();
         $rfqs =  Rfq::with('buyer')->where('seller_id', $currentUserId)->get();
         $payouts =  Payout::where('seller_id', $currentUserId)->get();
@@ -643,12 +650,14 @@ class SellerService extends Controller
             'delivery_charges' => $payouts->where('status', 'paid')->sum('fee'),
             'recent_orders' => $orders,
         ];
+
         return $this->success($data, "Dashboard details");
     }
+
     //Withdrawal
     public function getWithdrawalHistory()
     {
-        $currentUserId = Auth::id();
+        $currentUserId = userAuthId();
         $payouts =  Payout::where('seller_id', $currentUserId)->get();
         return $this->success($payouts, "payouts details");
     }
