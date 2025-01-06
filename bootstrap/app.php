@@ -29,8 +29,8 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'check.wallet' => CheckWalletBalance::class,
-            'seller.auth' => SellerAuthMiddleware::class,
-            'buyer.auth' => BuyerAuthMiddleware::class,
+            'b2b_seller.auth' => SellerAuthMiddleware::class,
+            'b2b_buyer.auth' => BuyerAuthMiddleware::class,
             'login.attempt' => BlockUserAfterFailedAttempts::class,
         ]);
     })

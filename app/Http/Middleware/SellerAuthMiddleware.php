@@ -22,7 +22,7 @@ class SellerAuthMiddleware
     {
         $user = $request->user();
 
-        if (! $user) {
+        if (!$user) {
             return $this->error(null, "Unauthorized action.", 401);
         }
 

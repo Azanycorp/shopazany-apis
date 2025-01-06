@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class Payout extends Model
 {
     protected $fillable = [
-        'user_id',
+        'seller_id',
         'amount',
         'fee',
         'account_name',
@@ -25,7 +25,7 @@ class Payout extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class, 'user_id', 'id')->where([
+        return $this->belongsTo(User::class, 'seller_id', 'id')->where([
             'type' => 'b2b_seller'
         ]);
     }

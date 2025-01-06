@@ -11,17 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('b2b_orders', function (Blueprint $table) {
+        Schema::create('rfqs', function (Blueprint $table) {
             $table->id();
             $table->bigInteger('buyer_id');
             $table->bigInteger('seller_id');
+            $table->string('quote_no')->nullable();
             $table->integer('product_id');
             $table->integer('product_quantity')->comment('the MOQ of the product');
-            $table->string('order_no')->nullable();
-            $table->longText('shipping_address')->nullable();
-            $table->longText('product_data')->nullable();
             $table->string('total_amount');
-            $table->string('payment_method');
             $table->enum('payment_status',['paid','unpaid'])->default('unpaid');
             $table->enum('status', ['pending', 'shipped','in-progress','confirmed','cancelled','delivered'])->default('pending');
             $table->timestamp('delivery_date')->nullable();
@@ -36,6 +33,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('b2b_orders');
+        Schema::dropIfExists('rfqs');
     }
 };

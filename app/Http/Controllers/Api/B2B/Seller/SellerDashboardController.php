@@ -1,0 +1,21 @@
+<?php
+
+namespace App\Http\Controllers\Api\B2B\Seller;
+
+use App\Trait\HttpResponse;
+use Illuminate\Http\Request;
+use App\Services\B2B\SellerService;
+use App\Http\Controllers\Controller;
+
+class SellerDashboardController extends Controller
+{
+    use HttpResponse;
+    public function __construct(
+        private SellerService $service
+    ) {}
+
+    function index()
+    {
+        return $this->service->getDashboardDetails();
+    }
+}
