@@ -104,7 +104,7 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
 
             // Payment Method
             Route::get('/method/{country_id}', 'getPaymentMethod');
-    });
+        });
 
     // Subscription
     Route::prefix('subscription')
@@ -113,14 +113,14 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
             Route::get('/country/{country_id}', 'getPlanByCountry');
             Route::post('/payment', 'subscriptionPayment');
             Route::get('/history/{user_id}', 'subscriptionHistory');
-    });
+        });
 
     Route::controller(UserController::class)->group(function () {
         Route::get('/profile', 'profile');
         Route::post('/bank/account', 'bankAccount');
         Route::delete('/remove/account', 'removeBankAccount');
         Route::post('/withdraw', 'withdraw')
-        ->middleware('check.wallet');
+            ->middleware('check.wallet');
 
         Route::post('/kyc', 'userKyc');
         Route::post('/earning-option', 'earningOption');
@@ -202,7 +202,6 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
             Route::get('/summary', 'getOrderSummary');
         });
     });
-
 });
 
 // // B2B
