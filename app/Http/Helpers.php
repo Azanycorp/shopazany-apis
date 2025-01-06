@@ -40,6 +40,12 @@ if (!function_exists('userAuth')) {
     }
 }
 
+if (!function_exists('userAuthId')) {
+    function userAuthId() {
+        return auth()->id();
+    }
+}
+
 if (!function_exists('getSetting')) {
     function getSetting($key, $default = null, $lang = false)
     {

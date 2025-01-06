@@ -11,7 +11,6 @@ use App\Trait\HttpResponse;
 use App\Mail\UserWelcomeMail;
 use App\Mail\SignUpVerifyMail;
 use App\Actions\SendEmailAction;
-use App\Models\BusinessInformation;
 use Illuminate\Support\Facades\DB;
 use App\Services\Auth\LoginService;
 
@@ -41,12 +40,7 @@ class AuthService
                 'is_verified' => 0,
                 'password' => bcrypt($request->password)
             ]);
-            BusinessInformation::create([
-                'user_id' => $user->id
-            ]);
-            B2bCompany::create([
-                'user_id' => $user->id
-            ]);
+
             $description = "User with email: {$request->email} signed up as b2b seller";
             $response = $this->success(null, "Created successfully");
             $action = UserLog::CREATED;
@@ -137,7 +131,9 @@ class AuthService
     public function buyerOnboarding($request)
     {
         $user = null;
+
         DB::beginTransaction();
+
         try {
             $code = generateVerificationCode();
 
@@ -156,8 +152,8 @@ class AuthService
                 'is_verified' => 0,
                 'password' => bcrypt($request->password)
             ]);
-            B2bCompany::create([
-                'user_id' => $user->id,
+
+            $user->b2bCompany()->create([
                 'service_type' => $request->service_type,
                 'average_spend' => $request->average_spend,
                 'business_name' => $request->company_name,
@@ -165,14 +161,18 @@ class AuthService
                 'website' => $request->website,
                 'country_id' => $request->country_id,
             ]);
+
             $description = "User with email: {$request->email} signed up as b2b buyer";
             $response = $this->success(null, "Created successfully");
             $action = UserLog::CREATED;
 
             logUserAction($request, $action, $description, $response, $user);
             DB::commit();
+            
             return $this->success($user, "Created successfully");;
         } catch (\Exception $e) {
+            DB::rollBack();
+
             $description = "Sign up failed: {$request->email}";
             $response = $this->error(null, $e->getMessage(), 500);
             $action = UserLog::FAILED;
@@ -180,7 +180,6 @@ class AuthService
             logUserAction($request, $action, $description, $response, $user);
 
             return $response;
-            DB::rollBack();
         }
     }
 }

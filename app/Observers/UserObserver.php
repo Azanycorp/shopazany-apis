@@ -5,6 +5,8 @@ namespace App\Observers;
 use App\Enum\ProductStatus;
 use App\Enum\UserType;
 use App\Mail\SignUpVerifyMail;
+use App\Models\B2bCompany;
+use App\Models\BusinessInformation;
 use App\Models\Product;
 use App\Models\User;
 use Illuminate\Contracts\Events\ShouldHandleEventsAfterCommit;
@@ -25,12 +27,15 @@ class UserObserver implements ShouldHandleEventsAfterCommit
             $user->referrer_link = generate_referrer_link($user->referrer_code);
             $user->save();
         }
-        if($user->type === UserType::B2B_BUYER) {
-            reward_user($user, 'create_account', 'completed');
+        
+        if($user->type === UserType::B2B_SELLER) {
+            BusinessInformation::create([
+                'user_id' => $user->id
+            ]);
 
-            $user->referrer_code = generate_referral_code();
-            $user->referrer_link = generate_referrer_link($user->referrer_code);
-            $user->save();
+            B2bCompany::create([
+                'user_id' => $user->id
+            ]);
         }
     }
 
