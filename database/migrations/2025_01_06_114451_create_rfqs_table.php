@@ -17,10 +17,12 @@ return new class extends Migration
             $table->bigInteger('seller_id');
             $table->string('quote_no')->nullable();
             $table->integer('product_id');
-            $table->integer('product_quantity')->comment('the MOQ of the product');
-            $table->string('total_amount');
-            $table->enum('payment_status',['paid','unpaid'])->default('unpaid');
-            $table->enum('status', ['pending', 'shipped','in-progress','confirmed','cancelled','delivered'])->default('pending');
+            $table->double('product_quantity')->default(0)->comment('the MOQ of the product');
+            $table->double('p_unit_price')->default(0)->comment('preferred_unit_price');
+            $table->double('total_amount')->default(0);
+            $table->longText('product_data')->nullable();
+            $table->enum('payment_status', ['paid', 'unpaid'])->default('unpaid');
+            $table->enum('status', ['pending', 'shipped', 'in-progress', 'confirmed', 'cancelled', 'delivered'])->default('pending');
             $table->timestamp('delivery_date')->nullable();
             $table->timestamp('shipped_date')->nullable();
             $table->index(['buyer_id', 'seller_id', 'product_id']);

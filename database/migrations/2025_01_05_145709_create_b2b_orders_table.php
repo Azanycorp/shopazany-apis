@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('order_no')->nullable();
             $table->longText('shipping_address')->nullable();
             $table->longText('product_data')->nullable();
-            $table->string('total_amount');
+            $table->double('total_amount')->default(0);
             $table->string('payment_method');
             $table->enum('payment_status',['paid','unpaid'])->default('unpaid');
             $table->enum('status', ['pending', 'shipped','in-progress','confirmed','cancelled','delivered'])->default('pending');

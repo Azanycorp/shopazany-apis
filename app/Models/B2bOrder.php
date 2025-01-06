@@ -33,7 +33,13 @@ class B2bOrder extends Model
         return $this->belongsTo(User::class,'buyer_id','id');
     }
 
-
+    protected function casts(): array
+    {
+        return [
+            'shipping_address' => 'array',
+            'product_data' => 'array'
+        ];
+    }
     public static function stats()
     {
         return DB::select(

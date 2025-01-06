@@ -18,4 +18,12 @@ class SellerDashboardController extends Controller
     {
         return $this->service->getDashboardDetails();
     }
+    public function getEarningReport()
+    {
+        return $this->service->getEarningReport();
+    }
+    public function withdrawalHistory()
+    {
+        return $this->service->getWithdrawalHistory();
+    }
 }

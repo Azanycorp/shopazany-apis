@@ -48,12 +48,17 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function () {
         //dashboard
         Route::controller(SellerDashboardController::class)->group(function () {
             Route::get('/dashboard', 'index');
+            Route::get('/withdrawals', 'getWithdrawalHistory');
+            Route::get('/earning-report', 'getEarningReport');
         });
 
-        //Orders
+        //Orders and rfqs
         Route::controller(SellerOrderController::class)->group(function () {
             Route::get('/orders', 'index');
             Route::get('/order-details/{id}', 'details');
+              //rfqs
+            Route::get('/rfq', 'allRfq');
+            Route::get('/rfq-details/{id}', 'rfqDetails');
         });
 
         //complaints log
@@ -61,10 +66,6 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function () {
             Route::get('/refund/request', 'getComplaints');
         });
 
-        //earning history
-        Route::controller(SellerWalletController::class)->group(function () {
-            Route::get('/earning-report/{user_id}', 'getEarningReport');
-        });
 
         //profile
         Route::controller(SellerProfileController::class)->group(function () {

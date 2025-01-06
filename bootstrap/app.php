@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Middleware\AuthGates;
+use App\Http\Middleware\B2BBuyer;
+use App\Http\Middleware\B2BSeller;
 use App\Http\Middleware\BlockUserAfterFailedAttempts;
 use App\Http\Middleware\BuyerAuthMiddleware;
 use App\Http\Middleware\CheckWalletBalance;
@@ -29,8 +31,10 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'check.wallet' => CheckWalletBalance::class,
-            'b2b_seller.auth' => SellerAuthMiddleware::class,
-            'b2b_buyer.auth' => BuyerAuthMiddleware::class,
+            'buyer.auth' => BuyerAuthMiddleware::class,
+            'seller.auth' => SellerAuthMiddleware::class,
+            'b2b_seller.auth' => B2BSeller::class,
+            'b2b_buyer.auth' => B2BBuyer::class,
             'login.attempt' => BlockUserAfterFailedAttempts::class,
         ]);
     })

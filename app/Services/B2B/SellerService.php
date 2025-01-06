@@ -19,6 +19,7 @@ use App\Http\Resources\B2BSellerShippingAddressResource;
 use App\Models\B2bOrder;
 use App\Models\Payout;
 use App\Models\Rfq;
+use App\Models\RfqMessage;
 use App\Models\UserWallet;
 
 class SellerService extends Controller
@@ -539,22 +540,27 @@ class SellerService extends Controller
         }
     }
 
-    public function getEarningReport($userId)
+    public function getEarningReport()
     {
         $currentUserId = Auth::id();
 
-        if ($currentUserId != $userId) {
+        if (!$currentUserId) {
             return $this->error(null, "Unauthorized action.", 401);
         }
+        $currentUserId = Auth::id();
+        $orderStats =  B2bOrder::stats();
+        $payoutStats =  Payout::stats();
+        $payouts =  Payout::where('seller_id', $currentUserId)->get();
 
         $data = (object) [
-            'total_sales_alltime' => 0,
-            'sales_this_month' => 0,
-            'total_payout' => 0,
-            'payout_this_month' => 0,
+            'total_sales_alltime' => $orderStats->total_sales,
+            'sales_this_month' => $orderStats->total_sales_this_month,
+            'total_payout' => $payouts->where('status', 'paid')->sum('amount'),
+            'payout_this_month' => $payoutStats->total_payout_this_month,
             'total_category' => 0,
             'total_brand' => 0,
         ];
+        return $this->success($data, "Earning details");
     }
 
     //orders
@@ -565,12 +571,9 @@ class SellerService extends Controller
         $orders =  B2bOrder::with('buyer')->where('seller_id', $currentUserId)->get();
         $rfqs =  Rfq::with('buyer')->where('seller_id', $currentUserId)->get();
         if (count($orders) < 1) {
-            return $this->error(null, "No record found.", 422);
+            return $this->error(null, "No record found.", 404);
         }
-        foreach ($orders as $order) {
-            $order->product_data = json_decode($order->product_data);
-            $order->shipping_address = json_decode($order->shipping_address);
-        }
+
         $data = [
             'total_orders' => $orders->count(),
             'total_rfqs' => $rfqs->count(),
@@ -579,13 +582,42 @@ class SellerService extends Controller
         ];
         return $this->success($data, "orders and rfqs");
     }
+
     public function getOrderDetails($id)
     {
         $order = B2bOrder::where('id', $id)->first();
         if (!$order) {
-            return $this->error(null, "No record found.", 422);
+            return $this->error(null, "No record found.", 404);
         }
         return $this->success($order, "order");
+    }
+
+    //Rfq
+    public function getAllRfq()
+    {
+        $currentUserId = Auth::id();
+        $rfqs =  Rfq::with('buyer')->where('seller_id', $currentUserId)->get();
+        return $this->success($rfqs, "rfqs");
+    }
+
+    public function getRfqDetails($id)
+    {
+        $order = Rfq::with('messages')->where('id', $id)->first();
+        if (!$order) {
+            return $this->error(null, "No record found.", 404);
+        }
+        return $this->success($order, "Rfq details");
+    }
+
+    public function reviewRequest($id,$data)
+    {
+        $rfq = Rfq::where('id',$id)->first();
+        RfqMessage::create([
+            'rfq_id' => $rfq->id,
+            'preferred_unit_price' => $data->preferred_unit_price,
+            'note' => $data->note
+        ]);
+        return $this->success($order, "Rfq details");
     }
 
     //dasboard
@@ -612,5 +644,12 @@ class SellerService extends Controller
             'recent_orders' => $orders,
         ];
         return $this->success($data, "Dashboard details");
+    }
+    //Withdrawal
+    public function getWithdrawalHistory()
+    {
+        $currentUserId = Auth::id();
+        $payouts =  Payout::where('seller_id', $currentUserId)->get();
+        return $this->success($payouts, "payouts details");
     }
 }

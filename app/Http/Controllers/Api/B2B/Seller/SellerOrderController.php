@@ -14,13 +14,24 @@ class SellerOrderController extends Controller
     public function __construct(
         private SellerService $service
     ) {}
-
+    //Orders
     public function index()
     {
-     return $this->service->getAllOrders();
+        return $this->service->getAllOrders();
     }
+
     public function details($id)
     {
-       return $this->service->getOrderDetails($id);
+        return $this->service->getOrderDetails($id);
+    }
+
+    //RFQS
+    public function allRfq()
+    {
+        return $this->service->getAllRfq();
+    }
+    public function rfqDetails($id)
+    {
+        return $this->service->getRfqDetails($id);
     }
 }
