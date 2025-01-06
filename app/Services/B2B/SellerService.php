@@ -2,19 +2,25 @@
 
 namespace App\Services\B2B;
 
-use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\B2BProduct;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
-use App\Http\Resources\B2BProductResource;
-use App\Http\Resources\B2BSellerShippingAddressResource;
-use App\Http\Resources\SellerProfileResource;
 use App\Models\B2BSellerShippingAddress;
+use App\Http\Resources\B2BProductResource;
 use App\Repositories\B2BProductRepository;
+use App\Http\Resources\SellerProfileResource;
 use App\Repositories\B2BSellerShippingRepository;
+use App\Http\Resources\B2BSellerShippingAddressResource;
+use App\Models\B2bOrder;
+use App\Models\Payout;
+use App\Models\Rfq;
+use App\Models\RfqMessage;
+use App\Models\UserWallet;
 
 class SellerService extends Controller
 {
@@ -26,8 +32,7 @@ class SellerService extends Controller
     public function __construct(
         B2BProductRepository $b2bProductRepository,
         B2BSellerShippingRepository $b2bSellerShippingRepository
-    )
-    {
+    ) {
         $this->b2bProductRepository = $b2bProductRepository;
         $this->b2bSellerShippingRepository = $b2bSellerShippingRepository;
     }
@@ -50,7 +55,7 @@ class SellerService extends Controller
             $businessDoc = $request->hasFile('business_reg_document') ? uploadImage($request, 'business_reg_document', $folder) : null;
 
             $identifyTypeDoc = null;
-            if($request->identification_type && $request->hasFile('identification_type_document')) {
+            if ($request->identification_type && $request->hasFile('identification_type_document')) {
                 $fld = folderName('document/identifytype');
                 $identifyTypeDoc = uploadImage($request, 'identification_type_document', $fld);
             }
@@ -74,7 +79,6 @@ class SellerService extends Controller
             ]);
 
             return $this->success(null, 'Created successfully');
-
         } catch (\Throwable $th) {
             throw $th;
         }
@@ -85,7 +89,6 @@ class SellerService extends Controller
         $auth = userAuth();
 
         $user = User::findOrFail($auth->id);
-
         $data = new SellerProfileResource($user);
 
         return $this->success($data, 'Seller profile');
@@ -118,9 +121,8 @@ class SellerService extends Controller
                 'password' => bcrypt($request->new_password),
             ]);
 
-             return $this->success(null, 'Password Successfully Updated');
-
-        }else {
+            return $this->success(null, 'Password Successfully Updated');
+        } else {
             return $this->error(null, 422, 'Old Password did not match');
         }
     }
@@ -185,7 +187,7 @@ class SellerService extends Controller
 
             $product = $this->b2bProductRepository->create($data);
 
-            if($request->hasFile('images')) {
+            if ($request->hasFile('images')) {
                 foreach ($request->file('images') as $image) {
                     $path = $image->store($res->folder, 's3');
                     $url = Storage::disk('s3')->url($path);
@@ -283,7 +285,7 @@ class SellerService extends Controller
 
         $product = $this->b2bProductRepository->update($request->product_id, $data);
 
-        if($request->hasFile('images')) {
+        if ($request->hasFile('images')) {
             $product->b2bProductImages()->delete();
             foreach ($request->file('images') as $image) {
                 $path = $image->store($res->folder, 's3');
@@ -445,7 +447,7 @@ class SellerService extends Controller
             ->where('id', $shipping_id)
             ->firstOrFail();
 
-        if($shipping->is_default) {
+        if ($shipping->is_default) {
             return $this->error(null, 'Already set at default', 400);
         }
 
@@ -538,31 +540,116 @@ class SellerService extends Controller
         }
     }
 
-    public function getEarningReport($userId)
+    public function getEarningReport()
     {
         $currentUserId = Auth::id();
 
-        if ($currentUserId != $userId) {
+        if (!$currentUserId) {
             return $this->error(null, "Unauthorized action.", 401);
         }
+        $currentUserId = Auth::id();
+        $orderStats =  B2bOrder::stats();
+        $payoutStats =  Payout::stats();
+        $payouts =  Payout::where('seller_id', $currentUserId)->get();
 
         $data = (object) [
-            'total_sales_alltime' => 0,
-            'sales_this_month' => 0,
-            'total_payout' => 0,
-            'payout_this_month' => 0,
+            'total_sales_alltime' => $orderStats->total_sales,
+            'sales_this_month' => $orderStats->total_sales_this_month,
+            'total_payout' => $payouts->where('status', 'paid')->sum('amount'),
+            'payout_this_month' => $payoutStats->total_payout_this_month,
             'total_category' => 0,
             'total_brand' => 0,
         ];
+        return $this->success($data, "Earning details");
+    }
+
+    //orders
+    public function getAllOrders()
+    {
+        $currentUserId = Auth::id();
+
+        $orders =  B2bOrder::with('buyer')->where('seller_id', $currentUserId)->get();
+        $rfqs =  Rfq::with('buyer')->where('seller_id', $currentUserId)->get();
+        if (count($orders) < 1) {
+            return $this->error(null, "No record found.", 404);
+        }
+
+        $data = [
+            'total_orders' => $orders->count(),
+            'total_rfqs' => $rfqs->count(),
+            'rfqs' => $rfqs,
+            'orders' => $orders,
+        ];
+        return $this->success($data, "orders and rfqs");
+    }
+
+    public function getOrderDetails($id)
+    {
+        $order = B2bOrder::where('id', $id)->first();
+        if (!$order) {
+            return $this->error(null, "No record found.", 404);
+        }
+        return $this->success($order, "order");
+    }
+
+    //Rfq
+    public function getAllRfq()
+    {
+        $currentUserId = Auth::id();
+        $rfqs =  Rfq::with('buyer')->where('seller_id', $currentUserId)->get();
+        return $this->success($rfqs, "rfqs");
+    }
+
+    public function getRfqDetails($id)
+    {
+        $order = Rfq::with('messages')->where('id', $id)->first();
+        if (!$order) {
+            return $this->error(null, "No record found.", 404);
+        }
+        return $this->success($order, "Rfq details");
+    }
+
+    public function reviewRequest($id,$data)
+    {
+        $rfq = Rfq::where('id',$id)->first();
+        RfqMessage::create([
+            'rfq_id' => $rfq->id,
+            'preferred_unit_price' => $data->preferred_unit_price,
+            'note' => $data->note
+        ]);
+        return $this->success($order, "Rfq details");
+    }
+
+    //dasboard
+    public function getDashboardDetails()
+    {
+        $currentUserId = Auth::id();
+
+        $orders =  B2bOrder::with('buyer')->where('seller_id', $currentUserId)->get();
+        $orderStats =  B2bOrder::stats();
+        $rfqs =  Rfq::with('buyer')->where('seller_id', $currentUserId)->get();
+        $payouts =  Payout::where('seller_id', $currentUserId)->get();
+        $wallet =  UserWallet::where('user_id', $currentUserId)->first();
+
+        $data = [
+            'total_sales' => $orderStats->total_sales_this_week,
+            'rfq_recieved' => $rfqs->count(),
+            'rfq_processed' => $rfqs->where('status', 'confirmed')->count(),
+            'deals_in_progress' => $orders->where('status', 'in-progress')->count(),
+            'deals_in_completed' => $orders->where('status', 'confirmed')->count(),
+            'withdrawable_balance' => $wallet ? $wallet->master_wallet : 0,
+            'pending_withdrawals' => $payouts->where('status', 'pending')->count(),
+            'rejected_withdrawals' => $payouts->where('status', 'cancelled')->count(),
+            'delivery_charges' => $payouts->where('status', 'paid')->sum('fee'),
+            'recent_orders' => $orders,
+        ];
+        return $this->success($data, "Dashboard details");
+    }
+    //Withdrawal
+    public function getWithdrawalHistory()
+    {
+        $currentUserId = Auth::id();
+        $payouts =  Payout::where('seller_id', $currentUserId)->get();
+        return $this->success($payouts, "payouts details");
     }
 }
-
-
-
-
-
-
-
-
-
-

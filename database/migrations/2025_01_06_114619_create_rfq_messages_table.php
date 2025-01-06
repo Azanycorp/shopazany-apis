@@ -11,8 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->enum('type', ['customer', 'seller', 'b2b_seller', 'b2b_buyer'])->after('password')->default('customer');
+        Schema::create('rfq_messages', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('rfq_id');
+            $table->double('p_unit_price')->default(0);
+            $table->longText('note')->nullable();
+            $table->timestamps();
         });
     }
 
@@ -21,8 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            //
-        });
+        Schema::dropIfExists('rfq_messages');
     }
 };

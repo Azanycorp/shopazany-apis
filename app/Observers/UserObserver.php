@@ -25,6 +25,13 @@ class UserObserver implements ShouldHandleEventsAfterCommit
             $user->referrer_link = generate_referrer_link($user->referrer_code);
             $user->save();
         }
+        if($user->type === UserType::B2B_BUYER) {
+            reward_user($user, 'create_account', 'completed');
+
+            $user->referrer_code = generate_referral_code();
+            $user->referrer_link = generate_referrer_link($user->referrer_code);
+            $user->save();
+        }
     }
 
     /**
