@@ -144,4 +144,12 @@ class B2BSellerController extends Controller
     {
         return $this->service->markDelivered($request);
     }
+    public function rateOrder(Request $request)
+    {
+        return $this->service->rateOrder($request);
+    }
+    public function orderFeeback(Request $request)
+    {
+        return $this->service->orderFeeback($request);
+    }
 }

@@ -196,24 +196,20 @@ class BuyerService
     public function getDashboardDetails()
     {
         $currentUserId = userAuthId();
-
-        $orders =  B2bOrder::with('buyer')
-            ->where('seller_id', $currentUserId)
-            ->get();
-
-        $orderStats =  B2bOrder::with('seller')
+        $orders =  Rfq::where('buyer_id', $currentUserId)->get();
+        $orderStats =  Rfq::with('seller')
             ->where([
                 'buyer_id' => $currentUserId,
-                'created_at' => Carbon::today()->subDays(7)
-            ])->where('status', 'confirmed')->sum('amount');
-        $rfqs =  Rfq::with('buyer')->where('seller_id', $currentUserId)->get();
+                'status' => 'confirmed'
+            ])->where('created_at', '<=',Carbon::today()->addDays(7))->sum('total_amount');
+        $rfqs =  Rfq::with('buyer')->where('buyer_id', $currentUserId)->get();
 
         $data = [
             'total_sales' => $orderStats,
-            'rfq_recieved' => $rfqs->count(),
-            'rfq_processed' => $rfqs->where('status', 'confirmed')->count(),
+            'rfq_sent' => $rfqs->count(),
+            'rfq_processed' => $rfqs->where('status', 'delivered')->count(),
             'deals_in_progress' => $orders->where('status', 'in-progress')->count(),
-            'deals_in_completed' => $orders->where('status', 'confirmed')->count(),
+            'deals_in_completed' => $orders->where('status', 'delivered')->count(),
             'recent_orders' => $orders,
         ];
 
@@ -230,7 +226,7 @@ class BuyerService
 
     public function rfqDetails($id)
     {
-        $rfq = Rfq::with(['seller','messages'])->find($id);
+        $rfq = Rfq::with(['seller', 'messages'])->find($id);
         // return $rfq->seller->first_name;
         if (!$rfq) {
             return $this->error(null, 'No record found to send', 404);
@@ -241,7 +237,7 @@ class BuyerService
     //send review request to vendor
     public function sendReviewRequest($data)
     {
-         $rfq = Rfq::find($data->rfq_id);
+        $rfq = Rfq::find($data->rfq_id);
         if (!$rfq) {
             return $this->error(null, 'No record found to send', 404);
         }
@@ -256,14 +252,14 @@ class BuyerService
             'note' => $data->note
         ]);
         $rfq->update([
-            'status'=>'review'
+            'status' => 'review'
         ]);
         return $this->success($rfq, 'Review sent successfully details');
     }
     //send review request to vendor
     public function acceptQuote($data)
     {
-         $rfq = Rfq::find($data->rfq_id);
+        $rfq = Rfq::find($data->rfq_id);
         if (!$rfq) {
             return $this->error(null, 'No record found to send', 404);
         }

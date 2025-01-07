@@ -52,12 +52,15 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function () {
             Route::get('/earning-report', 'getEarningReport');
 
             //Orders and rfqs
-            Route::get('/orders', 'allRfq');
-            Route::get('/order-details/{id}', 'rfqDetails');
-            Route::post('/rfq/mark-as-shipped', 'shippedRfq');
-            Route::post('/rfq/mark-as-delivered', 'markDelivered');
-            Route::post('/rfq/reply-review', 'replyReview');
-
+            Route::prefix('rfq')->group(function () {
+            Route::get('/', 'allRfq');
+            Route::get('/details/{id}', 'rfqDetails');
+            Route::post('/mark-as-shipped', 'shippedRfq');
+            Route::post('/mark-as-delivered', 'markDelivered');
+            Route::post('/reply-review', 'replyReview');
+            Route::post('/rate-order', 'rateOrder');
+            Route::post('/order-feeback', 'orderFeeback');
+        });
             //complaints log
             Route::get('/refund/request', 'getComplaints');
 
