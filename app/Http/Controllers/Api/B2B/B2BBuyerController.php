@@ -53,7 +53,11 @@ class B2BBuyerController extends Controller
     }
     public function reviewRequest(Request $request)
     {
-        return $request;
-        return $this->buyerService->sendReview($request);
+        return $this->buyerService->sendReviewRequest($request);
+    }
+
+    public function acceptQuote(Request $request)
+    {
+        return $this->buyerService->acceptQuote($request);
     }
 }

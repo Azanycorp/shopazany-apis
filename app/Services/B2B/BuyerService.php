@@ -48,12 +48,40 @@ class BuyerService
         return $this->success($data, 'Products');
     }
 
+    // public function getProductDetail($slug)
+    // {
+    //     $product = B2BProduct::with(['category', 'country', 'b2bProductImages'])->where('slug', $slug)->firstOrFail();
+
+    //     $moreFromSeller = B2BProduct::with(['category', 'country', 'b2bProductImages'])->select('id', 'name', 'slug', 'category_id', 'description', 'front_image', 'fob_price')
+    //         ->where('user_id', $product->user_id)
+    //         ->where('id', '!=', $product->id)
+    //         ->inRandomOrder()
+    //         ->limit(4)
+    //         ->get();
+
+    //     $relatedProducts = B2BProduct::with(['category', 'country', 'b2bProductImages'])->where('category_id', $product->category_id)
+    //         ->where('id', '!=', $product->id)
+    //         ->inRandomOrder()
+    //         ->limit(4)
+    //         ->get();
+
+    //     $data = new B2BProductResource($product);
+
+    //     $response = [
+    //         'data' => $data,
+    //         'more_from_seller' => B2BProductResource::collection($moreFromSeller),
+    //         'related_products' => B2BProductResource::collection($relatedProducts),
+    //     ];
+
+    //     return $this->success($response, 'Product Detail');
+    // }
     public function getProductDetail($slug)
     {
-        $product = B2BProduct::with(['category', 'country', 'b2bProductImages'])->where('slug', $slug)->firstOrFail();
+        $product = B2BProduct::with(['category', 'country', 'b2bProductImages'])
+            ->where('slug', $slug)
+            ->firstOrFail();
 
-        $moreFromSeller = B2BProduct::with(['category', 'country', 'b2bProductImages'])->select('id', 'name', 'slug', 'category_id', 'description', 'front_image', 'fob_price')
-            ->where('user_id', $product->user_id)
+        $moreFromSeller = B2BProduct::with(['category', 'country', 'b2bProductImages'])->where('user_id', $product->user_id)
             ->where('id', '!=', $product->id)
             ->inRandomOrder()
             ->limit(4)
@@ -75,6 +103,8 @@ class BuyerService
 
         return $this->success($response, 'Product Detail');
     }
+
+
 
     //Quotes
     public function allQuotes()
@@ -102,8 +132,8 @@ class BuyerService
                         'quote_no' => strtoupper(Str::random(10) . Auth::user()->id),
                         'product_id' => $quote->product_id,
                         'product_quantity' => $quote->qty,
-                        'total_amount' => ($quote->product_data['fob_price'] * $quote->product_data['minimum_order_quantity']),
-                        'p_unit_price' => $quote->product_data['fob_price'],
+                        'total_amount' => ($quote->product_data['unit_price'] * $quote->product_data['minimum_order_quantity']),
+                        'p_unit_price' => $quote->product_data['unit_price'],
                         'product_data' => $quote->product_data,
                     ]);
                 }
@@ -124,7 +154,7 @@ class BuyerService
         if (!$quote) return $this->error(null, 'No record found', 404);
         DB::beginTransaction();
         try {
-            $amount = ($quote->product_data['fob_price'] * $quote->product_data['minimum_order_quantity']);
+            $amount = ($quote->product_data['unit_price'] * $quote->product_data['minimum_order_quantity']);
             Rfq::create([
                 'buyer_id' => $quote->buyer_id,
                 'seller_id' => $quote->seller_id,
@@ -132,7 +162,7 @@ class BuyerService
                 'product_id' => $quote->product_id,
                 'product_quantity' => $quote->qty,
                 'total_amount' => $amount,
-                'p_unit_price' => $quote->product_data['fob_price'],
+                'p_unit_price' => $quote->product_data['unit_price'],
                 'product_data' => $quote->product_data,
             ]);
             DB::commit();
@@ -200,24 +230,46 @@ class BuyerService
 
     public function rfqDetails($id)
     {
-        $rfq = Rfq::with('seller')->find($id);
+        $rfq = Rfq::with(['seller','messages'])->find($id);
         // return $rfq->seller->first_name;
         if (!$rfq) {
             return $this->error(null, 'No record found to send', 404);
         }
         return $this->success($rfq, 'rfq details');
     }
+
     //send review request to vendor
-    public function sendReview($data)
+    public function sendReviewRequest($data)
     {
-        return $rfq = Rfq::find($data->id);
+         $rfq = Rfq::find($data->rfq_id);
+        if (!$rfq) {
+            return $this->error(null, 'No record found to send', 404);
+        }
+        if ($data->preferred_qty < $rfq->product_quantity) {
+            return $this->error(null, 'Your preferred qauntity can not be less than the product MOQ(Minimum Order Quantity)', 422);
+        }
+
+        $rfq->messages()->create([
+            'rfq_id' => $data->rfq_id,
+            'p_unit_price' => $data->p_unit_price,
+            'preferred_qty' => $data->preferred_qty,
+            'note' => $data->note
+        ]);
+        $rfq->update([
+            'status'=>'review'
+        ]);
+        return $this->success($rfq, 'Review sent successfully details');
+    }
+    //send review request to vendor
+    public function acceptQuote($data)
+    {
+         $rfq = Rfq::find($data->rfq_id);
         if (!$rfq) {
             return $this->error(null, 'No record found to send', 404);
         }
         $rfq->update([
-            'p_unit_price' => $data->p_unit_price,
-            'note' => $data->note
+            'status' => 'in-progress',
         ]);
-        return $this->success($rfq, 'Review sent successfully details');
+        return $this->success($rfq, 'Quote Accepted successfully');
     }
 }

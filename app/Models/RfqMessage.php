@@ -10,6 +10,7 @@ class RfqMessage extends Model
     protected $fillable = [
         'rfq_id',
         'p_unit_price',
+        'preferred_qty',
         'note',
     ];
 
