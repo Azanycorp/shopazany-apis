@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -40,6 +41,8 @@ class B2bOrder extends Model
             'product_data' => 'array'
         ];
     }
+
+   
     public static function stats()
     {
         return DB::select(

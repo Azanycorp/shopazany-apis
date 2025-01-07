@@ -3,8 +3,8 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\B2BController;
-use App\Http\Controllers\Api\B2BBuyerController;
 use App\Http\Controllers\Api\B2BSellerController;
+use App\Http\Controllers\Api\B2B\B2BBuyerController;
 use App\Http\Controllers\Api\B2B\B2BAccountController;
 use App\Http\Controllers\Api\B2B\Seller\SellerOrderController;
 use App\Http\Controllers\Api\B2B\Seller\SellerWalletController;
@@ -102,5 +102,10 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function () {
     // Buyer
     Route::group(['middleware' => 'b2b_buyer.auth', 'prefix' => 'buyer', 'controller' => B2BBuyerController::class], function () {
         Route::post('request/refund', 'requestRefund');
+        Route::post('add-quote', 'requestQuote');
+        Route::get('quotes', 'allQuotes');
+        Route::get('send-all-quotes', 'sendAllQuotes');
+        Route::get('send-rfq/{id}', 'sendSingleQuote');
+        Route::get('dashboard', 'dashboard');
     });
 });

@@ -2,13 +2,21 @@
 
 namespace App\Services\B2B;
 
+use App\Models\Rfq;
 use App\Models\User;
+use App\Models\Payout;
+use App\Models\B2bOrder;
 use App\Models\B2BProduct;
+use App\Models\RfqMessage;
+use App\Models\UserWallet;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
+use App\Imports\ProductImport;
+use Illuminate\Support\Carbon;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Storage;
 use App\Models\B2BSellerShippingAddress;
 use App\Http\Resources\B2BProductResource;
@@ -16,13 +24,6 @@ use App\Repositories\B2BProductRepository;
 use App\Http\Resources\SellerProfileResource;
 use App\Repositories\B2BSellerShippingRepository;
 use App\Http\Resources\B2BSellerShippingAddressResource;
-use App\Imports\ProductImport;
-use App\Models\B2bOrder;
-use App\Models\Payout;
-use App\Models\Rfq;
-use App\Models\RfqMessage;
-use App\Models\UserWallet;
-use Maatwebsite\Excel\Facades\Excel;
 
 class SellerService extends Controller
 {
@@ -550,15 +551,24 @@ class SellerService extends Controller
             return $this->error(null, "Unauthorized action.", 401);
         }
         $currentUserId = userAuthId();
-        $orderStats =  B2bOrder::stats();
-        $payoutStats =  Payout::stats();
+        $totalSales =  B2bOrder::where('seller_id', $currentUserId)->where('status', 'confirmed')->sum('amount');
         $payouts =  Payout::where('seller_id', $currentUserId)->get();
 
+        $monthlyPayout =  Payout::where([
+            'seller_id' => $currentUserId,
+            'created_at' => Carbon::today()->subMonth(1)
+        ])->where('status', 'paid')->sum('amount');
+        $dt = Carbon::now();
+        $monthlyOrder =  B2bOrder::where([
+            'seller_id' => $currentUserId,
+            'created_at' => $dt->month
+        ])->where('status', 'confirmed')->sum('amount');
+
         $data = (object) [
-            'total_sales_alltime' => $orderStats->total_sales,
-            'sales_this_month' => $orderStats->total_sales_this_month,
+            'total_sales_alltime' => $totalSales,
+            'sales_this_month' => $monthlyOrder,
             'total_payout' => $payouts->where('status', 'paid')->sum('amount'),
-            'payout_this_month' => $payoutStats->total_payout_this_month,
+            'payout_this_month' => $monthlyPayout,
             'total_category' => 0,
             'total_brand' => 0,
         ];
@@ -633,13 +643,18 @@ class SellerService extends Controller
             ->where('seller_id', $currentUserId)
             ->get();
 
-        $orderStats =  B2bOrder::stats();
+        $orderStats =  B2bOrder::with('seller')
+            ->where([
+                'seller_id' => $currentUserId,
+                'created_at' => Carbon::today()->subDays(7)
+            ])->where('status', 'confirmed')->sum('amount');
+
         $rfqs =  Rfq::with('buyer')->where('seller_id', $currentUserId)->get();
         $payouts =  Payout::where('seller_id', $currentUserId)->get();
         $wallet =  UserWallet::where('user_id', $currentUserId)->first();
 
         $data = [
-            'total_sales' => $orderStats->total_sales_this_week,
+            'total_sales' => $orderStats,
             'rfq_recieved' => $rfqs->count(),
             'rfq_processed' => $rfqs->where('status', 'confirmed')->count(),
             'deals_in_progress' => $orders->where('status', 'in-progress')->count(),

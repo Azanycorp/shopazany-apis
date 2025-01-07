@@ -15,6 +15,8 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('product_id');
             $table->unsignedBigInteger('buyer_id');
+            $table->unsignedBigInteger('seller_id');
+            $table->longText('product_data')->nullable();
             $table->double('qty')->default(0);
             $table->timestamps();
         });
