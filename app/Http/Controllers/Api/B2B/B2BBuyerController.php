@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\Api\B2B;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -18,5 +18,46 @@ class B2BBuyerController extends Controller
     public function requestRefund(Request $request)
     {
         return $this->buyerService->requestRefund($request);
+    }
+
+    public function requestQuote(Request $request)
+    {
+        return $this->buyerService->sendQuote($request);
+    }
+    //Quotes
+    public function allQuotes()
+    {
+        return $this->buyerService->allQuotes();
+    }
+    public function sendAllQuotes()
+    {
+        return $this->buyerService->sendMutipleQuotes();
+    }
+    public function sendSingleQuote($id)
+    {
+        return $this->buyerService->sendRfq($id);
+    }
+    //Dasbaord
+    public function dashboard()
+    {
+        return $this->buyerService->getDashboardDetails();
+    }
+     //RFQ
+    public function getAllRfqs()
+    {
+        return $this->buyerService->allRfqs();
+    }
+    public function getRfqDetails($id)
+    {
+        return $this->buyerService->rfqDetails($id);
+    }
+    public function reviewRequest(Request $request)
+    {
+        return $this->buyerService->sendReviewRequest($request);
+    }
+
+    public function acceptQuote(Request $request)
+    {
+        return $this->buyerService->acceptQuote($request);
     }
 }

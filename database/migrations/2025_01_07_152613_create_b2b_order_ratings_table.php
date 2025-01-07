@@ -11,13 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('b2b_quotes', function (Blueprint $table) {
+        Schema::create('b2b_order_ratings', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('product_id');
-            $table->unsignedBigInteger('buyer_id');
-            $table->unsignedBigInteger('seller_id');
-            $table->longText('product_data')->nullable();
-            $table->double('qty')->default(0);
+            $table->unsignedBigInteger('seller_id')->nullable();
+            $table->unsignedBigInteger('buyer_id')->nullable();
+            $table->string('order_no');
+            $table->double('rating')->default(0);
+            $table->text('description')->nullable();
             $table->timestamps();
         });
     }
@@ -27,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('b2b_quotes');
+        Schema::dropIfExists('b2b_order_ratings');
     }
 };

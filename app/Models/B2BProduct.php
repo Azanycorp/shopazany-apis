@@ -23,7 +23,11 @@ class B2BProduct extends Model
         'description',
         'front_image',
         'minimum_order_quantity',
-        'unit',
+        'unit_price',
+        'quantity',
+        'availability_quantity',
+        'sold',
+        'unit_price',
         'fob_price',
         'status',
         'country_id',
@@ -58,7 +62,7 @@ class B2BProduct extends Model
 
     public function country(): BelongsTo
     {
-        return $this->belongsTo(Country::class, 'country_id');
+        return $this->belongsTo(Country::class);
     }
 
     public function b2bRequestRefunds(): HasMany

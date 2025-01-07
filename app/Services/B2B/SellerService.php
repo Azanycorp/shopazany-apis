@@ -2,13 +2,21 @@
 
 namespace App\Services\B2B;
 
+use App\Models\Rfq;
 use App\Models\User;
+use App\Models\Payout;
+use App\Models\B2bOrder;
 use App\Models\B2BProduct;
+use App\Models\RfqMessage;
+use App\Models\UserWallet;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
+use App\Imports\ProductImport;
+use Illuminate\Support\Carbon;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Storage;
 use App\Models\B2BSellerShippingAddress;
 use App\Http\Resources\B2BProductResource;
@@ -16,13 +24,8 @@ use App\Repositories\B2BProductRepository;
 use App\Http\Resources\SellerProfileResource;
 use App\Repositories\B2BSellerShippingRepository;
 use App\Http\Resources\B2BSellerShippingAddressResource;
-use App\Imports\ProductImport;
-use App\Models\B2bOrder;
-use App\Models\Payout;
-use App\Models\Rfq;
-use App\Models\RfqMessage;
-use App\Models\UserWallet;
-use Maatwebsite\Excel\Facades\Excel;
+use App\Models\B2bOrderFeedback;
+use App\Models\B2bOrderRating;
 
 class SellerService extends Controller
 {
@@ -182,7 +185,9 @@ class SellerService extends Controller
                 'description' => $request->description,
                 'front_image' => $url,
                 'minimum_order_quantity' => $request->minimum_order_quantity,
-                'unit' => $request->unit,
+                'unit_price' => $request->unit,
+                'quantity' => $request->quantity,
+                'availability_quantity' => $request->quantity,
                 'fob_price' => $request->fob_price,
                 'country_id' => is_int($user->country) ? $user->country : 160,
             ];
@@ -280,7 +285,9 @@ class SellerService extends Controller
             'description' => $request->description,
             'front_image' => $url,
             'minimum_order_quantity' => $request->minimum_order_quantity,
-            'unit' => $request->unit,
+            'unit_price' => $request->unit,
+            'quantity' => $request->quantity,
+            'available_quantity' => $request->quantity - $prod->sold,
             'fob_price' => $request->fob_price,
             'country_id' => $user->country ?? 160,
         ];
@@ -550,15 +557,24 @@ class SellerService extends Controller
             return $this->error(null, "Unauthorized action.", 401);
         }
         $currentUserId = userAuthId();
-        $orderStats =  B2bOrder::stats();
-        $payoutStats =  Payout::stats();
+        $totalSales =  Rfq::where('seller_id', $currentUserId)->where('status', 'delivered')->sum('total_amount');
         $payouts =  Payout::where('seller_id', $currentUserId)->get();
 
+        $monthlyPayout =  Payout::where([
+            'seller_id' => $currentUserId,
+            'created_at' => Carbon::today()->subMonth(1)
+        ])->where('status', 'paid')->sum('amount');
+        $dt = Carbon::now();
+        $monthlyOrder =  Rfq::where([
+            'seller_id' => $currentUserId,
+            'created_at' => $dt->month()
+        ])->where('status', 'delivered')->sum('total_amount');
+
         $data = (object) [
-            'total_sales_alltime' => $orderStats->total_sales,
-            'sales_this_month' => $orderStats->total_sales_this_month,
+            'total_sales_alltime' => $totalSales,
+            'sales_this_month' => $monthlyOrder,
             'total_payout' => $payouts->where('status', 'paid')->sum('amount'),
-            'payout_this_month' => $payoutStats->total_payout_this_month,
+            'payout_this_month' => $monthlyPayout,
             'total_category' => 0,
             'total_brand' => 0,
         ];
@@ -566,40 +582,16 @@ class SellerService extends Controller
     }
 
     //orders
-    public function getAllOrders()
-    {
-        $currentUserId = userAuthId();
 
-        $orders =  B2bOrder::with('buyer')->where('seller_id', $currentUserId)->get();
-        $rfqs =  Rfq::with('buyer')->where('seller_id', $currentUserId)->get();
-        if (count($orders) < 1) {
-            return $this->error(null, "No record found.", 404);
-        }
-
-        $data = [
-            'total_orders' => $orders->count(),
-            'total_rfqs' => $rfqs->count(),
-            'rfqs' => $rfqs,
-            'orders' => $orders,
-        ];
-        return $this->success($data, "orders and rfqs");
-    }
-
-    public function getOrderDetails($id)
-    {
-        $order = B2bOrder::where('id', $id)->first();
-        if (!$order) {
-            return $this->error(null, "No record found.", 404);
-        }
-        return $this->success($order, "order");
-    }
-
-    //Rfq
     public function getAllRfq()
     {
         $currentUserId = userAuthId();
         $rfqs =  Rfq::with('buyer')->where('seller_id', $currentUserId)->get();
-        return $this->success($rfqs, "rfqs");
+        $data = [
+            'total_orders' => $rfqs->count(),
+            'orders' => $rfqs,
+        ];
+        return $this->success($data, "orders");
     }
 
     public function getRfqDetails($id)
@@ -610,17 +602,42 @@ class SellerService extends Controller
         }
         return $this->success($order, "Rfq details");
     }
-
-    public function reviewRequest($id, $data)
+    public function markShipped($data)
     {
-        $rfq = Rfq::findOrFail($id);
+        $rfq = Rfq::find($data->rfq_id);
+        if (!$rfq) {
+            return $this->error(null, 'No record found to send', 404);
+        }
 
+        $rfq->update([
+            'payment_status' => 'paid',
+            'status' => 'shipped',
+            'shipped_date' => Carbon::now()->toDateString()
+        ]);
+        // //Update product
+        // $product = B2BProduct::where('id', $rfq->product_id)->first();
+        // $remaining_qty = $product->quantity - $rfq->product_quantity;
+        // $product->availability_quantity = $remaining_qty;
+        // $product->sold += $rfq->product_quantity;
+        // $product->save();
+
+        return $this->success($rfq, 'Product Shipped successfully');
+    }
+
+    public function replyRequest($data)
+    {
+        $rfq = Rfq::find($data->rfq_id);
+        if (!$rfq) return $this->error(null, "No record found details", 404);
+        $amount = ($data->preferred_unit_price * $rfq->product_quantity);
         RfqMessage::create([
             'rfq_id' => $rfq->id,
-            'preferred_unit_price' => $data->preferred_unit_price,
+            'p_unit_price' => $data->preferred_unit_price,
             'note' => $data->note
         ]);
-
+        $rfq->update([
+            'p_unit_price' => $data->preferred_unit_price,
+            'total_amount' => $amount
+        ]);
         return $this->success($rfq, "Rfq details");
     }
 
@@ -629,17 +646,22 @@ class SellerService extends Controller
     {
         $currentUserId = userAuthId();
 
-        $orders =  B2bOrder::with('buyer')
+        $orders =  Rfq::with('buyer')
             ->where('seller_id', $currentUserId)
             ->get();
 
-        $orderStats =  B2bOrder::stats();
+        $orderStats =  Rfq::with('buyer')
+            ->where([
+                'seller_id' => $currentUserId,
+                'created_at' => Carbon::today()->subDays(7)
+            ])->where('status', 'confirmed')->sum('total_amount');
+
         $rfqs =  Rfq::with('buyer')->where('seller_id', $currentUserId)->get();
         $payouts =  Payout::where('seller_id', $currentUserId)->get();
         $wallet =  UserWallet::where('user_id', $currentUserId)->first();
 
         $data = [
-            'total_sales' => $orderStats->total_sales_this_week,
+            'total_sales' => $orderStats,
             'rfq_recieved' => $rfqs->count(),
             'rfq_processed' => $rfqs->where('status', 'confirmed')->count(),
             'deals_in_progress' => $orders->where('status', 'in-progress')->count(),
@@ -660,5 +682,59 @@ class SellerService extends Controller
         $currentUserId = userAuthId();
         $payouts =  Payout::where('seller_id', $currentUserId)->get();
         return $this->success($payouts, "payouts details");
+    }
+
+    public function markDelivered($data)
+    {
+        $rfq = Rfq::find($data->rfq_id);
+        if (!$rfq) {
+            return $this->error(null, 'No record found to send', 404);
+        }
+
+        $rfq->update([
+            'payment_status' => 'paid',
+            'status' => 'delivered',
+            'delivery_date' => Carbon::now()->toDateString()
+        ]);
+        //Update product
+        $product = B2BProduct::where('id', $rfq->product_id)->first();
+        $remaining_qty = $product->quantity - $rfq->product_quantity;
+        $product->availability_quantity = $remaining_qty;
+        $product->sold += $rfq->product_quantity;
+        $product->save();
+
+        return $this->success($rfq, 'Product marked delivered successfully');
+    }
+
+    public function rateOrder($data)
+    {
+        $rfq = Rfq::find($data->rfq_id);
+
+        if (!$rfq) {
+            return $this->error(null, "No record found", 404);
+        }
+        B2bOrderRating::create([
+            'seller_id' => Auth::user()->id,
+            'order_no' => $rfq->quote_no,
+            'rating' => $data->rating,
+            'description' => $data->description
+        ]);
+
+        return $this->success(null, "Rating successful");
+    }
+    public function orderFeeback($data)
+    {
+        $rfq = Rfq::find($data->rfq_id);
+
+        if (!$rfq) {
+            return $this->error(null, "No record found", 404);
+        }
+        B2bOrderFeedback::create([
+            'seller_id' => Auth::user()->id,
+            'order_no' => $rfq->quote_no,
+            'description' => $data->description
+        ]);
+
+        return $this->success(null, "Fesback taken successfully");
     }
 }
