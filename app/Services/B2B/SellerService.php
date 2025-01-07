@@ -183,7 +183,7 @@ class SellerService extends Controller
                 'description' => $request->description,
                 'front_image' => $url,
                 'minimum_order_quantity' => $request->minimum_order_quantity,
-                'unit' => $request->unit,
+                'unit_price' => $request->unit,
                 'fob_price' => $request->fob_price,
                 'country_id' => is_int($user->country) ? $user->country : 160,
             ];
@@ -281,7 +281,7 @@ class SellerService extends Controller
             'description' => $request->description,
             'front_image' => $url,
             'minimum_order_quantity' => $request->minimum_order_quantity,
-            'unit' => $request->unit,
+            'unit_price' => $request->unit,
             'fob_price' => $request->fob_price,
             'country_id' => $user->country ?? 160,
         ];

@@ -24,7 +24,7 @@ class B2BBuyerController extends Controller
     {
         return $this->buyerService->sendQuote($request);
     }
-
+    //Quotes
     public function allQuotes()
     {
         return $this->buyerService->allQuotes();
@@ -42,6 +42,18 @@ class B2BBuyerController extends Controller
     {
         return $this->buyerService->getDashboardDetails();
     }
-
-
+     //RFQ
+    public function getAllRfqs()
+    {
+        return $this->buyerService->allRfqs();
+    }
+    public function getRfqDetails($id)
+    {
+        return $this->buyerService->rfqDetails($id);
+    }
+    public function reviewRequest(Request $request)
+    {
+        return $request;
+        return $this->buyerService->sendReview($request);
+    }
 }

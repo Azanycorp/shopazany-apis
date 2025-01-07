@@ -107,5 +107,8 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function () {
         Route::get('send-all-quotes', 'sendAllQuotes');
         Route::get('send-rfq/{id}', 'sendSingleQuote');
         Route::get('dashboard', 'dashboard');
+        Route::get('rfq', 'getAllRfqs');
+        Route::get('rfq-details/{id}', 'getRfqDetails');
+        Route::post('request-review', 'reviewRequest');
     });
 });

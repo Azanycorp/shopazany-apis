@@ -23,7 +23,7 @@ class B2BProductResource extends JsonResource
             'keywords' => $this->keywords,
             'moq' => (string)$this->minimum_order_quantity,
             'status' => (string)$this->status,
-            'country' => (string)$this->country?->name,
+            // 'country' => (string)$this->country?->name,
             'images' => (string)$this->b2bProductImages ? $this->b2bProductImages->map(function ($image) {
                 return [
                     'image' => $image->image
