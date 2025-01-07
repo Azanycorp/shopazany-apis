@@ -43,17 +43,17 @@ class BuyerService
 
     public function getProductDetail($slug)
     {
-        $product = B2BProduct::where('slug', $slug)->firstOrFail();
+        $product = B2BProduct::with(['category', 'country', 'b2bProductImages'])
+            ->where('slug', $slug)
+            ->firstOrFail();
 
-        $moreFromSeller = B2BProduct::select('id', 'name', 'slug', 'category_id', 'description', 'front_image', 'fob_price')
-            ->where('user_id', $product->user_id)
+        $moreFromSeller = B2BProduct::where('user_id', $product->user_id)
             ->where('id', '!=', $product->id)
             ->inRandomOrder()
             ->limit(4)
             ->get();
 
-        $relatedProducts = B2BProduct::select('id', 'name', 'slug', 'category_id', 'description', 'front_image', 'fob_price')
-            ->where('category_id', $product->category_id)
+        $relatedProducts = B2BProduct::where('category_id', $product->category_id)
             ->where('id', '!=', $product->id)
             ->inRandomOrder()
             ->limit(4)

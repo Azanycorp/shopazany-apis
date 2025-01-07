@@ -20,7 +20,7 @@ class B2BProductResource extends JsonResource
             'slug' => (string)$this->slug,
             'category' => (string)$this->category?->name,
             'price' => (string)$this->fob_price,
-            'keywords' => $this->keywords,
+            'keywords' => $this?->keywords,
             'moq' => (string)$this->minimum_order_quantity,
             'status' => (string)$this->status,
             'country' => (string)$this->country?->name,
