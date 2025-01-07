@@ -48,33 +48,7 @@ class BuyerService
         return $this->success($data, 'Products');
     }
 
-    // public function getProductDetail($slug)
-    // {
-    //     $product = B2BProduct::with(['category', 'country', 'b2bProductImages'])->where('slug', $slug)->firstOrFail();
-
-    //     $moreFromSeller = B2BProduct::with(['category', 'country', 'b2bProductImages'])->select('id', 'name', 'slug', 'category_id', 'description', 'front_image', 'fob_price')
-    //         ->where('user_id', $product->user_id)
-    //         ->where('id', '!=', $product->id)
-    //         ->inRandomOrder()
-    //         ->limit(4)
-    //         ->get();
-
-    //     $relatedProducts = B2BProduct::with(['category', 'country', 'b2bProductImages'])->where('category_id', $product->category_id)
-    //         ->where('id', '!=', $product->id)
-    //         ->inRandomOrder()
-    //         ->limit(4)
-    //         ->get();
-
-    //     $data = new B2BProductResource($product);
-
-    //     $response = [
-    //         'data' => $data,
-    //         'more_from_seller' => B2BProductResource::collection($moreFromSeller),
-    //         'related_products' => B2BProductResource::collection($relatedProducts),
-    //     ];
-
-    //     return $this->success($response, 'Product Detail');
-    // }
+    
     public function getProductDetail($slug)
     {
         $product = B2BProduct::with(['category', 'country', 'b2bProductImages'])
