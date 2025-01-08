@@ -48,16 +48,16 @@ class BuyerService
         return $this->success($data, 'Products');
     }
 
-    
+
     public function getProductDetail($slug)
     {
         $product = B2BProduct::with(['category', 'country', 'b2bProductImages'])
             ->where('slug', $slug)
             ->firstOrFail();
 
-        $moreFromSeller = B2BProduct::with(['category', 'country', 'b2bProductImages'])->where('user_id', $product->user_id)
+        $moreFromSeller = B2BProduct::with(['category', 'country', 'b2bProductImages'])->where('user_id', $product->user_id);
 
-        $relatedProducts = B2BProduct::with(['category', 'country', 'b2bProductImages'])->where('category_id', $product->category_id)
+        $relatedProducts = B2BProduct::with(['category', 'country', 'b2bProductImages'])->where('category_id', $product->category_id);
 
 
         $data = new B2BProductResource($product);
