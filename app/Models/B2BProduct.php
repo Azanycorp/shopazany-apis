@@ -27,7 +27,6 @@ class B2BProduct extends Model
         'quantity',
         'availability_quantity',
         'sold',
-        'unit_price',
         'fob_price',
         'status',
         'country_id',
