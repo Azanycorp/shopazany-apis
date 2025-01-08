@@ -56,16 +56,9 @@ class BuyerService
             ->firstOrFail();
 
         $moreFromSeller = B2BProduct::with(['category', 'country', 'b2bProductImages'])->where('user_id', $product->user_id)
-            ->where('id', '!=', $product->id)
-            ->inRandomOrder()
-            ->limit(4)
-            ->get();
 
         $relatedProducts = B2BProduct::with(['category', 'country', 'b2bProductImages'])->where('category_id', $product->category_id)
-            ->where('id', '!=', $product->id)
-            ->inRandomOrder()
-            ->limit(4)
-            ->get();
+
 
         $data = new B2BProductResource($product);
 
