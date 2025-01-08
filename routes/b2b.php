@@ -53,14 +53,14 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function () {
 
             //Orders and rfqs
             Route::prefix('rfq')->group(function () {
-            Route::get('/', 'allRfq');
-            Route::get('/details/{id}', 'rfqDetails');
-            Route::post('/mark-as-shipped', 'shippedRfq');
-            Route::post('/mark-as-delivered', 'markDelivered');
-            Route::post('/reply-review', 'replyReview');
-            Route::post('/rate-order', 'rateOrder');
-            Route::post('/order-feeback', 'orderFeeback');
-        });
+                Route::get('/', 'allRfq');
+                Route::get('/details/{id}', 'rfqDetails');
+                Route::post('/mark-as-shipped', 'shippedRfq');
+                Route::post('/mark-as-delivered', 'markDelivered');
+                Route::post('/reply-review', 'replyReview');
+                Route::post('/rate-order', 'rateOrder');
+                Route::post('/order-feeback', 'orderFeeback');
+            });
             //complaints log
             Route::get('/refund/request', 'getComplaints');
 
@@ -101,10 +101,21 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function () {
         Route::get('quotes', 'allQuotes');
         Route::get('send-all-quotes', 'sendAllQuotes');
         Route::get('send-rfq/{id}', 'sendSingleQuote');
+        Route::delete('remove-rfq/{id}', 'removeQuote');
         Route::get('dashboard', 'dashboard');
         Route::get('rfq', 'getAllRfqs');
         Route::get('rfq-details/{id}', 'getRfqDetails');
         Route::post('request-review', 'reviewRequest');
         Route::post('accept-quote', 'acceptQuote');
+        Route::post('/add-to-wish', 'addTowishList');
+        Route::get('/wish-list', 'wishList');
+        Route::delete('/wish/remove-item/{id}', 'removeItem');
+
+         //profile
+         Route::get('/profile', 'profile');
+         Route::post('/edit-account', 'editAccount');
+         Route::patch('/change-password', 'changePassword');
+         Route::post('/edit-company', 'editCompany');
+
     });
 });

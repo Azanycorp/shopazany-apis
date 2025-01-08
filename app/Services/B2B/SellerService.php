@@ -12,7 +12,10 @@ use App\Models\UserWallet;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
 use App\Imports\ProductImport;
+use App\Models\B2bOrderRating;
 use Illuminate\Support\Carbon;
+use App\Models\B2bOrderFeedback;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -24,8 +27,6 @@ use App\Repositories\B2BProductRepository;
 use App\Http\Resources\SellerProfileResource;
 use App\Repositories\B2BSellerShippingRepository;
 use App\Http\Resources\B2BSellerShippingAddressResource;
-use App\Models\B2bOrderFeedback;
-use App\Models\B2bOrderRating;
 
 class SellerService extends Controller
 {
@@ -142,6 +143,7 @@ class SellerService extends Controller
             'business_phone' => $request->business_phone,
             'country_id' => $request->country_id,
             'city' => $request->city,
+            'zip' => $request->postal_code,
             'address' => $request->address,
             'state' => $request->state,
         ]);
@@ -659,17 +661,25 @@ class SellerService extends Controller
         $rfqs =  Rfq::with('buyer')->where('seller_id', $currentUserId)->get();
         $payouts =  Payout::where('seller_id', $currentUserId)->get();
         $wallet =  UserWallet::where('user_id', $currentUserId)->first();
+        $orderCounts = DB::table('rfqs')
+            ->select('buyer_id', DB::raw('COUNT(*) as total_orders'))
+            ->groupBy('id')
+            ->where('seller_id', $currentUserId)
+            ->count();
 
         $data = [
             'total_sales' => $orderStats,
+            'partners' => $orderCounts,
             'rfq_recieved' => $rfqs->count(),
-            'rfq_processed' => $rfqs->where('status', 'confirmed')->count(),
+            'partners' => $rfqs->count(),
+            'rfq_processed' => $rfqs->where('status', '!=', 'pending')->count(),
             'deals_in_progress' => $orders->where('status', 'in-progress')->count(),
             'deals_in_completed' => $orders->where('status', 'confirmed')->count(),
             'withdrawable_balance' => $wallet ? $wallet->master_wallet : 0,
             'pending_withdrawals' => $payouts->where('status', 'pending')->count(),
             'rejected_withdrawals' => $payouts->where('status', 'cancelled')->count(),
             'delivery_charges' => $payouts->where('status', 'paid')->sum('fee'),
+            'life_time' => $payouts->where('status', 'paid')->sum('amount'),
             'recent_orders' => $orders,
         ];
 

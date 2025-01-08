@@ -2,19 +2,23 @@
 
 namespace App\Services\B2B;
 
+use Carbon\Carbon;
 use App\Models\Rfq;
+use App\Models\User;
 use App\Models\B2bOrder;
 use App\Models\B2bQuote;
 use App\Models\B2BProduct;
 use App\Enum\ProductStatus;
+use App\Models\B2bWishList;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
 use App\Models\B2BRequestRefund;
 use App\Enum\RefundRequestStatus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use App\Http\Resources\B2BProductResource;
-use Carbon\Carbon;
+use App\Http\Resources\SellerProfileResource;
 
 class BuyerService
 {
@@ -40,7 +44,7 @@ class BuyerService
 
     public function getProducts()
     {
-        $products = B2BProduct::with(['category', 'country', 'b2bProductImages'])->where('status', ProductStatus::ACTIVE)
+        $products = B2BProduct::with(['category', 'subCategory', 'country', 'b2bProductImages'])->where('status', ProductStatus::ACTIVE)
             ->get();
 
         $data = B2BProductResource::collection($products);
@@ -68,7 +72,7 @@ class BuyerService
             'related_products' => B2BProductResource::collection($relatedProducts),
         ];
 
-        return $this->success($response, 'Product Detail');
+        return $this->success($response, 'Product Details');
     }
 
 
@@ -140,6 +144,14 @@ class BuyerService
             return $this->error(null, 'transaction failed, please try again', 500);
         }
     }
+
+    public function removeQuote($id)
+    {
+        $quote = B2bQuote::where('id', $id)->first();
+        if (!$quote) return $this->error(null, 'No record found', 404);
+        $quote->delete();
+        return $this->success(null, 'Item removed successfully');
+    }
     public function sendQuote($data)
     {
         $product = B2BProduct::where('id', $data->product_id)->first();
@@ -147,12 +159,15 @@ class BuyerService
         if ($quote) {
             return $this->error(null, 'Product already exist');
         }
+        if ($data->qty < $product->minimum_order_quantity) {
+            return $this->error(null, 'Your peferred quantity can not be less than the one already set', 422);
+        }
         $quote = B2bQuote::create([
             'buyer_id' => Auth::user()->id,
             'seller_id' => $product->user_id,
             'product_id' => $product->id,
             'product_data' => $product,
-            'qty' => $product->minimum_order_quantity,
+            'qty' => $data->qty,
         ]);
 
         return $this->success($quote, 'quote Added successfully');
@@ -168,13 +183,19 @@ class BuyerService
             ->where([
                 'buyer_id' => $currentUserId,
                 'status' => 'confirmed'
-            ])->where('created_at', '<=',Carbon::today()->addDays(7))->sum('total_amount');
+            ])->where('created_at', '<=', Carbon::today()->addDays(7))->sum('total_amount');
         $rfqs =  Rfq::with('buyer')->where('buyer_id', $currentUserId)->get();
-
+        $orderCounts = DB::table('rfqs')
+            ->select('seller_id', DB::raw('COUNT(*) as total_orders'))
+            ->groupBy('id')
+            ->where('buyer_id', $currentUserId)
+            ->count();
+            
         $data = [
             'total_sales' => $orderStats,
+            'partners' => $orderCounts,
             'rfq_sent' => $rfqs->count(),
-            'rfq_processed' => $rfqs->where('status', 'delivered')->count(),
+            'rfq_accepted' => $rfqs->where('status', '!=', 'pending')->count(),
             'deals_in_progress' => $orders->where('status', 'in-progress')->count(),
             'deals_in_completed' => $orders->where('status', 'delivered')->count(),
             'recent_orders' => $orders,
@@ -208,14 +229,11 @@ class BuyerService
         if (!$rfq) {
             return $this->error(null, 'No record found to send', 404);
         }
-        if ($data->preferred_qty < $rfq->product_quantity) {
-            return $this->error(null, 'Your preferred qauntity can not be less than the product MOQ(Minimum Order Quantity)', 422);
-        }
 
         $rfq->messages()->create([
             'rfq_id' => $data->rfq_id,
             'p_unit_price' => $data->p_unit_price,
-            'preferred_qty' => $data->preferred_qty,
+            'preferred_qty' => $rfq->qty,
             'note' => $data->note
         ]);
         $rfq->update([
@@ -234,5 +252,93 @@ class BuyerService
             'status' => 'in-progress',
         ]);
         return $this->success($rfq, 'Quote Accepted successfully');
+    }
+
+    public function addToWishList($data)
+    {
+        $product = B2BProduct::find($data->product_id);
+        if (!$product) {
+            return $this->error(null, 'No record found to send', 404);
+        }
+        B2bWishList::create([
+            'user_id' => Auth::id(),
+            'product_id' => $product->id
+        ]);
+        return $this->success(null, 'Product Added successfully');
+    }
+    //wish list
+    public function myWishList()
+    {
+        $wishes =  B2bWishList::with('product')->where('user_id', Auth::id())->latest('id')->get();
+        if (count($wishes) < 1) {
+            return $this->error(null, 'No record found to send', 404);
+        }
+        return $this->success($wishes, 'My Wish List');
+    }
+
+    public function removeItem($id)
+    {
+        $wish =  B2bWishList::find($id);
+        if (!$wish) {
+            return $this->error(null, 'No record found to send', 404);
+        }
+        $wish->delete();
+        return $this->success(null, 'Item Removed');
+    }
+    //Account section
+    public function profile()
+    {
+        $auth = userAuth();
+
+        $user = User::with('b2bCompany')->where('id', $auth->id)->where('type', 'b2b_buyer')->first();
+        if (!$user) return $this->error(null, 'User does not exist');
+        // $data = new SellerProfileResource($user);
+
+        return $this->success($user, 'Buyer profile');
+    }
+
+    public function editAccount($request)
+    {
+        $user = Auth::user();
+        $image = $request->hasFile('logo') ? uploadUserImage($request, 'logo', $user) : $user->image;
+
+        $user->update([
+            'first_name' => $request->first_name,
+            'last_name' => $request->last_name,
+            'middlename' => $request->middlename,
+            'email' => $request->email ?? $user->email,
+            'phone' => $request->phone,
+            'image' => $image
+        ]);
+
+        return $this->success(null, "Profile Updated successfully");
+    }
+
+    public function changePassword($request)
+    {
+        $user = $request->user();
+
+        if (Hash::check($request->old_password, $user->password)) {
+            $user->update([
+                'password' => bcrypt($request->new_password),
+            ]);
+
+            return $this->success(null, 'Password Successfully Updated');
+        } else {
+            return $this->error(null, 422, 'Old Password did not match');
+        }
+    }
+    public function editCompany($request)
+    {
+        $user = Auth::user();
+        $user->b2bCompany()->update([
+            'company_name' => $request->company_name ?? $user->company_name,
+            'company_size' => $request->company_size ?? $user->company_size,
+            'website' => $request->website ?? $user->website,
+            'average_spend' => $request->average_spend ?? $user->average_spend,
+            'service_type' => $request->service_type ?? $user->service_type,
+            'country_id' => $request->country_id ?? $user->country,
+        ]);
+        return $this->success(null, "Details Updated successfully");
     }
 }
