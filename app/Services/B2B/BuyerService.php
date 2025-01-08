@@ -14,6 +14,7 @@ use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
 use App\Models\B2BRequestRefund;
 use App\Enum\RefundRequestStatus;
+use App\Enum\UserType;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -290,7 +291,7 @@ class BuyerService
     {
         $auth = userAuth();
 
-        $user = User::with('b2bCompany')->where('id', $auth->id)->where('type', 'b2b_buyer')->first();
+        $user = User::with('b2bCompany')->where('id', $auth->id)->where('type',UserType::B2B_BUYER)->first();
         if (!$user) return $this->error(null, 'User does not exist');
         // $data = new SellerProfileResource($user);
 

@@ -1,22 +1,22 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\Api\B2B;
 
-use App\Http\Controllers\Controller;
-use App\Http\Requests\CategoryRequest;
-use App\Http\Requests\SubCategoryRequest;
-use App\Services\User\CategoryService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
+use App\Http\Requests\CategoryRequest;
+use App\Http\Requests\SubCategoryRequest;
+use App\Services\B2B\ProductCategoryService;
 
-class CategoryController extends Controller
+class ProductCategoryController extends Controller
 {
     const MESSAGE = '403 Forbidden';
 
     protected $service;
 
-    public function __construct(CategoryService $categoryService)
+    public function __construct(ProductCategoryService $categoryService)
     {
         $this->service = $categoryService;
     }
@@ -26,6 +26,12 @@ class CategoryController extends Controller
         abort_if(Gate::denies('category_create'), Response::HTTP_FORBIDDEN, self::MESSAGE);
 
         return $this->service->createCategory($request);
+    }
+    public function updateCategory(CategoryRequest $request,$id)
+    {
+        abort_if(Gate::denies('category_create'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+
+        return $this->service->updateCategory($request,$id);
     }
 
     public function categories()

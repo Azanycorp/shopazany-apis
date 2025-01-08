@@ -19,7 +19,7 @@ return new class extends Migration
             $table->integer('featured')->default(0);
             $table->string('meta_title')->nullable();
             $table->text('meta_description')->nullable();
-            $table->enum('status', ['active', 'in-active'])->default('active');
+            $table->enum('status', ['active', 'inactive'])->default('active');
             $table->timestamps();
         });
     }

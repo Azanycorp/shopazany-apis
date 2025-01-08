@@ -16,11 +16,12 @@ class B2bProductSubCategory extends Model
 
     public function category()
     {
-        return $this->belongsTo(B2bProductCategory::class, 'category_id');
+        return $this->belongsTo(B2BProductCategory::class, 'category_id');
     }
 
     public function products()
     {
         return $this->hasMany(B2BProduct::class, 'sub_category_id');
     }
+
 }

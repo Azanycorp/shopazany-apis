@@ -23,6 +23,6 @@ class B2bProductCategory extends Model
 
     public function products()
     {
-        return $this->hasMany(B2BProduct::class);
+        return $this->hasMany(B2BProduct::class,'category_id');
     }
 }
