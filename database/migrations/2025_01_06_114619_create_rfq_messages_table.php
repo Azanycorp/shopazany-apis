@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('rfq_id');
             $table->double('p_unit_price')->default(0);
+            $table->double('preferred_qty')->default(0);
             $table->longText('note')->nullable();
             $table->timestamps();
         });

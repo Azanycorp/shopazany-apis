@@ -3,6 +3,7 @@
 namespace App\Trait;
 
 use App\Models\B2bCompany;
+use App\Models\B2bOrderRating;
 use App\Models\B2BProduct;
 use App\Models\B2BSellerShippingAddress;
 use App\Models\BankAccount;
@@ -106,6 +107,10 @@ trait UserRelationship
     public function orderRate(): HasMany
     {
         return $this->hasMany(OrderRate::class, 'user_id');
+    }
+    public function b2bOrderRate(): HasMany
+    {
+        return $this->hasMany(B2bOrderRating::class, 'user_id');
     }
 
     public function wishlist(): HasMany

@@ -108,9 +108,48 @@ class B2BSellerController extends Controller
         return $this->service->getTemplate();
     }
 
-    public function getEarningReport($userId)
+
+    public function dashboard()
     {
-        return $this->service->getEarningReport($userId);
+        return $this->service->getDashboardDetails();
     }
 
+    public function getEarningReport()
+    {
+        return $this->service->getEarningReport();
+    }
+
+    public function withdrawalHistory()
+    {
+        return $this->service->getWithdrawalHistory();
+    }
+    //RFQS
+    public function allRfq()
+    {
+        return $this->service->getAllRfq();
+    }
+    public function rfqDetails($id)
+    {
+        return $this->service->getRfqDetails($id);
+    }
+    public function replyReview(Request $request)
+    {
+        return $this->service->replyRequest($request);
+    }
+    public function shippedRfq(Request $request)
+    {
+        return $this->service->markShipped($request);
+    }
+    public function markDelivered(Request $request)
+    {
+        return $this->service->markDelivered($request);
+    }
+    public function rateOrder(Request $request)
+    {
+        return $this->service->rateOrder($request);
+    }
+    public function orderFeeback(Request $request)
+    {
+        return $this->service->orderFeeback($request);
+    }
 }
