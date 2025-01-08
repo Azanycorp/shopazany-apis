@@ -190,7 +190,7 @@ class BuyerService
             ->groupBy('id')
             ->where('buyer_id', $currentUserId)
             ->count();
-            
+
         $data = [
             'total_sales' => $orderStats,
             'partners' => $orderCounts,

@@ -7,5 +7,7 @@ use Illuminate\Http\Request;
 
 class B2BAdminController extends Controller
 {
-    //
+    function index() {
+        return 'dashbord';
+    }
 }
