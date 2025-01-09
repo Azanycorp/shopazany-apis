@@ -16,13 +16,13 @@ class B2bProductCategory extends Model
         'meta_description'
     ];
 
-    // public function subcategory()
-    // {
-    //     return $this->hasMany(SubCategory::class, 'category_id');
-    // }
+    public function subcategory()
+    {
+        return $this->hasMany(B2bProductSubCategory::class, 'category_id');
+    }
 
     public function products()
     {
-        return $this->hasMany(B2BProduct::class);
+        return $this->hasMany(B2BProduct::class,'category_id');
     }
 }

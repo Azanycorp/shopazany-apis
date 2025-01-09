@@ -51,12 +51,12 @@ class B2BProduct extends Model
 
     public function category(): BelongsTo
     {
-        return $this->belongsTo(Category::class, 'category_id');
+        return $this->belongsTo(B2bProductCategory::class, 'category_id');
     }
 
     public function subCategory(): BelongsTo
     {
-        return $this->belongsTo(SubCategory::class, 'sub_category_id');
+        return $this->belongsTo(B2bProductSubCategory::class, 'category_id');
     }
 
     public function country(): BelongsTo

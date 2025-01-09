@@ -12,11 +12,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('rfqs', function (Blueprint $table) {
-            if (DB::connection()->getDriverName() === 'mysql') {
-                DB::statement("ALTER TABLE rfqs CHANGE COLUMN status status ENUM('pending', 'review', 'in-progress', 'shipped', 'confirmed', 'cancelled', 'delivered') NOT NULL");
-            }
-        });
+        if (DB::connection()->getDriverName() === 'mysql') {
+            Schema::table('b2b_product_sub_categories', function (Blueprint $table) {
+                DB::statement("ALTER TABLE b2b_product_sub_categories CHANGE COLUMN status status ENUM('active', 'inactive','in-active') NOT NULL");
+
+            });
+        }
     }
 
     /**
@@ -24,7 +25,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('rfqs', function (Blueprint $table) {
+        Schema::table('b2b_product_sub_categories', function (Blueprint $table) {
             //
         });
     }

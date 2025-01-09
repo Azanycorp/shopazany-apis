@@ -96,7 +96,6 @@ class OrderService
         ];
     }
 
-
     public function intOrder()
     {
         $search = request()->input('search');

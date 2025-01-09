@@ -11,9 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('rfq_messages', function (Blueprint $table) {
-            //
-            $table->double('preferred_qty')->after('note')->default(0);
+        Schema::table('b2b_companies', function (Blueprint $table) {
+            $table->string('logo')->nullable();
         });
     }
 
@@ -22,7 +21,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('rfq_messages', function (Blueprint $table) {
+        Schema::table('b2b_companies', function (Blueprint $table) {
             //
         });
     }
