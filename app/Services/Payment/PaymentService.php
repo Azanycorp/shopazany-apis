@@ -2,21 +2,18 @@
 
 namespace App\Services\Payment;
 
-use App\Models\User;
 use App\Models\Payment;
 use App\Enum\PaymentType;
 use App\Enum\PaystackEvent;
 use App\Trait\HttpResponse;
-use App\Contracts\PaymentStrategy;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use App\Services\Curl\GetCurlService;
 use App\Http\Resources\PaymentVerifyResource;
-use Unicodeveloper\Paystack\Facades\Paystack;
 use App\Models\PaymentService as ModelPaymentService;
 use App\Services\Payment\AuthorizeNet\ChargeCardService;
 
-class PaymentService implements PaymentStrategy
+class PaymentService
 {
     use HttpResponse;
 
@@ -25,19 +22,6 @@ class PaymentService implements PaymentStrategy
     public function __construct(ChargeCardService $chargeCardService)
     {
         $this->chargeCardService = $chargeCardService;
-    }
-
-    public function processPayment(array $paymentDetails): array
-    {
-        try {
-            $paystackInstance = Paystack::getAuthorizationUrl($paymentDetails);
-            return [
-                'status' => 'success',
-                'data' => $paystackInstance,
-            ];
-        } catch (\Exception $e) {
-            return $this->error(null, 'Payment processing failed, please try again later');
-        }
     }
 
     public function webhook($request)
