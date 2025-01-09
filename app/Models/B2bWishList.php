@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enum\UserType;
 use Illuminate\Database\Eloquent\Model;
 
 class B2bWishList extends Model
@@ -11,7 +12,7 @@ class B2bWishList extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class)->where('type','b2b_buyer');
+        return $this->belongsTo(User::class)->where('type',UserType::B2B_BUYER);
     }
 
     public function product()

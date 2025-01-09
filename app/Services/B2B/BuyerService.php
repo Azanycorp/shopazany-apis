@@ -33,21 +33,21 @@ class BuyerService
     {
         $query = trim(request()->input('search'));
 
-        $users = User::where('type',UserType::B2B_BUYER)
-        ->where(function($queryBuilder) use ($query) {
-            $queryBuilder->where('first_name', 'LIKE', '%' . $query . '%')
-                         ->orWhere('last_name', 'LIKE', '%' . $query . '%')
-                         ->orWhere('middlename', 'LIKE', '%' . $query . '%')
-                         ->orWhere('email', 'LIKE', '%' . $query . '%');
-        })
-        ->paginate(25);
+        $users = User::where('type', UserType::B2B_BUYER)
+            ->where(function ($queryBuilder) use ($query) {
+                $queryBuilder->where('first_name', 'LIKE', '%' . $query . '%')
+                    ->orWhere('last_name', 'LIKE', '%' . $query . '%')
+                    ->orWhere('middlename', 'LIKE', '%' . $query . '%')
+                    ->orWhere('email', 'LIKE', '%' . $query . '%');
+            })
+            ->paginate(25);
 
-        // $data = CustomerResource::collection($users);
+        $data = CustomerResource::collection($users);
 
         return [
             'status' => 'true',
             'message' => 'All Buyers',
-            'data' => $users,
+            'data' => $data,
             'pagination' => [
                 'current_page' => $users->currentPage(),
                 'last_page' => $users->lastPage(),
@@ -60,10 +60,17 @@ class BuyerService
 
     public function viewCustomer($id)
     {
-        $user = User::with(['userCountry', 'state', 'wishlist.product', 'payments.order'])->where('id', $id)
-        ->where('type',UserType::B2B_BUYER)
-        ->first();
-
+        // $user = User::with(['userCountry', 'state', 'wishlist.product', 'payments.order'])->where('id', $id)
+        // ->where('type',UserType::B2B_BUYER)
+        // ->first();
+        $user = User::with([
+            'userCountry',
+            'state',
+            'wishlist.product',
+            'payments.order'
+        ])
+            ->where('type', UserType::B2B_BUYER)
+            ->find($id);
         if (!$user) {
             return $this->error(null, "User not found", 404);
         }
@@ -79,10 +86,7 @@ class BuyerService
 
     public function banCustomer($request)
     {
-        $user = User::where('id', $request->user_id)
-        ->where('type',UserType::B2B_BUYER)
-        ->first();
-
+        $user = User::where('type', UserType::B2B_BUYER)->find($request->user_id);
         if (!$user) {
             return $this->error(null, "User not found", 404);
         }
@@ -157,7 +161,6 @@ class BuyerService
             $image = $request->hasFile('image') ? uploadUserImage($request, 'image', $user) : null;
 
             $user->update(['image' => $image]);
-
         } catch (\Throwable $th) {
             throw $th;
         }
@@ -168,8 +171,8 @@ class BuyerService
     public function editCustomer($request)
     {
         $user = User::where('id', $request->user_id)
-        ->where('type', 'customer')
-        ->first();
+            ->where('type', 'customer')
+            ->first();
 
         if (!$user) {
             return $this->error(null, "User not found", 404);
@@ -323,7 +326,7 @@ class BuyerService
 
     public function removeQuote($id)
     {
-        $quote = B2bQuote::where('id', $id)->first();
+        $quote = B2bQuote::find($id);
         if (!$quote) return $this->error(null, 'No record found', 404);
         $quote->delete();
         return $this->success(null, 'Item removed successfully');
@@ -466,7 +469,7 @@ class BuyerService
     {
         $auth = userAuth();
 
-        $user = User::with('b2bCompany')->where('id', $auth->id)->where('type',UserType::B2B_BUYER)->first();
+        $user = User::with('b2bCompany')->where('id', $auth->id)->where('type', UserType::B2B_BUYER)->first();
         if (!$user) return $this->error(null, 'User does not exist');
         // $data = new SellerProfileResource($user);
 

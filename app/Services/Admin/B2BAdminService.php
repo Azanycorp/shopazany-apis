@@ -11,6 +11,7 @@ use App\Models\Color;
 use App\Models\State;
 use App\Models\Country;
 use App\Models\Category;
+use App\Enum\BannerStatus;
 use App\Models\ShopCountry;
 use App\Models\SliderImage;
 use App\Trait\HttpResponse;
@@ -102,28 +103,28 @@ class B2BAdminService
 
     public function brands()
     {
-        $brands = Brand::where('status', 'active')->get(['id', 'name', 'slug', 'image']);
+        $brands = Brand::where('status',BannerStatus::ACTIVE)->get(['id', 'name', 'slug', 'image']);
 
         return $this->success($brands, "All brands");
     }
 
     public function colors()
     {
-        $colors = Color::where('status', 'active')->get(['id', 'name', 'code']);
+        $colors = Color::where('status',BannerStatus::ACTIVE)->get(['id', 'name', 'code']);
 
         return $this->success($colors, "All colors");
     }
 
     public function units()
     {
-        $units = Unit::where('status', 'active')->get(['id', 'name']);
+        $units = Unit::where('status',BannerStatus::ACTIVE)->get(['id', 'name']);
 
         return $this->success($units, "All units");
     }
 
     public function sizes()
     {
-        $sizes = Size::where('status', 'active')->get(['id', 'name']);
+        $sizes = Size::where('status',BannerStatus::ACTIVE)->get(['id', 'name']);
 
         return $this->success($sizes, "All sizes");
     }
