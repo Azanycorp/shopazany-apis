@@ -2,12 +2,26 @@
 
 namespace App\Http\Controllers\Api\B2B;
 
-use App\Http\Controllers\Controller;
+use App\Enum\UserStatus;
 use Illuminate\Http\Request;
+use App\Services\B2B\AdminService;
+use App\Http\Controllers\Controller;
 
 class B2BAdminController extends Controller
 {
-    function index() {
-        return 'dashbord';
-    }
+    public function __construct(
+        private AdminService $adminService)
+    {}
+
+  //RFQS
+  public function allRfq()
+  {
+    return 'ok';
+      return $this->adminService->getAllRfq();
+  }
+  public function rfqDetails($id)
+  {
+      return $this->adminService->getRfqDetails($id);
+  }
+
 }

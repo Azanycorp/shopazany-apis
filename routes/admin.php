@@ -18,7 +18,10 @@ use App\Http\Controllers\Api\AdminSellerController;
 use App\Http\Controllers\Api\BannerPromoController;
 use App\Http\Controllers\Api\RewardPointController;
 use App\Http\Controllers\Api\AdminProductController;
+use App\Http\Controllers\Api\B2B\B2BAdminController;
 use App\Http\Controllers\Api\AdminCustomerController;
+use App\Http\Controllers\Api\B2B\B2BAdminBuyerController;
+use App\Http\Controllers\Api\B2B\B2BAdminSellerController;
 use App\Http\Controllers\Api\B2B\ProductCategoryController;
 
 Route::prefix('connect')->controller(AdminAuthController::class)->group(function () {
@@ -204,6 +207,44 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function () {
             Route::get('/{category_id}/subcategory', 'getSubcategory');
             Route::patch('/subcategory/status/{sub_category_id}', 'subStatus');
             Route::delete('/subcategory/delete/{id}', 'deleteSubCategory');
+        });
+
+        //buyers
+        Route::prefix('buyer')->controller(B2BAdminBuyerController::class)->group(function () {
+            // GET routes
+            Route::get('/', 'allCustomers');
+            Route::get('/filter', 'filter');
+            Route::get('/{user_id}', 'viewCustomer');
+            Route::get('/payment/{id}', 'getPayment');
+
+            Route::post('/add', 'addCustomer');
+            Route::post('/edit', 'editCustomer');
+
+            Route::patch('/approve', 'approveCustomer');
+            Route::patch('/ban', 'banCustomer');
+
+            Route::delete('/remove', 'removeCustomer');
+        });
+
+        //Sellers
+        Route::prefix('seller')->controller(B2BAdminSellerController::class)->group(function () {
+            Route::get('/', 'allSellers');
+            Route::get('/{user_id}', 'viewSeller');
+            Route::get('/payment-history/{user_id}', 'paymentHistory');
+
+            Route::patch('/{user_id}/edit', 'editSeller');
+            Route::delete('/remove/{user_id}', 'removeSeller');
+
+            Route::patch('/approve', 'approveSeller');
+            Route::patch('/ban', 'banSeller');
+
+            Route::delete('/bulk/remove', 'bulkRemove');
+        });
+
+        //Rfq
+        Route::prefix('rfqs')->controller(B2BAdminController::class)->group(function () {
+            Route::get('/', 'allRfq');
+            Route::get('/details/{id}', 'rfqDetails');
         });
     });
 });

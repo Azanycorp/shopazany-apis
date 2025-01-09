@@ -6,13 +6,6 @@ use App\Http\Controllers\Api\B2BController;
 use App\Http\Controllers\Api\B2BSellerController;
 use App\Http\Controllers\Api\B2B\B2BBuyerController;
 use App\Http\Controllers\Api\B2B\B2BAccountController;
-use App\Http\Controllers\Api\B2B\Seller\SellerOrderController;
-use App\Http\Controllers\Api\B2B\Seller\SellerWalletController;
-use App\Http\Controllers\Api\B2B\Seller\SellerProductController;
-use App\Http\Controllers\Api\B2B\Seller\SellerProfileController;
-use App\Http\Controllers\Api\B2B\Seller\SellerDashboardController;
-use App\Http\Controllers\Api\B2B\Seller\SellerComplaintsController;
-use App\Http\Controllers\Api\B2B\Seller\SellerShippingAddressController;
 
 // Route::get('/user', function (Request $request) {
 //     return $request->user();
@@ -48,7 +41,7 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function () {
         Route::controller(B2BSellerController::class)->group(function () {
             //dashboard
             Route::get('/dashboard', 'dashboard');
-            Route::get('/withdrawals', 'getWithdrawalHistory');
+            Route::get('/withdrawals', 'withdrawalHistory');
             Route::get('/earning-report', 'getEarningReport');
 
             //Orders and rfqs
@@ -60,6 +53,13 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function () {
                 Route::post('/reply-review', 'replyReview');
                 Route::post('/rate-order', 'rateOrder');
                 Route::post('/order-feeback', 'orderFeeback');
+            });
+            //payment method
+            Route::prefix('payment-method')->group(function () {
+                Route::get('/', 'allMethods');
+                Route::get('/details/{id}', 'viewPaymentMethodDetails');
+                Route::post('/update/{id}', 'updatePaymentMethod');
+                Route::delete('/details/{id}', 'deletePaymentMethod');
             });
             //complaints log
             Route::get('/refund/request', 'getComplaints');
@@ -111,11 +111,10 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function () {
         Route::get('/wish-list', 'wishList');
         Route::delete('/wish/remove-item/{id}', 'removeItem');
 
-         //profile
-         Route::get('/profile', 'profile');
-         Route::post('/edit-account', 'editAccount');
-         Route::patch('/change-password', 'changePassword');
-         Route::post('/edit-company', 'editCompany');
-
+        //profile
+        Route::get('/profile', 'profile');
+        Route::post('/edit-account', 'editAccount');
+        Route::patch('/change-password', 'changePassword');
+        Route::post('/edit-company', 'editCompany');
     });
 });
