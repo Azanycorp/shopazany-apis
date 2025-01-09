@@ -12,10 +12,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('b2b_product_sub_categories', function (Blueprint $table) {
-            DB::statement("ALTER TABLE b2b_product_sub_categories CHANGE COLUMN status status ENUM('active', 'inactive','in-active') NOT NULL");
+        if (DB::connection()->getDriverName() === 'mysql') {
+            Schema::table('b2b_product_sub_categories', function (Blueprint $table) {
+                DB::statement("ALTER TABLE b2b_product_sub_categories CHANGE COLUMN status status ENUM('active', 'inactive','in-active') NOT NULL");
 
-        });
+            });
+        }
     }
 
     /**

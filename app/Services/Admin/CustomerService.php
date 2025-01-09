@@ -45,9 +45,9 @@ class CustomerService
 
     public function viewCustomer($id)
     {
-        $user = User::with(['userCountry', 'state', 'wishlist.product', 'payments.order'])->where('id', $id)
-        ->where('type', 'customer')
-        ->first();
+        $user = User::with(['userCountry', 'state', 'wishlist.product', 'payments.order'])
+            ->where('type', 'customer')
+            ->find($id);
 
         if (!$user) {
             return $this->error(null, "User not found", 404);
@@ -64,18 +64,17 @@ class CustomerService
 
     public function banCustomer($request)
     {
-        $user = User::where('id', $request->user_id)
-        ->where('type', 'customer')
-        ->first();
+        $user = User::where('type', UserType::CUSTOMER)
+            ->find($request->user_id);
 
-        if (!$user) {
+        if (! $user) {
             return $this->error(null, "User not found", 404);
         }
 
-        $user->status = 'blocked';
-        $user->is_admin_approve = 0;
-
-        $user->save();
+        $user->update([
+            'status' => UserStatus::BLOCKED,
+            'is_admin_approve' => 0
+        ]);
 
         return $this->success(null, "User has been blocked successfully");
     }
@@ -85,10 +84,11 @@ class CustomerService
         $users = User::whereIn('id', $request->user_ids)->get();
 
         foreach ($users as $user) {
-            $user->status = UserStatus::DELETED;
-            $user->is_verified = 0;
-            $user->is_admin_approve = 0;
-            $user->save();
+            $user->update([
+                'status' => UserStatus::DELETED,
+                'is_verified' => 0,
+                'is_admin_approve' => 0,
+            ]);
 
             $user->delete();
         }
@@ -100,7 +100,7 @@ class CustomerService
     {
         $query = trim(request()->query('approved'));
 
-        $users = User::where('type', 'customer')
+        $users = User::where('type', UserType::CUSTOMER)
             ->when($query !== null, function ($queryBuilder) use ($query) {
                 $queryBuilder->where('is_admin_approve', $query);
             })
