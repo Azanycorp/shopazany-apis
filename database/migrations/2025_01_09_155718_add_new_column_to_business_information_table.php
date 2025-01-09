@@ -12,7 +12,6 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('business_information', function (Blueprint $table) {
-            //
             $table->string('logo')->nullable();
         });
     }
