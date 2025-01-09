@@ -6,13 +6,6 @@ use App\Http\Controllers\Api\B2BController;
 use App\Http\Controllers\Api\B2BSellerController;
 use App\Http\Controllers\Api\B2B\B2BBuyerController;
 use App\Http\Controllers\Api\B2B\B2BAccountController;
-use App\Http\Controllers\Api\B2B\Seller\SellerOrderController;
-use App\Http\Controllers\Api\B2B\Seller\SellerWalletController;
-use App\Http\Controllers\Api\B2B\Seller\SellerProductController;
-use App\Http\Controllers\Api\B2B\Seller\SellerProfileController;
-use App\Http\Controllers\Api\B2B\Seller\SellerDashboardController;
-use App\Http\Controllers\Api\B2B\Seller\SellerComplaintsController;
-use App\Http\Controllers\Api\B2B\Seller\SellerShippingAddressController;
 
 // Route::get('/user', function (Request $request) {
 //     return $request->user();
@@ -48,19 +41,26 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function () {
         Route::controller(B2BSellerController::class)->group(function () {
             //dashboard
             Route::get('/dashboard', 'dashboard');
-            Route::get('/withdrawals', 'getWithdrawalHistory');
+            Route::get('/withdrawals', 'withdrawalHistory');
             Route::get('/earning-report', 'getEarningReport');
 
             //Orders and rfqs
             Route::prefix('rfq')->group(function () {
-            Route::get('/', 'allRfq');
-            Route::get('/details/{id}', 'rfqDetails');
-            Route::post('/mark-as-shipped', 'shippedRfq');
-            Route::post('/mark-as-delivered', 'markDelivered');
-            Route::post('/reply-review', 'replyReview');
-            Route::post('/rate-order', 'rateOrder');
-            Route::post('/order-feeback', 'orderFeeback');
-        });
+                Route::get('/', 'allRfq');
+                Route::get('/details/{id}', 'rfqDetails');
+                Route::post('/mark-as-shipped', 'shippedRfq');
+                Route::post('/mark-as-delivered', 'markDelivered');
+                Route::post('/reply-review', 'replyReview');
+                Route::post('/rate-order', 'rateOrder');
+                Route::post('/order-feeback', 'orderFeeback');
+            });
+            //payment method
+            Route::prefix('payment-method')->group(function () {
+                Route::get('/', 'allMethods');
+                Route::get('/details/{id}', 'viewPaymentMethodDetails');
+                Route::post('/update/{id}', 'updatePaymentMethod');
+                Route::delete('/details/{id}', 'deletePaymentMethod');
+            });
             //complaints log
             Route::get('/refund/request', 'getComplaints');
 
@@ -101,10 +101,20 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function () {
         Route::get('quotes', 'allQuotes');
         Route::get('send-all-quotes', 'sendAllQuotes');
         Route::get('send-rfq/{id}', 'sendSingleQuote');
+        Route::delete('remove-rfq/{id}', 'removeQuote');
         Route::get('dashboard', 'dashboard');
         Route::get('rfq', 'getAllRfqs');
         Route::get('rfq-details/{id}', 'getRfqDetails');
         Route::post('request-review', 'reviewRequest');
         Route::post('accept-quote', 'acceptQuote');
+        Route::post('/add-to-wish', 'addTowishList');
+        Route::get('/wish-list', 'wishList');
+        Route::delete('/wish/remove-item/{id}', 'removeItem');
+
+        //profile
+        Route::get('/profile', 'profile');
+        Route::post('/edit-account', 'editAccount');
+        Route::patch('/change-password', 'changePassword');
+        Route::post('/edit-company', 'editCompany');
     });
 });

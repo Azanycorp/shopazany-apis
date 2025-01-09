@@ -27,6 +27,8 @@ class AddProductRequest extends FormRequest
             'category_id' => ['required', 'integer'],
             'keywords' => ['required'],
             'description' => ['required', 'string'],
+            'quantity' => ['required', 'string'],
+            'unit' => ['required', 'string'],
             'front_image' => ['required', 'image', 'mimes:png,jpg,jpeg'],
             'minimum_order_quantity' => ['required', 'integer'],
             'fob_price' => ['required'],

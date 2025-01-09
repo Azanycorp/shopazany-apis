@@ -18,6 +18,11 @@ class B2BSellerController extends Controller
         $this->service = $service;
     }
 
+    public function deletePaymentMethod($id)
+    {
+        return $this->service->deletePaymentMethod($id);
+    }
+
     public function profile()
     {
         return $this->service->profile();

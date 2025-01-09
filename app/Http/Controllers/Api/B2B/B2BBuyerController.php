@@ -3,8 +3,9 @@
 namespace App\Http\Controllers\Api\B2B;
 
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
 use App\Services\B2B\BuyerService;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\ChangePasswordRequest;
 
 class B2BBuyerController extends Controller
 {
@@ -37,12 +38,16 @@ class B2BBuyerController extends Controller
     {
         return $this->buyerService->sendRfq($id);
     }
+    public function removeQuote($id)
+    {
+        return $this->buyerService->removeQuote($id);
+    }
     //Dasbaord
     public function dashboard()
     {
         return $this->buyerService->getDashboardDetails();
     }
-     //RFQ
+    //RFQ
     public function getAllRfqs()
     {
         return $this->buyerService->allRfqs();
@@ -59,5 +64,38 @@ class B2BBuyerController extends Controller
     public function acceptQuote(Request $request)
     {
         return $this->buyerService->acceptQuote($request);
+    }
+    //Wish list
+    public function addTowishList(Request $request)
+    {
+        return $this->buyerService->addToWishList($request);
+    }
+
+    public function wishList()
+    {
+        return $this->buyerService->myWishList();
+    }
+    public function removeItem($id)
+    {
+        return $this->buyerService->removeItem($id);
+    }
+    //Account section
+    public function profile()
+    {
+        return $this->buyerService->profile();
+    }
+    public function editAccount(Request $request)
+    {
+        return $this->buyerService->editAccount($request);
+    }
+
+    public function changePassword(ChangePasswordRequest $request)
+    {
+        return $this->buyerService->changePassword($request);
+    }
+
+    public function editCompany(Request $request)
+    {
+        return $this->buyerService->editCompany($request);
     }
 }
