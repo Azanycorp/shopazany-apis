@@ -24,7 +24,7 @@ class PaymentController extends Controller
     public function processPayment(PaymentRequest $request)
     {
         match($request->payment_method) {
-            PaymentType::PAYSTACK => $paymentProcessor = new PaystackPaymentProcessor(),
+            PaymentType::PAYSTACK => $paymentProcessor = new PaystackPaymentProcessor()
         };
 
         $paymentService = new HandlePaymentService($paymentProcessor);
