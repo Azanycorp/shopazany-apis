@@ -40,16 +40,6 @@ class AuthService
                 'password' => bcrypt($request->password)
             ]);
 
-            $user->businessInformation()->create([
-                'business_name' => $request->business_name,
-                'business_phone' => $request->business_phone,
-                'country_id' => $request->country_id,
-                'city' => $request->city,
-                'zip' => $request->postal_code,
-                'address' => $request->address,
-                'state' => $request->state,
-            ]);
-            
             $description = "User with email: {$request->email} signed up as b2b seller";
             $response = $this->success(null, "Created successfully");
             $action = UserLog::CREATED;
