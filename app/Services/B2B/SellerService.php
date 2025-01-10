@@ -19,6 +19,7 @@ use App\Models\B2bOrderRating;
 use Illuminate\Support\Carbon;
 use App\Models\B2bOrderFeedback;
 use Illuminate\Support\Facades\DB;
+use App\Models\B2bWithdrawalMethod;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -810,6 +811,61 @@ class SellerService extends Controller
         return $this->success($rfq, "Rfq details");
     }
 
+    public function markDelivered($data)
+    {
+        $rfq = Rfq::find($data->rfq_id);
+        if (!$rfq) {
+            return $this->error(null, 'No record found to send', 404);
+        }
+
+        $rfq->update([
+            'payment_status' => 'paid',
+            'status' => 'delivered',
+            'delivery_date' => Carbon::now()->toDateString()
+        ]);
+        //Update product
+        $product = B2BProduct::where('id', $rfq->product_id)->first();
+        $remaining_qty = $product->quantity - $rfq->product_quantity;
+        $product->availability_quantity = $remaining_qty;
+        $product->sold += $rfq->product_quantity;
+        $product->save();
+
+        return $this->success($rfq, 'Product marked delivered successfully');
+    }
+
+    public function rateOrder($data)
+    {
+        $rfq = Rfq::find($data->rfq_id);
+
+        if (!$rfq) {
+            return $this->error(null, "No record found", 404);
+        }
+        B2bOrderRating::create([
+            'seller_id' => Auth::user()->id,
+            'order_no' => $rfq->quote_no,
+            'rating' => $data->rating,
+            'description' => $data->description
+        ]);
+
+        return $this->success(null, "Rating successful");
+    }
+
+    public function orderFeeback($data)
+    {
+        $rfq = Rfq::find($data->rfq_id);
+
+        if (!$rfq) {
+            return $this->error(null, "No record found", 404);
+        }
+        B2bOrderFeedback::create([
+            'seller_id' => Auth::user()->id,
+            'order_no' => $rfq->quote_no,
+            'description' => $data->description
+        ]);
+
+        return $this->success(null, "Fesback taken successfully");
+    }
+
     //dasboard
     public function getDashboardDetails()
     {
@@ -861,61 +917,70 @@ class SellerService extends Controller
         return $this->success($payouts, "payouts details");
     }
 
-    public function markDelivered($data)
+    public function addNewMethod($data)
     {
-        $rfq = Rfq::find($data->rfq_id);
-        if (!$rfq) {
-            return $this->error(null, 'No record found to send', 404);
-        }
-
-        $rfq->update([
-            'payment_status' => 'paid',
-            'status' => 'delivered',
-            'delivery_date' => Carbon::now()->toDateString()
+        $method = B2bWithdrawalMethod::create([
+            'country_id' => $data->country_id,
+            'user_id' => Auth::id(),
+            'account_name' => $data->account_name,
+            'account_number' => $data->account_number,
+            'account_type' => $data->account_type,
+            'bank_name' => $data->bank_name,
+            'routing_number' => $data->routing_number,
+            'bic_swift_code' => $data->bic_swift_code,
         ]);
-        //Update product
-        $product = B2BProduct::where('id', $rfq->product_id)->first();
-        $remaining_qty = $product->quantity - $rfq->product_quantity;
-        $product->availability_quantity = $remaining_qty;
-        $product->sold += $rfq->product_quantity;
-        $product->save();
-
-        return $this->success($rfq, 'Product marked delivered successfully');
+        if ($method) {
+            return $this->success(null, 'Method added successfully', 200);
+        }
+        return $this->error(null, 'Something went wrong', 422);
     }
 
-    public function rateOrder($data)
+    public function getAllMethod()
     {
-        $rfq = Rfq::find($data->rfq_id);
-
-        if (!$rfq) {
-            return $this->error(null, "No record found", 404);
+        $methods = auth()->user()->B2bWithdrawalMethod();
+        if ($methods) {
+            return $this->error(null, 'No record found', 404);
         }
-        B2bOrderRating::create([
-            'seller_id' => Auth::user()->id,
-            'order_no' => $rfq->quote_no,
-            'rating' => $data->rating,
-            'description' => $data->description
-        ]);
-
-        return $this->success(null, "Rating successful");
-    }
-    public function orderFeeback($data)
-    {
-        $rfq = Rfq::find($data->rfq_id);
-
-        if (!$rfq) {
-            return $this->error(null, "No record found", 404);
-        }
-        B2bOrderFeedback::create([
-            'seller_id' => Auth::user()->id,
-            'order_no' => $rfq->quote_no,
-            'description' => $data->description
-        ]);
-
-        return $this->success(null, "Fesback taken successfully");
+        return $this->success($methods, 'All Withdrawal methods', 200);
     }
 
-    //Payment method
+    public function getSingleMethod($id)
+    {
+        $method = B2bWithdrawalMethod::with('country')->find($id);
+        if (!$method) {
+            return $this->error(null, 'No record found', 404);
+        }
+        return $this->success($method, 'Withdrawal details', 200);
+    }
+    public function updateMethod($id, $data)
+    {
+        $method = B2bWithdrawalMethod::find($id);
+        if (!$method) {
+            return $this->error(null, 'No record found', 404);
+        }
+        $method->update([
+            'country_id' => $data->country_id,
+            'user_id' => Auth::id(),
+            'account_name' => $data->account_name,
+            'account_number' => $data->account_number,
+            'account_type' => $data->account_type,
+            'bank_name' => $data->bank_name,
+            'routing_number' => $data->routing_number,
+            'bic_swift_code' => $data->bic_swift_code,
+        ]);
+        return $this->success($method, 'Withdrawal details Updated', 200);
+    }
+
+    public function deleteMethod($id)
+    {
+        $method = B2bWithdrawalMethod::find($id);
+        if (!$method) {
+            return $this->error(null, 'No record found', 404);
+        }
+        $method->delete();
+        return $this->success($method, 'Withdrawal details deleted', 200);
+    }
+
     public function deletePaymentMethod($id)
     {
         $method = PaymentMethod::find($id);
@@ -926,18 +991,5 @@ class SellerService extends Controller
         $method->delete();
         return $this->success(null, "details deleted successfully");
     }
-    public function createPaymentMethod($data)
-    {
-        $method = PaymentMethod::create([
-            'user_id' => Auth::user()->id,
-            'type' => $data->type,
-            'bank_name' => $data->bank_name,
-            'account_number' => $data->account_number,
-            'account_holder_name' => $data->account_holder_name,
-            'swift' => $data->swift,
-            'bank_branch' => $data->bank_branch,
-            'paypal_email' => $data->paypal_email,
-        ]);
-        return $this->success($method, "details created successfully");
-    }
+
 }

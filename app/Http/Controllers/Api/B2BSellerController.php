@@ -128,6 +128,7 @@ class B2BSellerController extends Controller
     {
         return $this->service->getWithdrawalHistory();
     }
+
     //RFQS
     public function allRfq()
     {
@@ -156,5 +157,31 @@ class B2BSellerController extends Controller
     public function orderFeeback(Request $request)
     {
         return $this->service->orderFeeback($request);
+    }
+
+    //Seller Wihdrawal method
+    public function allWithdrawalMethods()
+    {
+        return $this->service->getAllMethod();
+    }
+
+    public function addWithdrawalMethod(Request $request)
+    {
+        return $this->service->addNewMethod($request);
+    }
+
+    public function getWithdrawalMethod($id)
+    {
+        return $this->service->getSingleMethod($id);
+    }
+
+    public function updateWithdrawalMethod($id, Request $request)
+    {
+        return $this->service->getSingleMethod($id, $request);
+    }
+
+    public function deleteWithdrawalMethod($id)
+    {
+        return $this->service->deleteMethod($id);
     }
 }

@@ -12,6 +12,7 @@ class LoginService extends Controller
 {
     public static function AuthLogin($request)
     {
+        return $request;
         $request->validated();
 
         if (Auth::attempt($request->only(['email', 'password']))) {
