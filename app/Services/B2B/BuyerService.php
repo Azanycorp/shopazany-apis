@@ -583,7 +583,7 @@ class BuyerService
             'service_type' => $request->service_type ?? $user->service_type,
             'country_id' => $request->country_id ?? $user->country,
         ]);
-        
+
         return $this->success(null, "Details Updated successfully");
     }
 }
