@@ -12,7 +12,6 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('b2b_companies', function (Blueprint $table) {
-            //
             $table->string('logo')->nullable();
         });
     }

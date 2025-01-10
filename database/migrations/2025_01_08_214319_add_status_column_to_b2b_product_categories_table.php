@@ -11,9 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('rfq_messages', function (Blueprint $table) {
-            //
-            $table->double('preferred_qty')->after('note')->default(0);
+        Schema::table('b2b_product_categories', function (Blueprint $table) {
+            if (!Schema::hasColumn('b2b_product_categories', 'status')) {
+                $table->enum('status', ['active', 'inactive'])->default('active');
+            }
         });
     }
 
@@ -22,8 +23,5 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('rfq_messages', function (Blueprint $table) {
-            //
-        });
     }
 };

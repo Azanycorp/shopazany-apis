@@ -69,12 +69,12 @@ class SellerService extends Controller
             })
             ->paginate(25);
 
-        // $data = SellerResource::collection($users);
+        $data = SellerResource::collection($users);
 
         return [
             'status' => 'true',
             'message' => 'Sellers filtered',
-            'data' => $users,
+            'data' => $data,
             'pagination' => [
                 'current_page' => $users->currentPage(),
                 'last_page' => $users->lastPage(),
@@ -105,9 +105,8 @@ class SellerService extends Controller
 
     public function viewSeller($id)
     {
-        $user = User::with(['b2bProducts'])->where('id', $id)
-            ->where('type', UserType::B2B_SELLER)
-            ->first();
+        $user = User::with(['b2bProducts'])->where('type', UserType::B2B_SELLER)
+            ->find($id);
 
         if (!$user) {
             return $this->error(null, "User not found", 404);
@@ -398,7 +397,7 @@ class SellerService extends Controller
         return $this->success($data, 'All products');
     }
 
-    public function getProductById($user_id, $product_id)
+    public function getProductById($product_id, $user_id)
     {
         $currentUserId = userAuthId();
 

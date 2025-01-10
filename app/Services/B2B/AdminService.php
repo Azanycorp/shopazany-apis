@@ -31,19 +31,25 @@ class AdminService
 
     public function getAllRfq()
     {
-        $rfqs =  Rfq::with('buyer', 'seller')->get();
+        $rfqs =  Rfq::with(['buyer', 'seller'])->get();
+
         if (count($rfqs)) {
             return $this->error(null, "No record found.", 404);
         }
+
         return $this->success($rfqs, "rfqs");
     }
 
     public function getRfqDetails($id)
     {
-        $order = Rfq::with('messages')->where('id', $id)->first();
+        $order = Rfq::with('messages')
+            ->where('id', $id)
+            ->find($id);
+
         if (!$order) {
             return $this->error(null, "No record found.", 404);
         }
+        
         return $this->success($order, "Rfq details");
     }
 }

@@ -22,10 +22,6 @@ return new class extends Migration
             $table->longText('description');
             $table->string('front_image');
             $table->double('minimum_order_quantity')->default(0);
-            $table->double('unit_price')->default(0);
-            $table->double('availability_quantity')->default(0);
-            $table->double('quantity')->default(0);
-            $table->double('sold')->default(0);
             $table->double('fob_price')->default(0);
             $table->integer('country_id');
             $table->string('status')->default('pending');

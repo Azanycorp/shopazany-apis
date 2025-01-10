@@ -10,7 +10,6 @@ use App\Models\Brand;
 use App\Models\Color;
 use App\Models\State;
 use App\Models\Country;
-use App\Models\Category;
 use App\Enum\BannerStatus;
 use App\Models\ShopCountry;
 use App\Models\SliderImage;
@@ -22,7 +21,6 @@ use Illuminate\Support\Facades\Cache;
 use App\Http\Resources\SliderResource;
 use App\Http\Resources\CountryResource;
 use Illuminate\Support\Facades\Storage;
-use App\Http\Resources\CategoryResource;
 use App\Http\Resources\AdminUserResource;
 use App\Http\Resources\B2BCategoryResource;
 use App\Http\Resources\ShopCountryResource;
@@ -103,28 +101,36 @@ class B2BAdminService
 
     public function brands()
     {
-        $brands = Brand::where('status',BannerStatus::ACTIVE)->get(['id', 'name', 'slug', 'image']);
+        $brands = Brand::select('id', 'name', 'slug', 'image')
+            ->where('status', BannerStatus::ACTIVE)
+            ->get();
 
         return $this->success($brands, "All brands");
     }
 
     public function colors()
     {
-        $colors = Color::where('status',BannerStatus::ACTIVE)->get(['id', 'name', 'code']);
+        $colors = Color::select('id', 'name', 'code')
+            ->where('status', BannerStatus::ACTIVE)
+            ->get();
 
         return $this->success($colors, "All colors");
     }
 
     public function units()
     {
-        $units = Unit::where('status',BannerStatus::ACTIVE)->get(['id', 'name']);
+        $units = Unit::select('id', 'name')
+            ->where('status', BannerStatus::ACTIVE)
+            ->get();
 
         return $this->success($units, "All units");
     }
 
     public function sizes()
     {
-        $sizes = Size::where('status',BannerStatus::ACTIVE)->get(['id', 'name']);
+        $sizes = Size::select('id', 'name')
+            ->where('status', BannerStatus::ACTIVE)
+            ->get();
 
         return $this->success($sizes, "All sizes");
     }
@@ -133,7 +139,7 @@ class B2BAdminService
     {
         $country = Country::find($request->country_id);
 
-        if(!$country) {
+        if(! $country) {
             return $this->error(null, "Not found", 404);
         }
 

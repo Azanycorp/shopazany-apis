@@ -13,8 +13,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('rfqs', function (Blueprint $table) {
-            //
-            DB::statement("ALTER TABLE rfqs CHANGE COLUMN status status ENUM('pending', 'review', 'in-progress', 'shipped', 'confirmed', 'cancelled', 'delivered') NOT NULL");
+            if (DB::connection()->getDriverName() === 'mysql') {
+                DB::statement("ALTER TABLE rfqs CHANGE COLUMN status status ENUM('pending', 'review', 'in-progress', 'shipped', 'confirmed', 'cancelled', 'delivered') NOT NULL");
+            }
         });
     }
 
