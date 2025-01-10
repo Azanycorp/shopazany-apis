@@ -13,19 +13,22 @@ use App\Http\Controllers\Api\B2B\B2BAccountController;
 
 // B2B
 Route::middleware(['throttle:apis'])->group(function () {
-    Route::prefix('b2b/connect')->controller(B2BAccountController::class)->group(function () {
-        Route::post('/login', 'login');
-        Route::post('/login/verify', 'loginVerify');
-        Route::post('/seller/signup', 'signup');
-        Route::post('/forgot/password', 'forgot');
-        Route::post('/reset/password', 'reset');
-        Route::post('/signup/resend', 'resendCode');
-        Route::post('/logout', 'logout');
-        Route::post('/verify', 'verify');
+    Route::prefix('b2b/connect')
+        ->controller(B2BAccountController::class)
+        ->group(function () {
 
-        // Buyer Onboarding
-        Route::post('/buyer/signup', 'buyerOnboarding');
-    });
+            Route::post('/login', 'login');
+            Route::post('/login/verify', 'loginVerify');
+            Route::post('/seller/signup', 'signup');
+            Route::post('/forgot/password', 'forgot');
+            Route::post('/reset/password', 'reset');
+            Route::post('/signup/resend', 'resendCode');
+            Route::post('/logout', 'logout');
+            Route::post('/verify', 'verify');
+
+            // Buyer Onboarding
+            Route::post('/buyer/signup', 'buyerOnboarding');
+        });
 
     Route::prefix('b2b')->controller(B2BController::class)->group(function () {
         Route::post('/business/information', 'businessInformation');

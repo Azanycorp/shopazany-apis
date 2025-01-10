@@ -204,7 +204,7 @@ abstract class Controller
 
     protected function handleInvalidCredentials($request)
     {
-        $description = "Login OTP sent to {$request->email}";
+        $description = "Credentials do not match {$request->email}";
         $action = UserLog::LOGIN_ATTEMPT;
         $response = $this->error(null, 'Credentials do not match', 401);
 
