@@ -75,7 +75,7 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function () {
                 Route::post('/', 'addProduct');
                 Route::get('/{user_id}', 'getAllProduct');
                 Route::get('/analytic/{user_id}', 'getAnalytics');
-                Route::get('/{user_id}/{product_id}', 'getProductById');
+                Route::get('/{product_id}/{user_id}', 'getProductById');
                 Route::post('/update', 'updateProduct');
                 Route::delete('/delete/{user_id}/{product_id}', 'deleteProduct');
                 Route::post('import', 'productImport');

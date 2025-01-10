@@ -53,9 +53,9 @@ class B2BSellerController extends Controller
         return $this->service->getAllProduct($request);
     }
 
-    public function getProductById($user_id, $product_id)
+    public function getProductById($product_id, $user_id)
     {
-        return $this->service->getProductById($user_id, $product_id);
+        return $this->service->getProductById($product_id, $user_id);
     }
 
     public function updateProduct(Request $request)
