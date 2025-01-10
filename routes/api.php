@@ -22,20 +22,23 @@ use App\Http\Controllers\Api\SubscriptionController;
 
 Route::middleware(['throttle:apis'])->group(function () {
 
-    Route::prefix('connect')->controller(AuthController::class)->group(function () {
-        Route::post('/login', 'login')
-            ->middleware('login.attempt');
-        Route::post('/login/verify', 'loginVerify');
-        Route::post('/signup', 'signup');
-        Route::post('/forgot/password', 'forgot');
-        Route::post('/reset/password', 'reset');
-        Route::post('/signup/resend', 'resendCode');
-        Route::post('/logout', 'logout');
-        Route::post('/verify/email', 'verify');
-        Route::post('/seller/signup', 'sellerSignup');
+    Route::prefix('connect')
+        ->controller(AuthController::class)
+        ->group(function () {
 
-        Route::post('/affiliate/signup', 'affiliateSignup');
-    });
+            Route::post('/login', 'login')
+                ->middleware('login.attempt');
+            Route::post('/login/verify', 'loginVerify');
+            Route::post('/signup', 'signup');
+            Route::post('/forgot/password', 'forgot');
+            Route::post('/reset/password', 'reset');
+            Route::post('/signup/resend', 'resendCode');
+            Route::post('/logout', 'logout');
+            Route::post('/verify/email', 'verify');
+            Route::post('/seller/signup', 'sellerSignup');
+
+            Route::post('/affiliate/signup', 'affiliateSignup');
+        });
 
     Route::get('/country', [ApiController::class, 'country']);
     Route::get('/states/{country_id}', [ApiController::class, 'states']);
@@ -203,4 +206,3 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
 
 
 require __DIR__ . '/b2b.php';
-require('b2badmin.php');
