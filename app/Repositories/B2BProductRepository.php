@@ -9,7 +9,7 @@ class B2BProductRepository implements B2BRepositoryInterface
 {
     public function all(int $user, string $search = null)
     {
-        $query = B2BProduct::with(['b2bProductImages', 'category', 'country', 'user'])
+        $query = B2BProduct::with(['b2bProductImages', 'category', 'country', 'user', 'subCategory'])
             ->where('user_id', $user);
 
         if (!empty($search)) {
@@ -29,7 +29,8 @@ class B2BProductRepository implements B2BRepositoryInterface
 
     public function find(int $id)
     {
-        return B2BProduct::findOrFail($id);
+        return B2BProduct::with(['b2bProductImages', 'category', 'country', 'user', 'subCategory'])
+            ->findOrFail($id);
     }
 
     public function update(int $id, array $data)
