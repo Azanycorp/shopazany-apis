@@ -19,6 +19,7 @@ use App\Imports\ProductImport;
 use App\Models\B2bOrderRating;
 use Illuminate\Support\Carbon;
 use App\Models\B2bOrderFeedback;
+use App\Imports\B2BProductImport;
 use Illuminate\Support\Facades\DB;
 use App\Models\B2bWithdrawalMethod;
 use App\Http\Controllers\Controller;
@@ -320,8 +321,50 @@ class SellerService extends Controller
         return $this->success(null, "Updated successfully");
     }
 
+    public function exportSellerProduct($userId, $data)
+    {
+        $currentUserId = Auth::id();
+
+        if ($currentUserId != $userId) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+
+        switch ($data->type) {
+            case 'product':
+                return $this->exportB2bProduct($userId,$data);
+                break;
+
+            case 'order':
+                return "None yet";
+                break;
+
+            default:
+                return "Type not found";
+                break;
+        }
+    }
+
+    public function b2bproductImport($request)
+    {
+        $currentUserId = Auth::id();
+
+        if ($currentUserId != $request->user_id) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+
+        $seller = auth()->user();
+
+        try {
+             Excel::import(new B2BProductImport($seller), $request->file('file'));
+
+            return $this->success(null, "Imported successfully");
+        } catch (\Exception $e) {
+            return $this->error(null, $e->getMessage(), 500);
+        }
+    }
     public function addProduct($request)
     {
+        return $request;
         $user = User::find($request->user_id);
 
         if (! $user) {
@@ -410,7 +453,7 @@ class SellerService extends Controller
         $prod = $this->b2bProductRepository->find($product_id);
         $data = new B2BProductResource($prod);
 
-        return $this->success($data, 'Product detail');
+        return $this->success($data, 'Product details');
     }
 
     public function updateProduct($request)
@@ -697,7 +740,7 @@ class SellerService extends Controller
         }
     }
 
-    public function export($userId, $type)
+    public function export($userId, $data)
     {
         $currentUserId = userAuthId();
 
@@ -705,9 +748,9 @@ class SellerService extends Controller
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        switch ($type) {
+        switch ($data->type) {
             case 'product':
-                return $this->b2bExportProduct($userId);
+                return $this->b2bExportProduct($userId,$data);
                 break;
 
             case 'order':

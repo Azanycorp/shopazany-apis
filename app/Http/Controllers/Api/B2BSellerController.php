@@ -18,9 +18,18 @@ class B2BSellerController extends Controller
         $this->service = $service;
     }
 
-    public function deletePaymentMethod($id)
+    // public function deletePaymentMethod($id)
+    // {
+    //     return $this->service->deletePaymentMethod($id);
+    // }
+    public function productImport(Request $request)
     {
-        return $this->service->deletePaymentMethod($id);
+        return $this->service->b2bproductImport($request);
+    }
+
+    public function export($userId, Request $request)
+    {
+        return $this->service->exportSellerProduct($userId, $request);
     }
 
     public function profile()
@@ -128,7 +137,7 @@ class B2BSellerController extends Controller
     {
         return $this->service->getWithdrawalHistory();
     }
-    
+
     public function makeWithdrawalRequest(Request $request)
     {
         return $this->service->withdrawalRequest($request);
@@ -182,7 +191,7 @@ class B2BSellerController extends Controller
 
     public function updateWithdrawalMethod($id, Request $request)
     {
-        return $this->service->getSingleMethod($id, $request);
+        return $this->service->updateMethod($id, $request);
     }
 
     public function deleteWithdrawalMethod($id)
