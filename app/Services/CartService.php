@@ -94,7 +94,7 @@ class CartService
             $price = optional($item->product)->price * $item->quantity;
             return currencyConvert(optional($item->product->shopCountry)->currency, $price, $defaultCurrency);
         });
-
+        
         return $this->success([
             'local_items' => CartResource::collection($localItems),
             'international_items' => CartResource::collection($internationalItems),

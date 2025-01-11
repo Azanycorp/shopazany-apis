@@ -2409,33 +2409,27 @@ if (!function_exists('orderNo')) {
 
 if (! function_exists('currencyConvert')) {
     function currencyConvert($from, $amount, $to = null) {
+        static $rates = [];
+
         if ($to === null || $from === $to) {
             return round($amount, 2);
         }
 
-        $fromRate = Cache::remember("exchange_rate_{$from}", now()->addHours(24), function () use ($from) {
-            $currency = Currency::where('code', $from)->first();
+        $cacheKey = "{$from}_to_{$to}";
+        if (!isset($rates[$cacheKey])) {
+            $rates[$cacheKey] = Cache::remember($cacheKey, now()->addHours(24), function () use ($from, $to) {
+                $fromRate = Currency::where('code', $from)->value('exchange_rate');
+                $toRate = Currency::where('code', $to)->value('exchange_rate');
 
-            if (!$currency) {
-                throw new Exception("Currency code '{$from}' not found.");
-            }
+                if (!$fromRate || !$toRate) {
+                    throw new Exception("Currency rate not found for '{$from}' or '{$to}'.");
+                }
 
-            return $currency->exchange_rate;
-        });
+                return $toRate / $fromRate;
+            });
+        }
 
-        $toRate = Cache::remember("exchange_rate_{$to}", now()->addHours(24), function () use ($to) {
-            $currency = Currency::where('code', $to)->first();
-
-            if (!$currency) {
-                throw new Exception("Currency code '{$to}' not found.");
-            }
-
-            return $currency->exchange_rate;
-        });
-
-        $convertedAmount = ($amount / $fromRate) * $toRate;
-
-        return round($convertedAmount, 2);
+        return round($amount * $rates[$cacheKey], 2);
     }
 }
 
