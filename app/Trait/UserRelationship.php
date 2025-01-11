@@ -2,35 +2,36 @@
 
 namespace App\Trait;
 
-use App\Models\B2bCompany;
-use App\Models\B2bOrderRating;
-use App\Models\B2BProduct;
-use App\Models\B2BSellerShippingAddress;
-use App\Models\BankAccount;
-use App\Models\BusinessInformation;
-use App\Models\Country;
 use App\Models\Kyc;
-use App\Models\Order;
-use App\Models\OrderRate;
-use App\Models\Payment;
-use App\Models\PaymentMethod;
-use App\Models\Product;
-use App\Models\RedeemPoint;
-use App\Models\State;
-use App\Models\Transaction;
 use App\Models\User;
-use App\Models\UserAction;
-use App\Models\UserActivityLog;
-use App\Models\UserBusinessInformation;
-use App\Models\UserShippingAddress;
-use App\Models\UserSubcription;
+use App\Models\Order;
+use App\Models\State;
 use App\Models\Wallet;
+use App\Models\Country;
+use App\Models\Payment;
+use App\Models\Product;
 use App\Models\Wishlist;
+use App\Models\OrderRate;
+use App\Models\B2bCompany;
+use App\Models\B2BProduct;
+use App\Models\UserAction;
+use App\Models\BankAccount;
+use App\Models\RedeemPoint;
+use App\Models\Transaction;
+use App\Models\PaymentMethod;
+use App\Models\B2bOrderRating;
+use App\Models\UserActivityLog;
+use App\Models\UserSubcription;
 use App\Models\WithdrawalRequest;
+use App\Models\B2bWithdrawalMethod;
+use App\Models\BusinessInformation;
+use App\Models\UserShippingAddress;
+use App\Models\UserBusinessInformation;
+use App\Models\B2BSellerShippingAddress;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 
 trait UserRelationship
 {
@@ -47,6 +48,11 @@ trait UserRelationship
     public function referrer(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'referral_relationships', 'referrer_id', 'referee_id');
+    }
+
+    public function B2bWithdrawalMethod(): HasMany
+    {
+        return $this->HasMany(B2bWithdrawalMethod::class, 'user_id');
     }
 
     public function bankAccount(): HasOne

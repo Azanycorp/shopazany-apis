@@ -45,6 +45,7 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function () {
             //dashboard
             Route::get('/dashboard', 'dashboard');
             Route::get('/withdrawals', 'withdrawalHistory');
+            Route::post('/withdrawal-request', 'makeWithdrawalRequest');
             Route::get('/earning-report', 'getEarningReport');
 
             //Orders and rfqs
@@ -58,11 +59,12 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function () {
                 Route::post('/order-feeback', 'orderFeeback');
             });
             //payment method
-            Route::prefix('payment-method')->group(function () {
-                Route::get('/', 'allMethods');
-                Route::get('/details/{id}', 'viewPaymentMethodDetails');
-                Route::post('/update/{id}', 'updatePaymentMethod');
-                Route::delete('/details/{id}', 'deletePaymentMethod');
+            Route::prefix('withdrawal-method')->group(function () {
+                Route::get('/', 'allWithdrawalMethods');
+                Route::post('/add', 'addWithdrawalMethod');
+                Route::get('/details/{id}', 'getWithdrawalMethod');
+                Route::post('/update/{id}', 'updateWithdrawalMethod');
+                Route::delete('/delete/{id}', 'deleteWithdrawalMethod');
             });
             //complaints log
             Route::get('/refund/request', 'getComplaints');

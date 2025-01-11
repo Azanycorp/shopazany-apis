@@ -206,4 +206,3 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
 
 
 require __DIR__ . '/b2b.php';
-require('b2badmin.php');
