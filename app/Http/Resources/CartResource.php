@@ -9,8 +9,12 @@ class CartResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
+        $defaultCurrency = userAuth()->default_currency;
+        
         $pricePerItem = $this->calculatePrice();
         $totalPrice = $pricePerItem * $this->quantity;
+
+        $totalPrice = currencyConvert(optional($this->product->shopCountry)->currency, $totalPrice, $defaultCurrency);
 
         return [
             'id' => (int) $this->id,

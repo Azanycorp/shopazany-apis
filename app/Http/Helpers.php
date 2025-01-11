@@ -7,6 +7,7 @@ use App\Models\Language;
 use App\Models\Transaction;
 use Illuminate\Support\Str;
 use App\Models\BusinessSetting;
+use App\Models\Currency;
 use App\Models\Order;
 use App\Models\User;
 use App\Models\UserActivityLog;
@@ -2403,6 +2404,38 @@ if (!function_exists('orderNo')) {
         }
 
         return $uniqueOrderNumber;
+    }
+}
+
+if (! function_exists('currencyConvert')) {
+    function currencyConvert($from, $amount, $to = null) {
+        if ($to === null || $from === $to) {
+            return round($amount, 2);
+        }
+
+        $fromRate = Cache::remember("exchange_rate_{$from}", now()->addHours(24), function () use ($from) {
+            $currency = Currency::where('code', $from)->first();
+
+            if (!$currency) {
+                throw new Exception("Currency code '{$from}' not found.");
+            }
+
+            return $currency->exchange_rate;
+        });
+
+        $toRate = Cache::remember("exchange_rate_{$to}", now()->addHours(24), function () use ($to) {
+            $currency = Currency::where('code', $to)->first();
+
+            if (!$currency) {
+                throw new Exception("Currency code '{$to}' not found.");
+            }
+
+            return $currency->exchange_rate;
+        });
+
+        $convertedAmount = ($amount / $fromRate) * $toRate;
+
+        return round($convertedAmount, 2);
     }
 }
 

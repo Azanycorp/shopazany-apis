@@ -83,8 +83,17 @@ class CartService
             return $cartItem->product->country_id != 160;
         });
 
-        $totalLocalPrice = $localItems->sum(fn($item) => optional($item->product)->price * $item->quantity);
-        $totalInternationalPrice = $internationalItems->sum(fn($item) => optional($item->product)->price * $item->quantity);
+        $defaultCurrency = userAuth()->default_currency;
+
+        $totalLocalPrice = $localItems->sum(function ($item) use ($defaultCurrency) {
+            $price = optional($item->product)->price * $item->quantity;
+            return currencyConvert(optional($item->product->shopCountry)->currency, $price, $defaultCurrency);
+        });
+
+        $totalInternationalPrice = $internationalItems->sum(function ($item) use ($defaultCurrency) {
+            $price = optional($item->product)->price * $item->quantity;
+            return currencyConvert(optional($item->product->shopCountry)->currency, $price, $defaultCurrency);
+        });
 
         return $this->success([
             'local_items' => CartResource::collection($localItems),
