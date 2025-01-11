@@ -917,8 +917,12 @@ class SellerService extends Controller
 
         $rfqs =  Rfq::with('buyer')->where('seller_id', $currentUserId)->get();
         $payouts =  Payout::where('seller_id', $currentUserId)->get();
-        $wallet =  UserWallet::where('user_id', $currentUserId)->first();
-
+        $wallet =  UserWallet::where('seller_id', $currentUserId)->first();
+        if (!$wallet) {
+            UserWallet::create([
+                'seller_id' => $currentUserId
+            ]);
+        }
         $orderCounts = DB::table('rfqs')
             ->select('buyer_id', DB::raw('COUNT(*) as total_orders'))
             ->groupBy('id')
@@ -1055,7 +1059,7 @@ class SellerService extends Controller
 
         $user = User::with('B2bWithdrawalMethod')->findOrFail($userId);
 
-        if($user->B2bWithdrawalMethod->isEmpty()) {
+        if ($user->B2bWithdrawalMethod->isEmpty()) {
             return $this->error(null, 'No record found', 404);
         }
 
@@ -1075,8 +1079,8 @@ class SellerService extends Controller
             'bic_swift_code',
             'country_id'
         ])
-        ->with(['country:id,name'])
-        ->find($id);
+            ->with(['country:id,name'])
+            ->find($id);
 
         if (!$method) {
             return $this->error(null, 'No record found', 404);
