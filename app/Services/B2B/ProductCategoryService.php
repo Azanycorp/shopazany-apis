@@ -2,25 +2,19 @@
 
 namespace App\Services\B2B;
 
-use App\Models\Product;
 use App\Models\Category;
-use App\Models\SubCategory;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
 use App\Enum\CategoryStatus;
 use App\Models\B2bProductCategory;
 use Illuminate\Support\Facades\App;
-use App\Models\B2bProductSubCategory;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
-use App\Http\Resources\CategoryResource;
-use App\Repositories\B2BProductRepository;
 use App\Http\Resources\B2BCategoryResource;
-use App\Http\Resources\SubCategoryResource;
 use App\Http\Resources\AdminCategoryResource;
 use App\Http\Resources\B2BSubCategoryResource;
 use App\Http\Resources\AdminSubCategoryResource;
 use App\Models\B2BProduct;
+use App\Models\B2bProductSubCategory;
 
 class ProductCategoryService
 {
@@ -149,7 +143,7 @@ class ProductCategoryService
 
     public function getSubcategory($id)
     {
-        $subcats = B2BProductSubCategory::with(['products', 'category'])
+        $subcats = B2bProductSubCategory::with(['products', 'category'])
             ->where('category_id', $id)
             ->get();
 
