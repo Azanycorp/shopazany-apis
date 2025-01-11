@@ -948,11 +948,11 @@ class SellerService extends Controller
     public function getWithdrawalHistory()
     {
         $currentUserId = userAuthId();
-        $wallet = UserWallet::where('user_id', $currentUserId)->first();
+        $wallet = UserWallet::where('seller_id', $currentUserId)->first();
 
         if (!$wallet) {
             UserWallet::create([
-                'user_id' => $currentUserId
+                'seller_id' => $currentUserId
             ]);
         }
 
@@ -964,7 +964,7 @@ class SellerService extends Controller
     {
         $currentUserId = userAuthId();
 
-        $wallet = UserWallet::where('user_id', $currentUserId)->first();
+        $wallet = UserWallet::where('seller_id', $currentUserId)->first();
         if (!$wallet) {
             return $this->error(null, 'User wallet not found', 404);
         }
