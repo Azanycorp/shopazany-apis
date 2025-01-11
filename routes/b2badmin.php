@@ -5,7 +5,7 @@ use App\Http\Controllers\Api\B2B\ProductCategoryController;
 use App\Http\Controllers\Api\AdminAuthController;
 
 Route::prefix('b2b/admin')->group(function () {
-    
+
     Route::prefix('connect')->controller(AdminAuthController::class)->group(function () {
         Route::post('/login', 'login');
         Route::post('/forgot/password', 'forgot');

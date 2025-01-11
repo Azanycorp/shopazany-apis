@@ -2,12 +2,10 @@
 
 namespace App\Services\B2B;
 
-use Carbon\Carbon;
 use App\Models\Rfq;
 use App\Models\User;
 use App\Enum\UserType;
 use App\Enum\UserStatus;
-use App\Models\B2bOrder;
 use App\Models\B2bQuote;
 use App\Models\B2BProduct;
 use App\Enum\ProductStatus;
@@ -16,13 +14,14 @@ use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
 use App\Models\B2BRequestRefund;
 use App\Enum\RefundRequestStatus;
+use App\Enum\RfqStatus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Resources\CustomerResource;
 use App\Http\Resources\B2BProductResource;
+use App\Http\Resources\BuyerResource;
 use App\Http\Resources\PaymentResource;
-use App\Http\Resources\SellerProfileResource;
 use App\Models\Payment;
 
 class BuyerService
@@ -163,11 +162,11 @@ class BuyerService
             $image = $request->hasFile('image') ? uploadUserImage($request, 'image', $user) : null;
 
             $user->update(['image' => $image]);
+
+            return $this->success(null, "User has been created successfully", 201);
         } catch (\Throwable $th) {
             throw $th;
         }
-
-        return $this->success(null, "User has been created successfully");
     }
 
     public function editCustomer($request)
@@ -284,23 +283,32 @@ class BuyerService
         }
 
         DB::beginTransaction();
+
         try {
+            $rfqs = [];
+
             foreach ($quotes as $quote) {
-                Rfq::create([
+
+                if (empty($quote->product_data['unit_price']) || empty($quote->product_data['minimum_order_quantity'])) {
+                    throw new \Exception('Invalid product data');
+                }
+
+                $rfqs[] = [
                     'buyer_id' => $quote->buyer_id,
                     'seller_id' => $quote->seller_id,
                     'quote_no' => strtoupper(Str::random(10) . $userId),
                     'product_id' => $quote->product_id,
                     'product_quantity' => $quote->qty,
-                    'total_amount' => ($quote->product_data['unit_price'] * $quote->product_data['minimum_order_quantity']),
+                    'total_amount' => $quote->product_data['unit_price'] * $quote->product_data['minimum_order_quantity'],
                     'p_unit_price' => $quote->product_data['unit_price'],
                     'product_data' => $quote->product_data,
-                ]);
+                ];
             }
 
-            DB::commit();
+            Rfq::insert($rfqs);
             B2bQuote::where('buyer_id', $userId)->delete();
 
+            DB::commit();
             return $this->success(null, 'rfq sent successfully');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -316,7 +324,6 @@ class BuyerService
             return $this->error(null, 'No record found', 404);
         }
 
-        DB::beginTransaction();
         try {
             $amount = ($quote->product_data['unit_price'] * $quote->product_data['minimum_order_quantity']);
 
@@ -331,11 +338,10 @@ class BuyerService
                 'product_data' => $quote->product_data,
             ]);
 
-            DB::commit();
             $quote->delete();
+
             return $this->success(null, 'rfq sent successfully');
         } catch (\Exception $e) {
-            DB::rollBack();
             return $this->error(null, 'transaction failed, please try again', 500);
         }
     }
@@ -380,30 +386,41 @@ class BuyerService
     public function getDashboardDetails()
     {
         $currentUserId = userAuthId();
+        $startDate = now()->subDays(7); // 7 days ago
+        $endDate = now(); // Current date and time
 
-        $orders =  Rfq::where('buyer_id', $currentUserId)->get();
+        $rfqStats = Rfq::select(
+            DB::raw('COUNT(*) as total_rfqs'),
+            DB::raw('SUM(CASE WHEN status != ? THEN 1 ELSE 0 END) as rfq_accepted', [RfqStatus::PENDING]),
+            DB::raw('SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as deals_in_progress', [RfqStatus::IN_PROGRESS]),
+            DB::raw('SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as deals_completed', [RfqStatus::DELIVERED])
+        )
+        ->where('buyer_id', $currentUserId)
+        ->first();
 
-        $orderStats =  Rfq::with('seller')
-            ->where([
-                'buyer_id' => $currentUserId,
-                'status' => 'confirmed'
-            ])->where('created_at', '<=', Carbon::today()->addDays(7))->sum('total_amount');
+        $orderStats = Rfq::where('buyer_id', $currentUserId)
+        ->where('status', RfqStatus::CONFIRMED)
+        ->whereBetween('created_at', [$startDate, $endDate])
+        ->sum('total_amount');
 
-        $rfqs =  Rfq::with('buyer')->where('buyer_id', $currentUserId)->get();
-        $orderCounts = DB::table('rfqs')
-            ->select('seller_id', DB::raw('COUNT(*) as total_orders'))
-            ->groupBy('id')
+        $uniqueSellersCount = Rfq::where('buyer_id', $currentUserId)
+            ->distinct('seller_id')
+            ->count('seller_id');
+
+        $recentOrders = Rfq::with('seller')
             ->where('buyer_id', $currentUserId)
-            ->count();
+            ->latest()
+            ->take(10)
+            ->get();
 
         $data = [
             'total_sales' => $orderStats,
-            'partners' => $orderCounts,
-            'rfq_sent' => $rfqs->count(),
-            'rfq_accepted' => $rfqs->where('status', '!=', 'pending')->count(),
-            'deals_in_progress' => $orders->where('status', 'in-progress')->count(),
-            'deals_in_completed' => $orders->where('status', 'delivered')->count(),
-            'recent_orders' => $orders,
+            'partners' => $uniqueSellersCount,
+            'rfq_sent' => $rfqStats->total_rfqs ?? 0,
+            'rfq_accepted' => $rfqStats->rfq_accepted ?? 0,
+            'deals_in_progress' => $rfqStats->deals_in_progress ?? 0,
+            'deals_completed' => $rfqStats->deals_completed ?? 0,
+            'recent_orders' => $recentOrders,
         ];
 
         return $this->success($data, "Dashboard details");
@@ -445,19 +462,28 @@ class BuyerService
             return $this->error(null, 'No record found to send', 404);
         }
 
-        $rfq->messages()->create([
-            'rfq_id' => $data->rfq_id,
-            'p_unit_price' => $data->p_unit_price,
-            'preferred_qty' => $rfq->qty,
-            'note' => $data->note
-        ]);
+        DB::beginTransaction();
 
-        $rfq->update([
-            'status' => 'review'
-        ]);
+        try {
 
-        return $this->success($rfq, 'Review sent successfully details');
+            $rfq->messages()->create([
+                'rfq_id' => $data->rfq_id,
+                'p_unit_price' => $data->p_unit_price,
+                'preferred_qty' => $rfq->qty,
+                'note' => $data->note,
+            ]);
+
+            $rfq->update(['status' => 'review']);
+
+            DB::commit();
+
+            return $this->success($rfq, 'Review sent successfully with details.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return $this->error(null, 'Failed to send review request: ' . $e->getMessage(), 500);
+        }
     }
+
     //send review request to vendor
     public function acceptQuote($data)
     {
@@ -530,9 +556,9 @@ class BuyerService
             return $this->error(null, 'User does not exist');
         }
 
-        //$data = new SellerProfileResource($user);
+        $data = new BuyerResource($user);
 
-        return $this->success($user, 'Buyer profile');
+        return $this->success($data, 'Buyer profile');
     }
 
     public function editAccount($request)

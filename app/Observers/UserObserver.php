@@ -2,13 +2,14 @@
 
 namespace App\Observers;
 
-use App\Enum\ProductStatus;
-use App\Enum\UserType;
-use App\Mail\SignUpVerifyMail;
-use App\Models\B2bCompany;
-use App\Models\BusinessInformation;
-use App\Models\Product;
 use App\Models\User;
+use App\Enum\UserType;
+use App\Models\Product;
+use App\Models\B2bCompany;
+use App\Models\UserWallet;
+use App\Enum\ProductStatus;
+use App\Mail\SignUpVerifyMail;
+use App\Models\BusinessInformation;
 use Illuminate\Contracts\Events\ShouldHandleEventsAfterCommit;
 
 class UserObserver implements ShouldHandleEventsAfterCommit
@@ -20,12 +21,17 @@ class UserObserver implements ShouldHandleEventsAfterCommit
     {
         defer(fn() => send_email($user->email, new SignUpVerifyMail($user)));
 
-        if($user->type === UserType::CUSTOMER) {
+        if ($user->type === UserType::CUSTOMER) {
             reward_user($user, 'create_account', 'completed');
 
             $user->referrer_code = generate_referral_code();
             $user->referrer_link = generate_referrer_link($user->referrer_code);
             $user->save();
+        }
+        if ($user->type === UserType::B2B_SELLER) {
+            UserWallet::create([
+                'user_id' => $user->id
+            ]);
         }
     }
 
@@ -43,7 +49,7 @@ class UserObserver implements ShouldHandleEventsAfterCommit
     public function deleted(User $user): void
     {
         Product::where('user_id', $user->id)
-        ->update(['status' => ProductStatus::DELETED]);
+            ->update(['status' => ProductStatus::DELETED]);
     }
 
     /**
