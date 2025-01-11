@@ -13,6 +13,7 @@ use App\Models\RfqMessage;
 use App\Models\UserWallet;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
+use App\Models\Configuration;
 use App\Models\PaymentMethod;
 use App\Imports\ProductImport;
 use App\Models\B2bOrderRating;
@@ -722,23 +723,26 @@ class SellerService extends Controller
     public function getEarningReport()
     {
         $currentUserId = userAuthId();
-
         if (!$currentUserId) {
             return $this->error(null, "Unauthorized action.", 401);
         }
+        $startDate = Carbon::now()->subDays(30); // 30 days ago
+        $endDate = Carbon::now(); // Current date and time
+
         $currentUserId = userAuthId();
         $totalSales =  Rfq::where('seller_id', $currentUserId)->where('status', 'delivered')->sum('total_amount');
         $payouts =  Payout::where('seller_id', $currentUserId)->get();
 
+        //payouts this month
         $monthlyPayout =  Payout::where([
             'seller_id' => $currentUserId,
-            'created_at' => Carbon::today()->subMonth(1)
-        ])->where('status', 'paid')->sum('amount');
-        $dt = Carbon::now();
+            'status' => 'paid'
+        ])->whereBetween('created_at', [$startDate, $endDate])->sum('amount');
+        //order this month
         $monthlyOrder =  Rfq::where([
             'seller_id' => $currentUserId,
-            'created_at' => $dt->month()
-        ])->where('status', 'delivered')->sum('total_amount');
+            'status' => 'delivered'
+        ])->whereBetween('created_at', [$startDate, $endDate])->sum('total_amount');
 
         $data = (object) [
             'total_sales_alltime' => $totalSales,
@@ -756,10 +760,13 @@ class SellerService extends Controller
     public function getAllRfq()
     {
         $currentUserId = userAuthId();
-        $rfqs =  Rfq::with('buyer')->where('seller_id', $currentUserId)->get();
+        $orders =  Rfq::with('buyer')->where(['seller_id' => $currentUserId, 'status' => 'delivered'])->get();
+        $rfqs =  Rfq::with('buyer')->where('seller_id', $currentUserId)->where('status', '!=', 'delivered')->get();
         $data = [
-            'total_orders' => $rfqs->count(),
-            'orders' => $rfqs,
+            'total_orders' => $orders->count(),
+            'total_rfqs' => $rfqs->count(),
+            'orders' => $orders,
+            'rfqs' => $rfqs,
         ];
         return $this->success($data, "orders");
     }
@@ -913,10 +920,74 @@ class SellerService extends Controller
     public function getWithdrawalHistory()
     {
         $currentUserId = userAuthId();
+        $wallet = UserWallet::where('user_id', $currentUserId)->first();
+        if (!$wallet) {
+            UserWallet::create([
+                'user_id' => $currentUserId
+            ]);
+        }
         $payouts =  Payout::select('amount', 'status', 'created_at')->where('seller_id', $currentUserId)->get();
         return $this->success($payouts, "payouts details");
     }
 
+    public function withdrawalRequest($data)
+    {
+        $currentUserId = userAuthId();
+        $wallet = UserWallet::where('user_id', $currentUserId)->first();
+        if ($wallet) {
+            $config = Configuration::first();
+            $min = 0;
+            $max = 0;
+            $withdrawal_fee = 0;
+
+            if ($config) {
+                $min = $config->withdrawal_min;
+                $withdrawal_fee = $config->withdrawal_fee;
+                $max = $config->withdrawal_max;
+            }
+
+            if ($data->amount > $wallet->master_wallet) {
+                return $this->error(null, 'Insufficient balance', 422);
+            }
+            if ($data->amount < $min) {
+                return $this->error(null, 'Minimum withdrawable amount is ' . number_format($min), 422);
+            }
+            if ($data->amount < $max) {
+                return $this->error(null, 'Maximum withdrawable amount is ' . number_format($min), 422);
+            }
+
+            $paymentInfo = B2bWithdrawalMethod::find($data->account_id);
+
+            if (!$paymentInfo) {
+                return $this->error(null, 'Please select account to be used ', 422);
+            }
+
+            $pendingRequest = Payout::where(['seller_id' => $currentUserId, 'status' => 'pending'])->count();
+            if ($pendingRequest) {
+                return $this->error(null, 'Opps! You have pending payout request, please wait for approval.', 422);
+            }
+
+            DB::beginTransaction();
+            $fee = ($withdrawal_fee * $data->amount) / 100;
+
+            $payout = Payout::create([
+                'seller_id' => $currentUserId,
+                'amount' => ($data->amount - $fee),
+                'fee' => $fee,
+                'b2b_withdrawal_method' => $paymentInfo,
+            ]);
+
+            $wallet->master_wallet -= $data->amount;
+
+            if ($wallet->save() && $payout) {
+                DB::commit();
+                return $this->success('Payout request submitted successfully', 200);
+            }
+        }
+        DB::rollBack();
+        return $this->error('Opps! Something went wrong, your request could not be processed', 422);
+    }
+    //Withdrawal method
     public function addNewMethod($data)
     {
         $method = B2bWithdrawalMethod::create([
@@ -937,8 +1008,8 @@ class SellerService extends Controller
 
     public function getAllMethod()
     {
-        $methods = auth()->user()->B2bWithdrawalMethod();
-        if ($methods) {
+        $methods = Auth::user()->B2bWithdrawalMethod;
+        if (count($methods) < 1) {
             return $this->error(null, 'No record found', 404);
         }
         return $this->success($methods, 'All Withdrawal methods', 200);
@@ -946,7 +1017,7 @@ class SellerService extends Controller
 
     public function getSingleMethod($id)
     {
-        $method = B2bWithdrawalMethod::with('country')->find($id);
+        $method = B2bWithdrawalMethod::select(['account_name', 'account_number', 'account_type', 'bank_name', 'routing_number', 'bic_swift_code', 'country_id'])->with('country')->find($id);
         if (!$method) {
             return $this->error(null, 'No record found', 404);
         }
@@ -954,7 +1025,7 @@ class SellerService extends Controller
     }
     public function updateMethod($id, $data)
     {
-        $method = B2bWithdrawalMethod::find($id);
+        return $method = B2bWithdrawalMethod::find($id);
         if (!$method) {
             return $this->error(null, 'No record found', 404);
         }
@@ -978,18 +1049,6 @@ class SellerService extends Controller
             return $this->error(null, 'No record found', 404);
         }
         $method->delete();
-        return $this->success($method, 'Withdrawal details deleted', 200);
+        return $this->success(null, 'Withdrawal details deleted', 200);
     }
-
-    public function deletePaymentMethod($id)
-    {
-        $method = PaymentMethod::find($id);
-
-        if (!$method) {
-            return $this->error(null, "No record found", 404);
-        }
-        $method->delete();
-        return $this->success(null, "details deleted successfully");
-    }
-
 }

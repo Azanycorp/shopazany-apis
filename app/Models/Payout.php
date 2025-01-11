@@ -17,8 +17,14 @@ class Payout extends Model
         'bank',
         'status',
         'date_paid',
+        'b2b_withdrawal_method'
     ];
-
+    protected function casts(): array
+    {
+        return [
+            'b2b_withdrawal_method' => 'array'
+        ];
+    }
     function paymentInfo(): HasOne
     {
         return $this->hasOne(BankAccount::class, 'user_id', 'user_id');

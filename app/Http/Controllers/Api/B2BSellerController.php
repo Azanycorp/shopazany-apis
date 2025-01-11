@@ -128,6 +128,11 @@ class B2BSellerController extends Controller
     {
         return $this->service->getWithdrawalHistory();
     }
+    
+    public function makeWithdrawalRequest(Request $request)
+    {
+        return $this->service->withdrawalRequest($request);
+    }
 
     //RFQS
     public function allRfq()

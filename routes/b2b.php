@@ -45,6 +45,7 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function () {
             //dashboard
             Route::get('/dashboard', 'dashboard');
             Route::get('/withdrawals', 'withdrawalHistory');
+            Route::post('/withdrawal-request', 'makeWithdrawalRequest');
             Route::get('/earning-report', 'getEarningReport');
 
             //Orders and rfqs

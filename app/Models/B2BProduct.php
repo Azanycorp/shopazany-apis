@@ -29,6 +29,7 @@ class B2BProduct extends Model
         'sold',
         'fob_price',
         'status',
+        'logo',
         'country_id',
     ];
 

@@ -380,14 +380,15 @@ class BuyerService
     public function getDashboardDetails()
     {
         $currentUserId = userAuthId();
-
+        $startDate = Carbon::now()->subDays(7); // 7 days ago
+        $endDate = Carbon::now(); // Current date and time
         $orders =  Rfq::where('buyer_id', $currentUserId)->get();
 
         $orderStats =  Rfq::with('seller')
             ->where([
                 'buyer_id' => $currentUserId,
                 'status' => 'confirmed'
-            ])->where('created_at', '<=', Carbon::today()->addDays(7))->sum('total_amount');
+            ])->whereBetween('created_at', [$startDate, $endDate])->sum('total_amount');
 
         $rfqs =  Rfq::with('buyer')->where('buyer_id', $currentUserId)->get();
         $orderCounts = DB::table('rfqs')

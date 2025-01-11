@@ -18,6 +18,10 @@ class B2bWithdrawalMethod extends Model
         'bic_swift_code',
     ];
 
+    public function country()
+    {
+        return $this->belongsTo(Country::class,'country_id');
+    }
     public function user()
     {
         return $this->belongsTo(User::class,'user_id')->where('type',UserType::B2B_BUYER)->withDefault([
