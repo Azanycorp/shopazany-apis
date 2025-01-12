@@ -24,8 +24,8 @@ class B2BProductImport implements ToCollection, WithHeadingRow, WithChunkReading
     }
 
     /**
-    * @param Collection $collection
-    */
+     * @param Collection $collection
+     */
     public function collection(Collection $rows)
     {
         foreach ($rows as $row) {
@@ -48,10 +48,10 @@ class B2BProductImport implements ToCollection, WithHeadingRow, WithChunkReading
                 'fob_price' => $row['price'],
                 'unit_price' => $row['price'],
                 'minimum_order_quantity' => $row['minimum_order_quantity'],
-                'keywords' => $row['keywords'],
-                'quantity' => $row['quantity'],
-                'availability_quantity' => $row['quantity'],
-                'front_image' => 'https://azany-uploads.s3.amazonaws.com/stag/b2bproduct/nedu24/front_image/pVCPKKfe655Yspt0WfOt3m7ThSsRbPhNGeWLbMlY.png',
+                // 'keywords' => $row['keywords'],
+                // 'quantity' => $row['quantity'],
+                // 'availability_quantity' => $row['quantity'],
+                // 'front_image' => 'https://azany-uploads.s3.amazonaws.com/stag/b2bproduct/nedu24/front_image/pVCPKKfe655Yspt0WfOt3m7ThSsRbPhNGeWLbMlY.png',
                 'status' => ProductStatus::PENDING,
                 'country_id' => $this->seller?->country,
                 'created_at' => now(),
@@ -64,9 +64,8 @@ class B2BProductImport implements ToCollection, WithHeadingRow, WithChunkReading
     {
         $getCategory = B2bProductCategory::where('name', $category)->first();
 
-        if(!$getCategory){
+        if (!$getCategory) {
             $category = null;
-
         } else {
             $category = $getCategory;
         }
@@ -76,17 +75,9 @@ class B2BProductImport implements ToCollection, WithHeadingRow, WithChunkReading
 
     private function getSubCategory($subCategory)
     {
-        $getSubCategory = B2bProductSubCategory::where('name', $subCategory)->first();
-
-        if(!$getSubCategory){
-            $subCategory = null;
-
-        } else {
-            $subCategory = $getSubCategory;
-        }
-
-        return $subCategory;
+        return B2bProductSubCategory::where('name', $subCategory)->first();
     }
+
     public function chunkSize(): int
     {
         return 1000;
