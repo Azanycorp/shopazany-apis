@@ -9,5 +9,7 @@ enum OrderStatus: string
     const DELIVERED = 'delivered';
     const PENDING = 'pending';
     const PROCESSING = 'processing';
+    const INPROGRESS = 'in-progress';
+    const REVIEW = 'review';
     const SHIPPED = 'shipped';
 }

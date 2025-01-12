@@ -9,6 +9,7 @@ use App\Enum\UserType;
 use App\Enum\UserStatus;
 use App\Models\B2bOrder;
 use App\Models\B2bQuote;
+use App\Enum\OrderStatus;
 use App\Models\B2BProduct;
 use App\Enum\ProductStatus;
 use App\Models\B2bWishList;
@@ -45,7 +46,7 @@ class AdminService
 
     public function getAllRfq()
     {
-        $rfqs =  Rfq::with(['buyer', 'seller'])->whereIn('status', ['pending', 'review', 'in-progress'])->get();
+        $rfqs =  Rfq::with(['buyer', 'seller'])->whereIn('status', [OrderStatus::PENDING,OrderStatus::REVIEW,OrderStatus::INPROGRESS])->get();
 
         if (count($rfqs) < 1) {
             return $this->error(null, "No record found.", 404);
@@ -67,7 +68,7 @@ class AdminService
 
     public function getAllOrders()
     {
-        $rfqs =  Rfq::with(['buyer', 'seller'])->whereIn('status', ['delivered', 'shipped'])->get();
+        $rfqs =  Rfq::with(['buyer', 'seller'])->whereIn('status', [OrderStatus::DELIVERED,OrderStatus::SHIPPED])->get();
 
         if (count($rfqs) < 1) {
             return $this->error(null, "No record found.", 404);
@@ -142,7 +143,7 @@ class AdminService
         }
 
         $user->is_admin_approve = !$user->is_admin_approve;
-        $user->status = $user->is_admin_approve ? 'active' : 'blocked';
+        $user->status = $user->is_admin_approve ? 'active' : UserStatus::BLOCKED;
 
         $user->save();
 
