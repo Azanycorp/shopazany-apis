@@ -46,7 +46,7 @@ class AdminService
 
     public function getAllRfq()
     {
-        $rfqs =  Rfq::with(['buyer', 'seller'])->whereIn('status', [OrderStatus::PENDING,OrderStatus::REVIEW,OrderStatus::INPROGRESS])->get();
+        $rfqs =  Rfq::with(['buyer', 'seller'])->whereIn('status', [OrderStatus::PENDING, OrderStatus::REVIEW, OrderStatus::INPROGRESS])->get();
 
         if (count($rfqs) < 1) {
             return $this->error(null, "No record found.", 404);
@@ -68,7 +68,7 @@ class AdminService
 
     public function getAllOrders()
     {
-        $rfqs =  Rfq::with(['buyer', 'seller'])->whereIn('status', [OrderStatus::DELIVERED,OrderStatus::SHIPPED])->get();
+        $rfqs =  Rfq::with(['buyer', 'seller'])->whereIn('status', [OrderStatus::DELIVERED, OrderStatus::SHIPPED])->get();
 
         if (count($rfqs) < 1) {
             return $this->error(null, "No record found.", 404);
@@ -398,5 +398,131 @@ class AdminService
         $this->b2bProductRepository->delete($product_id);
 
         return $this->success(null, 'Deleted successfully');
+    }
+
+    //Sellers
+    //Admin section
+
+    public function allBuyers()
+    {
+        $searchQuery = request()->input('search');
+        $approvedQuery = request()->query('approved');
+        $total_users = User::where('type', UserType::B2B_BUYER);
+        $inactive_users = User::where(['type' => UserType::B2B_BUYER, 'status' => UserStatus::PENDING])->count()
+            + User::where(['type' => UserType::B2B_BUYER, 'status' => UserStatus::SUSPENDED])->count()
+            + User::where(['type' => UserType::B2B_BUYER, 'status' => UserStatus::BLOCKED])->count();
+
+        $users = User::with(['businessInformation'])
+            ->where('type', UserType::B2B_BUYER)
+            ->when($searchQuery, function ($queryBuilder) use ($searchQuery) {
+                $queryBuilder->where(function ($subQuery) use ($searchQuery) {
+                    $subQuery->where('first_name', 'LIKE', '%' . $searchQuery . '%')
+                        ->orWhere('last_name', 'LIKE', '%' . $searchQuery . '%')
+                        ->orWhere('middlename', 'LIKE', '%' . $searchQuery . '%')
+                        ->orWhere('email', 'LIKE', '%' . $searchQuery . '%');
+                });
+            })
+            ->when($approvedQuery !== null, function ($queryBuilder) use ($approvedQuery) {
+                $queryBuilder->where('is_admin_approve', $approvedQuery);
+            })
+            ->paginate(25);
+
+        // $data = B2BBuyerResource::collection($users);
+
+        return [
+            'status' => 'true',
+            'message' => 'Buyers filtered',
+            'all_users' => $total_users->count(),
+            'active_users' => $total_users->where('status', UserStatus::ACTIVE)->count(),
+            'inactive_users' => $inactive_users,
+            'data' => $users,
+            'pagination' => [
+                'current_page' => $users->currentPage(),
+                'last_page' => $users->lastPage(),
+                'per_page' => $users->perPage(),
+                'prev_page_url' => $users->previousPageUrl(),
+                'next_page_url' => $users->nextPageUrl(),
+            ],
+        ];
+    }
+
+    public function viewBuyer($id)
+    {
+        $user = User::select('id','first_name','last_name','email','image')->with('b2bCompany')->where('type', UserType::B2B_BUYER)
+            ->find($id);
+
+        if (!$user) {
+            return $this->error(null, "Buyer not found", 404);
+        }
+
+        return [
+            'status' => 'true',
+            'message' => 'Buyer details',
+            'data' => $user,
+        ];
+    }
+
+    public function removeBuyer($id)
+    {
+        $user = User::find($id);
+
+        if (!$user) {
+            return $this->error(null, "User not found", 404);
+        }
+
+        $user->delete();
+
+        return $this->success(null, "User removed successfully");
+    }
+
+    public function bulkRemoveBuyer($request)
+    {
+        $users = User::whereIn('id', $request->user_ids)->get();
+
+        foreach ($users as $user) {
+            $user->status = UserStatus::DELETED;
+            $user->is_verified = 0;
+            $user->is_admin_approve = 0;
+            $user->save();
+
+            $user->delete();
+        }
+
+        return $this->success(null, "User(s) have been removed successfully");
+    }
+
+
+    public function approveBuyer($id)
+    {
+        $user = User::find($id);
+
+        if (!$user) {
+            return $this->error(null, "User not found", 404);
+        }
+
+        $user->is_admin_approve = !$user->is_admin_approve;
+        $user->status = $user->is_admin_approve ? UserStatus::ACTIVE : UserStatus::BLOCKED;
+
+        $user->save();
+
+        $status = $user->is_admin_approve ? "Approved successfully" : "Disapproved successfully";
+
+        return $this->success(null, $status);
+    }
+
+    public function banBuyer($id)
+    {
+        $user = User::find($id);
+
+        if (!$user) {
+            return $this->error(null, "User not found", 404);
+        }
+
+        $user->status = UserStatus::BLOCKED;
+        $user->is_admin_approve = 0;
+
+        $user->save();
+
+        return $this->success(null, "User has been blocked successfully");
     }
 }

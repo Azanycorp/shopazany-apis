@@ -6,80 +6,46 @@ use App\Enum\UserStatus;
 use Illuminate\Http\Request;
 use App\Services\B2B\BuyerService;
 use App\Http\Controllers\Controller;
+use App\Services\B2B\AdminService;
 
 class B2BAdminBuyerController extends Controller
 {
 
     public function __construct(
-        private BuyerService $buyerService)
-    {}
-    public function allCustomers()
+        private AdminService $buyerService
+    ) {}
+    public function allBuyers()
     {
-        return $this->buyerService->allCustomers();
+        return $this->buyerService->allBuyers();
     }
 
-    public function viewCustomer($id)
+    public function viewBuyer($id)
     {
-        return $this->buyerService->viewCustomer($id);
+        return $this->buyerService->viewBuyer($id);
     }
 
-    public function banCustomer(Request $request)
-    {
-        $request->validate([
-            'user_id' => ['required', 'integer', 'exists:users,id']
-        ]);
 
-        return $this->buyerService->banCustomer($request);
+    public function banBuyer($id)
+    {
+        return $this->buyerService->banBuyer($id);
     }
 
-    public function removeCustomer(Request $request)
+    public function removeBuyer($id)
+    {
+        return $this->buyerService->removeBuyer($id);
+    }
+    public function approveBuyer($id)
+    {
+        return $this->buyerService->approveBuyer($id);
+    }
+
+    public function bulkRemoveBuyer(Request $request)
     {
         $request->validate([
             'user_ids' => 'required|array',
             'user_ids.*' => 'exists:users,id',
         ]);
 
-        return $this->buyerService->removeCustomer($request);
+        return $this->buyerService->bulkRemove($request);
     }
-
-    public function filter()
-    {
-        return $this->buyerService->filter();
-    }
-
-    public function addCustomer(Request $request)
-    {
-        $request->validate([
-            'status' => [Rule::in([
-                UserStatus::ACTIVE,
-                UserStatus::BLOCKED,
-                UserStatus::DELETED,
-                UserStatus::PENDING,
-                UserStatus::SUSPENDED
-            ])],
-        ]);
-
-        return $this->buyerService->addCustomer($request);
-    }
-
-    public function editCustomer(Request $request)
-    {
-        $request->validate([
-            'status' => [Rule::in([
-                UserStatus::ACTIVE,
-                UserStatus::BLOCKED,
-                UserStatus::DELETED,
-                UserStatus::PENDING,
-                UserStatus::SUSPENDED
-            ])],
-        ]);
-
-        return $this->buyerService->editCustomer($request);
-    }
-
-    public function getPayment($id)
-    {
-        return $this->buyerService->getPayment($id);
-    }
-
 }

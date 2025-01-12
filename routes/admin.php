@@ -212,18 +212,13 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function () {
         //buyers
         Route::prefix('buyer')->controller(B2BAdminBuyerController::class)->group(function () {
             // GET routes
-            Route::get('/', 'allCustomers');
+            Route::get('/', 'allBuyers');
             Route::get('/filter', 'filter');
-            Route::get('/{user_id}', 'viewCustomer');
-            Route::get('/payment/{id}', 'getPayment');
-
-            Route::post('/add', 'addCustomer');
-            Route::post('/edit', 'editCustomer');
-
-            Route::patch('/approve', 'approveCustomer');
-            Route::patch('/ban', 'banCustomer');
-
-            Route::delete('/remove', 'removeCustomer');
+            Route::get('/details/{user_id}', 'viewBuyer');
+            Route::patch('/approve/{user_id}', 'approveBuyer');
+            Route::patch('/ban/{user_id}', 'banBuyer');
+            Route::delete('/bulk-remove', 'bulkRemoveBuyer');
+            Route::delete('/remove/{user_id}', 'removeBuyer');
         });
 
         //Sellers
