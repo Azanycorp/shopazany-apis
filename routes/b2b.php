@@ -111,6 +111,7 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function () {
         Route::get('rfq', 'getAllRfqs');
         Route::get('rfq-details/{id}', 'getRfqDetails');
         Route::post('request-review', 'reviewRequest');
+        Route::post('add-review', 'addReview');
         Route::post('accept-quote', 'acceptQuote');
         Route::post('/add-to-wish', 'addTowishList');
         Route::get('/wish-list', 'wishList');

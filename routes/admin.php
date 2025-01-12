@@ -229,7 +229,7 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function () {
         //Sellers
         Route::prefix('seller')->controller(B2BAdminSellerController::class)->group(function () {
             Route::get('/', 'allSellers');
-            Route::get('/{user_id}', 'viewSeller');
+            Route::get('/details/{user_id}', 'viewSeller');
             Route::get('/payment-history/{user_id}', 'paymentHistory');
 
             Route::patch('/{user_id}/edit', 'editSeller');
@@ -239,12 +239,24 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function () {
             Route::patch('/ban', 'banSeller');
 
             Route::delete('/bulk/remove', 'bulkRemove');
+
+            Route::prefix('product')->controller(B2BAdminSellerController::class)->group(function () {
+                Route::post('/add', 'addSellerProduct');
+                Route::get('/details/{id}/{user_id}', 'viewSellerProduct');
+                Route::post('/update{id}', 'editSellerProduct');
+                Route::delete('/remove/{id}', 'removeSellerProduct');
+            });
         });
 
         //Rfq
         Route::prefix('rfqs')->controller(B2BAdminController::class)->group(function () {
             Route::get('/', 'allRfq');
             Route::get('/details/{id}', 'rfqDetails');
+        });
+        //Orders
+        Route::prefix('orders')->controller(B2BAdminController::class)->group(function () {
+            Route::get('/', 'allOrders');
+            Route::get('/details/{id}', 'orderDetails');
         });
     });
 });

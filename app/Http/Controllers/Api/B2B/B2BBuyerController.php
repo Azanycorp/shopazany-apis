@@ -79,11 +79,19 @@ class B2BBuyerController extends Controller
     {
         return $this->buyerService->removeItem($id);
     }
+
+    //Product Review
+    public function addReview(Request $request)
+    {
+        return $this->buyerService->addPreview($request);
+    }
+
     //Account section
     public function profile()
     {
         return $this->buyerService->profile();
     }
+
     public function editAccount(Request $request)
     {
         return $this->buyerService->editAccount($request);
