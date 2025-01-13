@@ -2,6 +2,7 @@
 
 namespace App\Trait;
 
+use App\Enum\Coupon as EnumCoupon;
 use App\Enum\UserType;
 use App\Models\Coupon;
 use App\Models\User;
@@ -33,16 +34,18 @@ trait SignUp
 
     protected function validateAndAssignCoupon($couponCode, $user)
     {
-        $coupon = Coupon::where('code', $couponCode)->first();
+        $coupon = Coupon::where('code', $couponCode)
+            ->where('status', EnumCoupon::ACTIVE)
+            ->first();
 
-        if (!$coupon) {
-            throw new \Exception('Invalid coupon code');
+        if (! $coupon) {
+            throw new \Exception('Invalid coupon code or inactive');
         }
 
         if ($coupon->used) {
             throw new \Exception('Coupon has already been used');
         }
-        
+
         if ($coupon->expires_at && $coupon->expires_at < now()) {
             throw new \Exception('Coupon has expired');
         }
@@ -54,6 +57,7 @@ trait SignUp
                 'name' => $user->first_name . ' ' . $user->last_name,
                 'email' => $user->email,
             ],
+            'status' => EnumCoupon::INACTIVE
         ]);
     }
 }
