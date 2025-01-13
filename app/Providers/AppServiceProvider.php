@@ -2,17 +2,23 @@
 
 namespace App\Providers;
 
+use App\Contracts\B2BRepositoryInterface;
 use App\Models\User;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use Laravel\Sanctum\Sanctum;
 use App\Observers\UserObserver;
 use App\Observers\OrderObserver;
+use App\Repositories\B2BProductRepository;
+use App\Repositories\B2BSellerShippingRepository;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Cache\RateLimiting\Limit;
 use Laravel\Sanctum\PersonalAccessToken;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\URL;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -21,7 +27,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(B2BRepositoryInterface::class, B2BProductRepository::class);
+        $this->app->bind(B2BRepositoryInterface::class, B2BSellerShippingRepository::class);
     }
 
     /**
@@ -48,5 +55,38 @@ class AppServiceProvider extends ServiceProvider
 
         User::observe(UserObserver::class);
         Order::observe(OrderObserver::class);
+
+        $this->configureCommands();
+        $this->configureModels();
+        $this->configureUrl();
     }
+
+    /**
+     * Configure the application's command.
+     */
+    private function configureCommands(): void
+    {
+        DB::prohibitDestructiveCommands(
+            $this->app->isProduction(),
+        );
+    }
+
+    /**
+     * Configure the application's models.
+     */
+    private function configureModels(): void
+    {
+        Model::shouldBeStrict();
+        Model::unguard();
+    }
+
+    /**
+     * Configure the application's URL.
+     */
+    private function configureUrl(): void
+    {
+        URL::formatScheme('https');
+    }
+
+
 }

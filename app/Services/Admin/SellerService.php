@@ -2,6 +2,7 @@
 
 namespace App\Services\Admin;
 
+use App\Enum\UserStatus;
 use App\Enum\UserType;
 use App\Http\Resources\PaymentResource;
 use App\Http\Resources\SellerResource;
@@ -47,7 +48,6 @@ class SellerService
             ],
         ];
     }
-
 
     public function approveSeller($request)
     {
@@ -151,6 +151,22 @@ class SellerService
         $data = PaymentResource::collection($payments);
 
         return $this->success($data, "Payment history");
+    }
+
+    public function bulkRemove($request)
+    {
+        $users = User::whereIn('id', $request->user_ids)->get();
+
+        foreach ($users as $user) {
+            $user->status = UserStatus::DELETED;
+            $user->is_verified = 0;
+            $user->is_admin_approve = 0;
+            $user->save();
+
+            $user->delete();
+        }
+
+        return $this->success(null, "User(s) have been removed successfully");
     }
 
 }

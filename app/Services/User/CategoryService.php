@@ -2,9 +2,11 @@
 
 namespace App\Services\User;
 
+use App\Enum\CategoryStatus;
 use App\Http\Resources\AdminCategoryResource;
 use App\Http\Resources\AdminSubCategoryResource;
 use App\Http\Resources\CategoryResource;
+use App\Http\Resources\SubCategoryResource;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\SubCategory;
@@ -21,7 +23,6 @@ class CategoryService
     public function createCategory($request)
     {
         try {
-
             $folder = null;
 
             if(App::environment('production')){
@@ -63,8 +64,8 @@ class CategoryService
     {
         $search = request()->query('search');
 
-        $categories = Category::with(['product', 'subcategory'])
-            ->withCount(['product', 'subcategory'])
+        $categories = Category::with(['products', 'subcategory'])
+            ->withCount(['products', 'subcategory'])
             ->when($search, function ($query, $search) {
                 $query->where('name', 'like', '%' . $search . '%');
             })
@@ -84,7 +85,6 @@ class CategoryService
         }
 
         try {
-
             $folder = null;
             $url = null;
 
@@ -113,11 +113,13 @@ class CategoryService
 
     public function getSubcategory($id)
     {
-        $subcats = SubCategory::where('category_id', $id)
-        ->select(['id', 'name', 'slug', 'image', 'status'])
+        $subcats = SubCategory::with(['products', 'category'])
+        ->where('category_id', $id)
         ->get();
 
-        return $this->success($subcats, "Sub categories");
+        $data = SubCategoryResource::collection($subcats);
+
+        return $this->success($data, "Sub categories");
     }
 
     public function featuredStatus($request, $id)
@@ -129,7 +131,7 @@ class CategoryService
         }
 
         if ($request->has('status')) {
-            $category->status = $request->input('status') == 1 ? 'active' : 'inactive';
+            $category->status = $request->input('status') == 1 ? CategoryStatus::ACTIVE : CategoryStatus::INACTIVE;
         }
 
         $category->save();
@@ -139,13 +141,13 @@ class CategoryService
 
     public function categoryAnalytic()
     {
-        $categories = Category::withCount(['subcategory', 'product'])
+        $categories = Category::withCount(['subcategory', 'products'])
             ->get();
 
-        $totalActive = $categories->where('status', 'active')->count();
-        $subCategoryActiveCount = Subcategory::where('status', 'active')->count();
-        $productActiveCount = Product::where('status', 'active')->count();
-        $productInactiveCount = Product::where('status', 'inactive')->count();
+        $totalActive = $categories->where('status', CategoryStatus::ACTIVE)->count();
+        $subCategoryActiveCount = Subcategory::where('status', CategoryStatus::ACTIVE)->count();
+        $productActiveCount = Product::where('status', CategoryStatus::ACTIVE)->count();
+        $productInactiveCount = Product::where('status', CategoryStatus::INACTIVE)->count();
 
         $data = [
             'total_count' => $categories->count(),
@@ -180,12 +182,28 @@ class CategoryService
         $sub = SubCategory::findOrFail($id);
 
         if ($request->has('status')) {
-            $sub->status = $request->input('status') == 1 ? 'active' : 'inactive';
+            $sub->status = $request->input('status') == 1 ? CategoryStatus::ACTIVE : CategoryStatus::INACTIVE;
         }
 
         $sub->save();
 
         return $this->success(null, "Category updated successfully");
+    }
+
+    public function deleteCategory($id)
+    {
+        $category = Category::findOrFail($id);
+        $category->delete();
+
+        return $this->success(null, 'Deleted successfully');
+    }
+
+    public function deleteSubCategory($id)
+    {
+        $subcat = SubCategory::findOrFail($id);
+        $subcat->delete();
+
+        return $this->success(null, 'Deleted successfully');
     }
 }
 

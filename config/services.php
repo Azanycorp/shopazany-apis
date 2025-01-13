@@ -35,6 +35,18 @@ return [
         ],
     ],
 
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect' => env('GOOGLE_REDIRECT'),
+    ],
+
+    'apple' => [
+        'client_id' => env('APPLE_CLIENT_ID'),
+        'client_secret' => env('APPLE_CLIENT_SECRET'),
+        'redirect' => env('APPLE_REDIRECT'),
+    ],
+
     'reset_password_url' => env('RESET_PASSWORD_URL'),
     'frontend_baseurl' => env('FRONTEND_BASEURL'),
     'staging_frontend_baseurl' => env('STAGING_FRONTEND_BASEURL'),
@@ -44,9 +56,18 @@ return [
         'mode' => env('PAYSTACK'),
         'live_sk' => env('LIVE_PAYSTACK_SECRET_KEY'),
         'test_sk' => env('PAYSTACK_SECRET_KEY'),
-        
+
         'test_pk' => env('PAYSTACK_TEST_PK'),
         'live_pk' => env('PAYSTACK_PK'),
-    ]
+    ],
+
+    'authorizenet' => [
+        'api_login_id' => env('AUTHORIZENET_API_LOGIN_ID'),
+        'transaction_key' => env('AUTHORIZENET_TRANSACTION_KEY'),
+        'sandbox' => [
+            'api_login_id' => env('AUTHORIZENET_SANDBOX_API_LOGIN_ID'),
+            'transaction_key' => env('AUTHORIZENET_SANDBOX_TRANSACTION_KEY'),
+        ]
+    ],
 
 ];

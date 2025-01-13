@@ -20,7 +20,7 @@ class AdminCategoryResource extends JsonResource
             'slug' => (string)$this->slug,
             'image' => (string)$this->image,
             'is_featured' => $this->featured,
-            'product_count' => (int)$this->product_count,
+            'product_count' => (int)$this->products_count,
             'sub_category_count' => (int)$this->subcategory_count,
             'status' => (string)$this->status,
         ];

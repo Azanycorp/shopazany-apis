@@ -67,12 +67,22 @@ class CategoryController extends Controller
     public function getAdminSubcategory()
     {
         abort_if(Gate::denies('sub_category'), Response::HTTP_FORBIDDEN, self::MESSAGE);
-        
+
         return $this->service->getAdminSubcategory();
     }
 
     public function subStatus(Request $request, $id)
     {
         return $this->service->subStatus($request, $id);
+    }
+
+    public function deleteCategory($id)
+    {
+        return $this->service->deleteCategory($id);
+    }
+
+    public function deleteSubCategory($id)
+    {
+        return $this->service->deleteSubCategory($id);
     }
 }

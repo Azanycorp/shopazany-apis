@@ -17,5 +17,13 @@ class SubscriptionPlan extends Model
         'tagline',
         'details',
         'status',
+        'tier',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'tagline' => 'array'
+        ];
+    }
 }

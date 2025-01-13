@@ -14,6 +14,7 @@ class PaymentLog extends Model
         'data',
         'method',
         'status',
+        'type',
     ];
 
     protected function casts(): array

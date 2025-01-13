@@ -1,7 +1,12 @@
 <?php
 
 use App\Http\Middleware\AuthGates;
+use App\Http\Middleware\B2BBuyer;
+use App\Http\Middleware\B2BSeller;
+use App\Http\Middleware\BlockUserAfterFailedAttempts;
+use App\Http\Middleware\BuyerAuthMiddleware;
 use App\Http\Middleware\CheckWalletBalance;
+use App\Http\Middleware\SellerAuthMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -26,6 +31,11 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'check.wallet' => CheckWalletBalance::class,
+            'buyer.auth' => BuyerAuthMiddleware::class,
+            'seller.auth' => SellerAuthMiddleware::class,
+            'b2b_seller.auth' => B2BSeller::class,
+            'b2b_buyer.auth' => B2BBuyer::class,
+            'login.attempt' => BlockUserAfterFailedAttempts::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

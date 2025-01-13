@@ -110,4 +110,19 @@ class SettingsController extends Controller
     {
         return $this->service->addUser($request);
     }
+
+    public function allUsers()
+    {
+        return $this->service->allUsers();
+    }
+
+    public function updateUser(Request $request, $id)
+    {
+        return $this->service->updateUser($request, $id);
+    }
+
+    public function deleteUser($id)
+    {
+        return $this->service->deleteUser($id);
+    }
 }

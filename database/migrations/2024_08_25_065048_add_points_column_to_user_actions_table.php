@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('user_actions', function (Blueprint $table) {
-            $table->integer('points')->after('action_id');
-            $table->enum('status', ['pending', 'completed'])->after('is_rewarded');
+            $table->integer('points')->after('action_id')->default(0);
+            $table->enum('status', ['pending', 'completed'])->after('is_rewarded')->default('pending');
         });
     }
 

@@ -25,6 +25,7 @@ class PaymentRequest extends FormRequest
             'user_id' => ['required', 'integer', 'exists:users,id'],
             'email' => ['required', 'email', 'email:rfc,dns'],
             'amount' => ['required', 'integer'],
+            'currency' => ['required', 'string', 'in:NGN,USD'],
             'payment_redirect_url' => ['required', 'url'],
             'items' => ['required', 'array'],
             'items.*.product_id' => ['required', 'integer', 'exists:products,id'],

@@ -25,6 +25,7 @@ class Payment extends Model
         'createdAt',
         'transaction_date',
         'status',
+        'type',
     ];
 
     public function user(): BelongsTo

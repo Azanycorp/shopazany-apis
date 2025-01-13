@@ -1,17 +1,20 @@
 <?php
 
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\ApiController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CartController;
+use App\Http\Controllers\Api\HomeController;
+use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\SellerController;
+use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\CustomerController;
-use App\Http\Controllers\Api\HomeController;
+use App\Http\Controllers\Api\B2BSellerController;
+use App\Http\Controllers\Api\GoogleAuthController;
 use App\Http\Controllers\Api\MailingListController;
-use App\Http\Controllers\Api\PaymentController;
-use App\Http\Controllers\Api\SellerController;
-use App\Http\Controllers\Api\UserController;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\SubscriptionController;
 
 // Route::get('/user', function (Request $request) {
 //     return $request->user();
@@ -19,22 +22,33 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware(['throttle:apis'])->group(function () {
 
-    Route::prefix('connect')->controller(AuthController::class)->group(function () {
-        Route::post('/login', 'login');
-        Route::post('/login/verify', 'loginVerify');
-        Route::post('/signup', 'signup');
-        Route::post('/forgot/password', 'forgot');
-        Route::post('/reset/password', 'reset');
-        Route::post('/signup/resend', 'resendCode');
-        Route::post('/logout', 'logout');
-        Route::post('/verify/email', 'verify');
-        Route::post('/seller/signup', 'sellerSignup');
+    Route::prefix('connect')
+        ->controller(AuthController::class)
+        ->group(function () {
 
-        Route::post('/affiliate/signup', 'affiliateSignup');
-    });
+            Route::post('/login', 'login')
+                ->middleware('login.attempt');
+            Route::post('/login/verify', 'loginVerify');
+            Route::post('/signup', 'signup');
+            Route::post('/forgot/password', 'forgot');
+            Route::post('/reset/password', 'reset');
+            Route::post('/signup/resend', 'resendCode');
+            Route::post('/logout', 'logout');
+            Route::post('/verify/email', 'verify');
+            Route::post('/seller/signup', 'sellerSignup');
+
+            Route::post('/affiliate/signup', 'affiliateSignup');
+        });
 
     Route::get('/country', [ApiController::class, 'country']);
     Route::get('/states/{country_id}', [ApiController::class, 'states']);
+
+    // Google Auth
+    Route::controller(GoogleAuthController::class)
+        ->group(function () {
+            Route::get('auth/google', 'redirectToGoogle');
+            Route::get('auth/google/callback', 'handleCallback');
+        });
 });
 
 Route::get('/banners', [ApiController::class, 'slider']);
@@ -46,30 +60,67 @@ Route::prefix('user/category')->controller(CategoryController::class)->group(fun
 });
 
 Route::get('/user/seller/template', [SellerController::class, 'getTemplate']);
+Route::get('/b2b/seller/template', [B2BSellerController::class, 'getTemplate']);
 Route::get('/shop/country', [ApiController::class, 'getShopByCountry']);
 Route::get('/shop-by/country/{shop_country_id}', [ApiController::class, 'userShopByCountry']);
 
 Route::controller(HomeController::class)->group(function () {
     Route::get('/best/selling', 'bestSelling');
+    Route::get('/category/{slug}', 'categorySlug');
+    Route::get('/all/products', 'allProducts');
     Route::get('/featured/products', 'featuredProduct');
     Route::get('/pocket/friendly', 'pocketFriendly');
-
+    Route::get('/recommended/products', 'recommendedProducts');
     Route::get('/single/product/{slug}', 'productSlug');
+    Route::get('/top-brands', 'topBrands');
+    Route::get('/top-sellers', 'topSellers');
+
+    Route::prefix('seller')->group(function () {
+        Route::get('/{uuid}', 'sellerInfo');
+        Route::get('/{uuid}/category', 'sellerCategory');
+        Route::get('/{uuid}/reviews', 'sellerReviews');
+    });
 });
 
 Route::post('/payment/webhook', [PaymentController::class, 'webhook']);
 
 Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
+    // Product
+    Route::post('product-review', [HomeController::class, 'productReview']);
+    Route::post('/product/save-for-later', [HomeController::class, 'saveForLater']);
+    // Move to Cart
+    Route::post('/product/cart', [HomeController::class, 'moveToCart']);
 
-    Route::post('/checkout', [PaymentController::class, 'processPayment']);
-    Route::get('/verify/payment/{user_id}/{reference}', [PaymentController::class, 'verifyPayment']);
+    // Payment
+    Route::prefix('payment')
+        ->controller(PaymentController::class)
+        ->group(function () {
+            // Paystack
+            Route::post('/paystack', 'processPayment');
+            Route::get('/verify/paystack/{user_id}/{reference}', 'verifyPayment');
+
+            // Authorize.net
+            Route::post('/authorize', 'authorizeNetCard');
+
+            // Payment Method
+            Route::get('/method/{country_id}', 'getPaymentMethod');
+        });
+
+    // Subscription
+    Route::prefix('subscription')
+        ->controller(SubscriptionController::class)
+        ->group(function () {
+            Route::get('/country/{country_id}', 'getPlanByCountry');
+            Route::post('/payment', 'subscriptionPayment');
+            Route::get('/history/{user_id}', 'subscriptionHistory');
+        });
 
     Route::controller(UserController::class)->group(function () {
         Route::get('/profile', 'profile');
         Route::post('/bank/account', 'bankAccount');
         Route::delete('/remove/account', 'removeBankAccount');
         Route::post('/withdraw', 'withdraw')
-        ->middleware('check.wallet');
+            ->middleware('check.wallet');
 
         Route::post('/kyc', 'userKyc');
         Route::post('/earning-option', 'earningOption');
@@ -151,9 +202,7 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
             Route::get('/summary', 'getOrderSummary');
         });
     });
-
 });
 
 
-
-
+require __DIR__ . '/b2b.php';

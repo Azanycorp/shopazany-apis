@@ -24,8 +24,10 @@ class UserService extends Controller
     public function profile()
     {
         $auth = $this->userAuth();
-        $user = User::with(['wallet', 'referrals', 'bankAccount', 'userbusinessinfo'])
-        ->findOrFail($auth->id);
+        $user = User::with(['wallet', 'referrals', 'bankAccount', 'userbusinessinfo', 'userSubscriptions', 'userShippingAddress'])
+            ->findOrFail($auth->id)
+            ->append(['is_subscribed', 'subscription_plan']);
+
         $data = new ProfileResource($user);
 
         return $this->success($data, "Profile");
@@ -41,7 +43,7 @@ class UserService extends Controller
 
         $user = User::find($userId);
 
-        if (!$user) {
+        if (! $user) {
             return $this->error(null, "User not found", 404);
         }
 
@@ -62,7 +64,6 @@ class UserService extends Controller
         return $this->success([
             'user_id' => $user->id
         ], "Updated successfully");
-
     }
 
     public function bankAccount($request)
@@ -317,7 +318,6 @@ class UserService extends Controller
 
         return $this->success(null, "Settings changed successfully");
     }
-
 }
 
 

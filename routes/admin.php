@@ -1,23 +1,29 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\CategoryController;
-use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ApiController;
+use App\Http\Controllers\Api\FaqController;
+use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\SizeController;
 use App\Http\Controllers\Api\UnitController;
 use App\Http\Controllers\Api\BrandController;
 use App\Http\Controllers\Api\ColorController;
+use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\FinanceController;
+use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\AdminAuthController;
-use App\Http\Controllers\Api\AdminCustomerController;
-use App\Http\Controllers\Api\AdminProductController;
+use App\Http\Controllers\Api\AdminCouponController;
+use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\AdminSellerController;
 use App\Http\Controllers\Api\BannerPromoController;
-use App\Http\Controllers\Api\DashboardController;
-use App\Http\Controllers\Api\FaqController;
 use App\Http\Controllers\Api\RewardPointController;
-use App\Http\Controllers\Api\RoleController;
-use App\Http\Controllers\Api\SettingsController;
+use App\Http\Controllers\Api\AdminProductController;
+use App\Http\Controllers\Api\B2B\B2BAdminController;
+use App\Http\Controllers\Api\AdminCustomerController;
+use App\Http\Controllers\Api\B2B\B2BAdminBuyerController;
+use App\Http\Controllers\Api\B2B\B2BAdminSellerController;
+use App\Http\Controllers\Api\B2B\ProductCategoryController;
 
 Route::prefix('connect')->controller(AdminAuthController::class)->group(function () {
     Route::post('/login', 'login');
@@ -34,8 +40,9 @@ Route::controller(ApiController::class)->group(function () {
     Route::get('sizes', 'sizes');
 });
 
-
 Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function () {
+
+    Route::get('/profile', [ApiController::class, 'adminProfile']);
 
     Route::post('/add/slider', [ApiController::class, 'addSlider']);
     Route::get('/slider', [ApiController::class, 'slider']);
@@ -70,11 +77,13 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function () {
         Route::get('/all', 'adminCategories');
         Route::get('/analytics', 'categoryAnalytic');
         Route::patch('/change/{category_id}', 'featuredStatus');
+        Route::delete('/delete/{id}', 'deleteCategory');
 
         Route::post('/create/subcategory', 'createSubCategory');
         Route::get('/subcategory', 'getAdminSubcategory');
         Route::get('/{category_id}/subcategory', 'getSubcategory');
         Route::patch('/subcategory/status/{sub_category_id}', 'subStatus');
+        Route::delete('/subcategory/delete/{id}', 'deleteSubCategory');
     });
 
     Route::prefix('order')->controller(OrderController::class)->group(function () {
@@ -98,7 +107,7 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function () {
         Route::patch('/approve', 'approveCustomer');
         Route::patch('/ban', 'banCustomer');
 
-        Route::delete('/remove/{user_id}', 'removeCustomer');
+        Route::delete('/remove', 'removeCustomer');
     });
 
     Route::prefix('seller')->controller(AdminSellerController::class)->group(function () {
@@ -111,6 +120,8 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function () {
 
         Route::patch('/approve', 'approveSeller');
         Route::patch('/ban', 'banSeller');
+
+        Route::delete('/bulk/remove', 'bulkRemove');
     });
 
     Route::prefix('product')->controller(AdminProductController::class)->group(function () {
@@ -139,7 +150,12 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function () {
     });
 
     Route::prefix('settings')->controller(SettingsController::class)->group(function () {
+        // Admin User
         Route::post('/add-user', 'addUser');
+        Route::get('/all-users', 'allUsers');
+        Route::patch('/update-user/{id}', 'updateUser');
+        Route::delete('/delete-user/{id}', 'deleteUser');
+
         Route::post('/seo', 'addSeo');
         Route::get('/seo', 'getSeo');
         Route::post('/terms-service', 'addTermsService');
@@ -163,14 +179,87 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function () {
         Route::delete('/remove/{id}', 'deletePlan');
     });
 
+    Route::prefix('finance')->controller(FinanceController::class)->group(function () {
+        Route::post('/payment/service', 'addPaymentService');
+        Route::get('/payment/service', 'getPaymentService');
+        Route::get('/payment/service/{id}', 'getSinglePaymentService');
+        Route::patch('/payment/service/{id}', 'updatePaymentService');
+        Route::delete('/payment/service/{id}', 'deletePaymentService');
+    });
+
+    Route::prefix('coupon')
+        ->controller(AdminCouponController::class)
+        ->group(function () {
+            Route::post('/create', 'createCoupon');
+            Route::get('/', 'getCoupon');
+        });
+
     Route::resource('settings/faq', FaqController::class);
 
     Route::get('/generate/users/link', [ApiController::class, 'referralGenerate']);
 
+
+
+    //b2b admin
+    Route::prefix('b2b')->group(function () {
+        Route::prefix('category')->controller(ProductCategoryController::class)->group(function () {
+            Route::post('/create', 'createCategory');
+            Route::get('/all', 'adminCategories');
+            Route::get('/analytics', 'categoryAnalytic');
+            Route::post('/update/{id}', 'updateCategory');
+            Route::patch('/change/{category_id}', 'featuredStatus');
+            Route::delete('/delete/{id}', 'deleteCategory');
+
+            Route::post('/create/subcategory', 'createSubCategory');
+            Route::get('/subcategory', 'getAdminSubcategory');
+            Route::get('/{category_id}/subcategory', 'getSubcategory');
+            Route::patch('/subcategory/status/{sub_category_id}', 'subStatus');
+            Route::delete('/subcategory/delete/{id}', 'deleteSubCategory');
+        });
+
+        //buyers
+        Route::prefix('buyer')->controller(B2BAdminBuyerController::class)->group(function () {
+            // GET routes
+            Route::get('/', 'allBuyers');
+            Route::get('/filter', 'filter');
+            Route::get('/details/{user_id}', 'viewBuyer');
+            Route::patch('/approve/{user_id}', 'approveBuyer');
+            Route::patch('/ban/{user_id}', 'banBuyer');
+            Route::delete('/bulk-remove', 'bulkRemoveBuyer');
+            Route::delete('/remove/{user_id}', 'removeBuyer');
+        });
+
+        //Sellers
+        Route::prefix('seller')->controller(B2BAdminSellerController::class)->group(function () {
+            Route::get('/', 'allSellers');
+            Route::get('/details/{user_id}', 'viewSeller');
+            Route::get('/payment-history/{user_id}', 'paymentHistory');
+
+            Route::patch('/{user_id}/edit', 'editSeller');
+            Route::delete('/remove/{user_id}', 'removeSeller');
+
+            Route::patch('/approve', 'approveSeller');
+            Route::patch('/ban', 'banSeller');
+
+            Route::delete('/bulk/remove', 'bulkRemove');
+
+            Route::prefix('product')->controller(B2BAdminSellerController::class)->group(function () {
+                Route::post('/add', 'addSellerProduct');
+                Route::get('/details/{id}/{user_id}', 'viewSellerProduct');
+                Route::post('/update{id}', 'editSellerProduct');
+                Route::delete('/remove/{id}', 'removeSellerProduct');
+            });
+        });
+
+        //Rfq
+        Route::prefix('rfqs')->controller(B2BAdminController::class)->group(function () {
+            Route::get('/', 'allRfq');
+            Route::get('/details/{id}', 'rfqDetails');
+        });
+        //Orders
+        Route::prefix('orders')->controller(B2BAdminController::class)->group(function () {
+            Route::get('/', 'allOrders');
+            Route::get('/details/{id}', 'orderDetails');
+        });
+    });
 });
-
-
-
-
-
-

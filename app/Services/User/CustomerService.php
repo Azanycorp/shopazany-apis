@@ -54,7 +54,9 @@ class CustomerService
             return $this->error(null, "Country not found", 404);
         }
 
-        $products = Product::where('country_id', $country->id)->get();
+        $products = Product::with(['category', 'subCategory', 'shopCountry'])
+            ->where('country_id', $country->id)
+            ->get();
 
         $data = SellerProductResource::collection($products);
 
@@ -94,7 +96,7 @@ class CustomerService
             return $this->error(null, "User not found", 404);
         }
 
-        $orders = Order::where('user_id', $userId)
+        $orders = Order::with('user')->where('user_id', $userId)
         ->orderBy('created_at', 'desc')
         ->take(7)
         ->get();
@@ -118,9 +120,10 @@ class CustomerService
             return $this->error(null, "User not found", 404);
         }
 
-        $orders = Order::where('user_id', $userId)
-        ->orderBy('created_at', 'desc')
-        ->paginate(25);
+        $orders = Order::with('user')
+            ->where('user_id', $userId)
+            ->orderBy('created_at', 'desc')
+            ->paginate(25);
 
         $data = OrderResource::collection($orders);
 
@@ -140,7 +143,7 @@ class CustomerService
 
     public function getOrderDetail($orderNo)
     {
-        $order = Order::with(['product', 'user'])
+        $order = Order::with(['products', 'user'])
         ->where('order_no', $orderNo)
         ->get();
 
@@ -179,7 +182,7 @@ class CustomerService
         if ($currentUser->id != $request->user_id || $currentUser->type != UserType::CUSTOMER) {
             return $this->error(null, "Unauthorized action.", 401);
         }
-    
+
         CustomerSupport::create([
             'user_id' => $request->user_id,
             'name' => $request->name,
@@ -201,7 +204,7 @@ class CustomerService
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $user = User::with('orderRate')->find($request->user_id);
+        $user = User::with(['wishlist', 'orderRate'])->find($request->user_id);
 
         if (!$user) {
             return $this->error(null, "User not found", 404);
@@ -258,12 +261,12 @@ class CustomerService
             return $this->error(null, "User not found", 404);
         }
 
-        $wishlist = $user->wishlist()->find($id);
+        $wishlist = $user->wishlist()->with('product.category')->find($id);
 
         if (!$wishlist) {
             return $this->error(null, "Wishlist not found", 404);
         }
-        
+
         $data = new WishlistResource($wishlist);
 
         return $this->success($data, "Wishlist");
@@ -353,7 +356,8 @@ class CustomerService
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $user = User::with('reedemPoints')->findOrFail($request->user_id);
+        $user = User::with('reedemPoints')
+            ->findOrFail($request->user_id);
 
         $user->reedemPoints()->create([
             'name' => $request->name,

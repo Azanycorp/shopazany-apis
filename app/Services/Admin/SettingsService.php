@@ -2,6 +2,7 @@
 
 namespace App\Services\Admin;
 
+use App\Http\Resources\AdminUserResource;
 use App\Http\Resources\SubscriptionPlanResource;
 use App\Mail\AdminUserMail;
 use App\Models\AboutUs;
@@ -275,6 +276,7 @@ class SettingsService
                 'cost' => $request->cost,
                 'country_id' => $request->country_id,
                 'period' => $request->period,
+                'tier' => $request->tier,
                 'tagline' => $request->tagline,
                 'details' => $request->details,
                 'status' => 'active'
@@ -286,7 +288,7 @@ class SettingsService
             throw $th;
         }
     }
-    
+
     public function getPlanById($id)
     {
         $plan = SubscriptionPlan::findOrFail($id);
@@ -306,15 +308,16 @@ class SettingsService
     public function updatePlan($request, $id)
     {
         $plan = SubscriptionPlan::findOrFail($id);
-        
+
         $plan->update([
             'title' => $request->title,
             'cost' => $request->cost,
             'country_id' => $request->country_id,
             'period' => $request->period,
+            'tier' => $request->tier,
             'tagline' => $request->tagline,
             'details' => $request->details,
-            'status' => 'active'
+            'status' => 'active',
         ]);
 
         return $this->success(null, 'Plan updated successfully');
@@ -344,18 +347,81 @@ class SettingsService
                 'status' => 'active'
             ]);
 
-            $admin->roles()->sync($request->role_id);
+            // $admin->roles()->sync($request->role_id);
+            $admin->permissions()->sync($request->permissions);
 
             DB::commit();
 
             defer(fn() => send_email($request->email, new AdminUserMail($admin, $password)));
-            
+
             return $this->success(null, 'Created successfully');
         } catch (\Throwable $th) {
             DB::rollBack();
 
             throw $th;
         }
+    }
+
+    public function allUsers()
+    {
+        $search = trim(request()->input('search'));
+
+        $users = Admin::with('permissions')
+        ->where(function ($query) use($search) {
+            $query->where('first_name', 'LIKE', '%' . $search . '%')
+            ->orWhere('last_name', 'LIKE', '%' . $search . '%')
+            ->orWhere('email', 'LIKE', '%' . $search . '%');
+        })
+        ->paginate(25);
+
+        $data = AdminUserResource::collection($users);
+
+        return [
+            'status' => 'true',
+            'message' => 'All Admin Users',
+            'data' => $data,
+            'pagination' => [
+                'current_page' => $users->currentPage(),
+                'last_page' => $users->lastPage(),
+                'per_page' => $users->perPage(),
+                'prev_page_url' => $users->previousPageUrl(),
+                'next_page_url' => $users->nextPageUrl(),
+            ],
+        ];
+    }
+
+    public function updateUser($request, $id)
+    {
+        try {
+            DB::beginTransaction();
+
+            $admin = Admin::findOrFail($id);
+
+            $admin->update([
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'email' => $request->email,
+                'phone_number' => $request->phone_number
+            ]);
+
+            $admin->roles()->sync($request->role_id);
+            //$admin->permissions()->sync($request->permissions);
+
+            DB::commit();
+
+            return $this->success(null, 'Updated successfully');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            throw $th;
+        }
+    }
+
+    public function deleteUser($id)
+    {
+        $user = Admin::findOrFail($id);
+        $user->delete();
+
+        return $this->success(null, 'Deleted successfully');
     }
 }
 
