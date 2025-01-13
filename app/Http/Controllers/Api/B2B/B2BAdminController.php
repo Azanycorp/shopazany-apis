@@ -16,12 +16,21 @@ class B2BAdminController extends Controller
   //RFQS
   public function allRfq()
   {
-    return 'ok';
       return $this->adminService->getAllRfq();
   }
   public function rfqDetails($id)
   {
       return $this->adminService->getRfqDetails($id);
+  }
+
+  //Orders
+  public function allOrders()
+  {
+      return $this->adminService->getAllOrders();
+  }
+  public function orderDetails($id)
+  {
+      return $this->adminService->getOrderDetails($id);
   }
 
 }

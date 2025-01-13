@@ -77,10 +77,10 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function () {
 
             // Product
             Route::prefix('product')->group(function () {
-                Route::post('/', 'addProduct');
                 Route::get('/{user_id}', 'getAllProduct');
+                Route::post('/add', 'addProduct');
                 Route::get('/analytic/{user_id}', 'getAnalytics');
-                Route::get('/{product_id}/{user_id}', 'getProductById');
+                Route::get('/details/{product_id}/{user_id}', 'getProductById');
                 Route::post('/update', 'updateProduct');
                 Route::delete('/delete/{user_id}/{product_id}', 'deleteProduct');
                 Route::post('import', 'productImport');
@@ -111,6 +111,7 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function () {
         Route::get('rfq', 'getAllRfqs');
         Route::get('rfq-details/{id}', 'getRfqDetails');
         Route::post('request-review', 'reviewRequest');
+        Route::post('add-review', 'addReview');
         Route::post('accept-quote', 'acceptQuote');
         Route::post('/add-to-wish', 'addTowishList');
         Route::get('/wish-list', 'wishList');

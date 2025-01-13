@@ -58,26 +58,26 @@ class B2BController extends Controller
     {
         return $this->sellerService->businessInformation($request);
     }
-    
+
     public function buyerOnboarding(BuyerOnboardingRequest $request)
     {
         return $this->service->buyerOnboarding($request);
     }
-    
+
     public function getProducts()
     {
         return $this->buyerService->getProducts();
     }
-    
+
     public function getProductDetail($slug)
     {
         return $this->buyerService->getProductDetail($slug);
     }
-    
-    
-    
-    
-    
-    
-    
+
+
+
+
+
+
+
 }
