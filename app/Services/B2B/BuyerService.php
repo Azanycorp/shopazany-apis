@@ -5,6 +5,8 @@ namespace App\Services\B2B;
 use App\Models\Rfq;
 use App\Models\User;
 use App\Enum\UserType;
+use App\Enum\RfqStatus;
+use App\Models\Payment;
 use App\Enum\UserStatus;
 use App\Models\B2bQuote;
 use App\Models\B2BProduct;
@@ -12,17 +14,16 @@ use App\Enum\ProductStatus;
 use App\Models\B2bWishList;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
+use App\Models\B2bProdctReview;
 use App\Models\B2BRequestRefund;
 use App\Enum\RefundRequestStatus;
-use App\Enum\RfqStatus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use App\Http\Resources\CustomerResource;
-use App\Http\Resources\B2BProductResource;
 use App\Http\Resources\BuyerResource;
 use App\Http\Resources\PaymentResource;
-use App\Models\Payment;
+use App\Http\Resources\CustomerResource;
+use App\Http\Resources\B2BProductResource;
 
 class BuyerService
 {
@@ -235,17 +236,17 @@ class BuyerService
 
     public function getProductDetail($slug)
     {
-        $product = B2BProduct::with(['category', 'country', 'b2bProductImages'])
+        $product = B2BProduct::with(['category','user', 'country', 'b2bProductImages','b2bProdctReview'])
             ->where('slug', $slug)
             ->firstOrFail();
 
-        $moreFromSeller = B2BProduct::with(['category', 'country', 'b2bProductImages'])
-            ->where('user_id', $product->user_id);
+        $moreFromSeller = B2BProduct::with(['category','user','subCategory', 'country', 'b2bProductImages','b2bProdctReview'])
+            ->where('user_id', $product->user_id)->get();
 
-        $relatedProducts = B2BProduct::with(['category', 'country', 'b2bProductImages'])
-            ->where('category_id', $product->category_id);
+        $relatedProducts = B2BProduct::with(['category','user','subCategory', 'country', 'b2bProductImages','b2bProdctReview'])
+            ->where('category_id', $product->category_id)->get();
 
-        $data = new B2BProductResource($product);
+         $data = new B2BProductResource($product);
 
         $response = [
             'data' => $data,
@@ -320,7 +321,7 @@ class BuyerService
     {
         $quote = B2bQuote::find($id);
 
-        if (!$quote){
+        if (!$quote) {
             return $this->error(null, 'No record found', 404);
         }
 
@@ -395,13 +396,13 @@ class BuyerService
             DB::raw('SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as deals_in_progress', [RfqStatus::IN_PROGRESS]),
             DB::raw('SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as deals_completed', [RfqStatus::DELIVERED])
         )
-        ->where('buyer_id', $currentUserId)
-        ->first();
+            ->where('buyer_id', $currentUserId)
+            ->first();
 
         $orderStats = Rfq::where('buyer_id', $currentUserId)
-        ->where('status', RfqStatus::CONFIRMED)
-        ->whereBetween('created_at', [$startDate, $endDate])
-        ->sum('total_amount');
+            ->where('status', RfqStatus::CONFIRMED)
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->sum('total_amount');
 
         $uniqueSellersCount = Rfq::where('buyer_id', $currentUserId)
             ->distinct('seller_id')
@@ -498,6 +499,29 @@ class BuyerService
         ]);
 
         return $this->success($rfq, 'Quote Accepted successfully');
+    }
+
+    //send review request to vendor
+    public function addPreview($data)
+    {
+        $review = B2bProdctReview::where(['buyer_id' => Auth::id(), 'product_id' => $data->product_id])->first();
+        if ($review) {
+            $review->update([
+                'product_id' => $data->product_id,
+                'rating' => $data->rating,
+                'title' => $data->title,
+                'note' => $data->note,
+            ]);
+            return $this->success(null, 'Review Updated successfully');
+        }
+        B2bProdctReview::create([
+            'product_id' => $data->product_id,
+            'buyer_id' => Auth::id(),
+            'rating' => $data->rating,
+            'title' => $data->title,
+            'note' => $data->note,
+        ]);
+        return $this->success(null, 'Review Sent successfully');
     }
 
     public function addToWishList($data)

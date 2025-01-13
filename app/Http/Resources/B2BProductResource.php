@@ -22,12 +22,14 @@ class B2BProductResource extends JsonResource
             'subCategory' => (string)$this->subCategory?->name,
             'price' => (string)$this->unit_price,
             'description' => (string)$this->description,
+            'vendor' => (string)$this->user?->first_name,
             'quantity' => (string)$this->quantity,
             'availability_quantity' => (string)$this->availability_quantity,
             'keywords' => $this?->keywords,
             'moq' => (string)$this->minimum_order_quantity,
             'status' => (string)$this->status,
             'country' => (string)$this->country?->name,
+            'b2bProdctReview' => $this->b2bProdctReview,
             'images' => (string)$this->b2bProductImages ? $this->b2bProductImages->map(function ($image) {
                 return [
                     'image' => $image->image

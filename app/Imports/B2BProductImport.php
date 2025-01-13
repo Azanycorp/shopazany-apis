@@ -2,10 +2,12 @@
 
 namespace App\Imports;
 
-use App\Enum\ProductStatus;
 use App\Models\B2BProduct;
+use App\Enum\ProductStatus;
 use Illuminate\Support\Str;
+use App\Models\B2bProductCategory;
 use Illuminate\Support\Collection;
+use App\Models\B2bProductSubCategory;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
@@ -22,8 +24,8 @@ class B2BProductImport implements ToCollection, WithHeadingRow, WithChunkReading
     }
 
     /**
-    * @param Collection $collection
-    */
+     * @param Collection $collection
+     */
     public function collection(Collection $rows)
     {
         foreach ($rows as $row) {
@@ -44,7 +46,7 @@ class B2BProductImport implements ToCollection, WithHeadingRow, WithChunkReading
                 'category_id' => $category ? $category->id : 1,
                 'sub_category_id' => $subCategory ? $subCategory->id : 1,
                 'fob_price' => $row['price'],
-                'price' => $row['price'],
+                'unit_price' => $row['price'],
                 'minimum_order_quantity' => $row['minimum_order_quantity'],
                 'status' => ProductStatus::PENDING,
                 'country_id' => $this->seller?->country,
@@ -52,6 +54,16 @@ class B2BProductImport implements ToCollection, WithHeadingRow, WithChunkReading
                 'updated_at' => now(),
             ]);
         }
+    }
+
+    private function getCategory($category)
+    {
+        return B2bProductCategory::where('name', $category)->first() ?: null;
+    }
+
+    private function getSubCategory($subCategory)
+    {
+        return B2bProductSubCategory::where('name', $subCategory)->first() ?: null;
     }
 
     public function chunkSize(): int

@@ -8,11 +8,11 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 
 class B2BProductExport implements FromCollection, WithHeadings
 {
-    protected $userId;
-
-    public function __construct($userId)
+    protected $userId,$data;
+    public function __construct($userId,$data)
     {
         $this->userId = $userId;
+        $this->data = $data;
     }
 
     /**
@@ -21,7 +21,8 @@ class B2BProductExport implements FromCollection, WithHeadings
     public function collection()
     {
         return B2BProduct::where('user_id', $this->userId)
-                ->select('id', 'name', 'description', 'fob_price')
+                ->select('id', 'name','description', 'unit_price','availability_quantity','quantity')
+                ->whereBetween('created_at', [$this->data->startDate, $this->data->endDate])
                 ->get();
     }
 
@@ -34,7 +35,9 @@ class B2BProductExport implements FromCollection, WithHeadings
             'ID',
             'Name',
             'Description',
-            'FOB Price'
+            'Unit_price',
+            'Availability_quantity',
+            'Quantity'
         ];
     }
 }

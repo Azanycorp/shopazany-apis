@@ -3,16 +3,18 @@
 namespace App\Http\Controllers\Api\B2B;
 
 use Illuminate\Http\Request;
+use App\Services\B2B\AdminService;
 use App\Services\B2B\SellerService;
 use App\Http\Controllers\Controller;
 use Illuminate\Validation\Rules\Password;
+use App\Http\Requests\B2B\AddProductRequest;
 
 class B2BAdminSellerController extends Controller
 {
 
     protected $service;
 
-    public function __construct(SellerService $service)
+    public function __construct(AdminService $service)
     {
         $this->service = $service;
     }
@@ -63,11 +65,6 @@ class B2BAdminSellerController extends Controller
         return $this->service->removeSeller($id);
     }
 
-    public function paymentHistory($id)
-    {
-        return $this->service->paymentHistory($id);
-    }
-
     public function bulkRemove(Request $request)
     {
         $request->validate([
@@ -78,5 +75,24 @@ class B2BAdminSellerController extends Controller
         return $this->service->bulkRemove($request);
     }
 
+    //Seller product section
+    public function addSellerProduct(AddProductRequest $request)
+    {
+        return $this->service->addSellerProduct($request);
+    }
 
+    public function viewSellerProduct($product_id, $user_id)
+    {
+        return $this->service->viewSellerProduct($product_id,$user_id);
+    }
+
+    public function editSellerProduct(Request $request)
+    {
+        return $this->service->editSellerProduct($request);
+    }
+
+    public function removeSellerProduct($user_id, $product_id)
+    {
+        return $this->service->removeSellerProduct($user_id, $product_id);
+    }
 }
