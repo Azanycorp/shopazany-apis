@@ -10,8 +10,10 @@ use App\Http\Controllers\Controller;
 use App\Mail\SignUpVerifyMail;
 use App\Mail\UserWelcomeMail;
 use App\Models\Country;
+use App\Models\Coupon;
 use App\Models\User;
 use App\Trait\HttpResponse;
+use App\Trait\SignUp;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -21,7 +23,7 @@ use Illuminate\Support\Str;
 
 class AuthService extends Controller
 {
-    use HttpResponse;
+    use HttpResponse, SignUp;
 
     public function login($request)
     {
@@ -67,32 +69,16 @@ class AuthService extends Controller
     public function signup($request)
     {
         $request->validated($request->all());
-        $user = null;
 
         try {
+            $user = $this->createUser($request);
 
-            $code = generateVerificationCode();
-            $query = request()->query('referrer');
-
-            $referrer = null;
-
-            if ($query) {
-                $referrer = User::where('referrer_code', $query)->first();
+            if ($referrer = $request->query('referrer')) {
+                $this->handleReferrer($referrer, $user);
             }
-
-            $user = User::create([
-                'first_name' => $request->first_name,
-                'last_name' => $request->last_name,
-                'email' => $request->email,
-                'type' => UserType::CUSTOMER,
-                'email_verified_at' => null,
-                'verification_code' => $code,
-                'is_verified' => 0,
-                'password' => bcrypt($request->password)
-            ]);
-
-            if ($referrer !== null) {
-                reward_user($referrer, 'referral', 'completed');
+    
+            if ($coupon = $request->query('coupon')) {
+                $this->validateAndAssignCoupon($coupon, $user);
             }
 
             $description = "User with email: {$request->email} signed up";
