@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\FinanceController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\AdminAuthController;
+use App\Http\Controllers\Api\AdminCouponController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\AdminSellerController;
 use App\Http\Controllers\Api\BannerPromoController;
@@ -185,6 +186,13 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function () {
         Route::patch('/payment/service/{id}', 'updatePaymentService');
         Route::delete('/payment/service/{id}', 'deletePaymentService');
     });
+
+    Route::prefix('coupon')
+        ->controller(AdminCouponController::class)
+        ->group(function () {
+            Route::post('/create', 'createCoupon');
+            Route::get('/', 'getCoupon');
+        });
 
     Route::resource('settings/faq', FaqController::class);
 
