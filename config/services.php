@@ -52,6 +52,9 @@ return [
     'staging_frontend_baseurl' => env('STAGING_FRONTEND_BASEURL'),
     'baseurl' => env('BASEURL'),
 
+    'seller_baseurl' => 'https://shopazany.com/en/seller-signup',
+    'staging_seller_baseurl' => 'https://fe-staging.shopazany.com/en/seller-signup',
+
     'paystack' => [
         'mode' => env('PAYSTACK'),
         'live_sk' => env('LIVE_PAYSTACK_SECRET_KEY'),
