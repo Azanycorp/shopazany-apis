@@ -12,8 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('admins', function (Blueprint $table) {
-            $table->enum('type', ['b2b_admin', 'b2c_admin'])->after('email')->default('b2c_admin');
-
+            //
+            $table->string('type')->after('password')->comment('Handeles admin user type eg b2c,b2b for b2b_admin admin user and b2c_admin admin user');
+            $table->integer('two_factor_enabled')->after('type')->default(0);
         });
     }
 
