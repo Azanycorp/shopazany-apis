@@ -19,9 +19,9 @@ class CouponService
             } while (Coupon::where('code', $code)->exists());
 
             if (app()->environment('production')) {
-                $link = config('services.frontend_baseurl') . '/register?coupon=' . $code;
+                $link = config('services.seller_baseurl') . '?coupon=' . $code;
             } else {
-                $link = config('services.staging_frontend_baseurl') . '/register?coupon=' . $code;
+                $link = config('services.staging_seller_baseurl') . '?coupon=' . $code;
             }
 
             $coupon = Coupon::create([
