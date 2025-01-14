@@ -27,7 +27,7 @@ class AuthService extends Controller
 
     public function login($request)
     {
-        
+
         return LoginService::AuthLogin($request);
     }
 
@@ -75,10 +75,6 @@ class AuthService extends Controller
 
             if ($referrer = $request->query('referrer')) {
                 $this->handleReferrer($referrer, $user);
-            }
-    
-            if ($coupon = $request->query('coupon')) {
-                $this->validateAndAssignCoupon($coupon, $user);
             }
 
             $description = "User with email: {$request->email} signed up";
@@ -168,6 +164,10 @@ class AuthService extends Controller
                 'is_verified' => 0,
                 'password' => bcrypt($request->password)
             ]);
+
+            if ($coupon = $request->query('coupon')) {
+                $this->validateAndAssignCoupon($coupon, $user);
+            }
 
             $description = "Seller with email address {$request->email} just signed up";
             $action = UserLog::CREATED;
