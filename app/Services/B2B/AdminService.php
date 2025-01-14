@@ -525,4 +525,6 @@ class AdminService
 
         return $this->success(null, "User has been blocked successfully");
     }
+
+    //CMS / Promo and banners
 }
