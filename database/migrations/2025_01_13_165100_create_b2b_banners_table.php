@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('image');
             $table->dateTime('start_date');
             $table->dateTime('end_date');
-            $table->json('products');
+            $table->string('products');
             $table->enum('status', ['active', 'inactive']);
             $table->timestamps();
         });

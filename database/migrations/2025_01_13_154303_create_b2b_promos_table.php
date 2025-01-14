@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('coupon_code')->unique();
             $table->double('discount')->default(0);
             $table->string('discount_type')->nullable();
-            $table->enum('type', ['product', 'total_orders', 'welcome_coupon']);
+            $table->string('type');
             $table->dateTime('start_date')->nullable();
             $table->dateTime('end_date')->nullable();
             $table->timestamps();

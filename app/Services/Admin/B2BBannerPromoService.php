@@ -41,7 +41,7 @@ class B2BBannerPromoService
     public function banners()
     {
         $banners = B2bBanner::get();
-        if (count($banners) < 1) {
+        if ($banners->isEmpty()) {
             return $this->error(null, "No record found", 404);
         }
         $data = B2BBannerResource::collection($banners);
@@ -62,7 +62,7 @@ class B2BBannerPromoService
         $banner = B2bBanner::findOrFail($id);
 
         try {
-            if ($request->image) {
+            if ($request->hasFile('image')) {
                 # code...
                 $image = uploadImage($request, 'image', 'banner', null, $banner);
             }
@@ -140,7 +140,7 @@ class B2BBannerPromoService
             'discount_type' => $request->discount_type,
         ]);
 
-        foreach ($request->product as $product_id) {
+        foreach ($request->products as $product_id) {
             $promo->b2bPromoProduct()->create([
                 'product_id' => $product_id
             ]);

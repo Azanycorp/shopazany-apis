@@ -19,7 +19,6 @@ class PaystackPaymentProcessor implements PaymentStrategy
                 'data' => $paystackInstance,
             ];
         } catch (\Exception $e) {
-            return 'ok';
             return $this->error(null, 'Payment processing failed, please try again later');
         }
     }
