@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class PaymentRequest extends FormRequest
+class ChangeAdminPasswordRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,13 +22,8 @@ class PaymentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'user_id' => ['required', 'integer', 'exists:users,id'],
-            'email' => ['required', 'email', 'email:rfc,dns'],
-            'amount' => ['required', 'integer'],
-            'currency' => ['required', 'string', 'in:NGN,USD'],
-            'payment_redirect_url' => ['required', 'url'],
-            'items' => ['required', 'array'],
-            'items.*.product_id' => ['required', 'integer', 'exists:products,id'],
+            'old_password' => ['required', 'string','min:6'],
+            'password' => ['required', 'string', 'confirmed']
         ];
     }
 }
