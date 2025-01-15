@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\B2BController;
 use App\Http\Controllers\Api\B2BSellerController;
+use App\Http\Controllers\Api\B2BPaymentController;
 use App\Http\Controllers\Api\B2B\B2BBuyerController;
 use App\Http\Controllers\Api\B2B\B2BAccountController;
 
@@ -13,6 +14,8 @@ use App\Http\Controllers\Api\B2B\B2BAccountController;
 
 // B2B
 Route::middleware(['throttle:apis'])->group(function () {
+    //webhook
+    Route::post('/b2b/payment/webhook', [B2BPaymentController::class, 'webhook']);
     Route::prefix('b2b/connect')
         ->controller(B2BAccountController::class)
         ->group(function () {
@@ -38,6 +41,20 @@ Route::middleware(['throttle:apis'])->group(function () {
 });
 
 Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function () {
+    // Payment
+    Route::prefix('payment')
+        ->controller(B2BPaymentController::class)
+        ->group(function () {
+            // Paystack
+            Route::post('/paystack', 'processPayment');
+            Route::get('/verify/paystack/{user_id}/{reference}', 'verifyPayment');
+
+            // Authorize.net
+            Route::post('/authorize', 'authorizeNetCard');
+
+            // Payment Method
+            Route::get('/method/{country_id}', 'getPaymentMethod');
+        });
     // Seller
     Route::group(['middleware' => 'b2b_seller.auth', 'prefix' => 'seller'], function () {
 

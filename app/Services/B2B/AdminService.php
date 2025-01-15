@@ -560,15 +560,11 @@ class AdminService
     {
         $authUser = userAuth();
         $user = Admin::where('type', AdminStatus::B2B)->findOrFail($authUser->id);
-        $newStatus = !$user->two_factor_enabled;
         $user->update([
-            'two_factor_enabled' => $newStatus,
+            'two_factor_enabled' => $data->two_factor_enabled,
         ]);
-        // $user->update([
-        //     'two_factor_enabled' => $data->two_factor_enabled,
-        // ]);
-        $message = $newStatus ? '2FA Enabled successfully' : '2FA Disabled successfully';
-        return $this->success($message);
+
+        return $this->success('Settings updated');
     }
     public function updateAdminPassword($data)
     {
