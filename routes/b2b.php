@@ -41,20 +41,6 @@ Route::middleware(['throttle:apis'])->group(function () {
 });
 
 Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function () {
-    // Payment
-    Route::prefix('payment')
-        ->controller(B2BPaymentController::class)
-        ->group(function () {
-            // Paystack
-            Route::post('/paystack', 'processPayment');
-            Route::get('/verify/paystack/{user_id}/{reference}', 'verifyPayment');
-
-            // Authorize.net
-            Route::post('/authorize', 'authorizeNetCard');
-
-            // Payment Method
-            Route::get('/method/{country_id}', 'getPaymentMethod');
-        });
     // Seller
     Route::group(['middleware' => 'b2b_seller.auth', 'prefix' => 'seller'], function () {
 

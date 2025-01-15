@@ -249,6 +249,7 @@ class SellerService extends Controller
                 'availability_quantity' => $request->quantity,
                 'default_currency' => $request->default_currency,
                 'fob_price' => $request->fob_price,
+                'status' => 'active',
                 'country_id' => is_int($user->country) ? $user->country : 160,
             ];
 
