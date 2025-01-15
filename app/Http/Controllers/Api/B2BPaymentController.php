@@ -8,9 +8,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\B2BPaymentRequest;
 use App\Services\Payment\PaymentService;
 use App\Http\Requests\AuthorizeNetCardRequest;
-use App\Services\Payment\B2B\HandlePaymentService;
-use App\Services\Payment\B2B\PaymentDetailsService;
-use App\Services\Payment\B2B\PaystackPaymentProcessor;
+use App\Services\Payment\HandlePaymentService;
+use App\Services\Payment\PaymentDetailsService;
+use App\Services\Payment\PaystackPaymentProcessor;
 
 class B2BPaymentController extends Controller
 {
