@@ -568,10 +568,10 @@ class BuyerService
     }
 
     //Account section
+
     public function profile()
     {
         $auth = userAuth();
-
         $user = User::with('b2bCompany')
             ->where('type', UserType::B2B_BUYER)
             ->find($auth->id);
