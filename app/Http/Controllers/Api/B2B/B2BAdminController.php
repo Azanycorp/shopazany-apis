@@ -6,6 +6,7 @@ use App\Enum\UserStatus;
 use Illuminate\Http\Request;
 use App\Services\B2B\AdminService;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ChangeAdminPasswordRequest;
 
 class B2BAdminController extends Controller
 {
@@ -41,12 +42,12 @@ class B2BAdminController extends Controller
     {
         return $this->adminService->updateAdminProfile($request);
     }
-    public function updateAdminPassword(Request $request)
+    public function updateAdminPassword(ChangeAdminPasswordRequest $request)
     {
         return $this->adminService->updateAdminPassword($request);
     }
-    public function enable2FA()
+    public function enable2FA(Request $request)
     {
-        return $this->adminService->enableTwoFactor();
+        return $this->adminService->enableTwoFactor($request);
     }
 }

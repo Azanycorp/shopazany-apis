@@ -207,7 +207,7 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function () {
         Route::get('/profile', [B2BAdminController::class, 'adminProfile']);
         Route::post('/update-profile', [B2BAdminController::class, 'updateAdminProfile']);
         Route::post('/update-password', [B2BAdminController::class, 'updateAdminPassword']);
-        Route::get('/enable-2fa', [B2BAdminController::class, 'enable2FA']);
+        Route::post('/enable-2fa', [B2BAdminController::class, 'enable2FA']);
 
         Route::prefix('category')->controller(ProductCategoryController::class)->group(function () {
             Route::post('/create', 'createCategory');

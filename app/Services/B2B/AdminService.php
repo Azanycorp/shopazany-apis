@@ -556,47 +556,24 @@ class AdminService
         return $this->success($data, 'Profile detail');
     }
 
-    public function enableTwoFactor()
+    public function enableTwoFactor($data)
     {
         $authUser = userAuth();
         $user = Admin::where('type', AdminStatus::B2B)->findOrFail($authUser->id);
-        if ($user->two_factor_enabled == 1) {
-            $user->update([
-                'two_factor_enabled' => 0,
-            ]);
-            return $this->success('2FA Disabled successfully');
-        }
-        if ($user->two_factor_enabled == 0) {
-            $user->update([
-                'two_factor_enabled' => 1,
-            ]);
-            return $this->success('2FA Enabled successfully');
-        }
+        $newStatus = !$user->two_factor_enabled;
+        $user->update([
+            'two_factor_enabled' => $newStatus,
+        ]);
+        // $user->update([
+        //     'two_factor_enabled' => $data->two_factor_enabled,
+        // ]);
+        $message = $newStatus ? '2FA Enabled successfully' : '2FA Disabled successfully';
+        return $this->success($message);
     }
     public function updateAdminPassword($data)
     {
         $authUser = userAuth();
         $user = Admin::where('type', AdminStatus::B2B)->findOrFail($authUser->id);
-        if (!$data->password) {
-            return $this->error(null, 'Password field is required.', 422);
-        }
-
-        if (!$data->password_confirmation) {
-            return $this->error(null, 'Password firmation field is required.', 422);
-        }
-
-        if ($data->password_confirmation != $data->password) {
-            return $this->error(null, 'Password confirmation does not match.', 422);
-        }
-
-        if (strlen($data->password) < 6) {
-            return $this->error(null, 'The password field must be at least 6 characters', 422);
-        }
-
-        if (!Hash::check($data->current_password, $user->password)) {
-            return $this->error(null, 'Oops! Current password does not match record.', 422);
-        }
-
         $user->update([
             'password' => Hash::make($data->password),
         ]);
