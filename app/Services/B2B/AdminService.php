@@ -627,7 +627,6 @@ class AdminService
             'paystack_perc' => $data->paystack_perc,
             'paystack_fixed' => $data->paystack_fixed,
 	]);
-
         return $this->success(null, 'Details updated');
     }
 }
