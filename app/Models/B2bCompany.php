@@ -21,4 +21,11 @@ class B2bCompany extends Model
         'address',
         'state',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'service_type' => 'array'
+        ];
+    }
 }

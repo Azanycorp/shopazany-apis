@@ -5,10 +5,12 @@ namespace App\Services\B2B;
 use Carbon\Carbon;
 use App\Models\Rfq;
 use App\Models\User;
+use App\Models\Admin;
 use App\Enum\UserType;
 use App\Enum\UserStatus;
 use App\Models\B2bOrder;
 use App\Models\B2bQuote;
+use App\Enum\AdminStatus;
 use App\Enum\OrderStatus;
 use App\Models\B2BProduct;
 use App\Enum\ProductStatus;
@@ -23,6 +25,7 @@ use Illuminate\Support\Facades\Hash;
 use App\Http\Resources\SellerResource;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Resources\CustomerResource;
+use App\Http\Resources\AdminUserResource;
 use App\Http\Resources\B2BSellerResource;
 use App\Http\Resources\B2BProductResource;
 use App\Repositories\B2BProductRepository;
@@ -448,7 +451,7 @@ class AdminService
 
     public function viewBuyer($id)
     {
-        $user = User::select('id','first_name','last_name','email','image')->with('b2bCompany')->where('type', UserType::B2B_BUYER)
+        $user = User::select('id', 'first_name', 'last_name', 'email', 'image')->with('b2bCompany')->where('type', UserType::B2B_BUYER)
             ->find($id);
 
         if (!$user) {
@@ -524,5 +527,54 @@ class AdminService
         $user->save();
 
         return $this->success(null, "User has been blocked successfully");
+    }
+
+    //CMS / Promo and banners
+
+
+
+    public function adminProfile()
+    {
+        $authUser = userAuth();
+        $user = Admin::where('type', AdminStatus::B2B)->findOrFail($authUser->id);
+        $data = new AdminUserResource($user);
+
+        return $this->success($data, 'Profile detail');
+    }
+    public function updateAdminProfile($data)
+    {
+        $authUser = userAuth();
+        $user = Admin::where('type', AdminStatus::B2B)->findOrFail($authUser->id);
+        $user->update([
+            'first_name' => $data->first_name,
+            'last_name' => $data->last_name,
+            'email' => $data->email,
+            'phone_number' => $data->phone_number,
+        ]);
+        $data = new AdminUserResource($user);
+
+        return $this->success($data, 'Profile detail');
+    }
+
+    public function enableTwoFactor($data)
+    {
+        $authUser = userAuth();
+        $user = Admin::where('type', AdminStatus::B2B)->findOrFail($authUser->id);
+        $user->update([
+            'two_factor_enabled' => $data->two_factor_enabled,
+        ]);
+
+        return $this->success('Settings updated');
+    }
+    public function updateAdminPassword($data)
+    {
+        $authUser = userAuth();
+        $user = Admin::where('type', AdminStatus::B2B)->findOrFail($authUser->id);
+        $user->update([
+            'password' => Hash::make($data->password),
+        ]);
+        $data = new AdminUserResource($user);
+
+        return $this->success(null, 'Password updated');
     }
 }
