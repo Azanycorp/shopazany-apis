@@ -17,6 +17,7 @@ use App\Enum\ProductStatus;
 use App\Models\B2bWishList;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
+use App\Models\Configuration;
 use App\Models\B2BRequestRefund;
 use App\Enum\RefundRequestStatus;
 use Illuminate\Support\Facades\DB;
@@ -566,6 +567,7 @@ class AdminService
 
         return $this->success('Settings updated');
     }
+
     public function updateAdminPassword($data)
     {
         $authUser = userAuth();
@@ -576,5 +578,42 @@ class AdminService
         $data = new AdminUserResource($user);
 
         return $this->success(null, 'Password updated');
+    }
+
+    public function getConfigDetails()
+    {
+        $authUser = userAuth();
+        $user = Admin::where('type', AdminStatus::B2B)->findOrFail($authUser->id);
+        $user->update([
+            'password' => Hash::make($data->password),
+        ]);
+        $data = new AdminUserResource($user);
+
+        return $this->success(null, 'Password updated');
+    }
+
+    public function updateConfigDetails($data)
+    {
+        $config = Configuration::first();
+        $config->update([
+            'usd_rate' => $data->usd_rate,
+            'company_profit' => $data->usd_rate,
+            'email_verify' => $data->usd_rate,
+            'currency_code' => $data->usd_rate,
+            'currency_symbol' => $data->usd_rate,
+            'promotion_start_date' => $data->usd_rate,
+            'promotion_end_date' => $data->usd_rate,
+            'promo_type' => $data->usd_rate,
+            'jolly_promo' => $data->usd_rate,
+            'min_deposit' => $data->usd_rate,
+            'max_deposit' => $data->usd_rate,
+            'min_withdrawal' => $data->usd_rate,
+            'max_withdrawal' => $data->usd_rate,
+            'withdrawal_fee' => $data->usd_rate,
+            'seller_perc' => $data->usd_rate,
+            'paystack_perc' => $data->usd_rate,
+            'paystack_fixed' => $data->usd_rate,
+        ]);
+        return $this->success(null, 'Details updated');
     }
 }
