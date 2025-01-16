@@ -33,11 +33,11 @@ Route::middleware(['throttle:apis'])->group(function () {
             Route::post('/buyer/signup', 'buyerOnboarding');
         });
 
-    Route::prefix('b2b')->controller(B2BController::class)->group(function () {
-        Route::post('/business/information', 'businessInformation');
-        Route::get('/products', 'getProducts');
-        Route::get('/product/{slug}', 'getProductDetail');
-    });
+    // Route::prefix('b2b')->controller(B2BController::class)->group(function () {
+    //     Route::post('/business/information', 'businessInformation');
+    //     Route::get('/products', 'getProducts');
+    //     Route::get('/product/{slug}', 'getProductDetail');
+    // });
 });
 
 Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function () {

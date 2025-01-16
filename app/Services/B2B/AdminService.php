@@ -589,6 +589,7 @@ class AdminService
     public function updateConfigDetails($data)
     {
         $config = Configuration::first();
+
         if ($config) {
             $config->update([
                 'usd_rate' => $data->usd_rate,
@@ -625,7 +626,8 @@ class AdminService
             'seller_perc' => $data->seller_perc,
             'paystack_perc' => $data->paystack_perc,
             'paystack_fixed' => $data->paystack_fixed,
-        ]);
+	]);
+
         return $this->success(null, 'Details updated');
     }
 }
