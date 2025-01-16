@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\B2BController;
 use App\Http\Controllers\Api\B2BSellerController;
+use App\Http\Controllers\Api\B2BPaymentController;
 use App\Http\Controllers\Api\B2B\B2BBuyerController;
 use App\Http\Controllers\Api\B2B\B2BAccountController;
 
@@ -13,6 +14,8 @@ use App\Http\Controllers\Api\B2B\B2BAccountController;
 
 // B2B
 Route::middleware(['throttle:apis'])->group(function () {
+    //webhook
+    Route::post('/b2b/payment/webhook', [B2BPaymentController::class, 'webhook']);
     Route::prefix('b2b/connect')
         ->controller(B2BAccountController::class)
         ->group(function () {
@@ -121,6 +124,7 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function () {
         Route::get('/profile', 'profile');
         Route::post('/edit-account', 'editAccount');
         Route::patch('/change-password', 'changePassword');
+        Route::get('/company-info', 'companyInfo');
         Route::post('/edit-company', 'editCompany');
     });
 });
