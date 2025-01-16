@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -13,7 +14,7 @@ return new class extends Migration
     {
         Schema::table('admins', function (Blueprint $table) {
             if (DB::connection()->getDriverName() === 'mysql') {
-                $table->enum('type', ['b2b_admin', 'b2c_admin'])->after('email')->default('b2c_admin');
+                $table->enum('type', ['b2b_admin', 'b2c_admin'])->default('b2c_admin')->after('email');
             }
         });
     }
