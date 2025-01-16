@@ -124,6 +124,7 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function () {
         Route::get('/profile', 'profile');
         Route::post('/edit-account', 'editAccount');
         Route::patch('/change-password', 'changePassword');
+        Route::get('/company-info', 'companyInfo');
         Route::post('/edit-company', 'editCompany');
     });
 });
