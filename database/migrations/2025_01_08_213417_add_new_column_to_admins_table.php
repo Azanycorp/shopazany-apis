@@ -12,8 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('admins', function (Blueprint $table) {
-            $table->enum('type', ['b2b_admin', 'b2c_admin'])->after('email')->default('b2c_admin');
-
+            if (DB::connection()->getDriverName() === 'mysql') {
+                $table->enum('type', ['b2b_admin', 'b2c_admin'])->after('email')->default('b2c_admin');
+            }
         });
     }
 
