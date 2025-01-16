@@ -13,7 +13,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('admins', function (Blueprint $table) {
-            if (DB::connection()->getDriverName() === 'mysql') {
+            if (DB::connection()->getDriverName() === 'mysql' && !Schema::hasColumn('admins', 'type')) {
                 $table->enum('type', ['b2b_admin', 'b2c_admin'])->default('b2c_admin')->after('email');
             }
         });
