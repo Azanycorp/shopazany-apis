@@ -50,4 +50,12 @@ class B2BAdminController extends Controller
     {
         return $this->adminService->enableTwoFactor($request);
     }
+    public function getConfigDetails()
+    {
+        return $this->adminService->getConfigDetails();
+    }
+    public function UpdateConfigDetails(Request $request)
+    {
+        return $this->adminService->UpdateConfigDetails($request);
+    }
 }

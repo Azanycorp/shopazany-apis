@@ -134,10 +134,9 @@ class SellerService extends Controller
             $user->update([
                 'password' => bcrypt($request->new_password),
             ]);
-
             return $this->success(null, 'Password Successfully Updated');
         } else {
-            return $this->error(null, 422, 'Old Password did not match');
+            return $this->error(null,'Old Password did not match',422);
         }
     }
 

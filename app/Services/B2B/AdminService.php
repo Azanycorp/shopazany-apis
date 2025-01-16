@@ -582,37 +582,49 @@ class AdminService
 
     public function getConfigDetails()
     {
-        $authUser = userAuth();
-        $user = Admin::where('type', AdminStatus::B2B)->findOrFail($authUser->id);
-        $user->update([
-            'password' => Hash::make($data->password),
-        ]);
-        $data = new AdminUserResource($user);
-
-        return $this->success(null, 'Password updated');
+        $config = Configuration::first();
+        return $this->success($config, 'Config details');
     }
 
     public function updateConfigDetails($data)
     {
         $config = Configuration::first();
-        $config->update([
+        if ($config) {
+            $config->update([
+                'usd_rate' => $data->usd_rate,
+                'company_profit' => $data->company_profit,
+                'email_verify' => $data->email_verify,
+                'currency_code' => $data->currency_code,
+                'currency_symbol' => $data->currency_symbol,
+                'promotion_start_date' => $data->promotion_start_date,
+                'promotion_end_date' => $data->promotion_end_date,
+                'min_deposit' => $data->min_deposit,
+                'max_deposit' => $data->max_deposit,
+                'min_withdrawal' => $data->min_withdrawal,
+                'max_withdrawal' => $data->max_withdrawal,
+                'withdrawal_fee' => $data->withdrawal_fee,
+                'seller_perc' => $data->seller_perc,
+                'paystack_perc' => $data->paystack_perc,
+                'paystack_fixed' => $data->paystack_fixed,
+            ]);
+
+        }
+        $config = Configuration::create([
             'usd_rate' => $data->usd_rate,
-            'company_profit' => $data->usd_rate,
-            'email_verify' => $data->usd_rate,
-            'currency_code' => $data->usd_rate,
-            'currency_symbol' => $data->usd_rate,
-            'promotion_start_date' => $data->usd_rate,
-            'promotion_end_date' => $data->usd_rate,
-            'promo_type' => $data->usd_rate,
-            'jolly_promo' => $data->usd_rate,
-            'min_deposit' => $data->usd_rate,
-            'max_deposit' => $data->usd_rate,
-            'min_withdrawal' => $data->usd_rate,
-            'max_withdrawal' => $data->usd_rate,
-            'withdrawal_fee' => $data->usd_rate,
-            'seller_perc' => $data->usd_rate,
-            'paystack_perc' => $data->usd_rate,
-            'paystack_fixed' => $data->usd_rate,
+            'company_profit' => $data->company_profit,
+            'email_verify' => $data->email_verify,
+            'currency_code' => $data->currency_code,
+            'currency_symbol' => $data->currency_symbol,
+            'promotion_start_date' => $data->promotion_start_date,
+            'promotion_end_date' => $data->promotion_end_date,
+            'min_deposit' => $data->min_deposit,
+            'max_deposit' => $data->max_deposit,
+            'min_withdrawal' => $data->min_withdrawal,
+            'max_withdrawal' => $data->max_withdrawal,
+            'withdrawal_fee' => $data->withdrawal_fee,
+            'seller_perc' => $data->seller_perc,
+            'paystack_perc' => $data->paystack_perc,
+            'paystack_fixed' => $data->paystack_fixed,
         ]);
         return $this->success(null, 'Details updated');
     }
