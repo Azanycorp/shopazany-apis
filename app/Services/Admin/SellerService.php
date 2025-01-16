@@ -18,7 +18,7 @@ class SellerService
         $searchQuery = request()->input('search');
         $approvedQuery = request()->query('approved');
 
-        $users = User::with(['products'])
+        $users = User::with(['products', 'b2bProducts', 'bankAccount', 'wallet'])
             ->where('type', UserType::SELLER)
             ->when($searchQuery, function ($queryBuilder) use ($searchQuery) {
                 $queryBuilder->where(function($subQuery) use ($searchQuery) {
