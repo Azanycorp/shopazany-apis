@@ -26,7 +26,7 @@ use App\Http\Controllers\Api\B2B\B2BAdminSellerController;
 use App\Http\Controllers\Api\B2B\B2BBannerPromoController;
 use App\Http\Controllers\Api\B2B\ProductCategoryController;
 
-Route::controller(AdminAuthController::class)->group(function () {
+Route::prefix('/connect')->controller(AdminAuthController::class)->group(function () {
     Route::post('/login', 'login');
     Route::post('/forgot/password', 'forgot');
     Route::post('/reset/password', 'reset');
