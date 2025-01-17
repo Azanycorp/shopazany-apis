@@ -210,7 +210,7 @@ class SellerService extends Controller
     {
         $user = User::find($request->user_id);
 
-        if (! $user) {
+        if (!$user) {
             return $this->error(null, "User not found", 404);
         }
 
