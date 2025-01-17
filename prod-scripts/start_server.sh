@@ -17,9 +17,6 @@ git pull origin deploy --rebase
 # composer update
 composer update
 
-# composer update
-composer update
-
 # clear php cache
 php artisan optimize
 
