@@ -10,7 +10,8 @@ echo "Cleaning up the deployment directory..."
 find /var/www/AZANY-BE-2024 -mindepth 1 \
     -not -name '.env' \
     -not -name '.editorconfig' \
-    -exec rm -rf {} +
+    -not -path '/var/www/AZANY-BE-2024/vendor/*' \
+    -exec rm -rf {} + 2>/dev/null
 
 echo "Cleanup completed."
 
