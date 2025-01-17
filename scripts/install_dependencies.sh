@@ -3,18 +3,6 @@
 # Fail the script if any command fails
 set -e
 
-# Step 1: Clean up the deployment directory
-echo "Cleaning up the deployment directory..."
-
-# Remove all files except `.env` and `.editorconfig`
-find /var/www/AZANY-BE-2024 -mindepth 1 \
-    -not -name '.env' \
-    -not -name '.editorconfig' \
-    -not -path '/var/www/AZANY-BE-2024/vendor/*' \
-    -exec rm -rf {} + 2>/dev/null
-
-echo "Cleanup completed."
-
 echo "Updating package lists..."
 
 yum update -y
