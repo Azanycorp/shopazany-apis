@@ -59,4 +59,5 @@ class B2BAdminController extends Controller
     {
         return $this->adminService->UpdateConfigDetails($request);
     }
+
 }
