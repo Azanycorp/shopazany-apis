@@ -26,7 +26,7 @@ use App\Http\Controllers\Api\B2B\B2BAdminSellerController;
 use App\Http\Controllers\Api\B2B\B2BBannerPromoController;
 use App\Http\Controllers\Api\B2B\ProductCategoryController;
 
-Route::prefix('connect')->controller(AdminAuthController::class)->group(function () {
+Route::prefix('/admin')->controller(AdminAuthController::class)->group(function () {
     Route::post('/login', 'login');
     Route::post('/forgot/password', 'forgot');
     Route::post('/reset/password', 'reset');
@@ -198,9 +198,6 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function () {
     Route::resource('settings/faq', FaqController::class);
 
     Route::get('/generate/users/link', [ApiController::class, 'referralGenerate']);
-
-
-
     //b2b admin
     Route::prefix('b2b')->group(function () {
 
@@ -208,6 +205,8 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function () {
         Route::post('/update-profile', [B2BAdminController::class, 'updateAdminProfile']);
         Route::post('/update-password', [B2BAdminController::class, 'updateAdminPassword']);
         Route::post('/enable-2fa', [B2BAdminController::class, 'enable2FA']);
+        Route::get('/get-config', [B2BAdminController::class, 'getConfigDetails']);
+        Route::post('/update-config', [B2BAdminController::class, 'updateConfigDetails']);
 
         Route::prefix('category')->controller(ProductCategoryController::class)->group(function () {
             Route::post('/create', 'createCategory');

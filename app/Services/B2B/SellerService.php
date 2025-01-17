@@ -134,10 +134,9 @@ class SellerService extends Controller
             $user->update([
                 'password' => bcrypt($request->new_password),
             ]);
-
             return $this->success(null, 'Password Successfully Updated');
         } else {
-            return $this->error(null, 422, 'Old Password did not match');
+            return $this->error(null,'Old Password did not match',422);
         }
     }
 
@@ -209,7 +208,6 @@ class SellerService extends Controller
     }
     public function addProduct($request)
     {
-        return $request;
         $user = User::find($request->user_id);
 
         if (! $user) {
@@ -274,7 +272,7 @@ class SellerService extends Controller
 
     public function getAllProduct($request)
     {
-        $currentUserId = userAuthId();
+         $currentUserId = userAuthId();
 
         if ($currentUserId != $request->user_id) {
             return $this->error(null, "Unauthorized action.", 401);
@@ -386,7 +384,7 @@ class SellerService extends Controller
 
     public function getAnalytics($user_id)
     {
-        $currentUserId = userAuthId();
+         $currentUserId = userAuthId();
 
         if ($currentUserId != $user_id) {
             return $this->error(null, "Unauthorized action.", 401);

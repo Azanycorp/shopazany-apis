@@ -17,6 +17,7 @@ use App\Enum\ProductStatus;
 use App\Models\B2bWishList;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
+use App\Models\Configuration;
 use App\Models\B2BRequestRefund;
 use App\Enum\RefundRequestStatus;
 use Illuminate\Support\Facades\DB;
@@ -566,6 +567,7 @@ class AdminService
 
         return $this->success('Settings updated');
     }
+
     public function updateAdminPassword($data)
     {
         $authUser = userAuth();
@@ -576,5 +578,54 @@ class AdminService
         $data = new AdminUserResource($user);
 
         return $this->success(null, 'Password updated');
+    }
+
+    public function getConfigDetails()
+    {
+        $config = Configuration::first();
+        return $this->success($config, 'Config details');
+    }
+
+    public function updateConfigDetails($data)
+    {
+        $config = Configuration::first();
+        if ($config) {
+            $config->update([
+                'usd_rate' => $data->usd_rate,
+                'company_profit' => $data->company_profit,
+                'email_verify' => $data->email_verify,
+                'currency_code' => $data->currency_code,
+                'currency_symbol' => $data->currency_symbol,
+                'promotion_start_date' => $data->promotion_start_date,
+                'promotion_end_date' => $data->promotion_end_date,
+                'min_deposit' => $data->min_deposit,
+                'max_deposit' => $data->max_deposit,
+                'min_withdrawal' => $data->min_withdrawal,
+                'max_withdrawal' => $data->max_withdrawal,
+                'withdrawal_fee' => $data->withdrawal_fee,
+                'seller_perc' => $data->seller_perc,
+                'paystack_perc' => $data->paystack_perc,
+                'paystack_fixed' => $data->paystack_fixed,
+            ]);
+
+        }
+        $config = Configuration::create([
+            'usd_rate' => $data->usd_rate,
+            'company_profit' => $data->company_profit,
+            'email_verify' => $data->email_verify,
+            'currency_code' => $data->currency_code,
+            'currency_symbol' => $data->currency_symbol,
+            'promotion_start_date' => $data->promotion_start_date,
+            'promotion_end_date' => $data->promotion_end_date,
+            'min_deposit' => $data->min_deposit,
+            'max_deposit' => $data->max_deposit,
+            'min_withdrawal' => $data->min_withdrawal,
+            'max_withdrawal' => $data->max_withdrawal,
+            'withdrawal_fee' => $data->withdrawal_fee,
+            'seller_perc' => $data->seller_perc,
+            'paystack_perc' => $data->paystack_perc,
+            'paystack_fixed' => $data->paystack_fixed,
+        ]);
+        return $this->success(null, 'Details updated');
     }
 }
