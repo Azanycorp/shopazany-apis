@@ -134,10 +134,9 @@ class SellerService extends Controller
             $user->update([
                 'password' => bcrypt($request->new_password),
             ]);
-
             return $this->success(null, 'Password Successfully Updated');
         } else {
-            return $this->error(null, 422, 'Old Password did not match');
+            return $this->error(null,'Old Password did not match',422);
         }
     }
 
@@ -209,7 +208,6 @@ class SellerService extends Controller
     }
     public function addProduct($request)
     {
-        return $request;
         $user = User::find($request->user_id);
 
         if (! $user) {
@@ -247,7 +245,9 @@ class SellerService extends Controller
                 'unit_price' => $request->unit,
                 'quantity' => $request->quantity,
                 'availability_quantity' => $request->quantity,
+                'default_currency' => $request->default_currency,
                 'fob_price' => $request->fob_price,
+                'status' => 'active',
                 'country_id' => is_int($user->country) ? $user->country : 160,
             ];
 
@@ -272,7 +272,7 @@ class SellerService extends Controller
 
     public function getAllProduct($request)
     {
-        $currentUserId = userAuthId();
+         $currentUserId = userAuthId();
 
         if ($currentUserId != $request->user_id) {
             return $this->error(null, "Unauthorized action.", 401);
@@ -346,6 +346,7 @@ class SellerService extends Controller
             'minimum_order_quantity' => $request->minimum_order_quantity,
             'unit_price' => $request->unit,
             'quantity' => $request->quantity,
+            'default_currency' => $request->default_currency,
             'available_quantity' => $request->quantity - $prod->sold,
             'fob_price' => $request->fob_price,
             'country_id' => $user->country ?? 160,
@@ -383,7 +384,7 @@ class SellerService extends Controller
 
     public function getAnalytics($user_id)
     {
-        $currentUserId = userAuthId();
+         $currentUserId = userAuthId();
 
         if ($currentUserId != $user_id) {
             return $this->error(null, "Unauthorized action.", 401);

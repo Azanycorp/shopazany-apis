@@ -236,17 +236,17 @@ class BuyerService
 
     public function getProductDetail($slug)
     {
-        $product = B2BProduct::with(['category','user', 'country', 'b2bProductImages','b2bProdctReview'])
+        $product = B2BProduct::with(['category', 'user', 'country', 'b2bProductImages', 'b2bProdctReview'])
             ->where('slug', $slug)
             ->firstOrFail();
 
-        $moreFromSeller = B2BProduct::with(['category','user','subCategory', 'country', 'b2bProductImages','b2bProdctReview'])
+        $moreFromSeller = B2BProduct::with(['category', 'user', 'subCategory', 'country', 'b2bProductImages', 'b2bProdctReview'])
             ->where('user_id', $product->user_id)->get();
 
-        $relatedProducts = B2BProduct::with(['category','user','subCategory', 'country', 'b2bProductImages','b2bProdctReview'])
+        $relatedProducts = B2BProduct::with(['category', 'user', 'subCategory', 'country', 'b2bProductImages', 'b2bProdctReview'])
             ->where('category_id', $product->category_id)->get();
 
-         $data = new B2BProductResource($product);
+        $data = new B2BProductResource($product);
 
         $response = [
             'data' => $data,
@@ -390,12 +390,18 @@ class BuyerService
         $startDate = now()->subDays(7); // 7 days ago
         $endDate = now(); // Current date and time
 
-        $rfqStats = Rfq::select(
-            DB::raw('COUNT(*) as total_rfqs'),
-            DB::raw('SUM(CASE WHEN status != ? THEN 1 ELSE 0 END) as rfq_accepted', [RfqStatus::PENDING]),
-            DB::raw('SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as deals_in_progress', [RfqStatus::IN_PROGRESS]),
-            DB::raw('SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as deals_completed', [RfqStatus::DELIVERED])
-        )
+        $rfqStats = DB::table('rfqs')
+            ->selectRaw("
+            COUNT(CASE WHEN status = ? THEN 1 END) AS pending_deals,
+            COUNT(CASE WHEN status = ? THEN 1 END) AS deals_inprogress,
+            COUNT(CASE WHEN status = ? THEN 1 END) AS deals_accepted,
+            COUNT(CASE WHEN status = ? THEN 1 END) AS deals_completed
+        ", [
+                RfqStatus::PENDING,
+                RfqStatus::IN_PROGRESS,
+                RfqStatus::SHIPPED,
+                RfqStatus::DELIVERED,
+            ])
             ->where('buyer_id', $currentUserId)
             ->first();
 
@@ -419,7 +425,7 @@ class BuyerService
             'partners' => $uniqueSellersCount,
             'rfq_sent' => $rfqStats->total_rfqs ?? 0,
             'rfq_accepted' => $rfqStats->rfq_accepted ?? 0,
-            'deals_in_progress' => $rfqStats->deals_in_progress ?? 0,
+            'deals_in_progress' => $rfqStats->deals_inprogress ?? 0,
             'deals_completed' => $rfqStats->deals_completed ?? 0,
             'recent_orders' => $recentOrders,
         ];
@@ -568,10 +574,10 @@ class BuyerService
     }
 
     //Account section
+
     public function profile()
     {
         $auth = userAuth();
-
         $user = User::with('b2bCompany')
             ->where('type', UserType::B2B_BUYER)
             ->find($auth->id);

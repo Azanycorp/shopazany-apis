@@ -91,6 +91,10 @@ class B2BBuyerController extends Controller
     {
         return $this->buyerService->profile();
     }
+    public function companyInfo()
+    {
+        return $this->buyerService->companyInfo();
+    }
 
     public function editAccount(Request $request)
     {

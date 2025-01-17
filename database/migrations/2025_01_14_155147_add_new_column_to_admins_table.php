@@ -13,8 +13,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('admins', function (Blueprint $table) {
-            if (DB::connection()->getDriverName() === 'mysql' && !Schema::hasColumn('admins', 'type')) {
-                $table->enum('type', ['b2b_admin', 'b2c_admin'])->default('b2c_admin')->after('email');
+            if (DB::connection()->getDriverName() === 'mysql') {
+                $table->string('type')->after('password')->comment('Handeles admin user type eg b2c,b2b for b2b_admin admin user and b2c_admin admin user')->change();
+
+                $table->integer('two_factor_enabled')->after('type')->default(0);
             }
         });
     }
@@ -25,7 +27,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('admins', function (Blueprint $table) {
-            $table->dropColumn('type');
+            //
         });
     }
 };
