@@ -10,11 +10,9 @@ use App\Http\Controllers\Controller;
 use App\Mail\SignUpVerifyMail;
 use App\Mail\UserWelcomeMail;
 use App\Models\Country;
-use App\Models\Coupon;
 use App\Models\User;
 use App\Trait\HttpResponse;
 use App\Trait\SignUp;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -27,7 +25,7 @@ class AuthService extends Controller
 
     public function login($request)
     {
-        
+
         return LoginService::AuthLogin($request);
     }
 
@@ -75,10 +73,6 @@ class AuthService extends Controller
 
             if ($referrer = $request->query('referrer')) {
                 $this->handleReferrer($referrer, $user);
-            }
-    
-            if ($coupon = $request->query('coupon')) {
-                $this->validateAndAssignCoupon($coupon, $user);
             }
 
             $description = "User with email: {$request->email} signed up";
@@ -168,6 +162,10 @@ class AuthService extends Controller
                 'is_verified' => 0,
                 'password' => bcrypt($request->password)
             ]);
+
+            if ($coupon = $request->query('coupon')) {
+                $this->validateAndAssignCoupon($coupon, $user);
+            }
 
             $description = "Seller with email address {$request->email} just signed up";
             $action = UserLog::CREATED;

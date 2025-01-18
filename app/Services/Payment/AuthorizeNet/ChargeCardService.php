@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\Payment\AuthorizeNet;
+namespace App\Services\Payment\B2B\AuthorizeNet;
 
 use App\Models\Cart;
 use App\Enum\UserLog;
@@ -14,6 +14,7 @@ use App\Actions\UserLogAction;
 use App\Mail\CustomerOrderMail;
 use App\Actions\PaymentLogAction;
 use App\Contracts\PaymentStrategy;
+use Illuminate\Support\Facades\Auth;
 use net\authorize\api\contract\v1 as AnetAPI;
 use net\authorize\api\controller as AnetController;
 
@@ -34,7 +35,7 @@ class ChargeCardService implements PaymentStrategy
 
     public function processPayment(array $paymentDetails)
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $orderNo = $this->orderNo;
         $orderNum = Str::random(8);
 

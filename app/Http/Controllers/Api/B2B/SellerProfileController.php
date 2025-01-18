@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api\B2B\Seller;
+namespace App\Http\Controllers\Api\B2B;
 
 use Illuminate\Http\Request;
 use App\Services\B2B\SellerService;

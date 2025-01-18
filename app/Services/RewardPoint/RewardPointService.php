@@ -35,7 +35,7 @@ class RewardPointService
 
     public function getPoints()
     {
-        $actions = Action::get(['id', 'name', 'slug', 'points']);
+        $actions = Action::select('id', 'name', 'slug', 'points')->get();
 
         $data = $actions->map(function($action) {
             return [

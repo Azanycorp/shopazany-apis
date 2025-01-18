@@ -5,16 +5,19 @@ namespace App\Services\B2B;
 use Carbon\Carbon;
 use App\Models\Rfq;
 use App\Models\User;
+use App\Models\Admin;
 use App\Enum\UserType;
 use App\Enum\UserStatus;
 use App\Models\B2bOrder;
 use App\Models\B2bQuote;
+use App\Enum\AdminStatus;
 use App\Enum\OrderStatus;
 use App\Models\B2BProduct;
 use App\Enum\ProductStatus;
 use App\Models\B2bWishList;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
+use App\Models\Configuration;
 use App\Models\B2BRequestRefund;
 use App\Enum\RefundRequestStatus;
 use Illuminate\Support\Facades\DB;
@@ -23,6 +26,7 @@ use Illuminate\Support\Facades\Hash;
 use App\Http\Resources\SellerResource;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Resources\CustomerResource;
+use App\Http\Resources\AdminUserResource;
 use App\Http\Resources\B2BSellerResource;
 use App\Http\Resources\B2BProductResource;
 use App\Repositories\B2BProductRepository;
@@ -448,7 +452,7 @@ class AdminService
 
     public function viewBuyer($id)
     {
-        $user = User::select('id','first_name','last_name','email','image')->with('b2bCompany')->where('type', UserType::B2B_BUYER)
+        $user = User::select('id', 'first_name', 'last_name', 'email', 'image')->with('b2bCompany')->where('type', UserType::B2B_BUYER)
             ->find($id);
 
         if (!$user) {
@@ -524,5 +528,105 @@ class AdminService
         $user->save();
 
         return $this->success(null, "User has been blocked successfully");
+    }
+
+    //CMS / Promo and banners
+
+
+
+    public function adminProfile()
+    {
+        $authUser = userAuth();
+        $user = Admin::where('type', AdminStatus::B2B)->findOrFail($authUser->id);
+        $data = new AdminUserResource($user);
+
+        return $this->success($data, 'Profile detail');
+    }
+    public function updateAdminProfile($data)
+    {
+        $authUser = userAuth();
+        $user = Admin::where('type', AdminStatus::B2B)->findOrFail($authUser->id);
+        $user->update([
+            'first_name' => $data->first_name,
+            'last_name' => $data->last_name,
+            'email' => $data->email,
+            'phone_number' => $data->phone_number,
+        ]);
+        $data = new AdminUserResource($user);
+
+        return $this->success($data, 'Profile detail');
+    }
+
+    public function enableTwoFactor($data)
+    {
+        $authUser = userAuth();
+        $user = Admin::where('type', AdminStatus::B2B)->findOrFail($authUser->id);
+        $user->update([
+            'two_factor_enabled' => $data->two_factor_enabled,
+        ]);
+
+        return $this->success('Settings updated');
+    }
+
+    public function updateAdminPassword($data)
+    {
+        $authUser = userAuth();
+        $user = Admin::where('type', AdminStatus::B2B)->findOrFail($authUser->id);
+        $user->update([
+            'password' => Hash::make($data->password),
+        ]);
+        $data = new AdminUserResource($user);
+
+        return $this->success(null, 'Password updated');
+    }
+
+    public function getConfigDetails()
+    {
+        $config = Configuration::first();
+        return $this->success($config, 'Config details');
+    }
+
+    public function updateConfigDetails($data)
+    {
+        $config = Configuration::first();
+
+        if ($config) {
+            $config->update([
+                'usd_rate' => $data->usd_rate,
+                'company_profit' => $data->company_profit,
+                'email_verify' => $data->email_verify,
+                'currency_code' => $data->currency_code,
+                'currency_symbol' => $data->currency_symbol,
+                'promotion_start_date' => $data->promotion_start_date,
+                'promotion_end_date' => $data->promotion_end_date,
+                'min_deposit' => $data->min_deposit,
+                'max_deposit' => $data->max_deposit,
+                'min_withdrawal' => $data->min_withdrawal,
+                'max_withdrawal' => $data->max_withdrawal,
+                'withdrawal_fee' => $data->withdrawal_fee,
+                'seller_perc' => $data->seller_perc,
+                'paystack_perc' => $data->paystack_perc,
+                'paystack_fixed' => $data->paystack_fixed,
+            ]);
+
+        }
+        $config = Configuration::create([
+            'usd_rate' => $data->usd_rate,
+            'company_profit' => $data->company_profit,
+            'email_verify' => $data->email_verify,
+            'currency_code' => $data->currency_code,
+            'currency_symbol' => $data->currency_symbol,
+            'promotion_start_date' => $data->promotion_start_date,
+            'promotion_end_date' => $data->promotion_end_date,
+            'min_deposit' => $data->min_deposit,
+            'max_deposit' => $data->max_deposit,
+            'min_withdrawal' => $data->min_withdrawal,
+            'max_withdrawal' => $data->max_withdrawal,
+            'withdrawal_fee' => $data->withdrawal_fee,
+            'seller_perc' => $data->seller_perc,
+            'paystack_perc' => $data->paystack_perc,
+            'paystack_fixed' => $data->paystack_fixed,
+	]);
+        return $this->success(null, 'Details updated');
     }
 }

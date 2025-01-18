@@ -18,6 +18,8 @@ class AdminUserResource extends JsonResource
             'id' => (int)$this->id,
             'name' => (string)$this->first_name . ' ' . $this->last_name,
             'email' => (string)$this->email,
+            'phone_number' => (string)$this->phone_number,
+            'type' => (string)$this->type,
             'role' => $this?->roles->first()?->name,
             'date' => (string)$this->created_at,
             // 'role' => $this->roles ? $this->roles->map(function ($role) {

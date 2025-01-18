@@ -46,7 +46,7 @@ trait SignUp
             throw new \Exception('Coupon has already been used');
         }
 
-        if ($coupon->expires_at && $coupon->expires_at < now()) {
+        if ($coupon->expire_at && $coupon->expire_at < now()) {
             throw new \Exception('Coupon has expired');
         }
 

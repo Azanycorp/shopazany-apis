@@ -110,7 +110,7 @@ class ProductService
             $query->where('name', 'like', '%' . request('search') . '%');
         }
 
-        $query->with('productimages');
+        $query->with(['productimages', 'category', 'subCategory', 'brand', 'color', 'unit', 'size', 'shopCountry']);
 
         $products = $query->paginate(25);
 

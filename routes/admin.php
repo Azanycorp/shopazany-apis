@@ -13,8 +13,8 @@ use App\Http\Controllers\Api\FinanceController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\AdminAuthController;
-use App\Http\Controllers\Api\AdminCouponController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\AdminCouponController;
 use App\Http\Controllers\Api\AdminSellerController;
 use App\Http\Controllers\Api\BannerPromoController;
 use App\Http\Controllers\Api\RewardPointController;
@@ -23,9 +23,10 @@ use App\Http\Controllers\Api\B2B\B2BAdminController;
 use App\Http\Controllers\Api\AdminCustomerController;
 use App\Http\Controllers\Api\B2B\B2BAdminBuyerController;
 use App\Http\Controllers\Api\B2B\B2BAdminSellerController;
+use App\Http\Controllers\Api\B2B\B2BBannerPromoController;
 use App\Http\Controllers\Api\B2B\ProductCategoryController;
 
-Route::prefix('connect')->controller(AdminAuthController::class)->group(function () {
+Route::prefix('/connect')->controller(AdminAuthController::class)->group(function () {
     Route::post('/login', 'login');
     Route::post('/forgot/password', 'forgot');
     Route::post('/reset/password', 'reset');
@@ -197,11 +198,16 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function () {
     Route::resource('settings/faq', FaqController::class);
 
     Route::get('/generate/users/link', [ApiController::class, 'referralGenerate']);
-
-
-
     //b2b admin
     Route::prefix('b2b')->group(function () {
+
+        Route::get('/profile', [B2BAdminController::class, 'adminProfile']);
+        Route::post('/update-profile', [B2BAdminController::class, 'updateAdminProfile']);
+        Route::post('/update-password', [B2BAdminController::class, 'updateAdminPassword']);
+        Route::post('/enable-2fa', [B2BAdminController::class, 'enable2FA']);
+        Route::get('/get-config', [B2BAdminController::class, 'getConfigDetails']);
+        Route::post('/update-config', [B2BAdminController::class, 'updateConfigDetails']);
+
         Route::prefix('category')->controller(ProductCategoryController::class)->group(function () {
             Route::post('/create', 'createCategory');
             Route::get('/all', 'adminCategories');
@@ -215,6 +221,20 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function () {
             Route::get('/{category_id}/subcategory', 'getSubcategory');
             Route::patch('/subcategory/status/{sub_category_id}', 'subStatus');
             Route::delete('/subcategory/delete/{id}', 'deleteSubCategory');
+        });
+
+        Route::prefix('banner')->controller(B2BBannerPromoController::class)->group(function () {
+            Route::post('/add', 'addBanner');
+            Route::get('/', 'banners');
+            Route::get('/{id}', 'getOneBanner');
+            Route::post('/edit/{id}', 'editBanner');
+            Route::delete('/delete/{id}', 'deleteBanner');
+        });
+
+        Route::prefix('promo')->controller(B2BBannerPromoController::class)->group(function () {
+            Route::post('/add', 'addPromo');
+            Route::get('/', 'promos');
+            Route::delete('/delete/{id}', 'deletePromo');
         });
 
         //buyers
