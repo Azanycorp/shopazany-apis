@@ -86,6 +86,12 @@ class B2BBuyerController extends Controller
         return $this->buyerService->addPreview($request);
     }
 
+    //Product Review
+    public function likeProduct(Request $request)
+    {
+        return $this->buyerService->likeProduct($request);
+    }
+
     //Account section
     public function profile()
     {
@@ -104,6 +110,10 @@ class B2BBuyerController extends Controller
     public function changePassword(ChangePasswordRequest $request)
     {
         return $this->buyerService->changePassword($request);
+    }
+    public function change2Fa(Request $request)
+    {
+        return $this->buyerService->change2FA($request);
     }
 
     public function editCompany(Request $request)
