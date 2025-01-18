@@ -80,7 +80,6 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function () {
 
             // Product
             Route::prefix('product')->group(function () {
-                Route::get('/{user_id}', 'getAllProduct');
                 Route::post('/add', 'addProduct');
                 Route::get('/analytic/{user_id}', 'getAnalytics');
                 Route::get('/details/{product_id}/{user_id}', 'getProductById');
@@ -88,6 +87,7 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function () {
                 Route::delete('/delete/{user_id}/{product_id}', 'deleteProduct');
                 Route::post('import', 'productImport');
                 Route::get('export/{user_id}/{type}', 'export');
+                Route::get('/{user_id}', 'getAllProduct');
             });
 
             // Shipping
