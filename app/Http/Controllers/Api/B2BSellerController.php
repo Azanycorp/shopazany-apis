@@ -18,10 +18,6 @@ class B2BSellerController extends Controller
         $this->service = $service;
     }
 
-    // public function deletePaymentMethod($id)
-    // {
-    //     return $this->service->deletePaymentMethod($id);
-    // }
     public function productImport(Request $request)
     {
         return $this->service->b2bproductImport($request);
