@@ -310,7 +310,6 @@ class BuyerService
             B2bQuote::where('buyer_id', $userId)->delete();
             return $this->success(null, 'rfq sent successfully');
         } catch (\Exception $e) {
-            return $e;
             DB::rollBack();
             return $this->error(null, 'transaction failed, please try again', 500);
         }

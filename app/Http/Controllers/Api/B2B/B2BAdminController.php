@@ -58,4 +58,22 @@ class B2BAdminController extends Controller
     {
         return $this->adminService->UpdateConfigDetails($request);
     }
+
+    //Withdrawal Requests
+    public function widthrawalRequests()
+    {
+        return $this->adminService->widthrawalRequests();
+    }
+    public function viewWidthrawalRequest($id)
+    {
+        return $this->adminService->viewWidthrawalRequest($id);
+    }
+    public function approveWidthrawalRequest($id)
+    {
+        return $this->adminService->approveWidthrawalRequest($id);
+    }
+    public function cancelWidthrawalRequest($id)
+    {
+        return $this->adminService->cancelWidthrawalRequest($id);
+    }
 }

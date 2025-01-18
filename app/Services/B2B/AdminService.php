@@ -7,12 +7,14 @@ use App\Models\Rfq;
 use App\Models\User;
 use App\Models\Admin;
 use App\Enum\UserType;
+use App\Models\Payout;
 use App\Enum\UserStatus;
 use App\Models\B2bOrder;
 use App\Models\B2bQuote;
 use App\Enum\AdminStatus;
 use App\Enum\OrderStatus;
 use App\Models\B2BProduct;
+use App\Models\UserWallet;
 use App\Enum\ProductStatus;
 use App\Models\B2bWishList;
 use App\Trait\HttpResponse;
@@ -607,7 +609,6 @@ class AdminService
                 'paystack_perc' => $data->paystack_perc,
                 'paystack_fixed' => $data->paystack_fixed,
             ]);
-
         }
         $config = Configuration::create([
             'usd_rate' => $data->usd_rate,
@@ -627,5 +628,80 @@ class AdminService
             'paystack_fixed' => $data->paystack_fixed,
         ]);
         return $this->success(null, 'Details updated');
+    }
+
+    //seller withdrawal request
+    public function widthrawalRequests()
+    {
+        $payouts =  Payout::select(['id','seller_id','amount','status','created_at'])->with(['user' => function ($query) {
+            $query->where('type', UserType::B2B_SELLER)->select('id','first_name', 'last_name');
+        }])->latest('id')->get();
+        if (count($payouts) < 1) {
+            return $this->error(null, 'No record found');
+        }
+        return $this->success($payouts, 'Withdrawal requests');
+    }
+
+    public function viewWidthrawalRequest($id)
+    {
+        $payout =  Payout::with(['user' => function ($query) {
+            $query->where('type', UserType::B2B_SELLER)->select('id','first_name', 'last_name');
+        }])->find($id);
+        if (!$payout) {
+            return $this->error(null, 'No record found');
+        }
+        return $this->success($payout, 'request details');
+    }
+
+    public function approveWidthrawalRequest($id)
+    {
+        $payout =  Payout::find($id);
+        if (!$payout) {
+            return $this->error(null, 'No record found');
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $payout->update([
+                'status' => 'paid',
+                'date_paid' => now()->toDateString(),
+            ]);
+
+            DB::commit();
+            return $this->success(null, 'request Approved successfully');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return $this->error(null, 'transaction failed, please try again', 500);
+        }
+    }
+
+    public function cancelWidthrawalRequest($id)
+    {
+        $payout =  Payout::find($id);
+        if (!$payout) {
+            return $this->error(null, 'No record found');
+        }
+        $wallet = UserWallet::where('user_id', $payout->seller_id)->first();
+
+        if (!$wallet) {
+            return $this->error(null, 'No account found');
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $wallet->master_wallet += $payout->amount;
+            $wallet->save();
+            $payout->update([
+                'status' => 'cancelled',
+            ]);
+
+            DB::commit();
+            return $this->success(null, 'request cancelled');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return $this->error(null, 'transaction failed, please try again', 500);
+        }
     }
 }
