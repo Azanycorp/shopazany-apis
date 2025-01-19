@@ -632,7 +632,7 @@ class SellerService extends Controller
                 'id' => $product->id,
                 'name' => $product->name,
                 'slug' => $product->slug,
-                'front_image' => $product->front_image,
+                'front_image' => $product->image,
                 'sold' => $item->total_quantity
             ];
         });
