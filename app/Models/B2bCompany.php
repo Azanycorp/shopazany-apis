@@ -20,6 +20,7 @@ class B2bCompany extends Model
         'city',
         'address',
         'state',
+        'logo'
     ];
 
     protected function casts(): array

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\B2bProdctLike;
 use App\Models\B2bProdctReview;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -42,6 +43,10 @@ class B2BProduct extends Model
         ];
     }
 
+    public function b2bLikes(): HasMany
+    {
+        return $this->hasMany(B2bProdctLike::class, 'product_id');
+    }
     public function b2bProdctReview(): HasMany
     {
         return $this->hasMany(B2bProdctReview::class, 'product_id');

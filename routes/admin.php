@@ -198,6 +198,7 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function () {
     Route::resource('settings/faq', FaqController::class);
 
     Route::get('/generate/users/link', [ApiController::class, 'referralGenerate']);
+
     //b2b admin
     Route::prefix('b2b')->group(function () {
 
@@ -269,6 +270,29 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function () {
                 Route::post('/update{id}', 'editSellerProduct');
                 Route::delete('/remove/{id}', 'removeSellerProduct');
             });
+        });
+
+        //Withdrawal requests
+        Route::prefix('widthrawal-request')->controller(B2BAdminController::class)->group(function () {
+            Route::get('/', 'widthrawalRequests');
+            Route::get('/view/{id}', 'viewWidthrawalRequest');
+            Route::get('/approve/{id}', 'approveWidthrawalRequest');
+            Route::get('/cancel/{id}', 'cancelWidthrawalRequest');
+        });
+
+        //Withdrawal method requests
+        Route::prefix('widthrawal-method-request')->controller(B2BAdminController::class)->group(function () {
+            Route::get('/', 'widthrawalMethods');
+            Route::get('/view/{id}', 'viewWidthrawalMethod');
+            Route::get('/approve/{id}', 'approveWidthrawalMethod');
+            Route::post('/reject', 'rejectWidthrawalMethod');
+        });
+        //Seller Product Approval requests
+        Route::prefix('product-approval-request')->controller(B2BAdminController::class)->group(function () {
+            Route::get('/', 'allProducts');
+            Route::get('/view/{id}', 'viewProduct');
+            Route::get('/approve/{id}', 'approveProduct');
+            Route::post('/reject', 'rejectProduct');
         });
 
         //Rfq

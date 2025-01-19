@@ -9,11 +9,13 @@ use App\Enum\RfqStatus;
 use App\Models\Payment;
 use App\Enum\UserStatus;
 use App\Models\B2bQuote;
+use App\Models\B2bCompany;
 use App\Models\B2BProduct;
 use App\Enum\ProductStatus;
 use App\Models\B2bWishList;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
+use App\Models\B2bProdctLike;
 use App\Models\B2bProdctReview;
 use App\Models\B2BRequestRefund;
 use App\Enum\RefundRequestStatus;
@@ -224,7 +226,7 @@ class BuyerService
 
     public function getProducts()
     {
-        $products = B2BProduct::with(['category','user','b2bProdctReview','subCategory', 'country', 'b2bProductImages'])
+        $products = B2BProduct::with(['category', 'user', 'b2bLikes', 'b2bProdctReview', 'subCategory', 'country', 'b2bProductImages'])
             ->where('status', ProductStatus::ACTIVE)
             ->get();
 
@@ -236,14 +238,14 @@ class BuyerService
 
     public function getProductDetail($slug)
     {
-        $product = B2BProduct::with(['category', 'user', 'country', 'b2bProductImages', 'b2bProdctReview'])
+        $product = B2BProduct::with(['category', 'user', 'b2bLikes', 'country', 'b2bProductImages', 'b2bProdctReview'])
             ->where('slug', $slug)
             ->firstOrFail();
 
-        $moreFromSeller = B2BProduct::with(['category', 'user', 'subCategory', 'country', 'b2bProductImages', 'b2bProdctReview'])
+        $moreFromSeller = B2BProduct::with(['category', 'user', 'b2bLikes', 'subCategory', 'country', 'b2bProductImages', 'b2bProdctReview'])
             ->where('user_id', $product->user_id)->get();
 
-        $relatedProducts = B2BProduct::with(['category', 'user', 'subCategory', 'country', 'b2bProductImages', 'b2bProdctReview'])
+        $relatedProducts = B2BProduct::with(['category', 'user', 'b2bLikes', 'subCategory', 'country', 'b2bProductImages', 'b2bProdctReview'])
             ->where('category_id', $product->category_id)->get();
 
         $data = new B2BProductResource($product);
@@ -286,15 +288,13 @@ class BuyerService
         DB::beginTransaction();
 
         try {
-            $rfqs = [];
 
             foreach ($quotes as $quote) {
-
                 if (empty($quote->product_data['unit_price']) || empty($quote->product_data['minimum_order_quantity'])) {
                     throw new \Exception('Invalid product data');
                 }
 
-                $rfqs[] = [
+                Rfq::create([
                     'buyer_id' => $quote->buyer_id,
                     'seller_id' => $quote->seller_id,
                     'quote_no' => strtoupper(Str::random(10) . $userId),
@@ -303,13 +303,11 @@ class BuyerService
                     'total_amount' => $quote->product_data['unit_price'] * $quote->product_data['minimum_order_quantity'],
                     'p_unit_price' => $quote->product_data['unit_price'],
                     'product_data' => $quote->product_data,
-                ];
+                ]);
             }
 
-            Rfq::insert($rfqs);
-            B2bQuote::where('buyer_id', $userId)->delete();
-
             DB::commit();
+            B2bQuote::where('buyer_id', $userId)->delete();
             return $this->success(null, 'rfq sent successfully');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -510,7 +508,8 @@ class BuyerService
     //send review request to vendor
     public function addPreview($data)
     {
-        $review = B2bProdctReview::where(['buyer_id' => Auth::id(), 'product_id' => $data->product_id])->first();
+        $userId = userAuthId();
+        $review = B2bProdctReview::where(['buyer_id' => $userId, 'product_id' => $data->product_id])->first();
         if ($review) {
             $review->update([
                 'product_id' => $data->product_id,
@@ -522,12 +521,27 @@ class BuyerService
         }
         B2bProdctReview::create([
             'product_id' => $data->product_id,
-            'buyer_id' => Auth::id(),
+            'buyer_id' => $userId,
             'rating' => $data->rating,
             'title' => $data->title,
             'note' => $data->note,
         ]);
         return $this->success(null, 'Review Sent successfully');
+    }
+
+    public function likeProduct($data)
+    {
+        $userId = userAuthId();
+        $like = B2bProdctLike::where(['buyer_id' => $userId, 'product_id' => $data->product_id])->first();
+        if ($like) {
+            $like->delete();
+            return $this->success(null, 'Unliked');
+        }
+        B2bProdctLike::create([
+            'product_id' => $data->product_id,
+            'buyer_id' => $userId,
+        ]);
+        return $this->success(null, 'Liked successfully');
     }
 
     public function addToWishList($data)
@@ -573,6 +587,35 @@ class BuyerService
         return $this->success(null, 'Item Removed');
     }
 
+    public function sendFromWishList($id)
+    {
+        $quote = B2bWishList::find($id);
+
+        if (!$quote) {
+            return $this->error(null, 'No record found', 404);
+        }
+
+        try {
+            $amount = ($quote->product_data['unit_price'] * $quote->product_data['minimum_order_quantity']);
+
+            Rfq::create([
+                'buyer_id' => $quote->buyer_id,
+                'seller_id' => $quote->seller_id,
+                'quote_no' => strtoupper(Str::random(10) . Auth::user()->id),
+                'product_id' => $quote->product_id,
+                'product_quantity' => $quote->qty,
+                'total_amount' => $amount,
+                'p_unit_price' => $quote->product_data['unit_price'],
+                'product_data' => $quote->product_data,
+            ]);
+
+            $quote->delete();
+
+            return $this->success(null, 'rfq sent successfully');
+        } catch (\Exception $e) {
+            return $this->error(null, 'transaction failed, please try again', 500);
+        }
+    }
     //Account section
 
     public function profile()
@@ -597,12 +640,12 @@ class BuyerService
 
         $user = User::findOrFail($auth->id);
 
-        $image = $request->hasFile('logo') ? uploadUserImage($request, 'logo', $user) : $user->image;
+        $image = $request->hasFile('image') ? uploadUserImage($request, 'image', $user) : $user->image;
 
         $user->update([
-            'first_name' => $request->first_name,
-            'last_name' => $request->last_name,
-            'middlename' => $request->middlename,
+            'first_name' => $request->first_name ?? $user->first_name,
+            'last_name' => $request->last_name ?? $user->last_name,
+            'middlename' => $request->middlename ?? $user->middlename,
             'email' => $request->email ?? $user->email,
             'phone' => $request->phone,
             'image' => $image
@@ -610,6 +653,8 @@ class BuyerService
 
         return $this->success(null, "Profile Updated successfully");
     }
+
+
 
     public function changePassword($request)
     {
@@ -625,19 +670,35 @@ class BuyerService
             return $this->error(null, 422, 'Old Password did not match');
         }
     }
+    public function change2FA($data)
+    {
+
+        $authUser = userAuth();
+        $user = User::where('type', UserType::B2B_BUYER)->findOrFail($authUser->id);
+        $user->update([
+            'two_factor_enabled' => $data->two_factor_enabled,
+        ]);
+
+        return $this->success('Settings updated');
+    }
 
     public function editCompany($request)
     {
         $auth = Auth::user();
-        $user = User::with('b2bCompany')->findOrFail($auth->id);
-
-        $user->b2bCompany()->update([
-            'company_name' => $request->company_name ?? $user->company_name,
-            'company_size' => $request->company_size ?? $user->company_size,
-            'website' => $request->website ?? $user->website,
-            'average_spend' => $request->average_spend ?? $user->average_spend,
-            'service_type' => $request->service_type ?? $user->service_type,
-            'country_id' => $request->country_id ?? $user->country,
+        $company = B2bCompany::where('user_id', $auth->id)->first();
+        if (!$company)  return $this->error(null, 422, 'No company found to update');
+        if ($request->hasFile('logo')) {
+            $logo_url = uploadImage($request, 'logo', 'company-logo');
+        }
+        $company->update([
+            'business_name' => $request->company_name ?? $company->company_name,
+            'business_phone' => $request->company_phone ?? $company->company_phone,
+            'company_size' => $request->company_size ?? $company->company_size,
+            'website' => $request->website ?? $company->website,
+            'average_spend' => $request->average_spend ?? $company->average_spend,
+            'service_type' => $request->service_type ?? $company->service_type,
+            'country_id' => $request->country_id ?? $company->country,
+            'logo' => $request->hasFile('image') ? $logo_url : $company->logo,
         ]);
 
         return $this->success(null, "Details Updated successfully");
