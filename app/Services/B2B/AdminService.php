@@ -635,9 +635,9 @@ class AdminService
     public function widthrawalRequests()
     {
         $payouts =  Payout::select(['id', 'seller_id', 'amount', 'status', 'created_at'])->with(['user' => function ($query) {
-            $query->where('type', UserType::B2B_SELLER)->select('id', 'first_name', 'last_name');
+            $query->select('id', 'first_name', 'last_name')->where('type', UserType::B2B_SELLER);
         }])->latest('id')->get();
-        if (count($payouts) < 1) {
+        if ($payouts->isEmpty()) {
             return $this->error(null, 'No record found');
         }
         return $this->success($payouts, 'Withdrawal requests');
@@ -646,7 +646,7 @@ class AdminService
     public function viewWidthrawalRequest($id)
     {
         $payout =  Payout::with(['user' => function ($query) {
-            $query->where('type', UserType::B2B_SELLER)->select('id', 'first_name', 'last_name');
+            $query->select('id', 'first_name', 'last_name')->where('type', UserType::B2B_SELLER);
         }])->find($id);
         if (!$payout) {
             return $this->error(null, 'No record found');
@@ -660,21 +660,11 @@ class AdminService
         if (!$payout) {
             return $this->error(null, 'No record found');
         }
-
-        DB::beginTransaction();
-
-        try {
-            $payout->update([
-                'status' => 'paid',
-                'date_paid' => now()->toDateString(),
-            ]);
-
-            DB::commit();
-            return $this->success(null, 'request Approved successfully');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return $this->error(null, 'transaction failed, please try again', 500);
-        }
+        $payout->update([
+            'status' => 'paid',
+            'date_paid' => now()->toDateString(),
+        ]);
+        return $this->success(null, 'request Approved successfully');
     }
 
     public function cancelWidthrawalRequest($id)
@@ -722,7 +712,7 @@ class AdminService
         $business = BusinessInformation::select(['business_location', 'business_type', 'business_name', 'business_reg_number', 'business_phone', 'business_reg_document', 'identification_type_document', 'user_id'])->with(['user' => function ($query) {
             $query->where('type', UserType::B2B_SELLER)->select('id', 'first_name', 'last_name');
         }])->where('user_id', $account->user_id)->first();
-        if (!$account) {
+        if ($account->isEmpty()) {
             return $this->error(null, 'No record found');
         }
         $data = [
@@ -763,8 +753,8 @@ class AdminService
     {
         $products =  B2BProduct::with(['user' => function ($query) {
             $query->where('type', UserType::B2B_SELLER)->select('id', 'first_name', 'last_name');
-        }])->where('status', 'pending')->latest('id')->get();
-        if (count($products) < 1) {
+        }])->where('status',OrderStatus::PENDING)->latest('id')->get();
+        if ($products->isEmpty()) {
             return $this->error(null, 'No record found');
         }
         return $this->success($products, 'Products listing');
@@ -773,9 +763,9 @@ class AdminService
     public function viewProduct($id)
     {
         $product = B2BProduct::with(['user' => function ($query) {
-            $query->where('type', UserType::B2B_SELLER)->select('id', 'first_name', 'last_name');
+            $query->select('id','first_name','last_name')->where('type', UserType::B2B_SELLER);
         }])->find($id);
-        if (!$product) {
+        if ($product->isEmpty()) {
             return $this->error(null, 'No record found');
         }
         return $this->success($product, 'Product details');

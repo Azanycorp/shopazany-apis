@@ -120,6 +120,7 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function () {
         Route::post('/like-product', 'likeProduct');
         Route::get('/wish-list', 'wishList');
         Route::delete('/wish/remove-item/{id}', 'removeItem');
+        Route::get('/wish/send-quote/{id}', 'sendFromWishList');
 
         //profile
         Route::get('/profile', 'profile');

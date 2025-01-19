@@ -79,6 +79,10 @@ class B2BBuyerController extends Controller
     {
         return $this->buyerService->removeItem($id);
     }
+    public function sendFromWishList($id)
+    {
+        return $this->buyerService->sendFromWishList($id);
+    }
 
     //Product Review
     public function addReview(Request $request)
@@ -97,6 +101,7 @@ class B2BBuyerController extends Controller
     {
         return $this->buyerService->profile();
     }
+
     public function companyInfo()
     {
         return $this->buyerService->companyInfo();

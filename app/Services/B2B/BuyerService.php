@@ -508,7 +508,8 @@ class BuyerService
     //send review request to vendor
     public function addPreview($data)
     {
-        $review = B2bProdctReview::where(['buyer_id' => Auth::id(), 'product_id' => $data->product_id])->first();
+        $userId = userAuthId();
+        $review = B2bProdctReview::where(['buyer_id' => $userId, 'product_id' => $data->product_id])->first();
         if ($review) {
             $review->update([
                 'product_id' => $data->product_id,
@@ -520,7 +521,7 @@ class BuyerService
         }
         B2bProdctReview::create([
             'product_id' => $data->product_id,
-            'buyer_id' => Auth::id(),
+            'buyer_id' => $userId,
             'rating' => $data->rating,
             'title' => $data->title,
             'note' => $data->note,
@@ -530,14 +531,15 @@ class BuyerService
 
     public function likeProduct($data)
     {
-        $like = B2bProdctLike::where(['buyer_id' => Auth::id(), 'product_id' => $data->product_id])->first();
+        $userId = userAuthId();
+        $like = B2bProdctLike::where(['buyer_id' => $userId, 'product_id' => $data->product_id])->first();
         if ($like) {
             $like->delete();
             return $this->success(null, 'Unliked');
         }
         B2bProdctLike::create([
             'product_id' => $data->product_id,
-            'buyer_id' => Auth::id(),
+            'buyer_id' => $userId,
         ]);
         return $this->success(null, 'Liked successfully');
     }
@@ -585,6 +587,35 @@ class BuyerService
         return $this->success(null, 'Item Removed');
     }
 
+    public function sendFromWishList($id)
+    {
+        $quote = B2bWishList::find($id);
+
+        if (!$quote) {
+            return $this->error(null, 'No record found', 404);
+        }
+
+        try {
+            $amount = ($quote->product_data['unit_price'] * $quote->product_data['minimum_order_quantity']);
+
+            Rfq::create([
+                'buyer_id' => $quote->buyer_id,
+                'seller_id' => $quote->seller_id,
+                'quote_no' => strtoupper(Str::random(10) . Auth::user()->id),
+                'product_id' => $quote->product_id,
+                'product_quantity' => $quote->qty,
+                'total_amount' => $amount,
+                'p_unit_price' => $quote->product_data['unit_price'],
+                'product_data' => $quote->product_data,
+            ]);
+
+            $quote->delete();
+
+            return $this->success(null, 'rfq sent successfully');
+        } catch (\Exception $e) {
+            return $this->error(null, 'transaction failed, please try again', 500);
+        }
+    }
     //Account section
 
     public function profile()
