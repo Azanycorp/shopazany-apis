@@ -38,22 +38,27 @@ class B2BAdminController extends Controller
     {
         return $this->adminService->adminProfile();
     }
+    
     public function updateAdminProfile(Request $request)
     {
         return $this->adminService->updateAdminProfile($request);
     }
+
     public function updateAdminPassword(ChangeAdminPasswordRequest $request)
     {
         return $this->adminService->updateAdminPassword($request);
     }
+
     public function enable2FA(Request $request)
     {
         return $this->adminService->enableTwoFactor($request);
     }
+
     public function getConfigDetails()
     {
         return $this->adminService->getConfigDetails();
     }
+
     public function UpdateConfigDetails(Request $request)
     {
         return $this->adminService->UpdateConfigDetails($request);
@@ -64,14 +69,17 @@ class B2BAdminController extends Controller
     {
         return $this->adminService->widthrawalRequests();
     }
+
     public function viewWidthrawalRequest($id)
     {
         return $this->adminService->viewWidthrawalRequest($id);
     }
+
     public function approveWidthrawalRequest($id)
     {
         return $this->adminService->approveWidthrawalRequest($id);
     }
+
     public function cancelWidthrawalRequest($id)
     {
         return $this->adminService->cancelWidthrawalRequest($id);
@@ -82,14 +90,17 @@ class B2BAdminController extends Controller
     {
         return $this->adminService->widthrawalMethods();
     }
+
     public function viewWidthrawalMethod($id)
     {
         return $this->adminService->viewWidthrawalMethod($id);
     }
+
     public function approveWidthrawalMethod($id)
     {
         return $this->adminService->approveWidthrawalMethod($id);
     }
+
     public function rejectWidthrawalMethod(Request $request)
     {
         return $this->adminService->rejectWidthrawalMethod($request);
