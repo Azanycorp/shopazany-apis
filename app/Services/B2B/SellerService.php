@@ -115,11 +115,11 @@ class SellerService extends Controller
         $image = $request->hasFile('logo') ? uploadUserImage($request, 'logo', $user) : $user->image;
 
         $user->update([
-            'first_name' => $request->first_name,
-            'last_name' => $request->last_name,
-            'middlename' => $request->middlename,
-            'email' => $request->email,
-            'phone' => $request->phone,
+            'first_name' => $request->first_name ?? $user->first_name,
+            'last_name' => $request->last_name ?? $user->last_name,
+            'middlename' => $request->middlename ?? $user->middlename,
+            'email' => $request->email ?? $user->email,
+            'phone' => $request->phone ?? $user->phone,
             'image' => $image
         ]);
 
@@ -132,7 +132,7 @@ class SellerService extends Controller
 
         if (Hash::check($request->old_password, $user->password)) {
             $user->update([
-                'password' => bcrypt($request->new_password),
+                'password' => Hash::make($request->password),
             ]);
             return $this->success(null, 'Password Successfully Updated');
         } else {
@@ -786,7 +786,7 @@ class SellerService extends Controller
             'description' => $data->description
         ]);
 
-        return $this->success(null, "Fesback taken successfully");
+        return $this->success(null, "Feedback taken successfully");
     }
 
     //dasboard
@@ -806,10 +806,10 @@ class SellerService extends Controller
 
         $rfqs =  Rfq::with('buyer')->where('seller_id', $currentUserId)->get();
         $payouts =  Payout::where('seller_id', $currentUserId)->get();
-        $wallet =  UserWallet::where('seller_id', $currentUserId)->first();
+        $wallet =  UserWallet::where('user_id', $currentUserId)->first();
         if (!$wallet) {
             UserWallet::create([
-                'seller_id' => $currentUserId
+                'user_id' => $currentUserId
             ]);
         }
         $orderCounts = DB::table('rfqs')
@@ -841,11 +841,11 @@ class SellerService extends Controller
     public function getWithdrawalHistory()
     {
         $currentUserId = userAuthId();
-        $wallet = UserWallet::where('seller_id', $currentUserId)->first();
+        $wallet = UserWallet::where('user_id', $currentUserId)->first();
 
         if (!$wallet) {
             UserWallet::create([
-                'seller_id' => $currentUserId
+                'user_id' => $currentUserId
             ]);
         }
 
@@ -857,7 +857,7 @@ class SellerService extends Controller
     {
         $currentUserId = userAuthId();
 
-        $wallet = UserWallet::where('seller_id', $currentUserId)->first();
+        $wallet = UserWallet::where('user_id', $currentUserId)->first();
         if (!$wallet) {
             return $this->error(null, 'User wallet not found', 404);
         }
@@ -867,9 +867,9 @@ class SellerService extends Controller
             return $this->error(null, 'Configuration not found', 500);
         }
 
-        $min = $config->withdrawal_min;
-        $max = $config->withdrawal_max;
-        $withdrawal_fee = $config->withdrawal_fee;
+        $min = $config->withdrawal_min ?? 0;
+        $max = $config->withdrawal_max ?? $wallet->master_wallet;
+        $withdrawal_fee = $config->withdrawal_fee ?? 0;
 
         if ($data->amount > $wallet->master_wallet) {
             return $this->error(null, 'Insufficient balance', 422);
@@ -883,7 +883,7 @@ class SellerService extends Controller
             return $this->error(null, 'Maximum withdrawable amount is ' . number_format($max), 422);
         }
 
-        $paymentInfo = B2bWithdrawalMethod::find($data->account_id);
+         $paymentInfo = B2bWithdrawalMethod::where('status','active')->find($data->account_id);
         if (!$paymentInfo) {
             return $this->error(null, 'Invalid account selected for withdrawal', 422);
         }

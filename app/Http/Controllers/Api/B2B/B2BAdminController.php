@@ -76,4 +76,43 @@ class B2BAdminController extends Controller
     {
         return $this->adminService->cancelWidthrawalRequest($id);
     }
+
+    //Withdrawal Method Requests
+    public function widthrawalMethods()
+    {
+        return $this->adminService->widthrawalMethods();
+    }
+    public function viewWidthrawalMethod($id)
+    {
+        return $this->adminService->viewWidthrawalMethod($id);
+    }
+    public function approveWidthrawalMethod($id)
+    {
+        return $this->adminService->approveWidthrawalMethod($id);
+    }
+    public function rejectWidthrawalMethod(Request $request)
+    {
+        return $this->adminService->rejectWidthrawalMethod($request);
+    }
+
+    //Seller Products Approval Request
+    public function allProducts()
+    {
+        return $this->adminService->allProducts();
+    }
+
+    public function viewProduct($id)
+    {
+        return $this->adminService->viewProduct($id);
+    }
+
+    public function approveProduct($id)
+    {
+        return $this->adminService->approveProduct($id);
+    }
+
+    public function rejectProduct(Request $request)
+    {
+        return $this->adminService->rejectProduct($request);
+    }
 }
