@@ -8,4 +8,5 @@ enum ProductStatus: string
     const PENDING = 'pending';
     const OUT_OF_STOCK = 'out-of-stock';
     const DELETED = 'deleted';
+    const DECLINED = 'declined';
 }

@@ -52,7 +52,7 @@ trait UserRelationship
 
     public function B2bWithdrawalMethod(): HasMany
     {
-        return $this->HasMany(B2bWithdrawalMethod::class, 'user_id');
+        return $this->HasMany(B2bWithdrawalMethod::class, 'user_id')->latest('id');
     }
 
     public function bankAccount(): HasOne

@@ -117,13 +117,16 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function () {
         Route::post('add-review', 'addReview');
         Route::post('accept-quote', 'acceptQuote');
         Route::post('/add-to-wish', 'addTowishList');
+        Route::post('/like-product', 'likeProduct');
         Route::get('/wish-list', 'wishList');
         Route::delete('/wish/remove-item/{id}', 'removeItem');
+        Route::get('/wish/send-quote/{id}', 'sendFromWishList');
 
         //profile
         Route::get('/profile', 'profile');
         Route::post('/edit-account', 'editAccount');
         Route::patch('/change-password', 'changePassword');
+        Route::post('/change-2fa', 'change2Fa');
         Route::get('/company-info', 'companyInfo');
         Route::post('/edit-company', 'editCompany');
     });

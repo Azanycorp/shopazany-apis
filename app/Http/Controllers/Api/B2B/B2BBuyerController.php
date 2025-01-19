@@ -79,6 +79,10 @@ class B2BBuyerController extends Controller
     {
         return $this->buyerService->removeItem($id);
     }
+    public function sendFromWishList($id)
+    {
+        return $this->buyerService->sendFromWishList($id);
+    }
 
     //Product Review
     public function addReview(Request $request)
@@ -86,11 +90,18 @@ class B2BBuyerController extends Controller
         return $this->buyerService->addPreview($request);
     }
 
+    //Product Review
+    public function likeProduct(Request $request)
+    {
+        return $this->buyerService->likeProduct($request);
+    }
+
     //Account section
     public function profile()
     {
         return $this->buyerService->profile();
     }
+
     public function companyInfo()
     {
         return $this->buyerService->companyInfo();
@@ -104,6 +115,10 @@ class B2BBuyerController extends Controller
     public function changePassword(ChangePasswordRequest $request)
     {
         return $this->buyerService->changePassword($request);
+    }
+    public function change2Fa(Request $request)
+    {
+        return $this->buyerService->change2FA($request);
     }
 
     public function editCompany(Request $request)
