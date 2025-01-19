@@ -377,6 +377,7 @@ class SellerService extends Controller
             return $this->error(null, "Unauthorized action.", 401);
         }
 
+
         $this->b2bProductRepository->delete($product_id);
 
         return $this->success(null, 'Deleted successfully');
