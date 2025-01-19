@@ -7,12 +7,14 @@ use App\Models\Rfq;
 use App\Models\User;
 use App\Models\Admin;
 use App\Enum\UserType;
+use App\Models\Payout;
 use App\Enum\UserStatus;
 use App\Models\B2bOrder;
 use App\Models\B2bQuote;
 use App\Enum\AdminStatus;
 use App\Enum\OrderStatus;
 use App\Models\B2BProduct;
+use App\Models\UserWallet;
 use App\Enum\ProductStatus;
 use App\Models\B2bWishList;
 use App\Trait\HttpResponse;
@@ -21,6 +23,8 @@ use App\Models\Configuration;
 use App\Models\B2BRequestRefund;
 use App\Enum\RefundRequestStatus;
 use Illuminate\Support\Facades\DB;
+use App\Models\B2bWithdrawalMethod;
+use App\Models\BusinessInformation;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Resources\SellerResource;
@@ -532,8 +536,6 @@ class AdminService
 
     //CMS / Promo and banners
 
-
-
     public function adminProfile()
     {
         $authUser = userAuth();
@@ -542,6 +544,7 @@ class AdminService
 
         return $this->success($data, 'Profile detail');
     }
+
     public function updateAdminProfile($data)
     {
         $authUser = userAuth();
@@ -607,7 +610,6 @@ class AdminService
                 'paystack_perc' => $data->paystack_perc,
                 'paystack_fixed' => $data->paystack_fixed,
             ]);
-
         }
         $config = Configuration::create([
             'usd_rate' => $data->usd_rate,
@@ -627,5 +629,172 @@ class AdminService
             'paystack_fixed' => $data->paystack_fixed,
         ]);
         return $this->success(null, 'Details updated');
+    }
+
+    //seller withdrawal request
+    public function widthrawalRequests()
+    {
+        $payouts =  Payout::select(['id', 'seller_id', 'amount', 'status', 'created_at'])->with(['user' => function ($query) {
+            $query->select('id', 'first_name', 'last_name')->where('type', UserType::B2B_SELLER);
+        }])->latest('id')->get();
+        if ($payouts->isEmpty()) {
+            return $this->error(null, 'No record found');
+        }
+        return $this->success($payouts, 'Withdrawal requests');
+    }
+
+    public function viewWidthrawalRequest($id)
+    {
+        $payout =  Payout::with(['user' => function ($query) {
+            $query->select('id', 'first_name', 'last_name')->where('type', UserType::B2B_SELLER);
+        }])->find($id);
+        if (!$payout) {
+            return $this->error(null, 'No record found');
+        }
+        return $this->success($payout, 'request details');
+    }
+
+    public function approveWidthrawalRequest($id)
+    {
+        $payout =  Payout::find($id);
+        if (!$payout) {
+            return $this->error(null, 'No record found');
+        }
+        $payout->update([
+            'status' => 'paid',
+            'date_paid' => now()->toDateString(),
+        ]);
+        return $this->success(null, 'request Approved successfully');
+    }
+
+    public function cancelWidthrawalRequest($id)
+    {
+        $payout =  Payout::find($id);
+        if (!$payout) {
+            return $this->error(null, 'No record found');
+        }
+        $wallet = UserWallet::where('user_id', $payout->seller_id)->first();
+
+        if (!$wallet) {
+            return $this->error(null, 'No account found');
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $wallet->master_wallet += $payout->amount;
+            $wallet->save();
+            $payout->update([
+                'status' => 'cancelled',
+            ]);
+
+            DB::commit();
+            return $this->success(null, 'request cancelled');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return $this->error(null, 'transaction failed, please try again', 500);
+        }
+    }
+
+    //seller withdrawal method request
+    public function widthrawalMethods()
+    {
+        $accounts =  B2bWithdrawalMethod::where('status', 'pending')->latest('id')->get();
+        if (count($accounts) < 1) {
+            return $this->error(null, 'No record found');
+        }
+        return $this->success($accounts, 'Withdrawal methods');
+    }
+
+    public function viewWidthrawalMethod($id)
+    {
+        $account =  B2bWithdrawalMethod::with('user.businessInformation')->find($id);
+        $business = BusinessInformation::select(['business_location', 'business_type', 'business_name', 'business_reg_number', 'business_phone', 'business_reg_document', 'identification_type_document', 'user_id'])->with(['user' => function ($query) {
+            $query->where('type', UserType::B2B_SELLER)->select('id', 'first_name', 'last_name');
+        }])->where('user_id', $account->user_id)->first();
+        if ($account->isEmpty()) {
+            return $this->error(null, 'No record found');
+        }
+        $data = [
+            'account_info' => $account,
+            'business_info' => $business,
+        ];
+        return $this->success($data, 'request details');
+    }
+
+    public function approveWidthrawalMethod($id)
+    {
+        $account =  B2bWithdrawalMethod::find($id);
+        if (!$account) {
+            return $this->error(null, 'No record found');
+        }
+
+        $account->update([
+            'status' => 'active',
+        ]);
+        return $this->success(null, 'Account Approved');
+    }
+
+    public function rejectWidthrawalMethod($data)
+    {
+        $account =  B2bWithdrawalMethod::find($data->account_id);
+        if (!$account) {
+            return $this->error(null, 'No record found');
+        }
+        $account->update([
+            'status' => 'declined',
+            'admin_comment' => $data->note
+        ]);
+        return $this->success(null, 'Comment Submitted successfully');
+    }
+
+    //seller Product request
+    public function allProducts()
+    {
+        $products =  B2BProduct::with(['user' => function ($query) {
+            $query->where('type', UserType::B2B_SELLER)->select('id', 'first_name', 'last_name');
+        }])->where('status',OrderStatus::PENDING)->latest('id')->get();
+        if ($products->isEmpty()) {
+            return $this->error(null, 'No record found');
+        }
+        return $this->success($products, 'Products listing');
+    }
+
+    public function viewProduct($id)
+    {
+        $product = B2BProduct::with(['user' => function ($query) {
+            $query->select('id','first_name','last_name')->where('type', UserType::B2B_SELLER);
+        }])->find($id);
+        if ($product->isEmpty()) {
+            return $this->error(null, 'No record found');
+        }
+        return $this->success($product, 'Product details');
+    }
+
+    public function approveProduct($id)
+    {
+        $product =  B2BProduct::find($id);
+        if (!$product) {
+            return $this->error(null, 'No record found');
+        }
+
+        $product->update([
+            'status' => 'active',
+        ]);
+        return $this->success(null, 'Product Approved');
+    }
+
+    public function rejectProduct($data)
+    {
+        $product = B2BProduct::find($data->product_id);
+        if (!$product) {
+            return $this->error(null, 'No record found');
+        }
+
+        $product->update([
+            'status' => 'declined',
+            'admin_comment' => $data->note
+        ]);
+        return $this->success(null, 'Comment Submitted successfully');
     }
 }
