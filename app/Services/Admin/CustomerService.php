@@ -18,14 +18,15 @@ class CustomerService
     {
         $query = trim(request()->input('search'));
 
-        $users = User::where('type', 'customer')
-        ->where(function($queryBuilder) use ($query) {
-            $queryBuilder->where('first_name', 'LIKE', '%' . $query . '%')
-                         ->orWhere('last_name', 'LIKE', '%' . $query . '%')
-                         ->orWhere('middlename', 'LIKE', '%' . $query . '%')
-                         ->orWhere('email', 'LIKE', '%' . $query . '%');
-        })
-        ->paginate(25);
+        $users = User::with(['userCountry', 'state', 'wallet', 'wishlist', 'payments'])
+            ->where('type', 'customer')
+            ->where(function($queryBuilder) use ($query) {
+                $queryBuilder->where('first_name', 'LIKE', '%' . $query . '%')
+                            ->orWhere('last_name', 'LIKE', '%' . $query . '%')
+                            ->orWhere('middlename', 'LIKE', '%' . $query . '%')
+                            ->orWhere('email', 'LIKE', '%' . $query . '%');
+            })
+            ->paginate(25);
 
         $data = CustomerResource::collection($users);
 
