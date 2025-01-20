@@ -9,7 +9,6 @@ class PaymentDetailsService
 {
     public static function paystackPayDetails($request)
     {
-        // return $request;
         if($request->input('currency') === 'USD') {
             return response()->json([
                 'status' => false,
