@@ -15,6 +15,7 @@ use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
 use App\Models\Configuration;
 use App\Models\PaymentMethod;
+use App\Enum\WithdrawalStatus;
 use App\Imports\ProductImport;
 use App\Models\B2bOrderRating;
 use Illuminate\Support\Carbon;
@@ -136,7 +137,7 @@ class SellerService extends Controller
             ]);
             return $this->success(null, 'Password Successfully Updated');
         } else {
-            return $this->error(null,'Old Password did not match',422);
+            return $this->error(null, 'Old Password did not match', 422);
         }
     }
 
@@ -175,7 +176,7 @@ class SellerService extends Controller
 
         switch ($data->type) {
             case 'product':
-                return $this->exportB2bProduct($userId,$data);
+                return $this->exportB2bProduct($userId, $data);
                 break;
 
             case 'order':
@@ -199,7 +200,7 @@ class SellerService extends Controller
         $seller = auth()->user();
 
         try {
-             Excel::import(new B2BProductImport($seller), $request->file('file'));
+            Excel::import(new B2BProductImport($seller), $request->file('file'));
 
             return $this->success(null, "Imported successfully");
         } catch (\Exception $e) {
@@ -272,7 +273,7 @@ class SellerService extends Controller
 
     public function getAllProduct($request)
     {
-         $currentUserId = userAuthId();
+        $currentUserId = userAuthId();
 
         if ($currentUserId != $request->user_id) {
             return $this->error(null, "Unauthorized action.", 401);
@@ -385,7 +386,7 @@ class SellerService extends Controller
 
     public function getAnalytics($user_id)
     {
-         $currentUserId = userAuthId();
+        $currentUserId = userAuthId();
 
         if ($currentUserId != $user_id) {
             return $this->error(null, "Unauthorized action.", 401);
@@ -597,7 +598,7 @@ class SellerService extends Controller
 
         switch ($data->type) {
             case 'product':
-                return $this->b2bExportProduct($userId,$data);
+                return $this->b2bExportProduct($userId, $data);
                 break;
 
             case 'order':
@@ -751,6 +752,30 @@ class SellerService extends Controller
 
         return $this->success($rfq, 'Product marked delivered successfully');
     }
+    public function confirmPayment($data)
+    {
+        $rfq = Rfq::find($data->rfq_id);
+
+        if (!$rfq) {
+            return $this->error(null, 'No record found to send', 404);
+        }
+
+        $rfq->update([
+            'payment_status' => 'paid',
+            'status' => 'confirmed',
+        ]);
+
+        //Update product
+        $product = B2BProduct::findOrFail($rfq->product_id);
+        $remaining_qty = $product->quantity - $rfq->product_quantity;
+
+        $product->update([
+            'availability_quantity' => $remaining_qty,
+            'sold' => $product->sold + $rfq->product_quantity,
+        ]);
+
+        return $this->success($rfq, 'Payment Confirmed successfully');
+    }
 
     public function rateOrder($data)
     {
@@ -872,6 +897,9 @@ class SellerService extends Controller
         $max = $config->withdrawal_max ?? $wallet->master_wallet;
         $withdrawal_fee = $config->withdrawal_fee ?? 0;
 
+        if (strtolower($config->withdrawal_status) == WithdrawalStatus::DISABLED) {
+            return $this->error(null, 'Withrawal on this system is currently not available', 422);
+        }
         if ($data->amount > $wallet->master_wallet) {
             return $this->error(null, 'Insufficient balance', 422);
         }
@@ -884,7 +912,7 @@ class SellerService extends Controller
             return $this->error(null, 'Maximum withdrawable amount is ' . number_format($max), 422);
         }
 
-         $paymentInfo = B2bWithdrawalMethod::where('status','active')->find($data->account_id);
+        $paymentInfo = B2bWithdrawalMethod::where('status',WithdrawalStatus::ACTIVE)->find($data->account_id);
         if (!$paymentInfo) {
             return $this->error(null, 'Invalid account selected for withdrawal', 422);
         }

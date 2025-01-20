@@ -58,6 +58,7 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function () {
                 Route::post('/mark-as-shipped', 'shippedRfq');
                 Route::post('/mark-as-delivered', 'markDelivered');
                 Route::post('/reply-review', 'replyReview');
+                Route::post('/confirm-payment', 'confirmPayment');
                 Route::post('/rate-order', 'rateOrder');
                 Route::post('/order-feeback', 'orderFeeback');
             });
