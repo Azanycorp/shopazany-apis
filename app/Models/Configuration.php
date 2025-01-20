@@ -20,6 +20,8 @@ class Configuration extends Model
         'max_deposit',
         'min_withdrawal',
         'max_withdrawal',
+        'withdrawal_frequency',
+        'withdrawal_status',
         'withdrawal_fee',
         'seller_perc',
         'paystack_perc',
