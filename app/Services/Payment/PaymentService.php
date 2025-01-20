@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Services\Curl\GetCurlService;
 use App\Http\Resources\PaymentVerifyResource;
 use App\Models\PaymentService as ModelPaymentService;
-use App\Services\Payment\B2B\AuthorizeNet\ChargeCardService;
+use App\Services\Payment\AuthorizeNet\ChargeCardService;
 
 class PaymentService
 {
