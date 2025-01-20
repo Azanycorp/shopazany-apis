@@ -2411,6 +2411,8 @@ if (! function_exists('currencyConvert')) {
     function currencyConvert($from, $amount, $to = null) {
         static $rates = [];
 
+        $from = $from ?? 'USD';
+
         if ($to === null || $from === $to) {
             return round($amount, 2);
         }
