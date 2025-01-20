@@ -595,6 +595,8 @@ class AdminService
             'min_deposit' => $data->min_deposit,
             'max_deposit' => $data->max_deposit,
             'min_withdrawal' => $data->min_withdrawal,
+            'withdrawal_frequency' => $data->withdrawal_frequency,
+            'withdrawal_status' => $data->withdrawal_status,
             'max_withdrawal' => $data->max_withdrawal,
             'withdrawal_fee' => $data->withdrawal_fee,
             'seller_perc' => $data->seller_perc,

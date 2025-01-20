@@ -594,23 +594,23 @@ class BuyerService
         if (!$quote) {
             return $this->error(null, 'No record found', 404);
         }
+        $product = B2BProduct::find($quote->product_id);
 
         try {
-            $amount = ($quote->product_data['unit_price'] * $quote->product_data['minimum_order_quantity']);
+            $amount = ($product->unit_price * $product->minimum_order_quantity);
 
             Rfq::create([
-                'buyer_id' => $quote->buyer_id,
-                'seller_id' => $quote->seller_id,
+                'buyer_id' => $quote->user_id,
+                'seller_id' => $product->user_id,
                 'quote_no' => strtoupper(Str::random(10) . Auth::user()->id),
-                'product_id' => $quote->product_id,
-                'product_quantity' => $quote->qty,
+                'product_id' => $product->id,
+                'product_quantity' => $product->minimum_order_quantity,
                 'total_amount' => $amount,
-                'p_unit_price' => $quote->product_data['unit_price'],
-                'product_data' => $quote->product_data,
+                'p_unit_price' => $product->unit_price,
+                'product_data' => $product,
             ]);
 
             $quote->delete();
-
             return $this->success(null, 'rfq sent successfully');
         } catch (\Exception $e) {
             return $this->error(null, 'transaction failed, please try again', 500);
@@ -653,7 +653,6 @@ class BuyerService
 
         return $this->success(null, "Profile Updated successfully");
     }
-
 
 
     public function changePassword($request)
