@@ -144,6 +144,14 @@ class AuthService extends Controller
             $currencyCode = getCurrencyCode($country->sortname);
         }
 
+        if ($coupon = $request->query('coupon')) {
+            try {
+                $this->validateCoupon($coupon);
+            } catch (\Exception $e) {
+                return $this->error(null, $e->getMessage(), 400);
+            }
+        }
+
         try {
             $code = generateVerificationCode();
 
@@ -163,8 +171,8 @@ class AuthService extends Controller
                 'password' => bcrypt($request->password)
             ]);
 
-            if ($coupon = $request->query('coupon')) {
-                $this->validateAndAssignCoupon($coupon, $user);
+            if ($coupon) {
+                $this->assignCoupon($coupon, $user);
             }
 
             $description = "Seller with email address {$request->email} just signed up";
