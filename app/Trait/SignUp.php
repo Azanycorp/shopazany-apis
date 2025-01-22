@@ -32,13 +32,13 @@ trait SignUp
         }
     }
 
-    protected function validateAndAssignCoupon($couponCode, $user)
+    protected function validateCoupon($couponCode)
     {
         $coupon = Coupon::where('code', $couponCode)
             ->where('status', EnumCoupon::ACTIVE)
             ->first();
 
-        if (! $coupon) {
+        if (!$coupon) {
             throw new \Exception('Invalid coupon code or inactive');
         }
 
@@ -49,10 +49,17 @@ trait SignUp
         if ($coupon->expire_at && $coupon->expire_at < now()) {
             throw new \Exception('Coupon has expired');
         }
+    }
+
+    protected function assignCoupon($couponCode, $user)
+    {
+        $coupon = Coupon::where('code', $couponCode)
+            ->where('status', EnumCoupon::ACTIVE)
+            ->first();
 
         $coupon->update([
             'used' => 1,
-            'used_by' => (object)[
+            'used_by' => (object) [
                 'user_id' => $user->id,
                 'name' => $user->first_name . ' ' . $user->last_name,
                 'email' => $user->email,
