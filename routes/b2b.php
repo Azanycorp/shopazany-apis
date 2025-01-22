@@ -109,7 +109,7 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function () {
         Route::post('add-quote', 'requestQuote');
         Route::get('quotes', 'allQuotes');
         Route::get('send-all-quotes', 'sendAllQuotes');
-        Route::get('send-rfq/{id}', 'sendSingleQuote');
+        Route::post('send-rfq', 'sendSingleQuote');
         Route::delete('remove-rfq/{id}', 'removeQuote');
         Route::get('dashboard', 'dashboard');
         Route::get('rfq', 'getAllRfqs');
@@ -121,7 +121,7 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function () {
         Route::post('/like-product', 'likeProduct');
         Route::get('/wish-list', 'wishList');
         Route::delete('/wish/remove-item/{id}', 'removeItem');
-        Route::get('/wish/send-quote/{id}', 'sendFromWishList');
+        Route::post('/wish/send-quote', 'sendFromWishList');
 
         //profile
         Route::get('/profile', 'profile');
