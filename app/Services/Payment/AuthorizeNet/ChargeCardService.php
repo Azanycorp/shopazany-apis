@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\Payment\B2B\AuthorizeNet;
+namespace App\Services\Payment\AuthorizeNet;
 
 use App\Models\Cart;
 use App\Enum\UserLog;
