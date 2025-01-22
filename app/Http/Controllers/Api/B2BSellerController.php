@@ -160,6 +160,10 @@ class B2BSellerController extends Controller
     {
         return $this->service->markDelivered($request);
     }
+    public function confirmPayment(Request $request)
+    {
+        return $this->service->confirmPayment($request);
+    }
     public function rateOrder(Request $request)
     {
         return $this->service->rateOrder($request);
