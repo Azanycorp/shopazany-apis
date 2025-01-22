@@ -25,6 +25,8 @@ return new class extends Migration
     {
         Schema::table('configurations', function (Blueprint $table) {
             //
+            $table->string('withdrawal_frequency')->default('day');
+            $table->string('withdrawal_status')->default('disabled');
         });
     }
 };

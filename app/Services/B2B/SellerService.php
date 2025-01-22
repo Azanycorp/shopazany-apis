@@ -672,12 +672,14 @@ class SellerService extends Controller
             'rfqs' => $notDeliveredRfqs,
         ];
 
-        return $this->success($data, "orders");
+        return $this->success($data,"orders");
     }
 
     public function getRfqDetails($id)
     {
-        $order = Rfq::with('messages')->find($id);
+        $order = Rfq::with(['messages','buyer' => function ($query) {
+            $query->select('id', 'first_name', 'last_name','email','phone');
+        }])->find($id);
 
         if (!$order) {
             return $this->error(null, "No record found.", 404);
@@ -791,7 +793,7 @@ class SellerService extends Controller
             'seller_id' => $userId,
             'order_no' => $rfq->quote_no,
             'rating' => $data->rating,
-            'description' => $data->description
+            'description' => $data->description ? $data->description :'description'
         ]);
 
         return $this->success(null, "Rating successful");

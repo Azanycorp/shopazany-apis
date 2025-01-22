@@ -593,17 +593,20 @@ class BuyerService
         if (!$quote) {
             return $this->error(null, 'No record found', 404);
         }
-        $product = B2BProduct::find($quote->product_id);
 
+        $product = B2BProduct::find($quote->product_id);
+        if ($data->qty < $product->minimum_order_quantity) {
+            return $this->error(null, 'Your peferred quantity can not be less than the one already set', 422);
+        }
         try {
-            $amount = ($product->unit_price * $product->minimum_order_quantity);
+            $amount = ($product->unit_price * $data->qty);
 
             Rfq::create([
                 'buyer_id' => $quote->user_id,
                 'seller_id' => $product->user_id,
                 'quote_no' => strtoupper(Str::random(10) . Auth::user()->id),
                 'product_id' => $product->id,
-                'product_quantity' => $product->minimum_order_quantity,
+                'product_quantity' => $data->qty,
                 'total_amount' => $amount,
                 'p_unit_price' => $product->unit_price,
                 'product_data' => $product,
