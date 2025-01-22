@@ -564,7 +564,7 @@ class BuyerService
     public function myWishList()
     {
         $wishes =  B2bWishList::with('product')
-            ->where('user_id', Auth::id())
+            ->where('user_id',userAuthId())
             ->latest('id')
             ->get();
 
@@ -595,11 +595,14 @@ class BuyerService
         }
 
         $product = B2BProduct::find($quote->product_id);
+        if (!$product) {
+            return $this->error(null, 'Product not found', 422);
+        }
         if ($data->qty < $product->minimum_order_quantity) {
             return $this->error(null, 'Your peferred quantity can not be less than the one already set', 422);
         }
         try {
-            $amount = ($product->unit_price * $data->qty);
+            $amount = total_amount($product->unit_price,$data->qty);
 
             Rfq::create([
                 'buyer_id' => $quote->user_id,
@@ -693,7 +696,7 @@ class BuyerService
         }
         $company->update([
             'business_name' => $request->company_name ?? $company->company_name,
-            'business_phone' => $request->company_phone ?? $company->company_phone,
+            'business_phone' => $request->business_phone ?? $company->business_phone,
             'company_size' => $request->company_size ?? $company->company_size,
             'website' => $request->website ?? $company->website,
             'average_spend' => $request->average_spend ?? $company->average_spend,
