@@ -315,9 +315,9 @@ class BuyerService
         }
     }
 
-    public function sendRfq($id)
+    public function sendRfq($data)
     {
-        $quote = B2bQuote::find($id);
+        $quote = B2bQuote::find($data->rfq_id);
 
         if (!$quote) {
             return $this->error(null, 'No record found', 404);
@@ -587,10 +587,9 @@ class BuyerService
         return $this->success(null, 'Item Removed');
     }
 
-    public function sendFromWishList($id)
+    public function sendFromWishList($data)
     {
-        $quote = B2bWishList::find($id);
-
+        $quote = B2bWishList::find($data->id);
         if (!$quote) {
             return $this->error(null, 'No record found', 404);
         }

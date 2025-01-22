@@ -34,9 +34,9 @@ class B2BBuyerController extends Controller
     {
         return $this->buyerService->sendMutipleQuotes();
     }
-    public function sendSingleQuote($id)
+    public function sendSingleQuote(Request $request)
     {
-        return $this->buyerService->sendRfq($id);
+        return $this->buyerService->sendRfq($request);
     }
     public function removeQuote($id)
     {
@@ -79,9 +79,10 @@ class B2BBuyerController extends Controller
     {
         return $this->buyerService->removeItem($id);
     }
-    public function sendFromWishList($id)
+    
+    public function sendFromWishList(Request $request)
     {
-        return $this->buyerService->sendFromWishList($id);
+        return $this->buyerService->sendFromWishList($request);
     }
 
     //Product Review
