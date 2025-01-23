@@ -317,6 +317,7 @@ class SellerService extends Controller
                 'unit',
                 'size',
             ])
+            ->withCount(['orders', 'productReviews'])
             ->find($productId);
 
         if(!$product){
