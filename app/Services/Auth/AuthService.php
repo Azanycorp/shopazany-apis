@@ -144,7 +144,10 @@ class AuthService extends Controller
             $currencyCode = getCurrencyCode($country->sortname);
         }
 
-        if ($coupon = $request->query('coupon')) {
+        $coupon = $request->query('coupon');
+        $coupon = $this->normalizeCoupon($coupon);
+
+        if ($coupon) {
             try {
                 $this->validateCoupon($coupon);
             } catch (\Exception $e) {
