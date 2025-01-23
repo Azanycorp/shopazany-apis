@@ -649,7 +649,19 @@ class SellerService extends Controller
         return $this->success($data, "Earning details");
     }
 
-    //orders
+
+
+    public function getOrderDetails($id)
+    {
+        $order = B2bOrder::find($id);
+        if (!$order) {
+            return $this->error(null, "No record found.", 404);
+        }
+
+        return $this->success($order, 'order details');
+    }
+
+    //Rfq
     public function getAllRfq()
     {
         $currentUserId = userAuthId();
@@ -661,31 +673,39 @@ class SellerService extends Controller
                 return $rfq->status === 'delivered' ? 'delivered' : 'not_delivered';
             });
 
+        $orders = B2bOrder::with('buyer')
+            ->where('seller_id', $currentUserId)
+            ->get()
+            ->groupBy(function ($order) {
+                return $order->status === 'delivered' ? 'delivered' : 'not_delivered';
+            });
 
-        $deliveredRfqs = $rfqs->get('delivered', collect());
+
+        $deliveredOrders = $orders->get('delivered', collect());
         $notDeliveredRfqs = $rfqs->get('not_delivered', collect());
 
         $data = [
-            'total_orders' => $deliveredRfqs->count(),
+            'total_orders' => $deliveredOrders->count(),
             'total_rfqs' => $notDeliveredRfqs->count(),
-            'orders' => $deliveredRfqs,
+            'orders' => $deliveredOrders,
             'rfqs' => $notDeliveredRfqs,
         ];
 
-        return $this->success($data,"orders");
+        return $this->success($data, "orders");
     }
 
     public function getRfqDetails($id)
     {
-        $order = Rfq::with(['messages','buyer' => function ($query) {
-            $query->select('id', 'first_name', 'last_name','email','phone');
-        }])->find($id);
-
-        if (!$order) {
+        $rfq = Rfq::find($id);
+        if (!$rfq) {
             return $this->error(null, "No record found.", 404);
         }
-
-        return $this->success($order, "Rfq details");
+        $messages = RfqMessage::with(['seller', 'buyer'])->where('rfq_id', $rfq->id)->get();
+        $data = [
+            'rfq' => $rfq,
+            'messages' => $messages
+        ];
+        return $this->success($data, 'rfq details');
     }
 
     public function markShipped($data)
@@ -715,8 +735,9 @@ class SellerService extends Controller
 
         $amount = ($data->preferred_unit_price * $rfq->product_quantity);
 
-        RfqMessage::create([
+        $message = RfqMessage::create([
             'rfq_id' => $rfq->id,
+            'seller_id' => userAuthId(),
             'p_unit_price' => $data->preferred_unit_price,
             'note' => $data->note
         ]);
@@ -726,7 +747,7 @@ class SellerService extends Controller
             'total_amount' => $amount
         ]);
 
-        return $this->success($rfq, "Rfq details");
+        return $this->success($message, "message details");
     }
 
     public function markDelivered($data)
@@ -793,7 +814,7 @@ class SellerService extends Controller
             'seller_id' => $userId,
             'order_no' => $rfq->quote_no,
             'rating' => $data->rating,
-            'description' => $data->description ? $data->description :'description'
+            'description' => $data->description ? $data->description : 'description'
         ]);
 
         return $this->success(null, "Rating successful");
@@ -914,7 +935,7 @@ class SellerService extends Controller
             return $this->error(null, 'Maximum withdrawable amount is ' . number_format($max), 422);
         }
 
-        $paymentInfo = B2bWithdrawalMethod::where('status',WithdrawalStatus::ACTIVE)->find($data->account_id);
+        $paymentInfo = B2bWithdrawalMethod::where('status', WithdrawalStatus::ACTIVE)->find($data->account_id);
         if (!$paymentInfo) {
             return $this->error(null, 'Invalid account selected for withdrawal', 422);
         }
