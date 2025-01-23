@@ -316,8 +316,9 @@ class SellerService extends Controller
                 'color',
                 'unit',
                 'size',
+                'orders',
+                'productReviews',
             ])
-            ->withCount(['orders', 'productReviews'])
             ->find($productId);
 
         if(!$product){
