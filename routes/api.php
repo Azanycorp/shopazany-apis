@@ -16,9 +16,9 @@ use App\Http\Controllers\Api\GoogleAuthController;
 use App\Http\Controllers\Api\MailingListController;
 use App\Http\Controllers\Api\SubscriptionController;
 
-// Route::get('/user', function (Request $request) {
-//     return $request->user();
-// })->middleware('auth:sanctum');
+Route::get('/aaa', function (Request $request) {
+    throw new \Exception('test');
+});
 
 Route::middleware(['throttle:apis'])->group(function () {
 
