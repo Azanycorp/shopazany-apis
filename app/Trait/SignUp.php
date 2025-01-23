@@ -24,6 +24,22 @@ trait SignUp
         ]);
     }
 
+
+    /**
+     * Normalize coupon input.
+     * Convert invalid or placeholder values to null.
+     *
+     * @param mixed $coupon
+     * @return string|null
+     */
+    protected function normalizeCoupon($coupon)
+    {
+        if (is_null($coupon) || trim(strtolower($coupon)) === 'null' || trim($coupon) === '') {
+            return null;
+        }
+        return $coupon;
+    }
+
     protected function handleReferrer($referrerCode, $user)
     {
         $referrer = User::where('referrer_code', $referrerCode)->first();
