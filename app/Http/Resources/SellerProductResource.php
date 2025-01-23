@@ -39,8 +39,8 @@ class SellerProductResource extends JsonResource
             'price' => (string)$this->price,
             'current_stock_quantity' => (string)$this->current_stock_quantity,
             'minimum_order_quantity' => (string)$this->minimum_order_quantity,
-            'order_count' => (int)$this->orders_count,
-            'review_count' => (int)$this->product_reviews_count,
+            'order_count' => (int)$this->orders?->count(),
+            'review_count' => (int)$this->productReviews?->count(),
             'rating' => 3.5,
             'front_image' => (string)$this->image,
             'images' => $this->whenLoaded('productimages', function () {
