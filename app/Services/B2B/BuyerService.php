@@ -593,20 +593,18 @@ class BuyerService
 
     public function sendFromWishList($data)
     {
-        $quote = B2bWishList::find($data->id);
+        $quote = B2bWishList::findOrFail($data->id);
         if (!$quote) {
             return $this->error(null, 'No record found', 404);
         }
 
-        $product = B2BProduct::find($quote->product_id);
-        if (!$product) {
-            return $this->error(null, 'Product not found', 422);
-        }
+        $product = B2BProduct::findOrFail($quote->product_id);
+
         if ($data->qty < $product->minimum_order_quantity) {
             return $this->error(null, 'Your peferred quantity can not be less than the one already set', 422);
         }
         try {
-            $amount = total_amount($product->unit_price, $data->qty);
+            $amount = total_amount($product->unit_price,$data->qty);
 
             Rfq::create([
                 'buyer_id' => $quote->user_id,
