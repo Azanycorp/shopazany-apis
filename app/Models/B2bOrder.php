@@ -75,12 +75,12 @@ class B2bOrder extends Model
                 (SELECT ROUND(COUNT(`id`), 2) FROM `b2b_orders` WHERE `status`='shipped' ) AS total_shipped,
 
 
-                (SELECT ROUND(SUM(`amount`), 2)
+                (SELECT ROUND(SUM(`total_amount`), 2)
                     FROM `b2b_orders` WHERE status='delivered'
                 ) AS total_order_delivered_amount,
 
 
-                (SELECT ROUND(SUM(`amount`), 2)
+                (SELECT ROUND(SUM(`total_amount`), 2)
                     FROM `b2b_orders`
                     WHERE (YEARWEEK(`created_at`) = YEARWEEK(CURDATE()))
                 ) AS total_order_amount_week,
@@ -91,7 +91,7 @@ class B2bOrder extends Model
                 ) AS total_order_count_week,
 
                 (SELECT
-                    ROUND(SUM(`amount`), 2)
+                    ROUND(SUM(`total_amount`), 2)
                     FROM `b2b_orders`
                     WHERE MONTH(created_at) = MONTH(NOW()) AND YEAR(created_at) = YEAR(NOW())
                 ) AS total_order_amount_month
