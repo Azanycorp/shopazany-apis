@@ -287,7 +287,7 @@ class PaystackService
                     $sellerPerc = $config->seller_perc ?? 0;
                     $credit = ($sellerPerc / 100) * $amount;
 
-                    $wallet = UserWallet::firstOrNew(['user_id' => $seller->id]);
+                    $wallet = UserWallet::firstOrNew(['seller_id' => $seller->id]);
                     $wallet->master_wallet = ($wallet->master_wallet ?? 0) + $credit;
                     $wallet->save();
                 }
