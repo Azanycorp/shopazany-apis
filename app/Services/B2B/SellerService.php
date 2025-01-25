@@ -772,9 +772,9 @@ class SellerService extends Controller
     public function confirmPayment($data)
     {
         $rfq = Rfq::findOrFail($data->rfq_id);
-         $seller = User::select('id')->findOrFail($rfq->seller_id);
-          $buyer = User::select('id','email','first_name','last_name')->findOrFail($rfq->buyer_id);
-          $product = B2BProduct::select(['id','name','front_image','quantity','sold'])->findOrFail($rfq->product_id);
+        $seller = User::select('id')->findOrFail($rfq->seller_id);
+        $buyer = User::select('id', 'email', 'first_name', 'last_name')->findOrFail($rfq->buyer_id);
+        $product = B2BProduct::select(['id', 'name', 'front_image', 'quantity', 'sold'])->findOrFail($rfq->product_id);
 
         DB::beginTransaction();
 
@@ -798,7 +798,7 @@ class SellerService extends Controller
                 'image' => $product->front_image,
                 'quantity' => $rfq->product_quantity,
                 'price' => $rfq->total_amount,
-                'buyer_name' => $buyer->first_name.' '.$buyer->last_name,
+                'buyer_name' => $buyer->first_name . ' ' . $buyer->last_name,
                 'order_number' => $order->order_no,
             ];
 
@@ -820,7 +820,7 @@ class SellerService extends Controller
             $rfq->delete();
 
             DB::commit();
-            Mail::to($buyer->email)->send(new B2BOrderEmail($orderedItems));
+            send_email($buyer->email, new B2BOrderEmail($orderedItems));
             return $this->success($order, 'Payment Confirmed successfully');
         } catch (\Exception $e) {
             return $e;

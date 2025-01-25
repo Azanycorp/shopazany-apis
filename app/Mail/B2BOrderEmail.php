@@ -31,7 +31,7 @@ class B2BOrderEmail extends Mailable
      */
     public function build()
     {
-        return $this->subject('Order Confirmation Mail from' . env('APP_NAME'))
+        return $this->subject('Order Confirmation Mail from' . config('app.name'))
             ->view(
                 'mail.b2b-order-mail',
                 [

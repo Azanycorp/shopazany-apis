@@ -273,13 +273,13 @@ class PaystackService
                     'status' => OrderStatus::PENDING,
                 ]);
 
-              
+
                 $orderedItems = [
                     'product_name' => $product->name,
                     'image' => $product->front_image,
                     'quantity' => $rfq->product_quantity,
                     'price' => $rfq->total_amount,
-                    'buyer_name' => $user->first_name.' '.$user->last_name,
+                    'buyer_name' => $user->first_name . ' ' . $user->last_name,
                     'order_number' => $orderNo,
                 ];
                 $product->quantity -= $rfq->product_quantity;
@@ -298,7 +298,7 @@ class PaystackService
                 }
 
                 $rfq->delete();
-                Mail::to($user->email)->send(new B2BOrderEmail($orderedItems));
+                send_email($user->email, new B2BOrderEmail($orderedItems));
                 (new UserLogAction(
                     request(),
                     UserLog::PAYMENT,
