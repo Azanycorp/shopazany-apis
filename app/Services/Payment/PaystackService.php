@@ -272,11 +272,6 @@ class PaystackService
                     'status' => OrderStatus::PENDING,
                 ]);
 
-                $rfq->update([
-                    'status' => RfqStatus::COMPLETED,
-                    'payment_status' => OrderStatus::PAID
-                ]);
-
                 $orderedItems[] = [
                     'product_name' => $product->name,
                     'image' => $product->front_image,
@@ -303,6 +298,7 @@ class PaystackService
                         ]);
                     }
                 }
+                $rfq->delete();
                 self::sendOrderConfirmationEmail($user, $orderedItems, $orderNo, $formattedAmount);
                 self::sendSellerOrderEmail($product->user, $orderedItems, $orderNo, $formattedAmount);
 

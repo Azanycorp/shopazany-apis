@@ -28,11 +28,11 @@ class B2bOrder extends Model
 
     public function seller(): BelongsTo
     {
-        return $this->belongsTo(User::class,'seller_id','id');
+        return $this->belongsTo(User::class, 'seller_id', 'id');
     }
     public function buyer(): BelongsTo
     {
-        return $this->belongsTo(User::class,'buyer_id','id');
+        return $this->belongsTo(User::class, 'buyer_id', 'id');
     }
 
     protected function casts(): array
@@ -53,7 +53,7 @@ class B2bOrder extends Model
         $data->payment_id = $payment->id;
         $data->product_quantity = $item['product_quantity'] ?? $item['quantity'];
         $data->order_no = $orderNo;
-       // $data->shipping_address = $address;
+        // $data->shipping_address = $address;
         $data->order_date = now();
         $data->total_amount = $item['total_amount'] ?? $item['unitPrice'];
         $data->payment_method = $method;
@@ -66,4 +66,38 @@ class B2bOrder extends Model
         return $data;
     }
 
+    public static function orderStats()
+    {
+        return DB::select(
+            "SELECT
+                (SELECT ROUND(COUNT(`id`), 2) FROM `b2b_orders`) AS total_orders,
+                (SELECT ROUND(COUNT(`id`), 2) FROM `b2b_orders` WHERE `status`='delivered' ) AS total_delivered,
+                (SELECT ROUND(COUNT(`id`), 2) FROM `b2b_orders` WHERE `status`='pending' ) AS total_pending,
+                (SELECT ROUND(COUNT(`id`), 2) FROM `b2b_orders` WHERE `status`='shipped' ) AS total_shipped,
+
+
+                (SELECT ROUND(SUM(`amount`), 2)
+                    FROM `b2b_orders` WHERE status='delivered'
+                ) AS total_order_delivered_amount,
+
+
+                (SELECT ROUND(SUM(`amount`), 2)
+                    FROM `b2b_orders`
+                    WHERE (YEARWEEK(`created_at`) = YEARWEEK(CURDATE()))
+                ) AS total_order_amount_week,
+
+                (SELECT ROUND(COUNT(`id`), 2)
+                    FROM `b2b_orders`
+                    WHERE (YEARWEEK(`created_at`) = YEARWEEK(CURDATE()))
+                ) AS total_order_count_week,
+
+                (SELECT
+                    ROUND(SUM(`amount`), 2)
+                    FROM `b2b_orders`
+                    WHERE MONTH(created_at) = MONTH(NOW()) AND YEAR(created_at) = YEAR(NOW())
+                ) AS total_order_amount_month
+
+            "
+        )[0];
+    }
 }
