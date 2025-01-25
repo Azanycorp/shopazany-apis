@@ -127,8 +127,7 @@ class AdminService
             + User::where(['type' => UserType::B2B_SELLER, 'status' => UserStatus::SUSPENDED])->count()
             + User::where(['type' => UserType::B2B_SELLER, 'status' => UserStatus::BLOCKED])->count();
 
-        $users = User::with(['businessInformation'])
-            ->where('type', UserType::B2B_SELLER)
+        $users = User::where('type', UserType::B2B_SELLER)
             ->when($searchQuery, function ($queryBuilder) use ($searchQuery) {
                 $queryBuilder->where(function ($subQuery) use ($searchQuery) {
                     $subQuery->where('first_name', 'LIKE', '%' . $searchQuery . '%')
@@ -142,7 +141,7 @@ class AdminService
             })
             ->paginate(25);
 
-        $data = B2BSellerResource::collection($users);
+       // $data = B2BSellerResource::collection($users);
 
         return [
             'status' => 'true',
@@ -150,7 +149,7 @@ class AdminService
             'all_users' => $total_users->count(),
             'active_users' => $total_users->where('status', UserStatus::ACTIVE)->count(),
             'inactive_users' => $inactive_users,
-            'data' => $data,
+            'data' => $users,
             'pagination' => [
                 'current_page' => $users->currentPage(),
                 'last_page' => $users->lastPage(),
