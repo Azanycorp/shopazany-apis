@@ -11,6 +11,7 @@ use App\Enum\PaymentType;
 use App\Models\B2BProduct;
 use App\Models\RfqMessage;
 use App\Models\UserWallet;
+use App\Mail\B2BOrderEmail;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
 use App\Models\Configuration;
@@ -25,6 +26,7 @@ use App\Models\B2bWithdrawalMethod;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Storage;
 use App\Models\B2BSellerShippingAddress;
@@ -770,8 +772,9 @@ class SellerService extends Controller
     public function confirmPayment($data)
     {
         $rfq = Rfq::findOrFail($data->rfq_id);
-        $seller = User::findOrFail($rfq->seller_id);
-        $product = B2BProduct::findOrFail($rfq->product_id);
+         $seller = User::select('id')->findOrFail($rfq->seller_id);
+          $buyer = User::select('id','email','first_name','last_name')->findOrFail($rfq->buyer_id);
+          $product = B2BProduct::select(['id','name','front_image','quantity','sold'])->findOrFail($rfq->product_id);
 
         DB::beginTransaction();
 
@@ -790,11 +793,13 @@ class SellerService extends Controller
                 'status' => OrderStatus::PENDING,
             ]);
 
-            $orderedItems[] = [
+            $orderedItems = [
                 'product_name' => $product->name,
                 'image' => $product->front_image,
                 'quantity' => $rfq->product_quantity,
                 'price' => $rfq->total_amount,
+                'buyer_name' => $buyer->first_name.' '.$buyer->last_name,
+                'order_number' => $order->order_no,
             ];
 
             $product->quantity -= $rfq->product_quantity;
@@ -815,13 +820,10 @@ class SellerService extends Controller
             $rfq->delete();
 
             DB::commit();
-
-            // Use your own email service for B2B
-            // self::sendOrderConfirmationEmail($seller, $orderedItems, $order->oder_no, $rfq->total_amount);
-            // self::sendSellerOrderEmail($product->user, $orderedItems, $order->oder_no, $rfq->total_amount);
-
-            return $this->success($rfq, 'Payment Confirmed successfully');
+            Mail::to($buyer->email)->send(new B2BOrderEmail($orderedItems));
+            return $this->success($order, 'Payment Confirmed successfully');
         } catch (\Exception $e) {
+            return $e;
             DB::rollBack();
             return $this->error(null, 'transaction failed, please try again', 500);
         }
