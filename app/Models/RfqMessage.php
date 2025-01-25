@@ -20,10 +20,12 @@ class RfqMessage extends Model
     {
         return $this->BelongsTo(User::class, 'buyer_id');
     }
+
     public function seller(): BelongsTo
     {
         return $this->BelongsTo(User::class, 'seller_id');
     }
+    
     public function rfq(): BelongsTo
     {
         return $this->BelongsTo(RfqMessage::class, 'rfq_id');
