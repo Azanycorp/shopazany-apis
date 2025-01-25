@@ -8,11 +8,12 @@ use App\Models\Admin;
 use App\Enum\UserType;
 use App\Models\Payout;
 use App\Enum\UserStatus;
+use App\Models\B2bOrder;
 use App\Enum\AdminStatus;
 use App\Enum\OrderStatus;
-use App\Enum\ProductStatus;
 use App\Models\B2BProduct;
 use App\Models\UserWallet;
+use App\Enum\ProductStatus;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
 use App\Models\Configuration;
@@ -40,11 +41,32 @@ class AdminService
         $this->b2bProductRepository = $b2bProductRepository;
         $this->b2bSellerShippingRepository = $b2bSellerShippingRepository;
     }
-    //Rfq
+
+    //dashboard
+    public function dashboard()
+    {
+        $users =  User::all();
+        $orders =  B2bOrder::orderStats();
+        $rfqs =  Rfq::latest('id')->get();
+
+        $data = [
+            'buyers' => $users->where('type', UserType::B2B_BUYER)->count(),
+            'sellers' => $users->where('type', UserType::B2B_SELLER)->count(),
+            'ongoing_deals' => $orders->total_pending,
+            'all_time_orders_count' => $orders->total_orders,
+            'all_time_orders_amount' => $orders->total_order_delivered_amount,
+            'ongoing' => $orders->total_pending,
+            'last_seven_days' => $orders->total_order_count_week,
+            'last_thirty_days' => $orders->total_order_amount_month,
+            'recent_rfqs' => $rfqs,
+        ];
+
+        return $this->success($data, "Dashboard details");
+    }
 
     public function getAllRfq()
     {
-        $rfqs =  Rfq::with(['buyer', 'seller'])->whereIn('status', [OrderStatus::PENDING, OrderStatus::REVIEW, OrderStatus::INPROGRESS])->get();
+        $rfqs =  Rfq::with(['buyer', 'seller'])->latest('id')->get();
 
         if ($rfqs->isEmpty()) {
             return $this->error(null, "No record found.", 404);
@@ -63,19 +85,23 @@ class AdminService
 
         return $this->success($order, "Rfq details");
     }
-    //Orders Completed Rfq
 
-    public function getAllOrders()
+    public function getAllOrders($data)
     {
-        $rfqs =  Rfq::with(['buyer', 'seller'])
-            ->whereIn('status', [OrderStatus::DELIVERED, OrderStatus::SHIPPED])
-            ->get();
+        $orders =  B2bOrder::orderStats();
+        $recent_orders = B2bOrder::where('order_no', $data->search)->orWhere('id', $data->search)->get();
 
-        if ($rfqs->isEmpty()) {
-            return $this->error(null, "No record found.", 404);
-        }
+        $data = [
+            'all_orders' => $orders->total_orders,
+            'pending_orders' => $orders->total_pending,
+            'shipped_orders' => $orders->total_shipped,
+            'delivery_orders' => $orders->total_delivered,
 
-        return $this->success($rfqs, "orders");
+            'recent_orders' => $recent_orders,
+
+        ];
+
+        return $this->success($data, "orders");
     }
 
     public function getOrderDetails($id)
@@ -620,8 +646,8 @@ class AdminService
     {
         $payouts =  Payout::select(['id', 'seller_id', 'amount', 'status', 'created_at'])
             ->with(['user' => function ($query) {
-            $query->select('id', 'first_name', 'last_name')->where('type', UserType::B2B_SELLER);
-        }])->latest('id')->get();
+                $query->select('id', 'first_name', 'last_name')->where('type', UserType::B2B_SELLER);
+            }])->latest('id')->get();
 
         if ($payouts->isEmpty()) {
             return $this->error(null, 'No record found');
@@ -760,7 +786,7 @@ class AdminService
     {
         $products =  B2BProduct::with(['user' => function ($query) {
             $query->select('id', 'first_name', 'last_name')->where('type', UserType::B2B_SELLER);
-        }])->where('status',OrderStatus::PENDING)->latest('id')->get();
+        }])->where('status', OrderStatus::PENDING)->latest('id')->get();
 
         if ($products->isEmpty()) {
             return $this->error(null, 'No record found');
@@ -771,7 +797,7 @@ class AdminService
     public function viewProduct($id)
     {
         $product = B2BProduct::with(['user' => function ($query) {
-            $query->select('id','first_name','last_name')->where('type', UserType::B2B_SELLER);
+            $query->select('id', 'first_name', 'last_name')->where('type', UserType::B2B_SELLER);
         }])->find($id);
 
         if (! $product) {

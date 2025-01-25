@@ -12,4 +12,5 @@ enum OrderStatus: string
     const INPROGRESS = 'in-progress';
     const REVIEW = 'review';
     const SHIPPED = 'shipped';
+    const PAID = 'paid';
 }
