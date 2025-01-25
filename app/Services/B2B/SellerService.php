@@ -354,7 +354,7 @@ class SellerService extends Controller
             'unit_price' => $request->unit,
             'quantity' => $request->quantity,
             'default_currency' => $request->default_currency,
-            'available_quantity' => $request->quantity - $prod->sold,
+            'availability_quantity' => $request->quantity - $prod->sold,
             'fob_price' => $request->fob_price,
             'country_id' => $user->country ?? 160,
         ];
@@ -775,11 +775,13 @@ class SellerService extends Controller
 
         return $this->success($rfq, 'Product marked delivered successfully');
     }
+
     public function confirmPayment($data)
     {
         $rfq = Rfq::findOrFail($data->rfq_id);
         $seller = User::findOrFail($rfq->seller_id);
         $product = B2BProduct::findOrFail($rfq->product_id);
+
         DB::beginTransaction();
 
         try {
@@ -803,45 +805,35 @@ class SellerService extends Controller
                 'quantity' => $rfq->product_quantity,
                 'price' => $rfq->total_amount,
             ];
+
             $product->quantity -= $rfq->product_quantity;
             $product->sold += $rfq->product_quantity;
             $product->save();
 
             $config = Configuration::first();
-            if ($config) {
-                $seller_perc = $config->seller_perc ?? 0;
-                $credit = ($seller_perc / 100) * $amount;
-                $wallet = UserWallet::where('user_id', $seller->id)->first();
-                if ($wallet) {
-                    $wallet->master_wallet += $credit;
-                    $wallet->save();
-                } else {
-                    UserWallet::create([
-                        'user_id' => $seller->id,
-                        'master_wallet' => $credit,
-                    ]);
-                }
+            $sellerPercentage = $config->seller_perc ?? 0;
+            $credit = ($sellerPercentage / 100) * $amount;
+
+            if ($credit > 0) {
+                $wallet = UserWallet::firstOrNew(['user_id' => $seller->id]);
+
+                $wallet->master_wallet = ($wallet->master_wallet ?? 0) + $credit;
+                $wallet->save();
             }
-            DB::commit();
-            self::sendOrderConfirmationEmail($seller, $orderedItems, $order->oder_no, $rfq->total_amount);
-            self::sendSellerOrderEmail($product->user, $orderedItems, $order->oder_no, $rfq->total_amount);
+
             $rfq->delete();
+
+            DB::commit();
+
+            // Use your own email service for B2B
+            // self::sendOrderConfirmationEmail($seller, $orderedItems, $order->oder_no, $rfq->total_amount);
+            // self::sendSellerOrderEmail($product->user, $orderedItems, $order->oder_no, $rfq->total_amount);
+
             return $this->success($rfq, 'Payment Confirmed successfully');
         } catch (\Exception $e) {
-            return $e;
             DB::rollBack();
             return $this->error(null, 'transaction failed, please try again', 500);
         }
-    }
-
-    private static function sendSellerOrderEmail($seller, $order, $orderNo, $totalAmount)
-    {
-        defer(fn() => send_email($seller->email, new SellerOrderMail($seller, $order, $orderNo, $totalAmount)));
-    }
-
-    private static function sendOrderConfirmationEmail($user, $orderedItems, $orderNo, $totalAmount)
-    {
-        defer(fn() => send_email($user->email, new CustomerOrderMail($user, $orderedItems, $orderNo, $totalAmount)));
     }
 
     public function rateOrder($data)
@@ -900,11 +892,13 @@ class SellerService extends Controller
         $rfqs =  Rfq::with('buyer')->where('seller_id', $currentUserId)->get();
         $payouts =  Payout::where('seller_id', $currentUserId)->get();
         $wallet =  UserWallet::where('user_id', $currentUserId)->first();
+
         if (!$wallet) {
             UserWallet::create([
                 'user_id' => $currentUserId
             ]);
         }
+
         $orderCounts = DB::table('rfqs')
             ->select('buyer_id', DB::raw('COUNT(*) as total_orders'))
             ->groupBy('id')
@@ -967,6 +961,7 @@ class SellerService extends Controller
         if (strtolower($config->withdrawal_status) == WithdrawalStatus::DISABLED) {
             return $this->error(null, 'Withrawal on this system is currently not available', 422);
         }
+
         if ($data->amount > $wallet->master_wallet) {
             return $this->error(null, 'Insufficient balance', 422);
         }

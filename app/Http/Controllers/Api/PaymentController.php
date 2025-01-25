@@ -24,16 +24,18 @@ class PaymentController extends Controller
 
     public function processPayment(PaymentRequest $request)
     {
-        match ($request->payment_method) {
-            PaymentType::PAYSTACK => $paymentProcessor = new PaystackPaymentProcessor(),
-            PaymentType::B2B_PAYSTACK => $paymentProcessor = new B2BPaystackPaymentProcessor()
+        $paymentProcessor = match ($request->payment_method) {
+            PaymentType::PAYSTACK => new PaystackPaymentProcessor(),
+            PaymentType::B2B_PAYSTACK => new B2BPaystackPaymentProcessor(),
+            default => throw new \Exception("Unsupported payment method"),
         };
 
         $paymentService = new HandlePaymentService($paymentProcessor);
 
-        match ($request->payment_method) {
-            PaymentType::PAYSTACK => $paymentDetails = PaymentDetailsService::paystackPayDetails($request),
-            PaymentType::B2B_PAYSTACK => $paymentDetails = PaymentDetailsService::b2bPaystackPayDetails($request),
+        $paymentDetails = match ($request->payment_method) {
+            PaymentType::PAYSTACK => PaymentDetailsService::paystackPayDetails($request),
+            PaymentType::B2B_PAYSTACK => PaymentDetailsService::b2bPaystackPayDetails($request),
+            default => throw new \Exception("Unsupported payment method"),
         };
 
         return $paymentService->process($paymentDetails);

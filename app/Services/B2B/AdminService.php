@@ -45,7 +45,6 @@ class AdminService
     //dashboard
     public function dashboard()
     {
-
         $users =  User::all();
         $orders =  B2bOrder::orderStats();
         $rfqs =  Rfq::latest('id')->get();
@@ -57,12 +56,9 @@ class AdminService
             'all_time_orders_count' => $orders->total_orders,
             'all_time_orders_amount' => $orders->total_order_delivered_amount,
             'ongoing' => $orders->total_pending,
-
             'last_seven_days' => $orders->total_order_count_week,
             'last_thirty_days' => $orders->total_order_amount_month,
-
             'recent_rfqs' => $rfqs,
-
         ];
 
         return $this->success($data, "Dashboard details");
@@ -89,7 +85,6 @@ class AdminService
 
         return $this->success($order, "Rfq details");
     }
-    //Orders Completed Rfq
 
     public function getAllOrders($data)
     {

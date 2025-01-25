@@ -7,7 +7,6 @@ use App\Models\Cart;
 use App\Models\User;
 use App\Enum\UserLog;
 use App\Models\Order;
-use App\Enum\RfqStatus;
 use App\Models\Payment;
 use App\Models\Product;
 use App\Models\B2bOrder;
@@ -97,6 +96,9 @@ class PaystackService
 
     public static function handlePaymentSuccess($event, $status)
     {
+        $paymentData = null;
+        $user = null;
+
         try {
             DB::transaction(function () use ($event, $status) {
 
@@ -211,8 +213,6 @@ class PaystackService
 
     public static function handleB2BPaymentSuccess($event, $status)
     {
-
-
         try {
             DB::transaction(function () use ($event, $status) {
                 $paymentData = $event['data'];
@@ -220,7 +220,6 @@ class PaystackService
                 $rfqId = $paymentData['metadata']['rfq_id'];
                 $method = $paymentData['metadata']['payment_method'];
                 $ref = $paymentData['reference'];
-                $payment_type = $paymentData['metadata']['payment_type'];
                 $amount = $paymentData['amount'];
                 $formattedAmount = number_format($amount / 100, 2, '.', '');
                 $channel = $paymentData['channel'];
@@ -253,7 +252,7 @@ class PaystackService
                     'type' => PaymentType::B2BUSERORDER,
                 ];
 
-                $payment = (new PaymentLogAction($data, $paymentData, $method, $status))->execute();
+                (new PaymentLogAction($data, $paymentData, $method, $status))->execute();
 
                 $rfq = Rfq::findOrFail($rfqId);
                 $seller = User::findOrFail($rfq->seller_id);
@@ -264,7 +263,7 @@ class PaystackService
                     'seller_id' => $rfq->seller_id,
                     'product_id' => $rfq->product_id,
                     'product_quantity' => $rfq->product_quantity,
-                    'order_no' => $orderNo = self::orderNo(),
+                    'order_no' => $orderNo,
                     'product_data' => $product,
                     'amount' => $amount,
                     'payment_method' => $method,
@@ -285,19 +284,14 @@ class PaystackService
                 $config = Configuration::first();
 
                 if ($config) {
-                    $seller_perc = $config->seller_perc ?? 0;
-                    $credit = ($seller_perc / 100) * $amount;
-                    $wallet = UserWallet::where('user_id', $seller->id)->first();
-                    if ($wallet) {
-                        $wallet->master_wallet += $credit;
-                        $wallet->save();
-                    } else {
-                        UserWallet::create([
-                            'user_id' => $seller->id,
-                            'master_wallet' => $credit,
-                        ]);
-                    }
+                    $sellerPerc = $config->seller_perc ?? 0;
+                    $credit = ($sellerPerc / 100) * $amount;
+
+                    $wallet = UserWallet::firstOrNew(['user_id' => $seller->id]);
+                    $wallet->master_wallet = ($wallet->master_wallet ?? 0) + $credit;
+                    $wallet->save();
                 }
+
                 $rfq->delete();
                 self::sendOrderConfirmationEmail($user, $orderedItems, $orderNo, $formattedAmount);
                 self::sendSellerOrderEmail($product->user, $orderedItems, $orderNo, $formattedAmount);
@@ -311,8 +305,6 @@ class PaystackService
                 ))->run();
             });
         } catch (\Exception $e) {
-            $msg = 'Error in handlePaymentSuccess: ' . $e->getMessage();
-
             // (new UserLogAction(
             //     request(),
             //     UserLog::PAYMENT,
