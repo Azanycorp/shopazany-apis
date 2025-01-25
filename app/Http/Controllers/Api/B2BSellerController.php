@@ -139,6 +139,11 @@ class B2BSellerController extends Controller
         return $this->service->withdrawalRequest($request);
     }
 
+    //Orders
+    public function orderDetails($id)
+    {
+        return $this->service->getOrderDetails($id);
+    }
     //RFQS
     public function allRfq()
     {

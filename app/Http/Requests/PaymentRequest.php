@@ -27,8 +27,8 @@ class PaymentRequest extends FormRequest
             'amount' => ['required', 'integer'],
             'currency' => ['required', 'string', 'in:NGN,USD'],
             'payment_redirect_url' => ['required', 'url'],
-            'items' => ['required', 'array'],
-            'items.*.product_id' => ['required', 'integer', 'exists:products,id'],
+            // 'items' => ['required', 'array'],
+            // 'items.*.product_id' => ['required', 'integer', 'exists:products,id'],
         ];
     }
 }

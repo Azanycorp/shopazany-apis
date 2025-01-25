@@ -49,6 +49,10 @@ class PaymentService
                     PaystackService::handlePaymentSuccess($event, $event['event']);
                     break;
 
+                case PaymentType::B2BUSERORDER:
+                    PaystackService::handleB2BPaymentSuccess($event, $event['event']);
+                    break;
+
                 default:
                     Log::warning('Unknown payment type', ['payment_type' => $paymentType]);
                     break;
@@ -62,7 +66,6 @@ class PaymentService
     public function verifyPayment($userId, $ref)
     {
         $currentUserId = Auth::id();
-
         if ($currentUserId != $userId) {
             return $this->error(null, "Unauthorized action.", 401);
         }
