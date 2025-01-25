@@ -14,6 +14,7 @@ use App\Enum\OrderStatus;
 use App\Enum\PaymentType;
 use App\Models\B2BProduct;
 use App\Models\UserWallet;
+use App\Mail\B2BOrderEmail;
 use Illuminate\Support\Str;
 use App\Mail\SellerOrderMail;
 use App\Models\Configuration;
@@ -24,6 +25,7 @@ use App\Actions\PaymentLogAction;
 use Illuminate\Support\Facades\DB;
 use App\Models\UserShippingAddress;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class PaystackService
 {
@@ -271,11 +273,14 @@ class PaystackService
                     'status' => OrderStatus::PENDING,
                 ]);
 
-                $orderedItems[] = [
+              
+                $orderedItems = [
                     'product_name' => $product->name,
                     'image' => $product->front_image,
                     'quantity' => $rfq->product_quantity,
                     'price' => $rfq->total_amount,
+                    'buyer_name' => $user->first_name.' '.$user->last_name,
+                    'order_number' => $orderNo,
                 ];
                 $product->quantity -= $rfq->product_quantity;
                 $product->sold += $rfq->product_quantity;
@@ -293,9 +298,7 @@ class PaystackService
                 }
 
                 $rfq->delete();
-                self::sendOrderConfirmationEmail($user, $orderedItems, $orderNo, $formattedAmount);
-                self::sendSellerOrderEmail($product->user, $orderedItems, $orderNo, $formattedAmount);
-
+                Mail::to($user->email)->send(new B2BOrderEmail($orderedItems));
                 (new UserLogAction(
                     request(),
                     UserLog::PAYMENT,
