@@ -79,11 +79,7 @@ class BuyerService
 
         $data = new CustomerResource($user);
 
-        return [
-            'status' => 'true',
-            'message' => 'Buyer details',
-            'data' => $data,
-        ];
+        return $this->success($data, 'Buyer details');
     }
 
     public function banCustomer($request)
@@ -306,9 +302,10 @@ class BuyerService
                     'product_data' => $quote->product_data,
                 ]);
             }
+            B2bQuote::where('buyer_id', $userId)->delete();
 
             DB::commit();
-            B2bQuote::where('buyer_id', $userId)->delete();
+
             return $this->success(null, 'rfq sent successfully');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -550,6 +547,7 @@ class BuyerService
 
     public function addToWishList($data)
     {
+        $userId = userAuthId();
         $product = B2BProduct::find($data->product_id);
 
         if (!$product) {
@@ -557,7 +555,7 @@ class BuyerService
         }
 
         B2bWishList::create([
-            'user_id' => userAuthId(),
+            'user_id' => $userId,
             'product_id' => $product->id
         ]);
 
@@ -567,8 +565,10 @@ class BuyerService
     //wish list
     public function myWishList()
     {
+        $userId = userAuthId();
+
         $wishes =  B2bWishList::with('product')
-            ->where('user_id', userAuthId())
+            ->where('user_id', $userId)
             ->latest('id')
             ->get();
 
@@ -581,7 +581,7 @@ class BuyerService
 
     public function removeItem($id)
     {
-        $wish =  B2bWishList::find($id);
+        $wish = B2bWishList::find($id);
 
         if (!$wish) {
             return $this->error(null, 'No record found to send', 404);
@@ -594,6 +594,7 @@ class BuyerService
     public function sendFromWishList($data)
     {
         $quote = B2bWishList::findOrFail($data->id);
+
         if (!$quote) {
             return $this->error(null, 'No record found', 404);
         }
@@ -603,6 +604,7 @@ class BuyerService
         if ($data->qty < $product->minimum_order_quantity) {
             return $this->error(null, 'Your peferred quantity can not be less than the one already set', 422);
         }
+
         try {
             $amount = total_amount($product->unit_price,$data->qty);
 
@@ -628,6 +630,7 @@ class BuyerService
     public function profile()
     {
         $auth = userAuth();
+        
         $user = User::with('b2bCompany')
             ->where('type', UserType::B2B_BUYER)
             ->find($auth->id);

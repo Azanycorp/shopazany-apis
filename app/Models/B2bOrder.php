@@ -4,7 +4,6 @@ namespace App\Models;
 
 use App\Enum\OrderStatus;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -30,6 +29,7 @@ class B2bOrder extends Model
     {
         return $this->belongsTo(User::class, 'seller_id', 'id');
     }
+
     public function buyer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'buyer_id', 'id');
@@ -42,7 +42,7 @@ class B2bOrder extends Model
             'product_data' => 'array'
         ];
     }
-    //public static function saveOrder($user, $payment, $seller, $item, $orderNo, $address, $method, $status)
+
     public static function saveOrder($user, $payment, $seller, $item, $orderNo, $method, $status)
     {
         $data = new self();
@@ -53,7 +53,6 @@ class B2bOrder extends Model
         $data->payment_id = $payment->id;
         $data->product_quantity = $item['product_quantity'] ?? $item['quantity'];
         $data->order_no = $orderNo;
-        // $data->shipping_address = $address;
         $data->order_date = now();
         $data->total_amount = $item['total_amount'] ?? $item['unitPrice'];
         $data->payment_method = $method;
