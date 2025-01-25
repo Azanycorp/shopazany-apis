@@ -354,7 +354,7 @@ class SellerService extends Controller
             'unit_price' => $request->unit,
             'quantity' => $request->quantity,
             'default_currency' => $request->default_currency,
-            'available_quantity' => $request->quantity - $prod->sold,
+            'availability_quantity' => $request->quantity - $prod->sold,
             'fob_price' => $request->fob_price,
             'country_id' => $user->country ?? 160,
         ];
@@ -961,7 +961,7 @@ class SellerService extends Controller
         if (strtolower($config->withdrawal_status) == WithdrawalStatus::DISABLED) {
             return $this->error(null, 'Withrawal on this system is currently not available', 422);
         }
-        
+
         if ($data->amount > $wallet->master_wallet) {
             return $this->error(null, 'Insufficient balance', 422);
         }

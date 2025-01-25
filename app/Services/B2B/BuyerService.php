@@ -630,7 +630,7 @@ class BuyerService
     public function profile()
     {
         $auth = userAuth();
-        
+
         $user = User::with('b2bCompany')
             ->where('type', UserType::B2B_BUYER)
             ->find($auth->id);
@@ -694,11 +694,18 @@ class BuyerService
     public function editCompany($request)
     {
         $auth = Auth::user();
+
         $company = B2bCompany::where('user_id', $auth->id)->first();
-        if (!$company)  return $this->error(null, 422, 'No company found to update');
+
+        if (!$company) {
+            return $this->error(null, 'No company found to update', 404);
+        }
+
+        $logo_url = null;
         if ($request->hasFile('logo')) {
             $logo_url = uploadImage($request, 'logo', 'company-logo');
         }
+
         $company->update([
             'business_name' => $request->company_name ?? $company->company_name,
             'business_phone' => $request->business_phone ?? $company->business_phone,
