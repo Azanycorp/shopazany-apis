@@ -3,8 +3,9 @@
 namespace Database\Seeders;
 
 use App\Models\Admin;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Configuration;
 use Illuminate\Database\Seeder;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
 class AdminSeeder extends Seeder
 {
@@ -33,7 +34,15 @@ class AdminSeeder extends Seeder
                 "status" => "active"
             ]
         ];
-
+        Configuration::create([
+            'min_withdrawal' => 100,
+            'max_withdrawal' => 1000,
+            'withdrawal_frequency' => 2,
+            'withdrawal_status' => 'enabled',
+            'withdrawal_fee' => 100,
+            'seller_perc' => 20,
+            'paystack_perc' => 1.5,
+        ]);
         Admin::insert($data);
     }
 }

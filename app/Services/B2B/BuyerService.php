@@ -26,6 +26,7 @@ use App\Http\Resources\BuyerResource;
 use App\Http\Resources\PaymentResource;
 use App\Http\Resources\CustomerResource;
 use App\Http\Resources\B2BProductResource;
+use App\Models\RfqMessage;
 
 class BuyerService
 {
@@ -78,11 +79,7 @@ class BuyerService
 
         $data = new CustomerResource($user);
 
-        return [
-            'status' => 'true',
-            'message' => 'Buyer details',
-            'data' => $data,
-        ];
+        return $this->success($data, 'Buyer details');
     }
 
     public function banCustomer($request)
@@ -305,9 +302,10 @@ class BuyerService
                     'product_data' => $quote->product_data,
                 ]);
             }
+            B2bQuote::where('buyer_id', $userId)->delete();
 
             DB::commit();
-            B2bQuote::where('buyer_id', $userId)->delete();
+
             return $this->success(null, 'rfq sent successfully');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -324,12 +322,11 @@ class BuyerService
         }
 
         try {
-            $amount = ($quote->product_data['unit_price'] * $quote->product_data['minimum_order_quantity']);
-
+            $amount = total_amount($quote->product_data['unit_price'], $quote->product_data['minimum_order_quantity']);
             Rfq::create([
                 'buyer_id' => $quote->buyer_id,
                 'seller_id' => $quote->seller_id,
-                'quote_no' => strtoupper(Str::random(10) . Auth::user()->id),
+                'quote_no' => strtoupper(Str::random(10) . userAuthId()),
                 'product_id' => $quote->product_id,
                 'product_quantity' => $quote->qty,
                 'total_amount' => $amount,
@@ -450,12 +447,15 @@ class BuyerService
     public function rfqDetails($id)
     {
         $rfq = Rfq::with(['seller', 'messages'])->find($id);
-
         if (!$rfq) {
             return $this->error(null, 'No record found to send', 404);
         }
-
-        return $this->success($rfq, 'rfq details');
+        $messages = RfqMessage::with(['seller', 'buyer'])->where('rfq_id', $rfq->id)->get();
+        $data = [
+            'rfq' => $rfq,
+            'messages' => $messages
+        ];
+        return $this->success($data, 'rfq details');
     }
 
     //send review request to vendor
@@ -473,8 +473,9 @@ class BuyerService
 
             $rfq->messages()->create([
                 'rfq_id' => $data->rfq_id,
+                'buyer_id' => userAuthId(),
                 'p_unit_price' => $data->p_unit_price,
-                'preferred_qty' => $rfq->qty,
+                'preferred_qty' => $rfq->product_quantity,
                 'note' => $data->note,
             ]);
 
@@ -546,6 +547,7 @@ class BuyerService
 
     public function addToWishList($data)
     {
+        $userId = userAuthId();
         $product = B2BProduct::find($data->product_id);
 
         if (!$product) {
@@ -553,7 +555,7 @@ class BuyerService
         }
 
         B2bWishList::create([
-            'user_id' => userAuthId(),
+            'user_id' => $userId,
             'product_id' => $product->id
         ]);
 
@@ -563,8 +565,10 @@ class BuyerService
     //wish list
     public function myWishList()
     {
+        $userId = userAuthId();
+
         $wishes =  B2bWishList::with('product')
-            ->where('user_id', Auth::id())
+            ->where('user_id', $userId)
             ->latest('id')
             ->get();
 
@@ -577,7 +581,7 @@ class BuyerService
 
     public function removeItem($id)
     {
-        $wish =  B2bWishList::find($id);
+        $wish = B2bWishList::find($id);
 
         if (!$wish) {
             return $this->error(null, 'No record found to send', 404);
@@ -589,21 +593,27 @@ class BuyerService
 
     public function sendFromWishList($data)
     {
-        $quote = B2bWishList::find($data->id);
+        $quote = B2bWishList::findOrFail($data->id);
+
         if (!$quote) {
             return $this->error(null, 'No record found', 404);
         }
-        $product = B2BProduct::find($quote->product_id);
+
+        $product = B2BProduct::findOrFail($quote->product_id);
+
+        if ($data->qty < $product->minimum_order_quantity) {
+            return $this->error(null, 'Your peferred quantity can not be less than the one already set', 422);
+        }
 
         try {
-            $amount = ($product->unit_price * $product->minimum_order_quantity);
+            $amount = total_amount($product->unit_price,$data->qty);
 
             Rfq::create([
                 'buyer_id' => $quote->user_id,
                 'seller_id' => $product->user_id,
                 'quote_no' => strtoupper(Str::random(10) . Auth::user()->id),
                 'product_id' => $product->id,
-                'product_quantity' => $product->minimum_order_quantity,
+                'product_quantity' => $data->qty,
                 'total_amount' => $amount,
                 'p_unit_price' => $product->unit_price,
                 'product_data' => $product,
@@ -620,6 +630,7 @@ class BuyerService
     public function profile()
     {
         $auth = userAuth();
+
         $user = User::with('b2bCompany')
             ->where('type', UserType::B2B_BUYER)
             ->find($auth->id);
@@ -683,14 +694,21 @@ class BuyerService
     public function editCompany($request)
     {
         $auth = Auth::user();
+
         $company = B2bCompany::where('user_id', $auth->id)->first();
-        if (!$company)  return $this->error(null, 422, 'No company found to update');
+
+        if (!$company) {
+            return $this->error(null, 'No company found to update', 404);
+        }
+
+        $logo_url = null;
         if ($request->hasFile('logo')) {
             $logo_url = uploadImage($request, 'logo', 'company-logo');
         }
+
         $company->update([
             'business_name' => $request->company_name ?? $company->company_name,
-            'business_phone' => $request->company_phone ?? $company->company_phone,
+            'business_phone' => $request->business_phone ?? $company->business_phone,
             'company_size' => $request->company_size ?? $company->company_size,
             'website' => $request->website ?? $company->website,
             'average_spend' => $request->average_spend ?? $company->average_spend,

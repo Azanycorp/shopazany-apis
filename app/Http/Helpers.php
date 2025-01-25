@@ -20,6 +20,14 @@ use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 
 
+if (!function_exists('total_amount')) {
+    function total_amount($unit_price, $moq)
+    {
+        return ($unit_price * $moq);
+    }
+}
+
+
 if (!function_exists('reward_user')) {
     function reward_user($user, $actionName, $status)
     {

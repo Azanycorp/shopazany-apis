@@ -14,12 +14,10 @@ use App\Http\Controllers\Api\B2B\B2BAccountController;
 
 // B2B
 Route::middleware(['throttle:apis'])->group(function () {
-    //webhook
-    Route::post('/b2b/payment/webhook', [B2BPaymentController::class, 'webhook']);
+
     Route::prefix('b2b/connect')
         ->controller(B2BAccountController::class)
         ->group(function () {
-
             Route::post('/login', 'login');
             Route::post('/login/verify', 'loginVerify');
             Route::post('/seller/signup', 'signup');
@@ -48,10 +46,10 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function () {
             //dashboard
             Route::get('/dashboard', 'dashboard');
             Route::get('/withdrawals', 'withdrawalHistory');
-            Route::post('/withdrawal-request', 'makeWithdrawalRequest');
+            Route::post('/withdrawal-request','makeWithdrawalRequest');
             Route::get('/earning-report', 'getEarningReport');
 
-            //Orders and rfqs
+            // rfqs
             Route::prefix('rfq')->group(function () {
                 Route::get('/', 'allRfq');
                 Route::get('/details/{id}', 'rfqDetails');
@@ -61,6 +59,11 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function () {
                 Route::post('/confirm-payment', 'confirmPayment');
                 Route::post('/rate-order', 'rateOrder');
                 Route::post('/order-feeback', 'orderFeeback');
+            });
+
+            //orders
+            Route::prefix('order')->group(function () {
+                Route::get('/details/{id}', 'orderDetails');
             });
             //payment method
             Route::prefix('withdrawal-method')->group(function () {

@@ -273,6 +273,8 @@ class SellerService extends Controller
             'color',
             'unit',
             'size',
+            'orders',
+            'productReviews',
         ]);
 
         $products = $query->paginate(25);
@@ -316,6 +318,8 @@ class SellerService extends Controller
                 'color',
                 'unit',
                 'size',
+                'orders',
+                'productReviews',
             ])
             ->find($productId);
 

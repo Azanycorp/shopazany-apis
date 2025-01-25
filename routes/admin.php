@@ -201,6 +201,8 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function () {
 
     //b2b admin
     Route::prefix('b2b')->group(function () {
+        Route::get('/dashboard', [B2BAdminController::class, 'dashboard']);
+
 
         Route::get('/profile', [B2BAdminController::class, 'adminProfile']);
         Route::post('/update-profile', [B2BAdminController::class, 'updateAdminProfile']);

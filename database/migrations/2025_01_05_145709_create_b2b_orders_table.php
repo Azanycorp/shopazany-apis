@@ -16,7 +16,7 @@ return new class extends Migration
             $table->bigInteger('buyer_id');
             $table->bigInteger('seller_id');
             $table->integer('product_id');
-            $table->integer('product_quantity')->comment('the MOQ of the product');
+            $table->double('product_quantity')->comment('the MOQ of the product');
             $table->string('order_no')->nullable();
             $table->longText('shipping_address')->nullable();
             $table->longText('product_data')->nullable();

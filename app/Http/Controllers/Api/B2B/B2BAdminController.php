@@ -14,6 +14,11 @@ class B2BAdminController extends Controller
         private AdminService $adminService
     ) {}
 
+    //dashboard
+    public function dashboard()
+    {
+        return $this->adminService->dashboard();
+    }
     //RFQS
     public function allRfq()
     {
@@ -25,9 +30,9 @@ class B2BAdminController extends Controller
     }
 
     //Orders
-    public function allOrders()
+    public function allOrders(Request $request)
     {
-        return $this->adminService->getAllOrders();
+        return $this->adminService->getAllOrders($request);
     }
     public function orderDetails($id)
     {
@@ -38,7 +43,7 @@ class B2BAdminController extends Controller
     {
         return $this->adminService->adminProfile();
     }
-    
+
     public function updateAdminProfile(Request $request)
     {
         return $this->adminService->updateAdminProfile($request);

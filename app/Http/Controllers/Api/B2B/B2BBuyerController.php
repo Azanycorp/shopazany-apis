@@ -79,7 +79,7 @@ class B2BBuyerController extends Controller
     {
         return $this->buyerService->removeItem($id);
     }
-    
+
     public function sendFromWishList(Request $request)
     {
         return $this->buyerService->sendFromWishList($request);

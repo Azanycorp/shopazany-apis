@@ -3,14 +3,15 @@
 namespace App\Http\Controllers\Api;
 
 use App\Enum\PaymentType;
+use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\AuthorizeNetCardRequest;
 use App\Http\Requests\PaymentRequest;
+use App\Services\Payment\PaymentService;
+use App\Http\Requests\AuthorizeNetCardRequest;
 use App\Services\Payment\HandlePaymentService;
 use App\Services\Payment\PaymentDetailsService;
-use App\Services\Payment\PaymentService;
 use App\Services\Payment\PaystackPaymentProcessor;
-use Illuminate\Http\Request;
+use App\Services\Payment\B2BPaystackPaymentProcessor;
 
 class PaymentController extends Controller
 {
@@ -23,13 +24,19 @@ class PaymentController extends Controller
 
     public function processPayment(PaymentRequest $request)
     {
-        match($request->payment_method) {
-            PaymentType::PAYSTACK => $paymentProcessor = new PaystackPaymentProcessor()
+        $paymentProcessor = match ($request->payment_method) {
+            PaymentType::PAYSTACK => new PaystackPaymentProcessor(),
+            PaymentType::B2B_PAYSTACK => new B2BPaystackPaymentProcessor(),
+            default => throw new \Exception("Unsupported payment method"),
         };
 
         $paymentService = new HandlePaymentService($paymentProcessor);
 
-        $paymentDetails = PaymentDetailsService::paystackPayDetails($request);
+        $paymentDetails = match ($request->payment_method) {
+            PaymentType::PAYSTACK => PaymentDetailsService::paystackPayDetails($request),
+            PaymentType::B2B_PAYSTACK => PaymentDetailsService::b2bPaystackPayDetails($request),
+            default => throw new \Exception("Unsupported payment method"),
+        };
 
         return $paymentService->process($paymentDetails);
     }
@@ -53,5 +60,4 @@ class PaymentController extends Controller
     {
         return $this->service->getPaymentMethod($countryId);
     }
-
 }

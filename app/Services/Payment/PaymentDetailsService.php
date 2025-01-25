@@ -60,6 +60,38 @@ class PaymentDetailsService
             'callback_url' => $request->input('payment_redirect_url')
         ];
     }
+
+    public static function b2bPaystackPayDetails($request)
+    {
+        if($request->input('currency') === 'USD') {
+            return response()->json([
+                'status' => false,
+                'message' => "Currrency not available at the moment",
+                'data' => null
+            ], 400);
+        }
+
+        $user = User::findOrFail($request->input('user_id'));
+
+        $amount = $request->input('amount') * 100;
+        $callbackUrl = $request->input('payment_redirect_url');
+        if (!filter_var($callbackUrl, FILTER_VALIDATE_URL)) {
+            return response()->json(['error' => 'Invalid callback URL'], 400);
+        }
+
+        return [
+            'email' => $request->input('email'),
+            'amount' => $amount,
+            'currency' => $request->input('currency'),
+            'metadata' => json_encode([
+                'user_id' => $request->input('user_id'),
+                'rfq_id' => $request->input('rfq_id'),
+                'payment_method' => $request->input('payment_method'),
+                'payment_type' => PaymentType::B2BUSERORDER,
+            ]),
+            'callback_url' => $request->input('payment_redirect_url')
+        ];
+    }
 }
 
 
