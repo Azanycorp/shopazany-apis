@@ -4,10 +4,7 @@ namespace App\Services\B2B;
 
 use App\Models\Rfq;
 use App\Models\User;
-use App\Enum\UserLog;
-use App\Enum\UserType;
 use App\Models\Payout;
-use App\Enum\UserStatus;
 use App\Models\B2bOrder;
 use App\Enum\OrderStatus;
 use App\Enum\PaymentType;
@@ -17,24 +14,18 @@ use App\Models\UserWallet;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
 use App\Models\Configuration;
-use App\Models\PaymentMethod;
-use App\Actions\UserLogAction;
 use App\Enum\WithdrawalStatus;
 use App\Imports\ProductImport;
 use App\Models\B2bOrderRating;
 use Illuminate\Support\Carbon;
 use App\Models\B2bOrderFeedback;
-use App\Actions\PaymentLogAction;
 use App\Imports\B2BProductImport;
 use Illuminate\Support\Facades\DB;
 use App\Models\B2bWithdrawalMethod;
-use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Http\Resources\SellerResource;
-use App\Http\Resources\PaymentResource;
 use Illuminate\Support\Facades\Storage;
 use App\Models\B2BSellerShippingAddress;
 use App\Http\Resources\B2BProductResource;
@@ -815,7 +806,7 @@ class SellerService extends Controller
             $credit = ($sellerPercentage / 100) * $amount;
 
             if ($credit > 0) {
-                $wallet = UserWallet::firstOrNew(['user_id' => $seller->id]);
+                $wallet = UserWallet::firstOrNew(['seller_id' => $seller->id]);
 
                 $wallet->master_wallet = ($wallet->master_wallet ?? 0) + $credit;
                 $wallet->save();
@@ -891,11 +882,11 @@ class SellerService extends Controller
 
         $rfqs =  Rfq::with('buyer')->where('seller_id', $currentUserId)->get();
         $payouts =  Payout::where('seller_id', $currentUserId)->get();
-        $wallet =  UserWallet::where('user_id', $currentUserId)->first();
+        $wallet =  UserWallet::where('seller_id', $currentUserId)->first();
 
         if (!$wallet) {
             UserWallet::create([
-                'user_id' => $currentUserId
+                'seller_id' => $currentUserId
             ]);
         }
 
@@ -928,11 +919,11 @@ class SellerService extends Controller
     public function getWithdrawalHistory()
     {
         $currentUserId = userAuthId();
-        $wallet = UserWallet::where('user_id', $currentUserId)->first();
+        $wallet = UserWallet::where('seller_id', $currentUserId)->first();
 
         if (!$wallet) {
             UserWallet::create([
-                'user_id' => $currentUserId
+                'seller_id' => $currentUserId
             ]);
         }
 
@@ -944,7 +935,7 @@ class SellerService extends Controller
     {
         $currentUserId = userAuthId();
 
-        $wallet = UserWallet::where('user_id', $currentUserId)->first();
+        $wallet = UserWallet::where('seller_id', $currentUserId)->first();
         if (!$wallet) {
             return $this->error(null, 'User wallet not found', 404);
         }
