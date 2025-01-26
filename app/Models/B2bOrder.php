@@ -17,7 +17,7 @@ class B2bOrder extends Model
         'order_no',
         'shipping_address',
         'product_data',
-        'amount',
+        'total_amount',
         'payment_method',
         'payment_status',
         'status',
@@ -43,27 +43,7 @@ class B2bOrder extends Model
         ];
     }
 
-    public static function saveOrder($user, $payment, $seller, $item, $orderNo, $method, $status)
-    {
-        $data = new self();
-
-        $data->user_id = $user->id;
-        $data->seller_id = $seller->id;
-        $data->product_id = $item['product_id'] ?? $item['itemId'];
-        $data->payment_id = $payment->id;
-        $data->product_quantity = $item['product_quantity'] ?? $item['quantity'];
-        $data->order_no = $orderNo;
-        $data->order_date = now();
-        $data->total_amount = $item['total_amount'] ?? $item['unitPrice'];
-        $data->payment_method = $method;
-        $data->payment_status = $status;
-        $data->status = OrderStatus::PENDING;
-        $data->country_id = $user->country ?? 160;
-
-        $data->save();
-
-        return $data;
-    }
+   
 
     public static function orderStats()
     {

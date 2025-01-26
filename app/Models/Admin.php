@@ -27,7 +27,7 @@ class Admin extends Authenticatable
     {
         $email = $this->email;
 
-        $url = config('services.reset_password_url').'?token='.$token.'&email='.$email;
+        $url = config('services.reset_password_url') . '?token=' . $token . '&email=' . $email;
 
         $this->notify(new ResetPasswordNotification($url));
     }
@@ -46,4 +46,7 @@ class Admin extends Authenticatable
     {
         return $this->belongsToMany(Permission::class);
     }
+    protected $hidden = [
+        'password',
+    ];
 }

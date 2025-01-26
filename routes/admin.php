@@ -201,16 +201,24 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function () {
 
     //b2b admin
     Route::prefix('b2b')->group(function () {
-        Route::get('/dashboard', [B2BAdminController::class, 'dashboard']);
+        Route::controller(B2BAdminController::class)->group(function () {
+            Route::get('/dashboard', 'dashboard');
 
+            Route::get('/profile', 'adminProfile');
+            Route::post('/update-profile', 'updateAdminProfile');
+            Route::post('/update-password', 'updateAdminPassword');
+            Route::post('/enable-2fa', 'enable2FA');
+            Route::get('/get-config', 'getConfigDetails');
+            Route::post('/update-config', 'updateConfigDetails');
+        });
 
-        Route::get('/profile', [B2BAdminController::class, 'adminProfile']);
-        Route::post('/update-profile', [B2BAdminController::class, 'updateAdminProfile']);
-        Route::post('/update-password', [B2BAdminController::class, 'updateAdminPassword']);
-        Route::post('/enable-2fa', [B2BAdminController::class, 'enable2FA']);
-        Route::get('/get-config', [B2BAdminController::class, 'getConfigDetails']);
-        Route::post('/update-config', [B2BAdminController::class, 'updateConfigDetails']);
-
+        Route::controller(B2BAdminController::class)->prefix('admin-users')->group(function () {
+            Route::get('/', 'adminUsers');
+            Route::post('/add', 'addAdmin');
+            Route::get('/details/{id}', 'viewAdminUser');
+            Route::post('/update/{id}', 'editAdminUser');
+            Route::delete('/delete-account/{id}', 'removeAdmin');
+        });
         Route::prefix('category')->controller(ProductCategoryController::class)->group(function () {
             Route::post('/create', 'createCategory');
             Route::get('/all', 'adminCategories');

@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Admin;
 use App\Enum\UserType;
 use App\Models\Payout;
+use App\Enum\AdminType;
 use App\Enum\UserStatus;
 use App\Models\B2bOrder;
 use App\Enum\AdminStatus;
@@ -141,7 +142,7 @@ class AdminService
             })
             ->paginate(25);
 
-       // $data = B2BSellerResource::collection($users);
+        // $data = B2BSellerResource::collection($users);
 
         return [
             'status' => 'true',
@@ -557,7 +558,7 @@ class AdminService
     public function adminProfile()
     {
         $authUser = userAuth();
-        $user = Admin::where('type', AdminStatus::B2B)->findOrFail($authUser->id);
+        $user = Admin::where('type', AdminType::B2B)->findOrFail($authUser->id);
         $data = new AdminUserResource($user);
 
         return $this->success($data, 'Profile detail');
@@ -566,7 +567,7 @@ class AdminService
     public function updateAdminProfile($data)
     {
         $authUser = userAuth();
-        $user = Admin::where('type', AdminStatus::B2B)->findOrFail($authUser->id);
+        $user = Admin::where('type', AdminType::B2B)->findOrFail($authUser->id);
         $user->update([
             'first_name' => $data->first_name,
             'last_name' => $data->last_name,
@@ -581,7 +582,7 @@ class AdminService
     public function enableTwoFactor($data)
     {
         $authUser = userAuth();
-        $user = Admin::where('type', AdminStatus::B2B)->findOrFail($authUser->id);
+        $user = Admin::where('type', AdminType::B2B)->findOrFail($authUser->id);
         $user->update([
             'two_factor_enabled' => $data->two_factor_enabled,
         ]);
@@ -592,7 +593,7 @@ class AdminService
     public function updateAdminPassword($data)
     {
         $authUser = userAuth();
-        $user = Admin::where('type', AdminStatus::B2B)->findOrFail($authUser->id);
+        $user = Admin::where('type', AdminType::B2B)->findOrFail($authUser->id);
         $user->update([
             'password' => Hash::make($data->password),
         ]);
@@ -835,5 +836,54 @@ class AdminService
         ]);
 
         return $this->success(null, 'Comment Submitted successfully');
+    }
+
+
+    //Admin User Management
+    public function adminUsers()
+    {
+        $users = Admin::latest('id')->where('type', AdminType::B2B)->get();
+
+        return $this->success($users, 'All Admin Users');
+    }
+
+    public function addAdmin($data)
+    {
+        $admin = Admin::create([
+            'first_name' => $data->first_name,
+            'last_name' => $data->last_name,
+            'email' => $data->email,
+            'type' => AdminType::B2B,
+            'status' => AdminStatus::ACTIVE,
+            'phone_number' => $data->phone_number,
+            'password' => Hash::make($data->password),
+        ]);
+
+        return $this->success($admin, 'Admin user added successfully', 200);
+    }
+
+    public function viewAdmin($id)
+    {
+        $admin = Admin::findOrFail($id);
+        return $this->success($admin, 'Admin details');
+    }
+
+    public function editAdmin($id, $data)
+    {
+        $admin = Admin::findOrFail($id);
+        $admin->update([
+            'first_name' => $data->first_name,
+            'last_name' => $data->last_name,
+            'email' => $data->email,
+            'phone_number' => $data->phone_number,
+        ]);
+        return $this->success($admin, 'Details updated successfully');
+    }
+
+    public function removeAdmin($id)
+    {
+        $admin = Admin::findOrFail($id);
+        $admin->delete();
+        return $this->success(null, 'Deleted successfully');
     }
 }

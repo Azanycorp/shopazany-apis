@@ -4,6 +4,6 @@ namespace App\Enum;
 
 enum AdminStatus: string
 {
-    const B2B = 'b2b_admin';
-    const B2C = 'b2c_admin';
+    const ACTIVE = 'active';
+    const INACTIVE = 'inactive';
 }
