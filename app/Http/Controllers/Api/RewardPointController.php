@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 
 class RewardPointController extends Controller
 {
-    protected $service;
+    protected \App\Services\RewardPoint\RewardPointService $service;
 
     public function __construct(RewardPointService $service)
     {

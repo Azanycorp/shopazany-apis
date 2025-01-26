@@ -15,7 +15,7 @@ class BrandController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(): void
     {
         //
     }
@@ -28,35 +28,25 @@ class BrandController extends Controller
         $request->validate([
             'name' => ['required', 'string']
         ]);
-
-        try {
-
-            $path = null;
-            
-            if($request->hasFile('image')) {
-                $file = $request->file('image');
-                $filename = time() . rand(10, 1000) . '.' . $file->extension();
-                $file->move(public_path('brands'), $filename, 'public');
-                $path = config('services.baseurl') . 'brands/' . $filename;
-            }
-    
-            Brand::create([
-                'name' => $request->name,
-                'slug' => Str::slug($request->name),
-                'image' => $path
-            ]);
-    
-            return $this->success(null, "Created successfully");
-
-        } catch (\Throwable $th) {
-            throw $th;
+        $path = null;
+        if($request->hasFile('image')) {
+            $file = $request->file('image');
+            $filename = time() . rand(10, 1000) . '.' . $file->extension();
+            $file->move(public_path('brands'), $filename, 'public');
+            $path = config('services.baseurl') . 'brands/' . $filename;
         }
+        Brand::create([
+            'name' => $request->name,
+            'slug' => Str::slug($request->name),
+            'image' => $path
+        ]);
+        return $this->success(null, "Created successfully");
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(string $id): void
     {
         //
     }
@@ -64,7 +54,7 @@ class BrandController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, string $id): void
     {
         //
     }
@@ -72,7 +62,7 @@ class BrandController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(string $id): void
     {
         //
     }

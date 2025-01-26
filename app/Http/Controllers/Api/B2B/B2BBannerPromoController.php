@@ -12,7 +12,7 @@ use App\Http\Requests\Admin\B2BAddPromoRequest;
 
 class B2BBannerPromoController extends Controller
 {
-    protected $service;
+    protected \App\Services\Admin\B2BBannerPromoService $service;
 
     public function __construct(B2BBannerPromoService $service)
     {

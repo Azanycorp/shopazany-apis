@@ -35,7 +35,7 @@ class SubSubCategory extends Model
     {
         parent::boot();
 
-        static::addGlobalScope('alphabetical', function (Builder $builder) {
+        static::addGlobalScope('alphabetical', function (Builder $builder): void {
             $builder->orderBy('name', 'asc');
         });
     }

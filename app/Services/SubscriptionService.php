@@ -32,7 +32,7 @@ class SubscriptionService
             return $this->error(null, 'Invalid callback URL', 400);
         }
 
-        $user = User::with(['userSubscriptions' => function ($query) {
+        $user = User::with(['userSubscriptions' => function ($query): void {
             $query->where('status', 'active');
         }])->findOrFail($request->user_id);
 

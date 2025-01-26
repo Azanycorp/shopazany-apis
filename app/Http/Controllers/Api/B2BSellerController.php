@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 
 class B2BSellerController extends Controller
 {
-    protected $service;
+    protected \App\Services\B2B\SellerService $service;
 
     public function __construct(SellerService $service)
     {

@@ -14,13 +14,13 @@ class CustomerService
 {
     use HttpResponse;
 
-    public function allCustomers()
+    public function allCustomers(): array
     {
         $query = trim(request()->input('search'));
 
         $users = User::with(['userCountry', 'state', 'wallet', 'wishlist', 'payments'])
             ->where('type', 'customer')
-            ->where(function($queryBuilder) use ($query) {
+            ->where(function($queryBuilder) use ($query): void {
                 $queryBuilder->where('first_name', 'LIKE', '%' . $query . '%')
                             ->orWhere('last_name', 'LIKE', '%' . $query . '%')
                             ->orWhere('middlename', 'LIKE', '%' . $query . '%')
@@ -97,12 +97,12 @@ class CustomerService
         return $this->success(null, "User(s) have been removed successfully");
     }
 
-    public function filter()
+    public function filter(): array
     {
         $query = trim(request()->query('approved'));
 
         $users = User::where('type', UserType::CUSTOMER)
-            ->when($query !== null, function ($queryBuilder) use ($query) {
+            ->when($query !== null, function ($queryBuilder) use ($query): void {
                 $queryBuilder->where('is_admin_approve', $query);
             })
             ->paginate(25);
@@ -125,29 +125,21 @@ class CustomerService
 
     public function addCustomer($request)
     {
-        try {
-            $user = User::create([
-                'first_name' => $request->first_name,
-                'last_name' => $request->last_name,
-                'middlename' => $request->middlename,
-                'email' => $request->email,
-                'password' => bcrypt('12345678'),
-                'phone' => $request->phone,
-                'date_of_birth' => $request->date_of_birth,
-                'type' => UserType::CUSTOMER,
-                'is_verified' => 1,
-                'is_admin_approve' => 1,
-                'status' => $request->status,
-            ]);
-
-            $image = $request->hasFile('image') ? uploadUserImage($request, 'image', $user) : null;
-
-            $user->update(['image' => $image]);
-
-        } catch (\Throwable $th) {
-            throw $th;
-        }
-
+        $user = User::create([
+            'first_name' => $request->first_name,
+            'last_name' => $request->last_name,
+            'middlename' => $request->middlename,
+            'email' => $request->email,
+            'password' => bcrypt('12345678'),
+            'phone' => $request->phone,
+            'date_of_birth' => $request->date_of_birth,
+            'type' => UserType::CUSTOMER,
+            'is_verified' => 1,
+            'is_admin_approve' => 1,
+            'status' => $request->status,
+        ]);
+        $image = $request->hasFile('image') ? uploadUserImage($request, 'image', $user) : null;
+        $user->update(['image' => $image]);
         return $this->success(null, "User has been created successfully");
     }
 

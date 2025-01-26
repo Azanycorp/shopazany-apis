@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('sizes', function (Blueprint $table) {
+        Schema::create('sizes', function (Blueprint $table): void {
             $table->id();
             $table->string('name');
             $table->enum('status', ['active', 'inactive'])->default('active');

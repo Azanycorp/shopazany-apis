@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('sub_categories', function (Blueprint $table) {
+        Schema::create('sub_categories', function (Blueprint $table): void {
             $table->id();
             $table->unsignedBigInteger('category_id');
             $table->string('name');
@@ -23,7 +23,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::table('categories', function (Blueprint $table) {
+        Schema::table('categories', function (Blueprint $table): void {
             $table->enum('status', ['active', 'inactive'])->default('active')->after('meta_description');
         });
     }

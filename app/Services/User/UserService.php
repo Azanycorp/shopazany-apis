@@ -128,9 +128,8 @@ class UserService extends Controller
             (new TransactionService($user, 'withdrawal', $request->amount))->logTransaction();
 
             return $this->success(null, "Request sent successfully");
-        } else {
-            return $this->error(null, "Sorry you can't withdraw above your balance", 400);
         }
+        return $this->error(null, "Sorry you can't withdraw above your balance", 400);
     }
 
     public function userKyc($request)
@@ -148,7 +147,7 @@ class UserService extends Controller
 
             if($request->file('image')){
                 $file = $request->file('image');
-                $path = 'kyc' . '/' . $name;
+                $path = 'kyc/' . $name;
                 $filename = time() . rand(10, 1000) . '.' . $file->extension();
                 $file->move(public_path($path), $filename, 'public');
                 $kycpath = config('services.baseurl') . '/' . $path . '/' . $filename;
@@ -267,9 +266,8 @@ class UserService extends Controller
 
         if ($methodAdded) {
             return $this->success(null, "Added successfully");
-        } else {
-            return $this->error(null, "Failed to add payment method", 500);
         }
+        return $this->error(null, "Failed to add payment method", 500);
     }
 
     public function getPaymentMethod($userId)

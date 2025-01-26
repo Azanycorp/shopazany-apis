@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('configurations', function (Blueprint $table) {
+        Schema::create('configurations', function (Blueprint $table): void {
             $table->id();
             $table->double('usd_rate')->default(0)->comment('Local currency rate per USD');
             $table->integer('company_profit')->default(0)->comment('Current month profit');

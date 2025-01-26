@@ -20,11 +20,11 @@ use App\Http\Controllers\Api\SubscriptionController;
 //     return $request->user();
 // })->middleware('auth:sanctum');
 
-Route::middleware(['throttle:apis'])->group(function () {
+Route::middleware(['throttle:apis'])->group(function (): void {
 
     Route::prefix('connect')
         ->controller(AuthController::class)
-        ->group(function () {
+        ->group(function (): void {
 
             Route::post('/login', 'login')
                 ->middleware('login.attempt');
@@ -45,7 +45,7 @@ Route::middleware(['throttle:apis'])->group(function () {
 
     // Google Auth
     Route::controller(GoogleAuthController::class)
-        ->group(function () {
+        ->group(function (): void {
             Route::get('auth/google', 'redirectToGoogle');
             Route::get('auth/google/callback', 'handleCallback');
         });
@@ -54,7 +54,7 @@ Route::middleware(['throttle:apis'])->group(function () {
 Route::get('/banners', [ApiController::class, 'slider']);
 Route::get('/featured/categories', [ApiController::class, 'categories']);
 
-Route::prefix('user/category')->controller(CategoryController::class)->group(function () {
+Route::prefix('user/category')->controller(CategoryController::class)->group(function (): void {
     Route::get('/all', 'categories');
     Route::get('/subcategory/{category_id}', 'getSubcategory');
 });
@@ -64,7 +64,7 @@ Route::get('/b2b/seller/template', [B2BSellerController::class, 'getTemplate']);
 Route::get('/shop/country', [ApiController::class, 'getShopByCountry']);
 Route::get('/shop-by/country/{shop_country_id}', [ApiController::class, 'userShopByCountry']);
 
-Route::controller(HomeController::class)->group(function () {
+Route::controller(HomeController::class)->group(function (): void {
     Route::get('/best/selling', 'bestSelling');
     Route::get('/category/{slug}', 'categorySlug');
     Route::get('/all/products', 'allProducts');
@@ -75,7 +75,7 @@ Route::controller(HomeController::class)->group(function () {
     Route::get('/top-brands', 'topBrands');
     Route::get('/top-sellers', 'topSellers');
 
-    Route::prefix('seller')->group(function () {
+    Route::prefix('seller')->group(function (): void {
         Route::get('/{uuid}', 'sellerInfo');
         Route::get('/{uuid}/category', 'sellerCategory');
         Route::get('/{uuid}/reviews', 'sellerReviews');
@@ -84,7 +84,7 @@ Route::controller(HomeController::class)->group(function () {
 
 Route::post('/payment/webhook', [PaymentController::class, 'webhook']);
 
-Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
+Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function (): void {
     // Product
     Route::post('product-review', [HomeController::class, 'productReview']);
     Route::post('/product/save-for-later', [HomeController::class, 'saveForLater']);
@@ -94,7 +94,7 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
     // Payment
     Route::prefix('payment')
         ->controller(PaymentController::class)
-        ->group(function () {
+        ->group(function (): void {
             // Paystack
             Route::post('/paystack', 'processPayment');
             Route::get('/verify/paystack/{user_id}/{reference}', 'verifyPayment');
@@ -109,13 +109,13 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
     // Subscription
     Route::prefix('subscription')
         ->controller(SubscriptionController::class)
-        ->group(function () {
+        ->group(function (): void {
             Route::get('/country/{country_id}', 'getPlanByCountry');
             Route::post('/payment', 'subscriptionPayment');
             Route::get('/history/{user_id}', 'subscriptionHistory');
         });
 
-    Route::controller(UserController::class)->group(function () {
+    Route::controller(UserController::class)->group(function (): void {
         Route::get('/profile', 'profile');
         Route::post('/bank/account', 'bankAccount');
         Route::delete('/remove/account', 'removeBankAccount');
@@ -125,7 +125,7 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
         Route::post('/kyc', 'userKyc');
         Route::post('/earning-option', 'earningOption');
 
-        Route::prefix('affiliate')->group(function () {
+        Route::prefix('affiliate')->group(function (): void {
             Route::get('/dashboard-analytic/{user_id}', 'dashboardAnalytic');
             Route::get('/transaction/{user_id}', 'transactionHistory');
             Route::post('/payment-method', 'addPaymentMethod');
@@ -136,7 +136,7 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
         Route::post('/settings/{user_id}', 'changeSettings');
     });
 
-    Route::prefix('cart')->controller(CartController::class)->group(function () {
+    Route::prefix('cart')->controller(CartController::class)->group(function (): void {
         Route::get('/{user_id}', 'getCartItems');
         Route::post('/add', 'addToCart');
         Route::delete('/{user_id}/clear', 'clearCart');
@@ -144,7 +144,7 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
         Route::patch('/update-cart', [CartController::class, 'updateCart']);
     });
 
-    Route::prefix('customer')->controller(CustomerController::class)->group(function () {
+    Route::prefix('customer')->controller(CustomerController::class)->group(function (): void {
         // Account and Dashboard Routes
         Route::get('/account-overview/{user_id}', 'acountOverview');
         Route::get('/activity/{user_id}', 'activity');
@@ -172,13 +172,13 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
 
     Route::post('customer/mailing/subscribe', [MailingListController::class, 'signup']);
 
-    Route::prefix('seller')->controller(SellerController::class)->group(function () {
+    Route::prefix('seller')->controller(SellerController::class)->group(function (): void {
         // Business Information
         Route::post('/business/information', 'businessInfo');
         Route::get('/dashboard/analytic/{user_id}', 'dashboardAnalytics');
 
         // Product Routes
-        Route::prefix('product')->group(function () {
+        Route::prefix('product')->group(function (): void {
             Route::post('/create', 'createProduct');
             Route::post('/edit/{product_id}/{user_id}', 'updateProduct');
             Route::delete('/delete/{product_id}/{user_id}', 'deleteProduct');
@@ -191,7 +191,7 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function () {
         });
 
         // Orders Routes
-        Route::prefix('orders/{user_id}')->group(function () {
+        Route::prefix('orders/{user_id}')->group(function (): void {
             Route::get('/', 'getAllOrders');
             Route::get('/confirmed', 'getConfirmedOrders');
             Route::get('/cancelled', 'getCancelledOrders');

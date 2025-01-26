@@ -6,7 +6,7 @@ use App\Contracts\PaymentStrategy;
 
 class HandlePaymentService
 {
-    protected $paymentProcessor;
+    protected \App\Contracts\PaymentStrategy $paymentProcessor;
 
     public function __construct(PaymentStrategy $paymentProcessor)
     {

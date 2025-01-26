@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('rfqs', function (Blueprint $table) {
+        Schema::create('rfqs', function (Blueprint $table): void {
             $table->id();
             $table->bigInteger('buyer_id');
             $table->bigInteger('seller_id');

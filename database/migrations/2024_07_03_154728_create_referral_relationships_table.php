@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('referral_relationships', function (Blueprint $table) {
+        Schema::create('referral_relationships', function (Blueprint $table): void {
             $table->id();
             $table->unsignedBigInteger('referrer_id');
             $table->unsignedBigInteger('referee_id');

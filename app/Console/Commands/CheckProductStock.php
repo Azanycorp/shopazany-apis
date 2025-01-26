@@ -25,7 +25,7 @@ class CheckProductStock extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): void
     {
         Product::where('current_stock_quantity', 0)
         ->where('status', ProductStatus::ACTIVE)

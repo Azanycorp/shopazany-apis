@@ -22,7 +22,7 @@ class SellerDetailResource extends JsonResource
             'middlename' => (string)$this->middlename,
             'image' => (string)$this->image,
             'product_count' => $this->products_count,
-            'products' => $this->products ? $this->products->map(function ($product) {
+            'products' => $this->products ? $this->products->map(function ($product): array {
                 return [
                     'id' => $product->id,
                     'name' => (string)$product->name,

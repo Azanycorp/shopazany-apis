@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('b2_b_request_refunds', function (Blueprint $table) {
+        Schema::create('b2_b_request_refunds', function (Blueprint $table): void {
             $table->id();
             $table->unsignedBigInteger('user_id');
             $table->bigInteger('b2b_product_id');

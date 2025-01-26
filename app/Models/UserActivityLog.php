@@ -22,7 +22,7 @@ class UserActivityLog extends Model
         return $this->belongsTo(User::class);
     }
 
-    public static function logAction($user, $action, $status, $description = null)
+    public static function logAction(array $user, array $action, $status, $description = null): void
     {
         $actionName = $action['name'];
         $actionSlug = $action['slug'];

@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('b2b_products', function (Blueprint $table) {
+        Schema::table('b2b_products', function (Blueprint $table): void {
             $table->double('unit_price')->default(0);
             $table->double('availability_quantity')->default(0);
             $table->double('quantity')->default(0);
@@ -24,7 +24,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('b2b_products', function (Blueprint $table) {
+        Schema::table('b2b_products', function (Blueprint $table): void {
             //
         });
     }

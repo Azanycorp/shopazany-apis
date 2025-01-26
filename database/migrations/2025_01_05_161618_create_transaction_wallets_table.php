@@ -11,13 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('transaction_wallets', function (Blueprint $table) {
+        Schema::create('transaction_wallets', function (Blueprint $table): void {
             $table->id();
             $table->unsignedBigInteger('seller_id')->comment('b2b seller transaction history');
             $table->string('payment_id')->nullable()->comment('Funding ref ID');
             $table->enum('type', ['deposit', 'transfer', 'debit'])->default('debit');
-            $table->double('credit', 19,2)->default(0);
-            $table->double('debit', 19,2)->default(0);
+            $table->double('credit')->default(0);
+            $table->double('debit')->default(0);
             $table->string('remark')->nullable();
             $table->text('funding_pop')->nullable();
             $table->enum('status', ['verified', 'unverified'])->nullable()->comment('handles funding');

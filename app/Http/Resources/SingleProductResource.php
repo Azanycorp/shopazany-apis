@@ -48,13 +48,13 @@ class SingleProductResource extends JsonResource
             'currency' => $this->shopCountry?->currency,
             'country_id' => (int)$this->country_id,
             'images' => $this->whenLoaded('productimages', function () {
-                return $this->productimages->map(function ($image) {
+                return $this->productimages->map(function ($image): array {
                     return [
                         'image' => $image->image
                     ];
                 })->toArray();
             }),
-            'reviews' => $this->productReviews ? $this->productReviews->map(function ($review) {
+            'reviews' => $this->productReviews ? $this->productReviews->map(function ($review): array {
                 return [
                     'id' => $review->id,
                     'user' => $review?->user?->full_name,

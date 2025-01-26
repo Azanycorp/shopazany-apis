@@ -95,7 +95,7 @@ class ProductCategoryService
 
         $categories = B2BProductCategory::with(['products', 'subcategory'])
             ->withCount(['products', 'subcategory'])
-            ->when($search, function ($query, $search) {
+            ->when($search, function ($query, string $search): void {
                 $query->where('name', 'like', '%' . $search . '%');
             })
             ->latest('id')
@@ -198,7 +198,7 @@ class ProductCategoryService
 
         $subcats = B2BProductSubCategory::with(['product', 'category'])
             ->withCount(['product', 'category'])
-            ->when($search, function ($query, $search) {
+            ->when($search, function ($query, string $search): void {
                 $query->where('name', 'like', '%' . $search . '%');
             })
             ->get();

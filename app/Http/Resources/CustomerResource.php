@@ -37,13 +37,13 @@ class CustomerResource extends JsonResource
                 'total_income' => 0,
                 'total_withdrawal' => 0
             ],
-            'wishlist' => $this->wishlist ? $this->wishlist->map(function ($list) {
+            'wishlist' => $this->wishlist ? $this->wishlist->map(function ($list): array {
                 return [
                     'product_name' => $list->product?->name,
                     'created_at' => $list->product?->created_at,
                 ];
             })->toArray() : [],
-            'payments' => $this->payments ? $this->payments->map(function ($payment) {
+            'payments' => $this->payments ? $this->payments->map(function ($payment): array {
                 return [
                     'id' => $payment->id,
                     'order_no' => $payment?->order?->order_no,

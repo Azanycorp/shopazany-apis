@@ -31,7 +31,7 @@ class B2BProductResource extends JsonResource
             'country' => (string)$this->country?->name,
             'b2bProdctReview' => $this->b2bProdctReview,
             'b2bLikes' => $this->b2bLikes->count(),
-            'images' => (string)$this->b2bProductImages ? $this->b2bProductImages->map(function ($image) {
+            'images' => (string)$this->b2bProductImages !== '' && (string)$this->b2bProductImages !== '0' ? $this->b2bProductImages->map(function ($image): array {
                 return [
                     'image' => $image->image
                 ];

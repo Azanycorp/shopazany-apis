@@ -335,7 +335,7 @@ class CustomerService
             return $this->error(null, "User not found", 404);
         }
 
-        $data = $user->userActivityLog->map(function ($log) {
+        $data = $user->userActivityLog->map(function ($log): array {
             return [
                 'id' => $log->id,
                 'description' => $log->description,
@@ -360,7 +360,6 @@ class CustomerService
             ->findOrFail($request->user_id);
 
         $user->reedemPoints()->create([
-            'name' => $request->name,
             'name' => $request->name,
             'status' => RedeemPointStatus::REDEEMED
         ]);

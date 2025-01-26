@@ -54,7 +54,7 @@ class AuthService extends Controller
             'user_id' => $user->id,
             'user_type' => $user->type,
             'has_signed_up' => true,
-            'is_affiliate_member' => $user->is_affiliate_member === 1 ? true : false,
+            'is_affiliate_member' => $user->is_affiliate_member === 1,
             'token' => $token->plainTextToken,
             'expires_at' => $token->accessToken->expires_at,
         ]);
@@ -258,7 +258,7 @@ class AuthService extends Controller
 
         $status = Password::broker('users')->reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),
-            function ($user) use ($request) {
+            function ($user) use ($request): void {
                 $user->forceFill([
                     'password' => bcrypt($request->password),
                 ])->save();
@@ -317,7 +317,7 @@ class AuthService extends Controller
                 }
             }
 
-            DB::transaction(function () use ($request, $user) {
+            DB::transaction(function () use ($request, $user): void {
                 $referrer_code = $this->determineReferrerCode($request);
 
                 $referrer_link = generate_referrer_link($referrer_code);
@@ -345,15 +345,13 @@ class AuthService extends Controller
     {
         $initial_referrer_code = Str::random(10);
 
-        if ($request->referrer_code) {
-            if (User::where('referrer_code', $request->referrer_code)->exists()) {
-                return $this->generateUniqueReferrerCode();
-            } else {
-                return $request->referrer_code;
-            }
+        if (!$request->referrer_code) {
+            return $initial_referrer_code;
         }
-
-        return $initial_referrer_code;
+        if (User::where('referrer_code', $request->referrer_code)->exists()) {
+            return $this->generateUniqueReferrerCode();
+        }
+        return $request->referrer_code;
     }
 
     private function handleExistingUser($user)
@@ -365,7 +363,7 @@ class AuthService extends Controller
         return null;
     }
 
-    private function handleReferrer($referrer_code, $data)
+    private function handleReferrer($referrer_code, $data): void
     {
         $referrer = User::where('referrer_code', $referrer_code)->first();
         if ($referrer) {
@@ -441,6 +439,7 @@ class AuthService extends Controller
 
             return $user;
         }
+        return null;
     }
 }
 
