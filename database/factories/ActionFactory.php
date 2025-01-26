@@ -17,9 +17,9 @@ class ActionFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => $this->faker->word,
-            'slug' => $this->faker->slug,
-            'points' => $this->faker->numberBetween(5, 50),
+            'name' => fake()->word,
+            'slug' => fake()->slug,
+            'points' => fake()->numberBetween(5, 50),
         ];
     }
 }

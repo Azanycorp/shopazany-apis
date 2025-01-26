@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('payouts', function (Blueprint $table) {
+        Schema::table('payouts', function (Blueprint $table): void {
             //
             $table->longText('b2b_withdrawal_method')->nullable()->comment('Payment info');
         });
@@ -22,7 +22,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('payouts', function (Blueprint $table) {
+        Schema::table('payouts', function (Blueprint $table): void {
             //
         });
     }

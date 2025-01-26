@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('rfq_messages', function (Blueprint $table) {
+        Schema::create('rfq_messages', function (Blueprint $table): void {
             $table->id();
             $table->unsignedBigInteger('rfq_id');
             $table->double('p_unit_price')->default(0);

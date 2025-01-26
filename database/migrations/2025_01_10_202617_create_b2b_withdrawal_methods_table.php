@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('b2b_withdrawal_methods', function (Blueprint $table) {
+        Schema::create('b2b_withdrawal_methods', function (Blueprint $table): void {
             $table->id();
             $table->unsignedBigInteger('country_id');
             $table->unsignedBigInteger('user_id');

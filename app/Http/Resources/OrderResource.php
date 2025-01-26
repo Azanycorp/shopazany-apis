@@ -17,7 +17,7 @@ class OrderResource extends JsonResource
         return [
             'id' => (int)$this->id,
             'order_no' => (string)$this->order_no,
-            'customer' => (string)optional($this->user)->first_name . ' ' . optional($this->user)->last_name,
+            'customer' => optional($this->user)->first_name . ' ' . optional($this->user)->last_name,
             'quantity' => (string)$this->product_quantity,
             'order_date' => (string)$this->order_date,
             'total_amount' => (string)$this->total_amount,

@@ -12,9 +12,9 @@ class B2BProductRepository implements B2BRepositoryInterface
         $query = B2BProduct::with(['b2bProductImages', 'category', 'country', 'user', 'subCategory', 'b2bProdctReview', 'b2bLikes'])
             ->where('user_id', $user);
 
-        if (!empty($search)) {
+        if ($search !== null && $search !== '' && $search !== '0') {
             $query->where('name', 'like', '%' . $search . '%')
-                ->orWhereHas('category', function ($q) use ($search) {
+                ->orWhereHas('category', function ($q) use ($search): void {
                     $q->where('name', 'like', '%' . $search . '%');
                 });
         }
@@ -41,7 +41,7 @@ class B2BProductRepository implements B2BRepositoryInterface
         return $post;
     }
 
-    public function delete(int $id)
+    public function delete(int $id): bool
     {
         $post = $this->find($id);
         $post->delete();

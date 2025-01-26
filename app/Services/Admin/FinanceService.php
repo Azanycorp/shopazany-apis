@@ -13,26 +13,16 @@ class FinanceService
 
     public function addPaymentService($request)
     {
-        try {
-
-            $slug = Str::slug($request->name);
-
-            if (PaymentService::where('slug', $slug)->exists()) {
-                $slug = $slug . '-' . uniqid();
-            }
-
-            $paymentService = PaymentService::create([
-                'name' => $request->name,
-                'slug' => $slug
-            ]);
-
-            $paymentService->countries()->sync($request->country_ids);
-
-            return $this->success(null, "Created successfully");
-
-        } catch (\Throwable $th) {
-            throw $th;
+        $slug = Str::slug($request->name);
+        if (PaymentService::where('slug', $slug)->exists()) {
+            $slug = $slug . '-' . uniqid();
         }
+        $paymentService = PaymentService::create([
+            'name' => $request->name,
+            'slug' => $slug
+        ]);
+        $paymentService->countries()->sync($request->country_ids);
+        return $this->success(null, "Created successfully");
     }
 
     public function getPaymentService()

@@ -18,7 +18,7 @@ class ProductImageFactory extends Factory
     {
         return [
             'product_id' => \App\Models\Product::factory(),
-            'image' => $this->faker->imageUrl(),
+            'image' => fake()->imageUrl(),
         ];
     }
 }

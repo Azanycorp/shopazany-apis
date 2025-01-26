@@ -19,7 +19,7 @@ class OrderDetailResource extends JsonResource
             'id' => (int)$this->id,
             'order_no' => (string)$this->order_no,
             'total_amount' => (string)$this->total_amount,
-            'product' => $this->products ? $this->products->map(function ($product) {
+            'product' => $this->products ? $this->products->map(function ($product): array {
                 return [
                     'name' => $product->name,
                     'description' => $product->description,

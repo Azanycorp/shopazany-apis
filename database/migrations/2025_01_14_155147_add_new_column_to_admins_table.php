@@ -12,7 +12,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('admins', function (Blueprint $table) {
+        Schema::table('admins', function (Blueprint $table): void {
             if (DB::connection()->getDriverName() === 'mysql') {
                 $table->string('type')->after('password')->comment('Handeles admin user type eg b2c,b2b for b2b_admin admin user and b2c_admin admin user')->change();
 
@@ -26,7 +26,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('admins', function (Blueprint $table) {
+        Schema::table('admins', function (Blueprint $table): void {
             //
         });
     }

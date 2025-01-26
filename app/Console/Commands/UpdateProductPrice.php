@@ -27,7 +27,7 @@ class UpdateProductPrice extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): void
     {
         $products = Product::with(['user', 'admin'])
             ->where('status', ProductStatus::ACTIVE)
@@ -60,9 +60,6 @@ class UpdateProductPrice extends Command
     /**
      * Fetch conversion rate against USD for a given currency.
      * Replace this with actual implementation for fetching rates.
-     *
-     * @param string $currency
-     * @return float|null
      */
     private function fetchConversionRate(string $currency): ?float
     {

@@ -10,7 +10,7 @@ use Illuminate\Validation\Rule;
 
 class AdminCustomerController extends Controller
 {
-    protected $service;
+    protected \App\Services\Admin\CustomerService $service;
 
     public function __construct(CustomerService $service)
     {

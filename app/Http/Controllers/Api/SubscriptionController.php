@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 
 class SubscriptionController extends Controller
 {
-    protected $service;
+    protected \App\Services\SubscriptionService $service;
 
     public function __construct(SubscriptionService $service)
     {

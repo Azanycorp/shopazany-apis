@@ -11,14 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('payment_services', function (Blueprint $table) {
+        Schema::create('payment_services', function (Blueprint $table): void {
             $table->id();
             $table->string('name');
             $table->string('slug');
             $table->timestamps();
         });
 
-        Schema::create('payment_service_country', function (Blueprint $table) {
+        Schema::create('payment_service_country', function (Blueprint $table): void {
             $table->id();
             $table->foreignId('payment_service_id')->constrained()->onDelete('cascade');
             $table->foreignId('country_id')->constrained()->onDelete('cascade');

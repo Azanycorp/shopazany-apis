@@ -43,7 +43,7 @@ class B2bOrder extends Model
         ];
     }
 
-    public static function saveOrder($user, $payment, $seller, $item, $orderNo, $method, $status)
+    public static function saveOrder($user, $payment, $seller, $item, $orderNo, $method, $status): self
     {
         $data = new self();
 

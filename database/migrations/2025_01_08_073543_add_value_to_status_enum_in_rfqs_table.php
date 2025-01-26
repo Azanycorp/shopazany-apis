@@ -12,7 +12,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('rfqs', function (Blueprint $table) {
+        Schema::table('rfqs', function (Blueprint $table): void {
             if (DB::connection()->getDriverName() === 'mysql') {
                 DB::statement("ALTER TABLE rfqs CHANGE COLUMN status status ENUM('pending', 'review', 'in-progress', 'shipped', 'confirmed', 'cancelled', 'delivered') NOT NULL");
             }
@@ -24,7 +24,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('rfqs', function (Blueprint $table) {
+        Schema::table('rfqs', function (Blueprint $table): void {
             //
         });
     }

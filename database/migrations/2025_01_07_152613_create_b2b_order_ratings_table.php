@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('b2b_order_ratings', function (Blueprint $table) {
+        Schema::create('b2b_order_ratings', function (Blueprint $table): void {
             $table->id();
             $table->unsignedBigInteger('seller_id')->nullable();
             $table->unsignedBigInteger('buyer_id')->nullable();

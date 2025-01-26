@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('cookie_policies', function (Blueprint $table) {
+        Schema::create('cookie_policies', function (Blueprint $table): void {
             $table->id();
             $table->longText('short_description')->nullable();
             $table->longText('description')->nullable();

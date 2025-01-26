@@ -9,7 +9,7 @@ use App\Http\Requests\ChangePasswordRequest;
 
 class B2BBuyerController extends Controller
 {
-    protected $buyerService;
+    protected \App\Services\B2B\BuyerService $buyerService;
 
     public function __construct(BuyerService $buyerService)
     {

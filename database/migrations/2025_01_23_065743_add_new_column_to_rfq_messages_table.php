@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('rfq_messages', function (Blueprint $table) {
+        Schema::table('rfq_messages', function (Blueprint $table): void {
             //
             $table->unsignedBigInteger('seller_id')->after('preferred_qty')->nullable();
             $table->unsignedBigInteger('buyer_id')->after('seller_id')->nullable();
@@ -23,7 +23,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('rfq_messages', function (Blueprint $table) {
+        Schema::table('rfq_messages', function (Blueprint $table): void {
             //
             $table->unsignedBigInteger('seller_id')->after('preferred_qty')->nullable();
             $table->unsignedBigInteger('buyer_id')->after('seller_id')->nullable();

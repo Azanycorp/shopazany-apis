@@ -13,7 +13,7 @@ return new class extends Migration
     public function up(): void
     {
         if (DB::connection()->getDriverName() === 'mysql') {
-            Schema::table('b2b_product_categories', function (Blueprint $table) {
+            Schema::table('b2b_product_categories', function (Blueprint $table): void {
                 DB::statement("ALTER TABLE b2b_product_categories CHANGE COLUMN status status ENUM('active', 'inactive','in-active') NOT NULL");
             });
         }
@@ -24,7 +24,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('b2b_product_categories', function (Blueprint $table) {
+        Schema::table('b2b_product_categories', function (Blueprint $table): void {
             //
         });
     }

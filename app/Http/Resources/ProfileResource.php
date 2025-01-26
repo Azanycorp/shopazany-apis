@@ -56,7 +56,7 @@ class ProfileResource extends JsonResource
                 'file' => optional($this->userbusinessinfo)->file,
                 'status' => optional($this->userbusinessinfo)->status
             ],
-            "shipping_address" => $this->userShippingAddress ? $this->userShippingAddress->map(function ($addr) {
+            "shipping_address" => $this->userShippingAddress ? $this->userShippingAddress->map(function ($addr): array {
                 return [
                     'id' => $addr?->id,
                     'street_address' => $addr?->street_address,

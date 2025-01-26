@@ -25,11 +25,11 @@ class ExpireUserSubscription extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): void
     {
         ExpireUserSubscription::where('plan_end', '<=', Carbon::now()->subDays(30))
             ->whereNull('expired_at')
-            ->chunk(100, function ($subscriptions) {
+            ->chunk(100, function ($subscriptions): void {
                 foreach ($subscriptions as $subscription) {
                     $subscription->update([
                         'status' => SubscriptionType::EXPIRED,
