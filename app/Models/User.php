@@ -11,6 +11,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Notifications\ResetPasswordNotification;
 use App\Trait\UserRelationship;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
@@ -88,7 +89,7 @@ class User extends Authenticatable
     {
         parent::boot();
 
-        self::creating(function($model) {
+        self::creating(function($model): void {
             $model->uuid = (string) Str::uuid();
         });
 
@@ -115,32 +116,39 @@ class User extends Authenticatable
         ->first();
     }
 
-    public function getIsSubscribedAttribute()
+    protected function isSubscribed(): Attribute
     {
-        return $this->userSubscriptions()
-            ->where('status', SubscriptionType::ACTIVE)
-            ->exists();
-    }
-
-    public function getSubscriptionHistoryAttribute()
-    {
-        return $this->userSubscriptions()->where('status', SubscriptionType::ACTIVE)->get();
-    }
-
-    public function getSubscriptionPlanAttribute()
-    {
-        if (!array_key_exists('subscription_plan', $this->attributes)) {
-            $this->attributes['subscription_plan'] = $this->userSubscriptions()
+        return Attribute::make(get: function () {
+            return $this->userSubscriptions()
                 ->where('status', SubscriptionType::ACTIVE)
-                ->first();
-        }
-
-        return $this->attributes['subscription_plan'];
+                ->exists();
+        });
     }
 
-    public function getFullNameAttribute()
+    protected function subscriptionHistory(): Attribute
     {
-        return "{$this->first_name} {$this->last_name}";
+        return Attribute::make(get: function () {
+            return $this->userSubscriptions()->where('status', SubscriptionType::ACTIVE)->get();
+        });
+    }
+
+    protected function subscriptionPlan(): Attribute
+    {
+        return Attribute::make(get: function () {
+            if (!array_key_exists('subscription_plan', $this->attributes)) {
+                $this->attributes['subscription_plan'] = $this->userSubscriptions()
+                    ->where('status', SubscriptionType::ACTIVE)
+                    ->first();
+            }
+            return $this->attributes['subscription_plan'];
+        });
+    }
+
+    protected function fullName(): Attribute
+    {
+        return Attribute::make(get: function (): string {
+            return "{$this->first_name} {$this->last_name}";
+        });
     }
 
 }

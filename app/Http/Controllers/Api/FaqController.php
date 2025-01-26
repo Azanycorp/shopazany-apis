@@ -26,16 +26,11 @@ class FaqController extends Controller
      */
     public function store(Request $request)
     {
-        try {
-            Faq::create([
-                'question' => $request->question,
-                'answer' => $request->answer
-            ]);
-
-            return $this->success(null, "Added successfully");
-        } catch (\Throwable $th) {
-            throw $th;
-        }
+        Faq::create([
+            'question' => $request->question,
+            'answer' => $request->answer
+        ]);
+        return $this->success(null, "Added successfully");
     }
 
     /**

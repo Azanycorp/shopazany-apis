@@ -18,7 +18,7 @@ class PaymentServiceResource extends JsonResource
             'id' => (int)$this->id,
             'name' => (string)$this->name,
             'slug' => (string)$this->slug,
-            'countries' => $this->countries ? $this->countries->map(function ($country) {
+            'countries' => $this->countries ? $this->countries->map(function ($country): array {
                 return [
                     'id' => $country->id,
                     'name' => $country->name

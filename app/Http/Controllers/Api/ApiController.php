@@ -9,8 +9,8 @@ use Illuminate\Http\Request;
 
 class ApiController extends Controller
 {
-    protected $service;
-    protected $customerService;
+    protected \App\Services\Admin\AdminService $service;
+    protected \App\Services\User\CustomerService $customerService;
 
     public function __construct(AdminService $adminService, CustomerService $customerService)
     {

@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 
 class SettingsController extends Controller
 {
-    protected $service;
+    protected \App\Services\Admin\SettingsService $service;
 
     public function __construct(SettingsService $service)
     {

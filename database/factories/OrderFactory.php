@@ -25,13 +25,12 @@ class OrderFactory extends Factory
             'seller_id' => User::factory(),
             'product_id' => Product::factory(),
             'status' => OrderStatus::DELIVERED,
-            'country_id' => $this->faker->numberBetween(1, 5),
-            'product_quantity' => $this->faker->numberBetween(1, 5),
-            'total_amount' => $this->faker->randomFloat(2, 10, 500),
+            'country_id' => fake()->numberBetween(1, 5),
+            'product_quantity' => fake()->numberBetween(1, 5),
             'order_no' => Str::random(20),
-            'shipping_address' => $this->faker->address,
-            'order_date' => $this->faker->date,
-            'total_amount' => $this->faker->randomFloat(2, 10, 100),
+            'shipping_address' => fake()->address,
+            'order_date' => fake()->date,
+            'total_amount' => fake()->randomFloat(2, 10, 100),
             'payment_method' => 'paystack',
         ];
     }

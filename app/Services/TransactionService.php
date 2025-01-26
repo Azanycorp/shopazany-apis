@@ -18,22 +18,16 @@ class TransactionService
         $this->amount = $amount;
     }
 
-    public function logTransaction()
+    public function logTransaction(): void
     {
-        try {
-
-            Transaction::create([
-                'user_id' => $this->user->id,
-                'reference' => generateTransactionReference(),
-                'type' => $this->type,
-                'date' => now(),
-                'amount' => $this->amount,
-                'status' => TransactionStatus::PENDING,
-            ]);
-
-        } catch (\Throwable $th) {
-            throw $th;
-        }
+        Transaction::create([
+            'user_id' => $this->user->id,
+            'reference' => generateTransactionReference(),
+            'type' => $this->type,
+            'date' => now(),
+            'amount' => $this->amount,
+            'status' => TransactionStatus::PENDING,
+        ]);
     }
 }
 

@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('user_business_information', function (Blueprint $table) {
+        Schema::table('user_business_information', function (Blueprint $table): void {
             $table->enum('status', ['pending', 'approved'])->default('pending')->after('confirm');
         });
     }
@@ -21,7 +21,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('user_business_information', function (Blueprint $table) {
+        Schema::table('user_business_information', function (Blueprint $table): void {
             //
         });
     }

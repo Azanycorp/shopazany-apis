@@ -19,9 +19,9 @@ class ShopCountryFactory extends Factory
     {
         return [
             'country_id' => Country::factory(),
-            'name' => $this->faker->country(),
-            'flag' => $this->faker->imageUrl(),
-            'currency' => $this->faker->currencyCode(),
+            'name' => fake()->country(),
+            'flag' => fake()->imageUrl(),
+            'currency' => fake()->currencyCode(),
         ];
     }
 }

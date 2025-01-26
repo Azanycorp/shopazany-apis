@@ -25,9 +25,6 @@ class ProductExport implements FromCollection, WithHeadings
                 ->get();
     }
 
-    /**
-    * @return array
-    */
     public function headings(): array
     {
         return [

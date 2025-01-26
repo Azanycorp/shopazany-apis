@@ -26,7 +26,7 @@ class LoginTest extends TestCase
         ]);
     }
 
-    public function test_successful_login()
+    public function test_successful_login(): void
     {
         $user = User::factory()->create([
             'password' => bcrypt('password'),
@@ -54,7 +54,7 @@ class LoginTest extends TestCase
         $this->assertEquals('Login successful.', $responseData['message']);
     }
 
-    public function test_login_with_unverified_account()
+    public function test_login_with_unverified_account(): void
     {
         $user = User::factory()->create([
             'password' => bcrypt('password'),
@@ -80,7 +80,7 @@ class LoginTest extends TestCase
         $this->assertEquals('Account not verified or inactive', $responseData['message']);
     }
 
-    public function test_login_with_two_factor_authentication()
+    public function test_login_with_two_factor_authentication(): void
     {
         $user = User::factory()->create([
             'password' => bcrypt('password'),
@@ -110,7 +110,7 @@ class LoginTest extends TestCase
         $this->assertEquals('Code has been sent to your email address.', $responseData['message']);
     }
 
-    public function test_invalid_credentials()
+    public function test_invalid_credentials(): void
     {
         Auth::shouldReceive('attempt')
             ->once()
@@ -130,7 +130,7 @@ class LoginTest extends TestCase
         $this->assertEquals('Credentials do not match', $responseData['message']);
     }
 
-    private function mockRequest($data)
+    private function mockRequest(array $data)
     {
         $request = \Mockery::mock('Illuminate\Http\Request');
 

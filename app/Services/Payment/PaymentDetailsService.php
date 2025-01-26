@@ -71,7 +71,7 @@ class PaymentDetailsService
             ], 400);
         }
 
-        $user = User::findOrFail($request->input('user_id'));
+        User::findOrFail($request->input('user_id'));
 
         $amount = $request->input('amount') * 100;
         $callbackUrl = $request->input('payment_redirect_url');

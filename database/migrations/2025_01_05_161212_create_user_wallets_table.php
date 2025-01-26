@@ -11,11 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('user_wallets', function (Blueprint $table) {
+        Schema::create('user_wallets', function (Blueprint $table): void {
             $table->id();
             $table->unsignedBigInteger('seller_id')->unique()->comment('b2b seller wallet');
-            $table->double('master_wallet', 19,2)->default(0)->comment('total available earnings');
-            $table->double('transaction_wallet', 19,2)->default(0);
+            $table->double('master_wallet')->default(0)->comment('total available earnings');
+            $table->double('transaction_wallet')->default(0);
             $table->timestamps();
         });
     }

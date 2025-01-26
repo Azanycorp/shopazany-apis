@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 
 class BannerPromoController extends Controller
 {
-    protected $service;
+    protected \App\Services\Admin\BannerPromoService $service;
 
     public function __construct(BannerPromoService $service)
     {

@@ -26,9 +26,6 @@ class B2BProductExport implements FromCollection, WithHeadings
                 ->get();
     }
 
-    /**
-    * @return array
-    */
     public function headings(): array
     {
         return [

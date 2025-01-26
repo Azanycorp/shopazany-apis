@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('seo_configurations', function (Blueprint $table) {
+        Schema::create('seo_configurations', function (Blueprint $table): void {
             $table->id();
             $table->longText('keywords');
             $table->longText('description')->nullable();

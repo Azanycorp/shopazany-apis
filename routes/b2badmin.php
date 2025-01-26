@@ -4,9 +4,9 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\B2B\ProductCategoryController;
 use App\Http\Controllers\Api\AdminAuthController;
 
-Route::prefix('b2b/admin')->group(function () {
+Route::prefix('b2b/admin')->group(function (): void {
 
-    Route::prefix('connect')->controller(AdminAuthController::class)->group(function () {
+    Route::prefix('connect')->controller(AdminAuthController::class)->group(function (): void {
         Route::post('/login', 'login');
         Route::post('/forgot/password', 'forgot');
         Route::post('/reset/password', 'reset');
@@ -21,7 +21,7 @@ Route::prefix('b2b/admin')->group(function () {
     //     Route::get('sizes', 'sizes');
     // });
 
-    Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function () {
+    Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function (): void {
 
         // Route::get('/profile', [ApiController::class, 'adminProfile']);
 
@@ -53,7 +53,7 @@ Route::prefix('b2b/admin')->group(function () {
         //     Route::get('/best-selling-categories', 'bestSellingCat');
         // });
 
-        Route::prefix('category')->controller(ProductCategoryController::class)->group(function () {
+        Route::prefix('category')->controller(ProductCategoryController::class)->group(function (): void {
             Route::post('/create', 'createCategory');
             Route::get('/all', 'adminCategories');
             Route::get('/analytics', 'categoryAnalytic');

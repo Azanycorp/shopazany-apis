@@ -17,13 +17,12 @@ class AdminOrderResource extends JsonResource
         return [
             'id' => (int)$this->id,
             'order_no' => (string)$this->order_no,
-            'customer' => (string)optional($this->user)->first_name . ' ' . optional($this->user)->last_name,
             'quantity' => (string)$this->product_quantity,
             'order_date' => (string)$this->order_date,
             'total_amount' => (string)$this->total_amount,
             'payment_method' => (string)$this->payment_method,
             'status' => (string)$this->status,
-            'products' => $this->products ? $this->products->map(function ($product) {
+            'products' => $this->products ? $this->products->map(function ($product): array {
                 return [
                     'name' => $product?->name,
                     'category' => $product?->category?->name,

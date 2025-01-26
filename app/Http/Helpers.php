@@ -21,7 +21,7 @@ use Illuminate\Support\Facades\Storage;
 
 
 if (!function_exists('total_amount')) {
-    function total_amount($unit_price, $moq)
+    function total_amount($unit_price, $moq): int|float
     {
         return ($unit_price * $moq);
     }
@@ -37,7 +37,7 @@ if (!function_exists('reward_user')) {
 }
 
 if (!function_exists('log_user_activity')) {
-    function log_user_activity($user, $action, $status, $description = null)
+    function log_user_activity($user, $action, $status, $description = null): void
     {
         UserActivityLog::logAction($user, $action, $status, $description);
     }
@@ -66,7 +66,7 @@ if (!function_exists('getSetting')) {
             $setting = $settings->where('type', $key)->first();
         } else {
             $setting = $settings->where('type', $key)->where('lang', $lang)->first();
-            $setting = !$setting ? $settings->where('type', $key)->first() : $setting;
+            $setting = $setting ? $setting : $settings->where('type', $key)->first();
         }
         return $setting == null ? $default : $setting->value;
     }
@@ -97,7 +97,7 @@ if (!function_exists('getSliderImages')) {
 }
 
 if(!function_exists('getImportTemplate')){
-  function getImportTemplate()
+  function getImportTemplate(): string
   {
     if (App::environment('production')){
 
@@ -113,7 +113,7 @@ if(!function_exists('getImportTemplate')){
 }
 
 if(!function_exists('getB2BProductTemplate')){
-  function getB2BProductTemplate()
+  function getB2BProductTemplate(): string
   {
     if (App::environment('production')){
 
@@ -129,7 +129,7 @@ if(!function_exists('getB2BProductTemplate')){
 }
 
 if(!function_exists('getRelativePath')){
-    function getRelativePath($url) {
+    function getRelativePath($url): string|false|null {
         return parse_url($url, PHP_URL_PATH);
     }
 }
@@ -138,7 +138,6 @@ if(!function_exists('uploadSingleProductImage')){
     function uploadSingleProductImage($request, $file, $frontImage, $product)
     {
         if ($request->hasFile($file)) {
-
             if (!empty($product->image)) {
                 $image = getRelativePath($product->image);
 
@@ -146,19 +145,15 @@ if(!function_exists('uploadSingleProductImage')){
                     Storage::disk('s3')->delete($image);
                 }
             }
-
             $fileSize = $request->file($file)->getSize();
             if ($fileSize > 3000000) {
                 return json_encode(["status" => false, "message" => "file size is larger than 3MB.", "status_code" => 422]);
             }
-
             $path = $request->file($file)->store($frontImage, 's3');
-            $url = Storage::disk('s3')->url($path);
-        } else {
-            $url = $product->image;
+            return Storage::disk('s3')->url($path);
         }
 
-        return $url;
+        return $product->image;
     }
 }
 
@@ -206,7 +201,7 @@ if (!function_exists('uploadImage')) {
 }
 
 if(!function_exists('uploadMultipleProductImage')){
-    function uploadMultipleProductImage($request, $file, $folder, $product)
+    function uploadMultipleProductImage($request, $file, $folder, $product): void
     {
         if ($request->hasFile($file)) {
             $product->productimages()->delete();
@@ -238,7 +233,6 @@ if(!function_exists('uploadUserImage')){
         }
 
         if ($request->hasFile($file)) {
-
             if (!empty($user->image)) {
                 $image = getRelativePath($user->image);
 
@@ -246,24 +240,20 @@ if(!function_exists('uploadUserImage')){
                     Storage::disk('s3')->delete($image);
                 }
             }
-
             $fileSize = $request->file($file)->getSize();
             if ($fileSize > 3000000) {
                 return json_encode(["status" => false, "message" => "file size is larger than 3MB.", "status_code" => 422]);
             }
-
             $path = $request->file($file)->store($folder, 's3');
-            $url = Storage::disk('s3')->url($path);
-        } else {
-            $url = $user->image;
+            return Storage::disk('s3')->url($path);
         }
 
-        return $url;
+        return $user->image;
     }
 }
 
 if(!function_exists('generateTransactionReference')) {
-    function generateTransactionReference()
+    function generateTransactionReference(): string
     {
         do {
             $reference = 'TXN' . strtoupper(Str::random(8)) . time();
@@ -274,28 +264,28 @@ if(!function_exists('generateTransactionReference')) {
 }
 
 if(!function_exists('logUserAction')) {
-    function logUserAction($request, $action, $description, $response, $user = null)
+    function logUserAction($request, $action, $description, $response, $user = null): void
     {
         (new UserLogAction($request, $action, $description, $response, $user))->run();
     }
 }
 
 if(!function_exists('generateVerificationCode')) {
-    function generateVerificationCode()
+    function generateVerificationCode(): string
     {
         return str_pad(mt_rand(0, 999999), 6, '0', STR_PAD_LEFT);
     }
 }
 
 if(!function_exists('generateRefCode')) {
-    function generateRefCode()
+    function generateRefCode(): string
     {
         return 'AZY-' . sprintf("%06d", mt_rand(1, 999999));
     }
 }
 
 if(!function_exists('generate_referral_code')) {
-    function generate_referral_code()
+    function generate_referral_code(): string
     {
         do {
             $code = strtoupper(Str::random(10));
@@ -306,25 +296,23 @@ if(!function_exists('generate_referral_code')) {
 }
 
 if(!function_exists('generate_referrer_link')) {
-    function generate_referrer_link($referrer_code) {
-        if(App::environment('production')) {
-            $url = config('services.frontend_baseurl') . '/register?referrer=' . $referrer_code;
-        } else {
-            $url = config('services.staging_frontend_baseurl') . '/register?referrer=' . $referrer_code;
+    function generate_referrer_link(string $referrer_code): string {
+        if (App::environment('production')) {
+            return config('services.frontend_baseurl') . '/register?referrer=' . $referrer_code;
         }
 
-        return $url;
+        return config('services.staging_frontend_baseurl') . '/register?referrer=' . $referrer_code;
     }
 }
 
 if(!function_exists('send_email')) {
-    function send_email($email, $action) {
+    function send_email($email, $action): void {
         Mail::to($email)->send($action);
     }
 }
 
 if (!function_exists('generateRandomString')) {
-    function generateRandomString($length = 15)
+    function generateRandomString($length = 15): string
     {
         $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
         $randomString = '';
@@ -340,9 +328,11 @@ if (!function_exists('abbreviateNumber')) {
     {
         if ($number >= 1000000000) {
             return number_format($number / 1000000000, 1) . 'B';
-        } elseif ($number >= 1000000) {
+        }
+        if ($number >= 1000000) {
             return number_format($number / 1000000, 1) . 'M';
-        } elseif ($number >= 1000) {
+        }
+        if ($number >= 1000) {
             return number_format($number / 1000, 1) . 'K';
         }
 
@@ -379,7 +369,7 @@ if (!function_exists('folderNames')) {
 }
 
 if (!function_exists('getCurrencyCode')) {
-    function getCurrencyCode($code) {
+    function getCurrencyCode($code): string|int {
         $countries = [
             'AD' =>
             [
@@ -2388,7 +2378,7 @@ if (!function_exists('getCurrencyCode')) {
 }
 
 if (!function_exists('generateRefundComplaintNumber')) {
-    function generateRefundComplaintNumber($prefix = 'RFC') {
+    function generateRefundComplaintNumber(string $prefix = 'RFC'): string {
         $uniqueNumber = $prefix . '-' . strtoupper(Str::random(8)) . '-' . time();
 
         while (B2BRequestRefund::where('complaint_number', $uniqueNumber)->exists()) {
@@ -2400,7 +2390,7 @@ if (!function_exists('generateRefundComplaintNumber')) {
 }
 
 if (!function_exists('orderNo')) {
-    function orderNo () {
+    function orderNo (): string {
         $timestamp = now()->timestamp;
         $randomNumber = mt_rand(100000, 999999);
 
@@ -2416,7 +2406,7 @@ if (!function_exists('orderNo')) {
 }
 
 if (! function_exists('currencyConvert')) {
-    function currencyConvert($from, $amount, $to = null) {
+    function currencyConvert($from, $amount, $to = null): float {
         static $rates = [];
 
         $from = $from ?? 'USD';
@@ -2427,7 +2417,7 @@ if (! function_exists('currencyConvert')) {
 
         $cacheKey = "{$from}_to_{$to}";
         if (!isset($rates[$cacheKey])) {
-            $rates[$cacheKey] = Cache::remember($cacheKey, now()->addHours(24), function () use ($from, $to) {
+            $rates[$cacheKey] = Cache::remember($cacheKey, now()->addHours(24), function () use ($from, $to): int|float {
                 $fromRate = Currency::where('code', $from)->value('exchange_rate');
                 $toRate = Currency::where('code', $to)->value('exchange_rate');
 

@@ -17,7 +17,7 @@ class SliderImage extends Model
 
     protected static function booted()
     {
-        static::created(function ($slider) {
+        static::created(function ($slider): void {
             Cache::forget('home_sliders');
 
             Cache::rememberForever('home_sliders', function () {
