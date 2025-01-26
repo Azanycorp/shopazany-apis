@@ -321,13 +321,13 @@ class SettingsService
     {
         $search = trim(request()->input('search'));
 
-        $users = Admin::with('permissions')
-        ->where(function ($query) use($search): void {
-            $query->where('first_name', 'LIKE', '%' . $search . '%')
-            ->orWhere('last_name', 'LIKE', '%' . $search . '%')
-            ->orWhere('email', 'LIKE', '%' . $search . '%');
-        })
-        ->paginate(25);
+        $users = Admin::with(['permissions', 'roles'])
+            ->where(function ($query) use($search): void {
+                $query->where('first_name', 'LIKE', '%' . $search . '%')
+                ->orWhere('last_name', 'LIKE', '%' . $search . '%')
+                ->orWhere('email', 'LIKE', '%' . $search . '%');
+            })
+            ->paginate(25);
 
         $data = AdminUserResource::collection($users);
 
