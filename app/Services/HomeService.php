@@ -72,6 +72,8 @@ class HomeService
                 'color',
                 'unit',
                 'size',
+                'orders',
+                'productReviews',
             ])
             ->where('status', ProductStatus::ACTIVE);
 
@@ -109,6 +111,8 @@ class HomeService
                 'color',
                 'unit',
                 'size',
+                'orders',
+                'productReviews',
             ])
             ->where('is_featured', true)
             ->where('status', ProductStatus::ACTIVE);

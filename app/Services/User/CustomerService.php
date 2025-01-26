@@ -54,7 +54,17 @@ class CustomerService
             return $this->error(null, "Country not found", 404);
         }
 
-        $products = Product::with(['category', 'subCategory', 'shopCountry'])
+        $products = Product::with([
+                'category',
+                'subCategory',
+                'shopCountry',
+                'brand',
+                'color',
+                'unit',
+                'size',
+                'orders',
+                'productReviews',
+            ])
             ->where('country_id', $country->id)
             ->get();
 
