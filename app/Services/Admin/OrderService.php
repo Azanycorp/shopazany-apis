@@ -56,7 +56,12 @@ class OrderService
     {
         $search = request()->input('search');
 
-        $orders = Order::with(['user', 'seller', 'products.category'])
+        $orders = Order::with([
+            'user',
+            'seller.state',
+            'seller.userCountry',
+            'products.category'
+        ])
             ->where('country_id', 160)
             ->when($search, function ($query, $search): void {
                 $query->where(function ($query) use ($search): void {
