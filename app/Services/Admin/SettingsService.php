@@ -321,7 +321,7 @@ class SettingsService
     {
         $search = trim(request()->input('search'));
 
-        $users = Admin::with(['permissions', 'roles'])
+        $users = Admin::with(['permissions', 'roles.permissions'])
             ->where(function ($query) use($search): void {
                 $query->where('first_name', 'LIKE', '%' . $search . '%')
                 ->orWhere('last_name', 'LIKE', '%' . $search . '%')

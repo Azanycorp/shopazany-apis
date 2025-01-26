@@ -22,15 +22,15 @@ class AdminUserResource extends JsonResource
             'type' => (string)$this->type,
             'role' => $this?->roles->first()?->name,
             'date' => (string)$this->created_at,
-            // 'role' => $this->roles ? $this->roles->map(function ($role) {
-            //     return [
-            //         'id' => $role?->id,
-            //         'name' => $role?->name,
-            //         'permissions' => $role?->permissions->flatMap(function ($permission) {
-            //             return [$permission->name];
-            //         })->toArray()
-            //     ];
-            // })->toArray() : [],
+            'role' => $this->roles ? $this->roles->map(function ($role) {
+                return [
+                    'id' => $role?->id,
+                    'name' => $role?->name,
+                    'permissions' => $role?->permissions->flatMap(function ($permission) {
+                        return [$permission->name];
+                    })->toArray()
+                ];
+            })->toArray() : [],
         ];
     }
 }
