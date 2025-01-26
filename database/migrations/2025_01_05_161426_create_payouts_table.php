@@ -11,11 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('payouts', function (Blueprint $table) {
+        Schema::create('payouts', function (Blueprint $table): void {
             $table->id();
             $table->unsignedBigInteger('seller_id')->comment('b2b seller withdrawal request');
-            $table->double('amount', 19,2)->default(0);
-            $table->double('fee', 19,2)->default(0);
+            $table->double('amount')->default(0);
+            $table->double('fee')->default(0);
             $table->string('account_name')->nullable();
             $table->string('account_number')->nullable();
             $table->string('bank')->nullable();

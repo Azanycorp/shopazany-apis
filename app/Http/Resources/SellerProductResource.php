@@ -44,7 +44,7 @@ class SellerProductResource extends JsonResource
             'rating' => 3.5,
             'front_image' => (string)$this->image,
             'images' => $this->whenLoaded('productimages', function () {
-                return $this->productimages->map(function ($image) {
+                return $this->productimages->map(function ($image): array {
                     return [
                         'image' => $image->image
                     ];

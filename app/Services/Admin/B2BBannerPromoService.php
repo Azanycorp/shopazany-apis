@@ -10,7 +10,6 @@ use App\Models\B2bBanner;
 use App\Enum\BannerStatus;
 use App\Trait\HttpResponse;
 use App\Http\Resources\PromoResource;
-use App\Http\Resources\BannerResource;
 use App\Http\Resources\B2BBannerResource;
 
 class B2BBannerPromoService
@@ -19,23 +18,16 @@ class B2BBannerPromoService
 
     public function addBanner($request)
     {
-        try {
-
-            $image = uploadImage($request, 'image', 'banner');
-
-            B2bBanner::create([
-                'title' => $request->title,
-                'image' => $image,
-                'start_date' => $request->start_date,
-                'end_date' => $request->end_date,
-                'products' => $request->products,
-                'status' => BannerStatus::ACTIVE,
-            ]);
-
-            return $this->success(null, "Added successfully");
-        } catch (\Throwable $th) {
-            throw $th;
-        }
+        $image = uploadImage($request, 'image', 'banner');
+        B2bBanner::create([
+            'title' => $request->title,
+            'image' => $image,
+            'start_date' => $request->start_date,
+            'end_date' => $request->end_date,
+            'products' => $request->products,
+            'status' => BannerStatus::ACTIVE,
+        ]);
+        return $this->success(null, "Added successfully");
     }
 
     public function banners()
@@ -60,25 +52,18 @@ class B2BBannerPromoService
     public function editBanner($request, $id)
     {
         $banner = B2bBanner::findOrFail($id);
-
-        try {
-            if ($request->hasFile('image')) {
-                # code...
-                $image = uploadImage($request, 'image', 'banner', null, $banner);
-            }
-
-            $banner->update([
-                'title' => $request->title,
-                'image' => $request->image ? $image : $banner->image,
-                'start_date' => $request->start_date,
-                'end_date' => $request->end_date,
-                'products' => $request->products,
-            ]);
-
-            return $this->success(null, "Updated successfully");
-        } catch (\Throwable $th) {
-            throw $th;
+        if ($request->hasFile('image')) {
+            # code...
+            $image = uploadImage($request, 'image', 'banner', null, $banner);
         }
+        $banner->update([
+            'title' => $request->title,
+            'image' => $request->image ? $image : $banner->image,
+            'start_date' => $request->start_date,
+            'end_date' => $request->end_date,
+            'products' => $request->products,
+        ]);
+        return $this->success(null, "Updated successfully");
     }
 
     public function deleteBanner($id)
@@ -97,20 +82,18 @@ class B2BBannerPromoService
         switch ($type) {
             case CouponType::PRODUCT:
                 return $this->product($type, $request);
-                break;
 
             case CouponType::TOTAL_ORDERS:
                 return $this->totalOrders($type, $request);
-                break;
 
             case CouponType::WELCOME_COUPON:
                 return $this->welcomeCoupon($type, $request);
-                break;
 
             default:
                 # code...
                 break;
         }
+        return null;
     }
 
     public function promos()
@@ -118,7 +101,7 @@ class B2BBannerPromoService
         $promos = B2bPromo::get();
         $data = PromoResource::collection($promos);
 
-        return $this->success($promos, "All Promos");
+        return $this->success($data, "All Promos");
     }
 
     public function deletePromo($id)

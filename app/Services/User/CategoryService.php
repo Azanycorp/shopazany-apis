@@ -66,7 +66,7 @@ class CategoryService
 
         $categories = Category::with(['products', 'subcategory'])
             ->withCount(['products', 'subcategory'])
-            ->when($search, function ($query, $search) {
+            ->when($search, function ($query, string $search): void {
                 $query->where('name', 'like', '%' . $search . '%');
             })
             ->get();
@@ -167,7 +167,7 @@ class CategoryService
 
         $subcats = SubCategory::with(['product', 'category'])
             ->withCount(['product', 'category'])
-            ->when($search, function ($query, $search) {
+            ->when($search, function ($query, string $search): void {
                 $query->where('name', 'like', '%' . $search . '%');
             })
             ->get();

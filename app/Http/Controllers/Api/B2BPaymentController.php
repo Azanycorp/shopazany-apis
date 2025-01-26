@@ -14,7 +14,7 @@ use App\Services\Payment\PaystackPaymentProcessor;
 
 class B2BPaymentController extends Controller
 {
-    protected $service;
+    protected \App\Services\Payment\PaymentService $service;
 
     public function __construct(PaymentService $service)
     {

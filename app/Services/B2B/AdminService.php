@@ -31,8 +31,8 @@ use App\Repositories\B2BSellerShippingRepository;
 class AdminService
 {
     use HttpResponse;
-    protected $b2bProductRepository;
-    protected $b2bSellerShippingRepository;
+    protected \App\Repositories\B2BProductRepository $b2bProductRepository;
+    protected \App\Repositories\B2BSellerShippingRepository $b2bSellerShippingRepository;
 
     public function __construct(
         B2BProductRepository $b2bProductRepository,
@@ -118,7 +118,7 @@ class AdminService
     //Sellers
     //Admin section
 
-    public function allSellers()
+    public function allSellers(): array
     {
         $searchQuery = request()->input('search');
         $approvedQuery = request()->query('approved');
@@ -128,15 +128,15 @@ class AdminService
             + User::where(['type' => UserType::B2B_SELLER, 'status' => UserStatus::BLOCKED])->count();
 
         $users = User::where('type', UserType::B2B_SELLER)
-            ->when($searchQuery, function ($queryBuilder) use ($searchQuery) {
-                $queryBuilder->where(function ($subQuery) use ($searchQuery) {
+            ->when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
+                $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
                     $subQuery->where('first_name', 'LIKE', '%' . $searchQuery . '%')
                         ->orWhere('last_name', 'LIKE', '%' . $searchQuery . '%')
                         ->orWhere('middlename', 'LIKE', '%' . $searchQuery . '%')
                         ->orWhere('email', 'LIKE', '%' . $searchQuery . '%');
                 });
             })
-            ->when($approvedQuery !== null, function ($queryBuilder) use ($approvedQuery) {
+            ->when($approvedQuery !== null, function ($queryBuilder) use ($approvedQuery): void {
                 $queryBuilder->where('is_admin_approve', $approvedQuery);
             })
             ->paginate(25);
@@ -194,7 +194,7 @@ class AdminService
 
         if (!empty($search)) {
             $query->where('name', 'like', '%' . $search . '%')
-                ->orWhereHas('category', function ($q) use ($search) {
+                ->orWhereHas('category', function ($q) use ($search): void {
                     $q->where('name', 'like', '%' . $search . '%');
                 });
         }
@@ -283,59 +283,45 @@ class AdminService
         if (! $user) {
             return $this->error(null, "User not found", 404);
         }
-
-        try {
-
-            $parts = explode('@', $user->email);
-            $name = $parts[0];
-
-            $res = folderNames('b2bproduct', $name, 'front_image');
-
-            $slug = Str::slug($request->name);
-
-            if (B2BProduct::where('slug', $slug)->exists()) {
-                $slug = $slug . '-' . uniqid();
-            }
-
-            if ($request->hasFile('front_image')) {
-                $path = $request->file('front_image')->store($res->frontImage, 's3');
-                $url = Storage::disk('s3')->url($path);
-            }
-
-            $data = (array)[
-                'user_id' => $user->id,
-                'name' => $request->name,
-                'slug' => $slug,
-                'category_id' => $request->category_id,
-                'sub_category_id' => $request->sub_category_id,
-                'keywords' => $request->keywords,
-                'description' => $request->description,
-                'front_image' => $url,
-                'minimum_order_quantity' => $request->minimum_order_quantity,
-                'unit_price' => $request->unit,
-                'quantity' => $request->quantity,
-                'availability_quantity' => $request->quantity,
-                'fob_price' => $request->fob_price,
-                'country_id' => is_int($user->country) ? $user->country : 160,
-            ];
-
-            $product = $this->b2bProductRepository->create($data);
-
-            if ($request->hasFile('images')) {
-                foreach ($request->file('images') as $image) {
-                    $path = $image->store($res->folder, 's3');
-                    $url = Storage::disk('s3')->url($path);
-
-                    $product->b2bProductImages()->create([
-                        'image' => $url,
-                    ]);
-                }
-            }
-
-            return $this->success(null, 'Product added successfully', 201);
-        } catch (\Throwable $th) {
-            throw $th;
+        $parts = explode('@', $user->email);
+        $name = $parts[0];
+        $res = folderNames('b2bproduct', $name, 'front_image');
+        $slug = Str::slug($request->name);
+        if (B2BProduct::where('slug', $slug)->exists()) {
+            $slug = $slug . '-' . uniqid();
         }
+        if ($request->hasFile('front_image')) {
+            $path = $request->file('front_image')->store($res->frontImage, 's3');
+            $url = Storage::disk('s3')->url($path);
+        }
+        $data = [
+            'user_id' => $user->id,
+            'name' => $request->name,
+            'slug' => $slug,
+            'category_id' => $request->category_id,
+            'sub_category_id' => $request->sub_category_id,
+            'keywords' => $request->keywords,
+            'description' => $request->description,
+            'front_image' => $url,
+            'minimum_order_quantity' => $request->minimum_order_quantity,
+            'unit_price' => $request->unit,
+            'quantity' => $request->quantity,
+            'availability_quantity' => $request->quantity,
+            'fob_price' => $request->fob_price,
+            'country_id' => is_int($user->country) ? $user->country : 160,
+        ];
+        $product = $this->b2bProductRepository->create($data);
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $image) {
+                $path = $image->store($res->folder, 's3');
+                $url = Storage::disk('s3')->url($path);
+
+                $product->b2bProductImages()->create([
+                    'image' => $url,
+                ]);
+            }
+        }
+        return $this->success(null, 'Product added successfully', 201);
     }
 
     public function viewSellerProduct($product_id)
@@ -379,7 +365,7 @@ class AdminService
             $url = $prod->front_image;
         }
 
-        $data = (array)[
+        $data = [
             'user_id' => $user->id,
             'name' => $request->name ?? $prod->name,
             'slug' => $slug,
@@ -429,7 +415,7 @@ class AdminService
     //Sellers
     //Admin section
 
-    public function allBuyers()
+    public function allBuyers(): array
     {
         $searchQuery = request()->input('search');
         $approvedQuery = request()->query('approved');
@@ -440,15 +426,15 @@ class AdminService
 
         $users = User::with(['businessInformation'])
             ->where('type', UserType::B2B_BUYER)
-            ->when($searchQuery, function ($queryBuilder) use ($searchQuery) {
-                $queryBuilder->where(function ($subQuery) use ($searchQuery) {
+            ->when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
+                $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
                     $subQuery->where('first_name', 'LIKE', '%' . $searchQuery . '%')
                         ->orWhere('last_name', 'LIKE', '%' . $searchQuery . '%')
                         ->orWhere('middlename', 'LIKE', '%' . $searchQuery . '%')
                         ->orWhere('email', 'LIKE', '%' . $searchQuery . '%');
                 });
             })
-            ->when($approvedQuery !== null, function ($queryBuilder) use ($approvedQuery) {
+            ->when($approvedQuery !== null, function ($queryBuilder) use ($approvedQuery): void {
                 $queryBuilder->where('is_admin_approve', $approvedQuery);
             })
             ->paginate(25);
@@ -596,7 +582,7 @@ class AdminService
         $user->update([
             'password' => Hash::make($data->password),
         ]);
-        $data = new AdminUserResource($user);
+        new AdminUserResource($user);
 
         return $this->success(null, 'Password updated');
     }
@@ -644,7 +630,7 @@ class AdminService
     public function widthrawalRequests()
     {
         $payouts =  Payout::select(['id', 'seller_id', 'amount', 'status', 'created_at'])
-            ->with(['user' => function ($query) {
+            ->with(['user' => function ($query): void {
                 $query->select('id', 'first_name', 'last_name')->where('type', UserType::B2B_SELLER);
             }])->latest('id')->get();
 
@@ -657,7 +643,7 @@ class AdminService
 
     public function viewWidthrawalRequest($id)
     {
-        $payout =  Payout::with(['user' => function ($query) {
+        $payout =  Payout::with(['user' => function ($query): void {
             $query->select('id', 'first_name', 'last_name')->where('type', UserType::B2B_SELLER);
         }])->find($id);
 
@@ -733,7 +719,7 @@ class AdminService
     {
         $account =  B2bWithdrawalMethod::with('user.businessInformation')->findOrFail($id);
 
-        $business = BusinessInformation::select(['business_location', 'business_type', 'business_name', 'business_reg_number', 'business_phone', 'business_reg_document', 'identification_type_document', 'user_id'])->with(['user' => function ($query) {
+        $business = BusinessInformation::select(['business_location', 'business_type', 'business_name', 'business_reg_number', 'business_phone', 'business_reg_document', 'identification_type_document', 'user_id'])->with(['user' => function ($query): void {
             $query->where('type', UserType::B2B_SELLER)->select('id', 'first_name', 'last_name');
         }])->where('user_id', $account->user_id)->first();
 
@@ -783,7 +769,7 @@ class AdminService
     //seller Product request
     public function allProducts()
     {
-        $products =  B2BProduct::with(['user' => function ($query) {
+        $products =  B2BProduct::with(['user' => function ($query): void {
             $query->select('id', 'first_name', 'last_name')->where('type', UserType::B2B_SELLER);
         }])->where('status', OrderStatus::PENDING)->latest('id')->get();
 
@@ -795,7 +781,7 @@ class AdminService
 
     public function viewProduct($id)
     {
-        $product = B2BProduct::with(['user' => function ($query) {
+        $product = B2BProduct::with(['user' => function ($query): void {
             $query->select('id', 'first_name', 'last_name')->where('type', UserType::B2B_SELLER);
         }])->find($id);
 

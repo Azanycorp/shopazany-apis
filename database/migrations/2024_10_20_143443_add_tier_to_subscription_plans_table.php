@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('subscription_plans', function (Blueprint $table) {
+        Schema::table('subscription_plans', function (Blueprint $table): void {
             $table->integer('tier')->after('period')->nullable();
         });
     }
@@ -21,7 +21,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('subscription_plans', function (Blueprint $table) {
+        Schema::table('subscription_plans', function (Blueprint $table): void {
             $table->dropColumn('tier');
         });
     }

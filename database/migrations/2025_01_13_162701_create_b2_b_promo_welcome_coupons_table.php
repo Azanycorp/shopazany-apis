@@ -11,21 +11,21 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('b2b_promo_welcome_coupons', function (Blueprint $table) {
+        Schema::create('b2b_promo_welcome_coupons', function (Blueprint $table): void {
             $table->id();
             $table->foreignId('b2b_promo_id')->constrained('b2b_promos')->onDelete('cascade');
             $table->decimal('minimum_shopping_amount', 8, 2);
             $table->integer('number_of_days_valid');
             $table->timestamps();
         });
-        Schema::create('b2b_promo_products', function (Blueprint $table) {
+        Schema::create('b2b_promo_products', function (Blueprint $table): void {
             $table->id();
             $table->foreignId('b2b_promo_id')->constrained('b2b_promos')->onDelete('cascade');
             $table->foreignId('product_id')->constrained('b2b_products')->onDelete('cascade');
             $table->timestamps();
         });
 
-        Schema::create('b2b_promo_total_orders', function (Blueprint $table) {
+        Schema::create('b2b_promo_total_orders', function (Blueprint $table): void {
             $table->id();
             $table->foreignId('b2b_promo_id')->constrained('b2b_promos')->onDelete('cascade');
             $table->decimal('minimum_cart_amount', 8, 2);

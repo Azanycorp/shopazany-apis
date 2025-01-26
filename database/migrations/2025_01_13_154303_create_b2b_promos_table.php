@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('b2b_promos', function (Blueprint $table) {
+        Schema::create('b2b_promos', function (Blueprint $table): void {
             $table->id();
             $table->string('coupon_code')->unique();
             $table->double('discount')->default(0);

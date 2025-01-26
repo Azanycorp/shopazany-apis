@@ -28,7 +28,7 @@ class ChargeUserService
         $url = $this->baseUrl . "/transaction/charge_authorization";
 
         try {
-            
+
             $fields = [
             'authorization_code' => $this->subscription?->authorization_data?->authorization_code,
             'email' => $this->subscription?->user?->email,
@@ -52,7 +52,7 @@ class ChargeUserService
             $result = curl_exec($ch);
             $err = curl_error($ch);
 
-            if ($err) {
+            if ($err !== '' && $err !== '0') {
                 throw new Exception($err);
             }
 
@@ -67,6 +67,7 @@ class ChargeUserService
         } catch (Exception $e) {
             Log::info($e->getMessage());
         }
+        return null;
     }
 }
 

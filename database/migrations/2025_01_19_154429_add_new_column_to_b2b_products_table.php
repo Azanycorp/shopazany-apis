@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('b2b_products', function (Blueprint $table) {
+        Schema::table('b2b_products', function (Blueprint $table): void {
             //
             $table->text('admin_comment')->nullable();
         });
@@ -22,7 +22,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('b2b_products', function (Blueprint $table) {
+        Schema::table('b2b_products', function (Blueprint $table): void {
             //
         });
     }

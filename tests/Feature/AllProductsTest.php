@@ -20,7 +20,7 @@ class AllProductsTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function testAllProductsAreReturned()
+    public function testAllProductsAreReturned(): void
     {
         $category = Category::factory()->create();
         $subCategory = SubCategory::factory()->create();

@@ -39,9 +39,8 @@ class LoginService extends Controller
 
             if ($user->two_factor_enabled) {
                 return app(self::class)->handleTwoFactorAuthentication($user, $request);
-            } else {
-                return app(self::class)->logUserIn($user, $request);
             }
+            return app(self::class)->logUserIn($user, $request);
         }
 
         return app(self::class)->handleInvalidCredentials($request);

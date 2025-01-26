@@ -16,23 +16,16 @@ class BannerPromoService
 
     public function addBanner($request)
     {
-        try {
-
-            $image = uploadImage($request, 'image', 'banner');
-
-            Banner::create([
-                'title' => $request->title,
-                'image' => $image,
-                'start_date' => $request->start_date,
-                'end_date' => $request->end_date,
-                'products' => $request->products,
-                'status' => BannerStatus::ACTIVE,
-            ]);
-
-            return $this->success(null, "Added successfully");
-        } catch (\Throwable $th) {
-            throw $th;
-        }
+        $image = uploadImage($request, 'image', 'banner');
+        Banner::create([
+            'title' => $request->title,
+            'image' => $image,
+            'start_date' => $request->start_date,
+            'end_date' => $request->end_date,
+            'products' => $request->products,
+            'status' => BannerStatus::ACTIVE,
+        ]);
+        return $this->success(null, "Added successfully");
     }
 
     public function banners()
@@ -54,23 +47,15 @@ class BannerPromoService
     public function editBanner($request, $id)
     {
         $banner = Banner::findOrFail($id);
-
-        try {
-
-            $image = uploadImage($request, 'image', 'banner', null, $banner);
-
-            $banner->update([
-                'title' => $request->title,
-                'image' => $image,
-                'start_date' => $request->start_date,
-                'end_date' => $request->end_date,
-                'products' => $request->products,
-            ]);
-
-            return $this->success(null, "Updated successfully");
-        } catch (\Throwable $th) {
-            throw $th;
-        }
+        $image = uploadImage($request, 'image', 'banner', null, $banner);
+        $banner->update([
+            'title' => $request->title,
+            'image' => $image,
+            'start_date' => $request->start_date,
+            'end_date' => $request->end_date,
+            'products' => $request->products,
+        ]);
+        return $this->success(null, "Updated successfully");
     }
 
     public function deleteBanner($id)
@@ -88,20 +73,18 @@ class BannerPromoService
         switch ($type) {
             case CouponType::PRODUCT:
                 return $this->product($type, $request);
-                break;
 
             case CouponType::TOTAL_ORDERS:
                 return $this->totalOrders($type, $request);
-                break;
 
             case CouponType::WELCOME_COUPON:
                 return $this->welcomeCoupon($type, $request);
-                break;
 
             default:
                 # code...
                 break;
         }
+        return null;
     }
 
     public function promos()

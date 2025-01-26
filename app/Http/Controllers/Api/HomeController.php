@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 
 class HomeController extends Controller
 {
-    protected $service;
+    protected \App\Services\HomeService $service;
 
     public function __construct(HomeService $service)
     {

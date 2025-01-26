@@ -71,11 +71,10 @@ class UserWelcomeMail extends Mailable
                 'baseUrl' => "https://shopazany.com/en",
                 'loginUrl' => "https://shopazany.com/en/login"
             ];
-        } else {
-            return [
-                'baseUrl' => "https://fe-staging.shopazany.com/en",
-                'loginUrl' => "https://fe-staging.shopazany.com/en/login"
-            ];
         }
+        return [
+            'baseUrl' => "https://fe-staging.shopazany.com/en",
+            'loginUrl' => "https://fe-staging.shopazany.com/en/login"
+        ];
     }
 }

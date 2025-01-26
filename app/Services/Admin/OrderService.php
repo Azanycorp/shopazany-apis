@@ -52,18 +52,18 @@ class OrderService
         return $this->success($data, "Analytics");
     }
 
-    public function localOrder()
+    public function localOrder(): array
     {
         $search = request()->input('search');
 
         $orders = Order::with(['user', 'seller', 'products'])
             ->where('country_id', 160)
-            ->when($search, function ($query, $search) {
-                $query->where(function ($query) use ($search) {
-                    $query->whereHas('user', function ($query) use ($search) {
+            ->when($search, function ($query, $search): void {
+                $query->where(function ($query) use ($search): void {
+                    $query->whereHas('user', function ($query) use ($search): void {
                         $query->where('first_name', 'like', "%{$search}%")
                           ->orWhere('last_name', 'like', "%{$search}%");
-                    })->orWhereHas('seller', function ($query) use ($search) {
+                    })->orWhereHas('seller', function ($query) use ($search): void {
                         $query->where('first_name', 'like', "%{$search}%")
                           ->orWhere('last_name', 'like', "%{$search}%");
                     })->orWhere('order_no', 'like', "%{$search}%");
@@ -96,18 +96,18 @@ class OrderService
         ];
     }
 
-    public function intOrder()
+    public function intOrder(): array
     {
         $search = request()->input('search');
 
         $orders = Order::with(['user', 'seller', 'products'])
             ->where('country_id', '!=', 160)
-            ->when($search, function ($query, $search) {
-                $query->where(function ($query) use ($search) {
-                    $query->whereHas('user', function ($query) use ($search) {
+            ->when($search, function ($query, $search): void {
+                $query->where(function ($query) use ($search): void {
+                    $query->whereHas('user', function ($query) use ($search): void {
                         $query->where('first_name', 'like', "%{$search}%")
                           ->orWhere('last_name', 'like', "%{$search}%");
-                    })->orWhereHas('seller', function ($query) use ($search) {
+                    })->orWhereHas('seller', function ($query) use ($search): void {
                         $query->where('first_name', 'like', "%{$search}%")
                           ->orWhere('last_name', 'like', "%{$search}%");
                     })->orWhere('order_no', 'like', "%{$search}%");
@@ -140,7 +140,7 @@ class OrderService
         ];
     }
 
-    public function orderDetail($id)
+    public function orderDetail($id): array
     {
         $order = Order::with(['user', 'products'])->findOrFail($id);
 
@@ -153,7 +153,7 @@ class OrderService
         ];
     }
 
-    public function searchOrder($request)
+    public function searchOrder($request): array
     {
         $query = Order::query();
 

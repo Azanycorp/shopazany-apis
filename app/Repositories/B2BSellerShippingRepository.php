@@ -32,7 +32,7 @@ class B2BSellerShippingRepository implements B2BRepositoryInterface
         return $response;
     }
 
-    public function delete(int $id)
+    public function delete(int $id): bool
     {
         $response = $this->find($id);
         $response->delete();

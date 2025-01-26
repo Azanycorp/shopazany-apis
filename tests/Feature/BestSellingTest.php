@@ -26,7 +26,7 @@ class BestSellingTest extends TestCase
         ]);
     }
 
-    public function testBestSellingProductsAreReturned()
+    public function testBestSellingProductsAreReturned(): void
     {
         $product1 = Product::factory()->create(['country_id' => 1]);
         $product2 = Product::factory()->create(['country_id' => 1]);
