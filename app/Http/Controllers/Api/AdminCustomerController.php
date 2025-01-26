@@ -42,7 +42,7 @@ class AdminCustomerController extends Controller
             'user_ids' => 'required|array',
             'user_ids.*' => 'exists:users,id',
         ]);
-        
+
         return $this->service->removeCustomer($request);
     }
 

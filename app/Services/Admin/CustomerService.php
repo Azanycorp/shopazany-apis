@@ -18,7 +18,7 @@ class CustomerService
     {
         $query = trim(request()->input('search'));
 
-        $users = User::with(['userCountry', 'state', 'wallet', 'wishlist', 'payments'])
+        $users = User::with(['userCountry', 'state', 'wallet', 'wishlist', 'payments.order'])
             ->where('type', 'customer')
             ->where(function($queryBuilder) use ($query): void {
                 $queryBuilder->where('first_name', 'LIKE', '%' . $query . '%')
