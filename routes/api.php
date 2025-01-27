@@ -20,7 +20,7 @@ use App\Http\Controllers\Api\SubscriptionController;
 //     return $request->user();
 // })->middleware('auth:sanctum');
 
-Route::middleware(['throttle:apis'])->group(function (): void {
+Route::middleware(['throttle:apis', 'doNotCacheResponse'])->group(function (): void {
 
     Route::prefix('connect')
         ->controller(AuthController::class)
@@ -64,7 +64,9 @@ Route::get('/b2b/seller/template', [B2BSellerController::class, 'getTemplate']);
 Route::get('/shop/country', [ApiController::class, 'getShopByCountry']);
 Route::get('/shop-by/country/{shop_country_id}', [ApiController::class, 'userShopByCountry']);
 
-Route::controller(HomeController::class)->group(function (): void {
+Route::middleware('cacheResponse:300')
+    ->controller(HomeController::class)
+    ->group(function (): void {
     Route::get('/best/selling', 'bestSelling');
     Route::get('/category/{slug}', 'categorySlug');
     Route::get('/all/products', 'allProducts');
