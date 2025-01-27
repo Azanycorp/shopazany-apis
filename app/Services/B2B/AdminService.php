@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Admin;
 use App\Enum\UserType;
 use App\Models\Payout;
+use App\Enum\AdminType;
 use App\Enum\UserStatus;
 use App\Models\B2bOrder;
 use App\Enum\AdminStatus;
@@ -21,6 +22,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\B2bWithdrawalMethod;
 use App\Models\BusinessInformation;
 use Illuminate\Support\Facades\Hash;
+use App\Http\Resources\BuyerResource;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Resources\AdminUserResource;
 use App\Http\Resources\B2BSellerResource;
@@ -141,7 +143,7 @@ class AdminService
             })
             ->paginate(25);
 
-       // $data = B2BSellerResource::collection($users);
+        // $data = B2BSellerResource::collection($users);
 
         return [
             'status' => 'true',
@@ -424,7 +426,7 @@ class AdminService
             + User::where(['type' => UserType::B2B_BUYER, 'status' => UserStatus::SUSPENDED])->count()
             + User::where(['type' => UserType::B2B_BUYER, 'status' => UserStatus::BLOCKED])->count();
 
-        $users = User::with(['businessInformation'])
+        $users = User::with(['userCountry','state','b2bCompany'])
             ->where('type', UserType::B2B_BUYER)
             ->when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
                 $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
@@ -439,7 +441,7 @@ class AdminService
             })
             ->paginate(25);
 
-        // $data = B2BBuyerResource::collection($users);
+        $data = BuyerResource::collection($users);
 
         return [
             'status' => 'true',
@@ -447,7 +449,7 @@ class AdminService
             'all_users' => $total_users->count(),
             'active_users' => $total_users->where('status', UserStatus::ACTIVE)->count(),
             'inactive_users' => $inactive_users,
-            'data' => $users,
+            'data' => $data,
             'pagination' => [
                 'current_page' => $users->currentPage(),
                 'last_page' => $users->lastPage(),
@@ -543,7 +545,7 @@ class AdminService
     public function adminProfile()
     {
         $authUser = userAuth();
-        $user = Admin::where('type', AdminStatus::B2B)->findOrFail($authUser->id);
+        $user = Admin::where('type', AdminType::B2B)->findOrFail($authUser->id);
         $data = new AdminUserResource($user);
 
         return $this->success($data, 'Profile detail');
@@ -552,7 +554,7 @@ class AdminService
     public function updateAdminProfile($data)
     {
         $authUser = userAuth();
-        $user = Admin::where('type', AdminStatus::B2B)->findOrFail($authUser->id);
+        $user = Admin::where('type', AdminType::B2B)->findOrFail($authUser->id);
         $user->update([
             'first_name' => $data->first_name,
             'last_name' => $data->last_name,
@@ -567,7 +569,7 @@ class AdminService
     public function enableTwoFactor($data)
     {
         $authUser = userAuth();
-        $user = Admin::where('type', AdminStatus::B2B)->findOrFail($authUser->id);
+        $user = Admin::where('type', AdminType::B2B)->findOrFail($authUser->id);
         $user->update([
             'two_factor_enabled' => $data->two_factor_enabled,
         ]);
@@ -578,7 +580,7 @@ class AdminService
     public function updateAdminPassword($data)
     {
         $authUser = userAuth();
-        $user = Admin::where('type', AdminStatus::B2B)->findOrFail($authUser->id);
+        $user = Admin::where('type', AdminType::B2B)->findOrFail($authUser->id);
         $user->update([
             'password' => Hash::make($data->password),
         ]);
@@ -821,5 +823,54 @@ class AdminService
         ]);
 
         return $this->success(null, 'Comment Submitted successfully');
+    }
+
+
+    //Admin User Management
+    public function adminUsers()
+    {
+        $users = Admin::latest('created_at')->where('type', AdminType::B2B)->get();
+
+        return $this->success($users, 'All Admin Users');
+    }
+
+    public function addAdmin($data)
+    {
+        $admin = Admin::create([
+            'first_name' => $data->first_name,
+            'last_name' => $data->last_name,
+            'email' => $data->email,
+            'type' => AdminType::B2B,
+            'status' => AdminStatus::ACTIVE,
+            'phone_number' => $data->phone_number,
+            'password' => bcrypt($data->password),
+        ]);
+
+        return $this->success($admin, 'Admin user added successfully', 200);
+    }
+
+    public function viewAdmin($id)
+    {
+        $admin = Admin::findOrFail($id);
+        return $this->success($admin, 'Admin details');
+    }
+
+    public function editAdmin($id, $data)
+    {
+        $admin = Admin::findOrFail($id);
+        $admin->update([
+            'first_name' => $data->first_name,
+            'last_name' => $data->last_name,
+            'email' => $data->email,
+            'phone_number' => $data->phone_number,
+        ]);
+        return $this->success($admin, 'Details updated successfully');
+    }
+
+    public function removeAdmin($id)
+    {
+        $admin = Admin::findOrFail($id);
+        $admin->delete();
+        return $this->success(null, 'Deleted successfully');
     }
 }

@@ -92,7 +92,7 @@ trait UserRelationship
 
     public function userCountry(): BelongsTo
     {
-        return $this->belongsTo(Country::class, 'country');
+        return $this->belongsTo(Country::class, 'country','id');
     }
 
     public function state(): BelongsTo
