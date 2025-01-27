@@ -198,47 +198,60 @@ class SellerService extends Controller
         if (!$user) {
             return $this->error(null, "User not found", 404);
         }
-        $parts = explode('@', $user->email);
-        $name = $parts[0];
-        $res = folderNames('b2bproduct', $name, 'front_image');
-        $slug = Str::slug($request->name);
-        if (B2BProduct::where('slug', $slug)->exists()) {
-            $slug = $slug . '-' . uniqid();
-        }
-        if ($request->hasFile('front_image')) {
-            $path = $request->file('front_image')->store($res->frontImage, 's3');
-            $url = Storage::disk('s3')->url($path);
-        }
-        $data = [
-            'user_id' => $user->id,
-            'name' => $request->name,
-            'slug' => $slug,
-            'category_id' => $request->category_id,
-            'sub_category_id' => $request->sub_category_id,
-            'keywords' => $request->keywords,
-            'description' => $request->description,
-            'front_image' => $url,
-            'minimum_order_quantity' => $request->minimum_order_quantity,
-            'unit_price' => $request->unit,
-            'quantity' => $request->quantity,
-            'availability_quantity' => $request->quantity,
-            'default_currency' => $request->default_currency,
-            'fob_price' => $request->fob_price,
-            'status' => 'active',
-            'country_id' => is_int($user->country) ? $user->country : 160,
-        ];
-        $product = $this->b2bProductRepository->create($data);
-        if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $image) {
-                $path = $image->store($res->folder, 's3');
-                $url = Storage::disk('s3')->url($path);
 
-                $product->b2bProductImages()->create([
-                    'image' => $url,
-                ]);
+        try {
+
+            $parts = explode('@', $user->email);
+            $name = $parts[0];
+
+            $res = folderNames('b2bproduct', $name, 'front_image');
+
+            $slug = Str::slug($request->name);
+
+            if (B2BProduct::where('slug', $slug)->exists()) {
+                $slug = $slug . '-' . uniqid();
             }
+
+            if ($request->hasFile('front_image')) {
+                $path = $request->file('front_image')->store($res->frontImage, 's3');
+                $url = Storage::disk('s3')->url($path);
+            }
+
+            $data = (array)[
+                'user_id' => $user->id,
+                'name' => $request->name,
+                'slug' => $slug,
+                'category_id' => $request->category_id,
+                'sub_category_id' => $request->sub_category_id,
+                'keywords' => $request->keywords,
+                'description' => $request->description,
+                'front_image' => $url,
+                'minimum_order_quantity' => $request->minimum_order_quantity,
+                'unit_price' => $request->unit,
+                'quantity' => $request->quantity,
+                'availability_quantity' => $request->quantity,
+                'default_currency' => $user->default_currency,
+                'fob_price' => $request->fob_price,
+                'status' => 'active',
+                'country_id' => is_int($user->country) ? $user->country : 160,
+            ];
+
+            $product = $this->b2bProductRepository->create($data);
+
+            if ($request->hasFile('images')) {
+                foreach ($request->file('images') as $image) {
+                    $path = $image->store($res->folder, 's3');
+                    $url = Storage::disk('s3')->url($path);
+
+                    $product->b2bProductImages()->create([
+                        'image' => $url,
+                    ]);
+                }
+            }
+            return $this->success(null, 'Product added successfully', 201);
+        } catch (\Exception $e) {
+            return $this->error(null, $e->getMessage(), 500);
         }
-        return $this->success(null, 'Product added successfully', 201);
     }
 
     public function getAllProduct($request)
@@ -755,7 +768,7 @@ class SellerService extends Controller
                 'product_quantity' => $rfq->product_quantity,
                 'order_no' => 'ORD-' . now()->timestamp . '-' . Str::random(8),
                 'product_data' => $product,
-                'amount' => $amount,
+                'total_amount' => $amount,
                 'payment_method' => PaymentType::OFFLINE,
                 'payment_status' => OrderStatus::PAID,
                 'status' => OrderStatus::PENDING,

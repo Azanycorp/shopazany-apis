@@ -6,6 +6,7 @@ use App\Enum\UserStatus;
 use Illuminate\Http\Request;
 use App\Services\B2B\AdminService;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\AdminUserRequest;
 use App\Http\Requests\ChangeAdminPasswordRequest;
 
 class B2BAdminController extends Controller
@@ -130,5 +131,31 @@ class B2BAdminController extends Controller
     public function rejectProduct(Request $request)
     {
         return $this->adminService->rejectProduct($request);
+    }
+
+    //Admin Users
+    public function adminUsers()
+    {
+        return $this->adminService->adminUsers();
+    }
+
+    public function addAdmin(AdminUserRequest $request)
+    {
+        return $this->adminService->addAdmin($request);
+    }
+
+    public function viewAdminUser($id)
+    {
+        return $this->adminService->viewAdmin($id);
+    }
+
+    public function editAdminUser($id, Request $request)
+    {
+        return $this->adminService->editAdmin($id, $request);
+    }
+
+    public function removeAdmin($id)
+    {
+        return $this->adminService->removeAdmin($id);
     }
 }
