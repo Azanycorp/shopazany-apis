@@ -900,6 +900,7 @@ class AdminService
         }
         return $this->success(null, 'Access Revoked');
     }
+    
     public function removeAdmin($id)
     {
         $admin = Admin::findOrFail($id);
