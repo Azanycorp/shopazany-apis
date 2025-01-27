@@ -39,11 +39,24 @@ class CouponService
         return $this->success(null, "Coupons created successfully", 201);
     }
 
-    public function getCoupon()
+    public function getCoupon(): array
     {
-        $coupons = Coupon::select('id', 'name', 'code', 'link', 'used', 'type', 'expire_at', 'status')->get();
+        $coupons = Coupon::select('id', 'name', 'code', 'link', 'used', 'type', 'expire_at', 'status')
+            ->orderBy('created_at', 'desc')
+            ->paginate(25);
 
-        return $this->success($coupons, "Coupon List");
+        return [
+            'status' => 'true',
+            'message' => 'All products',
+            'data' => $coupons,
+            'pagination' => [
+                'current_page' => $coupons->currentPage(),
+                'last_page' => $coupons->lastPage(),
+                'per_page' => $coupons->perPage(),
+                'prev_page_url' => $coupons->previousPageUrl(),
+                'next_page_url' => $coupons->nextPageUrl(),
+            ],
+        ];
     }
 }
 
