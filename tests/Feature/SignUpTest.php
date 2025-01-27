@@ -27,7 +27,7 @@ class SignUpTest extends TestCase
      */
     public function test_user_can_sign_up_successfully(): void
     {
-        $password = $this->faker->password(12);
+        $password = 'ValidPass123!@#';
         $email = 'test'. rand(00, 99) . '@gmail.com';
 
         $payload = [
