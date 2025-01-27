@@ -278,7 +278,7 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function (): void
                 Route::post('/add', 'addSellerProduct');
                 Route::get('/details/{id}/{user_id}', 'viewSellerProduct');
                 Route::post('/update{id}', 'editSellerProduct');
-                Route::delete('/remove/{id}', 'removeSellerProduct');
+                Route::delete('/delete/{user_id}/{id}', 'removeSellerProduct');
             });
         });
 

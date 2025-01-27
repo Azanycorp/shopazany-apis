@@ -243,12 +243,15 @@ class SellerService extends Controller
                     $path = $image->store($res->folder, 's3');
                     $url = Storage::disk('s3')->url($path);
 
-                $product->b2bProductImages()->create([
-                    'image' => $url,
-                ]);
+                    $product->b2bProductImages()->create([
+                        'image' => $url,
+                    ]);
+                }
             }
+            return $this->success(null, 'Product added successfully', 201);
+        } catch (\Exception $e) {
+            return $this->error(null, $e->getMessage(), 500);
         }
-        return $this->success(null, 'Product added successfully', 201);
     }
 
     public function getAllProduct($request)
