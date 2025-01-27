@@ -257,11 +257,6 @@ class BuyerService
         $quotes = B2bQuote::where('buyer_id', $userId)
             ->latest('id')
             ->get();
-
-        if ($quotes->isEmpty()) {
-            return $this->error(null, 'No record found to send', 404);
-        }
-
         return $this->success($quotes, 'quotes lists');
     }
 
