@@ -37,6 +37,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'b2b_seller.auth' => B2BSeller::class,
             'b2b_buyer.auth' => B2BBuyer::class,
             'login.attempt' => BlockUserAfterFailedAttempts::class,
+            'cacheResponse' => \Spatie\ResponseCache\Middlewares\CacheResponse::class,
+            'doNotCacheResponse' => \Spatie\ResponseCache\Middlewares\DoNotCacheResponse::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
@@ -45,6 +47,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 'file' => $e->getFile(),
                 'Line' => $e->getLine(),
                 'code' => $e->getCode(),
+                'url' => request()->fullUrl(),
             ]);
         });
     })->create();
