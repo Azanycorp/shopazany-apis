@@ -154,6 +154,10 @@ class B2BAdminController extends Controller
         return $this->adminService->editAdmin($id, $request);
     }
 
+    public function revokeAccess(Request $request)
+    {
+        return $this->adminService->revokeAccess($request);
+    }
     public function removeAdmin($id)
     {
         return $this->adminService->removeAdmin($id);

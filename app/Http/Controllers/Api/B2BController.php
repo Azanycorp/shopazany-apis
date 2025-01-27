@@ -2,15 +2,17 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
-use App\Http\Requests\B2B\BusinessInformationRequest;
-use App\Http\Requests\B2B\SignupRequest;
-use App\Http\Requests\LoginRequest;
-use App\Services\B2B\Auth\AuthService;
-use App\Services\B2B\SellerService;
+use App\Models\B2BProduct;
 use Illuminate\Http\Request;
-use App\Http\Requests\B2B\BuyerOnboardingRequest;
 use App\Services\B2B\BuyerService;
+use App\Http\Requests\LoginRequest;
+use App\Services\B2B\SellerService;
+use App\Http\Controllers\Controller;
+use App\Services\B2B\Auth\AuthService;
+use App\Http\Requests\B2B\SignupRequest;
+use App\Http\Resources\B2BProductResource;
+use App\Http\Requests\B2B\BuyerOnboardingRequest;
+use App\Http\Requests\B2B\BusinessInformationRequest;
 
 class B2BController extends Controller
 {
@@ -64,6 +66,21 @@ class B2BController extends Controller
         return $this->service->buyerOnboarding($request);
     }
 
+    public function searchProduct()
+    {
+        $searchQuery = request()->input('search');
+        $products = B2BProduct::where('name', 'LIKE', '%' . $searchQuery . '%')
+            ->orWhere('unit_price', 'LIKE', '%' . $searchQuery . '%')->get();
+
+         $data = B2BProductResource::collection($products);
+
+        return [
+            'status' => 'true',
+            'message' => 'Products filtered',
+            'data' => $data,
+        ];
+    }
+
     public function getProducts()
     {
         return $this->buyerService->getProducts();
@@ -73,11 +90,4 @@ class B2BController extends Controller
     {
         return $this->buyerService->getProductDetail($slug);
     }
-
-
-
-
-
-
-
 }

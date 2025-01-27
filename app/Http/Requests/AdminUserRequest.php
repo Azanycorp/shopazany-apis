@@ -25,8 +25,7 @@ class AdminUserRequest extends FormRequest
             'first_name' => 'required',
             'last_name' => 'required',
             'phone_number' => 'required',
-            'email' => 'required|email|unique:admins,email',
-            'password' => 'required|min:6',
+            'email' => 'required|email|unique:admins,email'
         ];
     }
 }

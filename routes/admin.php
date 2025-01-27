@@ -217,6 +217,7 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function (): void
             Route::post('/add', 'addAdmin');
             Route::get('/details/{id}', 'viewAdminUser');
             Route::post('/update/{id}', 'editAdminUser');
+            Route::post('/revoke-access', 'revokeAccess');
             Route::delete('/delete-account/{id}', 'removeAdmin');
         });
         Route::prefix('category')->controller(ProductCategoryController::class)->group(function () {

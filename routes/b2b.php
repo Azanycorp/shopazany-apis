@@ -34,6 +34,7 @@ Route::middleware(['throttle:apis'])->group(function (): void {
     Route::prefix('b2b')->controller(B2BController::class)->group(function (): void {
         Route::post('/business/information', 'businessInformation');
         Route::get('/products', 'getProducts');
+        Route::post('/search-products', 'searchProduct');
         Route::get('/product/{slug}', 'getProductDetail');
     });
 });
