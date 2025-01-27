@@ -12,7 +12,7 @@ class DashboardController extends Controller
 {
     const MESSAGE = '403 Forbidden';
 
-    protected $service;
+    protected \App\Services\Admin\DashboardService $service;
 
     public function __construct(DashboardService $service)
     {

@@ -21,12 +21,10 @@ class CreateCurrencyTable extends Migration
 
     /**
      * Run the migrations.
-     *
-     * @return void
      */
-    public function up()
+    public function up(): void
     {
-        Schema::create($this->table_name, function ($table) {
+        Schema::create($this->table_name, function ($table): void {
             $table->increments('id')->unsigned();
             $table->string('name');
             $table->string('code', 10)->index();
@@ -40,10 +38,8 @@ class CreateCurrencyTable extends Migration
 
     /**
      * Reverse the migrations.
-     *
-     * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::drop($this->table_name);
     }

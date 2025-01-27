@@ -82,76 +82,60 @@ class SellerService extends Controller
         if (!$user) {
             return $this->error(null, "User not found", 404);
         }
-
-        try {
-
-            $slug = Str::slug($request->name);
-
-            if (Product::where('slug', $slug)->exists()) {
-                $slug = $slug . '-' . uniqid();
-            }
-
-            $price = $request->product_price;
-
-            if($request->discount_price > 0){
-                $price = (int)$request->product_price - (int)$request->discount_price;
-            }
-
-            $folder = null;
-            $frontImage = null;
-
-            $parts = explode('@', $user->email);
-            $name = $parts[0];
-
-            if(App::environment('production')){
-                $folder = "/prod/product/{$name}";
-                $frontImage = "/prod/product/{$name}/front_image";
-            } elseif(App::environment(['staging', 'local'])) {
-                $folder = "/stag/product/{$name}";
-                $frontImage = "/stag/product/{$name}/front_image";
-            }
-
-            if ($request->hasFile('front_image')) {
-                $path = $request->file('front_image')->store($frontImage, 's3');
-                $url = Storage::disk('s3')->url($path);
-            }
-
-            $product = $user->products()->create([
-                'name' => $request->name,
-                'slug' => $slug,
-                'description' => $request->description,
-                'category_id' => $request->category_id,
-                'sub_category_id' => $request->sub_category_id,
-                'brand_id' => $request->brand_id,
-                'color_id' => $request->color_id,
-                'unit_id' => $request->unit_id,
-                'size_id' => $request->size_id,
-                'product_sku' => $request->product_sku,
-                'product_price' => $request->product_price,
-                'discount_price' => $request->discount_price,
-                'price' => $price,
-                'current_stock_quantity' => $request->current_stock_quantity,
-                'minimum_order_quantity' => $request->minimum_order_quantity,
-                'image' => $url,
-                'added_by' => $user->type,
-                'country_id' => $user->country ?? 160,
-            ]);
-
-            if ($request->hasFile('images')) {
-                foreach ($request->file('images') as $image) {
-                    $path = $image->store($folder, 's3');
-                    $url = Storage::disk('s3')->url($path);
-
-                    $product->productimages()->create([
-                        'image' => $url,
-                    ]);
-                }
-            }
-
-            return $this->success(null, "Added successfully");
-        } catch (\Throwable $th) {
-            throw $th;
+        $slug = Str::slug($request->name);
+        if (Product::where('slug', $slug)->exists()) {
+            $slug = $slug . '-' . uniqid();
         }
+        $price = $request->product_price;
+        if($request->discount_price > 0){
+            $price = (int)$request->product_price - (int)$request->discount_price;
+        }
+        $folder = null;
+        $frontImage = null;
+        $parts = explode('@', $user->email);
+        $name = $parts[0];
+        if(App::environment('production')){
+            $folder = "/prod/product/{$name}";
+            $frontImage = "/prod/product/{$name}/front_image";
+        } elseif(App::environment(['staging', 'local'])) {
+            $folder = "/stag/product/{$name}";
+            $frontImage = "/stag/product/{$name}/front_image";
+        }
+        if ($request->hasFile('front_image')) {
+            $path = $request->file('front_image')->store($frontImage, 's3');
+            $url = Storage::disk('s3')->url($path);
+        }
+        $product = $user->products()->create([
+            'name' => $request->name,
+            'slug' => $slug,
+            'description' => $request->description,
+            'category_id' => $request->category_id,
+            'sub_category_id' => $request->sub_category_id,
+            'brand_id' => $request->brand_id,
+            'color_id' => $request->color_id,
+            'unit_id' => $request->unit_id,
+            'size_id' => $request->size_id,
+            'product_sku' => $request->product_sku,
+            'product_price' => $request->product_price,
+            'discount_price' => $request->discount_price,
+            'price' => $price,
+            'current_stock_quantity' => $request->current_stock_quantity,
+            'minimum_order_quantity' => $request->minimum_order_quantity,
+            'image' => $url,
+            'added_by' => $user->type,
+            'country_id' => $user->country ?? 160,
+        ]);
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $image) {
+                $path = $image->store($folder, 's3');
+                $url = Storage::disk('s3')->url($path);
+
+                $product->productimages()->create([
+                    'image' => $url,
+                ]);
+            }
+        }
+        return $this->success(null, "Added successfully");
     }
 
     public function updateProduct($request, $id, $userId)
@@ -173,63 +157,47 @@ class SellerService extends Controller
         if(!$product){
             return $this->error(null, "Product not found", 404);
         }
-
-        try {
-
-            $slug = Str::slug($request->name);
-
-            if (Product::where('slug', $slug)->exists()) {
-                $slug = $slug . '-' . uniqid();
-            }
-
-            $price = $request->product_price;
-
-            if($request->discount_price > 0){
-                $price = (int)$request->product_price - (int)$request->discount_price;
-            }
-
-            $folder = null;
-            $frontImage = null;
-
-            $parts = explode('@', $user->email);
-            $name = $parts[0];
-
-            if(App::environment('production')){
-                $folder = "/prod/product/{$name}";
-                $frontImage = "/prod/product/{$name}/front_image";
-            } elseif(App::environment(['staging', 'local'])) {
-                $folder = "/stag/product/{$name}";
-                $frontImage = "/stag/product/{$name}/front_image";
-            }
-
-            $image = uploadSingleProductImage($request, 'front_image', $frontImage, $product);
-
-            $product->update([
-                'name' => $request->name,
-                'slug' => $slug,
-                'description' => $request->description,
-                'category_id' => $request->category_id,
-                'sub_category_id' => $request->sub_category_id,
-                'brand_id' => $request->brand_id,
-                'color_id' => $request->color_id,
-                'unit_id' => $request->unit_id,
-                'size_id' => $request->size_id,
-                'product_sku' => $request->product_sku,
-                'product_price' => $request->product_price,
-                'discount_price' => $request->discount_price,
-                'price' => $price,
-                'current_stock_quantity' => $request->current_stock_quantity,
-                'minimum_order_quantity' => $request->minimum_order_quantity,
-                'image' => $image,
-                'country_id' => $user->country ?? 160,
-            ]);
-
-            uploadMultipleProductImage($request, 'images', $folder, $product);
-
-            return $this->success(null, "Updated successfully");
-        } catch (\Throwable $th) {
-            throw $th;
+        $slug = Str::slug($request->name);
+        if (Product::where('slug', $slug)->exists()) {
+            $slug = $slug . '-' . uniqid();
         }
+        $price = $request->product_price;
+        if($request->discount_price > 0){
+            $price = (int)$request->product_price - (int)$request->discount_price;
+        }
+        $folder = null;
+        $frontImage = null;
+        $parts = explode('@', $user->email);
+        $name = $parts[0];
+        if(App::environment('production')){
+            $folder = "/prod/product/{$name}";
+            $frontImage = "/prod/product/{$name}/front_image";
+        } elseif(App::environment(['staging', 'local'])) {
+            $folder = "/stag/product/{$name}";
+            $frontImage = "/stag/product/{$name}/front_image";
+        }
+        $image = uploadSingleProductImage($request, 'front_image', $frontImage, $product);
+        $product->update([
+            'name' => $request->name,
+            'slug' => $slug,
+            'description' => $request->description,
+            'category_id' => $request->category_id,
+            'sub_category_id' => $request->sub_category_id,
+            'brand_id' => $request->brand_id,
+            'color_id' => $request->color_id,
+            'unit_id' => $request->unit_id,
+            'size_id' => $request->size_id,
+            'product_sku' => $request->product_sku,
+            'product_price' => $request->product_price,
+            'discount_price' => $request->discount_price,
+            'price' => $price,
+            'current_stock_quantity' => $request->current_stock_quantity,
+            'minimum_order_quantity' => $request->minimum_order_quantity,
+            'image' => $image,
+            'country_id' => $user->country ?? 160,
+        ]);
+        uploadMultipleProductImage($request, 'images', $folder, $product);
+        return $this->success(null, "Updated successfully");
     }
 
     public function getProduct($userId)
@@ -536,15 +504,12 @@ class SellerService extends Controller
         switch ($type) {
             case 'product':
                 return $this->exportProduct($userId);
-                break;
 
             case 'order':
                 return "None yet";
-                break;
 
             default:
                 return "Type not found";
-                break;
         }
     }
 
@@ -630,7 +595,7 @@ class SellerService extends Controller
         $productIds = $topSellingProducts->pluck('product_id');
         $products = Product::whereIn('id', $productIds)->get();
 
-        $topSellingProductsWithDetails = $topSellingProducts->map(function ($item) use ($products) {
+        $topSellingProductsWithDetails = $topSellingProducts->map(function ($item) use ($products): array {
             $product = $products->firstWhere('id', $item->product_id);
             return [
                 'id' => $product->id,

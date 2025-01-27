@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 
 class RoleController extends Controller
 {
-    protected $service;
+    protected \App\Services\Admin\RolePermissionService $service;
 
     public function __construct(RolePermissionService $service)
     {

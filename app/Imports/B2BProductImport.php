@@ -26,7 +26,7 @@ class B2BProductImport implements ToCollection, WithHeadingRow, WithChunkReading
     /**
      * @param Collection $collection
      */
-    public function collection(Collection $rows)
+    public function collection(Collection $rows): void
     {
         foreach ($rows as $row) {
             $category = $this->getCategory($row['category']);

@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('promos', function (Blueprint $table) {
+        Schema::create('promos', function (Blueprint $table): void {
             $table->id();
             $table->string('coupon_code')->unique();
             $table->integer('discount');
@@ -22,14 +22,14 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('promo_products', function (Blueprint $table) {
+        Schema::create('promo_products', function (Blueprint $table): void {
             $table->id();
             $table->foreignId('promo_id')->constrained('promos')->onDelete('cascade');
             $table->foreignId('product_id')->constrained('products')->onDelete('cascade');
             $table->timestamps();
         });
 
-        Schema::create('promo_total_orders', function (Blueprint $table) {
+        Schema::create('promo_total_orders', function (Blueprint $table): void {
             $table->id();
             $table->foreignId('promo_id')->constrained('promos')->onDelete('cascade');
             $table->decimal('minimum_cart_amount', 8, 2);
@@ -37,7 +37,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('promo_welcome_coupons', function (Blueprint $table) {
+        Schema::create('promo_welcome_coupons', function (Blueprint $table): void {
             $table->id();
             $table->foreignId('promo_id')->constrained('promos')->onDelete('cascade');
             $table->decimal('minimum_shopping_amount', 8, 2);

@@ -29,10 +29,10 @@ use Illuminate\Support\Facades\Mail;
 
 class PaystackService
 {
-    public static function handleRecurringCharge($event, $status)
+    public static function handleRecurringCharge($event, $status): void
     {
         try {
-            DB::transaction(function () use ($event, $status) {
+            DB::transaction(function () use ($event, $status): void {
 
                 $paymentData = $event['data'];
 
@@ -96,13 +96,13 @@ class PaystackService
         }
     }
 
-    public static function handlePaymentSuccess($event, $status)
+    public static function handlePaymentSuccess($event, $status): void
     {
         $paymentData = null;
         $user = null;
 
         try {
-            DB::transaction(function () use ($event, $status) {
+            DB::transaction(function () use ($event, $status): void {
 
                 $paymentData = $event['data'];
                 $userId = $paymentData['metadata']['user_id'];
@@ -213,10 +213,10 @@ class PaystackService
         }
     }
 
-    public static function handleB2BPaymentSuccess($event, $status)
+    public static function handleB2BPaymentSuccess($event, $status): void
     {
         try {
-            DB::transaction(function () use ($event, $status) {
+            DB::transaction(function () use ($event, $status): void {
                 $paymentData = $event['data'];
                 $userId = $paymentData['metadata']['user_id'];
                 $rfqId = $paymentData['metadata']['rfq_id'];
@@ -320,7 +320,7 @@ class PaystackService
         }
     }
 
-    private static function orderNo()
+    private static function orderNo(): string
     {
         do {
             $uniqueOrderNumber = 'ORD-' . now()->timestamp . '-' . Str::random(8);
@@ -329,12 +329,12 @@ class PaystackService
         return $uniqueOrderNumber;
     }
 
-    private static function sendSellerOrderEmail($seller, $order, $orderNo, $totalAmount)
+    private static function sendSellerOrderEmail($seller, $order, $orderNo, string $totalAmount): void
     {
         defer(fn() => send_email($seller->email, new SellerOrderMail($seller, $order, $orderNo, $totalAmount)));
     }
 
-    private static function sendOrderConfirmationEmail($user, $orderedItems, $orderNo, $totalAmount)
+    private static function sendOrderConfirmationEmail($user, $orderedItems, $orderNo, string $totalAmount): void
     {
         defer(fn() => send_email($user->email, new CustomerOrderMail($user, $orderedItems, $orderNo, $totalAmount)));
     }

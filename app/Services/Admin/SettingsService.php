@@ -32,23 +32,17 @@ class SettingsService
         }
 
         $path = uploadImage($request, 'image', $folder);
-
-        try {
-            SeoConfiguration::updateOrCreate(
-                ['id' => SeoConfiguration::first()?->id],
-                [
-                    'keywords' => $request->keywords,
-                    'description' => $request->description,
-                    'social_title' => $request->social_title,
-                    'social_description' => $request->social_description,
-                    'image' => $path,
-                ]
-            );
-
-            return $this->success(null, "Successful");
-        } catch (\Throwable $th) {
-            throw $th;
-        }
+        SeoConfiguration::updateOrCreate(
+            ['id' => SeoConfiguration::first()?->id],
+            [
+                'keywords' => $request->keywords,
+                'description' => $request->description,
+                'social_title' => $request->social_title,
+                'social_description' => $request->social_description,
+                'image' => $path,
+            ]
+        );
+        return $this->success(null, "Successful");
     }
 
     public function getSeo()
@@ -73,20 +67,15 @@ class SettingsService
 
     public function addTermsService($request)
     {
-        try {
-            TermsService::updateOrCreate(
-                ['id' => TermsService::first()?->id],
-                [
-                    'title' => $request->title,
-                    'slug' => Str::slug($request->title),
-                    'description' => $request->description,
-                ]
-            );
-
-            return $this->success(null, "Successful");
-        } catch (\Throwable $th) {
-            throw $th;
-        }
+        TermsService::updateOrCreate(
+            ['id' => TermsService::first()?->id],
+            [
+                'title' => $request->title,
+                'slug' => Str::slug($request->title),
+                'description' => $request->description,
+            ]
+        );
+        return $this->success(null, "Successful");
     }
 
     public function getTermsService()
@@ -109,21 +98,15 @@ class SettingsService
 
     public function addCookiePolicy($request)
     {
-        try {
-
-            CookiePolicy::updateOrCreate(
-                ['id' => CookiePolicy::first()?->id],
-                [
-                    'short_description' => $request->short_description,
-                    'description' => $request->description,
-                    'status' => $request->status,
-                ]
-            );
-
-            return $this->success(null, "Successful");
-        } catch (\Throwable $th) {
-            throw $th;
-        }
+        CookiePolicy::updateOrCreate(
+            ['id' => CookiePolicy::first()?->id],
+            [
+                'short_description' => $request->short_description,
+                'description' => $request->description,
+                'status' => $request->status,
+            ]
+        );
+        return $this->success(null, "Successful");
     }
 
     public function getCookiePolicy()
@@ -146,35 +129,26 @@ class SettingsService
 
     public function addAboutUs($request)
     {
-        try {
-
-            $folder = null;
-
-            if(App::environment('production')){
-                $folder = '/prod/settings/about';
-            } elseif(App::environment(['staging', 'local'])) {
-                $folder = '/stag/settings/about';
-            }
-
-            $imageOne = uploadImage($request, 'image_one', $folder);
-            $imageTwo = uploadImage($request, 'image_two', $folder);
-
-            AboutUs::updateOrCreate(
-                ['id' => AboutUs::first()?->id],
-                [
-                    'heading_one' => $request->heading_one,
-                    'sub_text_one' => $request->sub_text_one,
-                    'heading_two' => $request->heading_two,
-                    'sub_text_two' => $request->sub_text_two,
-                    'image_one' => $imageOne,
-                    'image_two' => $imageTwo,
-                ]
-            );
-
-            return $this->success(null, "Successful");
-        } catch (\Throwable $th) {
-            throw $th;
+        $folder = null;
+        if(App::environment('production')){
+            $folder = '/prod/settings/about';
+        } elseif(App::environment(['staging', 'local'])) {
+            $folder = '/stag/settings/about';
         }
+        $imageOne = uploadImage($request, 'image_one', $folder);
+        $imageTwo = uploadImage($request, 'image_two', $folder);
+        AboutUs::updateOrCreate(
+            ['id' => AboutUs::first()?->id],
+            [
+                'heading_one' => $request->heading_one,
+                'sub_text_one' => $request->sub_text_one,
+                'heading_two' => $request->heading_two,
+                'sub_text_two' => $request->sub_text_two,
+                'image_one' => $imageOne,
+                'image_two' => $imageTwo,
+            ]
+        );
+        return $this->success(null, "Successful");
     }
 
     public function getAboutUs()
@@ -200,21 +174,15 @@ class SettingsService
 
     public function addContactInfo($request)
     {
-        try {
-
-            ContactInfo::updateOrCreate(
-                ['id' => ContactInfo::first()?->id],
-                [
-                    'address' => $request->address,
-                    'phone' => $request->phone,
-                    'email' => $request->email,
-                ]
-            );
-
-            return $this->success(null, "Successful");
-        } catch (\Throwable $th) {
-            throw $th;
-        }
+        ContactInfo::updateOrCreate(
+            ['id' => ContactInfo::first()?->id],
+            [
+                'address' => $request->address,
+                'phone' => $request->phone,
+                'email' => $request->email,
+            ]
+        );
+        return $this->success(null, "Successful");
     }
 
     public function getContactInfo()
@@ -237,19 +205,13 @@ class SettingsService
 
     public function addSocial($request)
     {
-        try {
-
-            ContactInfo::updateOrCreate(
-                ['id' => ContactInfo::first()?->id],
-                [
-                    'social_media' => $request->social_media,
-                ]
-            );
-
-            return $this->success(null, "Successful");
-        } catch (\Throwable $th) {
-            throw $th;
-        }
+        ContactInfo::updateOrCreate(
+            ['id' => ContactInfo::first()?->id],
+            [
+                'social_media' => $request->social_media,
+            ]
+        );
+        return $this->success(null, "Successful");
     }
     public function getSocial()
     {
@@ -269,24 +231,17 @@ class SettingsService
 
     public function addPlan($request)
     {
-        try {
-
-            SubscriptionPlan::create([
-                'title' => $request->title,
-                'cost' => $request->cost,
-                'country_id' => $request->country_id,
-                'period' => $request->period,
-                'tier' => $request->tier,
-                'tagline' => $request->tagline,
-                'details' => $request->details,
-                'status' => 'active'
-            ]);
-
-            return $this->success(null, 'Plan added successfully');
-
-        } catch (\Throwable $th) {
-            throw $th;
-        }
+        SubscriptionPlan::create([
+            'title' => $request->title,
+            'cost' => $request->cost,
+            'country_id' => $request->country_id,
+            'period' => $request->period,
+            'tier' => $request->tier,
+            'tagline' => $request->tagline,
+            'details' => $request->details,
+            'status' => 'active'
+        ]);
+        return $this->success(null, 'Plan added successfully');
     }
 
     public function getPlanById($id)
@@ -362,17 +317,17 @@ class SettingsService
         }
     }
 
-    public function allUsers()
+    public function allUsers(): array
     {
         $search = trim(request()->input('search'));
 
-        $users = Admin::with('permissions')
-        ->where(function ($query) use($search) {
-            $query->where('first_name', 'LIKE', '%' . $search . '%')
-            ->orWhere('last_name', 'LIKE', '%' . $search . '%')
-            ->orWhere('email', 'LIKE', '%' . $search . '%');
-        })
-        ->paginate(25);
+        $users = Admin::with(['permissions', 'roles.permissions'])
+            ->where(function ($query) use($search): void {
+                $query->where('first_name', 'LIKE', '%' . $search . '%')
+                ->orWhere('last_name', 'LIKE', '%' . $search . '%')
+                ->orWhere('email', 'LIKE', '%' . $search . '%');
+            })
+            ->paginate(25);
 
         $data = AdminUserResource::collection($users);
 

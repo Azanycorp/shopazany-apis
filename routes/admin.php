@@ -26,7 +26,7 @@ use App\Http\Controllers\Api\B2B\B2BAdminSellerController;
 use App\Http\Controllers\Api\B2B\B2BBannerPromoController;
 use App\Http\Controllers\Api\B2B\ProductCategoryController;
 
-Route::prefix('/connect')->controller(AdminAuthController::class)->group(function () {
+Route::prefix('/connect')->controller(AdminAuthController::class)->group(function (): void {
     Route::post('/login', 'login');
     Route::post('/forgot/password', 'forgot');
     Route::post('/reset/password', 'reset');
@@ -34,14 +34,14 @@ Route::prefix('/connect')->controller(AdminAuthController::class)->group(functio
     Route::post('/verify/email', 'verify');
 });
 
-Route::controller(ApiController::class)->group(function () {
+Route::controller(ApiController::class)->group(function (): void {
     Route::get('brands', 'brands');
     Route::get('colors', 'colors');
     Route::get('units', 'units');
     Route::get('sizes', 'sizes');
 });
 
-Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function () {
+Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function (): void {
 
     Route::get('/profile', [ApiController::class, 'adminProfile']);
 
@@ -53,7 +53,7 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function () {
     Route::resource('size', SizeController::class);
     Route::post('/shop/country', [ApiController::class, 'shopByCountry']);
 
-    Route::prefix('banner')->controller(BannerPromoController::class)->group(function () {
+    Route::prefix('banner')->controller(BannerPromoController::class)->group(function (): void {
         Route::post('/add', 'addBanner');
         Route::get('/', 'banners');
         Route::get('/{id}', 'getOneBanner');
@@ -61,19 +61,19 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function () {
         Route::delete('/delete/{id}', 'deleteBanner');
     });
 
-    Route::prefix('promo')->controller(BannerPromoController::class)->group(function () {
+    Route::prefix('promo')->controller(BannerPromoController::class)->group(function (): void {
         Route::post('/add', 'addPromo');
         Route::get('/', 'promos');
         Route::delete('/delete/{id}', 'deletePromo');
     });
 
-    Route::prefix('dashboard')->controller(DashboardController::class)->group(function () {
+    Route::prefix('dashboard')->controller(DashboardController::class)->group(function (): void {
         Route::get('/analytic', 'dashboardAnalytics');
         Route::get('/best-sellers', 'bestSellers');
         Route::get('/best-selling-categories', 'bestSellingCat');
     });
 
-    Route::prefix('category')->controller(CategoryController::class)->group(function () {
+    Route::prefix('category')->controller(CategoryController::class)->group(function (): void {
         Route::post('/create', 'createCategory');
         Route::get('/all', 'adminCategories');
         Route::get('/analytics', 'categoryAnalytic');
@@ -87,7 +87,7 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function () {
         Route::delete('/subcategory/delete/{id}', 'deleteSubCategory');
     });
 
-    Route::prefix('order')->controller(OrderController::class)->group(function () {
+    Route::prefix('order')->controller(OrderController::class)->group(function (): void {
         Route::get('/analytic', 'orderAnalytics');
         Route::get('/local', 'localOrder');
         Route::get('/international', 'intOrder');
@@ -95,7 +95,7 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function () {
         Route::get('/search', 'searchOrder');
     });
 
-    Route::prefix('customer')->controller(AdminCustomerController::class)->group(function () {
+    Route::prefix('customer')->controller(AdminCustomerController::class)->group(function (): void {
         // GET routes
         Route::get('/', 'allCustomers');
         Route::get('/filter', 'filter');
@@ -111,7 +111,7 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function () {
         Route::delete('/remove', 'removeCustomer');
     });
 
-    Route::prefix('seller')->controller(AdminSellerController::class)->group(function () {
+    Route::prefix('seller')->controller(AdminSellerController::class)->group(function (): void {
         Route::get('/', 'allSellers');
         Route::get('/{user_id}', 'viewSeller');
         Route::get('/payment-history/{user_id}', 'paymentHistory');
@@ -125,13 +125,13 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function () {
         Route::delete('/bulk/remove', 'bulkRemove');
     });
 
-    Route::prefix('product')->controller(AdminProductController::class)->group(function () {
+    Route::prefix('product')->controller(AdminProductController::class)->group(function (): void {
         Route::post('/add', 'addProduct');
         Route::get('/', 'getProduct');
         Route::get('/{slug}', 'getOneProduct');
     });
 
-    Route::prefix('reward')->controller(RewardPointController::class)->group(function () {
+    Route::prefix('reward')->controller(RewardPointController::class)->group(function (): void {
         Route::post('/action', 'addPoints');
         Route::get('/action', 'getPoints');
         Route::get('/action/{id}', 'getOnePoints');
@@ -139,18 +139,18 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function () {
         Route::delete('/delete/{id}', 'deletePoints');
     });
 
-    Route::prefix('role')->controller(RoleController::class)->group(function () {
+    Route::prefix('role')->controller(RoleController::class)->group(function (): void {
         Route::post('/', 'addRole');
         Route::get('/', 'getRole');
         Route::post('/assign/permission', 'assignPermission');
     });
 
-    Route::prefix('permission')->controller(RoleController::class)->group(function () {
+    Route::prefix('permission')->controller(RoleController::class)->group(function (): void {
         Route::post('/', 'addPermission');
         Route::get('/', 'getPermission');
     });
 
-    Route::prefix('settings')->controller(SettingsController::class)->group(function () {
+    Route::prefix('settings')->controller(SettingsController::class)->group(function (): void {
         // Admin User
         Route::post('/add-user', 'addUser');
         Route::get('/all-users', 'allUsers');
@@ -172,7 +172,7 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function () {
         Route::get('/social', 'getSocial');
     });
 
-    Route::prefix('subscription')->controller(SettingsController::class)->group(function () {
+    Route::prefix('subscription')->controller(SettingsController::class)->group(function (): void {
         Route::post('/', 'addPlan');
         Route::get('/country/{country_id}', 'getPlanByCountry');
         Route::get('/{id}', 'getPlanById');
@@ -180,7 +180,7 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function () {
         Route::delete('/remove/{id}', 'deletePlan');
     });
 
-    Route::prefix('finance')->controller(FinanceController::class)->group(function () {
+    Route::prefix('finance')->controller(FinanceController::class)->group(function (): void {
         Route::post('/payment/service', 'addPaymentService');
         Route::get('/payment/service', 'getPaymentService');
         Route::get('/payment/service/{id}', 'getSinglePaymentService');
@@ -190,7 +190,7 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function () {
 
     Route::prefix('coupon')
         ->controller(AdminCouponController::class)
-        ->group(function () {
+        ->group(function (): void {
             Route::post('/create', 'createCoupon');
             Route::get('/', 'getCoupon');
         });
@@ -234,7 +234,7 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function () {
             Route::delete('/subcategory/delete/{id}', 'deleteSubCategory');
         });
 
-        Route::prefix('banner')->controller(B2BBannerPromoController::class)->group(function () {
+        Route::prefix('banner')->controller(B2BBannerPromoController::class)->group(function (): void {
             Route::post('/add', 'addBanner');
             Route::get('/', 'banners');
             Route::get('/{id}', 'getOneBanner');
@@ -242,14 +242,14 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function () {
             Route::delete('/delete/{id}', 'deleteBanner');
         });
 
-        Route::prefix('promo')->controller(B2BBannerPromoController::class)->group(function () {
+        Route::prefix('promo')->controller(B2BBannerPromoController::class)->group(function (): void {
             Route::post('/add', 'addPromo');
             Route::get('/', 'promos');
             Route::delete('/delete/{id}', 'deletePromo');
         });
 
         //buyers
-        Route::prefix('buyer')->controller(B2BAdminBuyerController::class)->group(function () {
+        Route::prefix('buyer')->controller(B2BAdminBuyerController::class)->group(function (): void {
             // GET routes
             Route::get('/', 'allBuyers');
             Route::get('/filter', 'filter');
@@ -261,7 +261,7 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function () {
         });
 
         //Sellers
-        Route::prefix('seller')->controller(B2BAdminSellerController::class)->group(function () {
+        Route::prefix('seller')->controller(B2BAdminSellerController::class)->group(function (): void {
             Route::get('/', 'allSellers');
             Route::get('/details/{user_id}', 'viewSeller');
             Route::get('/payment-history/{user_id}', 'paymentHistory');
@@ -274,7 +274,7 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function () {
 
             Route::delete('/bulk/remove', 'bulkRemove');
 
-            Route::prefix('product')->controller(B2BAdminSellerController::class)->group(function () {
+            Route::prefix('product')->controller(B2BAdminSellerController::class)->group(function (): void {
                 Route::post('/add', 'addSellerProduct');
                 Route::get('/details/{id}/{user_id}', 'viewSellerProduct');
                 Route::post('/update{id}', 'editSellerProduct');
@@ -283,7 +283,7 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function () {
         });
 
         //Withdrawal requests
-        Route::prefix('widthrawal-request')->controller(B2BAdminController::class)->group(function () {
+        Route::prefix('widthrawal-request')->controller(B2BAdminController::class)->group(function (): void {
             Route::get('/', 'widthrawalRequests');
             Route::get('/view/{id}', 'viewWidthrawalRequest');
             Route::get('/approve/{id}', 'approveWidthrawalRequest');
@@ -291,14 +291,14 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function () {
         });
 
         //Withdrawal method requests
-        Route::prefix('widthrawal-method-request')->controller(B2BAdminController::class)->group(function () {
+        Route::prefix('widthrawal-method-request')->controller(B2BAdminController::class)->group(function (): void {
             Route::get('/', 'widthrawalMethods');
             Route::get('/view/{id}', 'viewWidthrawalMethod');
             Route::get('/approve/{id}', 'approveWidthrawalMethod');
             Route::post('/reject', 'rejectWidthrawalMethod');
         });
         //Seller Product Approval requests
-        Route::prefix('product-approval-request')->controller(B2BAdminController::class)->group(function () {
+        Route::prefix('product-approval-request')->controller(B2BAdminController::class)->group(function (): void {
             Route::get('/', 'allProducts');
             Route::get('/view/{id}', 'viewProduct');
             Route::get('/approve/{id}', 'approveProduct');
@@ -306,12 +306,12 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function () {
         });
 
         //Rfq
-        Route::prefix('rfqs')->controller(B2BAdminController::class)->group(function () {
+        Route::prefix('rfqs')->controller(B2BAdminController::class)->group(function (): void {
             Route::get('/', 'allRfq');
             Route::get('/details/{id}', 'rfqDetails');
         });
         //Orders
-        Route::prefix('orders')->controller(B2BAdminController::class)->group(function () {
+        Route::prefix('orders')->controller(B2BAdminController::class)->group(function (): void {
             Route::get('/', 'allOrders');
             Route::get('/details/{id}', 'orderDetails');
         });

@@ -33,12 +33,12 @@ class BuyerService
     use HttpResponse;
 
     //Admin section
-    public function allCustomers()
+    public function allCustomers(): array
     {
         $query = trim(request()->input('search'));
 
         $users = User::where('type', UserType::B2B_BUYER)
-            ->where(function ($queryBuilder) use ($query) {
+            ->where(function ($queryBuilder) use ($query): void {
                 $queryBuilder->where('first_name', 'LIKE', '%' . $query . '%')
                     ->orWhere('last_name', 'LIKE', '%' . $query . '%')
                     ->orWhere('middlename', 'LIKE', '%' . $query . '%')
@@ -116,12 +116,12 @@ class BuyerService
         return $this->success(null, "User(s) have been removed successfully");
     }
 
-    public function filter()
+    public function filter(): array
     {
         $query = trim(request()->query('approved'));
 
         $users = User::where('type', UserType::CUSTOMER)
-            ->when($query !== null, function ($queryBuilder) use ($query) {
+            ->when($query !== null, function ($queryBuilder) use ($query): void {
                 $queryBuilder->where('is_admin_approve', $query);
             })
             ->paginate(25);
@@ -144,29 +144,22 @@ class BuyerService
 
     public function addCustomer($request)
     {
-        try {
-            $user = User::create([
-                'first_name' => $request->first_name,
-                'last_name' => $request->last_name,
-                'middlename' => $request->middlename,
-                'email' => $request->email,
-                'password' => bcrypt('12345678'),
-                'phone' => $request->phone,
-                'date_of_birth' => $request->date_of_birth,
-                'type' => UserType::CUSTOMER,
-                'is_verified' => 1,
-                'is_admin_approve' => 1,
-                'status' => $request->status,
-            ]);
-
-            $image = $request->hasFile('image') ? uploadUserImage($request, 'image', $user) : null;
-
-            $user->update(['image' => $image]);
-
-            return $this->success(null, "User has been created successfully", 201);
-        } catch (\Throwable $th) {
-            throw $th;
-        }
+        $user = User::create([
+            'first_name' => $request->first_name,
+            'last_name' => $request->last_name,
+            'middlename' => $request->middlename,
+            'email' => $request->email,
+            'password' => bcrypt('12345678'),
+            'phone' => $request->phone,
+            'date_of_birth' => $request->date_of_birth,
+            'type' => UserType::CUSTOMER,
+            'is_verified' => 1,
+            'is_admin_approve' => 1,
+            'status' => $request->status,
+        ]);
+        $image = $request->hasFile('image') ? uploadUserImage($request, 'image', $user) : null;
+        $user->update(['image' => $image]);
+        return $this->success(null, "User has been created successfully", 201);
     }
 
     public function editCustomer($request)
@@ -675,9 +668,8 @@ class BuyerService
             ]);
 
             return $this->success(null, 'Password Successfully Updated');
-        } else {
-            return $this->error(null, 422, 'Old Password did not match');
         }
+        return $this->error(null, 422, 'Old Password did not match');
     }
     public function change2FA($data)
     {

@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('configurations', function (Blueprint $table) {
+        Schema::table('configurations', function (Blueprint $table): void {
             //
             $table->string('withdrawal_frequency')->default('day');
             $table->string('withdrawal_status')->default('disabled');
@@ -23,7 +23,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('configurations', function (Blueprint $table) {
+        Schema::table('configurations', function (Blueprint $table): void {
             //
             $table->string('withdrawal_frequency')->default('day');
             $table->string('withdrawal_status')->default('disabled');

@@ -13,22 +13,22 @@ class SellerService
 {
     use HttpResponse;
 
-    public function allSellers()
+    public function allSellers(): array
     {
         $searchQuery = request()->input('search');
         $approvedQuery = request()->query('approved');
 
         $users = User::with(['products', 'b2bProducts', 'bankAccount', 'wallet'])
             ->where('type', UserType::SELLER)
-            ->when($searchQuery, function ($queryBuilder) use ($searchQuery) {
-                $queryBuilder->where(function($subQuery) use ($searchQuery) {
+            ->when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
+                $queryBuilder->where(function($subQuery) use ($searchQuery): void {
                     $subQuery->where('first_name', 'LIKE', '%' . $searchQuery . '%')
                             ->orWhere('last_name', 'LIKE', '%' . $searchQuery . '%')
                             ->orWhere('middlename', 'LIKE', '%' . $searchQuery . '%')
                             ->orWhere('email', 'LIKE', '%' . $searchQuery . '%');
                 });
             })
-            ->when($approvedQuery !== null, function ($queryBuilder) use ($approvedQuery) {
+            ->when($approvedQuery !== null, function ($queryBuilder) use ($approvedQuery): void {
                 $queryBuilder->where('is_admin_approve', $approvedQuery);
             })
             ->paginate(25);

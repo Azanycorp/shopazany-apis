@@ -19,7 +19,11 @@ class B2BPaystackPaymentProcessor implements PaymentStrategy
                 'data' => $paystackInstance,
             ];
         } catch (\Exception $e) {
-            return $this->error(null, 'Payment processing failed, please try again later');
+            return [
+                'status' => false,
+                'message' => $e->getMessage(),
+                'data' => null,
+            ];
         }
     }
 }

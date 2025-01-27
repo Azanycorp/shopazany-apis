@@ -9,7 +9,7 @@ use Illuminate\Validation\Rules\Password;
 
 class AdminSellerController extends Controller
 {
-    protected $service;
+    protected \App\Services\Admin\SellerService $service;
 
     public function __construct(SellerService $service)
     {

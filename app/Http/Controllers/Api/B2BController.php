@@ -14,9 +14,9 @@ use App\Services\B2B\BuyerService;
 
 class B2BController extends Controller
 {
-    protected $service;
-    protected $sellerService;
-    protected $buyerService;
+    protected \App\Services\B2B\Auth\AuthService $service;
+    protected \App\Services\B2B\SellerService $sellerService;
+    protected \App\Services\B2B\BuyerService $buyerService;
 
     public function __construct(AuthService $service, SellerService $sellerService, BuyerService $buyerService)
     {

@@ -10,7 +10,7 @@ use App\Http\Requests\CustomerSupportRequest;
 
 class CustomerController extends Controller
 {
-    protected $service;
+    protected \App\Services\User\CustomerService $service;
 
     public function __construct(CustomerService $service)
     {

@@ -17,9 +17,9 @@ class SubCategoryFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => $this->faker->word(),
+            'name' => fake()->word(),
             'category_id' => \App\Models\Category::factory(),
-            'slug' => $this->faker->slug,
+            'slug' => fake()->slug,
         ];
     }
 }

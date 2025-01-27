@@ -17,7 +17,7 @@ class PaymentService
 {
     use HttpResponse;
 
-    protected $chargeCardService;
+    protected \App\Services\Payment\AuthorizeNet\ChargeCardService $chargeCardService;
 
     public function __construct(ChargeCardService $chargeCardService)
     {
@@ -87,11 +87,11 @@ class PaymentService
 
     public function getPaymentMethod($countryId)
     {
-        $services = ModelPaymentService::whereHas('countries', function ($q) use ($countryId) {
+        $services = ModelPaymentService::whereHas('countries', function ($q) use ($countryId): void {
             $q->where('country_id', $countryId);
         })->with('countries')->get();
 
-        $data = $services->map(function ($service) {
+        $data = $services->map(function ($service): array {
             return [
                 'id' => $service->id,
                 'name' => $service->name,

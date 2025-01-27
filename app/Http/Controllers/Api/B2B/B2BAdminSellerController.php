@@ -12,7 +12,7 @@ use App\Http\Requests\B2B\AddProductRequest;
 class B2BAdminSellerController extends Controller
 {
 
-    protected $service;
+    protected \App\Services\B2B\AdminService $service;
 
     public function __construct(AdminService $service)
     {

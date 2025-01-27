@@ -14,7 +14,7 @@ class ProductCategoryController extends Controller
 {
     const MESSAGE = '403 Forbidden';
 
-    protected $service;
+    protected \App\Services\B2B\ProductCategoryService $service;
 
     public function __construct(ProductCategoryService $categoryService)
     {

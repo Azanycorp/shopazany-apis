@@ -43,7 +43,7 @@ class B2bOrder extends Model
         ];
     }
 
-   
+
 
     public static function orderStats()
     {

@@ -34,12 +34,12 @@ class ChargeUserSubscriptions extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): void
     {
         UserSubcription::where('plan_end', '<=', Carbon::now()->subDays(30))
             ->whereNotNull('authorization_data')
             ->whereNull('expired_at')
-            ->chunk(100, function ($subscriptions) {
+            ->chunk(100, function ($subscriptions): void {
                 foreach ($subscriptions as $subscription) {
                     $this->chargeSubscription($subscription);
                 }
@@ -48,7 +48,7 @@ class ChargeUserSubscriptions extends Command
         $this->info('Subscriptions charged successfully.');
     }
 
-    private function chargeSubscription($subscription)
+    private function chargeSubscription($subscription): void
     {
         DB::beginTransaction();
 
