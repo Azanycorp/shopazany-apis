@@ -1060,6 +1060,26 @@ class SellerService extends Controller
 
         return $this->success($method, 'Withdrawal details Updated', 200);
     }
+    public function makeAccounDefaultt($data)
+    {
+        $method = B2bWithdrawalMethod::find($data->id);
+        $userId = userAuthId();
+        if (!$method) {
+            return $this->error(null, 'No record found', 404);
+        }
+        $checkStatus = B2bWithdrawalMethod::where('user_id', $userId)
+            ->where('is_default', 1)->count();
+
+        if ($checkStatus >= 1) {
+            B2bWithdrawalMethod::where('user_id', $userId)
+                ->update(['is_default' => 0,]);
+        }
+        $method->update([
+            'is_default' => 1,
+        ]);
+
+        return $this->success($method, 'Withdrawal details set to default', 200);
+    }
 
     public function deleteMethod($id)
     {

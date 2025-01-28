@@ -3,14 +3,18 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\B2BProduct;
+use App\Enum\ProductStatus;
 use Illuminate\Http\Request;
+use App\Models\B2bProductCategory;
 use App\Services\B2B\BuyerService;
 use App\Http\Requests\LoginRequest;
 use App\Services\B2B\SellerService;
 use App\Http\Controllers\Controller;
 use App\Services\B2B\Auth\AuthService;
 use App\Http\Requests\B2B\SignupRequest;
+use App\Http\Resources\CategoryResource;
 use App\Http\Resources\B2BProductResource;
+use App\Http\Resources\B2BCategoryResource;
 use App\Http\Requests\B2B\BuyerOnboardingRequest;
 use App\Http\Requests\B2B\BusinessInformationRequest;
 
@@ -72,7 +76,7 @@ class B2BController extends Controller
         $products = B2BProduct::where('name', 'LIKE', '%' . $searchQuery . '%')
             ->orWhere('unit_price', 'LIKE', '%' . $searchQuery . '%')->get();
 
-         $data = B2BProductResource::collection($products);
+        $data = B2BProductResource::collection($products);
 
         return [
             'status' => 'true',
@@ -80,7 +84,22 @@ class B2BController extends Controller
             'data' => $data,
         ];
     }
-
+    public function bestSellingProduct()
+    {
+        return $this->buyerService->bestSelling();
+    }
+    public function featuredProduct()
+    {
+        return $this->buyerService->featuredProduct();
+    }
+    public function allCategories()
+    {
+        return $this->buyerService->categories();
+    }
+    public function categoryBySlug($slug)
+    {
+        return $this->buyerService->categoryBySlug($slug);
+    }
     public function getProducts()
     {
         return $this->buyerService->getProducts();

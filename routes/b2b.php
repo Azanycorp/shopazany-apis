@@ -34,6 +34,9 @@ Route::middleware(['throttle:apis'])->group(function (): void {
     Route::prefix('b2b')->controller(B2BController::class)->group(function (): void {
         Route::post('/business/information', 'businessInformation');
         Route::get('/products', 'getProducts');
+        Route::get('/product-categories', 'allCategories');
+        Route::get('/best-selling-products', 'bestSellingProduct');
+        Route::get('/featured-products', 'featuredProduct');
         Route::post('/search-products', 'searchProduct');
         Route::get('/product/{slug}', 'getProductDetail');
     });
@@ -47,7 +50,7 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function (): voi
             //dashboard
             Route::get('/dashboard', 'dashboard');
             Route::get('/withdrawals', 'withdrawalHistory');
-            Route::post('/withdrawal-request','makeWithdrawalRequest');
+            Route::post('/withdrawal-request', 'makeWithdrawalRequest');
             Route::get('/earning-report', 'getEarningReport');
 
             // rfqs
@@ -72,6 +75,7 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function (): voi
                 Route::post('/add', 'addWithdrawalMethod');
                 Route::get('/details/{id}', 'getWithdrawalMethod');
                 Route::post('/update/{id}', 'updateWithdrawalMethod');
+                Route::post('/make-default', 'makeDefaultAccount');
                 Route::delete('/delete/{id}', 'deleteWithdrawalMethod');
             });
             //complaints log
