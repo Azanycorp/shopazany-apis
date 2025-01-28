@@ -110,7 +110,7 @@ class AdminService
 
     public function getOrderDetails($id)
     {
-        $order = Rfq::with(['buyer', 'seller'])->find($id);
+        $order = B2bOrder::with(['buyer', 'seller'])->find($id);
 
         if (!$order) {
             return $this->error(null, "No record found.", 404);
@@ -839,9 +839,6 @@ class AdminService
     public function addAdmin($data)
     {
 
-
-
-
         DB::beginTransaction();
         try {
             $password = generateRandomString();
@@ -900,7 +897,7 @@ class AdminService
         }
         return $this->success(null, 'Access Revoked');
     }
-    
+
     public function removeAdmin($id)
     {
         $admin = Admin::findOrFail($id);
