@@ -67,22 +67,22 @@ Route::get('/shop-by/country/{shop_country_id}', [ApiController::class, 'userSho
 Route::middleware('cacheResponse:300')
     ->controller(HomeController::class)
     ->group(function (): void {
-    Route::get('/best/selling', 'bestSelling');
-    Route::get('/category/{slug}', 'categorySlug');
-    Route::get('/all/products', 'allProducts');
-    Route::get('/featured/products', 'featuredProduct');
-    Route::get('/pocket/friendly', 'pocketFriendly');
-    Route::get('/recommended/products', 'recommendedProducts');
-    Route::get('/single/product/{slug}', 'productSlug');
-    Route::get('/top-brands', 'topBrands');
-    Route::get('/top-sellers', 'topSellers');
+        Route::get('/best/selling', 'bestSelling');
+        Route::get('/category/{slug}', 'categorySlug');
+        Route::get('/all/products', 'allProducts');
+        Route::get('/featured/products', 'featuredProduct');
+        Route::get('/pocket/friendly', 'pocketFriendly');
+        Route::get('/recommended/products', 'recommendedProducts');
+        Route::get('/single/product/{slug}', 'productSlug');
+        Route::get('/top-brands', 'topBrands');
+        Route::get('/top-sellers', 'topSellers');
 
-    Route::prefix('seller')->group(function (): void {
-        Route::get('/{uuid}', 'sellerInfo');
-        Route::get('/{uuid}/category', 'sellerCategory');
-        Route::get('/{uuid}/reviews', 'sellerReviews');
+        Route::prefix('seller')->group(function (): void {
+            Route::get('/{uuid}', 'sellerInfo');
+            Route::get('/{uuid}/category', 'sellerCategory');
+            Route::get('/{uuid}/reviews', 'sellerReviews');
+        });
     });
-});
 
 Route::post('/payment/webhook', [PaymentController::class, 'webhook']);
 
@@ -103,6 +103,9 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function (): vo
 
             // Authorize.net
             Route::post('/authorize', 'authorizeNetCard');
+
+            // Authorize.net for B2B
+            Route::post('/authorize-b2b', 'b2bAuthorizeNetCard');
 
             // Payment Method
             Route::get('/method/{country_id}', 'getPaymentMethod');
