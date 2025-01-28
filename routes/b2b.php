@@ -35,6 +35,7 @@ Route::middleware(['throttle:apis'])->group(function (): void {
         Route::post('/business/information', 'businessInformation');
         Route::get('/products', 'getProducts');
         Route::get('/product-categories', 'allCategories');
+        Route::get('/product-by-category/{slug}', 'categoryBySlug');
         Route::get('/best-selling-products', 'bestSellingProduct');
         Route::get('/featured-products', 'featuredProduct');
         Route::post('/search-products', 'searchProduct');

@@ -70,19 +70,9 @@ class B2BController extends Controller
         return $this->service->buyerOnboarding($request);
     }
 
-    public function searchProduct()
+    public function searchProduct(Request $request)
     {
-        $searchQuery = request()->input('search');
-        $products = B2BProduct::where('name', 'LIKE', '%' . $searchQuery . '%')
-            ->orWhere('unit_price', 'LIKE', '%' . $searchQuery . '%')->get();
-
-        $data = B2BProductResource::collection($products);
-
-        return [
-            'status' => 'true',
-            'message' => 'Products filtered',
-            'data' => $data,
-        ];
+        return $this->buyerService->searchProduct($request);
     }
     public function bestSellingProduct()
     {

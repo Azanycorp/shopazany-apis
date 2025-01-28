@@ -252,11 +252,20 @@ class BuyerService
             'b2b_products.description',
             'b2b_products.category_id',
             'b2b_products.country_id',
-            DB::raw('COUNT(b2b_orders.id) as total_orders'))
+            DB::raw('COUNT(b2b_orders.id) as total_orders')
+        )
             ->leftJoin('b2b_orders', 'b2b_orders.product_id', '=', 'b2b_products.id')
             ->where('b2b_orders.status', OrderStatus::DELIVERED)
-            ->groupBy('b2b_products.id', 'b2b_products.name', 'b2b_products.unit_price', 'b2b_products.slug', 'b2b_products.front_image', 'b2b_products.description',
-            'b2b_products.category_id', 'b2b_products.country_id')
+            ->groupBy(
+                'b2b_products.id',
+                'b2b_products.name',
+                'b2b_products.unit_price',
+                'b2b_products.slug',
+                'b2b_products.front_image',
+                'b2b_products.description',
+                'b2b_products.category_id',
+                'b2b_products.country_id'
+            )
             ->orderBy('total_orders', 'DESC')
             ->take(10);
 
@@ -278,14 +287,12 @@ class BuyerService
         $countryId = request()->query('country_id');
 
         $query = B2BProduct::with([
-                'category',
-                'subCategory',
-                'shopCountry',
-                'orders',
-                'b2bProductReview',
-            ])
-           // ->where('is_featured', true)
-            ->where('status', ProductStatus::ACTIVE);
+            'category',
+            'subCategory',
+            'shopCountry',
+            'orders',
+            'b2bProductReview',
+        ])->where('status', ProductStatus::ACTIVE);
 
         if ($countryId) {
             $query->where('country_id', $countryId);
@@ -297,22 +304,25 @@ class BuyerService
 
         return $this->success($data, "Featured products");
     }
+    public function searchProduct()
+    {
+        $searchQuery = request()->input('search');
+        $products = B2BProduct::where('name', 'LIKE', '%' . $searchQuery . '%')
+            ->orWhere('unit_price', 'LIKE', '%' . $searchQuery . '%')->get();
+
+        $data = B2BProductResource::collection($products);
+
+        return [
+            'status' => 'true',
+            'message' => 'Products filtered',
+            'data' => $data,
+        ];
+    }
     public function categoryBySlug($slug)
     {
-        $category = B2bProductCategory::with(['products' => function ($query): void {
-            $query->where('status', ProductStatus::ACTIVE)
-                ->select('id', 'name', 'slug', 'price', 'image', 'category_id')
-                ->withCount('productReviews as total_reviews')
-                ->withAvg('productReviews as average_rating', 'rating');
-        }])->where('slug', $slug)
-            ->select('id', 'name', 'slug', 'image')
+        $category = B2bProductCategory::with('products')->select('id', 'name', 'slug', 'image')->where('slug', $slug)
             ->firstOrFail();
-
-        $products = $category->products->map(function ($product) {
-            $product->average_rating = $product->average_rating ? round($product->average_rating, 1) : 0;
-            return $product;
-        });
-
+        $products = $category->products->where('status', ProductStatus::ACTIVE);
         return $this->success($products, 'Products by category');
     }
     public function getProductDetail($slug)
