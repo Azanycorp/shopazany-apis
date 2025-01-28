@@ -676,7 +676,7 @@ class SellerService extends Controller
 
     public function getRfqDetails($id)
     {
-        $rfq = Rfq::find($id);
+        $rfq = Rfq::with(['buyer','seller'])->find($id);
         if (!$rfq) {
             return $this->error(null, "No record found.", 404);
         }
@@ -1075,7 +1075,7 @@ class SellerService extends Controller
         if (!$method) {
             return $this->error(null, 'No record found', 404);
         }
-        
+
         B2bWithdrawalMethod::where('user_id', userAuthId())
             ->where('is_default', 1)
             ->update(['is_default' => 0]);

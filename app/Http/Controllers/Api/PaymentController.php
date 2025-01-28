@@ -10,6 +10,7 @@ use App\Services\Payment\PaymentService;
 use App\Http\Requests\AuthorizeNetCardRequest;
 use App\Services\Payment\HandlePaymentService;
 use App\Services\Payment\PaymentDetailsService;
+use App\Http\Requests\B2BAuthorizeNetCardRequest;
 use App\Services\Payment\PaystackPaymentProcessor;
 use App\Services\Payment\B2BPaystackPaymentProcessor;
 
@@ -52,6 +53,11 @@ class PaymentController extends Controller
     }
 
     public function authorizeNetCard(AuthorizeNetCardRequest $request)
+    {
+        return $this->service->authorizeNetCard($request);
+    }
+
+    public function b2bAuthorizeNetCard(B2BAuthorizeNetCardRequest $request)
     {
         return $this->service->authorizeNetCard($request);
     }

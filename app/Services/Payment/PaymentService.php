@@ -57,7 +57,6 @@ class PaymentService
                     Log::warning('Unknown payment type', ['payment_type' => $paymentType]);
                     break;
             }
-
         }
 
         return response()->json(['status' => true], 200);
@@ -82,6 +81,9 @@ class PaymentService
 
     public function authorizeNetCard($request)
     {
+        if ($request->type == "b2b") {
+            return $this->chargeCardService->processB2BPayment($request->all());
+        }
         return $this->chargeCardService->processPayment($request->all());
     }
 
@@ -101,9 +103,4 @@ class PaymentService
 
         return $this->success($data, "Payment methods");
     }
-
-
 }
-
-
-
