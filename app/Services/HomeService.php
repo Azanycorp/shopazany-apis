@@ -140,6 +140,8 @@ class HomeService
                 'color',
                 'unit',
                 'size',
+                'orders',
+                'productReviews',
             ]);
 
         if ($countryId) {

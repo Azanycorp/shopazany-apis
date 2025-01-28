@@ -9,8 +9,10 @@ use App\Enum\RfqStatus;
 use App\Models\Payment;
 use App\Enum\UserStatus;
 use App\Models\B2bQuote;
+use App\Enum\OrderStatus;
 use App\Models\B2bCompany;
 use App\Models\B2BProduct;
+use App\Models\RfqMessage;
 use App\Enum\ProductStatus;
 use App\Models\B2bWishList;
 use App\Trait\HttpResponse;
@@ -19,6 +21,7 @@ use App\Models\B2bProdctLike;
 use App\Models\B2bProdctReview;
 use App\Models\B2BRequestRefund;
 use App\Enum\RefundRequestStatus;
+use App\Models\B2bProductCategory;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -26,7 +29,9 @@ use App\Http\Resources\BuyerResource;
 use App\Http\Resources\PaymentResource;
 use App\Http\Resources\CustomerResource;
 use App\Http\Resources\B2BProductResource;
-use App\Models\RfqMessage;
+use App\Http\Resources\B2BCategoryResource;
+use App\Http\Resources\SellerProductResource;
+use App\Http\Resources\B2BSellerProductResource;
 
 class BuyerService
 {
@@ -224,18 +229,112 @@ class BuyerService
 
         return $this->success($data, 'Products');
     }
+    public function categories()
+    {
+        $categories = B2bProductCategory::where('featured', 1)
+            ->take(10)
+            ->get();
 
+        $data = B2BCategoryResource::collection($categories);
 
+        return $this->success($data, "Categories");
+    }
+    public function bestSelling()
+    {
+        $countryId = request()->query('country_id');
+
+        $query = B2BProduct::with('shopCountry')->select(
+            'b2b_products.id',
+            'b2b_products.name',
+            'b2b_products.slug',
+            'b2b_products.front_image',
+            'b2b_products.unit_price',
+            'b2b_products.description',
+            'b2b_products.category_id',
+            'b2b_products.country_id',
+            DB::raw('COUNT(b2b_orders.id) as total_orders')
+        )
+            ->leftJoin('b2b_orders', 'b2b_orders.product_id', '=', 'b2b_products.id')
+            ->where('b2b_orders.status', OrderStatus::DELIVERED)
+            ->groupBy(
+                'b2b_products.id',
+                'b2b_products.name',
+                'b2b_products.unit_price',
+                'b2b_products.slug',
+                'b2b_products.front_image',
+                'b2b_products.description',
+                'b2b_products.category_id',
+                'b2b_products.country_id'
+            )
+            ->orderBy('total_orders', 'DESC')
+            ->take(10);
+
+        if ($countryId) {
+            $query->where('b2b_orders.country_id', $countryId);
+        }
+
+        $products = $query->get();
+
+        $products->each(function ($product): void {
+            $product->currency = $product->shopCountry->currency ?? null;
+            unset($product->shopCountry);
+        });
+
+        return $this->success($products, "Best selling products");
+    }
+    public function featuredProduct()
+    {
+        $countryId = request()->query('country_id');
+
+        $query = B2BProduct::with([
+            'category',
+            'subCategory',
+            'shopCountry',
+            'orders',
+            'b2bProductReview',
+        ])->where('status', ProductStatus::ACTIVE);
+
+        if ($countryId) {
+            $query->where('country_id', $countryId);
+        }
+
+        $featuredProducts = $query->limit(8)->get();
+
+        $data = B2BSellerProductResource::collection($featuredProducts);
+
+        return $this->success($data, "Featured products");
+    }
+    public function searchProduct()
+    {
+        $searchQuery = request()->input('search');
+        $products = B2BProduct::where('name', 'LIKE', '%' . $searchQuery . '%')
+            ->orWhere('unit_price', 'LIKE', '%' . $searchQuery . '%')->get();
+
+        $data = B2BProductResource::collection($products);
+
+        return [
+            'status' => 'true',
+            'message' => 'Products filtered',
+            'data' => $data,
+        ];
+    }
+    public function categoryBySlug($slug)
+    {
+        $category = B2bProductCategory::with('products')->select('id', 'name', 'slug', 'image')->where('slug', $slug)
+            ->firstOrFail();
+        $products = $category->products->where('status', ProductStatus::ACTIVE);
+        return $this->success($products, 'Products by category');
+    }
     public function getProductDetail($slug)
     {
-        $product = B2BProduct::with(['category', 'user', 'b2bLikes', 'country', 'b2bProductImages', 'b2bProdctReview'])
+        $product = B2BProduct::with(['category', 'user', 'b2bLikes', 'country', 'b2bProductImages', 'b2bProductReview'])
             ->where('slug', $slug)
             ->firstOrFail();
 
-        $moreFromSeller = B2BProduct::with(['category', 'user', 'b2bLikes', 'subCategory', 'country', 'b2bProductImages', 'b2bProdctReview'])
+        $moreFromSeller = B2BProduct::with(['category', 'user', 'b2bLikes', 'subCategory', 'country', 'b2bProductImages', 'b2bProductReview'])
             ->where('user_id', $product->user_id)->get();
 
-        $relatedProducts = B2BProduct::with(['category', 'user', 'b2bLikes', 'subCategory', 'country', 'b2bProductImages', 'b2bProdctReview'])
+        $relatedProducts = B2BProduct::with(['category', 'user', 'b2bLikes', 'subCategory', 'country', 'b2bProductImages', 'b2bProductReview'])
             ->where('category_id', $product->category_id)->get();
 
         $data = new B2BProductResource($product);
@@ -257,11 +356,6 @@ class BuyerService
         $quotes = B2bQuote::where('buyer_id', $userId)
             ->latest('id')
             ->get();
-
-        if ($quotes->isEmpty()) {
-            return $this->error(null, 'No record found to send', 404);
-        }
-
         return $this->success($quotes, 'quotes lists');
     }
 
@@ -599,7 +693,7 @@ class BuyerService
         }
 
         try {
-            $amount = total_amount($product->unit_price,$data->qty);
+            $amount = total_amount($product->unit_price, $data->qty);
 
             Rfq::create([
                 'buyer_id' => $quote->user_id,

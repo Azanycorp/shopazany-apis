@@ -267,7 +267,7 @@ class PaystackService
                     'product_quantity' => $rfq->product_quantity,
                     'order_no' => $orderNo,
                     'product_data' => $product,
-                    'amount' => $amount,
+                    'total_amount' => $amount,
                     'payment_method' => $method,
                     'payment_status' => OrderStatus::PAID,
                     'status' => OrderStatus::PENDING,
@@ -297,7 +297,10 @@ class PaystackService
                     $wallet->save();
                 }
 
-                $rfq->delete();
+                $rfq->update([
+                    'payment_status' => OrderStatus::PAID,
+                    'status' => OrderStatus::COMPLETED
+                ]);
                 send_email($user->email, new B2BOrderEmail($orderedItems));
                 (new UserLogAction(
                     request(),

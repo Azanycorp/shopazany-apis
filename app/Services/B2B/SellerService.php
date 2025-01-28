@@ -4,6 +4,7 @@ namespace App\Services\B2B;
 
 use App\Models\Rfq;
 use App\Models\User;
+use App\Enum\UserType;
 use App\Models\Payout;
 use App\Models\B2bOrder;
 use App\Enum\OrderStatus;
@@ -33,6 +34,7 @@ use App\Models\B2BSellerShippingAddress;
 use App\Http\Resources\B2BProductResource;
 use App\Repositories\B2BProductRepository;
 use App\Http\Resources\SellerProfileResource;
+use App\Http\Resources\B2BSellerProfileResource;
 use App\Repositories\B2BSellerShippingRepository;
 use App\Http\Resources\B2BSellerShippingAddressResource;
 
@@ -89,10 +91,10 @@ class SellerService extends Controller
 
     public function profile()
     {
-        $auth = userAuth();
+        $authId = userAuthId();
 
-        $user = User::findOrFail($auth->id);
-        $data = new SellerProfileResource($user);
+        $user = User::findOrFail($authId);
+        $data = new B2BSellerProfileResource($user);
 
         return $this->success($data, 'Seller profile');
     }
@@ -198,47 +200,60 @@ class SellerService extends Controller
         if (!$user) {
             return $this->error(null, "User not found", 404);
         }
-        $parts = explode('@', $user->email);
-        $name = $parts[0];
-        $res = folderNames('b2bproduct', $name, 'front_image');
-        $slug = Str::slug($request->name);
-        if (B2BProduct::where('slug', $slug)->exists()) {
-            $slug = $slug . '-' . uniqid();
-        }
-        if ($request->hasFile('front_image')) {
-            $path = $request->file('front_image')->store($res->frontImage, 's3');
-            $url = Storage::disk('s3')->url($path);
-        }
-        $data = [
-            'user_id' => $user->id,
-            'name' => $request->name,
-            'slug' => $slug,
-            'category_id' => $request->category_id,
-            'sub_category_id' => $request->sub_category_id,
-            'keywords' => $request->keywords,
-            'description' => $request->description,
-            'front_image' => $url,
-            'minimum_order_quantity' => $request->minimum_order_quantity,
-            'unit_price' => $request->unit,
-            'quantity' => $request->quantity,
-            'availability_quantity' => $request->quantity,
-            'default_currency' => $request->default_currency,
-            'fob_price' => $request->fob_price,
-            'status' => 'active',
-            'country_id' => is_int($user->country) ? $user->country : 160,
-        ];
-        $product = $this->b2bProductRepository->create($data);
-        if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $image) {
-                $path = $image->store($res->folder, 's3');
-                $url = Storage::disk('s3')->url($path);
 
-                $product->b2bProductImages()->create([
-                    'image' => $url,
-                ]);
+        try {
+
+            $parts = explode('@', $user->email);
+            $name = $parts[0];
+
+            $res = folderNames('b2bproduct', $name, 'front_image');
+
+            $slug = Str::slug($request->name);
+
+            if (B2BProduct::where('slug', $slug)->exists()) {
+                $slug = $slug . '-' . uniqid();
             }
+
+            if ($request->hasFile('front_image')) {
+                $path = $request->file('front_image')->store($res->frontImage, 's3');
+                $url = Storage::disk('s3')->url($path);
+            }
+
+            $data = (array)[
+                'user_id' => $user->id,
+                'name' => $request->name,
+                'slug' => $slug,
+                'category_id' => $request->category_id,
+                'sub_category_id' => $request->sub_category_id,
+                'keywords' => $request->keywords,
+                'description' => $request->description,
+                'front_image' => $url,
+                'minimum_order_quantity' => $request->minimum_order_quantity,
+                'unit_price' => $request->unit,
+                'quantity' => $request->quantity,
+                'availability_quantity' => $request->quantity,
+                'default_currency' => $user->default_currency,
+                'fob_price' => $request->fob_price,
+                'status' => 'active',
+                'country_id' => is_int($user->country) ? $user->country : 160,
+            ];
+
+            $product = $this->b2bProductRepository->create($data);
+
+            if ($request->hasFile('images')) {
+                foreach ($request->file('images') as $image) {
+                    $path = $image->store($res->folder, 's3');
+                    $url = Storage::disk('s3')->url($path);
+
+                    $product->b2bProductImages()->create([
+                        'image' => $url,
+                    ]);
+                }
+            }
+            return $this->success(null, 'Product added successfully', 201);
+        } catch (\Exception $e) {
+            return $this->error(null, $e->getMessage(), 500);
         }
-        return $this->success(null, 'Product added successfully', 201);
     }
 
     public function getAllProduct($request)
@@ -620,7 +635,12 @@ class SellerService extends Controller
 
     public function getOrderDetails($id)
     {
-        $order = B2bOrder::find($id);
+        return Auth::user();
+        $order = B2bOrder::with(['buyer' => function ($query): void {
+            $query->select('id', 'first_name', 'last_name')->where('type', UserType::B2B_BUYER);
+        }, 'seller' => function ($query): void {
+            $query->select('id', 'first_name', 'last_name')->where('type', UserType::B2B_SELLER);
+        },])->find($id);
         if (!$order) {
             return $this->error(null, "No record found.", 404);
         }
@@ -755,7 +775,7 @@ class SellerService extends Controller
                 'product_quantity' => $rfq->product_quantity,
                 'order_no' => 'ORD-' . now()->timestamp . '-' . Str::random(8),
                 'product_data' => $product,
-                'amount' => $amount,
+                'total_amount' => $amount,
                 'payment_method' => PaymentType::OFFLINE,
                 'payment_status' => OrderStatus::PAID,
                 'status' => OrderStatus::PENDING,
@@ -785,8 +805,10 @@ class SellerService extends Controller
                 $wallet->save();
             }
 
-            $rfq->delete();
-
+            $rfq->update([
+                'payment_status' => OrderStatus::PAID,
+                'status' => OrderStatus::COMPLETED
+            ]);
             DB::commit();
             send_email($buyer->email, new B2BOrderEmail($orderedItems));
             return $this->success($order, 'Payment Confirmed successfully');
@@ -1046,6 +1068,23 @@ class SellerService extends Controller
         ]);
 
         return $this->success($method, 'Withdrawal details Updated', 200);
+    }
+    public function makeAccounDefaultt($data)
+    {
+        $method = B2bWithdrawalMethod::find($data->id);
+        if (!$method) {
+            return $this->error(null, 'No record found', 404);
+        }
+        
+        B2bWithdrawalMethod::where('user_id', userAuthId())
+            ->where('is_default', 1)
+            ->update(['is_default' => 0]);
+
+        $method->update([
+            'is_default' => 1,
+        ]);
+
+        return $this->success($method, 'Withdrawal details set to default', 200);
     }
 
     public function deleteMethod($id)
