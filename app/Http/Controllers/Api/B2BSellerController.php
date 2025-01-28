@@ -194,6 +194,11 @@ class B2BSellerController extends Controller
         return $this->service->getSingleMethod($id);
     }
 
+    public function makeDefaultAccount(Request $request)
+    {
+        return $this->service->makeAccounDefaultt($request);
+    }
+
     public function updateWithdrawalMethod($id, Request $request)
     {
         return $this->service->updateMethod($id, $request);

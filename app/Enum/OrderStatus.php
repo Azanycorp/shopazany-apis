@@ -7,6 +7,7 @@ enum OrderStatus: string
     const CONFIRMED = 'confirmed';
     const CANCELLED = 'cancelled';
     const DELIVERED = 'delivered';
+    const COMPLETED = 'completed';
     const PENDING = 'pending';
     const PROCESSING = 'processing';
     const INPROGRESS = 'in-progress';

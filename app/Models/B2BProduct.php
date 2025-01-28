@@ -48,7 +48,7 @@ class B2BProduct extends Model
         return $this->hasMany(B2bProdctLike::class, 'product_id');
     }
 
-    public function b2bProdctReview(): HasMany
+    public function b2bProductReview(): HasMany
     {
         return $this->hasMany(B2bProdctReview::class, 'product_id');
     }
@@ -63,6 +63,10 @@ class B2BProduct extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    public function shopCountry(): BelongsTo
+    {
+        return $this->belongsTo(ShopCountry::class, 'country_id', 'country_id');
+    }
     public function category(): BelongsTo
     {
         return $this->belongsTo(B2bProductCategory::class, 'category_id');
@@ -71,6 +75,10 @@ class B2BProduct extends Model
     public function subCategory(): BelongsTo
     {
         return $this->belongsTo(B2bProductSubCategory::class, 'category_id');
+    }
+    public function orders(): HasMany
+    {
+        return $this->hasMany(B2bOrder::class, 'product_id');
     }
 
     public function country(): BelongsTo

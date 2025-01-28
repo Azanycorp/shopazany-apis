@@ -15,9 +15,11 @@ use App\Enum\OrderStatus;
 use App\Models\B2BProduct;
 use App\Models\UserWallet;
 use App\Enum\ProductStatus;
+use App\Mail\AdminUserMail;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
 use App\Models\Configuration;
+use App\Mail\B2BNewAdminEmail;
 use Illuminate\Support\Facades\DB;
 use App\Models\B2bWithdrawalMethod;
 use App\Models\BusinessInformation;
@@ -108,7 +110,7 @@ class AdminService
 
     public function getOrderDetails($id)
     {
-        $order = Rfq::with(['buyer', 'seller'])->find($id);
+        $order = B2bOrder::with(['buyer', 'seller'])->find($id);
 
         if (!$order) {
             return $this->error(null, "No record found.", 404);
@@ -426,7 +428,7 @@ class AdminService
             + User::where(['type' => UserType::B2B_BUYER, 'status' => UserStatus::SUSPENDED])->count()
             + User::where(['type' => UserType::B2B_BUYER, 'status' => UserStatus::BLOCKED])->count();
 
-        $users = User::with(['userCountry','state','b2bCompany'])
+        $users = User::with(['userCountry', 'state', 'b2bCompany'])
             ->where('type', UserType::B2B_BUYER)
             ->when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
                 $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
@@ -836,17 +838,33 @@ class AdminService
 
     public function addAdmin($data)
     {
-        $admin = Admin::create([
-            'first_name' => $data->first_name,
-            'last_name' => $data->last_name,
-            'email' => $data->email,
-            'type' => AdminType::B2B,
-            'status' => AdminStatus::ACTIVE,
-            'phone_number' => $data->phone_number,
-            'password' => bcrypt($data->password),
-        ]);
 
-        return $this->success($admin, 'Admin user added successfully', 200);
+        DB::beginTransaction();
+        try {
+            $password = generateRandomString();
+            $admin = Admin::create([
+                'first_name' => $data->first_name,
+                'last_name' => $data->last_name,
+                'email' => $data->email,
+                'type' => AdminType::B2B,
+                'status' => AdminStatus::ACTIVE,
+                'phone_number' => $data->phone_number,
+                'password' => bcrypt($data->password),
+            ]);
+            $admin->roles()->sync($data->role_id);
+            $loginDetails = [
+                'name' => $data->first_name,
+                'email' => $data->email,
+                'password' => $password,
+            ];
+            DB::commit();
+            send_email($data->email, new B2BNewAdminEmail($loginDetails));
+
+            return $this->success($admin, 'Admin user added successfully', 200);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            throw $th;
+        }
     }
 
     public function viewAdmin($id)
@@ -864,12 +882,27 @@ class AdminService
             'email' => $data->email,
             'phone_number' => $data->phone_number,
         ]);
+        $admin->roles()->sync($data->role_id);
+        if ($data->permissions) {
+            $admin->permissions()->sync($data->permissions);
+        }
         return $this->success($admin, 'Details updated successfully');
+    }
+
+    public function revokeAccess($data)
+    {
+        $admin = Admin::findOrFail($data->admin_id);
+        if ($data->permissions) {
+            $admin->permissions()->sync($data->permissions);
+        }
+        return $this->success(null, 'Access Revoked');
     }
 
     public function removeAdmin($id)
     {
         $admin = Admin::findOrFail($id);
+        $admin->roles()->detach();
+        $admin->permissions()->detach();
         $admin->delete();
         return $this->success(null, 'Deleted successfully');
     }
