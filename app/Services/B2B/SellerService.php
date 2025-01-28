@@ -4,6 +4,7 @@ namespace App\Services\B2B;
 
 use App\Models\Rfq;
 use App\Models\User;
+use App\Enum\UserType;
 use App\Models\Payout;
 use App\Models\B2bOrder;
 use App\Enum\OrderStatus;
@@ -33,6 +34,7 @@ use App\Models\B2BSellerShippingAddress;
 use App\Http\Resources\B2BProductResource;
 use App\Repositories\B2BProductRepository;
 use App\Http\Resources\SellerProfileResource;
+use App\Http\Resources\B2BSellerProfileResource;
 use App\Repositories\B2BSellerShippingRepository;
 use App\Http\Resources\B2BSellerShippingAddressResource;
 
@@ -89,10 +91,10 @@ class SellerService extends Controller
 
     public function profile()
     {
-        $auth = userAuth();
+        $authId = userAuthId();
 
-        $user = User::findOrFail($auth->id);
-        $data = new SellerProfileResource($user);
+        $user = User::findOrFail($authId);
+        $data = new B2BSellerProfileResource($user);
 
         return $this->success($data, 'Seller profile');
     }
@@ -633,7 +635,12 @@ class SellerService extends Controller
 
     public function getOrderDetails($id)
     {
-        $order = B2bOrder::find($id);
+        return Auth::user();
+        $order = B2bOrder::with(['buyer' => function ($query): void {
+            $query->select('id', 'first_name', 'last_name')->where('type', UserType::B2B_BUYER);
+        }, 'seller' => function ($query): void {
+            $query->select('id', 'first_name', 'last_name')->where('type', UserType::B2B_SELLER);
+        },])->find($id);
         if (!$order) {
             return $this->error(null, "No record found.", 404);
         }
@@ -798,8 +805,10 @@ class SellerService extends Controller
                 $wallet->save();
             }
 
-            $rfq->delete();
-
+            $rfq->update([
+                'payment_status' => OrderStatus::PAID,
+                'status' => OrderStatus::COMPLETED
+            ]);
             DB::commit();
             send_email($buyer->email, new B2BOrderEmail($orderedItems));
             return $this->success($order, 'Payment Confirmed successfully');
@@ -1059,6 +1068,23 @@ class SellerService extends Controller
         ]);
 
         return $this->success($method, 'Withdrawal details Updated', 200);
+    }
+    public function makeAccounDefaultt($data)
+    {
+        $method = B2bWithdrawalMethod::find($data->id);
+        if (!$method) {
+            return $this->error(null, 'No record found', 404);
+        }
+        
+        B2bWithdrawalMethod::where('user_id', userAuthId())
+            ->where('is_default', 1)
+            ->update(['is_default' => 0]);
+
+        $method->update([
+            'is_default' => 1,
+        ]);
+
+        return $this->success($method, 'Withdrawal details set to default', 200);
     }
 
     public function deleteMethod($id)
