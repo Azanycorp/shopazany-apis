@@ -221,7 +221,7 @@ class BuyerService
 
     public function getProducts()
     {
-        $products = B2BProduct::with(['category', 'user', 'b2bLikes', 'b2bProdctReview', 'subCategory', 'country', 'b2bProductImages'])
+        $products = B2BProduct::with(['category', 'user', 'b2bLikes', 'b2bProductReview', 'subCategory', 'country', 'b2bProductImages'])
             ->where('status', ProductStatus::ACTIVE)
             ->get();
 
