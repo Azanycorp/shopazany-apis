@@ -221,7 +221,15 @@ class BuyerService
 
     public function getProducts()
     {
-        $products = B2BProduct::with(['category', 'user', 'b2bLikes', 'b2bProductReview', 'subCategory', 'country', 'b2bProductImages'])
+        $products = B2BProduct::with([
+                'category',
+                'user',
+                'b2bLikes',
+                'b2bProductReview',
+                'subCategory',
+                'country',
+                'b2bProductImages'
+            ])
             ->where('status', ProductStatus::ACTIVE)
             ->get();
 
@@ -307,8 +315,18 @@ class BuyerService
     public function searchProduct()
     {
         $searchQuery = request()->input('search');
-        $products = B2BProduct::where('name', 'LIKE', '%' . $searchQuery . '%')
-            ->orWhere('unit_price', 'LIKE', '%' . $searchQuery . '%')->get();
+        $products = B2BProduct::with([
+                'country',
+                'b2bProductReview', 
+                'b2bLikes',
+                'b2bProductImages',
+                'category',
+                'subCategory',
+                'user'
+            ])
+            ->where('name', 'LIKE', '%' . $searchQuery . '%')
+            ->orWhere('unit_price', 'LIKE', '%' . $searchQuery . '%')
+            ->get();
 
         $data = B2BProductResource::collection($products);
 
