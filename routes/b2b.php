@@ -147,7 +147,7 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function (): voi
             Route::post('/add', 'addShippingAddress');
             Route::get('/details/{id}', 'getShippingAddress');
             Route::post('/update/{id}', 'updateShippingAddress');
-            Route::post('/default/{id}', 'setDefaultAddress');
+            Route::post('/make-default/{id}', 'setDefaultAddress');
             Route::delete('/delete/{id}', 'deleteShippingAddress');
         });
     });
