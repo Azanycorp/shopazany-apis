@@ -2,19 +2,13 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Models\B2BProduct;
-use App\Enum\ProductStatus;
 use Illuminate\Http\Request;
-use App\Models\B2bProductCategory;
 use App\Services\B2B\BuyerService;
 use App\Http\Requests\LoginRequest;
 use App\Services\B2B\SellerService;
 use App\Http\Controllers\Controller;
 use App\Services\B2B\Auth\AuthService;
 use App\Http\Requests\B2B\SignupRequest;
-use App\Http\Resources\CategoryResource;
-use App\Http\Resources\B2BProductResource;
-use App\Http\Resources\B2BCategoryResource;
 use App\Http\Requests\B2B\BuyerOnboardingRequest;
 use App\Http\Requests\B2B\BusinessInformationRequest;
 
