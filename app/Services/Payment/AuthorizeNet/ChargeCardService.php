@@ -2,14 +2,22 @@
 
 namespace App\Services\Payment\AuthorizeNet;
 
+use App\Models\Rfq;
 use App\Models\Cart;
+use App\Models\User;
 use App\Enum\UserLog;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\B2bOrder;
+use App\Enum\OrderStatus;
 use App\Enum\PaymentType;
+use App\Models\B2BProduct;
+use App\Models\UserWallet;
+use App\Mail\B2BOrderEmail;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
 use App\Mail\SellerOrderMail;
+use App\Models\Configuration;
 use App\Actions\UserLogAction;
 use App\Mail\CustomerOrderMail;
 use App\Actions\PaymentLogAction;
@@ -57,7 +65,124 @@ class ChargeCardService implements PaymentStrategy
 
         return $this->handleResponse($response, $user, $paymentDetails, $orderNo, $payment);
     }
+    //B2B Payment section
+    public function ProcessB2BPayment(array $paymentDetails)
+    {
+        $user = Auth::user();
+        $orderNo = $this->orderNo;
+        $orderNum = Str::random(8);
 
+        $merchantAuthentication = $this->getMerchantAuthentication();
+        $payment = $this->getPayment($paymentDetails);
+        $order = $this->getOrder($orderNum);
+        $customerAddress = $this->getCustomerAddress($paymentDetails);
+        $customerData = $this->getCustomerData($paymentDetails, $user);
+
+        $transactionRequestType = $this->getTransactionRequestType($paymentDetails, $order, $payment, $customerAddress, $customerData);
+
+        $request = $this->createTransactionRequest($merchantAuthentication, $transactionRequestType);
+
+        $controller = new AnetController\CreateTransactionController($request);
+
+        $response = $this->executeTransaction($controller);
+
+        return $this->handleB2bResponse($response, $user, $paymentDetails, $orderNo, $payment);
+    }
+
+    private function handleB2bResponse($response, $user, array $paymentDetails, $orderNo, $payment)
+    {
+        if ($response != null) {
+            if ($response->getMessages()->getResultCode() == "Ok") {
+                $tresponse = $response->getTransactionResponse();
+
+                if ($tresponse != null && $tresponse->getMessages() != null) {
+                    return $this->handleB2bSuccessResponse($response, $tresponse, $user, $paymentDetails, $orderNo, $payment);
+                }
+                return $this->handleErrorResponse($tresponse, $response, $user);
+            }
+            return $this->handleErrorResponse(null, $response, $user);
+        }
+        return "No response returned \n";
+    }
+
+    private function handleB2bSuccessResponse($response, $tresponse, $user, array $paymentDetails, $orderNo, $payment)
+    {
+        $rfqId = $paymentDetails['rfq_id'];
+        $amount = $paymentDetails['amount'];
+        $data = (object)[
+            'user_id' => $user->id,
+            'first_name' => $user->first_name,
+            'last_name' => $user->last_name,
+            'email' => $user->email,
+            'phone' => $user->phone,
+            'amount' => $amount,
+            'reference' => generateRefCode(),
+            'channel' => "card",
+            'currency' => "USD",
+            'ip_address' => request()->ip(),
+            'paid_at' => now(),
+            'createdAt' => now(),
+            'transaction_date' => now(),
+            'status' => "success",
+            'type' => PaymentType::B2BUSERORDER,
+        ];
+       (new PaymentLogAction($data, $payment, 'authorizenet', 'success'))->execute();
+        $rfq = Rfq::findOrFail($rfqId);
+        $seller = User::findOrFail($rfq->seller_id);
+        $product = B2BProduct::findOrFail($rfq->product_id);
+
+        B2bOrder::create([
+            'buyer_id' => $user->id,
+            'seller_id' => $rfq->seller_id,
+            'product_id' => $rfq->product_id,
+            'product_quantity' => $rfq->product_quantity,
+            'order_no' => $orderNo,
+            'product_data' => $product,
+            'total_amount' => $amount,
+            'payment_method' => 'authorize-net',
+            'payment_status' => OrderStatus::PAID,
+            'status' => OrderStatus::PENDING,
+        ]);
+
+
+        $orderedItems = [
+            'product_name' => $product->name,
+            'image' => $product->front_image,
+            'quantity' => $rfq->product_quantity,
+            'price' => $rfq->total_amount,
+            'buyer_name' => $user->first_name . ' ' . $user->last_name,
+            'order_number' => $orderNo,
+        ];
+        $product->quantity -= $rfq->product_quantity;
+        $product->sold += $rfq->product_quantity;
+        $product->save();
+
+        $config = Configuration::first();
+
+        if ($config) {
+            $sellerPerc = $config->seller_perc ?? 0;
+            $credit = ($sellerPerc / 100) * $amount;
+
+            $wallet = UserWallet::firstOrNew(['seller_id' => $seller->id]);
+            $wallet->master_wallet = ($wallet->master_wallet ?? 0) + $credit;
+            $wallet->save();
+        }
+
+        $rfq->update([
+            'payment_status' => OrderStatus::PAID,
+            'status' => OrderStatus::COMPLETED
+        ]);
+        send_email($user->email, new B2BOrderEmail($orderedItems));
+        (new UserLogAction(
+            request(),
+            UserLog::PAYMENT,
+            "Payment successful",
+            json_encode($response),
+            $user
+        ))->run();
+
+        return $this->success(null, $tresponse->getMessages()[0]->getDescription());
+    }
     private function getMerchantAuthentication(): \net\authorize\api\contract\v1\MerchantAuthenticationType
     {
         $merchantAuthentication = new AnetAPI\MerchantAuthenticationType();
@@ -190,7 +315,6 @@ class ChargeCardService implements PaymentStrategy
             'status' => "success",
             'type' => PaymentType::USERORDER,
         ];
-
         $pay = (new PaymentLogAction($data, $payment, 'authorizenet', 'success'))->execute();
 
         $orderedItems = [];
@@ -275,16 +399,3 @@ class ChargeCardService implements PaymentStrategy
         defer(fn() => send_email($user->email, new CustomerOrderMail($user, $orderedItems, $orderNo, $totalAmount)));
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

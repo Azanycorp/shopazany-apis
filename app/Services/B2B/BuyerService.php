@@ -23,6 +23,7 @@ use App\Models\B2BRequestRefund;
 use App\Enum\RefundRequestStatus;
 use App\Models\B2bProductCategory;
 use Illuminate\Support\Facades\DB;
+use App\Models\BuyerShippingAddress;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Resources\BuyerResource;
@@ -221,7 +222,15 @@ class BuyerService
 
     public function getProducts()
     {
-        $products = B2BProduct::with(['category', 'user', 'b2bLikes', 'b2bProdctReview', 'subCategory', 'country', 'b2bProductImages'])
+        $products = B2BProduct::with([
+                'category',
+                'user',
+                'b2bLikes',
+                'b2bProductReview',
+                'subCategory',
+                'country',
+                'b2bProductImages'
+            ])
             ->where('status', ProductStatus::ACTIVE)
             ->get();
 
@@ -307,8 +316,18 @@ class BuyerService
     public function searchProduct()
     {
         $searchQuery = request()->input('search');
-        $products = B2BProduct::where('name', 'LIKE', '%' . $searchQuery . '%')
-            ->orWhere('unit_price', 'LIKE', '%' . $searchQuery . '%')->get();
+        $products = B2BProduct::with([
+                'country',
+                'b2bProductReview', 
+                'b2bLikes',
+                'b2bProductImages',
+                'category',
+                'subCategory',
+                'user'
+            ])
+            ->where('name', 'LIKE', '%' . $searchQuery . '%')
+            ->orWhere('unit_price', 'LIKE', '%' . $searchQuery . '%')
+            ->get();
 
         $data = B2BProductResource::collection($products);
 
@@ -331,6 +350,10 @@ class BuyerService
             ->where('slug', $slug)
             ->firstOrFail();
 
+        $b2bProductReview = B2bProdctReview::with(['user' => function ($query): void {
+            $query->select('id', 'first_name', 'last_name')->where('type', UserType::B2B_BUYER);
+        }])->where('product_id', $product->id)->get();
+
         $moreFromSeller = B2BProduct::with(['category', 'user', 'b2bLikes', 'subCategory', 'country', 'b2bProductImages', 'b2bProductReview'])
             ->where('user_id', $product->user_id)->get();
 
@@ -341,6 +364,7 @@ class BuyerService
 
         $response = [
             'data' => $data,
+            'reviews' => $b2bProductReview,
             'more_from_seller' => B2BProductResource::collection($moreFromSeller),
             'related_products' => B2BProductResource::collection($relatedProducts),
         ];
@@ -751,7 +775,6 @@ class BuyerService
         return $this->success(null, "Profile Updated successfully");
     }
 
-
     public function changePassword($request)
     {
         $user = $request->user();
@@ -804,5 +827,89 @@ class BuyerService
         ]);
 
         return $this->success(null, "Details Updated successfully");
+    }
+
+    public function addShippingAddress($data)
+    {
+        $currentUserId = userAuthId();
+        $address = BuyerShippingAddress::create([
+            'user_id' => $currentUserId,
+            'address_name' => $data->address_name,
+            'name' => $data->name,
+            'surname' => $data->surname,
+            'email' => $data->email,
+            'phone' => $data->phone,
+            'street' => $data->street,
+            'city' => $data->city,
+            'postal_code' => $data->postal_code,
+            'state_id' => $data->state_id,
+            'country_id' => $data->country_id,
+        ]);
+        return $this->success($address, 'Address Added');
+    }
+    public function getAllShippingAddress()
+    {
+        $currentUserId = userAuthId();
+        $addresses = BuyerShippingAddress::where('user_id', $currentUserId)->get();
+        return $this->success($addresses, 'All address');
+    }
+
+    public function getShippingAddress($id)
+    {
+        $address = BuyerShippingAddress::find($id);
+        if (!$address) {
+            return $this->error(null, 'No record found', 404);
+        }
+        return $this->success($address, 'Address detail');
+    }
+
+    public function updateShippingAddress($id, $data)
+    {
+        $address = BuyerShippingAddress::find($id);
+        if (!$address) {
+            return $this->error(null, 'No record found', 404);
+        }
+        $address->update([
+            'address_name' => $data->address_name ?? $address->address_name,
+            'name' => $data->name ?? $address->name,
+            'surname' => $data->surname ?? $address->surname,
+            'email' => $data->email ?? $address->email,
+            'phone' => $data->phone ?? $address->phone,
+            'street' => $data->street ?? $address->street,
+            'city' => $data->city ?? $address->city,
+            'postal_code' => $data->postal_code ?? $address->postal_code,
+            'state_id' => $data->state_id ?? $address->state_id,
+            'country_id' => $data->country_id ?? $address->country_id,
+        ]);
+
+        return $this->success(null, 'Details Updated successfully');
+    }
+
+    public function deleteShippingAddress($id)
+    {
+        $address = BuyerShippingAddress::find($id);
+        if (!$address) {
+            return $this->error(null, 'No record found', 404);
+        }
+        $address->delete();
+        return $this->success(null, 'Address Deleted successfully');
+    }
+
+    public function setDefaultAddress($id)
+    {
+        $method = BuyerShippingAddress::find($id);
+        if (!$method) {
+            return $this->error(null, 'No record found', 404);
+        }
+
+        BuyerShippingAddress::where('user_id', userAuthId())
+            ->where('is_default', 1)
+            ->update(['is_default' => 0]);
+
+        $method->update([
+            'is_default' => 1,
+        ]);
+
+        return $this->success(null, 'Address Set as default');
     }
 }
