@@ -29,6 +29,7 @@ class B2BProductResource extends JsonResource
             'moq' => (string)$this->minimum_order_quantity,
             'status' => (string)$this->status,
             'country' => (string)$this->country?->name,
+            'country' => (string)$this->country?->name,
             'review_count' => (int)$this->b2bProductReview?->count(),
             'b2bLikes' => $this->b2bLikes->count(),
             'images' => (string)$this->b2bProductImages !== '' && (string)$this->b2bProductImages !== '0' ? $this->b2bProductImages->map(function ($image): array {
