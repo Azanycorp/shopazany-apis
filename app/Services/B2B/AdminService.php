@@ -95,17 +95,24 @@ class AdminService
         return $this->success($order, "Rfq details");
     }
 
-    public function getAllOrders($data)
+    public function getAllOrders()
     {
+        $searchQuery = request()->input('search');
         $orders =  B2bOrder::orderStats();
-        $recent_orders = B2bOrder::where('order_no', $data->search)->orWhere('id', $data->search)->get();
+
+        $recent_orders = B2bOrder::when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
+            $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
+                $subQuery->where('id', 'LIKE', '%' . $searchQuery . '%')
+                    ->orWhere('order_no', 'LIKE', '%' . $searchQuery . '%');
+            });
+        })->get();
+
 
         $data = [
             'all_orders' => $orders->total_orders,
             'pending_orders' => $orders->total_pending,
             'shipped_orders' => $orders->total_shipped,
             'delivery_orders' => $orders->total_delivered,
-
             'recent_orders' => $recent_orders,
 
         ];
