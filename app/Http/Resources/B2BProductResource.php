@@ -24,6 +24,7 @@ class B2BProductResource extends JsonResource
             'description' => (string)$this->description,
             'vendor' => (string)$this->user?->first_name,
             'quantity' => (string)$this->quantity,
+            'default_currency' => (string)$this->default_currency,
             'availability_quantity' => (string)$this->availability_quantity,
             'keywords' => $this?->keywords,
             'moq' => (string)$this->minimum_order_quantity,

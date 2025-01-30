@@ -25,6 +25,10 @@ class B2bOrder extends Model
         'shipped_date',
     ];
 
+    public function product(): BelongsTo
+    {
+        return $this->belongsTo(B2BProduct::class);
+    }
     public function seller(): BelongsTo
     {
         return $this->belongsTo(User::class, 'seller_id', 'id');
