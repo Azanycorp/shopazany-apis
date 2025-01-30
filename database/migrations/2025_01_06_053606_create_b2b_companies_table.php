@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('b2b_companies', function (Blueprint $table) {
+        Schema::create('b2b_companies', function (Blueprint $table): void {
             $table->id();
             $table->unsignedBigInteger('user_id')->comment('for b2b entities only');
             $table->string('business_name')->nullable();

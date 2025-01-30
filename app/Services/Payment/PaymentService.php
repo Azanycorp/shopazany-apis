@@ -17,7 +17,7 @@ class PaymentService
 {
     use HttpResponse;
 
-    protected $chargeCardService;
+    protected \App\Services\Payment\AuthorizeNet\ChargeCardService $chargeCardService;
 
     public function __construct(ChargeCardService $chargeCardService)
     {
@@ -57,7 +57,6 @@ class PaymentService
                     Log::warning('Unknown payment type', ['payment_type' => $paymentType]);
                     break;
             }
-
         }
 
         return response()->json(['status' => true], 200);
@@ -82,16 +81,19 @@ class PaymentService
 
     public function authorizeNetCard($request)
     {
+        if ($request->type == "b2b") {
+            return $this->chargeCardService->processB2BPayment($request->all());
+        }
         return $this->chargeCardService->processPayment($request->all());
     }
 
     public function getPaymentMethod($countryId)
     {
-        $services = ModelPaymentService::whereHas('countries', function ($q) use ($countryId) {
+        $services = ModelPaymentService::whereHas('countries', function ($q) use ($countryId): void {
             $q->where('country_id', $countryId);
         })->with('countries')->get();
 
-        $data = $services->map(function ($service) {
+        $data = $services->map(function ($service): array {
             return [
                 'id' => $service->id,
                 'name' => $service->name,
@@ -101,9 +103,4 @@ class PaymentService
 
         return $this->success($data, "Payment methods");
     }
-
-
 }
-
-
-

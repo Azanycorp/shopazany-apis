@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 
 class AdminProductController extends Controller
 {
-    protected $service;
+    protected \App\Services\Admin\ProductService $service;
 
     public function __construct(ProductService $service)
     {

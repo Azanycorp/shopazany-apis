@@ -14,7 +14,7 @@ class CategoryController extends Controller
 {
     const MESSAGE = '403 Forbidden';
 
-    protected $service;
+    protected \App\Services\User\CategoryService $service;
 
     public function __construct(CategoryService $categoryService)
     {

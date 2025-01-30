@@ -28,8 +28,8 @@ class AuthGates
                 }
             }
             
-            collect($permissions)->unique()->each(function ($permission) {
-                Gate::define($permission, function($user) {
+            collect($permissions)->unique()->each(function ($permission): void {
+                Gate::define($permission, function($user): true {
                     return true;
                 });
             });

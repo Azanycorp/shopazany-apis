@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('b2b_product_sub_categories', function (Blueprint $table) {
+        Schema::create('b2b_product_sub_categories', function (Blueprint $table): void {
             $table->id();
             $table->unsignedBigInteger('category_id');
             $table->string('name');

@@ -11,33 +11,24 @@ class RewardPointService
 
     public function addPoints($request)
     {
-        try {
-
-            $name = strtolower(str_replace(' ', '_', $request->name));
-
-            $existingAction = Action::where('name', $name)->first();
-
-            if ($existingAction) {
-                return $this->error(null, "The action with this name already exists.", 409);
-            }
-
-            Action::create([
-                'name' => $request->name,
-                'slug' => $name,
-                'points' => $request->points
-            ]);
-
-            return $this->success(null, "Added successfully");
-        } catch (\Throwable $th) {
-            throw $th;
+        $name = strtolower(str_replace(' ', '_', $request->name));
+        $existingAction = Action::where('name', $name)->first();
+        if ($existingAction) {
+            return $this->error(null, "The action with this name already exists.", 409);
         }
+        Action::create([
+            'name' => $request->name,
+            'slug' => $name,
+            'points' => $request->points
+        ]);
+        return $this->success(null, "Added successfully");
     }
 
     public function getPoints()
     {
         $actions = Action::select('id', 'name', 'slug', 'points')->get();
 
-        $data = $actions->map(function($action) {
+        $data = $actions->map(function($action): array {
             return [
                 'id' => $action->id,
                 'name' => $action->name,

@@ -7,7 +7,6 @@ use App\Models\Cart;
 use App\Models\User;
 use App\Enum\UserLog;
 use App\Models\Order;
-use App\Enum\RfqStatus;
 use App\Models\Payment;
 use App\Models\Product;
 use App\Models\B2bOrder;
@@ -15,6 +14,7 @@ use App\Enum\OrderStatus;
 use App\Enum\PaymentType;
 use App\Models\B2BProduct;
 use App\Models\UserWallet;
+use App\Mail\B2BOrderEmail;
 use Illuminate\Support\Str;
 use App\Mail\SellerOrderMail;
 use App\Models\Configuration;
@@ -25,13 +25,14 @@ use App\Actions\PaymentLogAction;
 use Illuminate\Support\Facades\DB;
 use App\Models\UserShippingAddress;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class PaystackService
 {
-    public static function handleRecurringCharge($event, $status)
+    public static function handleRecurringCharge($event, $status): void
     {
         try {
-            DB::transaction(function () use ($event, $status) {
+            DB::transaction(function () use ($event, $status): void {
 
                 $paymentData = $event['data'];
 
@@ -95,10 +96,13 @@ class PaystackService
         }
     }
 
-    public static function handlePaymentSuccess($event, $status)
+    public static function handlePaymentSuccess($event, $status): void
     {
+        $paymentData = null;
+        $user = null;
+
         try {
-            DB::transaction(function () use ($event, $status) {
+            DB::transaction(function () use ($event, $status): void {
 
                 $paymentData = $event['data'];
                 $userId = $paymentData['metadata']['user_id'];
@@ -209,18 +213,15 @@ class PaystackService
         }
     }
 
-    public static function handleB2BPaymentSuccess($event, $status)
+    public static function handleB2BPaymentSuccess($event, $status): void
     {
-
-
         try {
-            DB::transaction(function () use ($event, $status) {
+            DB::transaction(function () use ($event, $status): void {
                 $paymentData = $event['data'];
                 $userId = $paymentData['metadata']['user_id'];
                 $rfqId = $paymentData['metadata']['rfq_id'];
                 $method = $paymentData['metadata']['payment_method'];
                 $ref = $paymentData['reference'];
-                $payment_type = $paymentData['metadata']['payment_type'];
                 $amount = $paymentData['amount'];
                 $formattedAmount = number_format($amount / 100, 2, '.', '');
                 $channel = $paymentData['channel'];
@@ -253,7 +254,7 @@ class PaystackService
                     'type' => PaymentType::B2BUSERORDER,
                 ];
 
-                $payment = (new PaymentLogAction($data, $paymentData, $method, $status))->execute();
+                (new PaymentLogAction($data, $paymentData, $method, $status))->execute();
 
                 $rfq = Rfq::findOrFail($rfqId);
                 $seller = User::findOrFail($rfq->seller_id);
@@ -264,19 +265,22 @@ class PaystackService
                     'seller_id' => $rfq->seller_id,
                     'product_id' => $rfq->product_id,
                     'product_quantity' => $rfq->product_quantity,
-                    'order_no' => $orderNo = self::orderNo(),
+                    'order_no' => $orderNo,
                     'product_data' => $product,
-                    'amount' => $amount,
+                    'total_amount' => $amount,
                     'payment_method' => $method,
                     'payment_status' => OrderStatus::PAID,
                     'status' => OrderStatus::PENDING,
                 ]);
 
-                $orderedItems[] = [
+
+                $orderedItems = [
                     'product_name' => $product->name,
                     'image' => $product->front_image,
                     'quantity' => $rfq->product_quantity,
                     'price' => $rfq->total_amount,
+                    'buyer_name' => $user->first_name . ' ' . $user->last_name,
+                    'order_number' => $orderNo,
                 ];
                 $product->quantity -= $rfq->product_quantity;
                 $product->sold += $rfq->product_quantity;
@@ -285,23 +289,19 @@ class PaystackService
                 $config = Configuration::first();
 
                 if ($config) {
-                    $seller_perc = $config->seller_perc ?? 0;
-                    $credit = ($seller_perc / 100) * $amount;
-                    $wallet = UserWallet::where('user_id', $seller->id)->first();
-                    if ($wallet) {
-                        $wallet->master_wallet += $credit;
-                        $wallet->save();
-                    } else {
-                        UserWallet::create([
-                            'user_id' => $seller->id,
-                            'master_wallet' => $credit,
-                        ]);
-                    }
-                }
-                $rfq->delete();
-                self::sendOrderConfirmationEmail($user, $orderedItems, $orderNo, $formattedAmount);
-                self::sendSellerOrderEmail($product->user, $orderedItems, $orderNo, $formattedAmount);
+                    $sellerPerc = $config->seller_perc ?? 0;
+                    $credit = ($sellerPerc / 100) * $amount;
 
+                    $wallet = UserWallet::firstOrNew(['seller_id' => $seller->id]);
+                    $wallet->master_wallet = ($wallet->master_wallet ?? 0) + $credit;
+                    $wallet->save();
+                }
+
+                $rfq->update([
+                    'payment_status' => OrderStatus::PAID,
+                    'status' => OrderStatus::COMPLETED
+                ]);
+                send_email($user->email, new B2BOrderEmail($orderedItems));
                 (new UserLogAction(
                     request(),
                     UserLog::PAYMENT,
@@ -311,8 +311,6 @@ class PaystackService
                 ))->run();
             });
         } catch (\Exception $e) {
-            $msg = 'Error in handlePaymentSuccess: ' . $e->getMessage();
-
             // (new UserLogAction(
             //     request(),
             //     UserLog::PAYMENT,
@@ -325,7 +323,7 @@ class PaystackService
         }
     }
 
-    private static function orderNo()
+    private static function orderNo(): string
     {
         do {
             $uniqueOrderNumber = 'ORD-' . now()->timestamp . '-' . Str::random(8);
@@ -334,12 +332,12 @@ class PaystackService
         return $uniqueOrderNumber;
     }
 
-    private static function sendSellerOrderEmail($seller, $order, $orderNo, $totalAmount)
+    private static function sendSellerOrderEmail($seller, $order, $orderNo, string $totalAmount): void
     {
         defer(fn() => send_email($seller->email, new SellerOrderMail($seller, $order, $orderNo, $totalAmount)));
     }
 
-    private static function sendOrderConfirmationEmail($user, $orderedItems, $orderNo, $totalAmount)
+    private static function sendOrderConfirmationEmail($user, $orderedItems, $orderNo, string $totalAmount): void
     {
         defer(fn() => send_email($user->email, new CustomerOrderMail($user, $orderedItems, $orderNo, $totalAmount)));
     }

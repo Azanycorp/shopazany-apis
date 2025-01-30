@@ -7,7 +7,7 @@ use Exception;
 class CurrencyConversionService
 {
     protected $appId;
-    protected $url;
+    protected string $url;
 
     public function __construct()
     {

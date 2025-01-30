@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 
 class AdminAuthController extends Controller
 {
-    protected $service;
+    protected \App\Services\Admin\AuthService $service;
 
     public function __construct(AuthService $authService)
     {

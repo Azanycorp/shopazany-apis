@@ -26,7 +26,7 @@ class ProductImport implements ToCollection, WithHeadingRow, WithChunkReading, W
     /**
     * @param Collection $collection
     */
-    public function collection(Collection $rows)
+    public function collection(Collection $rows): void
     {
         foreach ($rows as $row)
         {
@@ -63,28 +63,14 @@ class ProductImport implements ToCollection, WithHeadingRow, WithChunkReading, W
     {
         $getCategory = Category::where('name', $category)->first();
 
-        if(!$getCategory){
-            $category = null;
-
-        } else {
-            $category = $getCategory;
-        }
-
-        return $category;
+        return $getCategory ? $getCategory : null;
     }
 
     private function getSubCategory($subCategory)
     {
         $getSubCategory = SubCategory::where('name', $subCategory)->first();
 
-        if(!$getSubCategory){
-            $subCategory = null;
-
-        } else {
-            $subCategory = $getSubCategory;
-        }
-
-        return $subCategory;
+        return $getSubCategory ? $getSubCategory : null;
     }
 
     public function chunkSize(): int

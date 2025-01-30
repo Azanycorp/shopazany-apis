@@ -51,7 +51,7 @@ class HomeService
 
         $products = $query->get();
 
-        $products->each(function ($product) {
+        $products->each(function ($product): void {
             $product->currency = $product->shopCountry->currency ?? null;
             unset($product->shopCountry);
         });
@@ -59,7 +59,7 @@ class HomeService
         return $this->success($products, "Best selling products");
     }
 
-    public function allProducts()
+    public function allProducts(): array
     {
         $countryId = request()->query('country_id');
 
@@ -72,6 +72,8 @@ class HomeService
                 'color',
                 'unit',
                 'size',
+                'orders',
+                'productReviews',
             ])
             ->where('status', ProductStatus::ACTIVE);
 
@@ -109,6 +111,8 @@ class HomeService
                 'color',
                 'unit',
                 'size',
+                'orders',
+                'productReviews',
             ])
             ->where('is_featured', true)
             ->where('status', ProductStatus::ACTIVE);
@@ -136,6 +140,8 @@ class HomeService
                 'color',
                 'unit',
                 'size',
+                'orders',
+                'productReviews',
             ]);
 
         if ($countryId) {
@@ -166,7 +172,7 @@ class HomeService
             'productReviews.user',
             'productimages',
             'shopCountry',
-            'user.userCountry' => function($query) {
+            'user.userCountry' => function($query): void {
                 $query->with('shopCountry:country_id,flag');
             }
         ])
@@ -217,7 +223,7 @@ class HomeService
 
     public function categorySlug($slug)
     {
-        $category = Category::with(['products' => function ($query) {
+        $category = Category::with(['products' => function ($query): void {
             $query->where('status', ProductStatus::ACTIVE)
                   ->select('id', 'name', 'slug', 'price', 'image', 'category_id')
                   ->withCount('productReviews as total_reviews')
@@ -238,7 +244,7 @@ class HomeService
     {
         $products = Product::where('status', ProductStatus::ACTIVE)
         ->select(['id', 'name', 'slug', 'description', 'discount_price', 'price', 'image', 'country_id'])
-        ->with(['shopCountry' => function ($query) {
+        ->with(['shopCountry' => function ($query): void {
             $query->select('country_id', 'currency');
         }])
         ->take(50)
@@ -246,7 +252,7 @@ class HomeService
         ->shuffle()
         ->take(6);
 
-        $products->each(function ($product) {
+        $products->each(function ($product): void {
             $product->currency = $product->shopCountry->currency ?? null;
             unset($product->shopCountry);
         });
@@ -296,16 +302,16 @@ class HomeService
         $search = request()->input('search');
 
         $user = User::with([
-            'products' => function ($query) use ($search) {
+            'products' => function ($query) use ($search): void {
                 if ($search) {
-                    $query->where(function ($q) use ($search) {
+                    $query->where(function ($q) use ($search): void {
                         $q->where('name', 'like', '%' . $search . '%')
                           ->orWhere('description', 'like', '%' . $search . '%');
                     });
                 }
                 $query->with(['category', 'subCategory']);
                 $query->withCount(['productReviews']);
-                $query->withCount(['orders as item_sold' => function ($query) {
+                $query->withCount(['orders as item_sold' => function ($query): void {
                     $query->where('status', OrderStatus::DELIVERED);
                 }]);
             }
@@ -328,8 +334,8 @@ class HomeService
 
         $user = User::where('uuid', $uuid)
             ->with([
-                'products' => function ($query) use ($search) {
-                    $query->with(['category' => function ($q) use($search) {
+                'products' => function ($query) use ($search): void {
+                    $query->with(['category' => function ($q) use($search): void {
                         $q->select(['id', 'name', 'slug', 'image']);
 
                         if ($search) {
@@ -364,13 +370,13 @@ class HomeService
         $currentPage = request()->input('page', 1);
 
         $user = User::where('uuid', $uuid)
-            ->with(['products' => function ($query) use ($search) {
-                $query->with(['productReviews' => function ($q) use ($search) {
+            ->with(['products' => function ($query) use ($search): void {
+                $query->with(['productReviews' => function ($q) use ($search): void {
                     if ($search) {
                         $q->where('review', 'like', '%' . $search . '%');
                     }
 
-                    $q->with(['user' => function ($userQuery) {
+                    $q->with(['user' => function ($userQuery): void {
                         $userQuery->select('id', 'first_name', 'last_name');
                     }]);
 

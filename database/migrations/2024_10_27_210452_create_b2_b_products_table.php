@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('b2b_products', function (Blueprint $table) {
+        Schema::create('b2b_products', function (Blueprint $table): void {
             $table->id();
             $table->unsignedBigInteger('user_id');
             $table->string('name');
@@ -32,7 +32,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('b2b_product_images', function (Blueprint $table) {
+        Schema::create('b2b_product_images', function (Blueprint $table): void {
             $table->id();
             $table->unsignedBigInteger('b2b_product_id');
             $table->string('image');

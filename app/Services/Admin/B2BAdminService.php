@@ -152,21 +152,13 @@ class B2BAdminService
         }
 
         $url = uploadImage($request, 'flag', $folder);
-
-        try {
-
-            ShopCountry::create([
-                'country_id' => $country->id,
-                'name' => $country->name,
-                'flag' => $url,
-                'currency' => $request->currency,
-            ]);
-
-            return $this->success(null, "Added successfully");
-
-        } catch (\Throwable $th) {
-            throw $th;
-        }
+        ShopCountry::create([
+            'country_id' => $country->id,
+            'name' => $country->name,
+            'flag' => $url,
+            'currency' => $request->currency,
+        ]);
+        return $this->success(null, "Added successfully");
     }
 
     public function getShopByCountry()

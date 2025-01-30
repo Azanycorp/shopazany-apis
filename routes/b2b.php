@@ -13,11 +13,11 @@ use App\Http\Controllers\Api\B2B\B2BAccountController;
 // })->middleware('auth:sanctum');
 
 // B2B
-Route::middleware(['throttle:apis'])->group(function () {
+Route::middleware(['throttle:apis'])->group(function (): void {
 
     Route::prefix('b2b/connect')
         ->controller(B2BAccountController::class)
-        ->group(function () {
+        ->group(function (): void {
             Route::post('/login', 'login');
             Route::post('/login/verify', 'loginVerify');
             Route::post('/seller/signup', 'signup');
@@ -31,26 +31,31 @@ Route::middleware(['throttle:apis'])->group(function () {
             Route::post('/buyer/signup', 'buyerOnboarding');
         });
 
-    Route::prefix('b2b')->controller(B2BController::class)->group(function () {
+    Route::prefix('b2b')->controller(B2BController::class)->group(function (): void {
         Route::post('/business/information', 'businessInformation');
         Route::get('/products', 'getProducts');
+        Route::get('/product-categories', 'allCategories');
+        Route::get('/product-by-category/{slug}', 'categoryBySlug');
+        Route::get('/best-selling-products', 'bestSellingProduct');
+        Route::get('/featured-products', 'featuredProduct');
+        Route::post('/search-products', 'searchProduct');
         Route::get('/product/{slug}', 'getProductDetail');
     });
 });
 
-Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function () {
+Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function (): void {
     // Seller
-    Route::group(['middleware' => 'b2b_seller.auth', 'prefix' => 'seller'], function () {
+    Route::group(['middleware' => 'b2b_seller.auth', 'prefix' => 'seller'], function (): void {
 
-        Route::controller(B2BSellerController::class)->group(function () {
+        Route::controller(B2BSellerController::class)->group(function (): void {
             //dashboard
             Route::get('/dashboard', 'dashboard');
             Route::get('/withdrawals', 'withdrawalHistory');
-            Route::post('/withdrawal-request','makeWithdrawalRequest');
+            Route::post('/withdrawal-request', 'makeWithdrawalRequest');
             Route::get('/earning-report', 'getEarningReport');
 
             // rfqs
-            Route::prefix('rfq')->group(function () {
+            Route::prefix('rfq')->group(function (): void {
                 Route::get('/', 'allRfq');
                 Route::get('/details/{id}', 'rfqDetails');
                 Route::post('/mark-as-shipped', 'shippedRfq');
@@ -62,15 +67,16 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function () {
             });
 
             //orders
-            Route::prefix('order')->group(function () {
+            Route::prefix('order')->group(function (): void {
                 Route::get('/details/{id}', 'orderDetails');
             });
             //payment method
-            Route::prefix('withdrawal-method')->group(function () {
+            Route::prefix('withdrawal-method')->group(function (): void {
                 Route::get('/', 'allWithdrawalMethods');
                 Route::post('/add', 'addWithdrawalMethod');
                 Route::get('/details/{id}', 'getWithdrawalMethod');
                 Route::post('/update/{id}', 'updateWithdrawalMethod');
+                Route::post('/make-default', 'makeDefaultAccount');
                 Route::delete('/delete/{id}', 'deleteWithdrawalMethod');
             });
             //complaints log
@@ -83,7 +89,7 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function () {
             Route::post('/edit-company', 'editCompany');
 
             // Product
-            Route::prefix('product')->group(function () {
+            Route::prefix('product')->group(function (): void {
                 Route::post('/add', 'addProduct');
                 Route::get('/analytic/{user_id}', 'getAnalytics');
                 Route::get('/details/{product_id}/{user_id}', 'getProductById');
@@ -95,7 +101,7 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function () {
             });
 
             // Shipping
-            Route::prefix('shipping')->group(function () {
+            Route::prefix('shipping')->group(function (): void {
                 Route::post('/', 'addShipping');
                 Route::get('/{user_id}', 'getAllShipping');
                 Route::get('/{user_id}/{shipping_id}', 'getShippingById');
@@ -107,7 +113,7 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function () {
     });
 
     // Buyer
-    Route::group(['middleware' => 'b2b_buyer.auth', 'prefix' => 'buyer', 'controller' => B2BBuyerController::class], function () {
+    Route::group(['middleware' => 'b2b_buyer.auth', 'prefix' => 'buyer', 'controller' => B2BBuyerController::class], function (): void {
         Route::post('request/refund', 'requestRefund');
         Route::post('add-quote', 'requestQuote');
         Route::get('quotes', 'allQuotes');
@@ -119,7 +125,6 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function () {
         Route::get('rfq-details/{id}', 'getRfqDetails');
         Route::post('request-review', 'reviewRequest');
         Route::post('add-review', 'addReview');
-        Route::post('accept-quote', 'acceptQuote');
         Route::post('/add-to-wish', 'addTowishList');
         Route::post('/like-product', 'likeProduct');
         Route::get('/wish-list', 'wishList');
@@ -133,5 +138,16 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function () {
         Route::post('/change-2fa', 'change2Fa');
         Route::get('/company-info', 'companyInfo');
         Route::post('/edit-company', 'editCompany');
+
+
+        // Shipping address
+        Route::prefix('shipping-address')->group(function (): void {
+            Route::get('/', 'allShippingAddress');
+            Route::post('/add', 'addShippingAddress');
+            Route::get('/details/{id}', 'getShippingAddress');
+            Route::post('/update/{id}', 'updateShippingAddress');
+            Route::post('/make-default/{id}', 'setDefaultAddress');
+            Route::delete('/delete/{id}', 'deleteShippingAddress');
+        });
     });
 });

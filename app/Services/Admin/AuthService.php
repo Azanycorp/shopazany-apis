@@ -32,11 +32,11 @@ class AuthService
                 'id' => $user->id,
                 'token' => $token->plainTextToken,
                 'expires_at' => $token->accessToken->expires_at,
-                'role' => $user->roles ? $user->roles->map(function ($role) {
+                'role' => $user->roles ? $user->roles->map(function ($role): array {
                     return [
                         'id' => $role?->id,
                         'name' => $role?->name,
-                        'permissions' => $role?->permissions->flatMap(function ($permission) {
+                        'permissions' => $role?->permissions->flatMap(function ($permission): array {
                             return [$permission->name];
                         })->toArray()
                     ];
@@ -74,7 +74,7 @@ class AuthService
 
         $status = Password::broker('admins')->reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),
-            function ($user) use ($request) {
+            function ($user) use ($request): void {
                 $user->forceFill([
                     'password' => bcrypt($request->password),
                 ])->save();

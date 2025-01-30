@@ -10,12 +10,13 @@ use App\Services\Payment\PaymentService;
 use App\Http\Requests\AuthorizeNetCardRequest;
 use App\Services\Payment\HandlePaymentService;
 use App\Services\Payment\PaymentDetailsService;
+use App\Http\Requests\B2BAuthorizeNetCardRequest;
 use App\Services\Payment\PaystackPaymentProcessor;
 use App\Services\Payment\B2BPaystackPaymentProcessor;
 
 class PaymentController extends Controller
 {
-    protected $service;
+    protected \App\Services\Payment\PaymentService $service;
 
     public function __construct(PaymentService $service)
     {
@@ -24,16 +25,18 @@ class PaymentController extends Controller
 
     public function processPayment(PaymentRequest $request)
     {
-        match ($request->payment_method) {
-            PaymentType::PAYSTACK => $paymentProcessor = new PaystackPaymentProcessor(),
-            PaymentType::B2B_PAYSTACK => $paymentProcessor = new B2BPaystackPaymentProcessor()
+        $paymentProcessor = match ($request->payment_method) {
+            PaymentType::PAYSTACK => new PaystackPaymentProcessor(),
+            PaymentType::B2B_PAYSTACK => new B2BPaystackPaymentProcessor(),
+            default => throw new \Exception("Unsupported payment method"),
         };
 
         $paymentService = new HandlePaymentService($paymentProcessor);
 
-        match ($request->payment_method) {
-            PaymentType::PAYSTACK => $paymentDetails = PaymentDetailsService::paystackPayDetails($request),
-            PaymentType::B2B_PAYSTACK => $paymentDetails = PaymentDetailsService::b2bPaystackPayDetails($request),
+        $paymentDetails = match ($request->payment_method) {
+            PaymentType::PAYSTACK => PaymentDetailsService::paystackPayDetails($request),
+            PaymentType::B2B_PAYSTACK => PaymentDetailsService::b2bPaystackPayDetails($request),
+            default => throw new \Exception("Unsupported payment method"),
         };
 
         return $paymentService->process($paymentDetails);
@@ -50,6 +53,11 @@ class PaymentController extends Controller
     }
 
     public function authorizeNetCard(AuthorizeNetCardRequest $request)
+    {
+        return $this->service->authorizeNetCard($request);
+    }
+
+    public function b2bAuthorizeNetCard(B2BAuthorizeNetCardRequest $request)
     {
         return $this->service->authorizeNetCard($request);
     }

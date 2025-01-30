@@ -24,12 +24,10 @@ class SignUpTest extends TestCase
 
     /**
      * Test successful user signup.
-     *
-     * @return void
      */
-    public function test_user_can_sign_up_successfully()
+    public function test_user_can_sign_up_successfully(): void
     {
-        $password = $this->faker->password(12);
+        $password = 'ValidPass123!@#';
         $email = 'test'. rand(00, 99) . '@gmail.com';
 
         $payload = [
@@ -56,10 +54,8 @@ class SignUpTest extends TestCase
 
     /**
      * Test signup validation errors.
-     *
-     * @return void
      */
-    public function test_user_signup_validation_errors()
+    public function test_user_signup_validation_errors(): void
     {
         $payload = [
             'first_name' => '',
@@ -78,10 +74,8 @@ class SignUpTest extends TestCase
 
     /**
      * Test referral code functionality.
-     *
-     * @return void
      */
-    public function test_user_signup_with_referral_code()
+    public function test_user_signup_with_referral_code(): void
     {
         User::factory()->create([
             'referrer_code' => 'REF1234'

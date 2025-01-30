@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use App\Enum\PaymentType;
 use App\Enum\UserLog;
 use App\Enum\UserStatus;
 use App\Trait\HttpResponse;
@@ -41,6 +40,7 @@ abstract class Controller
         if($user->referrer_code !== null){
             return $this->error(null, 'Account has been created', 400);
         }
+        return null;
     }
 
     protected function userAuth()
@@ -48,7 +48,7 @@ abstract class Controller
         return Auth::user();
     }
 
-    public function logUserAction($request, $action, $description, $response, $user = null)
+    public function logUserAction($request, $action, $description, $response, $user = null): void
     {
         (new UserLogAction($request, $action, $description, $response, $user))->run();
     }
@@ -68,18 +68,18 @@ abstract class Controller
         return Storage::disk('s3')->url($path);
     }
 
-    protected function exportB2bProduct($userId,$data)
+    protected function exportB2bProduct(string $userId,$data)
     {
         $fileName = 'products_' . time() . '.xlsx';
         $path = 'public';
 
         if(App::environment('production')) {
-            $folderPath = 'prod/exports/' . 'user_'. $userId . '/';
+            $folderPath = 'prod/exports/user_'. $userId . '/';
             $fileName = $folderPath . 'products_' . time() . '.xlsx';
             $path = 's3';
 
         } elseif(App::environment('staging')) {
-            $folderPath = 'stag/exports/' . 'user_'. $userId . '/';
+            $folderPath = 'stag/exports/user_'. $userId . '/';
             $fileName = $folderPath . 'products_' . time() . '.xlsx';
             $path = 's3';
         }
@@ -90,18 +90,19 @@ abstract class Controller
 
         return $this->success(['file_url' => $fileUrl], "Product export successful.");
     }
-    protected function exportProduct($userId)
+
+    protected function exportProduct(string $userId)
     {
         $fileName = 'products_' . time() . '.xlsx';
         $path = 'public';
 
         if(App::environment('production')) {
-            $folderPath = 'prod/exports/' . 'user_'. $userId . '/';
+            $folderPath = 'prod/exports/user_'. $userId . '/';
             $fileName = $folderPath . 'products_' . time() . '.xlsx';
             $path = 's3';
 
         } elseif(App::environment('staging')) {
-            $folderPath = 'stag/exports/' . 'user_'. $userId . '/';
+            $folderPath = 'stag/exports/user_'. $userId . '/';
             $fileName = $folderPath . 'products_' . time() . '.xlsx';
             $path = 's3';
         }
@@ -213,8 +214,8 @@ abstract class Controller
             'user_id' => $user->id,
             'user_type' => $user->type,
             'has_signed_up' => true,
-            'is_affiliate_member' => $user->is_affiliate_member === 1 ? true : false,
-            'two_factor_enabled' => $user->two_factor_enabled === 1 ? true : false,
+            'is_affiliate_member' => $user->is_affiliate_member === 1,
+            'two_factor_enabled' => $user->two_factor_enabled === 1,
             'token' => $token->plainTextToken,
             'expires_at' => $token->accessToken->expires_at,
         ], 'Login successful.');
@@ -234,23 +235,23 @@ abstract class Controller
         return $response;
     }
 
-    protected function b2bExportProduct($userId)
+    protected function b2bExportProduct(string $userId)
     {
         $fileName = 'products_' . time() . '.xlsx';
         $path = 'public';
 
         if(App::environment('production')) {
-            $folderPath = 'prod/exports/' . 'user_'. $userId . '/';
+            $folderPath = 'prod/exports/user_'. $userId . '/';
             $fileName = $folderPath . 'products_' . time() . '.xlsx';
             $path = 's3';
 
         } elseif(App::environment('staging')) {
-            $folderPath = 'stag/exports/' . 'user_'. $userId . '/';
+            $folderPath = 'stag/exports/user_'. $userId . '/';
             $fileName = $folderPath . 'products_' . time() . '.xlsx';
             $path = 's3';
         }
 
-        Excel::store(new B2BProductExport($userId,$data), $fileName, $path);
+        Excel::store(new B2BProductExport($userId, $data), $fileName, $path);
 
         $fileUrl = ($path === 's3') ? Storage::disk('s3')->url($fileName) : asset('storage/' . $fileName);
 

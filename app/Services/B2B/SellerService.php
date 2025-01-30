@@ -4,42 +4,37 @@ namespace App\Services\B2B;
 
 use App\Models\Rfq;
 use App\Models\User;
-use App\Enum\UserLog;
 use App\Enum\UserType;
 use App\Models\Payout;
-use App\Enum\UserStatus;
 use App\Models\B2bOrder;
 use App\Enum\OrderStatus;
 use App\Enum\PaymentType;
 use App\Models\B2BProduct;
 use App\Models\RfqMessage;
 use App\Models\UserWallet;
+use App\Mail\B2BOrderEmail;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
 use App\Models\Configuration;
-use App\Models\PaymentMethod;
-use App\Actions\UserLogAction;
 use App\Enum\WithdrawalStatus;
 use App\Imports\ProductImport;
 use App\Models\B2bOrderRating;
 use Illuminate\Support\Carbon;
 use App\Models\B2bOrderFeedback;
-use App\Actions\PaymentLogAction;
 use App\Imports\B2BProductImport;
 use Illuminate\Support\Facades\DB;
 use App\Models\B2bWithdrawalMethod;
-use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Http\Resources\SellerResource;
-use App\Http\Resources\PaymentResource;
 use Illuminate\Support\Facades\Storage;
 use App\Models\B2BSellerShippingAddress;
 use App\Http\Resources\B2BProductResource;
 use App\Repositories\B2BProductRepository;
 use App\Http\Resources\SellerProfileResource;
+use App\Http\Resources\B2BSellerProfileResource;
 use App\Repositories\B2BSellerShippingRepository;
 use App\Http\Resources\B2BSellerShippingAddressResource;
 
@@ -47,8 +42,8 @@ class SellerService extends Controller
 {
     use HttpResponse;
 
-    protected $b2bProductRepository;
-    protected $b2bSellerShippingRepository;
+    protected \App\Repositories\B2BProductRepository $b2bProductRepository;
+    protected \App\Repositories\B2BSellerShippingRepository $b2bSellerShippingRepository;
 
     public function __construct(
         B2BProductRepository $b2bProductRepository,
@@ -61,56 +56,45 @@ class SellerService extends Controller
     public function businessInformation($request)
     {
         $user = User::with('businessInformation')->findOrFail($request->user_id);
-
-        try {
-
-            $user->update([
-                'first_name' => $request->first_name,
-                'last_name' => $request->last_name,
-                'middlename' => $request->middlename,
-                'country' => $request->country_id,
-            ]);
-
-            $folder = folderName('document/businessreg');
-
-            $businessDoc = $request->hasFile('business_reg_document') ? uploadImage($request, 'business_reg_document', $folder) : null;
-
-            $identifyTypeDoc = null;
-            if ($request->identification_type && $request->hasFile('identification_type_document')) {
-                $fld = folderName('document/identifytype');
-                $identifyTypeDoc = uploadImage($request, 'identification_type_document', $fld);
-            }
-
-            $user->businessInformation()->create([
-                'business_location' => $request->business_location,
-                'business_type' => $request->business_type,
-                'business_name' => $request->business_name,
-                'business_reg_number' => $request->business_reg_number,
-                'business_phone' => $request->business_phone,
-                'country_id' => $request->country_id,
-                'city' => $request->city,
-                'address' => $request->address,
-                'zip' => $request->zip,
-                'state' => $request->state,
-                'apartment' => $request->apartment,
-                'business_reg_document' => $businessDoc,
-                'identification_type' => $request->identification_type,
-                'identification_type_document' => $identifyTypeDoc,
-                'agree' => $request->agree,
-            ]);
-
-            return $this->success(null, 'Created successfully');
-        } catch (\Throwable $th) {
-            throw $th;
+        $user->update([
+            'first_name' => $request->first_name,
+            'last_name' => $request->last_name,
+            'middlename' => $request->middlename,
+            'country' => $request->country_id,
+        ]);
+        $folder = folderName('document/businessreg');
+        $businessDoc = $request->hasFile('business_reg_document') ? uploadImage($request, 'business_reg_document', $folder) : null;
+        $identifyTypeDoc = null;
+        if ($request->identification_type && $request->hasFile('identification_type_document')) {
+            $fld = folderName('document/identifytype');
+            $identifyTypeDoc = uploadImage($request, 'identification_type_document', $fld);
         }
+        $user->businessInformation()->create([
+            'business_location' => $request->business_location,
+            'business_type' => $request->business_type,
+            'business_name' => $request->business_name,
+            'business_reg_number' => $request->business_reg_number,
+            'business_phone' => $request->business_phone,
+            'country_id' => $request->country_id,
+            'city' => $request->city,
+            'address' => $request->address,
+            'zip' => $request->zip,
+            'state' => $request->state,
+            'apartment' => $request->apartment,
+            'business_reg_document' => $businessDoc,
+            'identification_type' => $request->identification_type,
+            'identification_type_document' => $identifyTypeDoc,
+            'agree' => $request->agree,
+        ]);
+        return $this->success(null, 'Created successfully');
     }
 
     public function profile()
     {
-        $auth = userAuth();
+        $authId = userAuthId();
 
-        $user = User::findOrFail($auth->id);
-        $data = new SellerProfileResource($user);
+        $user = User::findOrFail($authId);
+        $data = new B2BSellerProfileResource($user);
 
         return $this->success($data, 'Seller profile');
     }
@@ -142,9 +126,8 @@ class SellerService extends Controller
                 'password' => Hash::make($request->password),
             ]);
             return $this->success(null, 'Password Successfully Updated');
-        } else {
-            return $this->error(null, 'Old Password did not match', 422);
         }
+        return $this->error(null, 'Old Password did not match', 422);
     }
 
     public function editCompany($request)
@@ -183,15 +166,12 @@ class SellerService extends Controller
         switch ($data->type) {
             case 'product':
                 return $this->exportB2bProduct($userId, $data);
-                break;
 
             case 'order':
                 return "None yet";
-                break;
 
             default:
                 return "Type not found";
-                break;
         }
     }
 
@@ -252,7 +232,7 @@ class SellerService extends Controller
                 'unit_price' => $request->unit,
                 'quantity' => $request->quantity,
                 'availability_quantity' => $request->quantity,
-                'default_currency' => $request->default_currency,
+                'default_currency' => $user->default_currency,
                 'fob_price' => $request->fob_price,
                 'status' => 'active',
                 'country_id' => is_int($user->country) ? $user->country : 160,
@@ -270,10 +250,9 @@ class SellerService extends Controller
                     ]);
                 }
             }
-
             return $this->success(null, 'Product added successfully', 201);
-        } catch (\Throwable $th) {
-            throw $th;
+        } catch (\Exception $e) {
+            return $this->error(null, $e->getMessage(), 500);
         }
     }
 
@@ -341,21 +320,21 @@ class SellerService extends Controller
             $url = $prod->front_image;
         }
 
-        $data = (array)[
+        $data = [
             'user_id' => $user->id,
             'name' => $request->name ?? $prod->name,
             'slug' => $slug,
-            'category_id' => $request->category_id,
-            'sub_category_id' => $request->sub_category_id,
-            'keywords' => $request->keywords,
-            'description' => $request->description,
+            'category_id' => $request->category_id ?? $prod->category_id,
+            'sub_category_id' => $request->sub_category_id ?? $prod->sub_category_id,
+            'keywords' => $request->keywords ?? $prod->keywords,
+            'description' => $request->description ?? $prod->description,
             'front_image' => $url,
-            'minimum_order_quantity' => $request->minimum_order_quantity,
-            'unit_price' => $request->unit,
-            'quantity' => $request->quantity,
-            'default_currency' => $request->default_currency,
-            'available_quantity' => $request->quantity - $prod->sold,
-            'fob_price' => $request->fob_price,
+            'minimum_order_quantity' => $request->minimum_order_quantity ?? $prod->minimum_order_quantity,
+            'unit_price' => $request->unit ?? $prod->unit_price,
+            'quantity' => $request->quantity ?? $prod->quantity,
+            'default_currency' => $request->default_currency ?? $prod->default_currency,
+            'availability_quantity' => $request->quantity - $prod->sold,
+            'fob_price' => $request->fob_price ?? $prod->fob_price ?? 0,
             'country_id' => $user->country ?? 160,
         ];
 
@@ -399,7 +378,7 @@ class SellerService extends Controller
         }
 
         $user = User::with(['b2bProducts.category'])
-            ->withCount(['b2bProducts', 'b2bProducts as category_count' => function ($query) {
+            ->withCount(['b2bProducts', 'b2bProducts as category_count' => function ($query): void {
                 $query->distinct('category_id');
             }])
             ->findOrFail($user_id);
@@ -426,7 +405,7 @@ class SellerService extends Controller
             return $this->error(null, "User not found", 404);
         }
 
-        $data = (array)[
+        $data = [
             'user_id' => $request->user_id,
             'address_name' => $request->address_name,
             'name' => $request->name,
@@ -481,7 +460,7 @@ class SellerService extends Controller
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $data = (array)[
+        $data = [
             'address_name' => $request->address_name,
             'name' => $request->name,
             'surname' => $request->surname,
@@ -562,7 +541,7 @@ class SellerService extends Controller
         }
 
         if ($orderNo = request()->query('order_number')) {
-            $refunds = $refunds->where('order_number', $orderNo);
+            return $refunds->where('order_number', $orderNo);
         }
 
         return $refunds;
@@ -604,16 +583,13 @@ class SellerService extends Controller
 
         switch ($data->type) {
             case 'product':
-                return $this->b2bExportProduct($userId, $data);
-                break;
+                return $this->b2bExportProduct($userId);
 
             case 'order':
                 return "None yet";
-                break;
 
             default:
                 return "Type not found";
-                break;
         }
     }
 
@@ -659,7 +635,12 @@ class SellerService extends Controller
 
     public function getOrderDetails($id)
     {
-        $order = B2bOrder::find($id);
+        return Auth::user();
+        $order = B2bOrder::with(['buyer' => function ($query): void {
+            $query->select('id', 'first_name', 'last_name')->where('type', UserType::B2B_BUYER);
+        }, 'seller' => function ($query): void {
+            $query->select('id', 'first_name', 'last_name')->where('type', UserType::B2B_SELLER);
+        },])->find($id);
         if (!$order) {
             return $this->error(null, "No record found.", 404);
         }
@@ -695,7 +676,7 @@ class SellerService extends Controller
 
     public function getRfqDetails($id)
     {
-        $rfq = Rfq::find($id);
+        $rfq = Rfq::with(['buyer','seller'])->find($id);
         if (!$rfq) {
             return $this->error(null, "No record found.", 404);
         }
@@ -775,11 +756,14 @@ class SellerService extends Controller
 
         return $this->success($rfq, 'Product marked delivered successfully');
     }
+
     public function confirmPayment($data)
     {
         $rfq = Rfq::findOrFail($data->rfq_id);
-        $seller = User::findOrFail($rfq->seller_id);
-        $product = B2BProduct::findOrFail($rfq->product_id);
+        $seller = User::select('id')->findOrFail($rfq->seller_id);
+        $buyer = User::select('id', 'email', 'first_name', 'last_name')->findOrFail($rfq->buyer_id);
+        $product = B2BProduct::select(['id', 'name', 'front_image', 'quantity', 'sold'])->findOrFail($rfq->product_id);
+
         DB::beginTransaction();
 
         try {
@@ -791,57 +775,46 @@ class SellerService extends Controller
                 'product_quantity' => $rfq->product_quantity,
                 'order_no' => 'ORD-' . now()->timestamp . '-' . Str::random(8),
                 'product_data' => $product,
-                'amount' => $amount,
+                'total_amount' => $amount,
                 'payment_method' => PaymentType::OFFLINE,
                 'payment_status' => OrderStatus::PAID,
                 'status' => OrderStatus::PENDING,
             ]);
 
-            $orderedItems[] = [
+            $orderedItems = [
                 'product_name' => $product->name,
                 'image' => $product->front_image,
                 'quantity' => $rfq->product_quantity,
                 'price' => $rfq->total_amount,
+                'buyer_name' => $buyer->first_name . ' ' . $buyer->last_name,
+                'order_number' => $order->order_no,
             ];
+
             $product->quantity -= $rfq->product_quantity;
             $product->sold += $rfq->product_quantity;
             $product->save();
 
             $config = Configuration::first();
-            if ($config) {
-                $seller_perc = $config->seller_perc ?? 0;
-                $credit = ($seller_perc / 100) * $amount;
-                $wallet = UserWallet::where('user_id', $seller->id)->first();
-                if ($wallet) {
-                    $wallet->master_wallet += $credit;
-                    $wallet->save();
-                } else {
-                    UserWallet::create([
-                        'user_id' => $seller->id,
-                        'master_wallet' => $credit,
-                    ]);
-                }
+            $sellerPercentage = $config->seller_perc ?? 0;
+            $credit = ($sellerPercentage / 100) * $amount;
+
+            if ($credit > 0) {
+                $wallet = UserWallet::firstOrNew(['seller_id' => $seller->id]);
+
+                $wallet->master_wallet = ($wallet->master_wallet ?? 0) + $credit;
+                $wallet->save();
             }
+
+            $rfq->update([
+                'payment_status' => OrderStatus::PAID,
+                'status' => OrderStatus::COMPLETED
+            ]);
             DB::commit();
-            self::sendOrderConfirmationEmail($seller, $orderedItems, $order->oder_no, $rfq->total_amount);
-            self::sendSellerOrderEmail($product->user, $orderedItems, $order->oder_no, $rfq->total_amount);
-            $rfq->delete();
-            return $this->success($rfq, 'Payment Confirmed successfully');
+            send_email($buyer->email, new B2BOrderEmail($orderedItems));
+            return $this->success($order, 'Payment Confirmed successfully');
         } catch (\Exception $e) {
             return $e;
-            DB::rollBack();
-            return $this->error(null, 'transaction failed, please try again', 500);
         }
-    }
-
-    private static function sendSellerOrderEmail($seller, $order, $orderNo, $totalAmount)
-    {
-        defer(fn() => send_email($seller->email, new SellerOrderMail($seller, $order, $orderNo, $totalAmount)));
-    }
-
-    private static function sendOrderConfirmationEmail($user, $orderedItems, $orderNo, $totalAmount)
-    {
-        defer(fn() => send_email($user->email, new CustomerOrderMail($user, $orderedItems, $orderNo, $totalAmount)));
     }
 
     public function rateOrder($data)
@@ -899,13 +872,15 @@ class SellerService extends Controller
 
         $rfqs =  Rfq::with('buyer')->where('seller_id', $currentUserId)->get();
         $payouts =  Payout::where('seller_id', $currentUserId)->get();
-        $wallet =  UserWallet::where('user_id', $currentUserId)->first();
+        $wallet =  UserWallet::where('seller_id', $currentUserId)->first();
+
         if (!$wallet) {
             UserWallet::create([
-                'user_id' => $currentUserId
+                'seller_id' => $currentUserId
             ]);
         }
-        $orderCounts = DB::table('rfqs')
+
+        DB::table('rfqs')
             ->select('buyer_id', DB::raw('COUNT(*) as total_orders'))
             ->groupBy('id')
             ->where('seller_id', $currentUserId)
@@ -913,7 +888,6 @@ class SellerService extends Controller
 
         $data = [
             'total_sales' => $orderStats,
-            'partners' => $orderCounts,
             'rfq_recieved' => $rfqs->count(),
             'partners' => $rfqs->count(),
             'rfq_processed' => $rfqs->where('status', '!=', 'pending')->count(),
@@ -934,11 +908,11 @@ class SellerService extends Controller
     public function getWithdrawalHistory()
     {
         $currentUserId = userAuthId();
-        $wallet = UserWallet::where('user_id', $currentUserId)->first();
+        $wallet = UserWallet::where('seller_id', $currentUserId)->first();
 
         if (!$wallet) {
             UserWallet::create([
-                'user_id' => $currentUserId
+                'seller_id' => $currentUserId
             ]);
         }
 
@@ -950,7 +924,7 @@ class SellerService extends Controller
     {
         $currentUserId = userAuthId();
 
-        $wallet = UserWallet::where('user_id', $currentUserId)->first();
+        $wallet = UserWallet::where('seller_id', $currentUserId)->first();
         if (!$wallet) {
             return $this->error(null, 'User wallet not found', 404);
         }
@@ -964,9 +938,10 @@ class SellerService extends Controller
         $max = $config->withdrawal_max ?? $wallet->master_wallet;
         $withdrawal_fee = $config->withdrawal_fee ?? 0;
 
-        if (strtolower($config->withdrawal_status) == WithdrawalStatus::DISABLED) {
+        if (strtolower($config->withdrawal_status) === WithdrawalStatus::DISABLED) {
             return $this->error(null, 'Withrawal on this system is currently not available', 422);
         }
+
         if ($data->amount > $wallet->master_wallet) {
             return $this->error(null, 'Insufficient balance', 422);
         }
@@ -1094,6 +1069,23 @@ class SellerService extends Controller
 
         return $this->success($method, 'Withdrawal details Updated', 200);
     }
+    public function makeAccounDefaultt($data)
+    {
+        $method = B2bWithdrawalMethod::find($data->id);
+        if (!$method) {
+            return $this->error(null, 'No record found', 404);
+        }
+
+        B2bWithdrawalMethod::where('user_id', userAuthId())
+            ->where('is_default', 1)
+            ->update(['is_default' => 0]);
+
+        $method->update([
+            'is_default' => 1,
+        ]);
+
+        return $this->success($method, 'Withdrawal details set to default', 200);
+    }
 
     public function deleteMethod($id)
     {
@@ -1105,8 +1097,7 @@ class SellerService extends Controller
 
         if ($method->delete()) {
             return $this->success(null, 'Withdrawal details deleted successfully', 200);
-        } else {
-            return $this->error(null, 'Failed to delete the record', 500);
         }
+        return $this->error(null, 'Failed to delete the record', 500);
     }
 }

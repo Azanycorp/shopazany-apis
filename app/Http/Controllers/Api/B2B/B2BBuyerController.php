@@ -9,7 +9,7 @@ use App\Http\Requests\ChangePasswordRequest;
 
 class B2BBuyerController extends Controller
 {
-    protected $buyerService;
+    protected \App\Services\B2B\BuyerService $buyerService;
 
     public function __construct(BuyerService $buyerService)
     {
@@ -79,7 +79,7 @@ class B2BBuyerController extends Controller
     {
         return $this->buyerService->removeItem($id);
     }
-    
+
     public function sendFromWishList(Request $request)
     {
         return $this->buyerService->sendFromWishList($request);
@@ -126,4 +126,37 @@ class B2BBuyerController extends Controller
     {
         return $this->buyerService->editCompany($request);
     }
+
+    //Shipping Address
+
+    public function addShippingAddress(Request $request)
+    {
+        return $this->buyerService->addShippingAddress($request);
+    }
+
+    public function allShippingAddress()
+    {
+        return $this->buyerService->getAllShippingAddress();
+    }
+
+    public function getShippingAddress($id)
+    {
+        return $this->buyerService->getShippingAddress($id);
+    }
+
+    public function updateShippingAddress(Request $request,$id)
+    {
+        return $this->buyerService->updateShippingAddress($id,$request);
+    }
+
+    public function deleteShippingAddress($id)
+    {
+        return $this->buyerService->deleteShippingAddress($id);
+    }
+
+    public function setDefaultAddress($id)
+    {
+        return $this->buyerService->setDefaultAddress($id);
+    }
+
 }

@@ -44,7 +44,7 @@ class GetCurlService
         $err = curl_error($curl);
         curl_close($curl);
 
-        if ($err) {
+        if ($err !== '' && $err !== '0') {
             throw new Exception($err);
         }
 

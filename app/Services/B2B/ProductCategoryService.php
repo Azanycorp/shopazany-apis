@@ -39,12 +39,13 @@ class ProductCategoryService
             B2BProductCategory::create([
                 'name' => $request->name,
                 'slug' => Str::slug($request->name),
-                'image' => $url,
+                'image' => $request->file('image') ? $url : null,
                 'featured' => 1,
             ]);
 
             return $this->success(null, "Created successfully");
         } catch (\Exception $e) {
+            return $e;
             return $this->error(null, $e, 500);
         }
     }
@@ -52,7 +53,6 @@ class ProductCategoryService
     public function updateCategory($request,$id)
     {
         $category = B2BProductCategory::findOrFail($id);
-
         try {
             $folder = null;
 
@@ -67,12 +67,11 @@ class ProductCategoryService
                 $url = Storage::disk('s3')->url($path);
             }
 
-            $category::update([
+            $category->update([
                 'name' => $request->name,
                 'slug' => Str::slug($request->name),
                 'image' => $request->image ? $url : $category->image,
             ]);
-            $category->save();
             return $this->success(null, "Category updated successfully");
         } catch (\Exception $e) {
             return $this->error(null, $e->getMessage(), 500);
@@ -95,7 +94,7 @@ class ProductCategoryService
 
         $categories = B2BProductCategory::with(['products', 'subcategory'])
             ->withCount(['products', 'subcategory'])
-            ->when($search, function ($query, $search) {
+            ->when($search, function ($query, string $search): void {
                 $query->where('name', 'like', '%' . $search . '%');
             })
             ->latest('id')
@@ -198,7 +197,7 @@ class ProductCategoryService
 
         $subcats = B2BProductSubCategory::with(['product', 'category'])
             ->withCount(['product', 'category'])
-            ->when($search, function ($query, $search) {
+            ->when($search, function ($query, string $search): void {
                 $query->where('name', 'like', '%' . $search . '%');
             })
             ->get();

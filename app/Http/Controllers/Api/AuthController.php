@@ -12,7 +12,7 @@ use Illuminate\Http\Request;
 
 class AuthController extends Controller
 {
-    protected $service;
+    protected \App\Services\Auth\AuthService $service;
 
     public function __construct(AuthService $authService)
     {

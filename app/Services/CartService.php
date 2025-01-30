@@ -75,11 +75,11 @@ class CartService
 
         $cartItems = $cartItemsQuery->get();
 
-        $localItems = $cartItems->filter(function ($cartItem) {
+        $localItems = $cartItems->filter(function ($cartItem): bool {
             return $cartItem->product->country_id == 160;
         });
 
-        $internationalItems = $cartItems->filter(function ($cartItem) {
+        $internationalItems = $cartItems->filter(function ($cartItem): bool {
             return $cartItem->product->country_id != 160;
         });
 

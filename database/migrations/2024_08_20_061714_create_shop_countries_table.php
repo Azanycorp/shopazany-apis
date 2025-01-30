@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('shop_countries', function (Blueprint $table) {
+        Schema::create('shop_countries', function (Blueprint $table): void {
             $table->id();
             $table->bigInteger('country_id');
             $table->string('name');

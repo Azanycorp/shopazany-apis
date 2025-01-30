@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('user_subcriptions', function (Blueprint $table) {
+        Schema::table('user_subcriptions', function (Blueprint $table): void {
             $table->dateTime('expired_at')->after('status')->nullable();
         });
     }
@@ -21,7 +21,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('user_subcriptions', function (Blueprint $table) {
+        Schema::table('user_subcriptions', function (Blueprint $table): void {
             $table->dropColumn('expired_at');
         });
     }

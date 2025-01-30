@@ -2,14 +2,22 @@
 
 namespace App\Services\Payment\AuthorizeNet;
 
+use App\Models\Rfq;
 use App\Models\Cart;
+use App\Models\User;
 use App\Enum\UserLog;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\B2bOrder;
+use App\Enum\OrderStatus;
 use App\Enum\PaymentType;
+use App\Models\B2BProduct;
+use App\Models\UserWallet;
+use App\Mail\B2BOrderEmail;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
 use App\Mail\SellerOrderMail;
+use App\Models\Configuration;
 use App\Actions\UserLogAction;
 use App\Mail\CustomerOrderMail;
 use App\Actions\PaymentLogAction;
@@ -22,7 +30,7 @@ class ChargeCardService implements PaymentStrategy
 {
     use HttpResponse;
 
-    protected $orderNo;
+    protected string $orderNo;
 
     public function __construct()
     {
@@ -57,8 +65,125 @@ class ChargeCardService implements PaymentStrategy
 
         return $this->handleResponse($response, $user, $paymentDetails, $orderNo, $payment);
     }
+    //B2B Payment section
+    public function ProcessB2BPayment(array $paymentDetails)
+    {
+        $user = Auth::user();
+        $orderNo = $this->orderNo;
+        $orderNum = Str::random(8);
 
-    private function getMerchantAuthentication()
+        $merchantAuthentication = $this->getMerchantAuthentication();
+        $payment = $this->getPayment($paymentDetails);
+        $order = $this->getOrder($orderNum);
+        $customerAddress = $this->getCustomerAddress($paymentDetails);
+        $customerData = $this->getCustomerData($paymentDetails, $user);
+
+        $transactionRequestType = $this->getTransactionRequestType($paymentDetails, $order, $payment, $customerAddress, $customerData);
+
+        $request = $this->createTransactionRequest($merchantAuthentication, $transactionRequestType);
+
+        $controller = new AnetController\CreateTransactionController($request);
+
+        $response = $this->executeTransaction($controller);
+
+        return $this->handleB2bResponse($response, $user, $paymentDetails, $orderNo, $payment);
+    }
+
+    private function handleB2bResponse($response, $user, array $paymentDetails, $orderNo, $payment)
+    {
+        if ($response != null) {
+            if ($response->getMessages()->getResultCode() == "Ok") {
+                $tresponse = $response->getTransactionResponse();
+
+                if ($tresponse != null && $tresponse->getMessages() != null) {
+                    return $this->handleB2bSuccessResponse($response, $tresponse, $user, $paymentDetails, $orderNo, $payment);
+                }
+                return $this->handleErrorResponse($tresponse, $response, $user);
+            }
+            return $this->handleErrorResponse(null, $response, $user);
+        }
+        return "No response returned \n";
+    }
+
+    private function handleB2bSuccessResponse($response, $tresponse, $user, array $paymentDetails, $orderNo, $payment)
+    {
+        $rfqId = $paymentDetails['rfq_id'];
+        $amount = $paymentDetails['amount'];
+        $data = (object)[
+            'user_id' => $user->id,
+            'first_name' => $user->first_name,
+            'last_name' => $user->last_name,
+            'email' => $user->email,
+            'phone' => $user->phone,
+            'amount' => $amount,
+            'reference' => generateRefCode(),
+            'channel' => "card",
+            'currency' => "USD",
+            'ip_address' => request()->ip(),
+            'paid_at' => now(),
+            'createdAt' => now(),
+            'transaction_date' => now(),
+            'status' => "success",
+            'type' => PaymentType::B2BUSERORDER,
+        ];
+       (new PaymentLogAction($data, $payment, 'authorizenet', 'success'))->execute();
+        $rfq = Rfq::findOrFail($rfqId);
+        $seller = User::findOrFail($rfq->seller_id);
+        $product = B2BProduct::findOrFail($rfq->product_id);
+
+        B2bOrder::create([
+            'buyer_id' => $user->id,
+            'seller_id' => $rfq->seller_id,
+            'product_id' => $rfq->product_id,
+            'product_quantity' => $rfq->product_quantity,
+            'order_no' => $orderNo,
+            'product_data' => $product,
+            'total_amount' => $amount,
+            'payment_method' => 'authorize-net',
+            'payment_status' => OrderStatus::PAID,
+            'status' => OrderStatus::PENDING,
+        ]);
+
+
+        $orderedItems = [
+            'product_name' => $product->name,
+            'image' => $product->front_image,
+            'quantity' => $rfq->product_quantity,
+            'price' => $rfq->total_amount,
+            'buyer_name' => $user->first_name . ' ' . $user->last_name,
+            'order_number' => $orderNo,
+        ];
+        $product->quantity -= $rfq->product_quantity;
+        $product->sold += $rfq->product_quantity;
+        $product->save();
+
+        $config = Configuration::first();
+
+        if ($config) {
+            $sellerPerc = $config->seller_perc ?? 0;
+            $credit = ($sellerPerc / 100) * $amount;
+
+            $wallet = UserWallet::firstOrNew(['seller_id' => $seller->id]);
+            $wallet->master_wallet = ($wallet->master_wallet ?? 0) + $credit;
+            $wallet->save();
+        }
+
+        $rfq->update([
+            'payment_status' => OrderStatus::PAID,
+            'status' => OrderStatus::COMPLETED
+        ]);
+        send_email($user->email, new B2BOrderEmail($orderedItems));
+        (new UserLogAction(
+            request(),
+            UserLog::PAYMENT,
+            "Payment successful",
+            json_encode($response),
+            $user
+        ))->run();
+
+        return $this->success(null, $tresponse->getMessages()[0]->getDescription());
+    }
+    private function getMerchantAuthentication(): \net\authorize\api\contract\v1\MerchantAuthenticationType
     {
         $merchantAuthentication = new AnetAPI\MerchantAuthenticationType();
         $merchantAuthentication->setName(config('services.authorizenet.api_login_id'));
@@ -66,7 +191,7 @@ class ChargeCardService implements PaymentStrategy
         return $merchantAuthentication;
     }
 
-    private function getPayment(array $paymentDetails)
+    private function getPayment(array $paymentDetails): \net\authorize\api\contract\v1\PaymentType
     {
         $creditCard = new AnetAPI\CreditCardType();
         $creditCard->setCardNumber($paymentDetails['payment']['creditCard']['cardNumber']);
@@ -78,7 +203,7 @@ class ChargeCardService implements PaymentStrategy
         return $payment;
     }
 
-    private function getOrder($orderNo)
+    private function getOrder($orderNo): \net\authorize\api\contract\v1\OrderType
     {
         $order = new AnetAPI\OrderType();
         $order->setInvoiceNumber($orderNo);
@@ -86,7 +211,7 @@ class ChargeCardService implements PaymentStrategy
         return $order;
     }
 
-    private function getCustomerAddress(array $paymentDetails)
+    private function getCustomerAddress(array $paymentDetails): \net\authorize\api\contract\v1\CustomerAddressType
     {
         $customerAddress = new AnetAPI\CustomerAddressType();
         $customerAddress->setFirstName($paymentDetails['billTo']['firstName']);
@@ -100,7 +225,7 @@ class ChargeCardService implements PaymentStrategy
         return $customerAddress;
     }
 
-    private function getCustomerData(array $paymentDetails, $user)
+    private function getCustomerData(array $paymentDetails, $user): \net\authorize\api\contract\v1\CustomerDataType
     {
         $customerData = new AnetAPI\CustomerDataType();
         $customerData->setType("individual");
@@ -109,7 +234,7 @@ class ChargeCardService implements PaymentStrategy
         return $customerData;
     }
 
-    private function getTransactionRequestType(array $paymentDetails, $order, $payment, $customerAddress, $customerData)
+    private function getTransactionRequestType(array $paymentDetails, \net\authorize\api\contract\v1\OrderType $order, \net\authorize\api\contract\v1\PaymentType $payment, \net\authorize\api\contract\v1\CustomerAddressType $customerAddress, \net\authorize\api\contract\v1\CustomerDataType $customerData): \net\authorize\api\contract\v1\TransactionRequestType
     {
         $transactionRequestType = new AnetAPI\TransactionRequestType();
         $transactionRequestType->setTransactionType("authCaptureTransaction");
@@ -121,7 +246,7 @@ class ChargeCardService implements PaymentStrategy
         return $transactionRequestType;
     }
 
-    private function addLineItems($transactionRequestType, array $paymentDetails)
+    private function addLineItems($transactionRequestType, array $paymentDetails): void
     {
         if (isset($paymentDetails['lineItems']) && is_array($paymentDetails['lineItems'])) {
             foreach ($paymentDetails['lineItems'] as $item) {
@@ -137,7 +262,7 @@ class ChargeCardService implements PaymentStrategy
         }
     }
 
-    private function createTransactionRequest($merchantAuthentication, $transactionRequestType)
+    private function createTransactionRequest(\net\authorize\api\contract\v1\MerchantAuthenticationType $merchantAuthentication, \net\authorize\api\contract\v1\TransactionRequestType $transactionRequestType): \net\authorize\api\contract\v1\CreateTransactionRequest
     {
         $request = new AnetAPI\CreateTransactionRequest();
         $request->setMerchantAuthentication($merchantAuthentication);
@@ -146,16 +271,15 @@ class ChargeCardService implements PaymentStrategy
         return $request;
     }
 
-    private function executeTransaction($controller)
+    private function executeTransaction(\net\authorize\api\controller\CreateTransactionController $controller)
     {
         if (app()->environment('production')) {
             return $controller->executeWithApiResponse(\net\authorize\api\constants\ANetEnvironment::PRODUCTION);
-        } else {
-            return $controller->executeWithApiResponse(\net\authorize\api\constants\ANetEnvironment::SANDBOX);
         }
+        return $controller->executeWithApiResponse(\net\authorize\api\constants\ANetEnvironment::SANDBOX);
     }
 
-    private function handleResponse($response, $user, $paymentDetails, $orderNo, $payment)
+    private function handleResponse($response, $user, array $paymentDetails, $orderNo, $payment)
     {
         if ($response != null) {
             if ($response->getMessages()->getResultCode() == "Ok") {
@@ -163,18 +287,15 @@ class ChargeCardService implements PaymentStrategy
 
                 if ($tresponse != null && $tresponse->getMessages() != null) {
                     return $this->handleSuccessResponse($response, $tresponse, $user, $paymentDetails, $orderNo, $payment);
-                } else {
-                    return $this->handleErrorResponse($tresponse, $response, $user);
                 }
-            } else {
-                return $this->handleErrorResponse(null, $response, $user);
+                return $this->handleErrorResponse($tresponse, $response, $user);
             }
-        } else {
-            return "No response returned \n";
+            return $this->handleErrorResponse(null, $response, $user);
         }
+        return "No response returned \n";
     }
 
-    private function handleSuccessResponse($response, $tresponse, $user, $paymentDetails, $orderNo, $payment)
+    private function handleSuccessResponse($response, $tresponse, $user, array $paymentDetails, $orderNo, $payment)
     {
         $amount = $paymentDetails['amount'];
         $data = (object)[
@@ -194,7 +315,6 @@ class ChargeCardService implements PaymentStrategy
             'status' => "success",
             'type' => PaymentType::USERORDER,
         ];
-
         $pay = (new PaymentLogAction($data, $payment, 'authorizenet', 'success'))->execute();
 
         $orderedItems = [];
@@ -239,9 +359,9 @@ class ChargeCardService implements PaymentStrategy
         Cart::where('user_id', $user->id)->delete();
 
         if ($product) {
-            self::sendSellerOrderEmail($product->user, $orderedItems, $orderNo, $amount);
+            $this->sendSellerOrderEmail($product->user, $orderedItems, $orderNo, $amount);
         }
-        self::sendOrderConfirmationEmail($user, $orderedItems, $orderNo, $amount);
+        $this->sendOrderConfirmationEmail($user, $orderedItems, $orderNo, $amount);
 
         (new UserLogAction(
             request(),
@@ -269,26 +389,13 @@ class ChargeCardService implements PaymentStrategy
         return $this->error(null, $msg, 403);
     }
 
-    private static function sendSellerOrderEmail($seller, $order, $orderNo, $totalAmount)
+    private function sendSellerOrderEmail($seller, $order, $orderNo, $totalAmount): void
     {
         defer(fn() => send_email($seller->email, new SellerOrderMail($seller, $order, $orderNo, $totalAmount)));
     }
 
-    private static function sendOrderConfirmationEmail($user, $orderedItems, $orderNo, $totalAmount)
+    private function sendOrderConfirmationEmail($user, $orderedItems, $orderNo, $totalAmount): void
     {
         defer(fn() => send_email($user->email, new CustomerOrderMail($user, $orderedItems, $orderNo, $totalAmount)));
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

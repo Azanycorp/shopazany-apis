@@ -9,8 +9,10 @@ use App\Enum\RfqStatus;
 use App\Models\Payment;
 use App\Enum\UserStatus;
 use App\Models\B2bQuote;
+use App\Enum\OrderStatus;
 use App\Models\B2bCompany;
 use App\Models\B2BProduct;
+use App\Models\RfqMessage;
 use App\Enum\ProductStatus;
 use App\Models\B2bWishList;
 use App\Trait\HttpResponse;
@@ -19,26 +21,30 @@ use App\Models\B2bProdctLike;
 use App\Models\B2bProdctReview;
 use App\Models\B2BRequestRefund;
 use App\Enum\RefundRequestStatus;
+use App\Models\B2bProductCategory;
 use Illuminate\Support\Facades\DB;
+use App\Models\BuyerShippingAddress;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Resources\BuyerResource;
 use App\Http\Resources\PaymentResource;
 use App\Http\Resources\CustomerResource;
 use App\Http\Resources\B2BProductResource;
-use App\Models\RfqMessage;
+use App\Http\Resources\B2BCategoryResource;
+use App\Http\Resources\SellerProductResource;
+use App\Http\Resources\B2BSellerProductResource;
 
 class BuyerService
 {
     use HttpResponse;
 
     //Admin section
-    public function allCustomers()
+    public function allCustomers(): array
     {
         $query = trim(request()->input('search'));
 
         $users = User::where('type', UserType::B2B_BUYER)
-            ->where(function ($queryBuilder) use ($query) {
+            ->where(function ($queryBuilder) use ($query): void {
                 $queryBuilder->where('first_name', 'LIKE', '%' . $query . '%')
                     ->orWhere('last_name', 'LIKE', '%' . $query . '%')
                     ->orWhere('middlename', 'LIKE', '%' . $query . '%')
@@ -79,11 +85,7 @@ class BuyerService
 
         $data = new CustomerResource($user);
 
-        return [
-            'status' => 'true',
-            'message' => 'Buyer details',
-            'data' => $data,
-        ];
+        return $this->success($data, 'Buyer details');
     }
 
     public function banCustomer($request)
@@ -120,12 +122,12 @@ class BuyerService
         return $this->success(null, "User(s) have been removed successfully");
     }
 
-    public function filter()
+    public function filter(): array
     {
         $query = trim(request()->query('approved'));
 
         $users = User::where('type', UserType::CUSTOMER)
-            ->when($query !== null, function ($queryBuilder) use ($query) {
+            ->when($query !== null, function ($queryBuilder) use ($query): void {
                 $queryBuilder->where('is_admin_approve', $query);
             })
             ->paginate(25);
@@ -148,29 +150,22 @@ class BuyerService
 
     public function addCustomer($request)
     {
-        try {
-            $user = User::create([
-                'first_name' => $request->first_name,
-                'last_name' => $request->last_name,
-                'middlename' => $request->middlename,
-                'email' => $request->email,
-                'password' => bcrypt('12345678'),
-                'phone' => $request->phone,
-                'date_of_birth' => $request->date_of_birth,
-                'type' => UserType::CUSTOMER,
-                'is_verified' => 1,
-                'is_admin_approve' => 1,
-                'status' => $request->status,
-            ]);
-
-            $image = $request->hasFile('image') ? uploadUserImage($request, 'image', $user) : null;
-
-            $user->update(['image' => $image]);
-
-            return $this->success(null, "User has been created successfully", 201);
-        } catch (\Throwable $th) {
-            throw $th;
-        }
+        $user = User::create([
+            'first_name' => $request->first_name,
+            'last_name' => $request->last_name,
+            'middlename' => $request->middlename,
+            'email' => $request->email,
+            'password' => bcrypt('12345678'),
+            'phone' => $request->phone,
+            'date_of_birth' => $request->date_of_birth,
+            'type' => UserType::CUSTOMER,
+            'is_verified' => 1,
+            'is_admin_approve' => 1,
+            'status' => $request->status,
+        ]);
+        $image = $request->hasFile('image') ? uploadUserImage($request, 'image', $user) : null;
+        $user->update(['image' => $image]);
+        return $this->success(null, "User has been created successfully", 201);
     }
 
     public function editCustomer($request)
@@ -227,7 +222,15 @@ class BuyerService
 
     public function getProducts()
     {
-        $products = B2BProduct::with(['category', 'user', 'b2bLikes', 'b2bProdctReview', 'subCategory', 'country', 'b2bProductImages'])
+        $products = B2BProduct::with([
+                'category',
+                'user',
+                'b2bLikes',
+                'b2bProductReview',
+                'subCategory',
+                'country',
+                'b2bProductImages'
+            ])
             ->where('status', ProductStatus::ACTIVE)
             ->get();
 
@@ -235,24 +238,133 @@ class BuyerService
 
         return $this->success($data, 'Products');
     }
+    public function categories()
+    {
+        $categories = B2bProductCategory::where('featured', 1)
+            ->take(10)
+            ->get();
 
+        $data = B2BCategoryResource::collection($categories);
 
+        return $this->success($data, "Categories");
+    }
+    public function bestSelling()
+    {
+        $countryId = request()->query('country_id');
+
+        $query = B2BProduct::with('shopCountry')->select(
+            'b2b_products.id',
+            'b2b_products.name',
+            'b2b_products.slug',
+            'b2b_products.front_image',
+            'b2b_products.unit_price',
+            'b2b_products.description',
+            'b2b_products.category_id',
+            'b2b_products.country_id',
+            DB::raw('COUNT(b2b_orders.id) as total_orders')
+        )
+            ->leftJoin('b2b_orders', 'b2b_orders.product_id', '=', 'b2b_products.id')
+            ->where('b2b_orders.status', OrderStatus::DELIVERED)
+            ->groupBy(
+                'b2b_products.id',
+                'b2b_products.name',
+                'b2b_products.unit_price',
+                'b2b_products.slug',
+                'b2b_products.front_image',
+                'b2b_products.description',
+                'b2b_products.category_id',
+                'b2b_products.country_id'
+            )
+            ->orderBy('total_orders', 'DESC')
+            ->take(10);
+
+        if ($countryId) {
+            $query->where('b2b_orders.country_id', $countryId);
+        }
+
+        $products = $query->get();
+
+        $products->each(function ($product): void {
+            $product->currency = $product->shopCountry->currency ?? null;
+            unset($product->shopCountry);
+        });
+
+        return $this->success($products, "Best selling products");
+    }
+    public function featuredProduct()
+    {
+        $countryId = request()->query('country_id');
+
+        $query = B2BProduct::with([
+            'category',
+            'subCategory',
+            'shopCountry',
+            'orders',
+            'b2bProductReview',
+        ])->where('status', ProductStatus::ACTIVE);
+
+        if ($countryId) {
+            $query->where('country_id', $countryId);
+        }
+
+        $featuredProducts = $query->limit(8)->get();
+
+        $data = B2BSellerProductResource::collection($featuredProducts);
+
+        return $this->success($data, "Featured products");
+    }
+    public function searchProduct()
+    {
+        $searchQuery = request()->input('search');
+        $products = B2BProduct::with([
+                'country',
+                'b2bProductReview', 
+                'b2bLikes',
+                'b2bProductImages',
+                'category',
+                'subCategory',
+                'user'
+            ])
+            ->where('name', 'LIKE', '%' . $searchQuery . '%')
+            ->orWhere('unit_price', 'LIKE', '%' . $searchQuery . '%')
+            ->get();
+
+        $data = B2BProductResource::collection($products);
+
+        return [
+            'status' => 'true',
+            'message' => 'Products filtered',
+            'data' => $data,
+        ];
+    }
+    public function categoryBySlug($slug)
+    {
+        $category = B2bProductCategory::with('products')->select('id', 'name', 'slug', 'image')->where('slug', $slug)
+            ->firstOrFail();
+        $products = $category->products->where('status', ProductStatus::ACTIVE);
+        return $this->success($products, 'Products by category');
+    }
     public function getProductDetail($slug)
     {
-        $product = B2BProduct::with(['category', 'user', 'b2bLikes', 'country', 'b2bProductImages', 'b2bProdctReview'])
+        $product = B2BProduct::with(['category', 'user', 'b2bLikes', 'country', 'b2bProductImages', 'b2bProductReview'])
             ->where('slug', $slug)
             ->firstOrFail();
 
-        $moreFromSeller = B2BProduct::with(['category', 'user', 'b2bLikes', 'subCategory', 'country', 'b2bProductImages', 'b2bProdctReview'])
+        $b2bProductReview = B2bProdctReview::with(['user' => function ($query): void {
+            $query->select('id', 'first_name', 'last_name')->where('type', UserType::B2B_BUYER);
+        }])->where('product_id', $product->id)->get();
+
+        $moreFromSeller = B2BProduct::with(['category', 'user', 'b2bLikes', 'subCategory', 'country', 'b2bProductImages', 'b2bProductReview'])
             ->where('user_id', $product->user_id)->get();
 
-        $relatedProducts = B2BProduct::with(['category', 'user', 'b2bLikes', 'subCategory', 'country', 'b2bProductImages', 'b2bProdctReview'])
+        $relatedProducts = B2BProduct::with(['category', 'user', 'b2bLikes', 'subCategory', 'country', 'b2bProductImages', 'b2bProductReview'])
             ->where('category_id', $product->category_id)->get();
 
         $data = new B2BProductResource($product);
 
         $response = [
             'data' => $data,
+            'reviews' => $b2bProductReview,
             'more_from_seller' => B2BProductResource::collection($moreFromSeller),
             'related_products' => B2BProductResource::collection($relatedProducts),
         ];
@@ -268,11 +380,6 @@ class BuyerService
         $quotes = B2bQuote::where('buyer_id', $userId)
             ->latest('id')
             ->get();
-
-        if ($quotes->isEmpty()) {
-            return $this->error(null, 'No record found to send', 404);
-        }
-
         return $this->success($quotes, 'quotes lists');
     }
 
@@ -306,9 +413,10 @@ class BuyerService
                     'product_data' => $quote->product_data,
                 ]);
             }
+            B2bQuote::where('buyer_id', $userId)->delete();
 
             DB::commit();
-            B2bQuote::where('buyer_id', $userId)->delete();
+
             return $this->success(null, 'rfq sent successfully');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -550,6 +658,7 @@ class BuyerService
 
     public function addToWishList($data)
     {
+        $userId = userAuthId();
         $product = B2BProduct::find($data->product_id);
 
         if (!$product) {
@@ -557,7 +666,7 @@ class BuyerService
         }
 
         B2bWishList::create([
-            'user_id' => userAuthId(),
+            'user_id' => $userId,
             'product_id' => $product->id
         ]);
 
@@ -567,8 +676,10 @@ class BuyerService
     //wish list
     public function myWishList()
     {
+        $userId = userAuthId();
+
         $wishes =  B2bWishList::with('product')
-            ->where('user_id', userAuthId())
+            ->where('user_id', $userId)
             ->latest('id')
             ->get();
 
@@ -581,7 +692,7 @@ class BuyerService
 
     public function removeItem($id)
     {
-        $wish =  B2bWishList::find($id);
+        $wish = B2bWishList::find($id);
 
         if (!$wish) {
             return $this->error(null, 'No record found to send', 404);
@@ -594,6 +705,7 @@ class BuyerService
     public function sendFromWishList($data)
     {
         $quote = B2bWishList::findOrFail($data->id);
+
         if (!$quote) {
             return $this->error(null, 'No record found', 404);
         }
@@ -603,8 +715,9 @@ class BuyerService
         if ($data->qty < $product->minimum_order_quantity) {
             return $this->error(null, 'Your peferred quantity can not be less than the one already set', 422);
         }
+
         try {
-            $amount = total_amount($product->unit_price,$data->qty);
+            $amount = total_amount($product->unit_price, $data->qty);
 
             Rfq::create([
                 'buyer_id' => $quote->user_id,
@@ -628,6 +741,7 @@ class BuyerService
     public function profile()
     {
         $auth = userAuth();
+
         $user = User::with('b2bCompany')
             ->where('type', UserType::B2B_BUYER)
             ->find($auth->id);
@@ -661,7 +775,6 @@ class BuyerService
         return $this->success(null, "Profile Updated successfully");
     }
 
-
     public function changePassword($request)
     {
         $user = $request->user();
@@ -672,9 +785,8 @@ class BuyerService
             ]);
 
             return $this->success(null, 'Password Successfully Updated');
-        } else {
-            return $this->error(null, 422, 'Old Password did not match');
         }
+        return $this->error(null, 422, 'Old Password did not match');
     }
     public function change2FA($data)
     {
@@ -691,11 +803,18 @@ class BuyerService
     public function editCompany($request)
     {
         $auth = Auth::user();
+
         $company = B2bCompany::where('user_id', $auth->id)->first();
-        if (!$company)  return $this->error(null, 422, 'No company found to update');
+
+        if (!$company) {
+            return $this->error(null, 'No company found to update', 404);
+        }
+
+        $logo_url = null;
         if ($request->hasFile('logo')) {
             $logo_url = uploadImage($request, 'logo', 'company-logo');
         }
+
         $company->update([
             'business_name' => $request->company_name ?? $company->company_name,
             'business_phone' => $request->business_phone ?? $company->business_phone,
@@ -708,5 +827,89 @@ class BuyerService
         ]);
 
         return $this->success(null, "Details Updated successfully");
+    }
+
+    public function addShippingAddress($data)
+    {
+        $currentUserId = userAuthId();
+        $address = BuyerShippingAddress::create([
+            'user_id' => $currentUserId,
+            'address_name' => $data->address_name,
+            'name' => $data->name,
+            'surname' => $data->surname,
+            'email' => $data->email,
+            'phone' => $data->phone,
+            'street' => $data->street,
+            'city' => $data->city,
+            'postal_code' => $data->postal_code,
+            'state_id' => $data->state_id,
+            'country_id' => $data->country_id,
+        ]);
+        return $this->success($address, 'Address Added');
+    }
+    public function getAllShippingAddress()
+    {
+        $currentUserId = userAuthId();
+        $addresses = BuyerShippingAddress::where('user_id', $currentUserId)->get();
+        return $this->success($addresses, 'All address');
+    }
+
+    public function getShippingAddress($id)
+    {
+        $address = BuyerShippingAddress::find($id);
+        if (!$address) {
+            return $this->error(null, 'No record found', 404);
+        }
+        return $this->success($address, 'Address detail');
+    }
+
+    public function updateShippingAddress($id, $data)
+    {
+        $address = BuyerShippingAddress::find($id);
+        if (!$address) {
+            return $this->error(null, 'No record found', 404);
+        }
+        $address->update([
+            'address_name' => $data->address_name ?? $address->address_name,
+            'name' => $data->name ?? $address->name,
+            'surname' => $data->surname ?? $address->surname,
+            'email' => $data->email ?? $address->email,
+            'phone' => $data->phone ?? $address->phone,
+            'street' => $data->street ?? $address->street,
+            'city' => $data->city ?? $address->city,
+            'postal_code' => $data->postal_code ?? $address->postal_code,
+            'state_id' => $data->state_id ?? $address->state_id,
+            'country_id' => $data->country_id ?? $address->country_id,
+        ]);
+
+        return $this->success(null, 'Details Updated successfully');
+    }
+
+    public function deleteShippingAddress($id)
+    {
+        $address = BuyerShippingAddress::find($id);
+        if (!$address) {
+            return $this->error(null, 'No record found', 404);
+        }
+        $address->delete();
+        return $this->success(null, 'Address Deleted successfully');
+    }
+
+    public function setDefaultAddress($id)
+    {
+        $method = BuyerShippingAddress::find($id);
+        if (!$method) {
+            return $this->error(null, 'No record found', 404);
+        }
+
+        BuyerShippingAddress::where('user_id', userAuthId())
+            ->where('is_default', 1)
+            ->update(['is_default' => 0]);
+
+        $method->update([
+            'is_default' => 1,
+        ]);
+
+        return $this->success(null, 'Address Set as default');
     }
 }

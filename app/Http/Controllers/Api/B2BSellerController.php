@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 
 class B2BSellerController extends Controller
 {
-    protected $service;
+    protected \App\Services\B2B\SellerService $service;
 
     public function __construct(SellerService $service)
     {
@@ -192,6 +192,11 @@ class B2BSellerController extends Controller
     public function getWithdrawalMethod($id)
     {
         return $this->service->getSingleMethod($id);
+    }
+
+    public function makeDefaultAccount(Request $request)
+    {
+        return $this->service->makeAccounDefaultt($request);
     }
 
     public function updateWithdrawalMethod($id, Request $request)
