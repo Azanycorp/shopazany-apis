@@ -21,9 +21,9 @@ class ReviewResource extends JsonResource
             'review' => $this->review,
             'created_at' => $this->created_at,
             'user' => (object)[
-                'id' => $this->user->id,
-                'first_name' => $this->user->first_name,
-                'last_name' => $this->user->last_name,
+                'id' => $this->user?->id,
+                'first_name' => $this->user?->first_name,
+                'last_name' => $this->user?->last_name,
             ],
         ];
     }
