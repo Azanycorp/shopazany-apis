@@ -255,6 +255,8 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function (): void
             Route::get('/', 'allBuyers');
             Route::get('/filter', 'filter');
             Route::get('/details/{user_id}', 'viewBuyer');
+            Route::post('/update-details', 'editBuyer');
+            Route::post('/update-company-details', 'editBuyerCompany');
             Route::patch('/approve/{user_id}', 'approveBuyer');
             Route::patch('/ban/{user_id}', 'banBuyer');
             Route::delete('/bulk-remove', 'bulkRemoveBuyer');
