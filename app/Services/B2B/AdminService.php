@@ -53,7 +53,8 @@ class AdminService
     {
         $users =  User::all();
         $orders =  B2bOrder::orderStats();
-        $rfqs =  Rfq::with(['buyer','seller'])->latest('id')->get();
+        $rfqs =  Rfq::with(['buyer', 'seller'])->latest('id')->get();
+        $completion_request =  B2bOrder::where('status', OrderStatus::SHIPPED)->take(3)->get();
         $data = [
             'buyers' => $users->where('type', UserType::B2B_BUYER)->count(),
             'sellers' => $users->where('type', UserType::B2B_SELLER)->count(),
@@ -64,6 +65,7 @@ class AdminService
             'last_seven_days' => $orders->total_order_count_week,
             'last_thirty_days' => $orders->total_order_amount_month,
             'recent_rfqs' => $rfqs,
+            'completion_request' => $completion_request,
         ];
 
         return $this->success($data, "Dashboard details");
@@ -147,7 +149,7 @@ class AdminService
     public function allSellers()
     {
 
-        $sellers = User::with(['b2bProducts','businessInformation'])
+        $sellers = User::with(['b2bProducts', 'businessInformation'])
             ->where('type', UserType::B2B_SELLER)
             ->latest('created_at')->get();
 
@@ -165,7 +167,7 @@ class AdminService
 
     public function approveSeller($request)
     {
-        $user = User::find($request->user_id);
+        $user = User::where('type', UserType::B2B_SELLER)->find($request->user_id);
 
         if (!$user) {
             return $this->error(null, "User not found", 404);
@@ -234,7 +236,7 @@ class AdminService
 
     public function banSeller($request)
     {
-        $user = User::find($request->user_id);
+        $user = User::where('type', UserType::B2B_SELLER)->find($request->user_id);
 
         if (!$user) {
             return $this->error(null, "User not found", 404);
@@ -250,7 +252,7 @@ class AdminService
 
     public function removeSeller($id)
     {
-        $user = User::find($id);
+        $user = User::where('type', UserType::B2B_SELLER)->find($id);
 
         if (!$user) {
             return $this->error(null, "User not found", 404);
@@ -263,7 +265,7 @@ class AdminService
 
     public function bulkRemove($request)
     {
-        $users = User::whereIn('id', $request->user_ids)->get();
+        $users = User::where('type', UserType::B2B_SELLER)->whereIn('id', $request->user_ids)->get();
 
         foreach ($users as $user) {
             $user->status = UserStatus::DELETED;
@@ -414,50 +416,20 @@ class AdminService
         return $this->success(null, 'Deleted successfully');
     }
 
-    //Sellers
+    //buyers
     //Admin section
 
-    public function allBuyers(): array
+    public function allBuyers()
     {
-        $searchQuery = request()->input('search');
-        $approvedQuery = request()->query('approved');
-        $total_users = User::where('type', UserType::B2B_BUYER);
-        $inactive_users = User::where(['type' => UserType::B2B_BUYER, 'status' => UserStatus::PENDING])->count()
-            + User::where(['type' => UserType::B2B_BUYER, 'status' => UserStatus::SUSPENDED])->count()
-            + User::where(['type' => UserType::B2B_BUYER, 'status' => UserStatus::BLOCKED])->count();
-
-        $users = User::with(['userCountry', 'state', 'b2bCompany'])
+        $buyers = User::with('b2bCompany')
             ->where('type', UserType::B2B_BUYER)
-            ->when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
-                $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
-                    $subQuery->where('first_name', 'LIKE', '%' . $searchQuery . '%')
-                        ->orWhere('last_name', 'LIKE', '%' . $searchQuery . '%')
-                        ->orWhere('middlename', 'LIKE', '%' . $searchQuery . '%')
-                        ->orWhere('email', 'LIKE', '%' . $searchQuery . '%');
-                });
-            })
-            ->when($approvedQuery !== null, function ($queryBuilder) use ($approvedQuery): void {
-                $queryBuilder->where('is_admin_approve', $approvedQuery);
-            })
-            ->paginate(25);
+            ->latest('created_at')->get();
 
-        $data = BuyerResource::collection($users);
-
-        return [
-            'status' => 'true',
-            'message' => 'Buyers filtered',
-            'all_users' => $total_users->count(),
-            'active_users' => $total_users->where('status', UserStatus::ACTIVE)->count(),
-            'inactive_users' => $inactive_users,
-            'data' => $data,
-            'pagination' => [
-                'current_page' => $users->currentPage(),
-                'last_page' => $users->lastPage(),
-                'per_page' => $users->perPage(),
-                'prev_page_url' => $users->previousPageUrl(),
-                'next_page_url' => $users->nextPageUrl(),
-            ],
+        $data = [
+            'buyers_count' => $buyers->count(),
+            'buyers' => $buyers,
         ];
+        return $this->success($data, "buyers ");
     }
 
     public function viewBuyer($id)

@@ -267,14 +267,9 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function (): void
         Route::prefix('seller')->controller(B2BAdminSellerController::class)->group(function (): void {
             Route::get('/', 'allSellers');
             Route::get('/details/{user_id}', 'viewSeller');
-            Route::get('/payment-history/{user_id}', 'paymentHistory');
-
-            Route::patch('/{user_id}/edit', 'editSeller');
             Route::delete('/remove/{user_id}', 'removeSeller');
-
             Route::patch('/approve', 'approveSeller');
             Route::patch('/ban', 'banSeller');
-
             Route::delete('/bulk/remove', 'bulkRemove');
 
             Route::prefix('product')->controller(B2BAdminSellerController::class)->group(function (): void {
