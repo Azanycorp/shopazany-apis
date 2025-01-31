@@ -12,6 +12,7 @@ use App\Enum\UserStatus;
 use App\Models\B2bOrder;
 use App\Enum\AdminStatus;
 use App\Enum\OrderStatus;
+use App\Models\B2bCompany;
 use App\Models\B2BProduct;
 use App\Models\UserWallet;
 use App\Enum\ProductStatus;
@@ -51,7 +52,11 @@ class AdminService
     {
         $users =  User::all();
         $orders =  B2bOrder::orderStats();
-        $rfqs =  Rfq::latest('id')->get();
+        $rfqs =  Rfq::with(['buyer' => function ($query): void {
+            $query->select('id', 'first_name', 'last_name')->where('type', UserType::B2B_BUYER);
+        }, 'seller' => function ($query): void {
+            $query->select('id', 'first_name', 'last_name')->where('type', UserType::B2B_SELLER);
+        }])->latest('id')->get();
 
         $data = [
             'buyers' => $users->where('type', UserType::B2B_BUYER)->count(),
@@ -90,17 +95,24 @@ class AdminService
         return $this->success($order, "Rfq details");
     }
 
-    public function getAllOrders($data)
+    public function getAllOrders()
     {
+        $searchQuery = request()->input('search');
         $orders =  B2bOrder::orderStats();
-        $recent_orders = B2bOrder::where('order_no', $data->search)->orWhere('id', $data->search)->get();
+
+        $recent_orders = B2bOrder::when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
+            $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
+                $subQuery->where('id', 'LIKE', '%' . $searchQuery . '%')
+                    ->orWhere('order_no', 'LIKE', '%' . $searchQuery . '%');
+            });
+        })->get();
+
 
         $data = [
             'all_orders' => $orders->total_orders,
             'pending_orders' => $orders->total_pending,
             'shipped_orders' => $orders->total_shipped,
             'delivery_orders' => $orders->total_delivered,
-
             'recent_orders' => $recent_orders,
 
         ];
@@ -192,7 +204,6 @@ class AdminService
         }
         $search = request()->search;
         $data = new B2BSellerResource($user);
-        // $products = B2BProduct::whereBelongsTo($user)->latest('id')->get();
         $query = B2BProduct::with(['b2bProductImages', 'category', 'country', 'user', 'subCategory'])
             ->where('user_id', $id);
 
@@ -475,6 +486,54 @@ class AdminService
             'status' => 'true',
             'message' => 'Buyer details',
             'data' => $user,
+        ];
+    }
+
+    public function editBuyer($data)
+    {
+        $user = User::find($data->user_id);
+
+        if (!$user) {
+            return $this->error(null, "Buyer not found", 404);
+        }
+        $image = $data->hasFile('image') ? uploadUserImage($data->file('image'), 'image', $user) : $user->image;
+        $user->update([
+            'first_name' => $data->first_name ?? $user->first_name,
+            'last_name' => $data->last_name ?? $user->last_name,
+            'email' => $data->email ?? $user->email,
+            'image' => $data->image ? $image : $user->image,
+        ]);
+        return [
+            'status' => 'true',
+            'message' => 'Buyer details',
+            'data' => $user,
+        ];
+    }
+
+    public function editBuyerCompany($data)
+    {
+        $user = User::find($data->user_id);
+
+        if (!$user) {
+            return $this->error(null, "Buyer not found", 404);
+        }
+
+        $company = B2bCompany::where('user_id', $user->id)->first();
+
+        if (!$company) {
+            return $this->error(null, 'No company found to update', 404);
+        }
+        $company->update([
+            'business_name' => $data->business_name ?? $company->business_name,
+            'company_size' => $data->company_size ?? $company->company_size,
+            'website' => $data->website ?? $company->website,
+            'service_type' => $data->service_type ?? $company->service_type,
+        ]);
+
+        return [
+            'status' => 'true',
+            'message' => 'company details',
+            'data' => $company,
         ];
     }
 
@@ -831,7 +890,10 @@ class AdminService
     //Admin User Management
     public function adminUsers()
     {
-        $users = Admin::latest('created_at')->where('type', AdminType::B2B)->get();
+        $users = Admin::with('permissions')
+            ->select('id', 'first_name', 'email', 'created_at')
+            ->latest('created_at')
+            ->where('type', AdminType::B2B)->get();
 
         return $this->success($users, 'All Admin Users');
     }

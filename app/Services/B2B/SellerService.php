@@ -635,7 +635,6 @@ class SellerService extends Controller
 
     public function getOrderDetails($id)
     {
-        return Auth::user();
         $order = B2bOrder::with(['buyer' => function ($query): void {
             $query->select('id', 'first_name', 'last_name')->where('type', UserType::B2B_BUYER);
         }, 'seller' => function ($query): void {
@@ -676,7 +675,7 @@ class SellerService extends Controller
 
     public function getRfqDetails($id)
     {
-        $rfq = Rfq::with(['buyer','seller'])->find($id);
+        $rfq = Rfq::with(['buyer', 'seller'])->find($id);
         if (!$rfq) {
             return $this->error(null, "No record found.", 404);
         }
@@ -690,19 +689,18 @@ class SellerService extends Controller
 
     public function markShipped($data)
     {
-        $rfq = Rfq::find($data->rfq_id);
+        $order = B2bOrder::find($data->order_id);
 
-        if (!$rfq) {
+        if (!$order) {
             return $this->error(null, 'No record found to send', 404);
         }
 
-        $rfq->update([
-            'payment_status' => 'paid',
-            'status' => 'shipped',
+        $order->update([
+            'status' => OrderStatus::SHIPPED,
             'shipped_date' => now()->toDateString(),
         ]);
 
-        return $this->success($rfq, 'Product Shipped successfully');
+        return $this->success($order, 'order Shipped successfully');
     }
 
     public function replyRequest($data)
@@ -733,28 +731,17 @@ class SellerService extends Controller
 
     public function markDelivered($data)
     {
-        $rfq = Rfq::find($data->rfq_id);
+        $order = B2bOrder::find($data->order_id);
 
-        if (! $rfq) {
+        if (!$order) {
             return $this->error(null, 'No record found to send', 404);
         }
 
-        $rfq->update([
-            'payment_status' => 'paid',
-            'status' => 'delivered',
+        $order->update([
+            'status' => OrderStatus::DELIVERED,
             'delivery_date' => now()->toDateString()
         ]);
-
-        //Update product
-        $product = B2BProduct::findOrFail($rfq->product_id);
-        $remaining_qty = $product->quantity - $rfq->product_quantity;
-
-        $product->update([
-            'availability_quantity' => $remaining_qty,
-            'sold' => $product->sold + $rfq->product_quantity,
-        ]);
-
-        return $this->success($rfq, 'Product marked delivered successfully');
+        return $this->success($order, 'Order marked delivered successfully');
     }
 
     public function confirmPayment($data)

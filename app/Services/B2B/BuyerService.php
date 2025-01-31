@@ -8,6 +8,7 @@ use App\Enum\UserType;
 use App\Enum\RfqStatus;
 use App\Models\Payment;
 use App\Enum\UserStatus;
+use App\Models\B2bOrder;
 use App\Models\B2bQuote;
 use App\Enum\OrderStatus;
 use App\Models\B2bCompany;
@@ -250,47 +251,16 @@ class BuyerService
     }
     public function bestSelling()
     {
-        $countryId = request()->query('country_id');
-
-        $query = B2BProduct::with('shopCountry')->select(
-            'b2b_products.id',
-            'b2b_products.name',
-            'b2b_products.slug',
-            'b2b_products.front_image',
-            'b2b_products.unit_price',
-            'b2b_products.description',
-            'b2b_products.category_id',
-            'b2b_products.country_id',
-            DB::raw('COUNT(b2b_orders.id) as total_orders')
-        )
-            ->leftJoin('b2b_orders', 'b2b_orders.product_id', '=', 'b2b_products.id')
-            ->where('b2b_orders.status', OrderStatus::DELIVERED)
-            ->groupBy(
-                'b2b_products.id',
-                'b2b_products.name',
-                'b2b_products.unit_price',
-                'b2b_products.slug',
-                'b2b_products.front_image',
-                'b2b_products.description',
-                'b2b_products.category_id',
-                'b2b_products.country_id'
-            )
-            ->orderBy('total_orders', 'DESC')
-            ->take(10);
-
-        if ($countryId) {
-            $query->where('b2b_orders.country_id', $countryId);
-        }
-
-        $products = $query->get();
-
-        $products->each(function ($product): void {
-            $product->currency = $product->shopCountry->currency ?? null;
-            unset($product->shopCountry);
-        });
-
-        return $this->success($products, "Best selling products");
+        $bestSellingProducts = B2bOrder::select('product_id', DB::raw('SUM(product_quantity) as total_sold'))
+        ->groupBy('product_id')
+        ->orderByDesc('total_sold')
+        ->take(10)
+        ->with('product')
+        ->where('status',OrderStatus::DELIVERED)
+        ->get();
+        return $this->success($bestSellingProducts, "Best selling products");
     }
+
     public function featuredProduct()
     {
         $countryId = request()->query('country_id');
@@ -313,12 +283,13 @@ class BuyerService
 
         return $this->success($data, "Featured products");
     }
+
     public function searchProduct()
     {
         $searchQuery = request()->input('search');
         $products = B2BProduct::with([
                 'country',
-                'b2bProductReview', 
+                'b2bProductReview',
                 'b2bLikes',
                 'b2bProductImages',
                 'category',
@@ -816,7 +787,7 @@ class BuyerService
         }
 
         $company->update([
-            'business_name' => $request->company_name ?? $company->company_name,
+            'business_name' => $request->business_name ?? $company->business_name,
             'business_phone' => $request->business_phone ?? $company->business_phone,
             'company_size' => $request->company_size ?? $company->company_size,
             'website' => $request->website ?? $company->website,
