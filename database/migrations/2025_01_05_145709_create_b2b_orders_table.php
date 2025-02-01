@@ -22,8 +22,8 @@ return new class extends Migration
             $table->longText('product_data')->nullable();
             $table->double('total_amount')->default(0);
             $table->string('payment_method');
-            $table->enum('payment_status',['paid','unpaid'])->default('unpaid');
-            $table->enum('status', ['pending', 'shipped','in-progress','confirmed','cancelled','delivered'])->default('pending');
+            $table->string('payment_status')->default('unpaid');
+            $table->string('status')->default('pending');
             $table->timestamp('delivery_date')->nullable();
             $table->timestamp('shipped_date')->nullable();
             $table->index(['buyer_id', 'seller_id', 'product_id']);

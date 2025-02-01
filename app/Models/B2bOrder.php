@@ -16,6 +16,7 @@ class B2bOrder extends Model
         'product_quantity',
         'order_no',
         'shipping_address',
+        'billing_address',
         'product_data',
         'total_amount',
         'payment_method',
@@ -23,6 +24,7 @@ class B2bOrder extends Model
         'status',
         'delivery_date',
         'shipped_date',
+        'country_id'
     ];
 
     public function product(): BelongsTo
@@ -43,6 +45,7 @@ class B2bOrder extends Model
     {
         return [
             'shipping_address' => 'array',
+            'billing_address' => 'array',
             'product_data' => 'array'
         ];
     }
@@ -55,6 +58,7 @@ class B2bOrder extends Model
             "SELECT
                 (SELECT ROUND(COUNT(`id`), 2) FROM `b2b_orders`) AS total_orders,
                 (SELECT ROUND(COUNT(`id`), 2) FROM `b2b_orders` WHERE `status`='delivered' ) AS total_delivered,
+                (SELECT ROUND(COUNT(`id`), 2) FROM `b2b_orders` WHERE `status`='cancelled' ) AS total_cancelled,
                 (SELECT ROUND(COUNT(`id`), 2) FROM `b2b_orders` WHERE `status`='pending' ) AS total_pending,
                 (SELECT ROUND(COUNT(`id`), 2) FROM `b2b_orders` WHERE `status`='shipped' ) AS total_shipped,
 
