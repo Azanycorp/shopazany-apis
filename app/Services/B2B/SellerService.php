@@ -867,16 +867,15 @@ class SellerService extends Controller
     public function getDashboardDetails()
     {
         $currentUserId = userAuthId();
-
         $orders =  B2bOrder::with('buyer')
             ->where('seller_id', $currentUserId)
             ->get();
 
-        $orderStats =  Rfq::with('buyer')
+        $orderStats =  B2bOrder::with('buyer')
             ->where([
                 'seller_id' => $currentUserId,
                 'created_at' => Carbon::today()->subDays(7)
-            ])->where('status', 'confirmed')->sum('total_amount');
+            ])->where('status',OrderStatus::DELIVERED)->sum('total_amount');
 
         $rfqs =  Rfq::with('buyer')->where('seller_id', $currentUserId)->get();
         $payouts =  Payout::where('seller_id', $currentUserId)->get();
@@ -888,24 +887,18 @@ class SellerService extends Controller
             ]);
         }
 
-        DB::table('rfqs')
-            ->select('buyer_id', DB::raw('COUNT(*) as total_orders'))
-            ->groupBy('id')
-            ->where('seller_id', $currentUserId)
-            ->count();
-
         $data = [
             'total_sales' => $orderStats,
             'rfq_recieved' => $rfqs->count(),
             'partners' => $rfqs->count(),
-            'rfq_processed' => $rfqs->where('status','completed')->count(),
-            'deals_in_progress' => $orders->where('status', 'shipped')->count(),
-            'deals_in_completed' => $orders->where('status', 'delivered')->count(),
+            'rfq_processed' => $rfqs->where('status', OrderStatus::COMPLETED)->count(),
+            'deals_in_progress' => $orders->where('status', OrderStatus::SHIPPED)->count(),
+            'deals_in_completed' => $orders->where('status', OrderStatus::DELIVERED)->count(),
             'withdrawable_balance' => $wallet ? $wallet->master_wallet : 0,
-            'pending_withdrawals' => $payouts->where('status', 'pending')->count(),
-            'rejected_withdrawals' => $payouts->where('status', 'cancelled')->count(),
-            'delivery_charges' => $payouts->where('status', 'paid')->sum('fee'),
-            'life_time' => $payouts->where('status', 'paid')->sum('amount'),
+            'pending_withdrawals' => $payouts->where('status', OrderStatus::PENDING)->count(),
+            'rejected_withdrawals' => $payouts->where('status', OrderStatus::CANCELLED)->count(),
+            'delivery_charges' => $payouts->where('status', OrderStatus::PAID)->sum('fee'),
+            'life_time' => $payouts->where('status', OrderStatus::PAID)->sum('amount'),
             'recent_orders' => $orders,
         ];
 
