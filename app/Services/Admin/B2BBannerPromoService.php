@@ -96,6 +96,13 @@ class B2BBannerPromoService
         return null;
     }
 
+    public function getProducts()
+    {
+        $promos = B2bPromo::get();
+        $data = PromoResource::collection($promos);
+
+        return $this->success($data, "All Products");
+    }
     public function promos()
     {
         $promos = B2bPromo::get();

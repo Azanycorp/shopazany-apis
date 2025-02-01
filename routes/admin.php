@@ -246,6 +246,7 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function (): void
         Route::prefix('promo')->controller(B2BBannerPromoController::class)->group(function (): void {
             Route::post('/add', 'addPromo');
             Route::get('/', 'promos');
+            Route::get('/products', 'getProducts');
             Route::delete('/delete/{id}', 'deletePromo');
         });
 
