@@ -336,16 +336,11 @@ class AdminService
         return $this->success($data, 'Product details');
     }
 
-    public function editSellerProduct($request)
+    public function editSellerProduct($id, $request)
     {
-        $currentUserId = userAuthId();
-
-        if ($currentUserId != $request->user_id) {
-            return $this->error(null, "Unauthorized action.", 401);
-        }
 
         $user = User::findOrFail($request->user_id);
-        $prod = B2BProduct::findOrFail($request->product_id);
+        $prod = B2BProduct::findOrFail($id);
 
         $parts = explode('@', $user->email);
         $name = $parts[0];
@@ -373,20 +368,18 @@ class AdminService
             'user_id' => $user->id,
             'name' => $request->name ?? $prod->name,
             'slug' => $slug,
-            'category_id' => $request->category_id,
-            'sub_category_id' => $request->sub_category_id,
-            'keywords' => $request->keywords,
-            'description' => $request->description,
+            'category_id' => $request->category_id ?? $prod->category_id,
+            'sub_category_id' => $request->sub_category_id ?? $prod->name,
+            'keywords' => $request->keywords ?? $prod->keywords,
+            'description' => $request->description ?? $prod->description,
             'front_image' => $url,
-            'minimum_order_quantity' => $request->minimum_order_quantity,
-            'unit_price' => $request->unit,
-            'quantity' => $request->quantity,
-            'available_quantity' => $request->quantity - $prod->sold,
-            'fob_price' => $request->fob_price,
+            'minimum_order_quantity' => $request->minimum_order_quantity ?? $prod->minimum_order_quantity,
+            'unit_price' => $request->unit ?? $prod->unit_price,
+            'quantity' => $request->quantity ?? $prod->quantity,
             'country_id' => $user->country ?? 160,
         ];
 
-        $product = $this->b2bProductRepository->update($request->product_id, $data);
+        $product = $this->b2bProductRepository->update($id, $data);
 
         if ($request->hasFile('images')) {
             $product->b2bProductImages()->delete();
