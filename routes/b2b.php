@@ -68,6 +68,7 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function (): voi
                 Route::get('/details/{id}', 'orderDetails');
                 Route::post('/mark-as-shipped', 'shippOrder');
                 Route::post('/mark-as-delivered', 'markDelivered');
+                Route::post('/cancel-order', 'cancelOrder');
                 Route::post('/rate-order', 'rateOrder');
                 Route::post('/order-feeback', 'orderFeeback');
             });
@@ -81,7 +82,7 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function (): voi
                 Route::post('/make-default', 'makeDefaultAccount');
                 Route::delete('/delete/{id}', 'deleteWithdrawalMethod');
             });
-            
+
             //complaints log
             Route::get('/refund/request', 'getComplaints');
 
