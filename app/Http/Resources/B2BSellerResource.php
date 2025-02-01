@@ -31,7 +31,6 @@ class B2BSellerResource extends JsonResource
             "is_approved" => $this->is_admin_approve,
             "status" => (string)$this->status,
 
-
         ];
     }
 }

@@ -38,7 +38,7 @@ Route::middleware(['throttle:apis'])->group(function (): void {
         Route::get('/product-by-category/{slug}', 'categoryBySlug');
         Route::get('/best-selling-products', 'bestSellingProduct');
         Route::get('/featured-products', 'featuredProduct');
-        Route::post('/search-products', 'searchProduct');
+        Route::get('/search-products', 'searchProduct');
         Route::get('/product/{slug}', 'getProductDetail');
     });
 });
@@ -58,18 +58,21 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function (): voi
             Route::prefix('rfq')->group(function (): void {
                 Route::get('/', 'allRfq');
                 Route::get('/details/{id}', 'rfqDetails');
-                Route::post('/mark-as-shipped', 'shippedRfq');
-                Route::post('/mark-as-delivered', 'markDelivered');
                 Route::post('/reply-review', 'replyReview');
                 Route::post('/confirm-payment', 'confirmPayment');
-                Route::post('/rate-order', 'rateOrder');
-                Route::post('/order-feeback', 'orderFeeback');
             });
+
 
             //orders
             Route::prefix('order')->group(function (): void {
                 Route::get('/details/{id}', 'orderDetails');
+                Route::post('/mark-as-shipped', 'shippOrder');
+                Route::post('/mark-as-delivered', 'markDelivered');
+                Route::post('/cancel-order', 'cancelOrder');
+                Route::post('/rate-order', 'rateOrder');
+                Route::post('/order-feeback', 'orderFeeback');
             });
+
             //payment method
             Route::prefix('withdrawal-method')->group(function (): void {
                 Route::get('/', 'allWithdrawalMethods');
@@ -79,6 +82,7 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function (): voi
                 Route::post('/make-default', 'makeDefaultAccount');
                 Route::delete('/delete/{id}', 'deleteWithdrawalMethod');
             });
+
             //complaints log
             Route::get('/refund/request', 'getComplaints');
 
@@ -96,7 +100,7 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function (): voi
                 Route::post('/update', 'updateProduct');
                 Route::delete('/delete/{user_id}/{product_id}', 'deleteProduct');
                 Route::post('import', 'productImport');
-                Route::get('export/{user_id}/{type}', 'export');
+                Route::post('export/{user_id}/{type}', 'export');
                 Route::get('/{user_id}', 'getAllProduct');
             });
 

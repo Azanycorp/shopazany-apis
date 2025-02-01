@@ -22,6 +22,7 @@ use App\Actions\UserLogAction;
 use App\Mail\CustomerOrderMail;
 use App\Actions\PaymentLogAction;
 use App\Contracts\PaymentStrategy;
+use App\Models\BuyerShippingAddress;
 use Illuminate\Support\Facades\Auth;
 use net\authorize\api\contract\v1 as AnetAPI;
 use net\authorize\api\controller as AnetController;
@@ -108,6 +109,8 @@ class ChargeCardService implements PaymentStrategy
     private function handleB2bSuccessResponse($response, $tresponse, $user, array $paymentDetails, $orderNo, $payment)
     {
         $rfqId = $paymentDetails['rfq_id'];
+        $shipping_address_id = $paymentDetails['shipping_address_id'];
+        $billing_address = $paymentDetails['billTo'];
         $amount = $paymentDetails['amount'];
         $data = (object)[
             'user_id' => $user->id,
@@ -126,10 +129,12 @@ class ChargeCardService implements PaymentStrategy
             'status' => "success",
             'type' => PaymentType::B2BUSERORDER,
         ];
-       (new PaymentLogAction($data, $payment, 'authorizenet', 'success'))->execute();
+
+        (new PaymentLogAction($data, $payment, 'authorizenet', 'success'))->execute();
         $rfq = Rfq::findOrFail($rfqId);
         $seller = User::findOrFail($rfq->seller_id);
         $product = B2BProduct::findOrFail($rfq->product_id);
+        $shipping_address = BuyerShippingAddress::findOrFail($shipping_address_id);
 
         B2bOrder::create([
             'buyer_id' => $user->id,
@@ -138,6 +143,8 @@ class ChargeCardService implements PaymentStrategy
             'product_quantity' => $rfq->product_quantity,
             'order_no' => $orderNo,
             'product_data' => $product,
+            'shipping_address' => $shipping_address,
+            'billing_address' => $billing_address,
             'total_amount' => $amount,
             'payment_method' => 'authorize-net',
             'payment_status' => OrderStatus::PAID,
