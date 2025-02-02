@@ -136,7 +136,7 @@
         <tr style="margin-bottom: 1rem;">
             <td style="text-align: center">
                 <span style="display: inline-block; background-color: #F3F4F6; border-style: dashed; border-width: 2px; border-color: #D1D5DB; padding: 0.5rem 1rem; border-radius: 0.25rem; font-size: 1.25rem; font-family: monospace;">
-                    {{ $user->verification_code }}
+                    {{ $user['verification_code'] }}
                 </span>
             </td>
         </tr>
