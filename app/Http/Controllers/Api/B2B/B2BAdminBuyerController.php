@@ -24,14 +24,14 @@ class B2BAdminBuyerController extends Controller
         return $this->buyerService->viewBuyer($id);
     }
 
-    public function editBuyer(Request $request)
+    public function editBuyer($id,Request $request)
     {
-        return $this->buyerService->editBuyer($request);
+        return $this->buyerService->editBuyer($id,$request);
     }
 
-    public function editBuyerCompany(Request $request)
+    public function editBuyerCompany($id,Request $request)
     {
-        return $this->buyerService->editBuyerCompany($request);
+        return $this->buyerService->editBuyerCompany($id,$request);
     }
 
     public function banBuyer($id)
@@ -43,6 +43,7 @@ class B2BAdminBuyerController extends Controller
     {
         return $this->buyerService->removeBuyer($id);
     }
+    
     public function approveBuyer($id)
     {
         return $this->buyerService->approveBuyer($id);

@@ -125,7 +125,7 @@ class AdminService
             'shipped_orders' => $orders->total_shipped,
             'delivered_orders' => $orders->total_delivered,
             'local_orders' => $local_orders,
-            'international__orders' => $international_orders,
+            'international_orders' => $international_orders,
 
         ];
 
@@ -420,6 +420,8 @@ class AdminService
 
         $data = [
             'buyers_count' => $buyers->count(),
+            'active_buyers' => $buyers->where('status',UserStatus::ACTIVE)->count(),
+            'pending_buyers' => $buyers->where('status',UserStatus::PENDING)->count(),
             'buyers' => $buyers,
         ];
         return $this->success($data, "buyers ");
@@ -441,9 +443,9 @@ class AdminService
         ];
     }
 
-    public function editBuyer($data)
+    public function editBuyer($id, $data)
     {
-        $user = User::find($data->user_id);
+        $user = User::find($id);
 
         if (!$user) {
             return $this->error(null, "Buyer not found", 404);
@@ -462,9 +464,9 @@ class AdminService
         ];
     }
 
-    public function editBuyerCompany($data)
+    public function editBuyerCompany($id, $data)
     {
-        $user = User::find($data->user_id);
+        $user = User::find($id);
 
         if (!$user) {
             return $this->error(null, "Buyer not found", 404);
@@ -845,8 +847,9 @@ class AdminService
         $searchQuery = request()->input('search');
         $users =  User::all();
 
-        $admins = Admin::with('permissions')
-            ->select('id', 'first_name', 'email', 'created_at')
+        $admins = Admin::with(['permissions' => function ($query): void {
+            $query->select('permission_id', 'name');
+        }])->select('id', 'first_name', 'email', 'created_at')
             ->latest('created_at')->when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
                 $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
                     $subQuery->where('type', AdminType::B2B)
@@ -879,7 +882,7 @@ class AdminService
                 'phone_number' => $data->phone_number,
                 'password' => bcrypt($data->password),
             ]);
-            $admin->roles()->sync($data->role_id);
+            $admin->permissions()->sync($data->permissions);
             $loginDetails = [
                 'name' => $data->first_name,
                 'email' => $data->email,
@@ -917,12 +920,19 @@ class AdminService
         return $this->success($admin, 'Details updated successfully');
     }
 
-    public function revokeAccess($data)
+    public function verifyPassword($data)
     {
-        $admin = Admin::findOrFail($data->admin_id);
-        if ($data->permissions) {
-            $admin->permissions()->sync($data->permissions);
+        $currentUserId = userAuthId();
+        $admin = Admin::findOrFail($currentUserId);
+        if (Hash::check($data->password, $admin->password)) {
+            return $this->success(null, 'Password matched');
         }
+        return $this->error(null, 'Password do not match');
+    }
+    public function revokeAccess($id)
+    {
+        $admin = Admin::findOrFail($id);
+        $admin->permissions()->detach();
         return $this->success(null, 'Access Revoked');
     }
 
