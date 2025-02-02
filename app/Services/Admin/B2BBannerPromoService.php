@@ -8,9 +8,12 @@ use App\Enum\CouponType;
 use App\Models\B2bPromo;
 use App\Models\B2bBanner;
 use App\Enum\BannerStatus;
+use App\Enum\ProductStatus;
+use App\Models\B2BProduct;
 use App\Trait\HttpResponse;
 use App\Http\Resources\PromoResource;
 use App\Http\Resources\B2BBannerResource;
+use App\Http\Resources\B2BProductResource;
 
 class B2BBannerPromoService
 {
@@ -43,8 +46,9 @@ class B2BBannerPromoService
 
     public function getOneBanner($id)
     {
-        $banners = B2bBanner::findOrFail($id);
-        $data = new B2BBannerResource($banners);
+        $banner = B2bBanner::findOrFail($id);
+     
+        $data = new B2BBannerResource($banner);
 
         return $this->success($data, "Banner detail");
     }
@@ -52,6 +56,7 @@ class B2BBannerPromoService
     public function editBanner($request, $id)
     {
         $banner = B2bBanner::findOrFail($id);
+
         if ($request->hasFile('image')) {
             # code...
             $image = uploadImage($request, 'image', 'banner', null, $banner);
@@ -96,6 +101,13 @@ class B2BBannerPromoService
         return null;
     }
 
+    public function getProducts()
+    {
+        $products = B2BProduct::where('status', ProductStatus::ACTIVE)->get();
+        $data = B2BProductResource::collection($products);
+
+        return $this->success($data, "All Products");
+    }
     public function promos()
     {
         $promos = B2bPromo::get();

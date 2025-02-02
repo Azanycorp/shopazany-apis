@@ -22,11 +22,11 @@ class AddBannerRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'title' => ['required', 'string'],
-            'image' => ['required', 'image'],
-            'start_date' => ['required', 'date'],
-            'end_date' => ['required', 'date'],
-            'products' => ['required'],
+            'title' => 'required',
+            'image' => 'required|image',
+            'start_date' => 'required|date_format:Y-m-d H:i:s',
+            'end_date' => 'required|date_format:Y-m-d H:i:s',
+            'products' => 'required',
         ];
     }
 }

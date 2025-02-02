@@ -870,12 +870,15 @@ class SellerService extends Controller
         $orders =  B2bOrder::with('buyer')
             ->where('seller_id', $currentUserId)
             ->get();
+            
+        $uniqueSellersCount = B2bOrder::where(['seller_id' => $currentUserId, 'status' => OrderStatus::DELIVERED])
+            ->distinct('buyer_id')
+            ->count('buyer_id');
 
-        $orderStats =  B2bOrder::with('buyer')
-            ->where([
-                'seller_id' => $currentUserId,
-                'created_at' => Carbon::today()->subDays(7)
-            ])->where('status',OrderStatus::DELIVERED)->sum('total_amount');
+        $orderStats =  B2bOrder::where([
+            'seller_id' => $currentUserId,
+            'created_at' => Carbon::today()->subDays(7)
+        ])->where('status', OrderStatus::DELIVERED)->sum('total_amount');
 
         $rfqs =  Rfq::with('buyer')->where('seller_id', $currentUserId)->get();
         $payouts =  Payout::where('seller_id', $currentUserId)->get();
@@ -890,9 +893,9 @@ class SellerService extends Controller
         $data = [
             'total_sales' => $orderStats,
             'rfq_recieved' => $rfqs->count(),
-            'partners' => $rfqs->count(),
+            'partners' => $uniqueSellersCount,
             'rfq_processed' => $rfqs->where('status', OrderStatus::COMPLETED)->count(),
-            'deals_in_progress' => $orders->where('status', OrderStatus::SHIPPED)->count(),
+            'deals_in_progress' => $orders->where('status', OrderStatus::PAID)->count(),
             'deals_in_completed' => $orders->where('status', OrderStatus::DELIVERED)->count(),
             'withdrawable_balance' => $wallet ? $wallet->master_wallet : 0,
             'pending_withdrawals' => $payouts->where('status', OrderStatus::PENDING)->count(),
