@@ -2,14 +2,13 @@
 
 namespace App\Observers;
 
+use App\Enum\MailingEnum;
 use App\Models\User;
 use App\Enum\UserType;
 use App\Models\Product;
-use App\Models\B2bCompany;
 use App\Models\UserWallet;
 use App\Enum\ProductStatus;
 use App\Mail\SignUpVerifyMail;
-use App\Models\BusinessInformation;
 use Illuminate\Contracts\Events\ShouldHandleEventsAfterCommit;
 
 class UserObserver implements ShouldHandleEventsAfterCommit
@@ -19,7 +18,10 @@ class UserObserver implements ShouldHandleEventsAfterCommit
      */
     public function created(User $user): void
     {
-        defer(fn() => send_email($user->email, new SignUpVerifyMail($user)));
+        $type = MailingEnum::SIGN_UP_OTP;
+        $subject = "Verify Account";
+        $mail_class = "App\Mail\SignUpVerifyMail";
+        mailSend($type, $user, $subject, $mail_class);
 
         if ($user->type === UserType::CUSTOMER) {
             reward_user($user, 'create_account', 'completed');

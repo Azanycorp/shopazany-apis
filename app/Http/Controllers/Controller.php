@@ -9,6 +9,7 @@ use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
 use App\Mail\LoginVerifyMail;
 use App\Actions\UserLogAction;
+use App\Enum\MailingEnum;
 use App\Exports\ProductExport;
 use App\Exports\B2BProductExport;
 use Illuminate\Support\Facades\App;
@@ -185,14 +186,18 @@ abstract class Controller
         }
 
         $code = generateVerificationCode();
-        $time = now()->addMinutes(5);
+        $time = now()->addMinutes(10);
 
         $user->update([
             'login_code' => $code,
             'login_code_expires_at' => $time,
         ]);
 
-        Mail::to($request->email)->send(new LoginVerifyMail($user));
+        $type = MailingEnum::LOGIN_OTP;
+        $subject = "Login OTP";
+        $mail_class = "App\Mail\LoginVerifyMail";
+
+        mailSend($type, $user, $subject, $mail_class);
 
         $description = "Attempt to login by {$request->email}";
         $response = $this->success(null, "Code has been sent to your email address.");
@@ -251,8 +256,8 @@ abstract class Controller
             $path = 's3';
         }
 
+        $data = null;
         Excel::store(new B2BProductExport($userId, $data), $fileName, $path);
-
         $fileUrl = ($path === 's3') ? Storage::disk('s3')->url($fileName) : asset('storage/' . $fileName);
 
         return $this->success(['file_url' => $fileUrl], "Product export successful.");

@@ -3,6 +3,7 @@
 namespace App\Services\Auth;
 
 use App\Actions\SendEmailAction;
+use App\Enum\MailingEnum;
 use App\Enum\UserLog;
 use App\Enum\UserStatus;
 use App\Enum\UserType;
@@ -114,7 +115,11 @@ class AuthService extends Controller
                 'verification_code' => $code,
             ]);
 
-            defer(fn() => send_email($request->email, new SignUpVerifyMail($user)));
+            $type = MailingEnum::RESEND_CODE;
+            $subject = "Resend code";
+            $mail_class = "App\Mail\SignUpVerifyMail";
+
+            mailSend($type, $user, $subject, $mail_class);
 
             $description = "User with email address {$request->email} has requested a code to be resent.";
             $action = UserLog::CODE_RESENT;
@@ -214,7 +219,11 @@ class AuthService extends Controller
             'status' => UserStatus::ACTIVE
         ]);
 
-        (new SendEmailAction($user->email, new UserWelcomeMail($user)))->run();
+        $type = MailingEnum::EMAIL_VERIFICATION;
+        $subject = "Email verification";
+        $mail_class = "App\Mail\UserWelcomeMail";
+
+        mailSend($type, $user, $subject, $mail_class);
 
         $description = "User with email address {$request->email} verified OTP";
         $action = UserLog::CREATED;

@@ -8,8 +8,10 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 
 class B2BProductExport implements FromCollection, WithHeadings
 {
-    protected $userId,$data;
-    public function __construct($userId,$data)
+    protected $userId;
+    protected $data;
+
+    public function __construct($userId, $data)
     {
         $this->userId = $userId;
         $this->data = $data;
