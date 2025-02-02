@@ -635,7 +635,6 @@ class SellerService extends Controller
 
     public function getOrderDetails($id)
     {
-        return Auth::user();
         $order = B2bOrder::with(['buyer' => function ($query): void {
             $query->select('id', 'first_name', 'last_name')->where('type', UserType::B2B_BUYER);
         }, 'seller' => function ($query): void {
@@ -676,7 +675,7 @@ class SellerService extends Controller
 
     public function getRfqDetails($id)
     {
-        $rfq = Rfq::with(['buyer','seller'])->find($id);
+        $rfq = Rfq::with(['buyer', 'seller'])->find($id);
         if (!$rfq) {
             return $this->error(null, "No record found.", 404);
         }
@@ -690,19 +689,18 @@ class SellerService extends Controller
 
     public function markShipped($data)
     {
-        $rfq = Rfq::find($data->rfq_id);
+        $order = B2bOrder::find($data->order_id);
 
-        if (!$rfq) {
+        if (!$order) {
             return $this->error(null, 'No record found to send', 404);
         }
 
-        $rfq->update([
-            'payment_status' => 'paid',
-            'status' => 'shipped',
+        $order->update([
+            'status' => OrderStatus::SHIPPED,
             'shipped_date' => now()->toDateString(),
         ]);
 
-        return $this->success($rfq, 'Product Shipped successfully');
+        return $this->success($order, 'order Shipped successfully');
     }
 
     public function replyRequest($data)
@@ -733,28 +731,17 @@ class SellerService extends Controller
 
     public function markDelivered($data)
     {
-        $rfq = Rfq::find($data->rfq_id);
+        $order = B2bOrder::find($data->order_id);
 
-        if (! $rfq) {
+        if (!$order) {
             return $this->error(null, 'No record found to send', 404);
         }
 
-        $rfq->update([
-            'payment_status' => 'paid',
-            'status' => 'delivered',
+        $order->update([
+            'status' => OrderStatus::DELIVERED,
             'delivery_date' => now()->toDateString()
         ]);
-
-        //Update product
-        $product = B2BProduct::findOrFail($rfq->product_id);
-        $remaining_qty = $product->quantity - $rfq->product_quantity;
-
-        $product->update([
-            'availability_quantity' => $remaining_qty,
-            'sold' => $product->sold + $rfq->product_quantity,
-        ]);
-
-        return $this->success($rfq, 'Product marked delivered successfully');
+        return $this->success($order, 'Order marked delivered successfully');
     }
 
     public function confirmPayment($data)
@@ -817,19 +804,39 @@ class SellerService extends Controller
         }
     }
 
+    public function cancelOrder($data)
+    {
+        $order = B2bOrder::find($data->order_id);
+        if (!$order) {
+            return $this->error(null, "Order not found", 404);
+        }
+        $order->update([
+            'status' => OrderStatus::CANCELLED
+        ]);
+        $product = B2BProduct::find($order->product_id);
+        if (!$order) {
+            return $this->error(null, "Product not found", 404);
+        }
+        $product->availability_quantity += $order->product_quantity;
+        $product->sold -= $order->product_quantity;
+        $product->save();
+
+        return $this->success(null, "Order Cancelled successful");
+    }
+
     public function rateOrder($data)
     {
-        $rfq = Rfq::find($data->rfq_id);
+        $order = B2bOrder::find($data->order_id);
 
         $userId = userAuthId();
 
-        if (!$rfq) {
+        if (!$order) {
             return $this->error(null, "No record found", 404);
         }
 
         B2bOrderRating::create([
             'seller_id' => $userId,
-            'order_no' => $rfq->quote_no,
+            'order_no' => $order->order_no,
             'rating' => $data->rating,
             'description' => $data->description ? $data->description : 'description'
         ]);
@@ -839,16 +846,17 @@ class SellerService extends Controller
 
     public function orderFeeback($data)
     {
-        $rfq = Rfq::find($data->rfq_id);
+        $order = B2bOrder::find($data->order_id);
+
         $userId = userAuthId();
 
-        if (!$rfq) {
+        if (!$order) {
             return $this->error(null, "No record found", 404);
         }
 
         B2bOrderFeedback::create([
             'seller_id' => $userId,
-            'order_no' => $rfq->quote_no,
+            'order_no' => $order->order_no,
             'description' => $data->description
         ]);
 
@@ -859,16 +867,18 @@ class SellerService extends Controller
     public function getDashboardDetails()
     {
         $currentUserId = userAuthId();
-
-        $orders =  Rfq::with('buyer')
+        $orders =  B2bOrder::with('buyer')
             ->where('seller_id', $currentUserId)
             ->get();
+            
+        $uniqueSellersCount = B2bOrder::where(['seller_id' => $currentUserId, 'status' => OrderStatus::DELIVERED])
+            ->distinct('buyer_id')
+            ->count('buyer_id');
 
-        $orderStats =  Rfq::with('buyer')
-            ->where([
-                'seller_id' => $currentUserId,
-                'created_at' => Carbon::today()->subDays(7)
-            ])->where('status', 'confirmed')->sum('total_amount');
+        $orderStats =  B2bOrder::where([
+            'seller_id' => $currentUserId,
+            'created_at' => Carbon::today()->subDays(7)
+        ])->where('status', OrderStatus::DELIVERED)->sum('total_amount');
 
         $rfqs =  Rfq::with('buyer')->where('seller_id', $currentUserId)->get();
         $payouts =  Payout::where('seller_id', $currentUserId)->get();
@@ -880,24 +890,18 @@ class SellerService extends Controller
             ]);
         }
 
-        DB::table('rfqs')
-            ->select('buyer_id', DB::raw('COUNT(*) as total_orders'))
-            ->groupBy('id')
-            ->where('seller_id', $currentUserId)
-            ->count();
-
         $data = [
             'total_sales' => $orderStats,
             'rfq_recieved' => $rfqs->count(),
-            'partners' => $rfqs->count(),
-            'rfq_processed' => $rfqs->where('status', '!=', 'pending')->count(),
-            'deals_in_progress' => $orders->where('status', 'in-progress')->count(),
-            'deals_in_completed' => $orders->where('status', 'confirmed')->count(),
+            'partners' => $uniqueSellersCount,
+            'rfq_processed' => $rfqs->where('status', OrderStatus::COMPLETED)->count(),
+            'deals_in_progress' => $orders->where('status', OrderStatus::PAID)->count(),
+            'deals_in_completed' => $orders->where('status', OrderStatus::DELIVERED)->count(),
             'withdrawable_balance' => $wallet ? $wallet->master_wallet : 0,
-            'pending_withdrawals' => $payouts->where('status', 'pending')->count(),
-            'rejected_withdrawals' => $payouts->where('status', 'cancelled')->count(),
-            'delivery_charges' => $payouts->where('status', 'paid')->sum('fee'),
-            'life_time' => $payouts->where('status', 'paid')->sum('amount'),
+            'pending_withdrawals' => $payouts->where('status', OrderStatus::PENDING)->count(),
+            'rejected_withdrawals' => $payouts->where('status', OrderStatus::CANCELLED)->count(),
+            'delivery_charges' => $payouts->where('status', OrderStatus::PAID)->sum('fee'),
+            'life_time' => $payouts->where('status', OrderStatus::PAID)->sum('amount'),
             'recent_orders' => $orders,
         ];
 

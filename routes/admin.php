@@ -246,6 +246,7 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function (): void
         Route::prefix('promo')->controller(B2BBannerPromoController::class)->group(function (): void {
             Route::post('/add', 'addPromo');
             Route::get('/', 'promos');
+            Route::get('/products', 'getProducts');
             Route::delete('/delete/{id}', 'deletePromo');
         });
 
@@ -255,6 +256,8 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function (): void
             Route::get('/', 'allBuyers');
             Route::get('/filter', 'filter');
             Route::get('/details/{user_id}', 'viewBuyer');
+            Route::post('/update-details', 'editBuyer');
+            Route::post('/update-company-details', 'editBuyerCompany');
             Route::patch('/approve/{user_id}', 'approveBuyer');
             Route::patch('/ban/{user_id}', 'banBuyer');
             Route::delete('/bulk-remove', 'bulkRemoveBuyer');
@@ -265,20 +268,15 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function (): void
         Route::prefix('seller')->controller(B2BAdminSellerController::class)->group(function (): void {
             Route::get('/', 'allSellers');
             Route::get('/details/{user_id}', 'viewSeller');
-            Route::get('/payment-history/{user_id}', 'paymentHistory');
-
-            Route::patch('/{user_id}/edit', 'editSeller');
             Route::delete('/remove/{user_id}', 'removeSeller');
-
             Route::patch('/approve', 'approveSeller');
             Route::patch('/ban', 'banSeller');
-
             Route::delete('/bulk/remove', 'bulkRemove');
 
             Route::prefix('product')->controller(B2BAdminSellerController::class)->group(function (): void {
                 Route::post('/add', 'addSellerProduct');
                 Route::get('/details/{id}/{user_id}', 'viewSellerProduct');
-                Route::post('/update{id}', 'editSellerProduct');
+                Route::post('/update/{id}', 'editSellerProduct');
                 Route::delete('/delete/{user_id}/{id}', 'removeSellerProduct');
             });
         });

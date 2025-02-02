@@ -2,14 +2,16 @@
 
 namespace App\Services\Auth;
 
+use App\Models\User;
+use App\Trait\Login;
 use App\Enum\UserLog;
 use App\Enum\UserStatus;
-use App\Http\Controllers\Controller;
-use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 
-class LoginService extends Controller
+class LoginService
 {
+    use Login;
+
     public static function AuthLogin($request)
     {
         $request->validated();

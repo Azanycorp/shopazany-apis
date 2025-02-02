@@ -8,6 +8,7 @@ use App\Enum\UserType;
 use App\Enum\RfqStatus;
 use App\Models\Payment;
 use App\Enum\UserStatus;
+use App\Models\B2bOrder;
 use App\Models\B2bQuote;
 use App\Enum\OrderStatus;
 use App\Models\B2bCompany;
@@ -223,14 +224,14 @@ class BuyerService
     public function getProducts()
     {
         $products = B2BProduct::with([
-                'category',
-                'user',
-                'b2bLikes',
-                'b2bProductReview',
-                'subCategory',
-                'country',
-                'b2bProductImages'
-            ])
+            'category',
+            'user',
+            'b2bLikes',
+            'b2bProductReview',
+            'subCategory',
+            'country',
+            'b2bProductImages'
+        ])
             ->where('status', ProductStatus::ACTIVE)
             ->get();
 
@@ -250,47 +251,16 @@ class BuyerService
     }
     public function bestSelling()
     {
-        $countryId = request()->query('country_id');
-
-        $query = B2BProduct::with('shopCountry')->select(
-            'b2b_products.id',
-            'b2b_products.name',
-            'b2b_products.slug',
-            'b2b_products.front_image',
-            'b2b_products.unit_price',
-            'b2b_products.description',
-            'b2b_products.category_id',
-            'b2b_products.country_id',
-            DB::raw('COUNT(b2b_orders.id) as total_orders')
-        )
-            ->leftJoin('b2b_orders', 'b2b_orders.product_id', '=', 'b2b_products.id')
-            ->where('b2b_orders.status', OrderStatus::DELIVERED)
-            ->groupBy(
-                'b2b_products.id',
-                'b2b_products.name',
-                'b2b_products.unit_price',
-                'b2b_products.slug',
-                'b2b_products.front_image',
-                'b2b_products.description',
-                'b2b_products.category_id',
-                'b2b_products.country_id'
-            )
-            ->orderBy('total_orders', 'DESC')
-            ->take(10);
-
-        if ($countryId) {
-            $query->where('b2b_orders.country_id', $countryId);
-        }
-
-        $products = $query->get();
-
-        $products->each(function ($product): void {
-            $product->currency = $product->shopCountry->currency ?? null;
-            unset($product->shopCountry);
-        });
-
-        return $this->success($products, "Best selling products");
+        $bestSellingProducts = B2bOrder::select('product_id', DB::raw('SUM(product_quantity) as total_sold'))
+            ->groupBy('product_id')
+            ->orderByDesc('total_sold')
+            ->take(10)
+            ->with('product')
+            ->where('status', OrderStatus::DELIVERED)
+            ->get();
+        return $this->success($bestSellingProducts, "Best selling products");
     }
+
     public function featuredProduct()
     {
         $countryId = request()->query('country_id');
@@ -313,18 +283,19 @@ class BuyerService
 
         return $this->success($data, "Featured products");
     }
+
     public function searchProduct()
     {
         $searchQuery = request()->input('search');
         $products = B2BProduct::with([
-                'country',
-                'b2bProductReview', 
-                'b2bLikes',
-                'b2bProductImages',
-                'category',
-                'subCategory',
-                'user'
-            ])
+            'country',
+            'b2bProductReview',
+            'b2bLikes',
+            'b2bProductImages',
+            'category',
+            'subCategory',
+            'user'
+        ])
             ->where('name', 'LIKE', '%' . $searchQuery . '%')
             ->orWhere('unit_price', 'LIKE', '%' . $searchQuery . '%')
             ->get();
@@ -496,43 +467,32 @@ class BuyerService
         $startDate = now()->subDays(7); // 7 days ago
         $endDate = now(); // Current date and time
 
-        $rfqStats = DB::table('rfqs')
-            ->selectRaw("
-            COUNT(CASE WHEN status = ? THEN 1 END) AS pending_deals,
-            COUNT(CASE WHEN status = ? THEN 1 END) AS deals_inprogress,
-            COUNT(CASE WHEN status = ? THEN 1 END) AS deals_accepted,
-            COUNT(CASE WHEN status = ? THEN 1 END) AS deals_completed
-        ", [
-                RfqStatus::PENDING,
-                RfqStatus::IN_PROGRESS,
-                RfqStatus::SHIPPED,
-                RfqStatus::DELIVERED,
-            ])
-            ->where('buyer_id', $currentUserId)
-            ->first();
+        $rfqStats = Rfq::where('buyer_id', $currentUserId);
+        $deals = B2bOrder::where('buyer_id', $currentUserId);
 
-        $orderStats = Rfq::where('buyer_id', $currentUserId)
-            ->where('status', RfqStatus::CONFIRMED)
+        $orderStats = B2bOrder::where('buyer_id', $currentUserId)
+            ->where('status', OrderStatus::DELIVERED)
             ->whereBetween('created_at', [$startDate, $endDate])
             ->sum('total_amount');
 
-        $uniqueSellersCount = Rfq::where('buyer_id', $currentUserId)
+        $uniqueSellersCount = B2bOrder::where(['buyer_id' => $currentUserId, 'status' => OrderStatus::DELIVERED])
             ->distinct('seller_id')
             ->count('seller_id');
 
-        $recentOrders = Rfq::with('seller')
+        $recentOrders = B2bOrder::with('seller')
             ->where('buyer_id', $currentUserId)
+            ->where('status', OrderStatus::PENDING)
             ->latest()
             ->take(10)
             ->get();
 
         $data = [
-            'total_sales' => $orderStats,
+            'total_purchase' => $orderStats,
             'partners' => $uniqueSellersCount,
-            'rfq_sent' => $rfqStats->total_rfqs ?? 0,
-            'rfq_accepted' => $rfqStats->rfq_accepted ?? 0,
-            'deals_in_progress' => $rfqStats->deals_inprogress ?? 0,
-            'deals_completed' => $rfqStats->deals_completed ?? 0,
+            'rfq_sent' => $rfqStats->where('status', RfqStatus::PENDING)->count() ?? 0,
+            'rfq_accepted' => $rfqStats->where('status', RfqStatus::COMPLETED)->count() ?? 0,
+            'deals_in_progress' => $deals->where('status', OrderStatus::PENDING)->count() ?? 0,
+            'deals_completed' => $deals->where('status', OrderStatus::PENDING)->count() ?? 0,
             'recent_orders' => $recentOrders,
         ];
 
@@ -816,7 +776,7 @@ class BuyerService
         }
 
         $company->update([
-            'business_name' => $request->company_name ?? $company->company_name,
+            'business_name' => $request->business_name ?? $company->business_name,
             'business_phone' => $request->business_phone ?? $company->business_phone,
             'company_size' => $request->company_size ?? $company->company_size,
             'website' => $request->website ?? $company->website,

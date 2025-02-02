@@ -157,7 +157,7 @@ class B2BSellerController extends Controller
     {
         return $this->service->replyRequest($request);
     }
-    public function shippedRfq(Request $request)
+    public function shippOrder(Request $request)
     {
         return $this->service->markShipped($request);
     }
@@ -168,6 +168,10 @@ class B2BSellerController extends Controller
     public function confirmPayment(Request $request)
     {
         return $this->service->confirmPayment($request);
+    }
+    public function cancelOrder(Request $request)
+    {
+        return $this->service->cancelOrder($request);
     }
     public function rateOrder(Request $request)
     {

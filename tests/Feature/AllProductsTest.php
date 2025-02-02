@@ -9,11 +9,9 @@ use App\Models\Product;
 use App\Models\Category;
 use App\Enum\ProductStatus;
 use App\Models\ProductImage;
-use App\Models\ShopCountry;
 use App\Models\Size;
 use App\Models\SubCategory;
 use App\Models\Unit;
-use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class AllProductsTest extends TestCase

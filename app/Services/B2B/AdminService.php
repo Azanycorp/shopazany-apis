@@ -12,6 +12,7 @@ use App\Enum\UserStatus;
 use App\Models\B2bOrder;
 use App\Enum\AdminStatus;
 use App\Enum\OrderStatus;
+use App\Models\B2bCompany;
 use App\Models\B2BProduct;
 use App\Models\UserWallet;
 use App\Enum\ProductStatus;
@@ -28,6 +29,7 @@ use App\Http\Resources\BuyerResource;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Resources\AdminUserResource;
 use App\Http\Resources\B2BSellerResource;
+use App\Http\Resources\AdminB2BSellerResource;
 use App\Http\Resources\B2BProductResource;
 use App\Repositories\B2BProductRepository;
 use App\Repositories\B2BSellerShippingRepository;
@@ -51,8 +53,8 @@ class AdminService
     {
         $users =  User::all();
         $orders =  B2bOrder::orderStats();
-        $rfqs =  Rfq::latest('id')->get();
-
+        $rfqs =  Rfq::with(['buyer', 'seller'])->latest('id')->get();
+        $completion_request =  B2bOrder::where('status', OrderStatus::SHIPPED)->take(3)->get();
         $data = [
             'buyers' => $users->where('type', UserType::B2B_BUYER)->count(),
             'sellers' => $users->where('type', UserType::B2B_SELLER)->count(),
@@ -63,6 +65,7 @@ class AdminService
             'last_seven_days' => $orders->total_order_count_week,
             'last_thirty_days' => $orders->total_order_amount_month,
             'recent_rfqs' => $rfqs,
+            'completion_request' => $completion_request,
         ];
 
         return $this->success($data, "Dashboard details");
@@ -71,12 +74,17 @@ class AdminService
     public function getAllRfq()
     {
         $rfqs =  Rfq::with(['buyer', 'seller'])->latest('id')->get();
+        $active_rfqs =  Rfq::where('status', OrderStatus::COMPLETED)->count();
+        $users =  User::all();
 
-        if ($rfqs->isEmpty()) {
-            return $this->error(null, "No record found.", 404);
-        }
+        $data = [
+            'buyers' => $users->where('type', UserType::B2B_BUYER)->count(),
+            'sellers' => $users->where('type', UserType::B2B_SELLER)->count(),
+            'active_rfqs' => $active_rfqs,
+            'recent_rfqs' => $rfqs,
+        ];
 
-        return $this->success($rfqs, "rfqs");
+        return $this->success($data, "rfqs");
     }
 
     public function getRfqDetails($id)
@@ -90,18 +98,34 @@ class AdminService
         return $this->success($order, "Rfq details");
     }
 
-    public function getAllOrders($data)
+    public function getAllOrders()
     {
+        $searchQuery = request()->input('search');
         $orders =  B2bOrder::orderStats();
-        $recent_orders = B2bOrder::where('order_no', $data->search)->orWhere('id', $data->search)->get();
+
+        $international_orders = B2bOrder::when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
+            $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
+                $subQuery->where('country_id', '!=', 160)
+                    ->orWhere('order_no', 'LIKE', '%' . $searchQuery . '%');
+            });
+        })->get();
+
+        $local_orders = B2bOrder::when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
+            $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
+                $subQuery->where('country_id', 160)
+                    ->orWhere('order_no', 'LIKE', '%' . $searchQuery . '%');
+            });
+        })->get();
+
 
         $data = [
             'all_orders' => $orders->total_orders,
+            'cancelled_orders' => $orders->total_cancelled,
             'pending_orders' => $orders->total_pending,
             'shipped_orders' => $orders->total_shipped,
-            'delivery_orders' => $orders->total_delivered,
-
-            'recent_orders' => $recent_orders,
+            'delivered_orders' => $orders->total_delivered,
+            'local_orders' => $local_orders,
+            'international__orders' => $international_orders,
 
         ];
 
@@ -122,51 +146,28 @@ class AdminService
     //Sellers
     //Admin section
 
-    public function allSellers(): array
+    public function allSellers()
     {
-        $searchQuery = request()->input('search');
-        $approvedQuery = request()->query('approved');
-        $total_users = User::where('type', UserType::B2B_SELLER);
-        $inactive_users = User::where(['type' => UserType::B2B_SELLER, 'status' => UserStatus::PENDING])->count()
-            + User::where(['type' => UserType::B2B_SELLER, 'status' => UserStatus::SUSPENDED])->count()
-            + User::where(['type' => UserType::B2B_SELLER, 'status' => UserStatus::BLOCKED])->count();
 
-        $users = User::where('type', UserType::B2B_SELLER)
-            ->when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
-                $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
-                    $subQuery->where('first_name', 'LIKE', '%' . $searchQuery . '%')
-                        ->orWhere('last_name', 'LIKE', '%' . $searchQuery . '%')
-                        ->orWhere('middlename', 'LIKE', '%' . $searchQuery . '%')
-                        ->orWhere('email', 'LIKE', '%' . $searchQuery . '%');
-                });
-            })
-            ->when($approvedQuery !== null, function ($queryBuilder) use ($approvedQuery): void {
-                $queryBuilder->where('is_admin_approve', $approvedQuery);
-            })
-            ->paginate(25);
+        $sellers = User::with(['b2bProducts', 'businessInformation'])
+            ->where('type', UserType::B2B_SELLER)
+            ->latest('created_at')->get();
 
-        // $data = B2BSellerResource::collection($users);
+        $users = User::where('type', UserType::B2B_SELLER);
+        $inactive = User::whereIn('status', [UserStatus::PENDING, UserStatus::BLOCKED, UserStatus::SUSPENDED]);
 
-        return [
-            'status' => 'true',
-            'message' => 'Sellers filtered',
-            'all_users' => $total_users->count(),
-            'active_users' => $total_users->where('status', UserStatus::ACTIVE)->count(),
-            'inactive_users' => $inactive_users,
-            'data' => $users,
-            'pagination' => [
-                'current_page' => $users->currentPage(),
-                'last_page' => $users->lastPage(),
-                'per_page' => $users->perPage(),
-                'prev_page_url' => $users->previousPageUrl(),
-                'next_page_url' => $users->nextPageUrl(),
-            ],
+        $data = [
+            'sellers_count' => $users->count(),
+            'active' => $users->where('status', UserStatus::ACTIVE)->count(),
+            'inactive' => $inactive->count(),
+            'sellers' => $sellers,
         ];
+        return $this->success($data, "sellers details");
     }
 
     public function approveSeller($request)
     {
-        $user = User::find($request->user_id);
+        $user = User::where('type', UserType::B2B_SELLER)->find($request->user_id);
 
         if (!$user) {
             return $this->error(null, "User not found", 404);
@@ -192,7 +193,6 @@ class AdminService
         }
         $search = request()->search;
         $data = new B2BSellerResource($user);
-        // $products = B2BProduct::whereBelongsTo($user)->latest('id')->get();
         $query = B2BProduct::with(['b2bProductImages', 'category', 'country', 'user', 'subCategory'])
             ->where('user_id', $id);
 
@@ -236,7 +236,7 @@ class AdminService
 
     public function banSeller($request)
     {
-        $user = User::find($request->user_id);
+        $user = User::where('type', UserType::B2B_SELLER)->find($request->user_id);
 
         if (!$user) {
             return $this->error(null, "User not found", 404);
@@ -252,7 +252,7 @@ class AdminService
 
     public function removeSeller($id)
     {
-        $user = User::find($id);
+        $user = User::where('type', UserType::B2B_SELLER)->find($id);
 
         if (!$user) {
             return $this->error(null, "User not found", 404);
@@ -265,7 +265,7 @@ class AdminService
 
     public function bulkRemove($request)
     {
-        $users = User::whereIn('id', $request->user_ids)->get();
+        $users = User::where('type', UserType::B2B_SELLER)->whereIn('id', $request->user_ids)->get();
 
         foreach ($users as $user) {
             $user->status = UserStatus::DELETED;
@@ -336,16 +336,11 @@ class AdminService
         return $this->success($data, 'Product details');
     }
 
-    public function editSellerProduct($request)
+    public function editSellerProduct($id, $request)
     {
-        $currentUserId = userAuthId();
-
-        if ($currentUserId != $request->user_id) {
-            return $this->error(null, "Unauthorized action.", 401);
-        }
 
         $user = User::findOrFail($request->user_id);
-        $prod = B2BProduct::findOrFail($request->product_id);
+        $prod = B2BProduct::findOrFail($id);
 
         $parts = explode('@', $user->email);
         $name = $parts[0];
@@ -373,20 +368,18 @@ class AdminService
             'user_id' => $user->id,
             'name' => $request->name ?? $prod->name,
             'slug' => $slug,
-            'category_id' => $request->category_id,
-            'sub_category_id' => $request->sub_category_id,
-            'keywords' => $request->keywords,
-            'description' => $request->description,
+            'category_id' => $request->category_id ?? $prod->category_id,
+            'sub_category_id' => $request->sub_category_id ?? $prod->name,
+            'keywords' => $request->keywords ?? $prod->keywords,
+            'description' => $request->description ?? $prod->description,
             'front_image' => $url,
-            'minimum_order_quantity' => $request->minimum_order_quantity,
-            'unit_price' => $request->unit,
-            'quantity' => $request->quantity,
-            'available_quantity' => $request->quantity - $prod->sold,
-            'fob_price' => $request->fob_price,
+            'minimum_order_quantity' => $request->minimum_order_quantity ?? $prod->minimum_order_quantity,
+            'unit_price' => $request->unit ?? $prod->unit_price,
+            'quantity' => $request->quantity ?? $prod->quantity,
             'country_id' => $user->country ?? 160,
         ];
 
-        $product = $this->b2bProductRepository->update($request->product_id, $data);
+        $product = $this->b2bProductRepository->update($id, $data);
 
         if ($request->hasFile('images')) {
             $product->b2bProductImages()->delete();
@@ -416,50 +409,20 @@ class AdminService
         return $this->success(null, 'Deleted successfully');
     }
 
-    //Sellers
+    //buyers
     //Admin section
 
-    public function allBuyers(): array
+    public function allBuyers()
     {
-        $searchQuery = request()->input('search');
-        $approvedQuery = request()->query('approved');
-        $total_users = User::where('type', UserType::B2B_BUYER);
-        $inactive_users = User::where(['type' => UserType::B2B_BUYER, 'status' => UserStatus::PENDING])->count()
-            + User::where(['type' => UserType::B2B_BUYER, 'status' => UserStatus::SUSPENDED])->count()
-            + User::where(['type' => UserType::B2B_BUYER, 'status' => UserStatus::BLOCKED])->count();
-
-        $users = User::with(['userCountry', 'state', 'b2bCompany'])
+        $buyers = User::with('b2bCompany')
             ->where('type', UserType::B2B_BUYER)
-            ->when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
-                $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
-                    $subQuery->where('first_name', 'LIKE', '%' . $searchQuery . '%')
-                        ->orWhere('last_name', 'LIKE', '%' . $searchQuery . '%')
-                        ->orWhere('middlename', 'LIKE', '%' . $searchQuery . '%')
-                        ->orWhere('email', 'LIKE', '%' . $searchQuery . '%');
-                });
-            })
-            ->when($approvedQuery !== null, function ($queryBuilder) use ($approvedQuery): void {
-                $queryBuilder->where('is_admin_approve', $approvedQuery);
-            })
-            ->paginate(25);
+            ->latest('created_at')->get();
 
-        $data = BuyerResource::collection($users);
-
-        return [
-            'status' => 'true',
-            'message' => 'Buyers filtered',
-            'all_users' => $total_users->count(),
-            'active_users' => $total_users->where('status', UserStatus::ACTIVE)->count(),
-            'inactive_users' => $inactive_users,
-            'data' => $data,
-            'pagination' => [
-                'current_page' => $users->currentPage(),
-                'last_page' => $users->lastPage(),
-                'per_page' => $users->perPage(),
-                'prev_page_url' => $users->previousPageUrl(),
-                'next_page_url' => $users->nextPageUrl(),
-            ],
+        $data = [
+            'buyers_count' => $buyers->count(),
+            'buyers' => $buyers,
         ];
+        return $this->success($data, "buyers ");
     }
 
     public function viewBuyer($id)
@@ -475,6 +438,54 @@ class AdminService
             'status' => 'true',
             'message' => 'Buyer details',
             'data' => $user,
+        ];
+    }
+
+    public function editBuyer($data)
+    {
+        $user = User::find($data->user_id);
+
+        if (!$user) {
+            return $this->error(null, "Buyer not found", 404);
+        }
+        $image = $data->hasFile('image') ? uploadUserImage($data->file('image'), 'image', $user) : $user->image;
+        $user->update([
+            'first_name' => $data->first_name ?? $user->first_name,
+            'last_name' => $data->last_name ?? $user->last_name,
+            'email' => $data->email ?? $user->email,
+            'image' => $data->image ? $image : $user->image,
+        ]);
+        return [
+            'status' => 'true',
+            'message' => 'Buyer details',
+            'data' => $user,
+        ];
+    }
+
+    public function editBuyerCompany($data)
+    {
+        $user = User::find($data->user_id);
+
+        if (!$user) {
+            return $this->error(null, "Buyer not found", 404);
+        }
+
+        $company = B2bCompany::where('user_id', $user->id)->first();
+
+        if (!$company) {
+            return $this->error(null, 'No company found to update', 404);
+        }
+        $company->update([
+            'business_name' => $data->business_name ?? $company->business_name,
+            'company_size' => $data->company_size ?? $company->company_size,
+            'website' => $data->website ?? $company->website,
+            'service_type' => $data->service_type ?? $company->service_type,
+        ]);
+
+        return [
+            'status' => 'true',
+            'message' => 'company details',
+            'data' => $company,
         ];
     }
 
@@ -831,9 +842,26 @@ class AdminService
     //Admin User Management
     public function adminUsers()
     {
-        $users = Admin::latest('created_at')->where('type', AdminType::B2B)->get();
+        $searchQuery = request()->input('search');
+        $users =  User::all();
 
-        return $this->success($users, 'All Admin Users');
+        $admins = Admin::with('permissions')
+            ->select('id', 'first_name', 'email', 'created_at')
+            ->latest('created_at')->when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
+                $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
+                    $subQuery->where('type', AdminType::B2B)
+                        ->orWhere('first_name', 'LIKE', '%' . $searchQuery . '%')
+                        ->orWhere('email', 'LIKE', '%' . $searchQuery . '%');
+                });
+            })->get();
+
+        $data = [
+            'buyers' => $users->where('type', UserType::B2B_BUYER)->count(),
+            'sellers' => $users->where('type', UserType::B2B_SELLER)->count(),
+            'pending_approval' => $users->where('status', UserStatus::PENDING)->count(),
+            'admin_users' => $admins,
+        ];
+        return $this->success($data, 'All Admin Users');
     }
 
     public function addAdmin($data)

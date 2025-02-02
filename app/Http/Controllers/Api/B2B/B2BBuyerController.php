@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Services\B2B\BuyerService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ChangePasswordRequest;
+use App\Http\Requests\B2BBuyerShippingAddressRequest;
 
 class B2BBuyerController extends Controller
 {
@@ -129,7 +130,7 @@ class B2BBuyerController extends Controller
 
     //Shipping Address
 
-    public function addShippingAddress(Request $request)
+    public function addShippingAddress(B2BBuyerShippingAddressRequest $request)
     {
         return $this->buyerService->addShippingAddress($request);
     }
