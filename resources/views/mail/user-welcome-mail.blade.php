@@ -121,7 +121,7 @@
         <tr>
             <td class="text-center" style="text-align: center; margin-bottom: 2rem;">
                 <img src="https://azany-uploads.s3.amazonaws.com/assets/logo.png" alt="Azany Logo" style="max-height: 6rem; margin: 0 auto; display: block; margin-bottom: 1rem;">
-                <h1 style="font-size: 1.25rem; font-weight: bold;">Hi <span style="font-weight: 600;">{{ $user->first_name }}</span>,</h1>
+                <h1 style="font-size: 1.25rem; font-weight: bold;">Hi <span style="font-weight: 600;">{{ $user['first_name'] }}</span>,</h1>
                 <p style="color: #4B5563; margin-bottom: 1.5rem;">Welcome to Azany!</p>
                 <p style="color: #6B7280;">Your #1 Global E-commerce Platform</p>
             </td>

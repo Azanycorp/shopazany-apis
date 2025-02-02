@@ -8,6 +8,7 @@ use App\Models\Transaction;
 use Illuminate\Support\Str;
 use App\Models\BusinessSetting;
 use App\Models\Currency;
+use App\Models\Mailing;
 use App\Models\Order;
 use App\Models\User;
 use App\Models\UserActivityLog;
@@ -2430,6 +2431,24 @@ if (! function_exists('currencyConvert')) {
         }
 
         return round($amount * $rates[$cacheKey], 2);
+    }
+}
+
+if (! function_exists('mailSend')) {
+    function mailSend($type, $user, $subject, $mail_class) {
+        $data = [
+            'type' => $type,
+            'email' => $user->email,
+            'subject' => $subject,
+            'body' => "",
+            'mailable' => $mail_class,
+            'scheduled_at' => now(),
+            'payload' => [
+                'user' => $user
+            ]
+        ];
+
+        Mailing::saveData($data);
     }
 }
 
