@@ -420,8 +420,8 @@ class AdminService
 
         $data = [
             'buyers_count' => $buyers->count(),
-            'active_buyers' => $buyers->where('status',UserStatus::ACTIVE)->count(),
-            'pending_buyers' => $buyers->where('status',UserStatus::PENDING)->count(),
+            'active_buyers' => $buyers->where('status', UserStatus::ACTIVE)->count(),
+            'pending_buyers' => $buyers->where('status', UserStatus::PENDING)->count(),
             'buyers' => $buyers,
         ];
         return $this->success($data, "buyers ");
@@ -447,21 +447,23 @@ class AdminService
     {
         $user = User::find($id);
 
+        $check = User::where('email', $data->email)->first();
+
         if (!$user) {
             return $this->error(null, "Buyer not found", 404);
         }
-        $image = $data->hasFile('image') ? uploadUserImage($data->file('image'), 'image', $user) : $user->image;
-        $user->update([
-            'first_name' => $data->first_name ?? $user->first_name,
-            'last_name' => $data->last_name ?? $user->last_name,
-            'email' => $data->email ?? $user->email,
-            'image' => $data->image ? $image : $user->image,
-        ]);
-        return [
-            'status' => 'true',
-            'message' => 'Buyer details',
-            'data' => $user,
-        ];
+        if (!$check || $check->email == $user->email) {
+            $image = $data->hasFile('image') ? uploadUserImage($data->file('image'), 'image', $user) : $user->image;
+            $user->update([
+                'first_name' => $data->first_name ?? $user->first_name,
+                'last_name' => $data->last_name ?? $user->last_name,
+                'email' => $data->email ?? $user->email,
+                'image' => $data->image ? $image : $user->image,
+            ]);
+            return $this->success($user, "Buyer details");
+        } else {
+            return $this->error(null, "Email already exist", 404);
+        }
     }
 
     public function editBuyerCompany($id, $data)
@@ -484,11 +486,7 @@ class AdminService
             'service_type' => $data->service_type ?? $company->service_type,
         ]);
 
-        return [
-            'status' => 'true',
-            'message' => 'company details',
-            'data' => $company,
-        ];
+        return $this->success($company, "company details");
     }
 
     public function removeBuyer($id)
@@ -599,8 +597,6 @@ class AdminService
         $user->update([
             'password' => Hash::make($data->password),
         ]);
-        new AdminUserResource($user);
-
         return $this->success(null, 'Password updated');
     }
 
@@ -939,7 +935,6 @@ class AdminService
     public function removeAdmin($id)
     {
         $admin = Admin::findOrFail($id);
-        $admin->roles()->detach();
         $admin->permissions()->detach();
         $admin->delete();
         return $this->success(null, 'Deleted successfully');
