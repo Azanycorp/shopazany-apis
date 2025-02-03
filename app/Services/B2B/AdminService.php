@@ -462,6 +462,7 @@ class AdminService
             'email' => $data->email ?? $user->email,
             'image' => $data->image ? $image : $user->image,
         ]);
+        
         return [
             'status' => 'true',
             'message' => 'Buyer details',
