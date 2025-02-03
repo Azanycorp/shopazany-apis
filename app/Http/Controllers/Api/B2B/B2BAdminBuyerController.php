@@ -25,14 +25,14 @@ class B2BAdminBuyerController extends Controller
         return $this->buyerService->viewBuyer($id);
     }
 
-    public function editBuyer($id,EditBuyerRequest $request)
+    public function editBuyer($id, EditBuyerRequest $request)
     {
-        return $this->buyerService->editBuyer($id,$request);
+        return $this->buyerService->editBuyer($id, $request);
     }
 
-    public function editBuyerCompany($id,Request $request)
+    public function editBuyerCompany($id, Request $request)
     {
-        return $this->buyerService->editBuyerCompany($id,$request);
+        return $this->buyerService->editBuyerCompany($id, $request);
     }
 
     public function banBuyer($id)
