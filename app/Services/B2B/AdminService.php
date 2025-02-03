@@ -110,7 +110,7 @@ class AdminService
             });
         })->get();
 
-        $local_orders = B2bOrder::when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
+        $local_orders = B2bOrder::with(['buyer','seller'])->when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
             $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
                 $subQuery->where('country_id', 160)
                     ->orWhere('order_no', 'LIKE', '%' . $searchQuery . '%');
@@ -125,7 +125,7 @@ class AdminService
             'shipped_orders' => $orders->total_shipped,
             'delivered_orders' => $orders->total_delivered,
             'local_orders' => $local_orders,
-            'international__orders' => $international_orders,
+            'international_orders' => $international_orders,
 
         ];
 
@@ -420,6 +420,8 @@ class AdminService
 
         $data = [
             'buyers_count' => $buyers->count(),
+            'active_buyers' => $buyers->where('status', UserStatus::ACTIVE)->count(),
+            'pending_buyers' => $buyers->where('status', UserStatus::PENDING)->count(),
             'buyers' => $buyers,
         ];
         return $this->success($data, "buyers ");
@@ -441,30 +443,32 @@ class AdminService
         ];
     }
 
-    public function editBuyer($data)
+    public function editBuyer($id, $data)
     {
-        $user = User::find($data->user_id);
+        $user = User::find($id);
+
+        $check = User::where('email', $data->email)->first();
 
         if (!$user) {
             return $this->error(null, "Buyer not found", 404);
         }
-        $image = $data->hasFile('image') ? uploadUserImage($data->file('image'), 'image', $user) : $user->image;
-        $user->update([
-            'first_name' => $data->first_name ?? $user->first_name,
-            'last_name' => $data->last_name ?? $user->last_name,
-            'email' => $data->email ?? $user->email,
-            'image' => $data->image ? $image : $user->image,
-        ]);
-        return [
-            'status' => 'true',
-            'message' => 'Buyer details',
-            'data' => $user,
-        ];
+        if (!$check || $check->email == $user->email) {
+            $image = $data->hasFile('image') ? uploadUserImage($data->file('image'), 'image', $user) : $user->image;
+            $user->update([
+                'first_name' => $data->first_name ?? $user->first_name,
+                'last_name' => $data->last_name ?? $user->last_name,
+                'email' => $data->email ?? $user->email,
+                'image' => $data->image ? $image : $user->image,
+            ]);
+            return $this->success($user, "Buyer details");
+        } else {
+            return $this->error(null, "Email already exist", 404);
+        }
     }
 
-    public function editBuyerCompany($data)
+    public function editBuyerCompany($id, $data)
     {
-        $user = User::find($data->user_id);
+        $user = User::find($id);
 
         if (!$user) {
             return $this->error(null, "Buyer not found", 404);
@@ -482,11 +486,7 @@ class AdminService
             'service_type' => $data->service_type ?? $company->service_type,
         ]);
 
-        return [
-            'status' => 'true',
-            'message' => 'company details',
-            'data' => $company,
-        ];
+        return $this->success($company, "company details");
     }
 
     public function removeBuyer($id)
@@ -597,8 +597,6 @@ class AdminService
         $user->update([
             'password' => Hash::make($data->password),
         ]);
-        new AdminUserResource($user);
-
         return $this->success(null, 'Password updated');
     }
 
@@ -845,8 +843,9 @@ class AdminService
         $searchQuery = request()->input('search');
         $users =  User::all();
 
-        $admins = Admin::with('permissions')
-            ->select('id', 'first_name', 'email', 'created_at')
+        $admins = Admin::with(['permissions' => function ($query): void {
+            $query->select('permission_id', 'name');
+        }])->select('id', 'first_name', 'email', 'created_at')
             ->latest('created_at')->when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
                 $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
                     $subQuery->where('type', AdminType::B2B)
@@ -879,7 +878,7 @@ class AdminService
                 'phone_number' => $data->phone_number,
                 'password' => bcrypt($data->password),
             ]);
-            $admin->roles()->sync($data->role_id);
+            $admin->permissions()->sync($data->permissions);
             $loginDetails = [
                 'name' => $data->first_name,
                 'email' => $data->email,
@@ -917,19 +916,25 @@ class AdminService
         return $this->success($admin, 'Details updated successfully');
     }
 
-    public function revokeAccess($data)
+    public function verifyPassword($data)
     {
-        $admin = Admin::findOrFail($data->admin_id);
-        if ($data->permissions) {
-            $admin->permissions()->sync($data->permissions);
+        $currentUserId = userAuthId();
+        $admin = Admin::findOrFail($currentUserId);
+        if (Hash::check($data->password, $admin->password)) {
+            return $this->success(null, 'Password matched');
         }
+        return $this->error(null, 'Password do not match');
+    }
+    public function revokeAccess($id)
+    {
+        $admin = Admin::findOrFail($id);
+        $admin->permissions()->detach();
         return $this->success(null, 'Access Revoked');
     }
 
     public function removeAdmin($id)
     {
         $admin = Admin::findOrFail($id);
-        $admin->roles()->detach();
         $admin->permissions()->detach();
         $admin->delete();
         return $this->success(null, 'Deleted successfully');
