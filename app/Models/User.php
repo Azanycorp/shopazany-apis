@@ -42,6 +42,7 @@ class User extends Authenticatable
         'login_code_expires_at',
         'is_affiliate_member',
         'referrer_code',
+        'info_source',
         'referrer_link',
         'date_of_birth',
         'is_verified',

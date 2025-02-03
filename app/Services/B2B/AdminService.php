@@ -110,7 +110,7 @@ class AdminService
             });
         })->get();
 
-        $local_orders = B2bOrder::with(['buyer','seller'])->when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
+        $local_orders = B2bOrder::with(['buyer', 'seller'])->when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
             $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
                 $subQuery->where('country_id', 160)
                     ->orWhere('order_no', 'LIKE', '%' . $searchQuery . '%');
@@ -435,27 +435,26 @@ class AdminService
         if (!$user) {
             return $this->error(null, "Buyer not found", 404);
         }
-
-        return [
-            'status' => 'true',
-            'message' => 'Buyer details',
-            'data' => $user,
-        ];
+        return $this->success($user, "Buyer details");
     }
 
     public function editBuyer($id, $data)
     {
         $user = User::find($id);
+        $check = User::where('email', $data->email)->first();
 
-        $image = $data->hasFile('image') ? uploadUserImage($data->file('image'), 'image', $user) : $user->image;
-        $user->update([
-            'first_name' => $data->first_name ?? $user->first_name,
-            'last_name' => $data->last_name ?? $user->last_name,
-            'email' => $data->email ?? $user->email,
-            'image' => $data->image ? $image : $user->image,
-        ]);
-
-        return $this->success($user, "Buyer details");
+        if (!$check || $check->email == $user->email) {
+            $image = $data->hasFile('image') ? uploadUserImage($data->file('image'), 'image', $user) : $user->image;
+            $user->update([
+                'first_name' => $data->first_name ?? $user->first_name,
+                'last_name' => $data->last_name ?? $user->last_name,
+                'email' => $data->email ?? $user->email,
+                'image' => $data->image ? $image : $user->image,
+            ]);
+            return $this->success($user, "Buyer details");
+        } else {
+            return $this->error(null, "Email already exist");
+        }
     }
 
     public function editBuyerCompany($id, $data)
@@ -465,12 +464,12 @@ class AdminService
         if (!$user) {
             return $this->error(null, "Buyer not found", 404);
         }
-
         $company = B2bCompany::where('user_id', $user->id)->first();
 
         if (!$company) {
             return $this->error(null, 'No company found to update', 404);
         }
+
         $company->update([
             'business_name' => $data->business_name ?? $company->business_name,
             'company_size' => $data->company_size ?? $company->company_size,
@@ -836,7 +835,7 @@ class AdminService
 
         $admins = Admin::with(['permissions' => function ($query): void {
             $query->select('permission_id', 'name');
-        }])->select('id', 'first_name', 'email', 'created_at')
+        }])->select('id', 'first_name','last_name','email', 'created_at')
             ->latest('created_at')->when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
                 $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
                     $subQuery->where('type', AdminType::B2B)

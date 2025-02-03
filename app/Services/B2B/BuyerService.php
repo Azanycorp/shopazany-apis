@@ -249,6 +249,13 @@ class BuyerService
 
         return $this->success($data, "Categories");
     }
+    public function getCategoryProducts()
+    {
+        $categories = B2BProductCategory::select('id','name','image')
+            ->with('products')
+            ->get();
+        return $this->success($categories, "Categories products");
+    }
     public function bestSelling()
     {
         $bestSellingProducts = B2bOrder::select('product_id', DB::raw('SUM(product_quantity) as total_sold'))
@@ -515,6 +522,30 @@ class BuyerService
         return $this->success($rfqs, 'rfqs lists');
     }
 
+    public function allOrders()
+    {
+        $userId = userAuthId();
+
+        $orders = B2bOrder::with('seller')->where('buyer_id', $userId)
+            ->latest('id')
+            ->get();
+
+        if ($orders->isEmpty()) {
+            return $this->error(null, 'No record found to send', 404);
+        }
+
+        return $this->success($orders, 'orders lists');
+    }
+
+    public function orderDetails($id)
+    {
+        $order = B2bOrder::with(['seller', 'messages'])->find($id);
+        if (!$order) {
+            return $this->error(null, 'No record found', 404);
+        }
+
+        return $this->success($order, 'order details');
+    }
     public function rfqDetails($id)
     {
         $rfq = Rfq::with(['seller', 'messages'])->find($id);

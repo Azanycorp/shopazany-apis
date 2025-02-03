@@ -99,7 +99,7 @@ class ChargeUserSubscriptions extends Command
                     'status' => SubscriptionType::ACTIVE,
                     'expired_at' => null,
                 ]);
-
+                
                 Log::info('Subscription charged successfully: ' . $subscription->id);
                 DB::commit();
             } else {

@@ -34,6 +34,7 @@ Route::middleware(['throttle:apis'])->group(function (): void {
     Route::prefix('b2b')->controller(B2BController::class)->group(function (): void {
         Route::post('/business/information', 'businessInformation');
         Route::get('/products', 'getProducts');
+        Route::get('/categories-product', 'getCategoryProducts');
         Route::get('/product-categories', 'allCategories');
         Route::get('/product-by-category/{slug}', 'categoryBySlug');
         Route::get('/best-selling-products', 'bestSellingProduct');
@@ -127,6 +128,8 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function (): voi
         Route::get('dashboard', 'dashboard');
         Route::get('rfq', 'getAllRfqs');
         Route::get('rfq-details/{id}', 'getRfqDetails');
+        Route::get('orders', 'allOrders');
+        Route::get('order-details/{id}', 'getOrderDetails');
         Route::post('request-review', 'reviewRequest');
         Route::post('add-review', 'addReview');
         Route::post('/add-to-wish', 'addTowishList');

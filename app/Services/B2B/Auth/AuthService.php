@@ -5,7 +5,9 @@ namespace App\Services\B2B\Auth;
 use App\Models\User;
 use App\Enum\UserLog;
 use App\Enum\UserType;
+use App\Models\Wallet;
 use App\Enum\UserStatus;
+use App\Models\UserWallet;
 use App\Trait\HttpResponse;
 use App\Mail\UserWelcomeMail;
 use App\Mail\SignUpVerifyMail;
@@ -37,9 +39,19 @@ class AuthService
                 'email_verified_at' => null,
                 'verification_code' => $code,
                 'is_verified' => 0,
+                'info_source' => $request->info_source ?? null,
+                'referrer_code' => $request->referrer_code ?? null,
                 'password' => bcrypt($request->password)
             ]);
-
+            if ($request->referrer_code) {
+                $affiliate = User::where(['referrer_code' => $request->referrer_code, 'is_affiliate_member' => 1])->first();
+                if ($affiliate) {
+                    Wallet::create([
+                        'user_id' => $affiliate->id,
+                        'reward_point' => 300
+                    ]);
+                }
+            }
             $description = "User with email: {$request->email} signed up as b2b seller";
             $response = $this->success(null, "Created successfully");
             $action = UserLog::CREATED;
