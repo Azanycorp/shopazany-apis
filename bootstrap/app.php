@@ -12,6 +12,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -49,5 +50,14 @@ return Application::configure(basePath: dirname(__DIR__))
                 'code' => $e->getCode(),
                 'url' => request()->fullUrl(),
             ]);
+        });
+
+        $exceptions->renderable(function (NotFoundHttpException $e, $request) {
+            // Handle JSON request 404's
+            if ($request->json()) {
+                return response()->json(['message' => 'Resource was not Found'], 404);
+            }
+
+            throw $e;
         });
     })->create();

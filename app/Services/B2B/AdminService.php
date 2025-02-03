@@ -409,14 +409,12 @@ class AdminService
         return $this->success(null, 'Deleted successfully');
     }
 
-    //buyers
-    //Admin section
-
     public function allBuyers()
     {
         $buyers = User::with('b2bCompany')
             ->where('type', UserType::B2B_BUYER)
-            ->latest('created_at')->get();
+            ->latest('created_at')
+            ->get();
 
         $data = [
             'buyers_count' => $buyers->count(),
@@ -429,7 +427,9 @@ class AdminService
 
     public function viewBuyer($id)
     {
-        $user = User::select('id', 'first_name', 'last_name', 'email', 'image')->with('b2bCompany')->where('type', UserType::B2B_BUYER)
+        $user = User::select('id', 'first_name', 'last_name', 'email', 'image')
+            ->with('b2bCompany')
+            ->where('type', UserType::B2B_BUYER)
             ->find($id);
 
         if (!$user) {
@@ -447,23 +447,15 @@ class AdminService
     {
         $user = User::find($id);
 
-        $check = User::where('email', $data->email)->first();
+        $image = $data->hasFile('image') ? uploadUserImage($data->file('image'), 'image', $user) : $user->image;
+        $user->update([
+            'first_name' => $data->first_name ?? $user->first_name,
+            'last_name' => $data->last_name ?? $user->last_name,
+            'email' => $data->email ?? $user->email,
+            'image' => $data->image ? $image : $user->image,
+        ]);
 
-        if (!$user) {
-            return $this->error(null, "Buyer not found", 404);
-        }
-        if (!$check || $check->email == $user->email) {
-            $image = $data->file('image') ? uploadUserImage($data->file('image'), 'image', $user) : $user->image;
-            $user->update([
-                'first_name' => $data->first_name ?? $user->first_name,
-                'last_name' => $data->last_name ?? $user->last_name,
-                'email' => $data->email ?? $user->email,
-                'image' => $data->image ? $image : $user->image,
-            ]);
-            return $this->success($user, "Buyer details");
-        } else {
-            return $this->error(null, "Email already exist", 404);
-        }
+        return $this->success($user, "Buyer details");
     }
 
     public function editBuyerCompany($id, $data)
@@ -554,7 +546,6 @@ class AdminService
     }
 
     //CMS / Promo and banners
-
     public function adminProfile()
     {
         $authUser = userAuth();
@@ -722,7 +713,7 @@ class AdminService
         $accounts =  B2bWithdrawalMethod::where('status', 'pending')->latest('id')->get();
 
         if ($accounts->isEmpty()) {
-            return $this->error(null, 'No record found');
+            return $this->error(null, 'No record found', 404);
         }
 
         return $this->success($accounts, 'Withdrawal methods');
@@ -737,7 +728,7 @@ class AdminService
         }])->where('user_id', $account->user_id)->first();
 
         if ($account->isEmpty()) {
-            return $this->error(null, 'No record found');
+            return $this->error(null, 'No record found', 404);
         }
 
         $data = [
@@ -753,7 +744,7 @@ class AdminService
         $account =  B2bWithdrawalMethod::find($id);
 
         if (!$account) {
-            return $this->error(null, 'No record found');
+            return $this->error(null, 'No record found', 404);
         }
 
         $account->update([
@@ -768,7 +759,7 @@ class AdminService
         $account =  B2bWithdrawalMethod::find($data->account_id);
 
         if (!$account) {
-            return $this->error(null, 'No record found');
+            return $this->error(null, 'No record found', 404);
         }
 
         $account->update([
@@ -787,7 +778,7 @@ class AdminService
         }])->where('status', OrderStatus::PENDING)->latest('id')->get();
 
         if ($products->isEmpty()) {
-            return $this->error(null, 'No record found');
+            return $this->error(null, 'No record found', 404);
         }
         return $this->success($products, 'Products listing');
     }
@@ -799,7 +790,7 @@ class AdminService
         }])->find($id);
 
         if (! $product) {
-            return $this->error(null, 'No record found');
+            return $this->error(null, 'No record found', 404);
         }
 
         return $this->success($product, 'Product details');
@@ -810,7 +801,7 @@ class AdminService
         $product =  B2BProduct::find($id);
 
         if (!$product) {
-            return $this->error(null, 'No record found');
+            return $this->error(null, 'No record found', 404);
         }
 
         $product->update([
@@ -825,7 +816,7 @@ class AdminService
         $product = B2BProduct::find($data->product_id);
 
         if (!$product) {
-            return $this->error(null, 'No record found');
+            return $this->error(null, 'No record found', 404);
         }
 
         $product->update([
@@ -885,6 +876,7 @@ class AdminService
                 'password' => $password,
             ];
             DB::commit();
+
             send_email($data->email, new B2BNewAdminEmail($loginDetails));
 
             return $this->success($admin, 'Admin user added successfully', 200);
@@ -937,6 +929,7 @@ class AdminService
         $admin = Admin::findOrFail($id);
         $admin->permissions()->detach();
         $admin->delete();
+
         return $this->success(null, 'Deleted successfully');
     }
 }

@@ -23,11 +23,11 @@ class EditBuyerRequest extends FormRequest
     public function rules(): array
     {
 
-            return [
-                'email' => 'required',
-                'first_name' => 'required',
-                'last_name' => 'required',
-            ];
+        return [
+            'email' => ['required', 'unique:users,email'],
+            'first_name' => ['required'],
+            'last_name' => ['required'],
+        ];
 
     }
 }
