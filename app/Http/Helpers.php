@@ -233,7 +233,7 @@ if(!function_exists('uploadUserImage')){
             $folder = "/stag/profile/{$name}";
         }
 
-        if ($request->hasFile($file)) {
+        if (request()->hasFile($file)) {
             if (!empty($user->image)) {
                 $image = getRelativePath($user->image);
 
@@ -241,7 +241,7 @@ if(!function_exists('uploadUserImage')){
                     Storage::disk('s3')->delete($image);
                 }
             }
-            $fileSize = $request->file($file)->getSize();
+            $fileSize = request()->file($file)->getSize();
             if ($fileSize > 3000000) {
                 return json_encode(["status" => false, "message" => "file size is larger than 3MB.", "status_code" => 422]);
             }
