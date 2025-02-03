@@ -110,7 +110,7 @@ class AdminService
             });
         })->get();
 
-        $local_orders = B2bOrder::when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
+        $local_orders = B2bOrder::with(['buyer','seller'])->when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
             $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
                 $subQuery->where('country_id', 160)
                     ->orWhere('order_no', 'LIKE', '%' . $searchQuery . '%');
@@ -125,7 +125,7 @@ class AdminService
             'shipped_orders' => $orders->total_shipped,
             'delivered_orders' => $orders->total_delivered,
             'local_orders' => $local_orders,
-            'international__orders' => $international_orders,
+            'international_orders' => $international_orders,
 
         ];
 
@@ -409,17 +409,17 @@ class AdminService
         return $this->success(null, 'Deleted successfully');
     }
 
-    //buyers
-    //Admin section
-
     public function allBuyers()
     {
         $buyers = User::with('b2bCompany')
             ->where('type', UserType::B2B_BUYER)
-            ->latest('created_at')->get();
+            ->latest('created_at')
+            ->get();
 
         $data = [
             'buyers_count' => $buyers->count(),
+            'active_buyers' => $buyers->where('status', UserStatus::ACTIVE)->count(),
+            'pending_buyers' => $buyers->where('status', UserStatus::PENDING)->count(),
             'buyers' => $buyers,
         ];
         return $this->success($data, "buyers ");
@@ -427,7 +427,9 @@ class AdminService
 
     public function viewBuyer($id)
     {
-        $user = User::select('id', 'first_name', 'last_name', 'email', 'image')->with('b2bCompany')->where('type', UserType::B2B_BUYER)
+        $user = User::select('id', 'first_name', 'last_name', 'email', 'image')
+            ->with('b2bCompany')
+            ->where('type', UserType::B2B_BUYER)
             ->find($id);
 
         if (!$user) {
@@ -441,13 +443,10 @@ class AdminService
         ];
     }
 
-    public function editBuyer($data)
+    public function editBuyer($id, $data)
     {
-        $user = User::find($data->user_id);
+        $user = User::find($id);
 
-        if (!$user) {
-            return $this->error(null, "Buyer not found", 404);
-        }
         $image = $data->hasFile('image') ? uploadUserImage($data->file('image'), 'image', $user) : $user->image;
         $user->update([
             'first_name' => $data->first_name ?? $user->first_name,
@@ -455,16 +454,13 @@ class AdminService
             'email' => $data->email ?? $user->email,
             'image' => $data->image ? $image : $user->image,
         ]);
-        return [
-            'status' => 'true',
-            'message' => 'Buyer details',
-            'data' => $user,
-        ];
+
+        return $this->success($user, "Buyer details");
     }
 
-    public function editBuyerCompany($data)
+    public function editBuyerCompany($id, $data)
     {
-        $user = User::find($data->user_id);
+        $user = User::find($id);
 
         if (!$user) {
             return $this->error(null, "Buyer not found", 404);
@@ -482,11 +478,7 @@ class AdminService
             'service_type' => $data->service_type ?? $company->service_type,
         ]);
 
-        return [
-            'status' => 'true',
-            'message' => 'company details',
-            'data' => $company,
-        ];
+        return $this->success($company, "company details");
     }
 
     public function removeBuyer($id)
@@ -554,7 +546,6 @@ class AdminService
     }
 
     //CMS / Promo and banners
-
     public function adminProfile()
     {
         $authUser = userAuth();
@@ -597,8 +588,6 @@ class AdminService
         $user->update([
             'password' => Hash::make($data->password),
         ]);
-        new AdminUserResource($user);
-
         return $this->success(null, 'Password updated');
     }
 
@@ -724,7 +713,7 @@ class AdminService
         $accounts =  B2bWithdrawalMethod::where('status', 'pending')->latest('id')->get();
 
         if ($accounts->isEmpty()) {
-            return $this->error(null, 'No record found');
+            return $this->error(null, 'No record found', 404);
         }
 
         return $this->success($accounts, 'Withdrawal methods');
@@ -739,7 +728,7 @@ class AdminService
         }])->where('user_id', $account->user_id)->first();
 
         if ($account->isEmpty()) {
-            return $this->error(null, 'No record found');
+            return $this->error(null, 'No record found', 404);
         }
 
         $data = [
@@ -755,7 +744,7 @@ class AdminService
         $account =  B2bWithdrawalMethod::find($id);
 
         if (!$account) {
-            return $this->error(null, 'No record found');
+            return $this->error(null, 'No record found', 404);
         }
 
         $account->update([
@@ -770,7 +759,7 @@ class AdminService
         $account =  B2bWithdrawalMethod::find($data->account_id);
 
         if (!$account) {
-            return $this->error(null, 'No record found');
+            return $this->error(null, 'No record found', 404);
         }
 
         $account->update([
@@ -789,7 +778,7 @@ class AdminService
         }])->where('status', OrderStatus::PENDING)->latest('id')->get();
 
         if ($products->isEmpty()) {
-            return $this->error(null, 'No record found');
+            return $this->error(null, 'No record found', 404);
         }
         return $this->success($products, 'Products listing');
     }
@@ -801,7 +790,7 @@ class AdminService
         }])->find($id);
 
         if (! $product) {
-            return $this->error(null, 'No record found');
+            return $this->error(null, 'No record found', 404);
         }
 
         return $this->success($product, 'Product details');
@@ -812,7 +801,7 @@ class AdminService
         $product =  B2BProduct::find($id);
 
         if (!$product) {
-            return $this->error(null, 'No record found');
+            return $this->error(null, 'No record found', 404);
         }
 
         $product->update([
@@ -827,7 +816,7 @@ class AdminService
         $product = B2BProduct::find($data->product_id);
 
         if (!$product) {
-            return $this->error(null, 'No record found');
+            return $this->error(null, 'No record found', 404);
         }
 
         $product->update([
@@ -845,8 +834,9 @@ class AdminService
         $searchQuery = request()->input('search');
         $users =  User::all();
 
-        $admins = Admin::with('permissions')
-            ->select('id', 'first_name', 'email', 'created_at')
+        $admins = Admin::with(['permissions' => function ($query): void {
+            $query->select('permission_id', 'name');
+        }])->select('id', 'first_name', 'email', 'created_at')
             ->latest('created_at')->when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
                 $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
                     $subQuery->where('type', AdminType::B2B)
@@ -879,13 +869,14 @@ class AdminService
                 'phone_number' => $data->phone_number,
                 'password' => bcrypt($data->password),
             ]);
-            $admin->roles()->sync($data->role_id);
+            $admin->permissions()->sync($data->permissions);
             $loginDetails = [
                 'name' => $data->first_name,
                 'email' => $data->email,
                 'password' => $password,
             ];
             DB::commit();
+
             send_email($data->email, new B2BNewAdminEmail($loginDetails));
 
             return $this->success($admin, 'Admin user added successfully', 200);
@@ -917,21 +908,28 @@ class AdminService
         return $this->success($admin, 'Details updated successfully');
     }
 
-    public function revokeAccess($data)
+    public function verifyPassword($data)
     {
-        $admin = Admin::findOrFail($data->admin_id);
-        if ($data->permissions) {
-            $admin->permissions()->sync($data->permissions);
+        $currentUserId = userAuthId();
+        $admin = Admin::findOrFail($currentUserId);
+        if (Hash::check($data->password, $admin->password)) {
+            return $this->success(null, 'Password matched');
         }
+        return $this->error(null, 'Password do not match');
+    }
+    public function revokeAccess($id)
+    {
+        $admin = Admin::findOrFail($id);
+        $admin->permissions()->detach();
         return $this->success(null, 'Access Revoked');
     }
 
     public function removeAdmin($id)
     {
         $admin = Admin::findOrFail($id);
-        $admin->roles()->detach();
         $admin->permissions()->detach();
         $admin->delete();
+        
         return $this->success(null, 'Deleted successfully');
     }
 }
