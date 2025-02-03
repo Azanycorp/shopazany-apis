@@ -4,9 +4,10 @@ namespace App\Http\Controllers\Api\B2B;
 
 use App\Enum\UserStatus;
 use Illuminate\Http\Request;
+use App\Services\B2B\AdminService;
 use App\Services\B2B\BuyerService;
 use App\Http\Controllers\Controller;
-use App\Services\B2B\AdminService;
+use App\Http\Requests\EditBuyerRequest;
 
 class B2BAdminBuyerController extends Controller
 {
@@ -24,14 +25,14 @@ class B2BAdminBuyerController extends Controller
         return $this->buyerService->viewBuyer($id);
     }
 
-    public function editBuyer(Request $request)
+    public function editBuyer($id, EditBuyerRequest $request)
     {
-        return $this->buyerService->editBuyer($request);
+        return $this->buyerService->editBuyer($id, $request);
     }
 
-    public function editBuyerCompany(Request $request)
+    public function editBuyerCompany($id, Request $request)
     {
-        return $this->buyerService->editBuyerCompany($request);
+        return $this->buyerService->editBuyerCompany($id, $request);
     }
 
     public function banBuyer($id)
@@ -43,6 +44,7 @@ class B2BAdminBuyerController extends Controller
     {
         return $this->buyerService->removeBuyer($id);
     }
+
     public function approveBuyer($id)
     {
         return $this->buyerService->approveBuyer($id);

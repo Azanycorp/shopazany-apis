@@ -9,7 +9,7 @@ class B2BProductRepository implements B2BRepositoryInterface
 {
     public function all(int $user, string $search = null)
     {
-        $query = B2BProduct::with(['b2bProductImages', 'category', 'country', 'user', 'subCategory', 'b2bProdctReview', 'b2bLikes'])
+        $query = B2BProduct::with(['b2bProductImages', 'category', 'country', 'user', 'subCategory', 'b2bProductReview', 'b2bLikes'])
             ->where('user_id', $user);
 
         if ($search !== null && $search !== '' && $search !== '0') {

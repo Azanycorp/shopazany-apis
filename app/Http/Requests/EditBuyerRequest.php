@@ -1,10 +1,11 @@
 <?php
 
-namespace App\Http\Requests\Admin;
+namespace App\Http\Requests;
 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Foundation\Http\FormRequest;
 
-class AddBannerRequest extends FormRequest
+class EditBuyerRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -21,12 +22,12 @@ class AddBannerRequest extends FormRequest
      */
     public function rules(): array
     {
+
         return [
-            'title' => 'required',
-            'image' => 'required|image',
-            'start_date' => 'required|date_format:Y-m-d H:i:s',
-            'end_date' => 'required|date_format:Y-m-d H:i:s',
-            'products' => 'required',
+            'email' => ['required', 'unique:users,email'],
+            'first_name' => ['required'],
+            'last_name' => ['required'],
         ];
+
     }
 }

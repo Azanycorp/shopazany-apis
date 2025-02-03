@@ -53,6 +53,10 @@ class B2BBannerPromoController extends Controller
     {
         return $this->service->promos();
     }
+    public function getProducts()
+    {
+        return $this->service->getProducts();
+    }
 
     public function deletePromo($id)
     {

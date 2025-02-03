@@ -20,11 +20,13 @@ class B2BAdminController extends Controller
     {
         return $this->adminService->dashboard();
     }
+
     //RFQS
     public function allRfq()
     {
         return $this->adminService->getAllRfq();
     }
+
     public function rfqDetails($id)
     {
         return $this->adminService->getRfqDetails($id);
@@ -154,9 +156,14 @@ class B2BAdminController extends Controller
         return $this->adminService->editAdmin($id, $request);
     }
 
-    public function revokeAccess(Request $request)
+    public function verifyPassword(Request $request)
     {
-        return $this->adminService->revokeAccess($request);
+        return $this->adminService->verifyPassword($request);
+    }
+
+    public function revokeAccess($id)
+    {
+        return $this->adminService->revokeAccess($id);
     }
     public function removeAdmin($id)
     {

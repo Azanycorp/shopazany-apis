@@ -217,7 +217,8 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function (): void
             Route::post('/add', 'addAdmin');
             Route::get('/details/{id}', 'viewAdminUser');
             Route::post('/update/{id}', 'editAdminUser');
-            Route::post('/revoke-access', 'revokeAccess');
+            Route::post('/revoke-access/{id}', 'revokeAccess');
+            Route::post('/verify-password', 'verifyPassword');
             Route::delete('/delete-account/{id}', 'removeAdmin');
         });
         Route::prefix('category')->controller(ProductCategoryController::class)->group(function () {
@@ -246,6 +247,7 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function (): void
         Route::prefix('promo')->controller(B2BBannerPromoController::class)->group(function (): void {
             Route::post('/add', 'addPromo');
             Route::get('/', 'promos');
+            Route::get('/products', 'getProducts');
             Route::delete('/delete/{id}', 'deletePromo');
         });
 
@@ -255,8 +257,8 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function (): void
             Route::get('/', 'allBuyers');
             Route::get('/filter', 'filter');
             Route::get('/details/{user_id}', 'viewBuyer');
-            Route::post('/update-details', 'editBuyer');
-            Route::post('/update-company-details', 'editBuyerCompany');
+            Route::post('/update-details/{id}', 'editBuyer');
+            Route::post('/update-company-details/{id}', 'editBuyerCompany');
             Route::patch('/approve/{user_id}', 'approveBuyer');
             Route::patch('/ban/{user_id}', 'banBuyer');
             Route::delete('/bulk-remove', 'bulkRemoveBuyer');
@@ -275,7 +277,7 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function (): void
             Route::prefix('product')->controller(B2BAdminSellerController::class)->group(function (): void {
                 Route::post('/add', 'addSellerProduct');
                 Route::get('/details/{id}/{user_id}', 'viewSellerProduct');
-                Route::post('/update{id}', 'editSellerProduct');
+                Route::post('/update/{id}', 'editSellerProduct');
                 Route::delete('/delete/{user_id}/{id}', 'removeSellerProduct');
             });
         });
