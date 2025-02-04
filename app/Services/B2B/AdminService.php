@@ -440,30 +440,26 @@ class AdminService
 
     public function editBuyer($id, $data)
     {
-        $user = User::find($id);
+        $user = User::findOrFail($id);
         $check = User::where('email', $data->email)->first();
 
-        if (!$check || $check->email == $user->email) {
-            $image = $data->hasFile('image') ? uploadUserImage($data->file('image'), 'image', $user) : $user->image;
-            $user->update([
-                'first_name' => $data->first_name ?? $user->first_name,
-                'last_name' => $data->last_name ?? $user->last_name,
-                'email' => $data->email ?? $user->email,
-                'image' => $data->image ? $image : $user->image,
-            ]);
-            return $this->success($user, "Buyer details");
-        } else {
+        if ($check && $check->email != $user->email) {
             return $this->error(null, "Email already exist");
         }
+
+        $image = $data->hasFile('image') ? uploadUserImage($data->file('image'), 'image', $user) : $user->image;
+        $user->update([
+            'first_name' => $data->first_name ?? $user->first_name,
+            'last_name' => $data->last_name ?? $user->last_name,
+            'email' => $data->email ?? $user->email,
+            'image' => $data->image ? $image : $user->image,
+        ]);
+        return $this->success($user, "Buyer details");
     }
 
     public function editBuyerCompany($id, $data)
     {
-        $user = User::find($id);
-
-        if (!$user) {
-            return $this->error(null, "Buyer not found", 404);
-        }
+        $user = User::findOrFail($id);
         $company = B2bCompany::where('user_id', $user->id)->first();
 
         if (!$company) {
@@ -482,12 +478,7 @@ class AdminService
 
     public function removeBuyer($id)
     {
-        $user = User::find($id);
-
-        if (!$user) {
-            return $this->error(null, "User not found", 404);
-        }
-
+        $user = User::findOrFail($id);
         $user->delete();
 
         return $this->success(null, "User removed successfully");
@@ -512,11 +503,7 @@ class AdminService
 
     public function approveBuyer($id)
     {
-        $user = User::find($id);
-
-        if (!$user) {
-            return $this->error(null, "User not found", 404);
-        }
+        $user = User::findOrFail($id);
 
         $user->is_admin_approve = !$user->is_admin_approve;
         $user->status = $user->is_admin_approve ? UserStatus::ACTIVE : UserStatus::BLOCKED;
@@ -530,11 +517,7 @@ class AdminService
 
     public function banBuyer($id)
     {
-        $user = User::find($id);
-
-        if (!$user) {
-            return $this->error(null, "User not found", 404);
-        }
+        $user = User::findOrFail($id);
 
         $user->status = UserStatus::BLOCKED;
         $user->is_admin_approve = 0;
@@ -648,23 +631,14 @@ class AdminService
     {
         $payout =  Payout::with(['user' => function ($query): void {
             $query->select('id', 'first_name', 'last_name')->where('type', UserType::B2B_SELLER);
-        }])->find($id);
-
-        if (!$payout) {
-            return $this->error(null, 'No record found');
-        }
+        }])->findOrFail($id);
 
         return $this->success($payout, 'request details');
     }
 
     public function approveWidthrawalRequest($id)
     {
-        $payout =  Payout::find($id);
-
-        if (!$payout) {
-            return $this->error(null, 'No record found');
-        }
-
+        $payout =  Payout::findOrFail($id);
         $payout->update([
             'status' => 'paid',
             'date_paid' => now()->toDateString(),
@@ -740,11 +714,7 @@ class AdminService
 
     public function approveWidthrawalMethod($id)
     {
-        $account =  B2bWithdrawalMethod::find($id);
-
-        if (!$account) {
-            return $this->error(null, 'No record found', 404);
-        }
+        $account =  B2bWithdrawalMethod::findOrFail($id);
 
         $account->update([
             'status' => 'active',
@@ -753,13 +723,9 @@ class AdminService
         return $this->success(null, 'Account Approved');
     }
 
-    public function rejectWidthrawalMethod($data)
+    public function rejectWidthrawalMethod($id,$data)
     {
-        $account =  B2bWithdrawalMethod::find($data->account_id);
-
-        if (!$account) {
-            return $this->error(null, 'No record found', 404);
-        }
+        $account =  B2bWithdrawalMethod::findOrFail($id);
 
         $account->update([
             'status' => ProductStatus::DECLINED,
@@ -797,11 +763,7 @@ class AdminService
 
     public function approveProduct($id)
     {
-        $product =  B2BProduct::find($id);
-
-        if (!$product) {
-            return $this->error(null, 'No record found', 404);
-        }
+        $product =  B2BProduct::findOrFail($id);
 
         $product->update([
             'status' => ProductStatus::ACTIVE,
@@ -810,14 +772,9 @@ class AdminService
         return $this->success(null, 'Product Approved');
     }
 
-    public function rejectProduct($data)
+    public function rejectProduct($id,$data)
     {
-        $product = B2BProduct::find($data->product_id);
-
-        if (!$product) {
-            return $this->error(null, 'No record found', 404);
-        }
-
+        $product = B2BProduct::findOrFail($id);
         $product->update([
             'status' => ProductStatus::DECLINED,
             'admin_comment' => $data->note
@@ -835,7 +792,7 @@ class AdminService
 
         $admins = Admin::with(['permissions' => function ($query): void {
             $query->select('permission_id', 'name');
-        }])->select('id', 'first_name','last_name','email', 'created_at')
+        }])->select('id', 'first_name', 'last_name', 'email', 'created_at')
             ->latest('created_at')->when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
                 $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
                     $subQuery->where('type', AdminType::B2B)

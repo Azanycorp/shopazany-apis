@@ -253,9 +253,10 @@ class BuyerService
     public function getCategoryProducts()
     {
         $categories = B2BProductCategory::select('id','name','slug','image')
-            ->with('products')
+            ->with('products.b2bProductReview','products.b2bLikes')
             ->get();
-        return $this->success($categories, "Categories products");
+            $data = B2BCategoryResource::collection($categories);
+        return $this->success($data, "Categories products");
     }
 
     public function bestSelling()
@@ -541,7 +542,7 @@ class BuyerService
 
     public function orderDetails($id)
     {
-        $order = B2bOrder::with(['seller'])->find($id);
+        $order = B2bOrder::with(['seller'])->findOrFail($id);
         if (!$order) {
             return $this->error(null, 'No record found', 404);
         }
@@ -550,10 +551,8 @@ class BuyerService
     }
     public function rfqDetails($id)
     {
-        $rfq = Rfq::with(['seller', 'messages'])->find($id);
-        if (!$rfq) {
-            return $this->error(null, 'No record found to send', 404);
-        }
+        $rfq = Rfq::with(['seller', 'messages'])->findOrFail($id);
+
         $messages = RfqMessage::with(['seller', 'buyer'])->where('rfq_id', $rfq->id)->get();
         $data = [
             'rfq' => $rfq,

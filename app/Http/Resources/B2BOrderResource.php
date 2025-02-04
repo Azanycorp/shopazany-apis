@@ -16,8 +16,6 @@ class B2BOrderResource extends JsonResource
     {
         return [
             'id' => (int)$this->id,
-            'buyer' => (string)$this->buyer?->first_name,
-            'seller' => (string)$this->seller?->first_name,
             'product_quantity' => (string)$this->product_quantity,
             'order_no' => (string)$this->order_no,
             'shipping_address' => (string)$this->shipping_address,
@@ -29,7 +27,18 @@ class B2BOrderResource extends JsonResource
             'status' => (string)$this->status,
             'delivery_date' => (string)$this->delivery_date,
             'shipped_date' => (string)$this->delivery_date,
-
+            "seller" => (object) [
+                'first_name' => $this?->seller?->first_name,
+                'last_name' => $this?->seller?->last_name,
+                'email' => $this?->seller?->email,
+                'phone' => $this?->seller?->phone,
+            ],
+            "buyer" => (object) [
+                'first_name' => $this?->buyer?->first_name,
+                'last_name' => $this?->buyer?->last_name,
+                'email' => $this?->buyer?->email,
+                'phone' => $this?->buyer?->phone,
+            ],
         ];
     }
 }

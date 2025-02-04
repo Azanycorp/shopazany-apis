@@ -30,6 +30,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Storage;
+use App\Http\Resources\B2BOrderResource;
 use App\Models\B2BSellerShippingAddress;
 use App\Http\Resources\B2BProductResource;
 use App\Repositories\B2BProductRepository;
@@ -639,12 +640,10 @@ class SellerService extends Controller
             $query->select('id', 'first_name', 'last_name')->where('type', UserType::B2B_BUYER);
         }, 'seller' => function ($query): void {
             $query->select('id', 'first_name', 'last_name')->where('type', UserType::B2B_SELLER);
-        },])->find($id);
-        if (!$order) {
-            return $this->error(null, "No record found.", 404);
-        }
-
-        return $this->success($order, 'order details');
+        },])->findOrFail($id);
+        
+        $data = new B2BOrderResource($order);
+        return $this->success($data, 'order details');
     }
 
     //Rfq
@@ -870,7 +869,7 @@ class SellerService extends Controller
         $orders =  B2bOrder::with('buyer')
             ->where('seller_id', $currentUserId)
             ->get();
-            
+
         $uniqueSellersCount = B2bOrder::where(['seller_id' => $currentUserId, 'status' => OrderStatus::DELIVERED])
             ->distinct('buyer_id')
             ->count('buyer_id');

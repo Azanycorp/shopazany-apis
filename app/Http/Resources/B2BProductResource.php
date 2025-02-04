@@ -29,6 +29,7 @@ class B2BProductResource extends JsonResource
             'keywords' => $this?->keywords,
             'moq' => (string)$this->minimum_order_quantity,
             'status' => (string)$this->status,
+            'rating' => 3.5,
             'country' => (string)$this->country?->name,
             'country' => (string)$this->country?->name,
             'review_count' => (int)$this->b2bProductReview?->count(),

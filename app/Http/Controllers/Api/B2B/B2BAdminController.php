@@ -109,9 +109,9 @@ class B2BAdminController extends Controller
         return $this->adminService->approveWidthrawalMethod($id);
     }
 
-    public function rejectWidthrawalMethod(Request $request)
+    public function rejectWidthrawalMethod($id,Request $request)
     {
-        return $this->adminService->rejectWidthrawalMethod($request);
+        return $this->adminService->rejectWidthrawalMethod($id,$request);
     }
 
     //Seller Products Approval Request
@@ -130,9 +130,9 @@ class B2BAdminController extends Controller
         return $this->adminService->approveProduct($id);
     }
 
-    public function rejectProduct(Request $request)
+    public function rejectProduct($id,Request $request)
     {
-        return $this->adminService->rejectProduct($request);
+        return $this->adminService->rejectProduct($id,$request);
     }
 
     //Admin Users

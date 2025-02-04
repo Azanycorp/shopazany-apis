@@ -5,6 +5,7 @@ namespace App\Services\B2B\Auth;
 use App\Models\User;
 use App\Enum\UserLog;
 use App\Enum\UserType;
+use App\Models\Action;
 use App\Models\Wallet;
 use App\Enum\UserStatus;
 use App\Models\UserWallet;
@@ -32,7 +33,27 @@ class AuthService
         try {
 
             $code = generateVerificationCode();
+            if ($request->referrer_code) {
+                $affiliate = User::with('wallet')
+                    ->where(['referrer_code' => $request->referrer_code, 'is_affiliate_member' => 1])
+                    ->first();
 
+                if (!$affiliate) {
+                   return $this->error(null, 'No Affiliate found with this code', 500);
+                }
+                $wallet = $affiliate->wallet;
+                $action = Action::where('slug', 'create-account')->firstOrFail();
+                if ($wallet) {
+                    $affiliate->wallet->updateOrCreate(
+                        [
+                            'user_id' => $affiliate->id
+                        ],
+                        [
+                            'reward_point' => DB::raw("reward_point + $action->points")
+                        ]
+                    );
+                }
+            }
             $user = User::create([
                 'email' => $request->email,
                 'type' => UserType::B2B_SELLER,
@@ -43,19 +64,7 @@ class AuthService
                 'referrer_code' => $request->referrer_code ?? null,
                 'password' => bcrypt($request->password)
             ]);
-            $affiliate = User::where(['referrer_code' => $request->referrer_code, 'is_affiliate_member' => 1])->first();
-            if ($request->referrer_code && $affiliate) {
-                $wallet = Wallet::where('user_id', $affiliate->id)->first();
-                if ($wallet) {
-                    $wallet->reward_point += 300;
-                    $wallet->save();
-                } else {
-                    Wallet::create([
-                        'user_id' => $affiliate->id,
-                        'reward_point' => 300
-                    ]);
-                }
-            }
+
             $description = "User with email: {$request->email} signed up as b2b seller";
             $response = $this->success(null, "Created successfully");
             $action = UserLog::CREATED;

@@ -295,14 +295,14 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function (): void
             Route::get('/', 'widthrawalMethods');
             Route::get('/view/{id}', 'viewWidthrawalMethod');
             Route::get('/approve/{id}', 'approveWidthrawalMethod');
-            Route::post('/reject', 'rejectWidthrawalMethod');
+            Route::post('/reject/{id}', 'rejectWidthrawalMethod');
         });
         //Seller Product Approval requests
         Route::prefix('product-approval-request')->controller(B2BAdminController::class)->group(function (): void {
             Route::get('/', 'allProducts');
             Route::get('/view/{id}', 'viewProduct');
             Route::get('/approve/{id}', 'approveProduct');
-            Route::post('/reject', 'rejectProduct');
+            Route::post('/reject/{id}', 'rejectProduct');
         });
 
         //Rfq
