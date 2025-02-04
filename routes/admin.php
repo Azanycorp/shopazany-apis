@@ -297,6 +297,7 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function (): void
             Route::get('/approve/{id}', 'approveWidthrawalMethod');
             Route::post('/reject/{id}', 'rejectWidthrawalMethod');
         });
+        
         //Seller Product Approval requests
         Route::prefix('product-approval-request')->controller(B2BAdminController::class)->group(function (): void {
             Route::get('/', 'allProducts');
