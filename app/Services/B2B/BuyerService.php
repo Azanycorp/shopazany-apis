@@ -29,6 +29,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Resources\BuyerResource;
 use App\Http\Resources\PaymentResource;
+use App\Http\Resources\B2BOrderResource;
 use App\Http\Resources\CustomerResource;
 use App\Http\Resources\B2BProductResource;
 use App\Http\Resources\B2BCategoryResource;
@@ -251,11 +252,12 @@ class BuyerService
     }
     public function getCategoryProducts()
     {
-        $categories = B2BProductCategory::select('id','name','image')
+        $categories = B2BProductCategory::select('id','name','slug','image')
             ->with('products')
             ->get();
         return $this->success($categories, "Categories products");
     }
+
     public function bestSelling()
     {
         $bestSellingProducts = B2bOrder::select('product_id', DB::raw('SUM(product_quantity) as total_sold'))
@@ -539,12 +541,12 @@ class BuyerService
 
     public function orderDetails($id)
     {
-        $order = B2bOrder::with(['seller', 'messages'])->find($id);
+        $order = B2bOrder::with(['seller'])->find($id);
         if (!$order) {
             return $this->error(null, 'No record found', 404);
         }
-
-        return $this->success($order, 'order details');
+        $data = new B2BOrderResource($order);
+        return $this->success($data, 'order details');
     }
     public function rfqDetails($id)
     {

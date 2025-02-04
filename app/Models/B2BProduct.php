@@ -48,7 +48,7 @@ class B2BProduct extends Model
         return $this->hasMany(B2bProdctLike::class, 'product_id');
     }
 
-    public function b2bProductReview(): HasMany
+      public function b2bProductReview(): HasMany
     {
         return $this->hasMany(B2bProdctReview::class, 'product_id');
     }

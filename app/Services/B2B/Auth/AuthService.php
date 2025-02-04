@@ -43,9 +43,13 @@ class AuthService
                 'referrer_code' => $request->referrer_code ?? null,
                 'password' => bcrypt($request->password)
             ]);
-            if ($request->referrer_code) {
-                $affiliate = User::where(['referrer_code' => $request->referrer_code, 'is_affiliate_member' => 1])->first();
-                if ($affiliate) {
+            $affiliate = User::where(['referrer_code' => $request->referrer_code, 'is_affiliate_member' => 1])->first();
+            if ($request->referrer_code && $affiliate) {
+                $wallet = Wallet::where('user_id', $affiliate->id)->first();
+                if ($wallet) {
+                    $wallet->reward_point += 300;
+                    $wallet->save();
+                } else {
                     Wallet::create([
                         'user_id' => $affiliate->id,
                         'reward_point' => 300

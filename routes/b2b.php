@@ -33,8 +33,9 @@ Route::middleware(['throttle:apis'])->group(function (): void {
 
     Route::prefix('b2b')->controller(B2BController::class)->group(function (): void {
         Route::post('/business/information', 'businessInformation');
+        Route::get('/baners', 'getProducts');
         Route::get('/products', 'getProducts');
-        Route::get('/categories-product', 'getCategoryProducts');
+        Route::get('/categories-products', 'getCategoryProducts');
         Route::get('/product-categories', 'allCategories');
         Route::get('/product-by-category/{slug}', 'categoryBySlug');
         Route::get('/best-selling-products', 'bestSellingProduct');

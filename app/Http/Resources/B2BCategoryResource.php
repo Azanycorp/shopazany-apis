@@ -18,7 +18,8 @@ class B2BCategoryResource extends JsonResource
             'id' => (int)$this->id,
             'name' => (string)$this->name,
             'slug' => (string)$this->slug,
-            'image' => (string)$this->image
+            'image' => (string)$this->image,
+            'products' => (string)$this->products
         ];
     }
 }
