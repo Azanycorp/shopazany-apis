@@ -25,6 +25,7 @@ class B2BOrderResource extends JsonResource
             'payment_method' => (string)$this->payment_method,
             'payment_status' => (string)$this->payment_status,
             'status' => (string)$this->status,
+            'country' => (string)$this->country?->name,
             'delivery_date' => (string)$this->delivery_date,
             'shipped_date' => (string)$this->delivery_date,
             "seller" => (object) [

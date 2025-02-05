@@ -88,6 +88,10 @@ class B2BController extends Controller
     {
         return $this->buyerService->categoryBySlug($slug);
     }
+    public function getBanners()
+    {
+        return $this->buyerService->getBanners();
+    }
     public function getProducts()
     {
         return $this->buyerService->getProducts();

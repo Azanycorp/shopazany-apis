@@ -4,20 +4,21 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
-use App\Enum\SubscriptionType;
 use Illuminate\Support\Str;
+use App\Enum\SubscriptionType;
+use App\Trait\UserRelationship;
 use Laravel\Sanctum\HasApiTokens;
+use App\Trait\ClearsResponseCache;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Notifications\ResetPasswordNotification;
-use App\Trait\UserRelationship;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, HasApiTokens, SoftDeletes, UserRelationship;
+    use HasFactory, Notifiable, HasApiTokens, SoftDeletes, ClearsResponseCache, UserRelationship;
 
     /**
      * The attributes that are mass assignable.

@@ -11,6 +11,7 @@ use App\Enum\UserStatus;
 use App\Models\B2bOrder;
 use App\Models\B2bQuote;
 use App\Enum\OrderStatus;
+use App\Models\B2bBanner;
 use App\Models\B2bCompany;
 use App\Models\B2BProduct;
 use App\Models\RfqMessage;
@@ -35,6 +36,7 @@ use App\Http\Resources\B2BProductResource;
 use App\Http\Resources\B2BCategoryResource;
 use App\Http\Resources\SellerProductResource;
 use App\Http\Resources\B2BSellerProductResource;
+use App\Http\Resources\B2BBuyerShippingAddressResource;
 
 class BuyerService
 {
@@ -79,11 +81,8 @@ class BuyerService
             'payments.order'
         ])
             ->where('type', UserType::B2B_BUYER)
-            ->find($id);
+            ->findOrFail($id);
 
-        if (!$user) {
-            return $this->error(null, "User not found", 404);
-        }
 
         $data = new CustomerResource($user);
 
@@ -93,11 +92,7 @@ class BuyerService
     public function banCustomer($request)
     {
         $user = User::where('type', UserType::B2B_BUYER)
-            ->find($request->user_id);
-
-        if (!$user) {
-            return $this->error(null, "User not found", 404);
-        }
+            ->findOrFail($request->user_id);
 
         $user->status = UserStatus::BLOCKED;
         $user->is_admin_approve = 0;
@@ -220,6 +215,16 @@ class BuyerService
         ]);
 
         return $this->success(null, 'Request sent successful', 201);
+    }
+
+    public function getBanners()
+    {
+        $banners = B2bBanner::where('status',ProductStatus::ACTIVE)
+            ->get();
+
+       // $data = B2BProductResource::collection($banners);
+
+        return $this->success($banners, 'Products');
     }
 
     public function getProducts()
@@ -407,11 +412,8 @@ class BuyerService
 
     public function sendRfq($data)
     {
-        $quote = B2bQuote::find($data->rfq_id);
+        $quote = B2bQuote::findOrFail($data->rfq_id);
 
-        if (!$quote) {
-            return $this->error(null, 'No record found', 404);
-        }
 
         try {
             $amount = total_amount($quote->product_data['unit_price'], $quote->product_data['minimum_order_quantity']);
@@ -436,11 +438,7 @@ class BuyerService
 
     public function removeQuote($id)
     {
-        $quote = B2bQuote::find($id);
-
-        if (!$quote) {
-            return $this->error(null, 'No record found', 404);
-        }
+        $quote = B2bQuote::findOrFail($id);
 
         $quote->delete();
         return $this->success(null, 'Item removed successfully');
@@ -543,9 +541,7 @@ class BuyerService
     public function orderDetails($id)
     {
         $order = B2bOrder::with(['seller'])->findOrFail($id);
-        if (!$order) {
-            return $this->error(null, 'No record found', 404);
-        }
+
         $data = new B2BOrderResource($order);
         return $this->success($data, 'order details');
     }
@@ -684,11 +680,8 @@ class BuyerService
 
     public function removeItem($id)
     {
-        $wish = B2bWishList::find($id);
+        $wish = B2bWishList::findOrFail($id);
 
-        if (!$wish) {
-            return $this->error(null, 'No record found to send', 404);
-        }
 
         $wish->delete();
         return $this->success(null, 'Item Removed');
@@ -843,16 +836,16 @@ class BuyerService
     {
         $currentUserId = userAuthId();
         $addresses = BuyerShippingAddress::where('user_id', $currentUserId)->get();
-        return $this->success($addresses, 'All address');
+        $data = B2BBuyerShippingAddressResource::collection($addresses);
+        return $this->success($data, 'All address');
     }
 
     public function getShippingAddress($id)
     {
-        $address = BuyerShippingAddress::find($id);
-        if (!$address) {
-            return $this->error(null, 'No record found', 404);
-        }
-        return $this->success($address, 'Address detail');
+        $address = BuyerShippingAddress::findOrFail($id);
+
+        $data = new B2BBuyerShippingAddressResource($address);
+        return $this->success($data, 'Address detail');
     }
 
     public function updateShippingAddress($id, $data)

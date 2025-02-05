@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\B2bProdctLike;
 use App\Models\B2bProdctReview;
+use App\Trait\ClearsResponseCache;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,7 +14,7 @@ class B2BProduct extends Model
 {
     protected $table = 'b2b_products';
 
-    use HasFactory;
+    use HasFactory,ClearsResponseCache;
 
     protected $fillable = [
         'user_id',

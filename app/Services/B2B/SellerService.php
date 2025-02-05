@@ -400,13 +400,9 @@ class SellerService extends Controller
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $user = User::with('b2bSellerShippingAddresses')->find($request->user_id);
+        $user = User::with('b2bSellerShippingAddresses')->findOrFail($request->user_id);
 
-        if (! $user) {
-            return $this->error(null, "User not found", 404);
-        }
-
-        $data = [
+            $data = [
             'user_id' => $request->user_id,
             'address_name' => $request->address_name,
             'name' => $request->name,
@@ -641,7 +637,7 @@ class SellerService extends Controller
         }, 'seller' => function ($query): void {
             $query->select('id', 'first_name', 'last_name')->where('type', UserType::B2B_SELLER);
         },])->findOrFail($id);
-        
+
         $data = new B2BOrderResource($order);
         return $this->success($data, 'order details');
     }
@@ -674,10 +670,8 @@ class SellerService extends Controller
 
     public function getRfqDetails($id)
     {
-        $rfq = Rfq::with(['buyer', 'seller'])->find($id);
-        if (!$rfq) {
-            return $this->error(null, "No record found.", 404);
-        }
+        $rfq = Rfq::with(['buyer', 'seller'])->findOrFail($id);
+
         $messages = RfqMessage::with(['seller', 'buyer'])->where('rfq_id', $rfq->id)->get();
         $data = [
             'rfq' => $rfq,
@@ -688,11 +682,7 @@ class SellerService extends Controller
 
     public function markShipped($data)
     {
-        $order = B2bOrder::find($data->order_id);
-
-        if (!$order) {
-            return $this->error(null, 'No record found to send', 404);
-        }
+        $order = B2bOrder::findOrFail($data->order_id);
 
         $order->update([
             'status' => OrderStatus::SHIPPED,
@@ -730,11 +720,7 @@ class SellerService extends Controller
 
     public function markDelivered($data)
     {
-        $order = B2bOrder::find($data->order_id);
-
-        if (!$order) {
-            return $this->error(null, 'No record found to send', 404);
-        }
+        $order = B2bOrder::findOrFail($data->order_id);
 
         $order->update([
             'status' => OrderStatus::DELIVERED,
@@ -825,14 +811,8 @@ class SellerService extends Controller
 
     public function rateOrder($data)
     {
-        $order = B2bOrder::find($data->order_id);
-
+        $order = B2bOrder::findOrFail($data->order_id);
         $userId = userAuthId();
-
-        if (!$order) {
-            return $this->error(null, "No record found", 404);
-        }
-
         B2bOrderRating::create([
             'seller_id' => $userId,
             'order_no' => $order->order_no,
@@ -845,13 +825,9 @@ class SellerService extends Controller
 
     public function orderFeeback($data)
     {
-        $order = B2bOrder::find($data->order_id);
+        $order = B2bOrder::findOrFail($data->order_id);
 
         $userId = userAuthId();
-
-        if (!$order) {
-            return $this->error(null, "No record found", 404);
-        }
 
         B2bOrderFeedback::create([
             'seller_id' => $userId,
@@ -1043,21 +1019,14 @@ class SellerService extends Controller
             'country_id'
         ])
             ->with(['country:id,name'])
-            ->find($id);
+            ->findOrFail($id);
 
-        if (!$method) {
-            return $this->error(null, 'No record found', 404);
-        }
 
         return $this->success($method, 'Withdrawal details', 200);
     }
     public function updateMethod($id, $data)
     {
-        $method = B2bWithdrawalMethod::find($id);
-
-        if (!$method) {
-            return $this->error(null, 'No record found', 404);
-        }
+        $method = B2bWithdrawalMethod::findOrFail($id);
 
         $method->update([
             'country_id' => $data->country_id,
@@ -1074,10 +1043,7 @@ class SellerService extends Controller
     }
     public function makeAccounDefaultt($data)
     {
-        $method = B2bWithdrawalMethod::find($data->id);
-        if (!$method) {
-            return $this->error(null, 'No record found', 404);
-        }
+        $method = B2bWithdrawalMethod::findOrFail($data->id);
 
         B2bWithdrawalMethod::where('user_id', userAuthId())
             ->where('is_default', 1)
@@ -1092,15 +1058,8 @@ class SellerService extends Controller
 
     public function deleteMethod($id)
     {
-        $method = B2bWithdrawalMethod::find($id);
-
-        if (!$method) {
-            return $this->error(null, 'No record found', 404);
-        }
-
-        if ($method->delete()) {
-            return $this->success(null, 'Withdrawal details deleted successfully', 200);
-        }
-        return $this->error(null, 'Failed to delete the record', 500);
+        $method = B2bWithdrawalMethod::findOrFail($id);
+        $method->delete();
+        return $this->success(null, 'Withdrawal details deleted successfully', 200);
     }
 }

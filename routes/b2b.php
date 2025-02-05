@@ -33,7 +33,9 @@ Route::middleware(['throttle:apis'])->group(function (): void {
 
     Route::prefix('b2b')->controller(B2BController::class)->group(function (): void {
         Route::post('/business/information', 'businessInformation');
-        Route::get('/baners', 'getProducts');
+    });
+    Route::prefix('b2b')->controller(B2BController::class)->group(function (): void {
+        Route::get('/banners', 'getBanners');
         Route::get('/products', 'getProducts');
         Route::get('/categories-products', 'getCategoryProducts');
         Route::get('/product-categories', 'allCategories');
@@ -42,7 +44,7 @@ Route::middleware(['throttle:apis'])->group(function (): void {
         Route::get('/featured-products', 'featuredProduct');
         Route::get('/search-products', 'searchProduct');
         Route::get('/product/{slug}', 'getProductDetail');
-    });
+    })->middleware('cacheResponse:300');
 });
 
 Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function (): void {
@@ -85,8 +87,6 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function (): voi
                 Route::delete('/delete/{id}', 'deleteWithdrawalMethod');
             });
 
-            //complaints log
-            Route::get('/refund/request', 'getComplaints');
 
             //profile
             Route::get('/profile', 'profile');
@@ -120,39 +120,42 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function (): voi
 
     // Buyer
     Route::group(['middleware' => 'b2b_buyer.auth', 'prefix' => 'buyer', 'controller' => B2BBuyerController::class], function (): void {
-        Route::post('request/refund', 'requestRefund');
+       
         Route::post('add-quote', 'requestQuote');
-        Route::get('quotes', 'allQuotes');
         Route::get('send-all-quotes', 'sendAllQuotes');
         Route::post('send-rfq', 'sendSingleQuote');
         Route::delete('remove-rfq/{id}', 'removeQuote');
-        Route::get('dashboard', 'dashboard');
-        Route::get('rfq', 'getAllRfqs');
-        Route::get('rfq-details/{id}', 'getRfqDetails');
-        Route::get('orders', 'allOrders');
-        Route::get('order-details/{id}', 'getOrderDetails');
         Route::post('request-review', 'reviewRequest');
         Route::post('add-review', 'addReview');
         Route::post('/add-to-wish', 'addTowishList');
         Route::post('/like-product', 'likeProduct');
-        Route::get('/wish-list', 'wishList');
         Route::delete('/wish/remove-item/{id}', 'removeItem');
         Route::post('/wish/send-quote', 'sendFromWishList');
 
+        Route::middleware('cacheResponse:300')->group(function (): void {
+            Route::get('quotes', 'allQuotes');
+            Route::get('dashboard', 'dashboard');
+            Route::get('rfq', 'getAllRfqs');
+            Route::get('rfq-details/{id}', 'getRfqDetails');
+            Route::get('orders', 'allOrders');
+            Route::get('order-details/{id}', 'getOrderDetails');
+            Route::get('/wish-list', 'wishList');
+        });
+
         //profile
-        Route::get('/profile', 'profile');
+        Route::get('/profile', 'profile')->middleware('cacheResponse:300');
         Route::post('/edit-account', 'editAccount');
         Route::patch('/change-password', 'changePassword');
         Route::post('/change-2fa', 'change2Fa');
-        Route::get('/company-info', 'companyInfo');
+        Route::get('/company-info', 'companyInfo')->middleware('cacheResponse:300');
         Route::post('/edit-company', 'editCompany');
 
 
         // Shipping address
         Route::prefix('shipping-address')->group(function (): void {
-            Route::get('/', 'allShippingAddress');
+            Route::get('/', 'allShippingAddress')->middleware('cacheResponse:300');
             Route::post('/add', 'addShippingAddress');
-            Route::get('/details/{id}', 'getShippingAddress');
+            Route::get('/details/{id}', 'getShippingAddress')->middleware('cacheResponse:300');
             Route::post('/update/{id}', 'updateShippingAddress');
             Route::post('/make-default/{id}', 'setDefaultAddress');
             Route::delete('/delete/{id}', 'deleteShippingAddress');

@@ -89,11 +89,7 @@ class AdminService
 
     public function getRfqDetails($id)
     {
-        $order = Rfq::with(['buyer', 'seller'])->find($id);
-
-        if (!$order) {
-            return $this->error(null, "No record found.", 404);
-        }
+        $order = Rfq::with(['buyer', 'seller'])->findOrFail($id);
 
         return $this->success($order, "Rfq details");
     }
@@ -134,11 +130,7 @@ class AdminService
 
     public function getOrderDetails($id)
     {
-        $order = B2bOrder::with(['buyer', 'seller'])->find($id);
-
-        if (!$order) {
-            return $this->error(null, "No record found.", 404);
-        }
+        $order = B2bOrder::with(['buyer', 'seller'])->findOrFail($id);
 
         return $this->success($order, "Order details");
     }
@@ -167,11 +159,7 @@ class AdminService
 
     public function approveSeller($request)
     {
-        $user = User::where('type', UserType::B2B_SELLER)->find($request->user_id);
-
-        if (!$user) {
-            return $this->error(null, "User not found", 404);
-        }
+        $user = User::where('type', UserType::B2B_SELLER)->findOrFail($request->user_id);
 
         $user->is_admin_approve = !$user->is_admin_approve;
         $user->status = $user->is_admin_approve ? 'active' : UserStatus::BLOCKED;
@@ -185,12 +173,8 @@ class AdminService
 
     public function viewSeller($id)
     {
-        $user = User::where('type', UserType::B2B_SELLER)
-            ->find($id);
+        $user = User::where('type', UserType::B2B_SELLER)->findOrFail($id);
 
-        if (!$user) {
-            return $this->error(null, "Seller not found", 404);
-        }
         $search = request()->search;
         $data = new B2BSellerResource($user);
         $query = B2BProduct::with(['b2bProductImages', 'category', 'country', 'user', 'subCategory'])
@@ -213,11 +197,7 @@ class AdminService
 
     public function editSeller($request, $id)
     {
-        $user = User::find($id);
-
-        if (!$user) {
-            return $this->error(null, "User not found", 404);
-        }
+        $user = User::findOrFail($id);
 
         $user->update([
             'first_name' => $request->first_name,
@@ -236,11 +216,7 @@ class AdminService
 
     public function banSeller($request)
     {
-        $user = User::where('type', UserType::B2B_SELLER)->find($request->user_id);
-
-        if (!$user) {
-            return $this->error(null, "User not found", 404);
-        }
+        $user = User::where('type', UserType::B2B_SELLER)->findOrFail($request->user_id);
 
         $user->status = UserStatus::BLOCKED;
         $user->is_admin_approve = 0;
@@ -252,11 +228,7 @@ class AdminService
 
     public function removeSeller($id)
     {
-        $user = User::where('type', UserType::B2B_SELLER)->find($id);
-
-        if (!$user) {
-            return $this->error(null, "User not found", 404);
-        }
+        $user = User::where('type', UserType::B2B_SELLER)->findOrFail($id);
 
         $user->delete();
 
@@ -430,11 +402,7 @@ class AdminService
         $user = User::select('id', 'first_name', 'last_name', 'email', 'image')
             ->with('b2bCompany')
             ->where('type', UserType::B2B_BUYER)
-            ->find($id);
-
-        if (!$user) {
-            return $this->error(null, "Buyer not found", 404);
-        }
+            ->findOrFail($id);
         return $this->success($user, "Buyer details");
     }
 
@@ -649,12 +617,7 @@ class AdminService
 
     public function cancelWidthrawalRequest($id)
     {
-        $payout =  Payout::find($id);
-
-        if (!$payout) {
-            return $this->error(null, 'No record found');
-        }
-
+        $payout =  Payout::findOrFail($id);
         $wallet = UserWallet::where('user_id', $payout->seller_id)->first();
 
         if (!$wallet) {
@@ -752,11 +715,7 @@ class AdminService
     {
         $product = B2BProduct::with(['user' => function ($query): void {
             $query->select('id', 'first_name', 'last_name')->where('type', UserType::B2B_SELLER);
-        }])->find($id);
-
-        if (! $product) {
-            return $this->error(null, 'No record found', 404);
-        }
+        }])->findOrFail($id);
 
         return $this->success($product, 'Product details');
     }

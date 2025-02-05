@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use App\Trait\ClearsResponseCache;
 use Illuminate\Database\Eloquent\Model;
 
 class B2bPromo extends Model
 {
+    use ClearsResponseCache;
     protected $fillable = [
         'coupon_code',
         'discount',
