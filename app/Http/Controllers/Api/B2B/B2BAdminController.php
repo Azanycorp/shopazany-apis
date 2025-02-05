@@ -37,6 +37,10 @@ class B2BAdminController extends Controller
     {
         return $this->adminService->getAllOrders($request);
     }
+    public function markCompleted($id)
+    {
+        return $this->adminService->markCompleted($id);
+    }
     public function orderDetails($id)
     {
         return $this->adminService->getOrderDetails($id);

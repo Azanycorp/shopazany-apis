@@ -221,6 +221,7 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function (): void
             Route::post('/verify-password', 'verifyPassword');
             Route::delete('/delete-account/{id}', 'removeAdmin');
         });
+
         Route::prefix('category')->controller(ProductCategoryController::class)->group(function () {
             Route::post('/create', 'createCategory');
             Route::get('/all', 'adminCategories')->middleware('cacheResponse:300');
@@ -276,7 +277,7 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function (): void
 
             Route::prefix('product')->controller(B2BAdminSellerController::class)->group(function (): void {
                 Route::post('/add', 'addSellerProduct');
-                Route::get('/details/{id}/{user_id}', 'viewSellerProduct');
+                Route::get('/details/{user_id}/{id}', 'viewSellerProduct');
                 Route::post('/update/{id}', 'editSellerProduct');
                 Route::delete('/delete/{user_id}/{id}', 'removeSellerProduct');
             });
@@ -315,6 +316,7 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function (): void
         Route::middleware('cacheResponse:300')->prefix('orders')->controller(B2BAdminController::class)->group(function (): void {
             Route::get('/', 'allOrders');
             Route::get('/details/{id}', 'orderDetails');
+            Route::post('/mark-completed/{id}', 'markCompleted');
         });
     });
 });

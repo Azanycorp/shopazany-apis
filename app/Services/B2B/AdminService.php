@@ -135,13 +135,22 @@ class AdminService
         return $this->success($order, "Order details");
     }
 
+    public function markCompleted($id)
+    {
+        $order = B2bOrder::findOrFail($id);
+        $order->update([
+            'status' => OrderStatus::DELIVERED
+        ]);
+        return $this->success(null, "Order Completed");
+    }
+
     //Sellers
     //Admin section
 
     public function allSellers()
     {
 
-        $sellers = User::with(['b2bProducts', 'businessInformation'])
+        $sellers = User::withCount('b2bProducts')
             ->where('type', UserType::B2B_SELLER)
             ->latest('created_at')->get();
 
@@ -300,9 +309,10 @@ class AdminService
         return $this->success(null, 'Product added successfully', 201);
     }
 
-    public function viewSellerProduct($product_id)
+    public function viewSellerProduct($user_id, $product_id)
     {
-        $prod = $this->b2bProductRepository->find($product_id);
+        $user = User::findOrFail($user_id);
+        $prod = B2BProduct::where('user_id', $user->id)->findOrFail($product_id);
         $data = new B2BProductResource($prod);
 
         return $this->success($data, 'Product details');
@@ -686,7 +696,7 @@ class AdminService
         return $this->success(null, 'Account Approved');
     }
 
-    public function rejectWidthrawalMethod($id,$data)
+    public function rejectWidthrawalMethod($id, $data)
     {
         $account =  B2bWithdrawalMethod::findOrFail($id);
 
@@ -731,7 +741,7 @@ class AdminService
         return $this->success(null, 'Product Approved');
     }
 
-    public function rejectProduct($id,$data)
+    public function rejectProduct($id, $data)
     {
         $product = B2BProduct::findOrFail($id);
         $product->update([
