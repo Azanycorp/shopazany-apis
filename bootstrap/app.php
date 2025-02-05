@@ -1,17 +1,19 @@
 <?php
 
-use App\Http\Middleware\AuthGates;
 use App\Http\Middleware\B2BBuyer;
+use App\Http\Middleware\AuthGates;
 use App\Http\Middleware\B2BSeller;
-use App\Http\Middleware\BlockUserAfterFailedAttempts;
-use App\Http\Middleware\BuyerAuthMiddleware;
-use App\Http\Middleware\CheckWalletBalance;
-use App\Http\Middleware\SellerAuthMiddleware;
-use Illuminate\Foundation\Application;
-use Illuminate\Foundation\Configuration\Exceptions;
-use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Foundation\Application;
+use App\Http\Middleware\CheckWalletBalance;
+use App\Http\Middleware\BuyerAuthMiddleware;
+use App\Http\Middleware\SellerAuthMiddleware;
+use Illuminate\Foundation\Configuration\Exceptions;
+use Illuminate\Foundation\Configuration\Middleware;
+use Spatie\ResponseCache\Middlewares\CacheResponse;
+use App\Http\Middleware\BlockUserAfterFailedAttempts;
+use Spatie\ResponseCache\Middlewares\DoNotCacheResponse;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -38,8 +40,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'b2b_seller.auth' => B2BSeller::class,
             'b2b_buyer.auth' => B2BBuyer::class,
             'login.attempt' => BlockUserAfterFailedAttempts::class,
-            'cacheResponse' => \Spatie\ResponseCache\Middlewares\CacheResponse::class,
-            'doNotCacheResponse' => \Spatie\ResponseCache\Middlewares\DoNotCacheResponse::class,
+            'cacheResponse' => CacheResponse::class,
+            'doNotCacheResponse' => DoNotCacheResponse::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
