@@ -164,7 +164,7 @@ class AdminService
     //Admin section
 
     public function allSellers()
-    {
+     {
 
         $sellers = User::withCount('b2bProducts')
             ->where('type', UserType::B2B_SELLER)
@@ -182,9 +182,9 @@ class AdminService
         return $this->success($data, "sellers details");
     }
 
-    public function approveSeller($request)
+    public function approveSeller($id)
     {
-        $user = User::where('type', UserType::B2B_SELLER)->findOrFail($request->user_id);
+        $user = User::where('type', UserType::B2B_SELLER)->findOrFail($id);
 
         $user->is_admin_approve = !$user->is_admin_approve;
         $user->status = $user->is_admin_approve ? 'active' : UserStatus::BLOCKED;
@@ -239,9 +239,9 @@ class AdminService
         return $this->success($data, "Updated successfully");
     }
 
-    public function banSeller($request)
+    public function banSeller($id)
     {
-        $user = User::where('type', UserType::B2B_SELLER)->findOrFail($request->user_id);
+        $user = User::where('type', UserType::B2B_SELLER)->findOrFail($id);
 
         $user->status = UserStatus::BLOCKED;
         $user->is_admin_approve = 0;

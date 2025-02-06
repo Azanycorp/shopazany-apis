@@ -227,13 +227,13 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function (): void
             Route::get('/all', 'adminCategories')->middleware('cacheResponse:300');
             Route::get('/analytics', 'categoryAnalytic');
             Route::post('/update/{id}', 'updateCategory');
-            Route::patch('/change/{category_id}', 'featuredStatus');
+            Route::post('/change/{category_id}', 'featuredStatus');
             Route::delete('/delete/{id}', 'deleteCategory');
 
             Route::post('/create/subcategory', 'createSubCategory');
-            Route::get('/subcategory', 'getAdminSubcategory')->middleware('cacheResponse:300');
+            Route::get('/subcategory', 'getAdminSubcategory');
             Route::get('/{category_id}/subcategory', 'getSubcategory')->middleware('cacheResponse:300');
-            Route::patch('/subcategory/status/{sub_category_id}', 'subStatus');
+            Route::post('/subcategory/status/{sub_category_id}', 'subStatus');
             Route::delete('/subcategory/delete/{id}', 'deleteSubCategory');
         });
 
@@ -271,8 +271,8 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function (): void
             Route::get('/', 'allSellers')->middleware('cacheResponse:300');
             Route::get('/details/{user_id}', 'viewSeller')->middleware('cacheResponse:300');
             Route::delete('/remove/{user_id}', 'removeSeller');
-            Route::patch('/approve', 'approveSeller');
-            Route::patch('/ban', 'banSeller');
+            Route::post('/approve/{id}', 'approveSeller');
+            Route::post('/ban/{id}', 'banSeller');
             Route::delete('/bulk/remove', 'bulkRemove');
 
             Route::prefix('product')->controller(B2BAdminSellerController::class)->group(function (): void {
@@ -287,15 +287,15 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function (): void
         Route::prefix('widthrawal-request')->controller(B2BAdminController::class)->group(function (): void {
             Route::get('/', 'widthrawalRequests')->middleware('cacheResponse:300');
             Route::get('/view/{id}', 'viewWidthrawalRequest')->middleware('cacheResponse:300');
-            Route::get('/approve/{id}', 'approveWidthrawalRequest');
-            Route::get('/cancel/{id}', 'cancelWidthrawalRequest');
+            Route::post('/approve/{id}', 'approveWidthrawalRequest');
+            Route::post('/cancel/{id}', 'cancelWidthrawalRequest');
         });
 
         //Withdrawal method requests
         Route::prefix('widthrawal-method-request')->controller(B2BAdminController::class)->group(function (): void {
             Route::get('/', 'widthrawalMethods')->middleware('cacheResponse:300');
             Route::get('/view/{id}', 'viewWidthrawalMethod')->middleware('cacheResponse:300');
-            Route::get('/approve/{id}', 'approveWidthrawalMethod');
+            Route::post('/approve/{id}', 'approveWidthrawalMethod');
             Route::post('/reject/{id}', 'rejectWidthrawalMethod');
         });
 
@@ -303,7 +303,7 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function (): void
         Route::prefix('product-approval-request')->controller(B2BAdminController::class)->group(function (): void {
             Route::get('/', 'allProducts');
             Route::get('/view/{id}', 'viewProduct');
-            Route::get('/approve/{id}', 'approveProduct');
+            Route::post('/approve/{id}', 'approveProduct');
             Route::post('/reject/{id}', 'rejectProduct');
         });
 
