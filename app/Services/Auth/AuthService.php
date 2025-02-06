@@ -118,7 +118,6 @@ class AuthService extends Controller
             $type = MailingEnum::RESEND_CODE;
             $subject = "Resend code";
             $mail_class = "App\Mail\SignUpVerifyMail";
-
             mailSend($type, $user, $subject, $mail_class);
 
             $description = "User with email address {$request->email} has requested a code to be resent.";

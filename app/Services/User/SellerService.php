@@ -196,6 +196,7 @@ class SellerService extends Controller
             'image' => $image,
             'country_id' => $user->country ?? 160,
         ]);
+        
         uploadMultipleProductImage($request, 'images', $folder, $product);
         return $this->success(null, "Updated successfully");
     }

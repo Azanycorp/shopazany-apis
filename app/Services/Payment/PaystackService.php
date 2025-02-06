@@ -26,7 +26,6 @@ use Illuminate\Support\Facades\DB;
 use App\Models\UserShippingAddress;
 use Illuminate\Support\Facades\Log;
 use App\Models\BuyerShippingAddress;
-use Illuminate\Support\Facades\Mail;
 
 class PaystackService
 {
@@ -305,6 +304,7 @@ class PaystackService
                     'payment_status' => OrderStatus::PAID,
                     'status' => OrderStatus::COMPLETED
                 ]);
+
                 send_email($user->email, new B2BOrderEmail($orderedItems));
                 (new UserLogAction(
                     request(),
