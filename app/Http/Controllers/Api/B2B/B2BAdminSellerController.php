@@ -24,13 +24,9 @@ class B2BAdminSellerController extends Controller
         return $this->service->allSellers();
     }
 
-    public function approveSeller(Request $request)
+    public function approveSeller($id)
     {
-        $request->validate([
-            'user_id' => ['required', 'integer', 'exists:users,id']
-        ]);
-
-        return $this->service->approveSeller($request);
+        return $this->service->approveSeller($id);
     }
 
     public function viewSeller($id)
@@ -38,26 +34,10 @@ class B2BAdminSellerController extends Controller
         return $this->service->viewSeller($id);
     }
 
-    public function editSeller(Request $request, $id)
+   
+    public function banSeller($id)
     {
-        $request->validate([
-            'first_name' => ['string', 'max:255'],
-            'last_name' => ['string', 'max:255'],
-            'email_address' => ['email', 'email:rfc,dns'],
-            'phone_number' => ['string'],
-            'password' => ['string', 'confirmed', Password::defaults()],
-        ]);
-
-        return $this->service->editSeller($request, $id);
-    }
-
-    public function banSeller(Request $request)
-    {
-        $request->validate([
-            'user_id' => ['required', 'integer', 'exists:users,id']
-        ]);
-
-        return $this->service->banSeller($request);
+        return $this->service->banSeller($id);
     }
 
     public function removeSeller($id)
@@ -81,14 +61,14 @@ class B2BAdminSellerController extends Controller
         return $this->service->addSellerProduct($request);
     }
 
-    public function viewSellerProduct($product_id, $user_id)
+    public function viewSellerProduct($user_id,$product_id)
     {
-        return $this->service->viewSellerProduct($product_id,$user_id);
+        return $this->service->viewSellerProduct($user_id,$product_id,);
     }
 
-    public function editSellerProduct($id,Request $request)
+    public function editSellerProduct($user_id,$product_id,Request $request)
     {
-        return $this->service->editSellerProduct($id,$request);
+        return $this->service->editSellerProduct($user_id,$product_id,$request);
     }
 
     public function removeSellerProduct($user_id, $product_id)

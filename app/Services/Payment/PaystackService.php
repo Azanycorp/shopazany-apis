@@ -261,6 +261,7 @@ class PaystackService
                 $seller = User::findOrFail($rfq->seller_id);
                 $product = B2BProduct::findOrFail($rfq->product_id);
                 $shipping_address = BuyerShippingAddress::findOrFail($shipping_address_id);
+                $address = new B2BBuyerShippingAddressResource($shipping_address);
 
                 B2bOrder::create([
                     'buyer_id' => $userId,
@@ -269,7 +270,7 @@ class PaystackService
                     'product_quantity' => $rfq->product_quantity,
                     'order_no' => $orderNo,
                     'product_data' => $product,
-                    'shipping_address' => $shipping_address,
+                    'shipping_address' => $address,
                     'total_amount' => $amount,
                     'payment_method' => $method,
                     'payment_status' => OrderStatus::PAID,

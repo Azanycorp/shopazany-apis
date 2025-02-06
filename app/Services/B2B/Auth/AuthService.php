@@ -5,7 +5,10 @@ namespace App\Services\B2B\Auth;
 use App\Models\User;
 use App\Enum\UserLog;
 use App\Enum\UserType;
+use App\Models\Action;
+use App\Models\Wallet;
 use App\Enum\UserStatus;
+use App\Models\UserWallet;
 use App\Trait\HttpResponse;
 use App\Mail\UserWelcomeMail;
 use App\Mail\SignUpVerifyMail;
@@ -30,13 +33,35 @@ class AuthService
         try {
 
             $code = generateVerificationCode();
+            if ($request->referrer_code) {
+                $affiliate = User::with('wallet')
+                    ->where(['referrer_code' => $request->referrer_code, 'is_affiliate_member' => 1])
+                    ->first();
 
+                if (!$affiliate) {
+                   return $this->error(null, 'No Affiliate found with this code', 500);
+                }
+                $wallet = $affiliate->wallet;
+                $action = Action::where('slug', 'create-account')->firstOrFail();
+                if ($wallet) {
+                    $affiliate->wallet->updateOrCreate(
+                        [
+                            'user_id' => $affiliate->id
+                        ],
+                        [
+                            'reward_point' => DB::raw("reward_point + $action->points")
+                        ]
+                    );
+                }
+            }
             $user = User::create([
                 'email' => $request->email,
                 'type' => UserType::B2B_SELLER,
                 'email_verified_at' => null,
                 'verification_code' => $code,
                 'is_verified' => 0,
+                'info_source' => $request->info_source ?? null,
+                'referrer_code' => $request->referrer_code ?? null,
                 'password' => bcrypt($request->password)
             ]);
 

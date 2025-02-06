@@ -2,13 +2,17 @@
 
 namespace App\Models;
 
+use App\Models\Country;
 use App\Enum\OrderStatus;
+use App\Trait\ClearsResponseCache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class B2bOrder extends Model
 {
+    use ClearsResponseCache;
+
     protected $fillable = [
         'buyer_id',
         'seller_id',
@@ -35,7 +39,10 @@ class B2bOrder extends Model
     {
         return $this->belongsTo(User::class, 'seller_id', 'id');
     }
-
+    public function country(): BelongsTo
+    {
+        return $this->belongsTo(Country::class);
+    }
     public function buyer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'buyer_id', 'id');

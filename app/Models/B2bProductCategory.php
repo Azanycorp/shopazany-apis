@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use App\Trait\ClearsResponseCache;
 use Illuminate\Database\Eloquent\Model;
 
 class B2bProductCategory extends Model
 {
-
+    use ClearsResponseCache;
+    
     protected $fillable = [
         'name',
         'slug',
