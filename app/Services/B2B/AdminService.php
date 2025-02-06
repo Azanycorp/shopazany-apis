@@ -457,7 +457,7 @@ class AdminService
             return $this->error(null, "Email already exist");
         }
 
-        $image = $data->hasFile('image') ? uploadUserImage($data->file('image'), 'image', $user) : $user->image;
+        $image = $data->hasFile('image') ? uploadUserImage($data, 'image', $user) : $user->image;
         $user->update([
             'first_name' => $data->first_name ?? $user->first_name,
             'last_name' => $data->last_name ?? $user->last_name,

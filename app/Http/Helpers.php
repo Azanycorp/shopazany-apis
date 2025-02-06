@@ -2426,16 +2426,16 @@ if (! function_exists('currencyConvert')) {
 }
 
 if (! function_exists('mailSend')) {
-    function mailSend($type, $user, $subject, $mail_class) {
+    function mailSend($type, $recipient, $subject, $mail_class, $payloadKey = 'user') {
         $data = [
             'type' => $type,
-            'email' => $user->email,
+            'email' => $recipient->email,
             'subject' => $subject,
             'body' => "",
             'mailable' => $mail_class,
             'scheduled_at' => now(),
             'payload' => [
-                'user' => $user
+                $payloadKey => $recipient
             ]
         ];
 

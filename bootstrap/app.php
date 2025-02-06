@@ -13,6 +13,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Spatie\ResponseCache\Middlewares\CacheResponse;
 use App\Http\Middleware\BlockUserAfterFailedAttempts;
+use App\Http\Middleware\CheckUserCountry;
 use Spatie\ResponseCache\Middlewares\DoNotCacheResponse;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -40,6 +41,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'b2b_seller.auth' => B2BSeller::class,
             'b2b_buyer.auth' => B2BBuyer::class,
             'login.attempt' => BlockUserAfterFailedAttempts::class,
+            'check.user.country' => CheckUserCountry::class,
             'cacheResponse' => CacheResponse::class,
             'doNotCacheResponse' => DoNotCacheResponse::class,
         ]);
