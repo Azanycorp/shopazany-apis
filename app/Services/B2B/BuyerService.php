@@ -32,6 +32,7 @@ use App\Http\Resources\BuyerResource;
 use App\Http\Resources\PaymentResource;
 use App\Http\Resources\B2BOrderResource;
 use App\Http\Resources\CustomerResource;
+use App\Http\Resources\B2BBannerResource;
 use App\Http\Resources\B2BProductResource;
 use App\Http\Resources\B2BCategoryResource;
 use App\Http\Resources\SellerProductResource;
@@ -222,9 +223,9 @@ class BuyerService
         $banners = B2bBanner::where('status',ProductStatus::ACTIVE)
             ->get();
 
-       // $data = B2BProductResource::collection($banners);
+        $data = B2BBannerResource::collection($banners);
 
-        return $this->success($banners, 'Products');
+        return $this->success($data, 'banners');
     }
 
     public function getProducts()

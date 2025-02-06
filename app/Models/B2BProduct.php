@@ -29,6 +29,7 @@ class B2BProduct extends Model
         'unit_price',
         'quantity',
         'availability_quantity',
+        'admin_comment',
         'sold',
         'fob_price',
         'default_currency',
