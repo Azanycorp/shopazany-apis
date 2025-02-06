@@ -24,10 +24,9 @@ use Illuminate\Support\Facades\Storage;
 if (!function_exists('total_amount')) {
     function total_amount($unit_price, $moq): int|float
     {
-        return ($unit_price * $moq);
+        return $unit_price * $moq;
     }
 }
-
 
 if (!function_exists('reward_user')) {
     function reward_user($user, $actionName, $status)
@@ -101,14 +100,10 @@ if(!function_exists('getImportTemplate')){
   function getImportTemplate(): string
   {
     if (App::environment('production')){
-
       $data = "https://azany-uploads.s3.amazonaws.com/prod/product-template/product-template.xlsx";
-
-    } elseif (App::environment(['local', 'staging'])) {
-
+    } else {
       $data = "https://azany-uploads.s3.amazonaws.com/stag/product-template/product-template.xlsx";
     }
-
     return $data;
   }
 }
@@ -117,14 +112,10 @@ if(!function_exists('getB2BProductTemplate')){
   function getB2BProductTemplate(): string
   {
     if (App::environment('production')){
-
       $data = "https://azany-uploads.s3.us-east-1.amazonaws.com/prod/product-template/b2b/seller-product-template.xlsx";
-
-    } elseif (App::environment(['local', 'staging'])) {
-
-      $data = "https://azany-uploads.s3.us-east-1.amazonaws.com/prod/product-template/b2b/seller-product-template.xlsx";
+    } else {
+      $data = "https://azany-uploads.s3.us-east-1.amazonaws.com/stag/product-template/b2b/seller-product-template.xlsx";
     }
-
     return $data;
   }
 }
@@ -2435,16 +2426,16 @@ if (! function_exists('currencyConvert')) {
 }
 
 if (! function_exists('mailSend')) {
-    function mailSend($type, $user, $subject, $mail_class) {
+    function mailSend($type, $recipient, $subject, $mail_class, $payloadKey = 'user') {
         $data = [
             'type' => $type,
-            'email' => $user->email,
+            'email' => $recipient->email,
             'subject' => $subject,
             'body' => "",
             'mailable' => $mail_class,
             'scheduled_at' => now(),
             'payload' => [
-                'user' => $user
+                $payloadKey => $recipient
             ]
         ];
 

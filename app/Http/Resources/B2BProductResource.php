@@ -26,14 +26,15 @@ class B2BProductResource extends JsonResource
             'quantity' => (string)$this->quantity,
             'default_currency' => (string)$this->default_currency,
             'availability_quantity' => (string)$this->availability_quantity,
+            'admin_comment' => (string)$this->admin_comment,
             'keywords' => $this?->keywords,
             'moq' => (string)$this->minimum_order_quantity,
             'status' => (string)$this->status,
-            'country' => (string)$this->country?->name,
+            'rating' => 3.5,
             'country' => (string)$this->country?->name,
             'review_count' => (int)$this->b2bProductReview?->count(),
             'b2bLikes' => $this->b2bLikes->count(),
-            'images' => (string)$this->b2bProductImages !== '' && (string)$this->b2bProductImages !== '0' ? $this->b2bProductImages->map(function ($image): array {
+            'images' => $this->b2bProductImages ? $this->b2bProductImages->map(function ($image): array {
                 return [
                     'image' => $image->image
                 ];

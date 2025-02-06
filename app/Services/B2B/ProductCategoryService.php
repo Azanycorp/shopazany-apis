@@ -3,18 +3,19 @@
 namespace App\Services\B2B;
 
 use App\Models\Category;
+use App\Models\B2BProduct;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
 use App\Enum\CategoryStatus;
 use App\Models\B2bProductCategory;
 use Illuminate\Support\Facades\App;
+use App\Models\B2bProductSubCategory;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Resources\B2BCategoryResource;
 use App\Http\Resources\AdminCategoryResource;
 use App\Http\Resources\B2BSubCategoryResource;
 use App\Http\Resources\AdminSubCategoryResource;
-use App\Models\B2BProduct;
-use App\Models\B2bProductSubCategory;
+use App\Http\Resources\AdminB2BSubCategoryResource;
 
 class ProductCategoryService
 {
@@ -154,7 +155,7 @@ class ProductCategoryService
 
     public function featuredStatus($request, $id)
     {
-        $category = B2BProductSubCategory::findOrFail($id);
+        $category = B2BProductCategory::findOrFail($id);
 
         if ($request->has('featured')) {
             $category->featured = $request->input('featured') ? 1 : 0;
@@ -194,16 +195,14 @@ class ProductCategoryService
     public function getAdminSubcategory()
     {
         $search = request()->query('search');
-
-        $subcats = B2BProductSubCategory::with(['product', 'category'])
-            ->withCount(['product', 'category'])
+         $subcats = B2BProductSubCategory::with(['products', 'category'])
+            ->withCount('products')
             ->when($search, function ($query, string $search): void {
                 $query->where('name', 'like', '%' . $search . '%');
             })
             ->get();
 
-        $data = AdminSubCategoryResource::collection($subcats);
-
+        $data = AdminB2BSubCategoryResource::collection($subcats);
         return $this->success($data, "Sub categories");
     }
 

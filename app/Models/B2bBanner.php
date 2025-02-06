@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Trait\ClearsResponseCache;
 use Illuminate\Database\Eloquent\Model;
 
 class B2bBanner extends Model
 {
+    use ClearsResponseCache;
+    
     protected $fillable = [
         'title',
         'image',

@@ -2,14 +2,15 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Trait\ClearsResponseCache;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class B2BProductImage extends Model
 {
     protected $table = 'b2b_product_images';
 
-    use HasFactory;
+    use HasFactory,ClearsResponseCache;
 
     protected $fillable = [
         'b2b_product_id',

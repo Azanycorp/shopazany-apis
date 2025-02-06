@@ -22,11 +22,11 @@ use App\Actions\UserLogAction;
 use App\Enum\SubscriptionType;
 use App\Mail\CustomerOrderMail;
 use App\Actions\PaymentLogAction;
+use App\Http\Resources\B2BBuyerShippingAddressResource;
 use Illuminate\Support\Facades\DB;
 use App\Models\UserShippingAddress;
 use Illuminate\Support\Facades\Log;
 use App\Models\BuyerShippingAddress;
-use Illuminate\Support\Facades\Mail;
 
 class PaystackService
 {
@@ -147,7 +147,6 @@ class PaystackService
 
                 $orderedItems = [];
                 foreach ($items as $item) {
-
                     $product = Product::with('user')
                         ->findOrFail($item['product_id']);
 
@@ -262,6 +261,7 @@ class PaystackService
                 $seller = User::findOrFail($rfq->seller_id);
                 $product = B2BProduct::findOrFail($rfq->product_id);
                 $shipping_address = BuyerShippingAddress::findOrFail($shipping_address_id);
+                $address = new B2BBuyerShippingAddressResource($shipping_address);
 
                 B2bOrder::create([
                     'buyer_id' => $userId,
@@ -270,13 +270,12 @@ class PaystackService
                     'product_quantity' => $rfq->product_quantity,
                     'order_no' => $orderNo,
                     'product_data' => $product,
-                    'shipping_address' => $shipping_address,
+                    'shipping_address' => $address,
                     'total_amount' => $amount,
                     'payment_method' => $method,
                     'payment_status' => OrderStatus::PAID,
                     'status' => OrderStatus::PENDING,
                 ]);
-
 
                 $orderedItems = [
                     'product_name' => $product->name,
@@ -305,6 +304,7 @@ class PaystackService
                     'payment_status' => OrderStatus::PAID,
                     'status' => OrderStatus::COMPLETED
                 ]);
+
                 send_email($user->email, new B2BOrderEmail($orderedItems));
                 (new UserLogAction(
                     request(),
@@ -315,14 +315,6 @@ class PaystackService
                 ))->run();
             });
         } catch (\Exception $e) {
-            // (new UserLogAction(
-            //     request(),
-            //     UserLog::PAYMENT,
-            //     $msg,
-            //     json_encode($paymentData),
-            //     $user
-            // ))->run();
-
             Log::error('Error in handlePaymentSuccess: ' . $e->getMessage());
         }
     }
