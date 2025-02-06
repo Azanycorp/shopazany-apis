@@ -816,7 +816,7 @@ class AdminService
 
         DB::beginTransaction();
         try {
-            $password = generateRandomString();
+            $password = 'pass@12345';
             $admin = Admin::create([
                 'first_name' => $data->first_name,
                 'last_name' => $data->last_name,
