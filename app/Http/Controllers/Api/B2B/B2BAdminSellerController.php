@@ -86,9 +86,9 @@ class B2BAdminSellerController extends Controller
         return $this->service->viewSellerProduct($user_id,$product_id,);
     }
 
-    public function editSellerProduct($id,Request $request)
+    public function editSellerProduct($user_id,$product_id,Request $request)
     {
-        return $this->service->editSellerProduct($id,$request);
+        return $this->service->editSellerProduct($user_id,$product_id,$request);
     }
 
     public function removeSellerProduct($user_id, $product_id)

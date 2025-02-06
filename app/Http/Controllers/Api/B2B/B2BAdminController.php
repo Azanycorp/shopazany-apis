@@ -41,6 +41,11 @@ class B2BAdminController extends Controller
     {
         return $this->adminService->markCompleted($id);
     }
+    public function cancelOrder($id)
+    {
+        return $this->adminService->cancelOrder($id);
+    }
+
     public function orderDetails($id)
     {
         return $this->adminService->getOrderDetails($id);

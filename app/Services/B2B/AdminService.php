@@ -143,6 +143,22 @@ class AdminService
         ]);
         return $this->success(null, "Order Completed");
     }
+    public function cancelOrder($id)
+    {
+        $order = B2bOrder::findOrFail($id);
+        $order->update([
+            'status' => OrderStatus::CANCELLED
+        ]);
+        $product = B2BProduct::find($order->product_id);
+        if (!$order) {
+            return $this->error(null, "Product not found", 404);
+        }
+        $product->availability_quantity += $order->product_quantity;
+        $product->sold -= $order->product_quantity;
+        $product->save();
+
+        return $this->success(null, "Order Cancelled successful");
+    }
 
     //Sellers
     //Admin section
@@ -311,19 +327,33 @@ class AdminService
 
     public function viewSellerProduct($user_id, $product_id)
     {
-        $user = User::findOrFail($user_id);
-        $prod = B2BProduct::where('user_id', $user->id)->findOrFail($product_id);
+        $user = User::find($user_id);
+        $prod = B2BProduct::where('user_id', $user->id)->find($product_id);
+        if (!$user) {
+            return $this->error(null, "No user found.", 404);
+        }
+        if (!$prod) {
+            return $this->error(null, "No product found.", 404);
+        }
         $data = new B2BProductResource($prod);
 
         return $this->success($data, 'Product details');
     }
 
-    public function editSellerProduct($id, $request)
+    public function editSellerProduct($user_id, $product_id, $request)
     {
 
-        $user = User::findOrFail($request->user_id);
-        $prod = B2BProduct::findOrFail($id);
-
+        $prod = B2BProduct::find($product_id);
+        $user = User::find($user_id);
+        if (!$user) {
+            return $this->error(null, "No user found.", 404);
+        }
+        if (!$prod) {
+            return $this->error(null, "No Product found.", 404);
+        }
+        if ($prod->user_id != $user_id) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
         $parts = explode('@', $user->email);
         $name = $parts[0];
 
@@ -347,7 +377,7 @@ class AdminService
         }
 
         $data = [
-            'user_id' => $user->id,
+            'user_id' => $user_id,
             'name' => $request->name ?? $prod->name,
             'slug' => $slug,
             'category_id' => $request->category_id ?? $prod->category_id,
@@ -355,13 +385,14 @@ class AdminService
             'keywords' => $request->keywords ?? $prod->keywords,
             'description' => $request->description ?? $prod->description,
             'front_image' => $url,
+            'quantity' => $request->quantity ?? $prod->quantity,
             'minimum_order_quantity' => $request->minimum_order_quantity ?? $prod->minimum_order_quantity,
             'unit_price' => $request->unit ?? $prod->unit_price,
             'quantity' => $request->quantity ?? $prod->quantity,
             'country_id' => $user->country ?? 160,
         ];
 
-        $product = $this->b2bProductRepository->update($id, $data);
+        $product = $this->b2bProductRepository->update($product_id, $data);
 
         if ($request->hasFile('images')) {
             $product->b2bProductImages()->delete();
@@ -380,15 +411,16 @@ class AdminService
 
     public function removeSellerProduct($user_id, $product_id)
     {
-        $currentUserId = userAuthId();
-
-        if ($currentUserId != $user_id) {
-            return $this->error(null, "Unauthorized action.", 401);
+        $user = User::find($user_id);
+        if (!$user) {
+            return $this->error(null, "No user found.", 404);
         }
-
-        $this->b2bProductRepository->delete($product_id);
-
-        return $this->success(null, 'Deleted successfully');
+        $prod = B2BProduct::where('user_id', $user->id)->find($product_id);
+        if (!$prod) {
+            return $this->error(null, "No product found.", 404);
+        }
+       $prod->delete();
+        return $this->success(null, 'Product Deleted successfully');
     }
 
     public function allBuyers()
