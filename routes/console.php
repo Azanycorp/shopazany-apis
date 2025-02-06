@@ -8,7 +8,7 @@ Artisan::command('inspire', function (): void {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote')->hourly();
 
-Schedule::command('emails:process')->everySecond();
+Schedule::command('emails:process')->everyMinute()->withoutOverlapping();
 Schedule::command('currency:update -o')->daily();
 Schedule::command('queue:work --stop-when-empty')->everyMinute();
 Schedule::command('queue:prune-batches --hours=48 --unfinished=72')->daily();
