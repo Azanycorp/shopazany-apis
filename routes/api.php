@@ -149,7 +149,10 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function (): vo
         Route::patch('/update-cart', [CartController::class, 'updateCart']);
     });
 
-    Route::prefix('customer')->controller(CustomerController::class)->group(function (): void {
+    Route::middleware('check.user.country')
+        ->prefix('customer')
+        ->controller(CustomerController::class)
+        ->group(function (): void {
         // Account and Dashboard Routes
         Route::get('/account-overview/{user_id}', 'acountOverview');
         Route::get('/activity/{user_id}', 'activity');
@@ -177,13 +180,17 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function (): vo
 
     Route::post('customer/mailing/subscribe', [MailingListController::class, 'signup']);
 
-    Route::prefix('seller')->controller(SellerController::class)->group(function (): void {
+    Route::middleware('check.user.country')
+        ->prefix('seller')
+        ->controller(SellerController::class)
+        ->group(function (): void {
         // Business Information
         Route::post('/business/information', 'businessInfo');
         Route::get('/dashboard/analytic/{user_id}', 'dashboardAnalytics');
 
         // Product Routes
-        Route::prefix('product')->group(function (): void {
+        Route::prefix('product')
+            ->group(function (): void {
             Route::post('/create', 'createProduct');
             Route::post('/edit/{product_id}/{user_id}', 'updateProduct');
             Route::delete('/delete/{product_id}/{user_id}', 'deleteProduct');

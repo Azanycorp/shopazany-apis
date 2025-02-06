@@ -34,7 +34,7 @@ class UpdateProductPrice extends Command
             ->get();
 
         foreach ($products as $product) {
-            $currency = $product->user->default_currency;
+            $currency = $product?->user?->default_currency;
 
             $rate = $this->fetchConversionRate($currency);
 

@@ -14,7 +14,8 @@ class Country extends Model
     protected $fillable = [
         'sortname',
         'name',
-        'phonecode'
+        'phonecode',
+        'is_allowed',
     ];
 
     public function products(): HasMany

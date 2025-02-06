@@ -6,13 +6,11 @@ use App\Models\User;
 use App\Enum\UserLog;
 use App\Enum\UserType;
 use App\Models\Action;
-use App\Models\Wallet;
 use App\Enum\UserStatus;
-use App\Models\UserWallet;
 use App\Trait\HttpResponse;
 use App\Mail\UserWelcomeMail;
 use App\Mail\SignUpVerifyMail;
-use App\Actions\SendEmailAction;
+use App\Enum\MailingEnum;
 use Illuminate\Support\Facades\DB;
 use App\Services\Auth\LoginService;
 
@@ -41,19 +39,16 @@ class AuthService
                 if (!$affiliate) {
                    return $this->error(null, 'No Affiliate found with this code', 500);
                 }
-                $wallet = $affiliate->wallet;
-                $action = Action::where('slug', 'create-account')->firstOrFail();
-                if ($wallet) {
-                    $affiliate->wallet->updateOrCreate(
-                        [
-                            'user_id' => $affiliate->id
-                        ],
-                        [
-                            'reward_point' => DB::raw("reward_point + $action->points")
-                        ]
-                    );
-                }
+
+                $points = optional(Action::where('slug', 'create-account')->first())->points ?? 0;
+
+                $wallet = $affiliate->wallet()->firstOrCreate([
+                    'user_id' => $affiliate->id
+                ]);
+
+                $wallet->increment('reward_point', $points);
             }
+
             $user = User::create([
                 'email' => $request->email,
                 'type' => UserType::B2B_SELLER,
@@ -101,7 +96,10 @@ class AuthService
             'status' => UserStatus::ACTIVE,
         ]);
 
-        (new SendEmailAction($user->email, new UserWelcomeMail($user)))->run();
+        $type = MailingEnum::EMAIL_VERIFICATION;
+        $subject = "Email verification";
+        $mail_class = "App\Mail\UserWelcomeMail";
+        mailSend($type, $user, $subject, $mail_class, 'user');
 
         $description = "User with email address {$request->email} verified OTP";
         $action = UserLog::CREATED;
@@ -125,7 +123,6 @@ class AuthService
         }
 
         try {
-
             $code = generateVerificationCode();
 
             $user->update([
@@ -133,7 +130,10 @@ class AuthService
                 'verification_code' => $code,
             ]);
 
-            defer(fn() => send_email($request->email, new SignUpVerifyMail($user)));
+            $type = MailingEnum::RESEND_CODE;
+            $subject = "Resend code";
+            $mail_class = "App\Mail\SignUpVerifyMail";
+            mailSend($type, $user, $subject, $mail_class, 'user');
 
             $description = "User with email address {$request->email} has requested a code to be resent.";
             $action = UserLog::CODE_RESENT;
@@ -155,7 +155,6 @@ class AuthService
     public function buyerOnboarding($request)
     {
         $user = null;
-
         DB::beginTransaction();
 
         try {
@@ -200,7 +199,6 @@ class AuthService
             $description = "Sign up failed: {$request->email}";
             $response = $this->error(null, $e->getMessage(), 500);
             $action = UserLog::FAILED;
-
             logUserAction($request, $action, $description, $response, $user);
 
             return $response;

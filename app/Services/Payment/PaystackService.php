@@ -22,12 +22,11 @@ use App\Actions\UserLogAction;
 use App\Enum\SubscriptionType;
 use App\Mail\CustomerOrderMail;
 use App\Actions\PaymentLogAction;
+use App\Http\Resources\B2BBuyerShippingAddressResource;
 use Illuminate\Support\Facades\DB;
 use App\Models\UserShippingAddress;
 use Illuminate\Support\Facades\Log;
 use App\Models\BuyerShippingAddress;
-use Illuminate\Support\Facades\Mail;
-use App\Http\Resources\B2BBuyerShippingAddressResource;
 
 class PaystackService
 {
@@ -148,7 +147,6 @@ class PaystackService
 
                 $orderedItems = [];
                 foreach ($items as $item) {
-
                     $product = Product::with('user')
                         ->findOrFail($item['product_id']);
 
@@ -279,7 +277,6 @@ class PaystackService
                     'status' => OrderStatus::PENDING,
                 ]);
 
-
                 $orderedItems = [
                     'product_name' => $product->name,
                     'image' => $product->front_image,
@@ -307,6 +304,7 @@ class PaystackService
                     'payment_status' => OrderStatus::PAID,
                     'status' => OrderStatus::COMPLETED
                 ]);
+
                 send_email($user->email, new B2BOrderEmail($orderedItems));
                 (new UserLogAction(
                     request(),
@@ -317,14 +315,6 @@ class PaystackService
                 ))->run();
             });
         } catch (\Exception $e) {
-            // (new UserLogAction(
-            //     request(),
-            //     UserLog::PAYMENT,
-            //     $msg,
-            //     json_encode($paymentData),
-            //     $user
-            // ))->run();
-
             Log::error('Error in handlePaymentSuccess: ' . $e->getMessage());
         }
     }
