@@ -2,10 +2,8 @@
 
 namespace App\Http\Controllers\Api\B2B;
 
-use App\Enum\UserStatus;
 use Illuminate\Http\Request;
 use App\Services\B2B\AdminService;
-use App\Services\B2B\BuyerService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\EditBuyerRequest;
 

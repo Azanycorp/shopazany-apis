@@ -2,7 +2,6 @@
 
 namespace App\Services\Auth;
 
-use App\Actions\SendEmailAction;
 use App\Enum\MailingEnum;
 use App\Enum\UserLog;
 use App\Enum\UserStatus;
@@ -10,6 +9,7 @@ use App\Enum\UserType;
 use App\Http\Controllers\Controller;
 use App\Mail\SignUpVerifyMail;
 use App\Mail\UserWelcomeMail;
+use App\Models\Action;
 use App\Models\Country;
 use App\Models\User;
 use App\Trait\HttpResponse;
@@ -118,8 +118,7 @@ class AuthService extends Controller
             $type = MailingEnum::RESEND_CODE;
             $subject = "Resend code";
             $mail_class = "App\Mail\SignUpVerifyMail";
-
-            mailSend($type, $user, $subject, $mail_class);
+            mailSend($type, $user, $subject, $mail_class, 'user');
 
             $description = "User with email address {$request->email} has requested a code to be resent.";
             $action = UserLog::CODE_RESENT;
@@ -222,8 +221,7 @@ class AuthService extends Controller
         $type = MailingEnum::EMAIL_VERIFICATION;
         $subject = "Email verification";
         $mail_class = "App\Mail\UserWelcomeMail";
-
-        mailSend($type, $user, $subject, $mail_class);
+        mailSend($type, $user, $subject, $mail_class, 'user');
 
         $description = "User with email address {$request->email} verified OTP";
         $action = UserLog::CREATED;
@@ -374,10 +372,13 @@ class AuthService extends Controller
 
     private function handleReferrer($referrer_code, $data): void
     {
-        $referrer = User::where('referrer_code', $referrer_code)->first();
+        $referrer = User::with(['wallet', 'referrer'])
+            ->where('referrer_code', $referrer_code)
+            ->first();
+
         if ($referrer) {
-            $commission = 0.05 * 100;
-            $referrer->wallet()->increment('balance', $commission);
+            $points = optional(Action::where('slug', 'create_account')->first())->points ?? 0;
+            $referrer->wallet()->increment('reward_point', $points);
 
             $referrer->referrer()->attach($data);
             $referrer->save();
@@ -392,7 +393,7 @@ class AuthService extends Controller
             $user->update([
                 'first_name' => $request->first_name,
                 'last_name' => $request->last_name,
-                'type' => 'customer',
+                'type' => UserType::CUSTOMER,
                 'referrer_code' => $referrer_code,
                 'referrer_link' => $referrer_link,
                 'is_verified' => 1,
@@ -425,7 +426,7 @@ class AuthService extends Controller
                 'first_name' => $request->first_name,
                 'last_name' => $request->last_name,
                 'email' => $request->email,
-                'type' => 'customer',
+                'type' => UserType::CUSTOMER,
                 'referrer_code' => $referrer_code,
                 'referrer_link' => $referrer_link,
                 'email_verified_at' => null,

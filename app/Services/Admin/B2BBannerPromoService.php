@@ -103,9 +103,22 @@ class B2BBannerPromoService
 
     public function getProducts()
     {
-        $products = B2BProduct::where('status', ProductStatus::ACTIVE)->get();
-        return $this->success($products, "All Products");
+        $products = B2BProduct::with([
+            'user',
+            'category',
+            'subCategory',
+            'country',
+            'b2bProductReview',
+            'b2bLikes',
+            'b2bProductImages'
+        ])
+            ->where('status', ProductStatus::ACTIVE)
+            ->get();
+        $data = B2BProductResource::collection($products);
+
+        return $this->success($data, "All Products");
     }
+    
     public function promos()
     {
         $promos = B2bPromo::get();
