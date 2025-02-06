@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\B2bProdctLike;
 use App\Models\B2bProdctReview;
+use App\Trait\ClearsResponseCache;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,7 +14,7 @@ class B2BProduct extends Model
 {
     protected $table = 'b2b_products';
 
-    use HasFactory;
+    use HasFactory,ClearsResponseCache;
 
     protected $fillable = [
         'user_id',
@@ -28,6 +29,7 @@ class B2BProduct extends Model
         'unit_price',
         'quantity',
         'availability_quantity',
+        'admin_comment',
         'sold',
         'fob_price',
         'default_currency',
@@ -48,7 +50,7 @@ class B2BProduct extends Model
         return $this->hasMany(B2bProdctLike::class, 'product_id');
     }
 
-    public function b2bProductReview(): HasMany
+      public function b2bProductReview(): HasMany
     {
         return $this->hasMany(B2bProdctReview::class, 'product_id');
     }

@@ -89,11 +89,7 @@ class AdminService
 
     public function getRfqDetails($id)
     {
-        $order = Rfq::with(['buyer', 'seller'])->find($id);
-
-        if (!$order) {
-            return $this->error(null, "No record found.", 404);
-        }
+        $order = Rfq::with(['buyer', 'seller'])->findOrFail($id);
 
         return $this->success($order, "Rfq details");
     }
@@ -110,7 +106,7 @@ class AdminService
             });
         })->get();
 
-        $local_orders = B2bOrder::with(['buyer','seller'])->when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
+        $local_orders = B2bOrder::with(['buyer', 'seller'])->when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
             $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
                 $subQuery->where('country_id', 160)
                     ->orWhere('order_no', 'LIKE', '%' . $searchQuery . '%');
@@ -134,22 +130,43 @@ class AdminService
 
     public function getOrderDetails($id)
     {
-        $order = B2bOrder::with(['buyer', 'seller'])->find($id);
-
-        if (!$order) {
-            return $this->error(null, "No record found.", 404);
-        }
+        $order = B2bOrder::with(['buyer', 'seller'])->findOrFail($id);
 
         return $this->success($order, "Order details");
+    }
+
+    public function markCompleted($id)
+    {
+        $order = B2bOrder::findOrFail($id);
+        $order->update([
+            'status' => OrderStatus::DELIVERED
+        ]);
+        return $this->success(null, "Order Completed");
+    }
+    public function cancelOrder($id)
+    {
+        $order = B2bOrder::findOrFail($id);
+        $order->update([
+            'status' => OrderStatus::CANCELLED
+        ]);
+        $product = B2BProduct::find($order->product_id);
+        if (!$order) {
+            return $this->error(null, "Product not found", 404);
+        }
+        $product->availability_quantity += $order->product_quantity;
+        $product->sold -= $order->product_quantity;
+        $product->save();
+
+        return $this->success(null, "Order Cancelled successful");
     }
 
     //Sellers
     //Admin section
 
     public function allSellers()
-    {
+     {
 
-        $sellers = User::with(['b2bProducts', 'businessInformation'])
+        $sellers = User::withCount('b2bProducts')
             ->where('type', UserType::B2B_SELLER)
             ->latest('created_at')->get();
 
@@ -165,13 +182,9 @@ class AdminService
         return $this->success($data, "sellers details");
     }
 
-    public function approveSeller($request)
+    public function approveSeller($id)
     {
-        $user = User::where('type', UserType::B2B_SELLER)->find($request->user_id);
-
-        if (!$user) {
-            return $this->error(null, "User not found", 404);
-        }
+        $user = User::where('type', UserType::B2B_SELLER)->findOrFail($id);
 
         $user->is_admin_approve = !$user->is_admin_approve;
         $user->status = $user->is_admin_approve ? 'active' : UserStatus::BLOCKED;
@@ -185,12 +198,8 @@ class AdminService
 
     public function viewSeller($id)
     {
-        $user = User::where('type', UserType::B2B_SELLER)
-            ->find($id);
+        $user = User::where('type', UserType::B2B_SELLER)->findOrFail($id);
 
-        if (!$user) {
-            return $this->error(null, "Seller not found", 404);
-        }
         $search = request()->search;
         $data = new B2BSellerResource($user);
         $query = B2BProduct::with(['b2bProductImages', 'category', 'country', 'user', 'subCategory'])
@@ -213,11 +222,7 @@ class AdminService
 
     public function editSeller($request, $id)
     {
-        $user = User::find($id);
-
-        if (!$user) {
-            return $this->error(null, "User not found", 404);
-        }
+        $user = User::findOrFail($id);
 
         $user->update([
             'first_name' => $request->first_name,
@@ -234,13 +239,9 @@ class AdminService
         return $this->success($data, "Updated successfully");
     }
 
-    public function banSeller($request)
+    public function banSeller($id)
     {
-        $user = User::where('type', UserType::B2B_SELLER)->find($request->user_id);
-
-        if (!$user) {
-            return $this->error(null, "User not found", 404);
-        }
+        $user = User::where('type', UserType::B2B_SELLER)->findOrFail($id);
 
         $user->status = UserStatus::BLOCKED;
         $user->is_admin_approve = 0;
@@ -252,11 +253,7 @@ class AdminService
 
     public function removeSeller($id)
     {
-        $user = User::where('type', UserType::B2B_SELLER)->find($id);
-
-        if (!$user) {
-            return $this->error(null, "User not found", 404);
-        }
+        $user = User::where('type', UserType::B2B_SELLER)->findOrFail($id);
 
         $user->delete();
 
@@ -328,20 +325,35 @@ class AdminService
         return $this->success(null, 'Product added successfully', 201);
     }
 
-    public function viewSellerProduct($product_id)
+    public function viewSellerProduct($user_id, $product_id)
     {
-        $prod = $this->b2bProductRepository->find($product_id);
+        $user = User::find($user_id);
+        $prod = B2BProduct::where('user_id', $user->id)->find($product_id);
+        if (!$user) {
+            return $this->error(null, "No user found.", 404);
+        }
+        if (!$prod) {
+            return $this->error(null, "No product found.", 404);
+        }
         $data = new B2BProductResource($prod);
 
         return $this->success($data, 'Product details');
     }
 
-    public function editSellerProduct($id, $request)
+    public function editSellerProduct($user_id, $product_id, $request)
     {
 
-        $user = User::findOrFail($request->user_id);
-        $prod = B2BProduct::findOrFail($id);
-
+        $prod = B2BProduct::find($product_id);
+        $user = User::find($user_id);
+        if (!$user) {
+            return $this->error(null, "No user found.", 404);
+        }
+        if (!$prod) {
+            return $this->error(null, "No Product found.", 404);
+        }
+        if ($prod->user_id != $user_id) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
         $parts = explode('@', $user->email);
         $name = $parts[0];
 
@@ -365,7 +377,7 @@ class AdminService
         }
 
         $data = [
-            'user_id' => $user->id,
+            'user_id' => $user_id,
             'name' => $request->name ?? $prod->name,
             'slug' => $slug,
             'category_id' => $request->category_id ?? $prod->category_id,
@@ -373,13 +385,14 @@ class AdminService
             'keywords' => $request->keywords ?? $prod->keywords,
             'description' => $request->description ?? $prod->description,
             'front_image' => $url,
+            'quantity' => $request->quantity ?? $prod->quantity,
             'minimum_order_quantity' => $request->minimum_order_quantity ?? $prod->minimum_order_quantity,
             'unit_price' => $request->unit ?? $prod->unit_price,
             'quantity' => $request->quantity ?? $prod->quantity,
             'country_id' => $user->country ?? 160,
         ];
 
-        $product = $this->b2bProductRepository->update($id, $data);
+        $product = $this->b2bProductRepository->update($product_id, $data);
 
         if ($request->hasFile('images')) {
             $product->b2bProductImages()->delete();
@@ -398,15 +411,16 @@ class AdminService
 
     public function removeSellerProduct($user_id, $product_id)
     {
-        $currentUserId = userAuthId();
-
-        if ($currentUserId != $user_id) {
-            return $this->error(null, "Unauthorized action.", 401);
+        $user = User::find($user_id);
+        if (!$user) {
+            return $this->error(null, "No user found.", 404);
         }
-
-        $this->b2bProductRepository->delete($product_id);
-
-        return $this->success(null, 'Deleted successfully');
+        $prod = B2BProduct::where('user_id', $user->id)->find($product_id);
+        if (!$prod) {
+            return $this->error(null, "No product found.", 404);
+        }
+       $prod->delete();
+        return $this->success(null, 'Product Deleted successfully');
     }
 
     public function allBuyers()
@@ -430,22 +444,18 @@ class AdminService
         $user = User::select('id', 'first_name', 'last_name', 'email', 'image')
             ->with('b2bCompany')
             ->where('type', UserType::B2B_BUYER)
-            ->find($id);
-
-        if (!$user) {
-            return $this->error(null, "Buyer not found", 404);
-        }
-
-        return [
-            'status' => 'true',
-            'message' => 'Buyer details',
-            'data' => $user,
-        ];
+            ->findOrFail($id);
+        return $this->success($user, "Buyer details");
     }
 
     public function editBuyer($id, $data)
     {
-        $user = User::find($id);
+        $user = User::findOrFail($id);
+        $check = User::where('email', $data->email)->first();
+
+        if ($check && $check->email != $user->email) {
+            return $this->error(null, "Email already exist");
+        }
 
         $image = $data->hasFile('image') ? uploadUserImage($data->file('image'), 'image', $user) : $user->image;
         $user->update([
@@ -454,23 +464,18 @@ class AdminService
             'email' => $data->email ?? $user->email,
             'image' => $data->image ? $image : $user->image,
         ]);
-
         return $this->success($user, "Buyer details");
     }
 
     public function editBuyerCompany($id, $data)
     {
-        $user = User::find($id);
-
-        if (!$user) {
-            return $this->error(null, "Buyer not found", 404);
-        }
-
+        $user = User::findOrFail($id);
         $company = B2bCompany::where('user_id', $user->id)->first();
 
         if (!$company) {
             return $this->error(null, 'No company found to update', 404);
         }
+
         $company->update([
             'business_name' => $data->business_name ?? $company->business_name,
             'company_size' => $data->company_size ?? $company->company_size,
@@ -483,12 +488,7 @@ class AdminService
 
     public function removeBuyer($id)
     {
-        $user = User::find($id);
-
-        if (!$user) {
-            return $this->error(null, "User not found", 404);
-        }
-
+        $user = User::findOrFail($id);
         $user->delete();
 
         return $this->success(null, "User removed successfully");
@@ -513,11 +513,7 @@ class AdminService
 
     public function approveBuyer($id)
     {
-        $user = User::find($id);
-
-        if (!$user) {
-            return $this->error(null, "User not found", 404);
-        }
+        $user = User::findOrFail($id);
 
         $user->is_admin_approve = !$user->is_admin_approve;
         $user->status = $user->is_admin_approve ? UserStatus::ACTIVE : UserStatus::BLOCKED;
@@ -531,11 +527,7 @@ class AdminService
 
     public function banBuyer($id)
     {
-        $user = User::find($id);
-
-        if (!$user) {
-            return $this->error(null, "User not found", 404);
-        }
+        $user = User::findOrFail($id);
 
         $user->status = UserStatus::BLOCKED;
         $user->is_admin_approve = 0;
@@ -649,23 +641,14 @@ class AdminService
     {
         $payout =  Payout::with(['user' => function ($query): void {
             $query->select('id', 'first_name', 'last_name')->where('type', UserType::B2B_SELLER);
-        }])->find($id);
-
-        if (!$payout) {
-            return $this->error(null, 'No record found');
-        }
+        }])->findOrFail($id);
 
         return $this->success($payout, 'request details');
     }
 
     public function approveWidthrawalRequest($id)
     {
-        $payout =  Payout::find($id);
-
-        if (!$payout) {
-            return $this->error(null, 'No record found');
-        }
-
+        $payout =  Payout::findOrFail($id);
         $payout->update([
             'status' => 'paid',
             'date_paid' => now()->toDateString(),
@@ -676,12 +659,7 @@ class AdminService
 
     public function cancelWidthrawalRequest($id)
     {
-        $payout =  Payout::find($id);
-
-        if (!$payout) {
-            return $this->error(null, 'No record found');
-        }
-
+        $payout =  Payout::findOrFail($id);
         $wallet = UserWallet::where('user_id', $payout->seller_id)->first();
 
         if (!$wallet) {
@@ -741,11 +719,7 @@ class AdminService
 
     public function approveWidthrawalMethod($id)
     {
-        $account =  B2bWithdrawalMethod::find($id);
-
-        if (!$account) {
-            return $this->error(null, 'No record found', 404);
-        }
+        $account =  B2bWithdrawalMethod::findOrFail($id);
 
         $account->update([
             'status' => 'active',
@@ -754,13 +728,9 @@ class AdminService
         return $this->success(null, 'Account Approved');
     }
 
-    public function rejectWidthrawalMethod($data)
+    public function rejectWidthrawalMethod($id, $data)
     {
-        $account =  B2bWithdrawalMethod::find($data->account_id);
-
-        if (!$account) {
-            return $this->error(null, 'No record found', 404);
-        }
+        $account =  B2bWithdrawalMethod::findOrFail($id);
 
         $account->update([
             'status' => ProductStatus::DECLINED,
@@ -787,22 +757,14 @@ class AdminService
     {
         $product = B2BProduct::with(['user' => function ($query): void {
             $query->select('id', 'first_name', 'last_name')->where('type', UserType::B2B_SELLER);
-        }])->find($id);
-
-        if (! $product) {
-            return $this->error(null, 'No record found', 404);
-        }
+        }])->findOrFail($id);
 
         return $this->success($product, 'Product details');
     }
 
     public function approveProduct($id)
     {
-        $product =  B2BProduct::find($id);
-
-        if (!$product) {
-            return $this->error(null, 'No record found', 404);
-        }
+        $product =  B2BProduct::findOrFail($id);
 
         $product->update([
             'status' => ProductStatus::ACTIVE,
@@ -811,14 +773,9 @@ class AdminService
         return $this->success(null, 'Product Approved');
     }
 
-    public function rejectProduct($data)
+    public function rejectProduct($id, $data)
     {
-        $product = B2BProduct::find($data->product_id);
-
-        if (!$product) {
-            return $this->error(null, 'No record found', 404);
-        }
-
+        $product = B2BProduct::findOrFail($id);
         $product->update([
             'status' => ProductStatus::DECLINED,
             'admin_comment' => $data->note
@@ -836,7 +793,7 @@ class AdminService
 
         $admins = Admin::with(['permissions' => function ($query): void {
             $query->select('permission_id', 'name');
-        }])->select('id', 'first_name', 'email', 'created_at')
+        }])->select('id', 'first_name', 'last_name', 'email', 'created_at')
             ->latest('created_at')->when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
                 $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
                     $subQuery->where('type', AdminType::B2B)
@@ -859,7 +816,7 @@ class AdminService
 
         DB::beginTransaction();
         try {
-            $password = generateRandomString();
+            $password = 'pass@12345';
             $admin = Admin::create([
                 'first_name' => $data->first_name,
                 'last_name' => $data->last_name,
@@ -929,7 +886,7 @@ class AdminService
         $admin = Admin::findOrFail($id);
         $admin->permissions()->detach();
         $admin->delete();
-        
+
         return $this->success(null, 'Deleted successfully');
     }
 }
