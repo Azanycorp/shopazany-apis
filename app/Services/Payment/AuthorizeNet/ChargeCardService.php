@@ -26,6 +26,7 @@ use App\Models\BuyerShippingAddress;
 use Illuminate\Support\Facades\Auth;
 use net\authorize\api\contract\v1 as AnetAPI;
 use net\authorize\api\controller as AnetController;
+use App\Http\Resources\B2BBuyerShippingAddressResource;
 
 class ChargeCardService implements PaymentStrategy
 {
@@ -134,7 +135,8 @@ class ChargeCardService implements PaymentStrategy
         $rfq = Rfq::findOrFail($rfqId);
         $seller = User::findOrFail($rfq->seller_id);
         $product = B2BProduct::findOrFail($rfq->product_id);
-        $shipping_address = BuyerShippingAddress::findOrFail($shipping_address_id);
+        $saddress = BuyerShippingAddress::findOrFail($shipping_address_id);
+        $shipping_address = new B2BBuyerShippingAddressResource($saddress);
 
         B2bOrder::create([
             'buyer_id' => $user->id,

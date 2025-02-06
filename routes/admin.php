@@ -202,9 +202,9 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function (): void
     //b2b admin
     Route::prefix('b2b')->group(function () {
         Route::controller(B2BAdminController::class)->group(function () {
-            Route::get('/dashboard', 'dashboard');
+            Route::get('/dashboard', 'dashboard')->middleware('cacheResponse:300');
 
-            Route::get('/profile', 'adminProfile');
+            Route::get('/profile', 'adminProfile')->middleware('cacheResponse:300');
             Route::post('/update-profile', 'updateAdminProfile');
             Route::post('/update-password', 'updateAdminPassword');
             Route::post('/enable-2fa', 'enable2FA');
@@ -213,7 +213,7 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function (): void
         });
 
         Route::controller(B2BAdminController::class)->prefix('admin-users')->group(function () {
-            Route::get('/', 'adminUsers');
+            Route::get('/', 'adminUsers')->middleware('cacheResponse:300');
             Route::post('/add', 'addAdmin');
             Route::get('/details/{id}', 'viewAdminUser');
             Route::post('/update/{id}', 'editAdminUser');
@@ -221,24 +221,25 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function (): void
             Route::post('/verify-password', 'verifyPassword');
             Route::delete('/delete-account/{id}', 'removeAdmin');
         });
+
         Route::prefix('category')->controller(ProductCategoryController::class)->group(function () {
             Route::post('/create', 'createCategory');
-            Route::get('/all', 'adminCategories');
+            Route::get('/all', 'adminCategories')->middleware('cacheResponse:300');
             Route::get('/analytics', 'categoryAnalytic');
             Route::post('/update/{id}', 'updateCategory');
-            Route::patch('/change/{category_id}', 'featuredStatus');
+            Route::post('/change/{category_id}', 'featuredStatus');
             Route::delete('/delete/{id}', 'deleteCategory');
 
             Route::post('/create/subcategory', 'createSubCategory');
             Route::get('/subcategory', 'getAdminSubcategory');
-            Route::get('/{category_id}/subcategory', 'getSubcategory');
-            Route::patch('/subcategory/status/{sub_category_id}', 'subStatus');
+            Route::get('/{category_id}/subcategory', 'getSubcategory')->middleware('cacheResponse:300');
+            Route::post('/subcategory/status/{sub_category_id}', 'subStatus');
             Route::delete('/subcategory/delete/{id}', 'deleteSubCategory');
         });
 
         Route::prefix('banner')->controller(B2BBannerPromoController::class)->group(function (): void {
             Route::post('/add', 'addBanner');
-            Route::get('/', 'banners');
+            Route::get('/', 'banners')->middleware('cacheResponse:300');
             Route::get('/{id}', 'getOneBanner');
             Route::post('/edit/{id}', 'editBanner');
             Route::delete('/delete/{id}', 'deleteBanner');
@@ -247,14 +248,14 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function (): void
         Route::prefix('promo')->controller(B2BBannerPromoController::class)->group(function (): void {
             Route::post('/add', 'addPromo');
             Route::get('/', 'promos');
-            Route::get('/products', 'getProducts');
+            Route::get('/products', 'getProducts')->middleware('cacheResponse:300');
             Route::delete('/delete/{id}', 'deletePromo');
         });
 
         //buyers
         Route::prefix('buyer')->controller(B2BAdminBuyerController::class)->group(function (): void {
             // GET routes
-            Route::get('/', 'allBuyers');
+            Route::get('/', 'allBuyers')->middleware('cacheResponse:300');
             Route::get('/filter', 'filter');
             Route::get('/details/{user_id}', 'viewBuyer');
             Route::post('/update-details/{id}', 'editBuyer');
@@ -267,53 +268,56 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function (): void
 
         //Sellers
         Route::prefix('seller')->controller(B2BAdminSellerController::class)->group(function (): void {
-            Route::get('/', 'allSellers');
-            Route::get('/details/{user_id}', 'viewSeller');
+            Route::get('/', 'allSellers')->middleware('cacheResponse:300');
+            Route::get('/details/{user_id}', 'viewSeller')->middleware('cacheResponse:300');
             Route::delete('/remove/{user_id}', 'removeSeller');
-            Route::patch('/approve', 'approveSeller');
-            Route::patch('/ban', 'banSeller');
+            Route::post('/approve/{id}', 'approveSeller');
+            Route::post('/ban/{id}', 'banSeller');
             Route::delete('/bulk/remove', 'bulkRemove');
 
             Route::prefix('product')->controller(B2BAdminSellerController::class)->group(function (): void {
                 Route::post('/add', 'addSellerProduct');
-                Route::get('/details/{id}/{user_id}', 'viewSellerProduct');
-                Route::post('/update/{id}', 'editSellerProduct');
+                Route::get('/details/{user_id}/{id}', 'viewSellerProduct');
+                Route::post('/update/{user_id}/{id}', 'editSellerProduct');
                 Route::delete('/delete/{user_id}/{id}', 'removeSellerProduct');
             });
         });
 
         //Withdrawal requests
         Route::prefix('widthrawal-request')->controller(B2BAdminController::class)->group(function (): void {
-            Route::get('/', 'widthrawalRequests');
-            Route::get('/view/{id}', 'viewWidthrawalRequest');
-            Route::get('/approve/{id}', 'approveWidthrawalRequest');
-            Route::get('/cancel/{id}', 'cancelWidthrawalRequest');
+            Route::get('/', 'widthrawalRequests')->middleware('cacheResponse:300');
+            Route::get('/view/{id}', 'viewWidthrawalRequest')->middleware('cacheResponse:300');
+            Route::post('/approve/{id}', 'approveWidthrawalRequest');
+            Route::post('/cancel/{id}', 'cancelWidthrawalRequest');
         });
 
         //Withdrawal method requests
         Route::prefix('widthrawal-method-request')->controller(B2BAdminController::class)->group(function (): void {
-            Route::get('/', 'widthrawalMethods');
-            Route::get('/view/{id}', 'viewWidthrawalMethod');
-            Route::get('/approve/{id}', 'approveWidthrawalMethod');
-            Route::post('/reject', 'rejectWidthrawalMethod');
+            Route::get('/', 'widthrawalMethods')->middleware('cacheResponse:300');
+            Route::get('/view/{id}', 'viewWidthrawalMethod')->middleware('cacheResponse:300');
+            Route::post('/approve/{id}', 'approveWidthrawalMethod');
+            Route::post('/reject/{id}', 'rejectWidthrawalMethod');
         });
+
         //Seller Product Approval requests
         Route::prefix('product-approval-request')->controller(B2BAdminController::class)->group(function (): void {
             Route::get('/', 'allProducts');
             Route::get('/view/{id}', 'viewProduct');
-            Route::get('/approve/{id}', 'approveProduct');
-            Route::post('/reject', 'rejectProduct');
+            Route::post('/approve/{id}', 'approveProduct');
+            Route::post('/reject/{id}', 'rejectProduct');
         });
 
         //Rfq
-        Route::prefix('rfqs')->controller(B2BAdminController::class)->group(function (): void {
+        Route::middleware('cacheResponse:300')->prefix('rfqs')->controller(B2BAdminController::class)->group(function (): void {
             Route::get('/', 'allRfq');
             Route::get('/details/{id}', 'rfqDetails');
         });
         //Orders
-        Route::prefix('orders')->controller(B2BAdminController::class)->group(function (): void {
+        Route::middleware('cacheResponse:300')->prefix('orders')->controller(B2BAdminController::class)->group(function (): void {
             Route::get('/', 'allOrders');
             Route::get('/details/{id}', 'orderDetails');
+            Route::post('/mark-completed/{id}', 'markCompleted');
+            Route::post('/cancel-order/{id}', 'cancelOrder');
         });
     });
 });

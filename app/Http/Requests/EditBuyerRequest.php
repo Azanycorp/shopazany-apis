@@ -24,7 +24,7 @@ class EditBuyerRequest extends FormRequest
     {
 
         return [
-            'email' => ['required', 'unique:users,email'],
+            'email' => ['required','email'],
             'first_name' => ['required'],
             'last_name' => ['required'],
         ];

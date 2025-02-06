@@ -11,6 +11,7 @@ use App\Enum\UserStatus;
 use App\Models\B2bOrder;
 use App\Models\B2bQuote;
 use App\Enum\OrderStatus;
+use App\Models\B2bBanner;
 use App\Models\B2bCompany;
 use App\Models\B2BProduct;
 use App\Models\RfqMessage;
@@ -29,11 +30,14 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Resources\BuyerResource;
 use App\Http\Resources\PaymentResource;
+use App\Http\Resources\B2BOrderResource;
 use App\Http\Resources\CustomerResource;
+use App\Http\Resources\B2BBannerResource;
 use App\Http\Resources\B2BProductResource;
 use App\Http\Resources\B2BCategoryResource;
 use App\Http\Resources\SellerProductResource;
 use App\Http\Resources\B2BSellerProductResource;
+use App\Http\Resources\B2BBuyerShippingAddressResource;
 
 class BuyerService
 {
@@ -78,11 +82,8 @@ class BuyerService
             'payments.order'
         ])
             ->where('type', UserType::B2B_BUYER)
-            ->find($id);
+            ->findOrFail($id);
 
-        if (!$user) {
-            return $this->error(null, "User not found", 404);
-        }
 
         $data = new CustomerResource($user);
 
@@ -92,11 +93,7 @@ class BuyerService
     public function banCustomer($request)
     {
         $user = User::where('type', UserType::B2B_BUYER)
-            ->find($request->user_id);
-
-        if (!$user) {
-            return $this->error(null, "User not found", 404);
-        }
+            ->findOrFail($request->user_id);
 
         $user->status = UserStatus::BLOCKED;
         $user->is_admin_approve = 0;
@@ -221,6 +218,16 @@ class BuyerService
         return $this->success(null, 'Request sent successful', 201);
     }
 
+    public function getBanners()
+    {
+        $banners = B2bBanner::where('status',ProductStatus::ACTIVE)
+            ->get();
+
+        $data = B2BBannerResource::collection($banners);
+
+        return $this->success($data, 'banners');
+    }
+
     public function getProducts()
     {
         $products = B2BProduct::with([
@@ -249,6 +256,15 @@ class BuyerService
 
         return $this->success($data, "Categories");
     }
+    public function getCategoryProducts()
+    {
+        $categories = B2BProductCategory::select('id','name','slug','image')
+            ->with('products.b2bProductReview','products.b2bLikes')
+            ->get();
+            $data = B2BCategoryResource::collection($categories);
+        return $this->success($data, "Categories products");
+    }
+
     public function bestSelling()
     {
         $bestSellingProducts = B2bOrder::select('product_id', DB::raw('SUM(product_quantity) as total_sold'))
@@ -397,11 +413,8 @@ class BuyerService
 
     public function sendRfq($data)
     {
-        $quote = B2bQuote::find($data->rfq_id);
+        $quote = B2bQuote::findOrFail($data->rfq_id);
 
-        if (!$quote) {
-            return $this->error(null, 'No record found', 404);
-        }
 
         try {
             $amount = total_amount($quote->product_data['unit_price'], $quote->product_data['minimum_order_quantity']);
@@ -426,11 +439,7 @@ class BuyerService
 
     public function removeQuote($id)
     {
-        $quote = B2bQuote::find($id);
-
-        if (!$quote) {
-            return $this->error(null, 'No record found', 404);
-        }
+        $quote = B2bQuote::findOrFail($id);
 
         $quote->delete();
         return $this->success(null, 'Item removed successfully');
@@ -515,12 +524,32 @@ class BuyerService
         return $this->success($rfqs, 'rfqs lists');
     }
 
-    public function rfqDetails($id)
+    public function allOrders()
     {
-        $rfq = Rfq::with(['seller', 'messages'])->find($id);
-        if (!$rfq) {
+        $userId = userAuthId();
+
+        $orders = B2bOrder::with('seller')->where('buyer_id', $userId)
+            ->latest('id')
+            ->get();
+
+        if ($orders->isEmpty()) {
             return $this->error(null, 'No record found to send', 404);
         }
+
+        return $this->success($orders, 'orders lists');
+    }
+
+    public function orderDetails($id)
+    {
+        $order = B2bOrder::with(['seller'])->findOrFail($id);
+
+        $data = new B2BOrderResource($order);
+        return $this->success($data, 'order details');
+    }
+    public function rfqDetails($id)
+    {
+        $rfq = Rfq::with(['seller', 'messages'])->findOrFail($id);
+
         $messages = RfqMessage::with(['seller', 'buyer'])->where('rfq_id', $rfq->id)->get();
         $data = [
             'rfq' => $rfq,
@@ -652,11 +681,8 @@ class BuyerService
 
     public function removeItem($id)
     {
-        $wish = B2bWishList::find($id);
+        $wish = B2bWishList::findOrFail($id);
 
-        if (!$wish) {
-            return $this->error(null, 'No record found to send', 404);
-        }
 
         $wish->delete();
         return $this->success(null, 'Item Removed');
@@ -811,16 +837,16 @@ class BuyerService
     {
         $currentUserId = userAuthId();
         $addresses = BuyerShippingAddress::where('user_id', $currentUserId)->get();
-        return $this->success($addresses, 'All address');
+        $data = B2BBuyerShippingAddressResource::collection($addresses);
+        return $this->success($data, 'All address');
     }
 
     public function getShippingAddress($id)
     {
-        $address = BuyerShippingAddress::find($id);
-        if (!$address) {
-            return $this->error(null, 'No record found', 404);
-        }
-        return $this->success($address, 'Address detail');
+        $address = BuyerShippingAddress::findOrFail($id);
+
+        $data = new B2BBuyerShippingAddressResource($address);
+        return $this->success($data, 'Address detail');
     }
 
     public function updateShippingAddress($id, $data)

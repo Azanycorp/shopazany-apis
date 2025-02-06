@@ -47,7 +47,7 @@ class B2BBannerPromoService
     public function getOneBanner($id)
     {
         $banner = B2bBanner::findOrFail($id);
-     
+
         $data = new B2BBannerResource($banner);
 
         return $this->success($data, "Banner detail");
@@ -104,9 +104,7 @@ class B2BBannerPromoService
     public function getProducts()
     {
         $products = B2BProduct::where('status', ProductStatus::ACTIVE)->get();
-        $data = B2BProductResource::collection($products);
-
-        return $this->success($data, "All Products");
+        return $this->success($products, "All Products");
     }
     public function promos()
     {
