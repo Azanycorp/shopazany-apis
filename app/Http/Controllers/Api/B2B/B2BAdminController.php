@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Services\B2B\AdminService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AdminUserRequest;
+use App\Http\Requests\ShippingCountryRequest;
 use App\Http\Requests\ChangeAdminPasswordRequest;
 
 class B2BAdminController extends Controller
@@ -118,9 +119,9 @@ class B2BAdminController extends Controller
         return $this->adminService->approveWidthrawalMethod($id);
     }
 
-    public function rejectWidthrawalMethod($id,Request $request)
+    public function rejectWidthrawalMethod($id, Request $request)
     {
-        return $this->adminService->rejectWidthrawalMethod($id,$request);
+        return $this->adminService->rejectWidthrawalMethod($id, $request);
     }
 
     //Seller Products Approval Request
@@ -139,9 +140,9 @@ class B2BAdminController extends Controller
         return $this->adminService->approveProduct($id);
     }
 
-    public function rejectProduct($id,Request $request)
+    public function rejectProduct($id, Request $request)
     {
-        return $this->adminService->rejectProduct($id,$request);
+        return $this->adminService->rejectProduct($id, $request);
     }
 
     //Admin Users
@@ -177,5 +178,31 @@ class B2BAdminController extends Controller
     public function removeAdmin($id)
     {
         return $this->adminService->removeAdmin($id);
+    }
+
+    //ShippingCountry section
+
+    public function shippingCountries()
+    {
+        return $this->adminService->shippingCountries();
+    }
+
+    public function addShippingCountry(ShippingCountryRequest $request)
+    {
+        return $this->adminService->addShippingCountry($request);
+    }
+
+    public function viewShippingCountry($id)
+    {
+        return $this->adminService->viewShippingCountry($id);
+    }
+
+    public function editShippingCountry($id, ShippingCountryRequest $request)
+    {
+        return $this->adminService->editShippingCountry($id, $request);
+    }
+    public function deleteShippingCountry($id)
+    {
+        return $this->adminService->deleteShippingCountry($id);
     }
 }
