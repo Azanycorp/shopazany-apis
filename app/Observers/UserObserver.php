@@ -27,7 +27,7 @@ class UserObserver implements ShouldHandleEventsAfterCommit
             reward_user($user, 'create_account', 'completed');
         }
 
-        if ($user->type === UserType::SELLER) {
+        if ($user->is_affiliate_member) {
             $user->referrer_code = generate_referral_code();
             $user->referrer_link = generate_referrer_link($user->referrer_code);
             $user->save();

@@ -72,10 +72,6 @@ class AuthService extends Controller
         try {
             $user = $this->createUser($request);
 
-            if ($referrer = $request->query('referrer')) {
-                $this->handleReferrers($referrer, $user);
-            }
-
             $description = "User with email: {$request->email} signed up";
             $response = $this->success(null, "Created successfully");
             $action = UserLog::CREATED;
@@ -150,6 +146,7 @@ class AuthService extends Controller
 
         $coupon = $request->query('coupon');
         $coupon = $this->normalizeCoupon($coupon);
+        $referrer = $request->query('referrer');
 
         if ($coupon) {
             try {
@@ -157,6 +154,10 @@ class AuthService extends Controller
             } catch (\Exception $e) {
                 return $this->error(null, $e->getMessage(), 400);
             }
+        }
+
+        if ($referrer) {
+            $this->handleReferrers($referrer, $user);
         }
 
         try {

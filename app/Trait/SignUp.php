@@ -46,7 +46,9 @@ trait SignUp
             throw new \InvalidArgumentException('Referrer code is required');
         }
 
-        $referrer = User::where('referrer_code', $referrerCode)->first();
+        $referrer = User::with('wallet')
+            ->where('referrer_code', $referrerCode)
+            ->first();
 
         if (!$referrer || !$referrer->is_affiliate_member) {
             throw new \Exception('You are not a valid referrer');
