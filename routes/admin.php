@@ -77,7 +77,7 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function (): void
         Route::post('/create', 'createCategory');
         Route::get('/all', 'adminCategories');
         Route::get('/analytics', 'categoryAnalytic');
-        Route::patch('/edit/{id}', 'editCategory');
+        Route::post('/edit', 'editCategory');
         Route::patch('/change/{category_id}', 'featuredStatus');
         Route::delete('/delete/{id}', 'deleteCategory');
 
