@@ -76,6 +76,11 @@ class CategoryController extends Controller
         return $this->service->subStatus($request, $id);
     }
 
+    public function editCategory(Request $request, $id)
+    {
+        return $this->service->editCategory($request, $id);
+    }
+
     public function deleteCategory($id)
     {
         return $this->service->deleteCategory($id);
