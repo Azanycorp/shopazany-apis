@@ -5,7 +5,6 @@ namespace App\Console\Commands;
 use App\Enum\ProductStatus;
 use App\Models\Currency;
 use App\Models\Product;
-use App\Services\Curl\CurrencyConversionService;
 use Illuminate\Console\Command;
 
 class UpdateProductPrice extends Command
@@ -29,47 +28,64 @@ class UpdateProductPrice extends Command
      */
     public function handle(): void
     {
-        $products = Product::with(['user', 'admin'])
-            ->where('status', ProductStatus::ACTIVE)
-            ->get();
+        Product::with(['user'])
+        ->where('status', ProductStatus::ACTIVE)
+        ->chunk(100, function ($products) {
+            // Get all unique currencies in one query to avoid multiple DB calls
+            $currencyCodes = $products->pluck('user.default_currency')->filter()->unique()->toArray();
+            $exchangeRates = $this->getExchangeRates($currencyCodes);
 
-        foreach ($products as $product) {
-            $currency = $product?->user?->default_currency;
+            $updatedProducts = [];
 
-            $rate = $this->fetchConversionRate($currency);
+            foreach ($products as $product) {
+                $currency = $product->user?->default_currency ?? 'USD';
+                $rate = $exchangeRates[$currency] ?? null;
 
-            if ($rate) {
-                $price = $product->price;
+                if (!$rate) {
+                    $this->error("Conversion rate not available for currency {$currency} for product ID {$product->id}");
+                    continue;
+                }
 
-                $usdPrice = round($price / $rate, 2);
-
+                $usdPrice = round($product->price / $rate, 2);
                 $newPrice = round($usdPrice * $rate, 2);
 
-                $product->usd_price = $usdPrice;
-                $product->price = $newPrice;
-
-                $product->save();
-
-                $this->info("Updated product ID {$product->id} with new price: {$usdPrice} {$currency}");
-            } else {
-                $this->error("Conversion rate not available for currency {$currency} for product ID {$product->id}");
+                // Prepare data for batch update
+                $updatedProducts[] = [
+                    'id' => $product->id,
+                    'usd_price' => $usdPrice,
+                    'price' => $newPrice,
+                ];
             }
-        }
+
+            // Batch update products in one query
+            if (!empty($updatedProducts)) {
+                $this->batchUpdateProducts($updatedProducts);
+                $this->info("Updated " . count($updatedProducts) . " products successfully.");
+            }
+        });
     }
 
     /**
-     * Fetch conversion rate against USD for a given currency.
-     * Replace this with actual implementation for fetching rates.
+     * Fetch exchange rates for multiple currencies in one query
      */
-    private function fetchConversionRate(string $currency): ?float
+    private function getExchangeRates(array $currencyCodes): array
     {
-        $currencyRecord = Currency::where('code', $currency)->first();
+        return Currency::whereIn('code', $currencyCodes)
+            ->pluck('exchange_rate', 'code')
+            ->toArray();
+    }
 
-        if (! $currencyRecord) {
-            echo "Conversion rate not available for currency {$currency}.";
-            return null;
+    /**
+     * Batch update products efficiently
+     */
+    private function batchUpdateProducts(array $updatedProducts): void
+    {
+        foreach ($updatedProducts as $productData) {
+            Product::where('id', $productData['id'])
+                ->update([
+                    'usd_price' => $productData['usd_price'],
+                    'price' => $productData['price'],
+                ]);
         }
-
-        return (float) $currencyRecord->exchange_rate;
     }
 }

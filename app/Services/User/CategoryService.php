@@ -12,7 +12,6 @@ use App\Models\Product;
 use App\Models\SubCategory;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -36,9 +35,14 @@ class CategoryService
                 $url = Storage::disk('s3')->url($path);
             }
 
+            $slug = Str::slug($request->name);
+            if (Category::where('slug', $slug)->exists()) {
+                $slug = $slug . '-' . uniqid();
+            }
+
             Category::create([
                 'name' => $request->name,
-                'slug' => Str::slug($request->name),
+                'slug' => $slug,
                 'image' => $url,
                 'featured' => 1,
             ]);
@@ -188,6 +192,34 @@ class CategoryService
         $sub->save();
 
         return $this->success(null, "Category updated successfully");
+    }
+
+    public function editCategory($request, $id)
+    {
+        $category = Category::findOrFail($id);
+        $folder = App::environment('production') ? '/prod/category' : '/stag/category';
+
+        $url = $category->image;
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store($folder, 's3');
+            $url = Storage::disk('s3')->url($path);
+        }
+
+        $slug = $category->slug;
+        if ($request->has('name')) {
+            $slug = Str::slug($request->name);
+            if (Category::where('slug', $slug)->where('id', '!=', $id)->exists()) {
+                $slug = $slug . '-' . uniqid();
+            }
+        }
+
+        $category->update([
+            'name' => $request->name ?? $category->name,
+            'slug' => $slug,
+            'image' => $url
+        ]);
+
+        return $this->success(null, "Updated successfully");
     }
 
     public function deleteCategory($id)

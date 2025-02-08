@@ -77,6 +77,7 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function (): void
         Route::post('/create', 'createCategory');
         Route::get('/all', 'adminCategories');
         Route::get('/analytics', 'categoryAnalytic');
+        Route::patch('/edit/{id}', 'editCategory');
         Route::patch('/change/{category_id}', 'featuredStatus');
         Route::delete('/delete/{id}', 'deleteCategory');
 
@@ -297,6 +298,18 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function (): void
             Route::get('/view/{id}', 'viewWidthrawalMethod')->middleware('cacheResponse:300');
             Route::post('/approve/{id}', 'approveWidthrawalMethod');
             Route::post('/reject/{id}', 'rejectWidthrawalMethod');
+        });
+
+        //Shipping Country
+        Route::prefix('Shipping-management')->controller(B2BAdminController::class)->group(function (): void {
+
+            Route::prefix('country')->group(function (): void {
+                Route::get('/', 'shippingCountries');
+                Route::post('/add', 'addShippingCountry');
+                Route::get('/details/{id}', 'viewShippingCountry');
+                Route::post('/update/{id}', 'editShippingCountry');
+                Route::delete('/delete/{id}', 'deleteShippingCountry');
+            });
         });
 
         //Seller Product Approval requests
