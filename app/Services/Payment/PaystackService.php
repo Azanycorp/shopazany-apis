@@ -260,7 +260,7 @@ class PaystackService
                 $rfq = Rfq::findOrFail($rfqId);
                 $seller = User::findOrFail($rfq->seller_id);
                 $product = B2BProduct::findOrFail($rfq->product_id);
-                $shipping_address = BuyerShippingAddress::findOrFail($shipping_address_id);
+                $shipping_address = BuyerShippingAddress::with(['state','country'])->findOrFail($shipping_address_id);
                 $address = new B2BBuyerShippingAddressResource($shipping_address);
 
                 B2bOrder::create([

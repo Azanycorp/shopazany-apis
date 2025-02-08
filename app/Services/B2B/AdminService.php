@@ -21,6 +21,7 @@ use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
 use App\Models\Configuration;
 use App\Mail\B2BNewAdminEmail;
+use App\Models\ShippingCountry;
 use Illuminate\Support\Facades\DB;
 use App\Models\B2bWithdrawalMethod;
 use App\Models\BusinessInformation;
@@ -29,9 +30,10 @@ use App\Http\Resources\BuyerResource;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Resources\AdminUserResource;
 use App\Http\Resources\B2BSellerResource;
-use App\Http\Resources\AdminB2BSellerResource;
 use App\Http\Resources\B2BProductResource;
 use App\Repositories\B2BProductRepository;
+use App\Http\Resources\AdminB2BSellerResource;
+use App\Http\Resources\ShippingCountryResource;
 use App\Repositories\B2BSellerShippingRepository;
 
 class AdminService
@@ -164,7 +166,7 @@ class AdminService
     //Admin section
 
     public function allSellers()
-     {
+    {
 
         $sellers = User::withCount('b2bProducts')
             ->where('type', UserType::B2B_SELLER)
@@ -419,7 +421,7 @@ class AdminService
         if (!$prod) {
             return $this->error(null, "No product found.", 404);
         }
-       $prod->delete();
+        $prod->delete();
         return $this->success(null, 'Product Deleted successfully');
     }
 
@@ -888,5 +890,53 @@ class AdminService
         $admin->delete();
 
         return $this->success(null, 'Deleted successfully');
+    }
+
+
+    //Shipping COuntries
+    public function shippingCountries()
+    {
+        $searchQuery = request()->input('search');
+        $countries = ShippingCountry::when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
+            $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
+                $subQuery->where('id', '>', 0)
+                    ->orWhere('name', 'LIKE', '%' . $searchQuery . '%');
+            });
+        })->get();
+        return $this->success($countries, 'All countries');
+    }
+
+    public function addShippingCountry($data)
+    {
+        $country = ShippingCountry::create([
+            'name' => $data->name,
+            'code' => $data->code,
+            'zone' => $data->zone,
+        ]);
+        return $this->success($country, 'country added successfully', 201);
+    }
+
+    public function viewShippingCountry($id)
+    {
+        $country = ShippingCountry::findOrFail($id);
+        $data = new ShippingCountryResource($country);
+        return $this->success($data, 'country details');
+    }
+
+    public function editShippingCountry($id, $data)
+    {
+        $country = ShippingCountry::findOrFail($id);
+        $country->update([
+            'name' => $data->name,
+            'code' => $data->code,
+            'zone' => $data->zone,
+        ]);
+        return $this->success(null,'Details updated successfully');
+    }
+    public function deleteShippingCountry($id)
+    {
+        $country = ShippingCountry::findOrFail($id);
+        $country->delete();
+        return $this->success(null, 'Details deleted successfully');
     }
 }

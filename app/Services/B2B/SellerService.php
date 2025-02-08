@@ -632,11 +632,7 @@ class SellerService extends Controller
 
     public function getOrderDetails($id)
     {
-        $order = B2bOrder::with(['buyer' => function ($query): void {
-            $query->select('id', 'first_name', 'last_name')->where('type', UserType::B2B_BUYER);
-        }, 'seller' => function ($query): void {
-            $query->select('id', 'first_name', 'last_name')->where('type', UserType::B2B_SELLER);
-        },])->findOrFail($id);
+        $order = B2bOrder::with(['buyer','seller'])->findOrFail($id);
 
         $data = new B2BOrderResource($order);
         return $this->success($data, 'order details');
