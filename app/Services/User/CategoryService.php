@@ -199,10 +199,19 @@ class CategoryService
         $category = Category::findOrFail($id);
         $folder = App::environment('production') ? '/prod/category' : '/stag/category';
 
-        $url = $category->image;
-        if ($request->hasFile('image')) {
+        if ($request->file('image')) {
+            if (!empty($category->image)) {
+                $image = getRelativePath($category->image);
+
+                if (Storage::disk('s3')->exists($image)) {
+                    Storage::disk('s3')->delete($image);
+                }
+            }
+
             $path = $request->file('image')->store($folder, 's3');
             $url = Storage::disk('s3')->url($path);
+        } else {
+            $url = $category->image;
         }
 
         $slug = $category->slug;
