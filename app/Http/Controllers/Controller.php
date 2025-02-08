@@ -39,7 +39,7 @@ abstract class Controller
     public function getUserReferrer($user)
     {
         if($user->referrer_code !== null){
-            return $this->error(null, 'Account has been created', 400);
+            return $this->error(null, 'Account has been created', 403);
         }
         return null;
     }

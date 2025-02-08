@@ -73,7 +73,7 @@ class AuthService extends Controller
             $user = $this->createUser($request);
 
             if ($referrer = $request->query('referrer')) {
-                $this->handleReferrer($referrer, $user);
+                $this->handleReferrers($referrer, $user);
             }
 
             $description = "User with email: {$request->email} signed up";
@@ -376,13 +376,14 @@ class AuthService extends Controller
             ->where('referrer_code', $referrer_code)
             ->first();
 
-        if ($referrer) {
-            $points = optional(Action::where('slug', 'create_account')->first())->points ?? 0;
-            $referrer->wallet()->increment('reward_point', $points);
-
-            $referrer->referrer()->attach($data);
-            $referrer->save();
+        if (!$referrer || !$referrer->is_affiliate_member) {
+            throw new \Exception('You are not a valid referrer');
         }
+
+        $points = optional(Action::where('slug', 'create_account')->first())->points ?? 0;
+        $referrer->wallet()->increment('reward_point', $points);
+        $referrer->referrer()->attach($data);
+        $referrer->save();
     }
 
     private function userTrigger($user, $request, $referrer_link, $referrer_code, $code)
@@ -393,7 +394,7 @@ class AuthService extends Controller
             $user->update([
                 'first_name' => $request->first_name,
                 'last_name' => $request->last_name,
-                'type' => UserType::CUSTOMER,
+                'type' => UserType::SELLER,
                 'referrer_code' => $referrer_code,
                 'referrer_link' => $referrer_link,
                 'is_verified' => 1,
@@ -414,11 +415,12 @@ class AuthService extends Controller
 
             if (is_null($emailVerified)) {
                 $user->update(['email_verified_at' => null, 'verification_code' => $code,]);
-                try {
-                    Mail::to($request->email)->send(new SignUpVerifyMail($user));
-                } catch (\Exception $e) {
-                    return $this->error(null, 'Unable to send verification email. Please try again later', 500);
-                }
+
+                // Send email to user to verify account
+                $type = MailingEnum::SIGN_UP_OTP;
+                $subject = "Verify Account";
+                $mail_class = "App\Mail\SignUpVerifyMail";
+                mailSend($type, $user, $subject, $mail_class, 'user');
             }
 
         } else {
@@ -426,9 +428,7 @@ class AuthService extends Controller
                 'first_name' => $request->first_name,
                 'last_name' => $request->last_name,
                 'email' => $request->email,
-                'type' => UserType::CUSTOMER,
-                'referrer_code' => $referrer_code,
-                'referrer_link' => $referrer_link,
+                'type' => UserType::SELLER,
                 'email_verified_at' => null,
                 'verification_code' => $code,
                 'is_verified' => 0,
@@ -444,7 +444,6 @@ class AuthService extends Controller
             $description = "User with email {$request->email} signed up as an affiliate";
             $action = UserLog::CREATED;
             $response = $this->success(null, "Created successfully");
-
             logUserAction($request, $action, $description, $response, $user);
 
             return $user;
