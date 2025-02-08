@@ -302,7 +302,7 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function (): void
         //Shipping Country
         Route::prefix('Shipping-management')->controller(B2BAdminController::class)->group(function (): void {
 
-            Route::prefix('country')->controller(B2BAdminController::class)->group(function (): void {
+            Route::prefix('country')->group(function (): void {
                 Route::get('/', 'shippingCountries');
                 Route::post('/add', 'addShippingCountry');
                 Route::get('/details/{id}', 'viewShippingCountry');

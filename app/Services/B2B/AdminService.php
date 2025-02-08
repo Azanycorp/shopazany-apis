@@ -33,6 +33,7 @@ use App\Http\Resources\B2BSellerResource;
 use App\Http\Resources\B2BProductResource;
 use App\Repositories\B2BProductRepository;
 use App\Http\Resources\AdminB2BSellerResource;
+use App\Http\Resources\ShippingCountryResource;
 use App\Repositories\B2BSellerShippingRepository;
 
 class AdminService
@@ -912,13 +913,14 @@ class AdminService
             'code' => $data->code,
             'zone' => $data->zone,
         ]);
-        return $this->success($country, 'country added successfully', 200);
+        return $this->success($country, 'country added successfully', 201);
     }
 
     public function viewShippingCountry($id)
     {
         $country = ShippingCountry::findOrFail($id);
-        return $this->success($country, 'country details');
+        $data = new ShippingCountryResource($country);
+        return $this->success($data, 'country details');
     }
 
     public function editShippingCountry($id, $data)
@@ -929,12 +931,12 @@ class AdminService
             'code' => $data->code,
             'zone' => $data->zone,
         ]);
-        return $this->success($country, 'Details updated successfully');
+        return $this->success(null,'Details updated successfully');
     }
     public function deleteShippingCountry($id)
     {
         $country = ShippingCountry::findOrFail($id);
         $country->delete();
-        return $this->success($country, 'Details deleted successfully');
+        return $this->success(null, 'Details deleted successfully');
     }
 }
