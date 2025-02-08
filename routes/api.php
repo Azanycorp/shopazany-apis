@@ -109,6 +109,8 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function (): vo
 
             // Payment Method
             Route::get('/method/{country_id}', 'getPaymentMethod');
+            //Shipping Agent
+            Route::get('/shipping-agents', 'getShippingAgents');
         });
 
     // Subscription

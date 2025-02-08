@@ -300,15 +300,14 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function (): void
         });
 
         //Shipping Country
-        Route::prefix('Shipping-management')->controller(B2BAdminController::class)->group(function (): void {
+        Route::prefix('shipping-management')->controller(B2BAdminController::class)->group(function (): void {
+            Route::get('/', 'shippingAgents')->middleware('cacheResponse:300');
+            Route::post('/add', 'addShippingAgent');
+            Route::get('/details/{id}', 'viewShippingAgent')->middleware('cacheResponse:300');
+            Route::post('/update/{id}', 'editShippingAgent');
+            Route::delete('/delete/{id}', 'deleteShippingAgent');
 
-            Route::prefix('country')->group(function (): void {
-                Route::get('/', 'shippingCountries');
-                Route::post('/add', 'addShippingCountry');
-                Route::get('/details/{id}', 'viewShippingCountry');
-                Route::post('/update/{id}', 'editShippingCountry');
-                Route::delete('/delete/{id}', 'deleteShippingCountry');
-            });
+            Route::get('/get-country', 'getCountryList')->middleware('cacheResponse:300');
         });
 
         //Seller Product Approval requests

@@ -8,6 +8,7 @@ use App\Models\Admin;
 use App\Enum\UserType;
 use App\Models\Payout;
 use App\Enum\AdminType;
+use App\Models\Country;
 use App\Enum\UserStatus;
 use App\Models\B2bOrder;
 use App\Enum\AdminStatus;
@@ -20,6 +21,7 @@ use App\Mail\AdminUserMail;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
 use App\Models\Configuration;
+use App\Models\ShippingAgent;
 use App\Mail\B2BNewAdminEmail;
 use App\Models\ShippingCountry;
 use Illuminate\Support\Facades\DB;
@@ -32,6 +34,7 @@ use App\Http\Resources\AdminUserResource;
 use App\Http\Resources\B2BSellerResource;
 use App\Http\Resources\B2BProductResource;
 use App\Repositories\B2BProductRepository;
+use App\Http\Resources\ShippingAgentResource;
 use App\Http\Resources\AdminB2BSellerResource;
 use App\Http\Resources\ShippingCountryResource;
 use App\Repositories\B2BSellerShippingRepository;
@@ -888,55 +891,68 @@ class AdminService
         $admin = Admin::findOrFail($id);
         $admin->permissions()->detach();
         $admin->delete();
-
         return $this->success(null, 'Deleted successfully');
     }
 
 
-    //Shipping COuntries
-    public function shippingCountries()
+    //Shipping Agents
+    public function shippingAgents()
     {
-        $searchQuery = request()->input('search');
-        $countries = ShippingCountry::when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
-            $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
-                $subQuery->where('id', '>', 0)
-                    ->orWhere('name', 'LIKE', '%' . $searchQuery . '%');
-            });
-        })->get();
-        return $this->success($countries, 'All countries');
+        $agents = ShippingAgent::latest('id')->get();
+        $data = ShippingAgentResource::collection($agents);
+        return $this->success($data, 'All Agents');
     }
 
-    public function addShippingCountry($data)
+    public function addShippingAgent($data)
     {
-        $country = ShippingCountry::create([
+
+        $agent = ShippingAgent::create([
             'name' => $data->name,
-            'code' => $data->code,
-            'zone' => $data->zone,
+            'type' => $data->type,
+            'country_id' => $data->country_id,
+            'account_email' => $data->account_email,
+            'account_password' => $data->account_password,
+            'api_live_key' => $data->api_live_key,
+            'api_test_key' => $data->api_test_key,
+            'status' => $data->status,
         ]);
-        return $this->success($country, 'country added successfully', 201);
+        return $this->success($agent, 'Agent added successfully', 201);
     }
 
-    public function viewShippingCountry($id)
+
+    public function viewShippingAgent($id)
     {
-        $country = ShippingCountry::findOrFail($id);
-        $data = new ShippingCountryResource($country);
-        return $this->success($data, 'country details');
+         $agent = ShippingAgent::findOrFail($id);
+        $data = new ShippingAgentResource($agent);
+        return $this->success($data, 'Agent details');
     }
 
-    public function editShippingCountry($id, $data)
+    public function getCountryList()
     {
-        $country = ShippingCountry::findOrFail($id);
-        $country->update([
-            'name' => $data->name,
-            'code' => $data->code,
-            'zone' => $data->zone,
-        ]);
-        return $this->success(null,'Details updated successfully');
+         $countries = Country::all();
+        return $this->success($countries, 'countries list');
     }
-    public function deleteShippingCountry($id)
+
+    public function editShippingAgent($id, $data)
     {
-        $country = ShippingCountry::findOrFail($id);
-        $country->delete();
+        $agent = ShippingAgent::findOrFail($id);
+        $agent->update([
+            'name' => $data->name ?? $agent->name,
+            'type' => $data->type ?? $agent->type,
+            'logo' => $data->logo ?? $agent->logo,
+            'country_id' => $data->country_id ?? $agent->country_id,
+            'account_email' => $data->account_email ?? $agent->account_email,
+            'account_password' => $data->account_password ?? $agent->account_password,
+            'api_live_key' => $data->api_live_key ?? $agent->api_live_key,
+            'api_test_key' => $data->api_test_key ?? $agent->api_test_key,
+            'status' => $data->status ?? $agent->status,
+        ]);
+        return $this->success(null, 'Details updated successfully');
+    }
+    public function deleteShippingAgent($id)
+    {
+        $agent = ShippingAgent::findOrFail($id);
+        $agent->delete();
         return $this->success(null, 'Details deleted successfully');
     }
 }
