@@ -541,7 +541,7 @@ class BuyerService
 
     public function orderDetails($id)
     {
-        $order = B2bOrder::with(['seller'])->findOrFail($id);
+        $order = B2bOrder::with(['seller','buyer'])->findOrFail($id);
 
         $data = new B2BOrderResource($order);
         return $this->success($data, 'order details');
@@ -836,14 +836,14 @@ class BuyerService
     public function getAllShippingAddress()
     {
         $currentUserId = userAuthId();
-        $addresses = BuyerShippingAddress::where('user_id', $currentUserId)->get();
+        $addresses = BuyerShippingAddress::with(['state','country'])->where('user_id', $currentUserId)->get();
         $data = B2BBuyerShippingAddressResource::collection($addresses);
         return $this->success($data, 'All address');
     }
 
     public function getShippingAddress($id)
     {
-        $address = BuyerShippingAddress::findOrFail($id);
+        $address = BuyerShippingAddress::with(['state','country'])->findOrFail($id);
 
         $data = new B2BBuyerShippingAddressResource($address);
         return $this->success($data, 'Address detail');
