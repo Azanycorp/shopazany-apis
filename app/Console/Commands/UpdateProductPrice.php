@@ -5,7 +5,6 @@ namespace App\Console\Commands;
 use App\Enum\ProductStatus;
 use App\Models\Currency;
 use App\Models\Product;
-use App\Services\Curl\CurrencyConversionService;
 use Illuminate\Console\Command;
 
 class UpdateProductPrice extends Command
@@ -29,38 +28,6 @@ class UpdateProductPrice extends Command
      */
     public function handle(): void
     {
-        // $products = Product::with(['user', 'admin'])
-        //     ->where('status', ProductStatus::ACTIVE)
-        //     ->get();
-
-        // foreach ($products as $product) {
-        //     $currency = $product?->user?->default_currency;
-
-        //     if (!$currency) {
-        //         $this->error("Default currency not set for user associated with product ID {$product->id}");
-        //         continue;
-        //     }
-
-        //     $rate = $this->fetchConversionRate($currency);
-
-        //     if ($rate) {
-        //         $price = $product->price;
-
-        //         $usdPrice = round($price / $rate, 2);
-
-        //         $newPrice = round($usdPrice * $rate, 2);
-
-        //         $product->usd_price = $usdPrice;
-        //         $product->price = $newPrice;
-
-        //         $product->save();
-
-        //         $this->info("Updated product ID {$product->id} with new price: {$usdPrice} {$currency}");
-        //     } else {
-        //         $this->error("Conversion rate not available for currency {$currency} for product ID {$product->id}");
-        //     }
-        // }
-
         Product::with(['user'])
         ->where('status', ProductStatus::ACTIVE)
         ->chunk(100, function ($products) {
@@ -121,20 +88,4 @@ class UpdateProductPrice extends Command
                 ]);
         }
     }
-
-    /**
-     * Fetch conversion rate against USD for a given currency.
-     * Replace this with actual implementation for fetching rates.
-     */
-    // private function fetchConversionRate(string $currency): ?float
-    // {
-    //     $currencyRecord = Currency::where('code', $currency)->first();
-
-    //     if (! $currencyRecord) {
-    //         echo "Conversion rate not available for currency {$currency}.";
-    //         return null;
-    //     }
-
-    //     return (float) $currencyRecord->exchange_rate;
-    // }
 }

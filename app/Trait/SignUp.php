@@ -40,12 +40,21 @@ trait SignUp
         return $coupon;
     }
 
-    protected function handleReferrer($referrerCode, $user)
+    protected function handleReferrers(?string $referrerCode, $user)
     {
-        $referrer = User::where('referrer_code', $referrerCode)->first();
-        if ($referrer) {
-            reward_user($referrer, 'referral', 'completed');
+        if (!$referrerCode) {
+            throw new \InvalidArgumentException('Referrer code is required');
         }
+
+        $referrer = User::with('wallet')
+            ->where('referrer_code', $referrerCode)
+            ->first();
+
+        if (!$referrer || !$referrer->is_affiliate_member) {
+            throw new \Exception('You are not a valid referrer');
+        }
+
+        reward_user($referrer, 'referral', 'completed');
     }
 
     protected function validateCoupon($couponCode)
