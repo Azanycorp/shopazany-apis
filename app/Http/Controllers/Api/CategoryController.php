@@ -76,9 +76,14 @@ class CategoryController extends Controller
         return $this->service->subStatus($request, $id);
     }
 
-    public function editCategory(Request $request, $id)
+    public function editCategory(Request $request)
     {
-        return $this->service->editCategory($request, $id);
+        $request->validate([
+            'id' => 'required|exists:categories,id',
+            'name' => 'nullable|string|max:255',
+        ]);
+
+        return $this->service->editCategory($request);
     }
 
     public function deleteCategory($id)

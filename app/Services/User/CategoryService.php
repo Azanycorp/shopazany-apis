@@ -194,9 +194,9 @@ class CategoryService
         return $this->success(null, "Category updated successfully");
     }
 
-    public function editCategory($request, $id)
+    public function editCategory($request)
     {
-        $category = Category::findOrFail($id);
+        $category = Category::findOrFail($request->id);
         $folder = App::environment('production') ? '/prod/category' : '/stag/category';
 
         $url = $category->image;
@@ -208,7 +208,7 @@ class CategoryService
         $slug = $category->slug;
         if ($request->has('name')) {
             $slug = Str::slug($request->name);
-            if (Category::where('slug', $slug)->where('id', '!=', $id)->exists()) {
+            if (Category::where('slug', $slug)->where('id', '!=', $request->id)->exists()) {
                 $slug = $slug . '-' . uniqid();
             }
         }
