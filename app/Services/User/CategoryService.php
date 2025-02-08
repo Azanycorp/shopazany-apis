@@ -194,30 +194,21 @@ class CategoryService
         return $this->success(null, "Category updated successfully");
     }
 
-    public function editCategory($request, $id)
+    public function editCategory($request)
     {
-        $category = Category::findOrFail($id);
+        $category = Category::findOrFail($request->id);
         $folder = App::environment('production') ? '/prod/category' : '/stag/category';
 
-        if ($request->file('image')) {
-            if (!empty($category->image)) {
-                $image = getRelativePath($category->image);
-
-                if (Storage::disk('s3')->exists($image)) {
-                    Storage::disk('s3')->delete($image);
-                }
-            }
-
+        $url = $category->image;
+        if ($request->hasFile('image')) {
             $path = $request->file('image')->store($folder, 's3');
             $url = Storage::disk('s3')->url($path);
-        } else {
-            $url = $category->image;
         }
 
         $slug = $category->slug;
         if ($request->has('name')) {
             $slug = Str::slug($request->name);
-            if (Category::where('slug', $slug)->where('id', '!=', $id)->exists()) {
+            if (Category::where('slug', $slug)->where('id', '!=', $request->id)->exists()) {
                 $slug = $slug . '-' . uniqid();
             }
         }
