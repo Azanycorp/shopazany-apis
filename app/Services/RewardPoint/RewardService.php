@@ -30,12 +30,14 @@ class RewardService
         ]);
         $userAction->save();
 
-        $wallet = $user->wallet()->firstOrCreate([], [
-            'balance' => 0.00,
-            'reward_point' => 0,
-        ]);
+        if ($user->is_affiliate_member) {
+            $wallet = $user->wallet()->firstOrCreate([], [
+                'balance' => 0.00,
+                'reward_point' => 0,
+            ]);
 
-        $wallet->increment('reward_point', $action->points);
+            $wallet->increment('reward_point', $action->points);
+        }
 
         // Log user activity
         log_user_activity($user, $action, $status);
