@@ -290,10 +290,10 @@ if(!function_exists('generate_referral_code')) {
 if(!function_exists('generate_referrer_link')) {
     function generate_referrer_link(string $referrer_code): string {
         if (App::environment('production')) {
-            return config('services.frontend_baseurl') . '/register?referrer=' . $referrer_code;
+            return config('services.seller_baseurl') . '?referrer=' . $referrer_code;
         }
 
-        return config('services.staging_frontend_baseurl') . '/register?referrer=' . $referrer_code;
+        return config('services.staging_seller_baseurl') . '?referrer=' . $referrer_code;
     }
 }
 
