@@ -156,7 +156,7 @@ class AdminService
     {
         $priorityCountries = ['United States', 'Canada', 'United Kingdom', 'Brazil', 'Nigeria', 'Jamaica', 'Switzerland', 'Norway'];
 
-        $shopByCountries = ShopCountry::orderByRaw("FIELD(name, '".implode("','", $priorityCountries)."') DESC")
+        $shopByCountries = ShopCountry::orderByRaw("FIELD(name, '".implode("','", $priorityCountries)."') ASC")
             ->orderBy('name', 'asc')
             ->get();
 
