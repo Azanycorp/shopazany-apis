@@ -96,4 +96,9 @@ class HomeController extends Controller
     {
         return $this->service->moveToCart($request);
     }
+
+    public function topProducts()
+    {
+        return $this->service->topProducts();
+    }
 }

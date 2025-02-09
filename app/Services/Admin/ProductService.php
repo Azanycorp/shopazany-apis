@@ -136,6 +136,17 @@ class ProductService
 
         return $this->success($data, "Product retrieved successfully");
     }
+
+    public function changeFeatured($request)
+    {
+        $product = Product::findOrFail($request->product_id);
+        $product->is_featured = !$product->is_featured;
+
+        $product->save();
+        $status = $product->is_featured ? "Approved successfully" : "Disapproved successfully";
+
+        return $this->success(null, $status);
+    }
 }
 
 

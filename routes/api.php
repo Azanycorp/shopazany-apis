@@ -76,6 +76,7 @@ Route::middleware('cacheResponse:300')
         Route::get('/single/product/{slug}', 'productSlug');
         Route::get('/top-brands', 'topBrands');
         Route::get('/top-sellers', 'topSellers');
+        Route::get('/top-products', 'topProducts');
 
         Route::prefix('seller')->group(function (): void {
             Route::get('/{uuid}', 'sellerInfo');
