@@ -128,6 +128,34 @@ class HomeService
         return $this->success($data, "Featured products");
     }
 
+    public function topProducts()
+    {
+        $countryId = request()->query('country_id');
+
+        $query = Product::with([
+                'category',
+                'subCategory',
+                'shopCountry',
+                'brand',
+                'color',
+                'unit',
+                'size',
+                'orders',
+                'productReviews',
+            ])
+            ->where('status', ProductStatus::ACTIVE);
+
+        if ($countryId) {
+            $query->where('country_id', $countryId);
+        }
+
+        $featuredProducts = $query->orderByDesc('created_at')->limit(10)->get();
+
+        $data = SellerProductResource::collection($featuredProducts);
+
+        return $this->success($data, "Top products");
+    }
+
     public function pocketFriendly()
     {
         $countryId = request()->query('country_id');

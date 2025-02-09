@@ -130,6 +130,7 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function (): void
         Route::post('/add', 'addProduct');
         Route::get('/', 'getProduct');
         Route::get('/{slug}', 'getOneProduct');
+        Route::patch('/featured', 'changeFeatured');
     });
 
     Route::prefix('reward')->controller(RewardPointController::class)->group(function (): void {
