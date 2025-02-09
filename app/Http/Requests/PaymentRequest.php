@@ -23,6 +23,7 @@ class PaymentRequest extends FormRequest
     {
         return [
             'user_id' => ['required', 'integer', 'exists:users,id'],
+            'shipping_agent_id' => ['required', 'integer', 'exists:shipping_agents,id'],
             'email' => ['required', 'email', 'email:rfc,dns'],
             'amount' => ['required', 'integer'],
             'currency' => ['required', 'string', 'in:NGN,USD'],

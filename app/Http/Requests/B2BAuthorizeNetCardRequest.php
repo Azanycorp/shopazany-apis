@@ -24,6 +24,7 @@ class B2BAuthorizeNetCardRequest extends FormRequest
         return [
             'rfq_id' => 'required|numeric|exists:rfqs,id',
             'shipping_address_id' => 'required|numeric|exists:buyer_shipping_addresses,id',
+            'shipping_agent_id' => 'required|numeric|exists:shipping_agents,id',
             'amount' => 'required|numeric',
             'payment.creditCard.cardNumber' => 'required|digits:16',
             'payment.creditCard.expirationDate' => 'required|date_format:m/y',
