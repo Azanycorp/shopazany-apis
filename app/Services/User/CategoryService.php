@@ -56,7 +56,6 @@ class CategoryService
     public function categories()
     {
         $categories = Category::where('featured', 1)
-        ->take(10)
         ->get();
 
         $data = CategoryResource::collection($categories);
