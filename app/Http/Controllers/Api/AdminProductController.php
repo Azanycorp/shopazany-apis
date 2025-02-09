@@ -30,4 +30,9 @@ class AdminProductController extends Controller
     {
         return $this->service->getOneProduct($slug);
     }
+
+    public function changeFeatured(Request $request)
+    {
+        return $this->service->changeFeatured($request);
+    }
 }
