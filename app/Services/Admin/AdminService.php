@@ -154,7 +154,12 @@ class AdminService
 
     public function getShopByCountry()
     {
-        $shopByCountries = ShopCountry::orderBy('name', 'asc')->get();
+        $priorityCountries = ['United States', 'Canada', 'United Kingdom', 'Brazil', 'Nigeria', 'Jamaica', 'Switzerland', 'Norway'];
+
+        $shopByCountries = ShopCountry::orderByRaw("FIELD(name, '".implode("','", $priorityCountries)."') DESC")
+            ->orderBy('name', 'asc')
+            ->get();
+
         $data = ShopCountryResource::collection($shopByCountries);
 
         return $this->success($data, "List");
