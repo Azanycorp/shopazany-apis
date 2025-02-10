@@ -161,8 +161,14 @@ class AdminService
             ->get();
 
         $data = ShopCountryResource::collection($shopByCountries);
+        $totalCount = $shopByCountries->count();
 
-        return $this->success($data, "List");
+        return [
+            'status' => true,
+            'message' => 'Shop By Country List',
+            'data' => $data,
+            'total_count' => $totalCount,
+        ];
     }
 
     public function referralGenerate()
