@@ -56,12 +56,12 @@ return Application::configure(basePath: dirname(__DIR__))
             ]);
         });
 
-        // $exceptions->renderable(function (NotFoundHttpException $e, $request) {
-        //     // Handle JSON request 404's
-        //     if ($request->json()) {
-        //         return response()->json(['message' => 'Resource was not Found'], 404);
-        //     }
+        $exceptions->renderable(function (NotFoundHttpException $e, $request) {
+            // Handle JSON request 404's
+            if ($request->json()) {
+                return response()->json(['message' => 'Resource was not Found'], 404);
+            }
 
-        //     throw $e;
-        // });
+            throw $e;
+        });
     })->create();
