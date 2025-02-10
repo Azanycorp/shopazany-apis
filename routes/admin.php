@@ -306,8 +306,6 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function (): void
             Route::get('/details/{id}', 'viewShippingAgent')->middleware('cacheResponse:300');
             Route::post('/update/{id}', 'editShippingAgent');
             Route::delete('/delete/{id}', 'deleteShippingAgent');
-
-            Route::get('/get-country', 'getCountryList')->middleware('cacheResponse:300');
         });
 
         //Seller Product Approval requests

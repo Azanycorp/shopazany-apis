@@ -149,7 +149,7 @@ class ChargeCardService implements PaymentStrategy
             'order_no' => $orderNo,
             'product_data' => $product,
             'shipping_address' => $shipping_address,
-            'shipping_agent' => $shipping_agent->name,
+            'shipping_agent' => $shipping_agent->name ?? 'DHL',
             'billing_address' => $billing_address,
             'total_amount' => $amount,
             'payment_method' => 'authorize-net',
