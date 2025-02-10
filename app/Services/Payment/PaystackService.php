@@ -259,11 +259,14 @@ class PaystackService
 
                 (new PaymentLogAction($data, $paymentData, $method, $status))->execute();
 
+                if ($shipping_agent_id) {
+                    $shipping_agent =  ShippingAgent::findOrFail(2);
+                }
+
                 $rfq = Rfq::findOrFail($rfqId);
                 $seller = User::findOrFail($rfq->seller_id);
                 $product = B2BProduct::findOrFail($rfq->product_id);
-                $shipping_agent = ShippingAgent::findOrFail($shipping_agent_id);
-                $shipping_address = BuyerShippingAddress::with(['state','country'])->findOrFail($shipping_address_id);
+                $shipping_address = BuyerShippingAddress::with(['state', 'country'])->findOrFail($shipping_address_id);
                 $address = new B2BBuyerShippingAddressResource($shipping_address);
 
                 B2bOrder::create([
@@ -273,7 +276,7 @@ class PaystackService
                     'product_quantity' => $rfq->product_quantity,
                     'order_no' => $orderNo,
                     'product_data' => $product,
-                    'shipping_agent' => $shipping_agent->name ?? 'DHL',
+                    'shipping_agent' => $shipping_agent_id ? $shipping_agent->name : 'DHL',
                     'shipping_address' => $address,
                     'total_amount' => $amount,
                     'payment_method' => $method,

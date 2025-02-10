@@ -134,11 +134,14 @@ class ChargeCardService implements PaymentStrategy
         ];
 
         (new PaymentLogAction($data, $payment, 'authorizenet', 'success'))->execute();
+
+        if ($shipping_agent_id) {
+            $shipping_agent =  ShippingAgent::findOrFail($shipping_agent_id);
+        }
         $rfq = Rfq::findOrFail($rfqId);
         $seller = User::findOrFail($rfq->seller_id);
         $product = B2BProduct::findOrFail($rfq->product_id);
         $saddress = BuyerShippingAddress::findOrFail($shipping_address_id);
-        $shipping_agent = ShippingAgent::findOrFail($shipping_agent_id);
         $shipping_address = new B2BBuyerShippingAddressResource($saddress);
 
         B2bOrder::create([
@@ -149,7 +152,7 @@ class ChargeCardService implements PaymentStrategy
             'order_no' => $orderNo,
             'product_data' => $product,
             'shipping_address' => $shipping_address,
-            'shipping_agent' => $shipping_agent->name ?? 'DHL',
+            'shipping_agent' => $shipping_agent_id ? $shipping_agent->name : '',
             'billing_address' => $billing_address,
             'total_amount' => $amount,
             'payment_method' => 'authorize-net',

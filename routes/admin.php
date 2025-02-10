@@ -199,6 +199,15 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function (): void
 
     Route::get('/generate/users/link', [ApiController::class, 'referralGenerate']);
 
+    //Shipping Agency
+    Route::prefix('shipping-management')->controller(B2BAdminController::class)->group(function (): void {
+        Route::get('/', 'shippingAgents')->middleware('cacheResponse:300');
+        Route::post('/add', 'addShippingAgent');
+        Route::get('/details/{id}', 'viewShippingAgent')->middleware('cacheResponse:300');
+        Route::post('/update/{id}', 'editShippingAgent');
+        Route::delete('/delete/{id}', 'deleteShippingAgent');
+    });
+    
     //b2b admin
     Route::prefix('b2b')->group(function () {
         Route::controller(B2BAdminController::class)->group(function () {
@@ -299,14 +308,7 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function (): void
             Route::post('/reject/{id}', 'rejectWidthrawalMethod');
         });
 
-        //Shipping Country
-        Route::prefix('shipping-management')->controller(B2BAdminController::class)->group(function (): void {
-            Route::get('/', 'shippingAgents')->middleware('cacheResponse:300');
-            Route::post('/add', 'addShippingAgent');
-            Route::get('/details/{id}', 'viewShippingAgent')->middleware('cacheResponse:300');
-            Route::post('/update/{id}', 'editShippingAgent');
-            Route::delete('/delete/{id}', 'deleteShippingAgent');
-        });
+
 
         //Seller Product Approval requests
         Route::prefix('product-approval-request')->controller(B2BAdminController::class)->group(function (): void {
