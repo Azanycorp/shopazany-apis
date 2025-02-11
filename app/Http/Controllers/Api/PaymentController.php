@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Api;
 
 use App\Enum\PaymentType;
 use Illuminate\Http\Request;
+use App\Models\ShippingAgent;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PaymentRequest;
 use App\Services\Payment\PaymentService;
+use App\Http\Resources\ShippingAgentResource;
 use App\Http\Requests\AuthorizeNetCardRequest;
 use App\Services\Payment\HandlePaymentService;
 use App\Services\Payment\PaymentDetailsService;
@@ -21,6 +23,13 @@ class PaymentController extends Controller
     public function __construct(PaymentService $service)
     {
         $this->service = $service;
+    }
+
+    public function getShippingAgents()
+    {
+        $agents = ShippingAgent::latest('id')->get();
+        $data = ShippingAgentResource::collection($agents);
+        return $this->success($data, 'Available Agents');
     }
 
     public function processPayment(PaymentRequest $request)

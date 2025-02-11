@@ -18,15 +18,16 @@ use App\Mail\B2BOrderEmail;
 use Illuminate\Support\Str;
 use App\Mail\SellerOrderMail;
 use App\Models\Configuration;
+use App\Models\ShippingAgent;
 use App\Actions\UserLogAction;
 use App\Enum\SubscriptionType;
 use App\Mail\CustomerOrderMail;
 use App\Actions\PaymentLogAction;
-use App\Http\Resources\B2BBuyerShippingAddressResource;
 use Illuminate\Support\Facades\DB;
 use App\Models\UserShippingAddress;
 use Illuminate\Support\Facades\Log;
 use App\Models\BuyerShippingAddress;
+use App\Http\Resources\B2BBuyerShippingAddressResource;
 
 class PaystackService
 {
@@ -221,6 +222,7 @@ class PaystackService
                 $userId = $paymentData['metadata']['user_id'];
                 $rfqId = $paymentData['metadata']['rfq_id'];
                 $shipping_address_id = $paymentData['metadata']['shipping_address_id'];
+                $shipping_agent_id = $paymentData['metadata']['shipping_agent_id'];
                 $method = $paymentData['metadata']['payment_method'];
                 $ref = $paymentData['reference'];
                 $amount = $paymentData['amount'];
@@ -257,10 +259,14 @@ class PaystackService
 
                 (new PaymentLogAction($data, $paymentData, $method, $status))->execute();
 
+                if ($shipping_agent_id) {
+                    $shipping_agent =  ShippingAgent::findOrFail(2);
+                }
+
                 $rfq = Rfq::findOrFail($rfqId);
                 $seller = User::findOrFail($rfq->seller_id);
                 $product = B2BProduct::findOrFail($rfq->product_id);
-                $shipping_address = BuyerShippingAddress::with(['state','country'])->findOrFail($shipping_address_id);
+                $shipping_address = BuyerShippingAddress::with(['state', 'country'])->findOrFail($shipping_address_id);
                 $address = new B2BBuyerShippingAddressResource($shipping_address);
 
                 B2bOrder::create([
@@ -270,6 +276,7 @@ class PaystackService
                     'product_quantity' => $rfq->product_quantity,
                     'order_no' => $orderNo,
                     'product_data' => $product,
+                    'shipping_agent' => $shipping_agent_id ? $shipping_agent->name : 'DHL',
                     'shipping_address' => $address,
                     'total_amount' => $amount,
                     'payment_method' => $method,

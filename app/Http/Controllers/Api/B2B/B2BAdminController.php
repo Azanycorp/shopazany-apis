@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Services\B2B\AdminService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AdminUserRequest;
+use App\Http\Requests\ShippingAgentRequest;
 use App\Http\Requests\ShippingCountryRequest;
 use App\Http\Requests\ChangeAdminPasswordRequest;
 
@@ -182,27 +183,31 @@ class B2BAdminController extends Controller
 
     //ShippingCountry section
 
-    public function shippingCountries()
+    public function shippingAgents()
     {
-        return $this->adminService->shippingCountries();
+        return $this->adminService->shippingAgents();
     }
 
-    public function addShippingCountry(ShippingCountryRequest $request)
+    public function addShippingAgent(ShippingAgentRequest $request)
     {
-        return $this->adminService->addShippingCountry($request);
+        return $this->adminService->addShippingAgent($request);
+    }
+    public function getCountryList()
+    {
+        return $this->adminService->getCountryList();
     }
 
-    public function viewShippingCountry($id)
+    public function viewShippingAgent($id)
     {
-        return $this->adminService->viewShippingCountry($id);
+        return $this->adminService->viewShippingAgent($id);
     }
 
-    public function editShippingCountry($id, ShippingCountryRequest $request)
+    public function editShippingAgent($id, ShippingAgentRequest $request)
     {
-        return $this->adminService->editShippingCountry($id, $request);
+        return $this->adminService->editShippingAgent($id, $request);
     }
-    public function deleteShippingCountry($id)
+    public function deleteShippingAgent($id)
     {
-        return $this->adminService->deleteShippingCountry($id);
+        return $this->adminService->deleteShippingAgent($id);
     }
 }

@@ -27,6 +27,7 @@ use Illuminate\Support\Facades\Auth;
 use net\authorize\api\contract\v1 as AnetAPI;
 use net\authorize\api\controller as AnetController;
 use App\Http\Resources\B2BBuyerShippingAddressResource;
+use App\Models\ShippingAgent;
 
 class ChargeCardService implements PaymentStrategy
 {
@@ -111,6 +112,7 @@ class ChargeCardService implements PaymentStrategy
     {
         $rfqId = $paymentDetails['rfq_id'];
         $shipping_address_id = $paymentDetails['shipping_address_id'];
+        $shipping_agent_id = $paymentDetails['shipping_agent_id'];
         $billing_address = $paymentDetails['billTo'];
         $amount = $paymentDetails['amount'];
         $data = (object)[
@@ -132,10 +134,14 @@ class ChargeCardService implements PaymentStrategy
         ];
 
         (new PaymentLogAction($data, $payment, 'authorizenet', 'success'))->execute();
+
+        if ($shipping_agent_id) {
+            $shipping_agent =  ShippingAgent::findOrFail($shipping_agent_id);
+        }
         $rfq = Rfq::findOrFail($rfqId);
         $seller = User::findOrFail($rfq->seller_id);
         $product = B2BProduct::findOrFail($rfq->product_id);
-        $saddress = BuyerShippingAddress::with(['state','country'])->findOrFail($shipping_address_id);
+        $saddress = BuyerShippingAddress::findOrFail($shipping_address_id);
         $shipping_address = new B2BBuyerShippingAddressResource($saddress);
 
         B2bOrder::create([
@@ -146,13 +152,13 @@ class ChargeCardService implements PaymentStrategy
             'order_no' => $orderNo,
             'product_data' => $product,
             'shipping_address' => $shipping_address,
+            'shipping_agent' => $shipping_agent_id ? $shipping_agent->name : '',
             'billing_address' => $billing_address,
             'total_amount' => $amount,
             'payment_method' => 'authorize-net',
             'payment_status' => OrderStatus::PAID,
             'status' => OrderStatus::PENDING,
         ]);
-
 
         $orderedItems = [
             'product_name' => $product->name,
@@ -162,6 +168,7 @@ class ChargeCardService implements PaymentStrategy
             'buyer_name' => $user->first_name . ' ' . $user->last_name,
             'order_number' => $orderNo,
         ];
+
         $product->quantity -= $rfq->product_quantity;
         $product->sold += $rfq->product_quantity;
         $product->save();

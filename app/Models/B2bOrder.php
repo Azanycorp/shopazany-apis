@@ -20,6 +20,7 @@ class B2bOrder extends Model
         'product_quantity',
         'order_no',
         'shipping_address',
+        'shipping_agent',
         'billing_address',
         'product_data',
         'total_amount',
