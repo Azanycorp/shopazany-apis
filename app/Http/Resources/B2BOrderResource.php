@@ -19,6 +19,7 @@ class B2BOrderResource extends JsonResource
             'product_quantity' => (string)$this->product_quantity,
             'order_no' => (string)$this->order_no,
             'shipping_address' => $this->shipping_address,
+            'shipping_agent' => $this->shipping_agent,
             'billing_address' => $this->billing_address,
             'product_data' => $this->product_data,
             'total_amount' => (string)$this->total_amount,
@@ -27,7 +28,7 @@ class B2BOrderResource extends JsonResource
             'status' => (string)$this->status,
             'country' => (string)$this->country?->name,
             'delivery_date' => (string)$this->delivery_date,
-            'shipped_date' => (string)$this->delivery_date,
+            'shipped_date' => (string)$this->shipped_date,
             "seller" => (object) [
                 'first_name' => $this?->seller?->first_name,
                 'last_name' => $this?->seller?->last_name,
