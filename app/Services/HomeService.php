@@ -253,7 +253,7 @@ class HomeService
     {
         $category = Category::with(['products' => function ($query): void {
             $query->where('status', ProductStatus::ACTIVE)
-                  ->select('id', 'name', 'slug', 'price', 'image', 'category_id')
+                  ->select('id', 'name', 'slug', 'price', 'image', 'category_id', 'discount_price', 'default_currency')
                   ->withCount('productReviews as total_reviews')
                   ->withAvg('productReviews as average_rating', 'rating');
         }])->where('slug', $slug)
