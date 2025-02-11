@@ -7,7 +7,7 @@ use App\Models\User;
 
 class PaymentDetailsService
 {
-    public static function paystackPayDetails($request)
+    public static function paystackPayDetails($request): array
     {
         if($request->input('currency') === 'USD') {
             return response()->json([
@@ -61,7 +61,7 @@ class PaymentDetailsService
         ];
     }
 
-    public static function b2bPaystackPayDetails($request)
+    public static function b2bPaystackPayDetails($request): array
     {
         if($request->input('currency') === 'USD') {
             return response()->json([
