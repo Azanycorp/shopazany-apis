@@ -16,10 +16,9 @@ class ShippingAgentResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $countryIds = json_decode($this->country_id, true);
+        $countryIds = $this->country_ids;
         $locations = Country::whereIn('id',$countryIds)
-            ->select(['name'])
-            ->get()
+            ->pluck('name')
             ->toArray();
 
         return [

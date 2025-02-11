@@ -24,13 +24,15 @@ class ShippingAgentRequest extends FormRequest
         return [
             'name' => 'required',
             'type' => 'required|in:local,international',
-            'logo' => 'nullable|image',
-            'country_id' => 'required',
+            'logo' => 'nullable',
+            'country_ids' => 'required|array',
             'account_email' => 'required|email',
             'account_password' => 'required',
             'api_live_key' => 'required',
             'api_test_key' => 'required',
             'status' => 'required|in:active,test',
         ];
+
+
     }
 }

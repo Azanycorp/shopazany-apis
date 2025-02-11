@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('type');
             $table->text('logo')->nullable();
-            $table->string('country_id');
+            $table->json('country_ids');
             $table->string('account_email')->nullable();
             $table->string('account_password')->nullable();
             $table->string('api_live_key')->nullable();

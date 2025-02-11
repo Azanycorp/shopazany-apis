@@ -10,7 +10,7 @@ class ShippingAgent extends Model
         'name',
         'type',
         'logo',
-        'country_id',
+        'country_ids',
         'account_email',
         'account_password',
         'api_live_key',
@@ -21,7 +21,7 @@ class ShippingAgent extends Model
     protected function casts(): array
     {
         return [
-            'country_id' => 'array',
+            'country_ids' => 'array',
         ];
     }
 }

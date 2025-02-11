@@ -909,7 +909,7 @@ class AdminService
         $agent = ShippingAgent::create([
             'name' => $data->name,
             'type' => $data->type,
-            'country_id' => $data->country_id,
+            'country_ids' => $data->country_ids,
             'account_email' => $data->account_email,
             'account_password' => $data->account_password,
             'api_live_key' => $data->api_live_key,
@@ -940,7 +940,7 @@ class AdminService
             'name' => $data->name ?? $agent->name,
             'type' => $data->type ?? $agent->type,
             'logo' => $data->logo ?? $agent->logo,
-            'country_id' => $data->country_id ?? $agent->country_id,
+            'country_ids' => $data->country_ids ?? $agent->country_ids,
             'account_email' => $data->account_email ?? $agent->account_email,
             'account_password' => $data->account_password ?? $agent->account_password,
             'api_live_key' => $data->api_live_key ?? $agent->api_live_key,
