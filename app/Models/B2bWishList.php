@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class B2bWishList extends Model
 {
 
-    protected $fillable = ['user_id', 'product_id'];
+    protected $fillable = ['user_id', 'product_id','qty'];
 
     public function user()
     {

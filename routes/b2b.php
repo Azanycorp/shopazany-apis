@@ -131,15 +131,15 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function (): voi
         Route::post('/like-product', 'likeProduct');
         Route::delete('/wish/remove-item/{id}', 'removeItem');
         Route::post('/wish/send-quote', 'sendFromWishList');
+        Route::get('quotes', 'allQuotes');
+        Route::get('/wish-list', 'wishList');
 
         Route::middleware('cacheResponse:300')->group(function (): void {
-            Route::get('quotes', 'allQuotes');
             Route::get('dashboard', 'dashboard');
             Route::get('rfq', 'getAllRfqs');
             Route::get('rfq-details/{id}', 'getRfqDetails');
             Route::get('orders', 'allOrders');
             Route::get('order-details/{id}', 'getOrderDetails');
-            Route::get('/wish-list', 'wishList');
         });
 
         //profile
