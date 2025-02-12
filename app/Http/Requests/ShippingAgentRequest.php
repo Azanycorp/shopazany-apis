@@ -30,7 +30,7 @@ class ShippingAgentRequest extends FormRequest
             'account_password' => 'required',
             'api_live_key' => 'required',
             'api_test_key' => 'required',
-            'status' => 'required|in:active,test',
+            'status' => 'required|in:live,test',
         ];
 
 

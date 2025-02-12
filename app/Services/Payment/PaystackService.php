@@ -10,6 +10,7 @@ use App\Models\Order;
 use App\Models\Payment;
 use App\Models\Product;
 use App\Models\B2bOrder;
+use App\Enum\MailingEnum;
 use App\Enum\OrderStatus;
 use App\Enum\PaymentType;
 use App\Models\B2BProduct;
@@ -312,7 +313,11 @@ class PaystackService
                     'status' => OrderStatus::COMPLETED
                 ]);
 
-                send_email($user->email, new B2BOrderEmail($orderedItems));
+                $type = MailingEnum::ORDER_EMAIL;
+                $subject = "B2B Order Confirmation";
+                $mail_class = "App\Mail\B2BOrderEmail";
+                mailSend($type, $user, $subject, $mail_class);
+                
                 (new UserLogAction(
                     request(),
                     UserLog::PAYMENT,

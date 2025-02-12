@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Enum\UserType;
 use App\Models\Payout;
 use App\Models\B2bOrder;
+use App\Enum\MailingEnum;
 use App\Enum\OrderStatus;
 use App\Enum\PaymentType;
 use App\Models\B2BProduct;
@@ -778,7 +779,12 @@ class SellerService extends Controller
                 'status' => OrderStatus::COMPLETED
             ]);
             DB::commit();
-            send_email($buyer->email, new B2BOrderEmail($orderedItems));
+            
+            $type = MailingEnum::ORDER_EMAIL;
+            $subject = "B2B Order Confirmation";
+            $mail_class = "App\Mail\B2BOrderEmail";
+            mailSend($type, $buyer, $subject, $mail_class);
+
             return $this->success($order, 'Payment Confirmed successfully');
         } catch (\Exception $e) {
             return $e;
