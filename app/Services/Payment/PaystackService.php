@@ -316,8 +316,8 @@ class PaystackService
                 $type = MailingEnum::ORDER_EMAIL;
                 $subject = "B2B Order Confirmation";
                 $mail_class = "App\Mail\B2BOrderEmail";
-                mailSend($type, $user, $subject, $mail_class);
-                
+                mailSend($type, $user, $subject, $mail_class,'orderedItems');
+
                 (new UserLogAction(
                     request(),
                     UserLog::PAYMENT,

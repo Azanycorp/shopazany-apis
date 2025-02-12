@@ -49,7 +49,7 @@ Route::middleware(['throttle:apis'])->group(function (): void {
 
 Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function (): void {
     // Seller
-    Route::group(['middleware' => 'b2b_seller.auth', 'prefix' => 'seller'], function (): void {
+    Route::group(['middleware' => 'b2b_seller.auth','check.user.country', 'prefix' => 'seller'], function (): void {
 
         Route::controller(B2BSellerController::class)->group(function (): void {
             //dashboard
@@ -119,8 +119,8 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'b2b'], function (): voi
     });
 
     // Buyer
-    Route::group(['middleware' => 'b2b_buyer.auth', 'prefix' => 'buyer', 'controller' => B2BBuyerController::class], function (): void {
-       
+    Route::group(['middleware' => 'b2b_buyer.auth','check.user.country', 'prefix' => 'buyer', 'controller' => B2BBuyerController::class], function (): void {
+
         Route::post('add-quote', 'requestQuote');
         Route::get('send-all-quotes', 'sendAllQuotes');
         Route::post('send-rfq', 'sendSingleQuote');

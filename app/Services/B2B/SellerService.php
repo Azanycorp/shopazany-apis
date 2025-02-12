@@ -779,11 +779,11 @@ class SellerService extends Controller
                 'status' => OrderStatus::COMPLETED
             ]);
             DB::commit();
-            
+
             $type = MailingEnum::ORDER_EMAIL;
             $subject = "B2B Order Confirmation";
             $mail_class = "App\Mail\B2BOrderEmail";
-            mailSend($type, $buyer, $subject, $mail_class);
+            mailSend($type, $buyer, $subject, $mail_class,'orderedItems');
 
             return $this->success($order, 'Payment Confirmed successfully');
         } catch (\Exception $e) {
