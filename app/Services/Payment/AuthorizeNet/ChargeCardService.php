@@ -9,6 +9,7 @@ use App\Enum\UserLog;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\B2bOrder;
+use App\Enum\MailingEnum;
 use App\Enum\OrderStatus;
 use App\Enum\PaymentType;
 use App\Models\B2BProduct;
@@ -18,6 +19,7 @@ use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
 use App\Mail\SellerOrderMail;
 use App\Models\Configuration;
+use App\Models\ShippingAgent;
 use App\Actions\UserLogAction;
 use App\Mail\CustomerOrderMail;
 use App\Actions\PaymentLogAction;
@@ -27,7 +29,6 @@ use Illuminate\Support\Facades\Auth;
 use net\authorize\api\contract\v1 as AnetAPI;
 use net\authorize\api\controller as AnetController;
 use App\Http\Resources\B2BBuyerShippingAddressResource;
-use App\Models\ShippingAgent;
 
 class ChargeCardService implements PaymentStrategy
 {
@@ -188,7 +189,12 @@ class ChargeCardService implements PaymentStrategy
             'payment_status' => OrderStatus::PAID,
             'status' => OrderStatus::COMPLETED
         ]);
-        send_email($user->email, new B2BOrderEmail($orderedItems));
+
+        $type = MailingEnum::ORDER_EMAIL;
+        $subject = "B2B Order Confirmation";
+        $mail_class = "App\Mail\B2BOrderEmail";
+        mailSend($type, $user, $subject, $mail_class,'orderedItems');
+
         (new UserLogAction(
             request(),
             UserLog::PAYMENT,
