@@ -147,6 +147,13 @@ class User extends Authenticatable
         });
     }
 
+    protected function subscriptionStatus(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->userSubscriptions()->latest()->value('status') ?? 'No Subscription'
+        );
+    }
+
     protected function fullName(): Attribute
     {
         return Attribute::make(get: function (): string {

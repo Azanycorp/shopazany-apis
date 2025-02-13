@@ -40,14 +40,16 @@ trait UserRelationship
         return $this->hasOne(Wallet::class, 'user_id');
     }
 
+    // Returns users that this user referred (i.e., their downline)
     public function referrals(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'referral_relationships', 'referrer_id', 'referee_id');
     }
 
+    // Returns the user that referred this user (i.e., their upliner)
     public function referrer(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'referral_relationships', 'referrer_id', 'referee_id');
+        return $this->belongsToMany(User::class, 'referral_relationships', 'referee_id', 'referrer_id');
     }
 
     public function B2bWithdrawalMethod(): HasMany
