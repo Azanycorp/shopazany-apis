@@ -300,7 +300,7 @@ class BuyerService
         return $this->success($data, "Featured products");
     }
 
-    public function searchProduct()
+    public function searchProduct(): array
     {
         $searchQuery = request()->input('search');
         $products = B2BProduct::with([

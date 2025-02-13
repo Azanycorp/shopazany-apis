@@ -16,7 +16,7 @@ class AdminSellerController extends Controller
         $this->service = $service;
     }
 
-    public function allSellers()
+    public function allSellers(): array
     {
         return $this->service->allSellers();
     }

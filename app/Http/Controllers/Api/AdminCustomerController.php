@@ -17,7 +17,7 @@ class AdminCustomerController extends Controller
         $this->service = $service;
     }
 
-    public function allCustomers()
+    public function allCustomers(): array
     {
         return $this->service->allCustomers();
     }
@@ -46,7 +46,7 @@ class AdminCustomerController extends Controller
         return $this->service->removeCustomer($request);
     }
 
-    public function filter()
+    public function filter(): array
     {
         return $this->service->filter();
     }

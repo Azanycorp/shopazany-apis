@@ -152,7 +152,7 @@ class AdminService
         return $this->success(null, "Added successfully");
     }
 
-    public function getShopByCountry()
+    public function getShopByCountry(): array
     {
         $priorityCountries = ['Jamaica', 'Switzerland', 'Norway', 'Nigeria', 'United Kingdom', 'United States', 'Canada', 'Brazil'];
 
