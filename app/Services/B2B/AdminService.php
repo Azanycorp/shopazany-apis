@@ -17,26 +17,21 @@ use App\Models\B2bCompany;
 use App\Models\B2BProduct;
 use App\Models\UserWallet;
 use App\Enum\ProductStatus;
-use App\Mail\AdminUserMail;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
 use App\Models\Configuration;
 use App\Models\ShippingAgent;
 use App\Mail\B2BNewAdminEmail;
-use App\Models\ShippingCountry;
 use Illuminate\Support\Facades\DB;
 use App\Models\B2bWithdrawalMethod;
 use App\Models\BusinessInformation;
 use Illuminate\Support\Facades\Hash;
-use App\Http\Resources\BuyerResource;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Resources\AdminUserResource;
 use App\Http\Resources\B2BSellerResource;
 use App\Http\Resources\B2BProductResource;
 use App\Repositories\B2BProductRepository;
 use App\Http\Resources\ShippingAgentResource;
-use App\Http\Resources\AdminB2BSellerResource;
-use App\Http\Resources\ShippingCountryResource;
 use App\Repositories\B2BSellerShippingRepository;
 
 class AdminService
@@ -347,7 +342,6 @@ class AdminService
 
     public function editSellerProduct($user_id, $product_id, $request)
     {
-
         $prod = B2BProduct::find($product_id);
         $user = User::find($user_id);
         if (!$user) {
@@ -393,7 +387,6 @@ class AdminService
             'quantity' => $request->quantity ?? $prod->quantity,
             'minimum_order_quantity' => $request->minimum_order_quantity ?? $prod->minimum_order_quantity,
             'unit_price' => $request->unit ?? $prod->unit_price,
-            'quantity' => $request->quantity ?? $prod->quantity,
             'country_id' => $user->country ?? 160,
         ];
 

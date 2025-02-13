@@ -85,12 +85,12 @@ class CartService
 
         $defaultCurrency = userAuth()->default_currency;
 
-        $totalLocalPrice = $localItems->sum(function ($item) use ($defaultCurrency) {
+        $totalLocalPrice = $localItems->sum(function ($item) use ($defaultCurrency): float {
             $price = optional($item->product)->price * $item->quantity;
             return currencyConvert(optional($item->product->shopCountry)->currency, $price, $defaultCurrency);
         });
 
-        $totalInternationalPrice = $internationalItems->sum(function ($item) use ($defaultCurrency) {
+        $totalInternationalPrice = $internationalItems->sum(function ($item) use ($defaultCurrency): float {
             $price = optional($item->product)->price * $item->quantity;
             return currencyConvert(optional($item->product->shopCountry)->currency, $price, $defaultCurrency);
         });

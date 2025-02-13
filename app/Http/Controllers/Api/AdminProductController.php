@@ -21,7 +21,7 @@ class AdminProductController extends Controller
         return $this->service->addProduct($request);
     }
 
-    public function getProduct()
+    public function getProduct(): array
     {
         return $this->service->getProduct();
     }

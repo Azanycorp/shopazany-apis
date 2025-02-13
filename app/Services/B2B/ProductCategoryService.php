@@ -14,7 +14,6 @@ use Illuminate\Support\Facades\Storage;
 use App\Http\Resources\B2BCategoryResource;
 use App\Http\Resources\AdminCategoryResource;
 use App\Http\Resources\B2BSubCategoryResource;
-use App\Http\Resources\AdminSubCategoryResource;
 use App\Http\Resources\AdminB2BSubCategoryResource;
 
 class ProductCategoryService
@@ -46,8 +45,7 @@ class ProductCategoryService
 
             return $this->success(null, "Created successfully");
         } catch (\Exception $e) {
-            return $e;
-            return $this->error(null, $e, 500);
+            return $this->error(null, $e->getMessage(), 500);
         }
     }
 

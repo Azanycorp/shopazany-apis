@@ -17,22 +17,22 @@ class CustomerController extends Controller
         $this->service = $service;
     }
 
-    public function dashboardAnalytics($userId)
+    public function dashboardAnalytics(int $userId)
     {
         return $this->service->dashboardAnalytics($userId);
     }
 
-    public function acountOverview($userId)
+    public function acountOverview(int $userId)
     {
         return $this->service->acountOverview($userId);
     }
 
-    public function recentOrders($userId)
+    public function recentOrders(int $userId)
     {
         return $this->service->recentOrders($userId);
     }
 
-    public function getOrders($userId)
+    public function getOrders(int $userId)
     {
         return $this->service->getOrders($userId);
     }
@@ -62,27 +62,27 @@ class CustomerController extends Controller
         return $this->service->wishlist($request);
     }
 
-    public function getWishlist($userId)
+    public function getWishlist(int $userId)
     {
         return $this->service->getWishlist($userId);
     }
 
-    public function getSingleWishlist($userId, $id)
+    public function getSingleWishlist(int $userId, $id)
     {
         return $this->service->getSingleWishlist($userId, $id);
     }
 
-    public function removeWishlist($userId, $id)
+    public function removeWishlist(int $userId, $id)
     {
         return $this->service->removeWishlist($userId, $id);
     }
 
-    public function rewardDashboard($userId)
+    public function rewardDashboard(int $userId)
     {
         return $this->service->rewardDashboard($userId);
     }
 
-    public function activity($userId)
+    public function activity(int $userId)
     {
         return $this->service->activity($userId);
     }

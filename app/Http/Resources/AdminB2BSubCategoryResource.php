@@ -19,7 +19,6 @@ class AdminB2BSubCategoryResource extends JsonResource
             'name' => (string)$this->name,
             'slug' => (string)$this->slug,
             'image' => (string)$this->image,
-            'image' => (string)$this->image,
             'product_count' => (int)$this->products?->count(),
             'products' => (object)$this->products,
             'status' => (string)$this->status,

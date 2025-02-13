@@ -22,7 +22,7 @@ class HomeController extends Controller
         return $this->service->bestSelling();
     }
 
-    public function allProducts()
+    public function allProducts(): array
     {
         return $this->service->allProducts();
     }

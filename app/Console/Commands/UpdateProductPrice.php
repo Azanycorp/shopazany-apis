@@ -58,7 +58,7 @@ class UpdateProductPrice extends Command
             }
 
             // Batch update products in one query
-            if (!empty($updatedProducts)) {
+            if ($updatedProducts !== []) {
                 $this->batchUpdateProducts($updatedProducts);
                 $this->info("Updated " . count($updatedProducts) . " products successfully.");
             }
