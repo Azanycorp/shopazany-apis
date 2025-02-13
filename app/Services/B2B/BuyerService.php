@@ -385,7 +385,7 @@ class BuyerService
         try {
 
             foreach ($quotes as $quote) {
-                if (empty($quote->product_data['unit_price']) || empty($quote->product_data['minimum_order_quantity'])) {
+                if (empty($quote->product_data['unit_price']) || empty($quote->qty)) {
                     throw new \Exception('Invalid product data');
                 }
 
@@ -395,7 +395,7 @@ class BuyerService
                     'quote_no' => strtoupper(Str::random(10) . $userId),
                     'product_id' => $quote->product_id,
                     'product_quantity' => $quote->qty,
-                    'total_amount' => $quote->product_data['unit_price'] * $quote->product_data['minimum_order_quantity'],
+                    'total_amount' => $quote->product_data['unit_price'] * $quote->qty,
                     'p_unit_price' => $quote->product_data['unit_price'],
                     'product_data' => $quote->product_data,
                 ]);
@@ -415,9 +415,8 @@ class BuyerService
     {
         $quote = B2bQuote::findOrFail($data->rfq_id);
 
-
         try {
-            $amount = total_amount($quote->product_data['unit_price'], $quote->product_data['minimum_order_quantity']);
+            $amount = total_amount($quote->product_data['unit_price'], $quote->qty);
             Rfq::create([
                 'buyer_id' => $quote->buyer_id,
                 'seller_id' => $quote->seller_id,
@@ -656,7 +655,8 @@ class BuyerService
 
         B2bWishList::create([
             'user_id' => $userId,
-            'product_id' => $product->id
+            'product_id' => $product->id,
+            'qty' => $product->minimum_order_quantity
         ]);
 
         return $this->success(null, 'Product Added successfully');
@@ -682,28 +682,26 @@ class BuyerService
     public function removeItem($id)
     {
         $wish = B2bWishList::findOrFail($id);
-
-
         $wish->delete();
         return $this->success(null, 'Item Removed');
     }
 
     public function sendFromWishList($data)
     {
-        $quote = B2bWishList::findOrFail($data->id);
+         $quote = B2bWishList::findOrFail($data->id);
 
         if (!$quote) {
             return $this->error(null, 'No record found', 404);
         }
-
         $product = B2BProduct::findOrFail($quote->product_id);
+      //  return $product;
 
         if ($data->qty < $product->minimum_order_quantity) {
             return $this->error(null, 'Your peferred quantity can not be less than the one already set', 422);
         }
 
         try {
-            $amount = total_amount($product->unit_price, $data->qty);
+           $amount = total_amount($product->unit_price, $data->qty);
 
             Rfq::create([
                 'buyer_id' => $quote->user_id,

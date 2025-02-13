@@ -29,10 +29,10 @@ if (!function_exists('total_amount')) {
 }
 
 if (!function_exists('reward_user')) {
-    function reward_user($user, $actionName, $status)
+    function reward_user($user, $actionName, $status, $newUser = null)
     {
         $rewardService = app(RewardService::class);
-        return $rewardService->rewardUser($user, $actionName, $status);
+        return $rewardService->rewardUser($user, $actionName, $status, $newUser);
     }
 }
 
