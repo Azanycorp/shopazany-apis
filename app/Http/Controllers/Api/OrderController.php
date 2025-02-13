@@ -20,12 +20,12 @@ class OrderController extends Controller
         return $this->service->orderAnalytics();
     }
 
-    public function localOrder()
+    public function localOrder(): array
     {
         return $this->service->localOrder();
     }
 
-    public function intOrder()
+    public function intOrder(): array
     {
         return $this->service->intOrder();
     }
@@ -35,7 +35,7 @@ class OrderController extends Controller
         return $this->service->orderDetail($id);
     }
 
-    public function searchOrder(Request $request)
+    public function searchOrder(Request $request): array
     {
         return $this->service->searchOrder($request);
     }

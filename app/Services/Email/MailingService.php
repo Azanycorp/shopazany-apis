@@ -10,9 +10,9 @@ use Illuminate\Support\Facades\Mail;
 
 class MailingService
 {
-    public function sendEmails(int $batchSize = 15)
+    public function sendEmails(int $batchSize = 15): void
     {
-        DB::transaction(function () use ($batchSize) {
+        DB::transaction(function () use ($batchSize): void {
             $emails = Mailing::where('status', MailingEnum::PENDING)
                             ->where('attempts', '<', 3)
                             ->limit($batchSize)

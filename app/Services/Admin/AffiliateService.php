@@ -46,7 +46,7 @@ class AffiliateService
             ->orderByDesc('transactions_sum_amount')
             ->limit(5)
             ->get()
-            ->map(function ($user) {
+            ->map(function ($user): array {
                 return [
                     'id' => $user->id,
                     'first_name' => $user->first_name,
@@ -63,7 +63,7 @@ class AffiliateService
             })
             ->get()
             ->groupBy('userCountry.id')
-            ->map(function ($users, $countryId) {
+            ->map(function ($users, $countryId): array {
                 return [
                     'country' => $countryId,
                     'country_name' => optional($users->first()->userCountry)->name,
@@ -87,7 +87,7 @@ class AffiliateService
         return $this->success($data, 'Affiliate Overview');
     }
 
-    public function allUsers()
+    public function allUsers(): array
     {
         $topAffiliates = User::where('is_affiliate_member', 1)
             ->withCount('referrals')
@@ -95,7 +95,7 @@ class AffiliateService
             ->orderByDesc('transactions_sum_amount')
             ->paginate(25);
 
-        $data = $topAffiliates->map(function ($user) {
+        $data = $topAffiliates->map(function ($user): array {
             return [
                 'id' => $user->id,
                 'first_name' => $user->first_name,
@@ -137,7 +137,7 @@ class AffiliateService
             'earnings' => $user->transactions_sum_amount ?? 0,
             'referred' => $user->referrals_count ?? 0,
             'status' => $user->status,
-            'referrals' => $user->referrals->map(function ($referral) {
+            'referrals' => $user->referrals->map(function ($referral): array {
                 return [
                     'id' => $referral->id,
                     'first_name' => $referral->first_name,

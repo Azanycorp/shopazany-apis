@@ -4,7 +4,6 @@ namespace App\Services\B2B;
 
 use App\Models\Rfq;
 use App\Models\User;
-use App\Enum\UserType;
 use App\Models\Payout;
 use App\Models\B2bOrder;
 use App\Enum\MailingEnum;
@@ -35,7 +34,6 @@ use App\Http\Resources\B2BOrderResource;
 use App\Models\B2BSellerShippingAddress;
 use App\Http\Resources\B2BProductResource;
 use App\Repositories\B2BProductRepository;
-use App\Http\Resources\SellerProfileResource;
 use App\Http\Resources\B2BSellerProfileResource;
 use App\Repositories\B2BSellerShippingRepository;
 use App\Http\Resources\B2BSellerShippingAddressResource;
@@ -221,7 +219,7 @@ class SellerService extends Controller
                 $url = Storage::disk('s3')->url($path);
             }
 
-            $data = (array)[
+            $data = [
                 'user_id' => $user->id,
                 'name' => $request->name,
                 'slug' => $slug,
@@ -275,7 +273,7 @@ class SellerService extends Controller
         return $this->success($data, 'All products');
     }
 
-    public function getProductById($product_id, $user_id)
+    public function getProductById(int $product_id, $user_id)
     {
         $currentUserId = userAuthId();
 
@@ -357,15 +355,13 @@ class SellerService extends Controller
         return $this->success(null, 'Product updated successfully');
     }
 
-    public function deleteProduct($user_id, $product_id)
+    public function deleteProduct($user_id, int $product_id)
     {
         $currentUserId = userAuthId();
 
         if ($currentUserId != $user_id) {
             return $this->error(null, "Unauthorized action.", 401);
         }
-
-
         $this->b2bProductRepository->delete($product_id);
 
         return $this->success(null, 'Deleted successfully');
