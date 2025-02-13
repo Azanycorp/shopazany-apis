@@ -111,7 +111,7 @@ class SettingsController extends Controller
         return $this->service->addUser($request);
     }
 
-    public function allUsers()
+    public function allUsers(): array
     {
         return $this->service->allUsers();
     }

@@ -29,10 +29,10 @@ if (!function_exists('total_amount')) {
 }
 
 if (!function_exists('reward_user')) {
-    function reward_user($user, $actionName, $status)
+    function reward_user($user, $actionName, $status, $newUser = null)
     {
         $rewardService = app(RewardService::class);
-        return $rewardService->rewardUser($user, $actionName, $status);
+        return $rewardService->rewardUser($user, $actionName, $status, $newUser);
     }
 }
 
@@ -100,11 +100,9 @@ if(!function_exists('getImportTemplate')){
   function getImportTemplate(): string
   {
     if (App::environment('production')){
-      $data = "https://azany-uploads.s3.amazonaws.com/prod/product-template/product-template.xlsx";
-    } else {
-      $data = "https://azany-uploads.s3.amazonaws.com/stag/product-template/product-template.xlsx";
+      return "https://azany-uploads.s3.amazonaws.com/prod/product-template/product-template.xlsx";
     }
-    return $data;
+    return "https://azany-uploads.s3.amazonaws.com/stag/product-template/product-template.xlsx";;
   }
 }
 
@@ -112,11 +110,9 @@ if(!function_exists('getB2BProductTemplate')){
   function getB2BProductTemplate(): string
   {
     if (App::environment('production')){
-      $data = "https://azany-uploads.s3.us-east-1.amazonaws.com/prod/product-template/b2b/seller-product-template.xlsx";
-    } else {
-      $data = "https://azany-uploads.s3.us-east-1.amazonaws.com/stag/product-template/b2b/seller-product-template.xlsx";
+        return "https://azany-uploads.s3.us-east-1.amazonaws.com/prod/product-template/b2b/seller-product-template.xlsx";
     }
-    return $data;
+    return "https://azany-uploads.s3.us-east-1.amazonaws.com/stag/product-template/b2b/seller-product-template.xlsx";
   }
 }
 

@@ -64,9 +64,9 @@ class B2BController extends Controller
         return $this->service->buyerOnboarding($request);
     }
 
-    public function searchProduct(Request $request)
+    public function searchProduct()
     {
-        return $this->buyerService->searchProduct($request);
+        return $this->buyerService->searchProduct();
     }
     public function getCategoryProducts()
     {

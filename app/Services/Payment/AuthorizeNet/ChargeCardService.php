@@ -9,6 +9,7 @@ use App\Enum\UserLog;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\B2bOrder;
+use App\Enum\MailingEnum;
 use App\Enum\OrderStatus;
 use App\Enum\PaymentType;
 use App\Models\B2BProduct;
@@ -18,6 +19,7 @@ use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
 use App\Mail\SellerOrderMail;
 use App\Models\Configuration;
+use App\Models\ShippingAgent;
 use App\Actions\UserLogAction;
 use App\Mail\CustomerOrderMail;
 use App\Actions\PaymentLogAction;
@@ -111,6 +113,7 @@ class ChargeCardService implements PaymentStrategy
     {
         $rfqId = $paymentDetails['rfq_id'];
         $shipping_address_id = $paymentDetails['shipping_address_id'];
+        $shipping_agent_id = $paymentDetails['shipping_agent_id'];
         $billing_address = $paymentDetails['billTo'];
         $amount = $paymentDetails['amount'];
         $data = (object)[
@@ -132,10 +135,14 @@ class ChargeCardService implements PaymentStrategy
         ];
 
         (new PaymentLogAction($data, $payment, 'authorizenet', 'success'))->execute();
+
+        if ($shipping_agent_id) {
+            $shipping_agent =  ShippingAgent::findOrFail($shipping_agent_id);
+        }
         $rfq = Rfq::findOrFail($rfqId);
         $seller = User::findOrFail($rfq->seller_id);
         $product = B2BProduct::findOrFail($rfq->product_id);
-        $saddress = BuyerShippingAddress::with(['state','country'])->findOrFail($shipping_address_id);
+        $saddress = BuyerShippingAddress::findOrFail($shipping_address_id);
         $shipping_address = new B2BBuyerShippingAddressResource($saddress);
 
         B2bOrder::create([
@@ -146,13 +153,13 @@ class ChargeCardService implements PaymentStrategy
             'order_no' => $orderNo,
             'product_data' => $product,
             'shipping_address' => $shipping_address,
+            'shipping_agent' => $shipping_agent_id ? $shipping_agent->name : '',
             'billing_address' => $billing_address,
             'total_amount' => $amount,
             'payment_method' => 'authorize-net',
             'payment_status' => OrderStatus::PAID,
             'status' => OrderStatus::PENDING,
         ]);
-
 
         $orderedItems = [
             'product_name' => $product->name,
@@ -162,6 +169,7 @@ class ChargeCardService implements PaymentStrategy
             'buyer_name' => $user->first_name . ' ' . $user->last_name,
             'order_number' => $orderNo,
         ];
+
         $product->quantity -= $rfq->product_quantity;
         $product->sold += $rfq->product_quantity;
         $product->save();
@@ -181,7 +189,12 @@ class ChargeCardService implements PaymentStrategy
             'payment_status' => OrderStatus::PAID,
             'status' => OrderStatus::COMPLETED
         ]);
-        send_email($user->email, new B2BOrderEmail($orderedItems));
+
+        $type = MailingEnum::ORDER_EMAIL;
+        $subject = "B2B Order Confirmation";
+        $mail_class = "App\Mail\B2BOrderEmail";
+        mailSend($type, $user, $subject, $mail_class,'orderedItems');
+
         (new UserLogAction(
             request(),
             UserLog::PAYMENT,

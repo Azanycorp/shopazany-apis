@@ -124,6 +124,7 @@ class SellerService extends Controller
             'image' => $url,
             'added_by' => $user->type,
             'country_id' => $user->country ?? 160,
+            'default_currency' => $user->default_currency,
         ]);
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $image) {
