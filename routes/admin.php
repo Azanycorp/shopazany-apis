@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AdminAffiliateController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\ApiController;
 use App\Http\Controllers\Api\FaqController;
@@ -202,14 +203,27 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function (): void
     Route::get('/generate/users/link', [ApiController::class, 'referralGenerate']);
 
     //Shipping Agency
-    Route::prefix('shipping-management')->controller(B2BAdminController::class)->group(function (): void {
-        Route::get('/', 'shippingAgents')->middleware('cacheResponse:300');
-        Route::post('/add', 'addShippingAgent');
-        Route::get('/details/{id}', 'viewShippingAgent')->middleware('cacheResponse:300');
-        Route::post('/update/{id}', 'editShippingAgent');
-        Route::delete('/delete/{id}', 'deleteShippingAgent');
+    Route::prefix('shipping-management')
+        ->controller(B2BAdminController::class)
+        ->group(function (): void {
+            Route::get('/', 'shippingAgents')->middleware('cacheResponse:300');
+            Route::post('/add', 'addShippingAgent');
+            Route::get('/details/{id}', 'viewShippingAgent')->middleware('cacheResponse:300');
+            Route::post('/update/{id}', 'editShippingAgent');
+            Route::delete('/delete/{id}', 'deleteShippingAgent');
     });
-    
+
+    // Affiliate
+    Route::prefix('affiliate')
+        ->controller(AdminAffiliateController::class)
+        ->group(function () {
+            Route::get('/overview', 'overview')->middleware('cacheResponse:600');
+            Route::get('/users', 'allUsers')->middleware('cacheResponse:900');
+            Route::get('/user/{id}', 'userDetail');
+            Route::patch('/suspend/{id}', 'suspend');
+            Route::post('/reset-password', 'resetPassword');
+    });
+
     //b2b admin
     Route::prefix('b2b')->group(function () {
         Route::controller(B2BAdminController::class)->group(function () {

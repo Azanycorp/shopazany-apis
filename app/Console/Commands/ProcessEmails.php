@@ -19,7 +19,7 @@ class ProcessEmails extends Command
      *
      * @var string
      */
-    protected $description = 'Process pending emails in batche';
+    protected $description = 'Process pending emails in batch';
 
     /**
      * Execute the console command.
