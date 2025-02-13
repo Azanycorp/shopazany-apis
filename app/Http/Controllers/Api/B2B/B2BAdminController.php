@@ -2,13 +2,11 @@
 
 namespace App\Http\Controllers\Api\B2B;
 
-use App\Enum\UserStatus;
 use Illuminate\Http\Request;
 use App\Services\B2B\AdminService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AdminUserRequest;
 use App\Http\Requests\ShippingAgentRequest;
-use App\Http\Requests\ShippingCountryRequest;
 use App\Http\Requests\ChangeAdminPasswordRequest;
 
 class B2BAdminController extends Controller
@@ -176,13 +174,13 @@ class B2BAdminController extends Controller
     {
         return $this->adminService->revokeAccess($id);
     }
+
     public function removeAdmin($id)
     {
         return $this->adminService->removeAdmin($id);
     }
 
     //ShippingCountry section
-
     public function shippingAgents()
     {
         return $this->adminService->shippingAgents();
@@ -206,6 +204,7 @@ class B2BAdminController extends Controller
     {
         return $this->adminService->editShippingAgent($id, $request);
     }
+    
     public function deleteShippingAgent($id)
     {
         return $this->adminService->deleteShippingAgent($id);

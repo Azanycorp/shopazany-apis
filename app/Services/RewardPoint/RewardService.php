@@ -7,7 +7,7 @@ use App\Models\UserAction;
 
 class RewardService
 {
-    public function rewardUser($user, $actionName, $status)
+    public function rewardUser($user, $actionName, $status, $newUser = null)
     {
         $action = Action::where('slug', $actionName)->first();
         if (!$action) {
@@ -37,6 +37,7 @@ class RewardService
             ]);
 
             $wallet->increment('reward_point', $action->points);
+            $user->referrer()->attach($newUser);
         }
 
         // Log user activity

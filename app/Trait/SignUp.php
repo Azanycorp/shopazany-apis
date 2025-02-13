@@ -46,7 +46,7 @@ trait SignUp
             throw new \InvalidArgumentException('Referrer code is required');
         }
 
-        $referrer = User::with('wallet')
+        $referrer = User::with(['wallet', 'referrer'])
             ->where('referrer_code', $referrerCode)
             ->first();
 
@@ -54,7 +54,7 @@ trait SignUp
             throw new \Exception('You are not a valid referrer');
         }
 
-        reward_user($referrer, 'referral', 'completed');
+        reward_user($referrer, 'referral', 'completed', $user);
     }
 
     protected function validateCoupon($couponCode)

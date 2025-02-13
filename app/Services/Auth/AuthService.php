@@ -156,10 +156,6 @@ class AuthService extends Controller
             }
         }
 
-        if ($referrer) {
-            $this->handleReferrers($referrer, $user);
-        }
-
         try {
             $code = generateVerificationCode();
 
@@ -181,6 +177,10 @@ class AuthService extends Controller
 
             if ($coupon) {
                 $this->assignCoupon($coupon, $user);
+            }
+
+            if ($referrer) {
+                $this->handleReferrers($referrer, $user);
             }
 
             $description = "Seller with email address {$request->email} just signed up";

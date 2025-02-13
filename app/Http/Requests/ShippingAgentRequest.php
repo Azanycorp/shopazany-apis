@@ -22,15 +22,15 @@ class ShippingAgentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required',
+            'name' => 'required|max:255',
             'type' => 'required|in:local,international',
             'logo' => 'nullable',
             'country_ids' => 'required|array',
             'account_email' => 'required|email',
             'account_password' => 'required',
-            'api_live_key' => 'required',
-            'api_test_key' => 'required',
-            'status' => 'required|in:live,test',
+            'api_live_key' => 'required|max:200',
+            'api_test_key' => 'required|max:200',
+            'status' => 'required|in:active,test',
         ];
 
 
