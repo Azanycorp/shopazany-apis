@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enum\PaymentType;
+use App\Enum\UserStatus;
 use App\Http\Resources\SubscriptionHistoryResource;
 use App\Http\Resources\SubscriptionPlanResource;
 use App\Models\SubscriptionPlan;
@@ -32,9 +33,14 @@ class SubscriptionService
             return $this->error(null, 'Invalid callback URL', 400);
         }
 
-        $user = User::with(['userSubscriptions' => function ($query): void {
-            $query->where('status', 'active');
-        }])->findOrFail($request->user_id);
+        $user = User::with([
+            'referrer' => function ($query) {
+                $query->with('wallet');
+            },
+            'userSubscriptions' => function ($query) {
+                $query->where('status', UserStatus::ACTIVE);
+            }
+        ])->findOrFail($request->user_id);
 
         if($user->is_subscribed) {
             $currentPlan = $user?->subscription_plan?->subscriptionPlan;
@@ -56,6 +62,7 @@ class SubscriptionService
             'currency' => 'NGN',
             'metadata' => json_encode([
                 'user_id' => $request->input('user_id'),
+                'referrer_id' => $user->referrer->first()->id,
                 'subscription_plan_id' => $request->input('subscription_plan_id'),
                 'payment_method' => 'paystack',
                 'payment_type' => PaymentType::RECURRINGCHARGE,
@@ -82,6 +89,17 @@ class SubscriptionService
         $data = SubscriptionHistoryResource::collection($user->subscription_history);
 
         return $this->success($data, "Subscription history");
+    }
+
+    public static function creditAffiliate($user, $amount)
+    {
+        $wallet = $user->wallet()->firstOrCreate([], [
+            'balance' => 0.00,
+            'reward_point' => 0,
+        ]);
+
+        $subcriptionBonus = $amount * 0.05;
+        $wallet->increment('balance', $subcriptionBonus);
     }
 }
 
