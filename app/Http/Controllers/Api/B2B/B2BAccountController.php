@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\B2B;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use App\Services\B2B\BuyerService;
 use App\Http\Requests\LoginRequest;

@@ -98,7 +98,12 @@ class B2BBuyerController extends Controller
     //Product Review
     public function addReview(Request $request)
     {
-        return $this->buyerService->addPreview($request);
+        return $this->buyerService->addReview($request);
+    }
+    //Rate Product
+    public function addRating(Request $request)
+    {
+        return $this->buyerService->addRating($request);
     }
 
     //Product Review

@@ -68,7 +68,6 @@ class AuthService extends Controller
     public function signup($request)
     {
         $request->validated($request->all());
-
         try {
             $user = $this->createUser($request);
 
