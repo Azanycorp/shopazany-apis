@@ -251,11 +251,16 @@ class HomeService
 
     public function categorySlug($slug)
     {
-        $category = Category::with(['products' => function ($query): void {
+        $countryId = request()->query('country_id', 231);
+
+        $category = Category::with(['products' => function ($query) use($countryId) {
             $query->where('status', ProductStatus::ACTIVE)
-                  ->select('id', 'name', 'slug', 'price', 'image', 'category_id', 'discount_price', 'default_currency')
-                  ->withCount('productReviews as total_reviews')
-                  ->withAvg('productReviews as average_rating', 'rating');
+                ->when($countryId, function ($query) use ($countryId) {
+                    $query->where('country_id', $countryId);
+                })
+                ->select('id', 'name', 'slug', 'price', 'image', 'category_id', 'discount_price', 'default_currency')
+                ->withCount('productReviews as total_reviews')
+                ->withAvg('productReviews as average_rating', 'rating');
         }])->where('slug', $slug)
           ->select('id', 'name', 'slug', 'image')
           ->firstOrFail();
@@ -270,15 +275,20 @@ class HomeService
 
     public function recommendedProducts()
     {
+        $countryId = request()->query('country_id', 231);
+
         $products = Product::where('status', ProductStatus::ACTIVE)
-        ->select(['id', 'name', 'slug', 'description', 'discount_price', 'price', 'image', 'country_id'])
-        ->with(['shopCountry' => function ($query): void {
-            $query->select('country_id', 'currency');
-        }])
-        ->take(50)
-        ->get()
-        ->shuffle()
-        ->take(6);
+            ->when($countryId, function ($query) use ($countryId) {
+                $query->where('country_id', $countryId);
+            })
+            ->select(['id', 'name', 'slug', 'description', 'discount_price', 'price', 'image', 'country_id'])
+            ->with(['shopCountry' => function ($query): void {
+                $query->select('country_id', 'currency');
+            }])
+            ->take(50)
+            ->get()
+            ->shuffle()
+            ->take(6);
 
         $products->each(function ($product): void {
             $product->currency = $product->shopCountry->currency ?? null;
