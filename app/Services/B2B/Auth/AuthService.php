@@ -192,7 +192,7 @@ class AuthService
             logUserAction($request, $action, $description, $response, $user);
             DB::commit();
 
-            return $this->success($user, "Created successfully");;
+            return $this->success($user, "Created successfully");
         } catch (\Exception $e) {
             DB::rollBack();
 
