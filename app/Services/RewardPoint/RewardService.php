@@ -19,10 +19,6 @@ class RewardService
             'action_id' => $action->id,
         ]);
 
-        if ($userAction->is_rewarded) {
-            return 0;
-        }
-
         $userAction->fill([
             'is_rewarded' => true,
             'points' => $action->points,
@@ -31,16 +27,21 @@ class RewardService
         $userAction->save();
 
         if ($user->is_affiliate_member) {
-            $wallet = $user->wallet()->firstOrCreate([], [
-                'balance' => 0.00,
-                'reward_point' => 0,
-            ]);
+            $wallet = $user->wallet()->firstOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'balance' => 0.00,
+                    'reward_point' => 0,
+                ]
+            );
 
-            $wallet->increment('reward_point', $action->points);
-            $user->referrer()->attach($newUser);
+            $points = $action->points ?? 0;
+            $wallet->increment('reward_point', $points);
+            $wallet->refresh();
+
+            $user->referrals()->syncWithoutDetaching($newUser);
         }
 
-        // Log user activity
         log_user_activity($user, $action, $status);
 
         return $action->points;
