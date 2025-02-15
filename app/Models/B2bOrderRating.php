@@ -23,4 +23,8 @@ class B2bOrderRating extends Model
     {
         return $this->belongsTo(User::class,'buyer_id');
     }
+    public function product(): BelongsTo
+    {
+        return $this->belongsTo(B2BProduct::class,'product_id');
+    }
 }

@@ -22,7 +22,7 @@ use Illuminate\Support\Str;
 
 class AuthService extends Controller
 {
-    use HttpResponse, SignUp;
+    use HttpResponse,SignUp;
 
     public function login($request)
     {
@@ -68,7 +68,6 @@ class AuthService extends Controller
     public function signup($request)
     {
         $request->validated($request->all());
-
         try {
             $user = $this->createUser($request);
 

@@ -4,19 +4,20 @@ namespace App\Services\B2B\Auth;
 
 use App\Models\User;
 use App\Enum\UserLog;
+use App\Trait\SignUp;
 use App\Enum\UserType;
 use App\Models\Action;
 use App\Enum\UserStatus;
+use App\Enum\MailingEnum;
 use App\Trait\HttpResponse;
 use App\Mail\UserWelcomeMail;
 use App\Mail\SignUpVerifyMail;
-use App\Enum\MailingEnum;
 use Illuminate\Support\Facades\DB;
 use App\Services\Auth\LoginService;
 
 class AuthService
 {
-    use HttpResponse;
+    use HttpResponse, SignUp;
 
     public function login($request)
     {
@@ -31,24 +32,6 @@ class AuthService
         try {
 
             $code = generateVerificationCode();
-            if ($request->referrer_code) {
-                $affiliate = User::with('wallet')
-                    ->where(['referrer_code' => $request->referrer_code, 'is_affiliate_member' => 1])
-                    ->first();
-
-                if (!$affiliate) {
-                   return $this->error(null, 'No Affiliate found with this code', 500);
-                }
-
-                $points = optional(Action::where('slug', 'create-account')->first())->points ?? 0;
-
-                $wallet = $affiliate->wallet()->firstOrCreate([
-                    'user_id' => $affiliate->id
-                ]);
-
-                $wallet->increment('reward_point', $points);
-            }
-
             $user = User::create([
                 'email' => $request->email,
                 'type' => UserType::B2B_SELLER,
@@ -59,6 +42,18 @@ class AuthService
                 'referrer_code' => $request->referrer_code ?? null,
                 'password' => bcrypt($request->password)
             ]);
+            if ($request->referrer_code) {
+                $affiliate = User::with('wallet')
+                    ->where(['referrer_code' => $request->referrer_code, 'is_affiliate_member' => 1])
+                    ->first();
+
+                if (!$affiliate) {
+                    return $this->error(null, 'No Affiliate found with this code', 404);
+                }
+
+                $this->handleReferrers($request->referrer_code, $user);
+            }
+
 
             $description = "User with email: {$request->email} signed up as b2b seller";
             $response = $this->success(null, "Created successfully");

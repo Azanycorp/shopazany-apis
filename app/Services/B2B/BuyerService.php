@@ -407,7 +407,7 @@ class BuyerService
             return $this->success(null, 'rfq sent successfully');
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->error(null, 'transaction failed, please try again', 500);
+            return $this->error(null, 'transaction failed, please try again: '.$e->getMessage(), 422);
         }
     }
 
@@ -432,7 +432,7 @@ class BuyerService
 
             return $this->success(null, 'rfq sent successfully');
         } catch (\Exception $e) {
-            return $this->error(null, 'transaction failed, please try again', 500);
+            return $this->error(null, 'transaction failed, please try again: '.$e->getMessage(), 422);
         }
     }
 
@@ -606,7 +606,7 @@ class BuyerService
     }
 
     //send review request to vendor
-    public function addPreview($data)
+    public function addReview($data)
     {
         $userId = userAuthId();
         $review = B2bProdctReview::where(['buyer_id' => $userId, 'product_id' => $data->product_id])->first();
@@ -717,7 +717,7 @@ class BuyerService
             $quote->delete();
             return $this->success(null, 'rfq sent successfully');
         } catch (\Exception $e) {
-            return $this->error(null, 'transaction failed, please try again', 500);
+            return $this->error(null, 'transaction failed, please try again: '.$e->getMessage(), 422);
         }
     }
     //Account section
