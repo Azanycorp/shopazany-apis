@@ -14,6 +14,8 @@ class B2BProductResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $average_rating = $this->b2bProductReview->avg('rating');
+
         return [
             'id' => (int)$this->id,
             'name' => (string)$this->name,
@@ -30,11 +32,7 @@ class B2BProductResource extends JsonResource
             'keywords' => $this?->keywords,
             'moq' => (string)$this->minimum_order_quantity,
             'status' => (string)$this->status,
-            'rating' => $this->b2bProductReview ? $this->b2bProductReview->map(function ($b2bProductReview): array {
-                return [
-                    'rating' => $b2bProductReview?->rating,
-                ];
-            })->toArray() : [],
+            'rating' => floatval($average_rating),
             'country' => (string)$this->country?->name,
             'reviews' => $this->b2bProductReview,
             'review_count' => (int)$this->b2bProductReview?->count(),
