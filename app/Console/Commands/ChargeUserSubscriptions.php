@@ -5,11 +5,11 @@ namespace App\Console\Commands;
 use App\Enum\PaymentType;
 use App\Enum\PaystackEvent;
 use App\Enum\SubscriptionType;
-use App\Models\Payment;
 use App\Models\PaymentLog;
 use App\Models\User;
 use App\Models\UserSubcription;
 use App\Services\Curl\ChargeUserService;
+use App\Services\SubscriptionService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -53,22 +53,29 @@ class ChargeUserSubscriptions extends Command
         DB::beginTransaction();
 
         try {
-
             $response = (new ChargeUserService($subscription))->run();
 
             if ($response['status'] === true) {
 
-                $user = User::with('userSubscription')->findOrFail($subscription->user_id);
+                $user = User::with([
+                        'referrer' => function ($query) {
+                            $query->with('wallet');
+                        },
+                        'userSubscription'
+                    ])
+                    ->findOrFail($subscription->user_id);
 
                 $method = $response['metadata']['payment_method'];
                 $authData = $response['authorization'];
+                $amount = $response['amount'];
+                $referrer = User::with(['wallet'])->findOrFail($user->referrer->first()->id);
 
                 $payment = $user->payments()->create([
                     'first_name' => $user->first_name,
                     'last_name' => $user->last_name,
                     'email' => $user->email,
                     'phone_number' => $user->phone,
-                    'amount' => number_format($response['amount'] / 100, 2, '.', ''),
+                    'amount' => number_format($amount / 100, 2, '.', ''),
                     'reference' => $response['reference'],
                     'channel' => $response['channel'],
                     'currency' => $response['currency'],
@@ -99,7 +106,9 @@ class ChargeUserSubscriptions extends Command
                     'status' => SubscriptionType::ACTIVE,
                     'expired_at' => null,
                 ]);
-                
+
+                SubscriptionService::creditAffiliate($referrer, $amount);
+
                 Log::info('Subscription charged successfully: ' . $subscription->id);
                 DB::commit();
             } else {

@@ -29,6 +29,7 @@ use App\Models\UserShippingAddress;
 use Illuminate\Support\Facades\Log;
 use App\Models\BuyerShippingAddress;
 use App\Http\Resources\B2BBuyerShippingAddressResource;
+use App\Services\SubscriptionService;
 
 class PaystackService
 {
@@ -40,6 +41,7 @@ class PaystackService
                 $paymentData = $event['data'];
 
                 $userId = $paymentData['metadata']['user_id'];
+                $referrerId = $paymentData['metadata']['referrer_id'];
                 $amount = $paymentData['amount'];
                 $formattedAmount = number_format($amount / 100, 2, '.', '');
                 $ref = $paymentData['reference'];
@@ -55,6 +57,7 @@ class PaystackService
                 $authData = $paymentData['authorization'];
 
                 $user = User::findOrFail($userId);
+                $referrer = User::with(['wallet'])->findOrFail($referrerId);
 
                 $activeSubscription = $user->subscription_plan;
                 if ($activeSubscription) {
@@ -93,6 +96,8 @@ class PaystackService
                     'status' => SubscriptionType::ACTIVE,
                     'expired_at' => null,
                 ]);
+
+                SubscriptionService::creditAffiliate($referrer, $amount);
             });
         } catch (\Exception $e) {
             Log::error('Error in handleRecurringCharge: ' . $e->getMessage());
