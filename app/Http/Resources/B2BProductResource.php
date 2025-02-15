@@ -30,9 +30,13 @@ class B2BProductResource extends JsonResource
             'keywords' => $this?->keywords,
             'moq' => (string)$this->minimum_order_quantity,
             'status' => (string)$this->status,
-            'rating' => 3.5,
+            'rating' => $this->b2bProductReview ? $this->b2bProductReview->map(function ($b2bProductReview): array {
+                return [
+                    'rating' => $b2bProductReview?->rating,
+                ];
+            })->toArray() : [],
             'country' => (string)$this->country?->name,
-            'reviews' => (object)$this->b2bProductReview,
+            'reviews' => $this->b2bProductReview,
             'review_count' => (int)$this->b2bProductReview?->count(),
             'b2bLikes' => $this->b2bLikes->count(),
             'images' => $this->b2bProductImages ? $this->b2bProductImages->map(function ($image): array {

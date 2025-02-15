@@ -48,17 +48,10 @@ class AuthService
                     ->first();
 
                 if (!$affiliate) {
-                    return $this->error(null, 'No Affiliate found with this code', 500);
+                    return $this->error(null, 'No Affiliate found with this code', 404);
                 }
 
-                $points = optional(Action::where('slug', 'create_account')->first())->points ?? 0;
-
-                $wallet = $affiliate->wallet()->firstOrCreate([
-                    'user_id' => $affiliate->id
-                ]);
-                $wallet->reward_point += $points;
-                $wallet->save();
-                $affiliate->referrals()->attach($user);
+                $this->handleReferrers($request->referrer_code, $user);
             }
 
 
