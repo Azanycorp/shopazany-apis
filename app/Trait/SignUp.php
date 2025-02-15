@@ -54,7 +54,7 @@ trait SignUp
             throw new \Exception('You are not a valid referrer');
         }
 
-        reward_user($referrer, 'create_account', 'completed', $user);
+        reward_user($referrer, 'referral', 'completed', $user);
     }
 
     protected function validateCoupon($couponCode)
