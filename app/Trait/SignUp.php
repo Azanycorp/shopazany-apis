@@ -46,7 +46,7 @@ trait SignUp
             throw new \InvalidArgumentException('Referrer code is required');
         }
 
-        $referrer = User::with(['wallet', 'referrer'])
+        $referrer = User::with(['wallet', 'referrals'])
             ->where('referrer_code', $referrerCode)
             ->first();
 
