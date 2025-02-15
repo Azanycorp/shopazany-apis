@@ -22,7 +22,7 @@ use Illuminate\Support\Str;
 
 class AuthService extends Controller
 {
-    use HttpResponse,SignUp;
+    use HttpResponse, SignUp;
 
     public function login($request)
     {
