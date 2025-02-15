@@ -23,7 +23,7 @@ class UserObserver implements ShouldHandleEventsAfterCommit
         $mail_class = "App\Mail\SignUpVerifyMail";
         mailSend($type, $user, $subject, $mail_class, 'user');
 
-        if ($user->type === UserType::CUSTOMER && $user->type === UserType::SELLER) {
+        if ($user->type === UserType::CUSTOMER || $user->type === UserType::SELLER) {
             reward_user($user, 'create_account', 'completed');
         }
 
