@@ -84,8 +84,8 @@ trait Login
             'user_id' => $user->id,
             'user_type' => $user->type,
             'has_signed_up' => true,
-            'is_affiliate_member' => $user->is_affiliate_member === 1,
-            'two_factor_enabled' => $user->two_factor_enabled === 1,
+            'is_affiliate_member' => $user->is_affiliate_member,
+            'two_factor_enabled' => $user->two_factor_enabled == 1,
             'token' => $token->plainTextToken,
             'expires_at' => $token->accessToken->expires_at,
         ], 'Login successful.');
