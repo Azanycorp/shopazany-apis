@@ -62,7 +62,7 @@ class SubscriptionService
             'currency' => 'NGN',
             'metadata' => json_encode([
                 'user_id' => $request->input('user_id'),
-                'referrer_id' => $user->referrer->first()->id,
+                'referrer_id' => $user->referrer->first()?->id,
                 'subscription_plan_id' => $request->input('subscription_plan_id'),
                 'payment_method' => 'paystack',
                 'payment_type' => PaymentType::RECURRINGCHARGE,
@@ -93,6 +93,10 @@ class SubscriptionService
 
     public static function creditAffiliate($user, $amount)
     {
+        if(!$user) {
+            return;
+        }
+
         $wallet = $user->wallet()->firstOrCreate([], [
             'balance' => 0.00,
             'reward_point' => 0,
