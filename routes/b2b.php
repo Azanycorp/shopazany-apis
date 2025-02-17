@@ -4,7 +4,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\B2BController;
 use App\Http\Controllers\Api\B2BSellerController;
-use App\Http\Controllers\Api\B2BPaymentController;
 use App\Http\Controllers\Api\B2B\B2BBuyerController;
 use App\Http\Controllers\Api\B2B\B2BAccountController;
 

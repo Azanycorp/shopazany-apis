@@ -35,7 +35,6 @@ use App\Http\Resources\CustomerResource;
 use App\Http\Resources\B2BBannerResource;
 use App\Http\Resources\B2BProductResource;
 use App\Http\Resources\B2BCategoryResource;
-use App\Http\Resources\SellerProductResource;
 use App\Http\Resources\B2BSellerProductResource;
 use App\Http\Resources\B2BBuyerShippingAddressResource;
 
@@ -248,7 +247,8 @@ class BuyerService
     }
     public function categories()
     {
-        $categories = B2bProductCategory::where('featured', 1)
+        $categories = B2bProductCategory::with(['products'])
+            ->where('featured', 1)
             ->take(10)
             ->get();
 
