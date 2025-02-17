@@ -57,7 +57,7 @@ class PaystackService
                 $authData = $paymentData['authorization'];
 
                 $user = User::findOrFail($userId);
-                $referrer = User::with(['wallet'])->findOrFail($referrerId);
+                $referrer = User::with(['wallet'])->find($referrerId);
 
                 $activeSubscription = $user->subscription_plan;
                 if ($activeSubscription) {
