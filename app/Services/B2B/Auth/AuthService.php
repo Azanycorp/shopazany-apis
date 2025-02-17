@@ -30,7 +30,6 @@ class AuthService
         $user = null;
 
         try {
-
             $code = generateVerificationCode();
             $user = User::create([
                 'email' => $request->email,
@@ -53,7 +52,6 @@ class AuthService
 
                 $this->handleReferrers($request->referrer_code, $user);
             }
-
 
             $description = "User with email: {$request->email} signed up as b2b seller";
             $response = $this->success(null, "Created successfully");
