@@ -81,7 +81,7 @@ class ProductService
         return $this->success(null, "Added successfully");
     }
 
-    public function getProduct(): array
+    public function getProducts(): array
     {
         $query = Product::query();
 

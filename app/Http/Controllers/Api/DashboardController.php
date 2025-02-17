@@ -32,11 +32,11 @@ class DashboardController extends Controller
 
         return $this->service->bestSellers();
     }
-    
+
     public function bestSellingCat()
     {
         abort_if(Gate::denies('overview'), Response::HTTP_FORBIDDEN, self::MESSAGE);
-        
+
         return $this->service->bestSellingCat();
     }
 
