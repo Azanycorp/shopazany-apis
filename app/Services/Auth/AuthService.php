@@ -351,7 +351,6 @@ class AuthService extends Controller
     private function determineReferrerCode($request)
     {
         $initial_referrer_code = Str::random(10);
-
         if (!$request->referrer_code) {
             return $initial_referrer_code;
         }
@@ -366,7 +365,6 @@ class AuthService extends Controller
         if ($user) {
             return $this->getUserReferrer($user);
         }
-
         return null;
     }
 
