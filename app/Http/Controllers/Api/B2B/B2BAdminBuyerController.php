@@ -15,6 +15,7 @@ class B2BAdminBuyerController extends Controller
     ) {}
     public function allBuyers()
     {
+
         return $this->buyerService->allBuyers();
     }
 

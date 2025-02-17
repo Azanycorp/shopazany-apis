@@ -31,7 +31,7 @@ class ShippingAgentResource extends JsonResource
             'account_password' => (string)$this->account_password,
             'api_live_key' => (string)$this->api_live_key,
             'api_test_key' => (string)$this->api_test_key,
-            'status' => (string)$this->name,
+            'status' => (string)$this->status,
         ];
     }
 }

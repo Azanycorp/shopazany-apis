@@ -98,7 +98,6 @@ class AdminService
     {
         $searchQuery = request()->input('search');
         $orders =  B2bOrder::orderStats();
-
         $international_orders = B2bOrder::when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
             $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
                 $subQuery->where('country_id', '!=', 160)
@@ -165,8 +164,7 @@ class AdminService
 
     public function allSellers()
     {
-
-        $sellers = User::withCount('b2bProducts')
+         $sellers = User::withCount('b2bProducts')
             ->where('type', UserType::B2B_SELLER)
             ->latest('created_at')->get();
 

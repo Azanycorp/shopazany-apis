@@ -252,14 +252,12 @@ class BuyerService
             ->take(10)
             ->get();
 
-        $data = B2BCategoryResource::collection($categories);
-
-        return $this->success($data, "Categories");
+        return $this->success($categories, "Categories");
     }
     public function getCategoryProducts()
     {
         $categories = B2BProductCategory::select('id','name','slug','image')
-            ->with('products.b2bProductReview','products.b2bLikes')
+            ->with(['products.b2bProductReview','products.b2bLikes'])
             ->get();
             $data = B2BCategoryResource::collection($categories);
         return $this->success($data, "Categories products");
