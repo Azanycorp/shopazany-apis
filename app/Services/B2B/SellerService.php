@@ -676,11 +676,21 @@ class SellerService extends Controller
     public function markShipped($data)
     {
         $order = B2bOrder::findOrFail($data->order_id);
-
+        $user = User::findOrFail($order->buyer_id);
         $order->update([
             'status' => OrderStatus::SHIPPED,
             'shipped_date' => now()->toDateString(),
         ]);
+        $orderedItems = [
+            'quantity' => $order->product_quantity,
+            'price' => $order->total_amount,
+            'buyer_name' => $user->first_name . ' ' . $user->last_name,
+            'order_number' => $order->order_no,
+        ];
+        $type = MailingEnum::ORDER_EMAIL;
+        $subject = "B2B Order Shipped Confirmation";
+        $mail_class = "App\Mail\B2BSHippedOrderMail";
+        mailSend($type, $user, $subject, $mail_class,'orderedItems');
 
         return $this->success($order, 'order Shipped successfully');
     }
@@ -714,11 +724,21 @@ class SellerService extends Controller
     public function markDelivered($data)
     {
         $order = B2bOrder::findOrFail($data->order_id);
-
+        $user = User::findOrFail($order->buyer_id);
         $order->update([
             'status' => OrderStatus::DELIVERED,
             'delivery_date' => now()->toDateString()
         ]);
+        $orderedItems = [
+            'quantity' => $order->product_quantity,
+            'price' => $order->total_amount,
+            'buyer_name' => $user->first_name . ' ' . $user->last_name,
+            'order_number' => $order->order_no,
+        ];
+        $type = MailingEnum::ORDER_EMAIL;
+        $subject = "B2B Order Delivery Confirmation";
+        $mail_class = "App\Mail\B2BDeliveredOrderMail";
+        mailSend($type, $user, $subject, $mail_class,'orderedItems');
         return $this->success($order, 'Order marked delivered successfully');
     }
 
