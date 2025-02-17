@@ -129,7 +129,7 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function (): void
 
     Route::prefix('product')->controller(AdminProductController::class)->group(function (): void {
         Route::post('/add', 'addProduct');
-        Route::get('/', 'getProduct');
+        Route::get('/', 'getProducts');
         Route::get('/{slug}', 'getOneProduct');
         Route::patch('/featured', 'changeFeatured');
     });
