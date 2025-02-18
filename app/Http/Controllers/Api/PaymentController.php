@@ -75,4 +75,18 @@ class PaymentController extends Controller
     {
         return $this->service->getPaymentMethod($countryId);
     }
+
+    public function getBanks()
+    {
+        return $this->service->getBanks();
+    }
+
+    public function accountLookup(Request $request)
+    {
+        $request->validate([
+            'account_number' => ['required', 'string'],
+            'bank_code' => ['required', 'string'],
+        ]);
+        return $this->service->accountLookup($request);
+    }
 }
