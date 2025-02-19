@@ -4,6 +4,7 @@ namespace App\Trait;
 
 use App\Enum\Coupon as EnumCoupon;
 use App\Enum\UserType;
+use App\Models\Country;
 use App\Models\Coupon;
 use App\Models\User;
 
@@ -91,6 +92,16 @@ trait SignUp
             ],
             'status' => EnumCoupon::INACTIVE
         ]);
+    }
+
+    protected function currencyCode($request)
+    {
+        $currencyCode = 'NGN';
+        if($request->country_id) {
+            $country = Country::findOrFail($request->country_id);
+            $currencyCode = getCurrencyCode($country->sortname);
+        }
+        return $currencyCode;
     }
 }
 

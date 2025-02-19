@@ -197,7 +197,7 @@ class SellerService extends Controller
             'image' => $image,
             'country_id' => $user->country ?? 160,
         ]);
-        
+
         uploadMultipleProductImage($request, 'images', $folder, $product);
         return $this->success(null, "Updated successfully");
     }
@@ -589,6 +589,7 @@ class SellerService extends Controller
 
         $topSellingProducts = DB::table('orders')
         ->select('product_id', DB::raw('SUM(product_quantity) as total_quantity'))
+        ->where('seller_id', $userId)
         ->groupBy('product_id')
         ->orderBy('total_quantity', 'desc')
         ->limit(8)
@@ -597,7 +598,7 @@ class SellerService extends Controller
         $productIds = $topSellingProducts->pluck('product_id');
         $products = Product::whereIn('id', $productIds)->get();
 
-        $topSellingProductsWithDetails = $topSellingProducts->map(function ($item) use ($products): array {
+        $data = $topSellingProducts->map(function ($item) use ($products): array {
             $product = $products->firstWhere('id', $item->product_id);
             return [
                 'id' => $product->id,
@@ -608,7 +609,7 @@ class SellerService extends Controller
             ];
         });
 
-        return $this->success($topSellingProductsWithDetails, "Top Selling Products");
+        return $this->success($data, "Top Selling Products");
     }
 }
 
