@@ -51,8 +51,13 @@ Route::middleware(['throttle:apis', 'doNotCacheResponse'])->group(function (): v
         });
 });
 
-Route::get('/banners', [ApiController::class, 'slider']);
-Route::get('/featured/categories', [ApiController::class, 'categories']);
+Route::controller(ApiController::class)
+    ->group(function (): void {
+        Route::get('/banners', 'slider');
+        Route::get('/featured/categories', 'categories');
+    });
+
+Route::get('/banks', [PaymentController::class, 'getBanks']);
 
 Route::prefix('user/category')->controller(CategoryController::class)->group(function (): void {
     Route::get('/all', 'categories');
@@ -102,6 +107,9 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function (): vo
             // Paystack
             Route::post('/paystack', 'processPayment');
             Route::get('/verify/paystack/{user_id}/{reference}', 'verifyPayment');
+
+            // Account LookUp
+            Route::post('/account-lookup', 'accountLookup');
 
             // Authorize.net
             Route::post('/authorize', 'authorizeNetCard');

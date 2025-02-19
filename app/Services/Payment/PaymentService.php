@@ -10,8 +10,11 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use App\Services\Curl\GetCurlService;
 use App\Http\Resources\PaymentVerifyResource;
+use App\Models\Bank;
 use App\Models\PaymentService as ModelPaymentService;
+use App\Services\Curl\GetCurl;
 use App\Services\Payment\AuthorizeNet\ChargeCardService;
+use Illuminate\Support\Facades\Cache;
 
 class PaymentService
 {
@@ -102,5 +105,38 @@ class PaymentService
         });
 
         return $this->success($data, "Payment methods");
+    }
+
+    public function getBanks()
+    {
+        $banks = Cache::remember('banks_list', 43200, function () {
+            $banks = Bank::select('id', 'name', 'slug', 'code')->get();
+
+            if ($banks->isNotEmpty()) {
+                return $banks;
+            }
+
+            return null;
+        });
+
+        if (empty($banks)) {
+            return $this->error('No banks found', 404);
+        }
+
+        return $this->success($banks, 'Banks retrieved successfully');
+    }
+
+    public function accountLookUp($request)
+    {
+        $url = config('services.paystack.bank_base_url') . "/resolve?account_number=". $request->account_number . "&bank_code=". $request->bank_code;
+
+        $token = config('services.paystack.test_sk');
+
+        $headers = [
+            'Accept' => 'application/json',
+            'Authorization' => 'Bearer ' . $token,
+        ];
+
+        return (new GetCurl($url, $headers))->execute();
     }
 }

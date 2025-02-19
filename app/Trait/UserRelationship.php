@@ -116,6 +116,7 @@ trait UserRelationship
     {
         return $this->hasMany(OrderRate::class, 'user_id');
     }
+
     public function b2bOrderRate(): HasMany
     {
         return $this->hasMany(B2bOrderRating::class, 'user_id');

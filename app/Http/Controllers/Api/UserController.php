@@ -79,7 +79,8 @@ class UserController extends Controller
     {
         $request->validate([
             'user_id' => ['required', 'integer', 'exists:users,id'],
-            'type' => ['required']
+            'type' => ['required', 'in:bank_transfer'],
+            'platform' => ['required', 'in:paystack,authorize'],
         ]);
 
         return $this->service->addPaymentMethod($request);

@@ -62,6 +62,7 @@ return [
 
         'test_pk' => env('PAYSTACK_TEST_PK'),
         'live_pk' => env('PAYSTACK_PK'),
+        'bank_base_url' => "https://api.paystack.co/bank",
     ],
 
     'authorizenet' => [
