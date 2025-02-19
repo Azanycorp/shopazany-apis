@@ -9,6 +9,7 @@ use App\Models\AboutUs;
 use App\Models\Admin;
 use App\Models\ContactInfo;
 use App\Models\CookiePolicy;
+use App\Models\CountryCurrency;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
 use App\Models\TermsService;
@@ -231,14 +232,17 @@ class SettingsService
 
     public function addPlan($request)
     {
+        $currency = CountryCurrency::where('country_id', $request->country_id)->first();
         SubscriptionPlan::create([
             'title' => $request->title,
             'cost' => $request->cost,
             'country_id' => $request->country_id,
+            'curency' => $currency->currency,
             'period' => $request->period,
             'tier' => $request->tier,
             'tagline' => $request->tagline,
             'details' => $request->details,
+            'type' => 'b2c',
             'status' => 'active'
         ]);
         return $this->success(null, 'Plan added successfully');
@@ -254,7 +258,9 @@ class SettingsService
 
     public function getPlanByCountry($countryId)
     {
-        $plan = SubscriptionPlan::where('country_id', $countryId)->get();
+        $plan = SubscriptionPlan::where('country_id', $countryId)
+            ->where('type', 'b2c')
+            ->get();
         $data = SubscriptionPlanResource::collection($plan);
 
         return $this->success($data, "Subscription plan");

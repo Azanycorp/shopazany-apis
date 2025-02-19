@@ -18,6 +18,8 @@ class SubscriptionPlan extends Model
         'details',
         'status',
         'tier',
+        'currency',
+        'type',
     ];
 
     protected function casts(): array

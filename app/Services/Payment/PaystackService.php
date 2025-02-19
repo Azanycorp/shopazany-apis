@@ -29,6 +29,7 @@ use App\Models\UserShippingAddress;
 use Illuminate\Support\Facades\Log;
 use App\Models\BuyerShippingAddress;
 use App\Http\Resources\B2BBuyerShippingAddressResource;
+use App\Services\Curl\PostCurl;
 use App\Services\SubscriptionService;
 
 class PaystackService
@@ -336,6 +337,18 @@ class PaystackService
         }
     }
 
+    public static function createRecipient($fields, $method)
+    {
+        $url = "https://api.paystack.co/transferrecipient";
+        $token = config('paystack.secretKey');
+        $headers = [
+            'Accept' => 'application/json',
+            'Authorization' => 'Bearer ' . $token,
+        ];
+        $data = (new PostCurl($url, $headers, $fields))->execute();
+        self::logTransfer($data, $method);
+    }
+
     private static function orderNo(): string
     {
         do {
@@ -353,5 +366,13 @@ class PaystackService
     private static function sendOrderConfirmationEmail($user, $orderedItems, $orderNo, string $totalAmount): void
     {
         defer(fn() => send_email($user->email, new CustomerOrderMail($user, $orderedItems, $orderNo, $totalAmount)));
+    }
+
+    private static function logTransfer($data, $method)
+    {
+        $method->update([
+            'recipient_code' => $data['recipient_code'],
+            'data' => $data,
+        ]);
     }
 }
