@@ -13,6 +13,7 @@ trait Payment
     {
         return match ($request->platform) {
             'paystack' => $this->addPaystackMethod($request, $user),
+            'authorize' => $this->addAuthorizeMethod($request, $user),
         };
     }
 
@@ -38,7 +39,8 @@ trait Payment
                 'type' => $request->type,
                 'bank_name' => $request->bank_name,
                 'account_number' => $request->account_number,
-                'account_name' => $request->account_name
+                'account_name' => $request->account_name,
+                'platform' => $request->platform,
             ]);
 
             $bank = Bank::where([
@@ -63,5 +65,17 @@ trait Payment
             DB::rollBack();
             throw $th;
         }
+    }
+
+    private function addAuthorizeMethod($request, User $user)
+    {
+        $user->paymentMethods()->create([
+            'type' => $request->type,
+            'account_number' => $request->account_number,
+            'account_name' => $request->account_name,
+            'platform' => $request->platform,
+            'routing_number' => $request->routing_number
+        ]);
+        return $this->success(null, "Added successfully");
     }
 }

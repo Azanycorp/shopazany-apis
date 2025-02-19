@@ -18,6 +18,8 @@ class PaymentMethod extends Model
         'account_name',
         'recipient_code',
         'data',
+        'platform',
+        'routing_number',
     ];
 
     protected function casts(): array

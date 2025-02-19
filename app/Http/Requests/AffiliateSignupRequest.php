@@ -25,6 +25,8 @@ class AffiliateSignupRequest extends FormRequest
         return [
             'first_name' => ['required', 'string'],
             'last_name' => ['required', 'string'],
+            'country_id' => ['required', 'integer', 'exists:countries,id'],
+            'state_id' => ['required', 'integer', 'exists:states,id'],
             'email' => ['required', 'email', 'email:rfc,dns'],
             'password' => ['required', 'string', 'confirmed', Password::defaults()],
             'referral_code' => ['somtimes', 'string']

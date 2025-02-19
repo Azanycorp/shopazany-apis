@@ -25,6 +25,7 @@ class SellerSignUpRequest extends FormRequest
         return [
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
+            'business_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'email:rfc,dns', 'unique:users,email'],
             'address' => ['required', 'string'],
             'country_id' => ['required', 'integer', 'exists:countries,id'],

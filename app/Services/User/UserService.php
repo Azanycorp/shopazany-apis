@@ -55,6 +55,7 @@ class UserService extends Controller
             'first_name' => $request->first_name ?? $user->first_name,
             'last_name' => $request->last_name ?? $user->last_name,
             'middlename' => $request->middlename ?? $user->middlename,
+            'company_name' => $request->business_name ?? $user->company_name,
             'address' => $request->address ?? $user->address,
             'phone' => $request->phone_number ?? $user->phone,
             'country' => $request->country_id ?? $user->country,
