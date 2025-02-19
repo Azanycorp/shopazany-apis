@@ -137,12 +137,7 @@ class AuthService extends Controller
         $request->validated($request->all());
         $user = null;
 
-        $currencyCode = 'NGN';
-        if($request->country_id) {
-            $country = Country::findOrFail($request->country_id);
-            $currencyCode = getCurrencyCode($country->sortname);
-        }
-
+        $currencyCode = $this->currencyCode($request);
         $coupon = $request->query('coupon');
         $coupon = $this->normalizeCoupon($coupon);
         $referrer = $request->query('referrer');
@@ -162,6 +157,7 @@ class AuthService extends Controller
                 'first_name' => $request->first_name,
                 'last_name' => $request->last_name,
                 'middlename' => $request->other_name,
+                'company_name' => $request->business_name,
                 'email' => $request->email,
                 'address' => $request->address,
                 'country' => $request->country_id,
@@ -386,12 +382,16 @@ class AuthService extends Controller
 
     private function userTrigger($user, $request, $referrer_link, $referrer_code, $code)
     {
+        $currencyCode = $this->currencyCode($request);
         if ($user) {
             $emailVerified = $user->email_verified_at;
 
             $user->update([
                 'first_name' => $request->first_name,
                 'last_name' => $request->last_name,
+                'country' => $request->country_id,
+                'state_id' => $request->state_id,
+                'default_currency' => $currencyCode,
                 'type' => UserType::SELLER,
                 'referrer_code' => $referrer_code,
                 'referrer_link' => $referrer_link,
@@ -427,8 +427,11 @@ class AuthService extends Controller
                 'last_name' => $request->last_name,
                 'email' => $request->email,
                 'type' => UserType::SELLER,
+                'default_currency' => $currencyCode,
                 'email_verified_at' => null,
                 'verification_code' => $code,
+                'country' => $request->country_id,
+                'state_id' => $request->state_id,
                 'is_verified' => 0,
                 'is_affiliate_member' => 1,
                 'password' => bcrypt($request->password)
