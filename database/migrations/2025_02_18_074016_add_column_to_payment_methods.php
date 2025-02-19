@@ -41,5 +41,10 @@ return new class extends Migration
             $table->dropColumn('recipient_code');
             $table->dropColumn('data');
         });
+
+        Schema::table('withdrawal_requests', function (Blueprint $table) {
+            $table->dropColumn('user_type');
+            $table->string('status')->nullable(false)->change();
+        });
     }
 };
