@@ -13,7 +13,39 @@ class CouponService
 
     public function createCoupon($request)
     {
-        for ($i = 0; $i < $request->no_of_coupon; $i++) {
+        if ($request->type === EnumCoupon::MULTI_USE) {
+            $this->createMultiUseCoupon($request);
+        } else {
+            $this->createOneTimeCoupon($request);
+        }
+
+        return $this->success(null, "Coupons created successfully", 201);
+    }
+
+    private function createMultiUseCoupon($request)
+    {
+        do {
+            $code = strtoupper(Str::random(8));
+        } while (Coupon::where('code', $code)->exists());
+
+        $link = app()->environment('production')
+            ? config('services.seller_baseurl') . '?coupon=' . $code
+            : config('services.staging_seller_baseurl') . '?coupon=' . $code;
+
+        Coupon::create([
+            'name' => "Signup coupon",
+            'code' => $code,
+            'link' => $link,
+            'type' => EnumCoupon::MULTI_USE,
+            'max_use' => $request->numbers,
+            'expire_at' => now()->addDays(30),
+            'status' => EnumCoupon::ACTIVE
+        ]);
+    }
+
+    private function createOneTimeCoupon($request)
+    {
+        for ($i = 0; $i < $request->numbers; $i++) {
             do {
                 $code = strtoupper(Str::random(8));
             } while (Coupon::where('code', $code)->exists());
@@ -35,8 +67,6 @@ class CouponService
 
             $coupons[] = $coupon;
         }
-
-        return $this->success(null, "Coupons created successfully", 201);
     }
 
     public function getCoupon(): array

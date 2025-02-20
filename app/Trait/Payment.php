@@ -35,12 +35,17 @@ trait Payment
         try {
             DB::beginTransaction();
 
+            if ($request->is_default) {
+                $user->paymentMethods()->update(['is_default' => false]);
+            }
+
             $method = $user->paymentMethods()->create([
                 'type' => $request->type,
                 'bank_name' => $request->bank_name,
                 'account_number' => $request->account_number,
                 'account_name' => $request->account_name,
                 'platform' => $request->platform,
+                'is_default' => $request->is_default,
             ]);
 
             $bank = Bank::where([
@@ -69,12 +74,17 @@ trait Payment
 
     private function addAuthorizeMethod($request, User $user)
     {
+        if ($request->is_default) {
+            $user->paymentMethods()->update(['is_default' => false]);
+        }
+
         $user->paymentMethods()->create([
             'type' => $request->type,
             'account_number' => $request->account_number,
             'account_name' => $request->account_name,
             'platform' => $request->platform,
-            'routing_number' => $request->routing_number
+            'routing_number' => $request->routing_number,
+            'is_default' => $request->is_default,
         ]);
         return $this->success(null, "Added successfully");
     }

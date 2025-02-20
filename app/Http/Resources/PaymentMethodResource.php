@@ -22,6 +22,7 @@ class PaymentMethodResource extends JsonResource
             "account_name" => (string)$this->account_name,
             'platform' => (string)$this->platform,
             'routing_number' => (string)$this->routing_number,
+            'is_default' => (bool)$this->is_default,
         ];
     }
 }

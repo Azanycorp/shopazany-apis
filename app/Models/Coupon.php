@@ -16,12 +16,13 @@ class Coupon extends Model
         'type',
         'expire_at',
         'status',
+        'total_used',
     ];
 
     protected function casts(): array
     {
         return [
-            'used_by' => 'json'
+            'used_by' => 'array'
         ];
     }
 }

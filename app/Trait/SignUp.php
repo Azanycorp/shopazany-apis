@@ -61,7 +61,7 @@ trait SignUp
     protected function validateCoupon($couponCode)
     {
         $coupon = Coupon::where('code', $couponCode)
-            ->where('status', EnumCoupon::ACTIVE)
+            ->whereStatus(EnumCoupon::ACTIVE)
             ->first();
 
         if (!$coupon) {
@@ -80,17 +80,39 @@ trait SignUp
     protected function assignCoupon($couponCode, $user)
     {
         $coupon = Coupon::where('code', $couponCode)
-            ->where('status', EnumCoupon::ACTIVE)
+            ->whereStatus(EnumCoupon::ACTIVE)
+            ->lockForUpdate()
             ->first();
 
+        if (!$coupon) {
+            return $this->error("Invalid or expired coupon", 400);
+        }
+
+        $coupon->total_used = $coupon->total_used ?? 0;
+        $usedBy = $coupon->used_by ?? [];
+
+        $newUserEntry = [
+            'user_id' => $user->id,
+            'name' => $user->first_name . ' ' . $user->last_name,
+            'email' => $user->email,
+        ];
+
+        if ($coupon->type === EnumCoupon::MULTI_USE) {
+            $coupon->increment('total_used');
+            $usedBy[] = $newUserEntry;
+        } else {
+            $usedBy = [$newUserEntry];
+            $coupon->total_used = 1;
+        }
+
+        if ($coupon->type === EnumCoupon::ONE_TIME || $coupon->total_used >= $coupon->max_use) {
+            $coupon->status = EnumCoupon::INACTIVE;
+        }
+
         $coupon->update([
-            'used' => 1,
-            'used_by' => (object) [
-                'user_id' => $user->id,
-                'name' => $user->first_name . ' ' . $user->last_name,
-                'email' => $user->email,
-            ],
-            'status' => EnumCoupon::INACTIVE
+            'used' => ($coupon->status === EnumCoupon::INACTIVE) ? 1 : 0,
+            'used_by' => $usedBy,
+            'status' => $coupon->status,
         ]);
     }
 

@@ -38,10 +38,15 @@ class WithdrawalNotification extends Notification implements ShouldQueue
      */
     public function toMail(object $notifiable): MailMessage
     {
+        $defaultPaymentMethod = $notifiable->paymentMethods->where('is_default', true)->first();
+        $accountNumber = $defaultPaymentMethod ? $defaultPaymentMethod->account_number : 'N/A';
+        $accountName = $defaultPaymentMethod ? $defaultPaymentMethod->account_name : 'N/A';
+
         return (new MailMessage)
             ->subject('Withdrawal Request Update')
             ->line("Your withdrawal request (ID: {$this->request->id}) has been {$this->status}.")
             ->line("Amount: {$this->request->amount}")
+            ->line("Sent to Account: {$accountName} (****" . substr($accountNumber, -4) . ")")
             ->line('Thank you for using our service.');
     }
 
