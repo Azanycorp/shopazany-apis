@@ -20,12 +20,14 @@ class PaymentMethod extends Model
         'data',
         'platform',
         'routing_number',
+        'is_default',
     ];
 
     protected function casts(): array
     {
         return [
-            'data' => 'array'
+            'data' => 'array',
+            'is_default' => 'boolean',
         ];
     }
 

@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enum\Coupon;
 use App\Http\Controllers\Controller;
 use App\Services\Admin\CouponService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class AdminCouponController extends Controller
 {
@@ -14,7 +16,12 @@ class AdminCouponController extends Controller
     public function createCoupon(Request $request)
     {
         $request->validate([
-            'no_of_coupon' => 'required|integer|min:1',
+            'type' => ['required', Rule::in([
+                    Coupon::MULTI_USE,
+                    Coupon::ONE_TIME
+                ])
+            ],
+            'numbers' => 'required|integer|min:1|max:10000',
         ]);
 
         return $this->couponService->createCoupon($request);

@@ -60,14 +60,17 @@ class WithdrawRequestPayout extends Command
             if ($request->status !== WithdrawalStatus::PENDING) {
                 continue;
             }
-
             $withdrawalAmount = $request->amount;
             if ($withdrawalAmount <= 0) {
                 $this->warn("Skipping user {$user->id}, withdrawal ID {$request->id}: Invalid withdrawal amount.");
                 continue;
             }
-
-            $recipient = $user->paymentMethods->first()->recipient_code;
+            $defaultPaymentMethod = $user->paymentMethods->where('is_default', true)->first();
+            if (!$defaultPaymentMethod) {
+                $this->warn("Skipping user {$user->id}: No default payment method found.");
+                return;
+            }
+            $recipient = $defaultPaymentMethod->recipient_code;
             $fields = [
                 "source" => "balance",
                 "reason" => "Withdrawal",
