@@ -24,11 +24,14 @@ use App\Actions\UserLogAction;
 use App\Enum\SubscriptionType;
 use App\Mail\CustomerOrderMail;
 use App\Actions\PaymentLogAction;
+use App\Enum\WithdrawalStatus;
 use Illuminate\Support\Facades\DB;
 use App\Models\UserShippingAddress;
 use Illuminate\Support\Facades\Log;
 use App\Models\BuyerShippingAddress;
 use App\Http\Resources\B2BBuyerShippingAddressResource;
+use App\Models\WithdrawalRequest;
+use App\Notifications\WithdrawalNotification;
 use App\Services\Curl\PostCurl;
 use App\Services\SubscriptionService;
 
@@ -335,6 +338,39 @@ class PaystackService
         } catch (\Exception $e) {
             Log::error('Error in handlePaymentSuccess: ' . $e->getMessage());
         }
+    }
+
+    public static function handleTransferSuccess($event): void
+    {
+        $reference = $event['reference'];
+        $withdrawal = WithdrawalRequest::with('user')
+            ->where('reference', $reference)
+            ->first();
+
+        if (!$withdrawal) {
+            Log::error("Transfer success: No matching withdrawal found for reference: {$reference}");
+            return;
+        }
+
+        DB::beginTransaction();
+        try {
+            $withdrawal->update(['status' => WithdrawalStatus::COMPLETED]);
+
+            $user = $withdrawal->user;
+            $user->notify(new WithdrawalNotification($withdrawal, 'completed'));
+
+            Log::info("Transfer successful for withdrawal ID {$withdrawal->id} - Reference: {$reference}");
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("Error processing transfer success: " . $e->getMessage());
+        }
+    }
+
+    public static function handleTransferFailed($event, $status)
+    {
+        return "Failed";
     }
 
     public static function createRecipient($fields, $method)

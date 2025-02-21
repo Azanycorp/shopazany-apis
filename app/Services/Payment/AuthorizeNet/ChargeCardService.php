@@ -69,6 +69,7 @@ class ChargeCardService implements PaymentStrategy
 
         return $this->handleResponse($response, $user, $paymentDetails, $orderNo, $payment);
     }
+
     //B2B Payment section
     public function ProcessB2BPayment(array $paymentDetails)
     {

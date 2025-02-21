@@ -16,6 +16,7 @@ class WithdrawalRequest extends Model
         'previous_balance',
         'current_balance',
         'status',
+        'reference',
     ];
 
     public function user()
