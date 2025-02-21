@@ -4,6 +4,7 @@ namespace App\Services\User;
 
 use App\Enum\TransactionStatus;
 use App\Enum\UserType;
+use App\Enum\WithdrawalStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\PaymentMethodResource;
 use App\Http\Resources\ProfileResource;
@@ -213,18 +214,21 @@ class UserService extends Controller
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $user = User::with(['wallet', 'withdrawalRequest'])
-        ->find($id);
+        $user = User::with(['wallet', 'withdrawalRequest', 'paymentMethods'])
+            ->find($id);
 
         if(! $user) {
             return $this->error(null, "User not found", 404);
         }
 
-        $pending = $user->withdrawalRequest->where('status', 'pending')->sum('amount');
+        $pending = $user->withdrawalRequest->where('status', WithdrawalStatus::PENDING)
+            ->sum('amount');
 
         $data = [
             'current_balance' => $user?->wallet?->balance,
             'pending_withdrawals' => $pending,
+            'payment_method' => $user?->paymentMethods->where('is_default', 1)
+                ->pluck('account_name'),
         ];
 
         return $this->success($data, "Dashboard analytics");
@@ -249,11 +253,39 @@ class UserService extends Controller
             $query->where('status', $status);
         }
 
-        $trnx = $query->get();
-        $data = TransactionResource::collection($trnx);
+        $transactions = $query->get()->map(function ($transaction) {
+            return [
+                'id' => $transaction->id,
+                'transaction_id' => $transaction->transaction_id,
+                'type' => 'transaction',
+                'date' => $transaction->created_at->format('Y-m-d'),
+                'amount' => $transaction->amount,
+                'status' => $transaction->status,
+            ];
+        });
+
+        $withdrawalQuery = WithdrawalRequest::where('user_id', $userId);
+
+        if ($status) {
+            $withdrawalQuery->where('status', $status);
+        }
+
+        $withdrawals = $withdrawalQuery->get()->map(function ($withdrawal) {
+            return [
+                'id' => $withdrawal->id,
+                'transaction_id' => $withdrawal->reference,
+                'type' => 'withdrawal',
+                'date' => $withdrawal->created_at->format('Y-m-d'),
+                'amount' => $withdrawal->amount,
+                'status' => $withdrawal->status,
+            ];
+        });
+
+        $data = $transactions->merge($withdrawals)->sortByDesc('date')->values();
 
         return $this->success($data, "Transaction history");
     }
+
 
     public function addPaymentMethod($request)
     {
