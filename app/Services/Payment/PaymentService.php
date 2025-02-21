@@ -75,7 +75,7 @@ class PaymentService
                 break;
 
             case PaystackEvent::TRANSFER_FAILED:
-                PaystackService::handleTransferFailed($event, $event['event']);
+                PaystackService::handleTransferFailed($data);
                 break;
 
             default:

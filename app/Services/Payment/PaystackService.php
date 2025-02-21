@@ -368,9 +368,32 @@ class PaystackService
         }
     }
 
-    public static function handleTransferFailed($event, $status)
+    public static function handleTransferFailed($event)
     {
-        return "Failed";
+        $reference = $event['reference'];
+        $withdrawal = WithdrawalRequest::with('user')
+            ->where('reference', $reference)
+            ->first();
+
+        if (!$withdrawal) {
+            Log::error("Transfer success: No matching withdrawal found for reference: {$reference}");
+            return;
+        }
+
+        DB::beginTransaction();
+        try {
+            $withdrawal->update(['status' => WithdrawalStatus::FAILED]);
+
+            $user = $withdrawal->user;
+            $user->notify(new WithdrawalNotification($withdrawal, 'failed'));
+
+            Log::info("Transfer failed for withdrawal ID {$withdrawal->id} - Reference: {$reference}");
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("Error processing transfer success: " . $e->getMessage());
+        }
     }
 
     public static function createRecipient($fields, $method)
