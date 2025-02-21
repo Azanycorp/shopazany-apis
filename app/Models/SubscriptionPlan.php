@@ -14,6 +14,7 @@ class SubscriptionPlan extends Model
         'cost',
         'country_id',
         'period',
+        'designation',
         'tagline',
         'details',
         'status',

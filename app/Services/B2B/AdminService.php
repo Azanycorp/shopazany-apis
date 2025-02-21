@@ -5,10 +5,13 @@ namespace App\Services\B2B;
 use App\Models\Rfq;
 use App\Models\User;
 use App\Models\Admin;
+use App\Trait\SignUp;
+use App\Enum\PlanType;
 use App\Enum\UserType;
 use App\Models\Payout;
 use App\Enum\AdminType;
 use App\Models\Country;
+use App\Enum\PlanStatus;
 use App\Enum\UserStatus;
 use App\Models\B2bOrder;
 use App\Enum\AdminStatus;
@@ -22,6 +25,8 @@ use Illuminate\Support\Str;
 use App\Models\Configuration;
 use App\Models\ShippingAgent;
 use App\Mail\B2BNewAdminEmail;
+use App\Models\CountryCurrency;
+use App\Models\SubscriptionPlan;
 use Illuminate\Support\Facades\DB;
 use App\Models\B2bWithdrawalMethod;
 use App\Models\BusinessInformation;
@@ -32,11 +37,12 @@ use App\Http\Resources\B2BSellerResource;
 use App\Http\Resources\B2BProductResource;
 use App\Repositories\B2BProductRepository;
 use App\Http\Resources\ShippingAgentResource;
+use App\Http\Resources\SubscriptionPlanResource;
 use App\Repositories\B2BSellerShippingRepository;
 
 class AdminService
 {
-    use HttpResponse;
+    use HttpResponse, SignUp;
     protected \App\Repositories\B2BProductRepository $b2bProductRepository;
     protected \App\Repositories\B2BSellerShippingRepository $b2bSellerShippingRepository;
 
@@ -164,7 +170,7 @@ class AdminService
 
     public function allSellers()
     {
-         $sellers = User::withCount('b2bProducts')
+        $sellers = User::withCount('b2bProducts')
             ->where('type', UserType::B2B_SELLER)
             ->latest('created_at')->get();
 
@@ -913,14 +919,14 @@ class AdminService
 
     public function viewShippingAgent($id)
     {
-         $agent = ShippingAgent::findOrFail($id);
+        $agent = ShippingAgent::findOrFail($id);
         $data = new ShippingAgentResource($agent);
         return $this->success($data, 'Agent details');
     }
 
     public function getCountryList()
     {
-         $countries = Country::all();
+        $countries = Country::all();
         return $this->success($countries, 'countries list');
     }
 
@@ -945,5 +951,74 @@ class AdminService
         $agent = ShippingAgent::findOrFail($id);
         $agent->delete();
         return $this->success(null, 'Details deleted successfully');
+    }
+
+    //Subscription Plans
+    public function b2bSubscriptionPlans()
+    {
+        $plans = SubscriptionPlan::where('type', PlanType::B2B)->latest('id')->get();
+        $data = SubscriptionPlanResource::collection($plans);
+        return $this->success($data, 'All B2B Plans');
+    }
+
+    public function addSubscriptionPlan($data)
+    {
+        $currencyCode = $this->currencyCode($data);
+        $plan = SubscriptionPlan::create([
+            'title' => $data->title,
+            'cost' => $data->cost,
+            'country_id' => $data->country_id,
+            'currency' => $currencyCode,
+            'period' => $data->period,
+            'tier' => $data->tier,
+            'designation' => $data->designation,
+            'details' => $data->details,
+            'type' => PlanType::B2B,
+            'status' => PlanStatus::ACTIVE
+        ]);
+        return $this->success($plan, 'Plan added successfully', 201);
+    }
+
+
+    public function viewSubscriptionPlan($id)
+    {
+        $plan = SubscriptionPlan::where('type', PlanType::B2B)->find($id);
+        if (!$plan) {
+            return $this->error(null, 'Plan not found', 404);
+        }
+
+        $data = new SubscriptionPlanResource($plan);
+        return $this->success($data, 'Plan details');
+    }
+
+    public function editSubscriptionPlan($id, $data)
+    {
+        $plan = SubscriptionPlan::where('type', PlanType::B2B)->find($id);
+        if (!$plan) {
+            return $this->error(null, 'Plan not found', 404);
+        }
+        $currencyCode = $this->currencyCode($data);
+        $plan->update([
+            'title' => $data->title,
+            'cost' => $data->cost,
+            'country_id' => $data->country_id,
+            'currency' => $data->country_id ? $currencyCode : $plan->currency,
+            'period' => $data->period,
+            'tier' => $data->tier,
+            'designation' => $data->designation,
+            'details' => $data->details,
+            'status' => $data->status ?? PlanStatus::ACTIVE
+        ]);
+        return $this->success(null, 'Details updated successfully');
+    }
+    public function deleteSubscriptionPlan($id)
+    {
+        $plan = SubscriptionPlan::where('type', PlanType::B2B)->find($id);
+        if (!$plan) {
+            return $this->error(null, 'Plan not found', 404);
+        }
+
+        $plan->delete();
+        return $this->success(null,'Plan deleted successfully');
     }
 }

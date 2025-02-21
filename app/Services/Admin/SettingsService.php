@@ -2,21 +2,23 @@
 
 namespace App\Services\Admin;
 
-use App\Http\Resources\AdminUserResource;
-use App\Http\Resources\SubscriptionPlanResource;
-use App\Mail\AdminUserMail;
-use App\Models\AboutUs;
 use App\Models\Admin;
+use App\Enum\PlanType;
+use App\Models\AboutUs;
+use App\Enum\PlanStatus;
+use App\Mail\AdminUserMail;
 use App\Models\ContactInfo;
-use App\Models\CookiePolicy;
-use App\Models\CountryCurrency;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
+use App\Models\CookiePolicy;
 use App\Models\TermsService;
+use App\Models\CountryCurrency;
 use App\Models\SeoConfiguration;
 use App\Models\SubscriptionPlan;
-use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\App;
+use App\Http\Resources\AdminUserResource;
+use App\Http\Resources\SubscriptionPlanResource;
 
 class SettingsService
 {
@@ -26,9 +28,9 @@ class SettingsService
     {
         $folder = null;
 
-        if(App::environment('production')){
+        if (App::environment('production')) {
             $folder = '/prod/seo';
-        } elseif(App::environment(['staging', 'local'])) {
+        } elseif (App::environment(['staging', 'local'])) {
             $folder = '/stag/seo';
         }
 
@@ -50,7 +52,7 @@ class SettingsService
     {
         $seo = SeoConfiguration::first();
 
-        if(! $seo) {
+        if (! $seo) {
             return $this->error([], "Empty", 403);
         }
 
@@ -83,7 +85,7 @@ class SettingsService
     {
         $terms = TermsService::first();
 
-        if(! $terms) {
+        if (! $terms) {
             return $this->error([], "Empty", 403);
         }
 
@@ -114,7 +116,7 @@ class SettingsService
     {
         $cookie = CookiePolicy::first();
 
-        if(! $cookie) {
+        if (! $cookie) {
             return $this->error([], "Empty", 403);
         }
 
@@ -131,9 +133,9 @@ class SettingsService
     public function addAboutUs($request)
     {
         $folder = null;
-        if(App::environment('production')){
+        if (App::environment('production')) {
             $folder = '/prod/settings/about';
-        } elseif(App::environment(['staging', 'local'])) {
+        } elseif (App::environment(['staging', 'local'])) {
             $folder = '/stag/settings/about';
         }
         $imageOne = uploadImage($request, 'image_one', $folder);
@@ -156,7 +158,7 @@ class SettingsService
     {
         $about = AboutUs::first();
 
-        if(! $about) {
+        if (! $about) {
             return $this->error([], "Empty", 403);
         }
 
@@ -190,7 +192,7 @@ class SettingsService
     {
         $contact = ContactInfo::first();
 
-        if(! $contact) {
+        if (! $contact) {
             return $this->error([], "Empty", 403);
         }
 
@@ -218,7 +220,7 @@ class SettingsService
     {
         $contact = ContactInfo::first();
 
-        if(! $contact) {
+        if (! $contact) {
             return $this->error([], "Empty", 403);
         }
 
@@ -237,20 +239,21 @@ class SettingsService
             'title' => $request->title,
             'cost' => $request->cost,
             'country_id' => $request->country_id,
-            'curency' => $currency->currency,
+            'currency' => $currency->currency,
             'period' => $request->period,
             'tier' => $request->tier,
             'tagline' => $request->tagline,
+            'designation' => $request->designation,
             'details' => $request->details,
-            'type' => 'b2c',
-            'status' => 'active'
+            'type' => PlanType::B2C,
+            'status' => PlanStatus::ACTIVE
         ]);
         return $this->success(null, 'Plan added successfully');
     }
 
     public function getPlanById($id)
     {
-        $plan = SubscriptionPlan::findOrFail($id);
+        $plan = SubscriptionPlan::where('type', PlanType::B2C)->findOrFail($id);
         $data = new SubscriptionPlanResource($plan);
 
         return $this->success($data, "Subscription plan detail");
@@ -259,7 +262,7 @@ class SettingsService
     public function getPlanByCountry($countryId)
     {
         $plan = SubscriptionPlan::where('country_id', $countryId)
-            ->where('type', 'b2c')
+            ->where('type', PlanType::B2C)
             ->get();
         $data = SubscriptionPlanResource::collection($plan);
 
@@ -268,8 +271,7 @@ class SettingsService
 
     public function updatePlan($request, $id)
     {
-        $plan = SubscriptionPlan::findOrFail($id);
-
+        $plan = SubscriptionPlan::where('type', PlanType::B2C)->findOrFail($id);
         $plan->update([
             'title' => $request->title,
             'cost' => $request->cost,
@@ -277,8 +279,9 @@ class SettingsService
             'period' => $request->period,
             'tier' => $request->tier,
             'tagline' => $request->tagline,
+            'designation' => $request->designation,
             'details' => $request->details,
-            'status' => 'active',
+            'status' => PlanStatus::ACTIVE
         ]);
 
         return $this->success(null, 'Plan updated successfully');
@@ -286,7 +289,7 @@ class SettingsService
 
     public function deletePlan($id)
     {
-        $plan = SubscriptionPlan::findOrFail($id);
+        $plan = SubscriptionPlan::where('type', PlanType::B2C)->findOrFail($id);
         $plan->delete();
 
         return $this->success(null, 'Plan deleted successfully');
@@ -310,7 +313,6 @@ class SettingsService
 
             // $admin->roles()->sync($request->role_id);
             $admin->permissions()->sync($request->permissions);
-
             DB::commit();
 
             defer(fn() => send_email($request->email, new AdminUserMail($admin, $password)));
@@ -328,10 +330,10 @@ class SettingsService
         $search = trim(request()->input('search'));
 
         $users = Admin::with(['permissions', 'roles.permissions'])
-            ->where(function ($query) use($search): void {
+            ->where(function ($query) use ($search): void {
                 $query->where('first_name', 'LIKE', '%' . $search . '%')
-                ->orWhere('last_name', 'LIKE', '%' . $search . '%')
-                ->orWhere('email', 'LIKE', '%' . $search . '%');
+                    ->orWhere('last_name', 'LIKE', '%' . $search . '%')
+                    ->orWhere('email', 'LIKE', '%' . $search . '%');
             })
             ->paginate(25);
 
@@ -385,10 +387,3 @@ class SettingsService
         return $this->success(null, 'Deleted successfully');
     }
 }
-
-
-
-
-
-
-
