@@ -234,7 +234,7 @@ class SettingsService
 
     public function addPlan($request)
     {
-        $currency = CountryCurrency::where('country_id', $request->country_id)->first();
+        $currency = CountryCurrency::where('id', $request->country_id)->first();
         SubscriptionPlan::create([
             'title' => $request->title,
             'cost' => $request->cost,
@@ -310,8 +310,6 @@ class SettingsService
                 'password' => bcrypt($password),
                 'status' => 'active'
             ]);
-
-            // $admin->roles()->sync($request->role_id);
             $admin->permissions()->sync($request->permissions);
             DB::commit();
 
