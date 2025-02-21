@@ -227,8 +227,7 @@ class UserService extends Controller
         $data = [
             'current_balance' => $user?->wallet?->balance,
             'pending_withdrawals' => $pending,
-            'payment_method' => $user?->paymentMethods->where('is_default', 1)
-                ->pluck('account_name'),
+            'payment_method' => optional($user?->paymentMethods->where('is_default', 1)->first())->account_number,
         ];
 
         return $this->success($data, "Dashboard analytics");
