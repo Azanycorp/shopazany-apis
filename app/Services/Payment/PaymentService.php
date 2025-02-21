@@ -39,7 +39,11 @@ class PaymentService
 
         $event = json_decode($payload, true);
 
-        if (isset($event['event']) && $event['event'] === PaystackEvent::CHARGE_SUCCESS) {
+        if (!isset($event['event']) || !isset($event['data'])) {
+            return $this->error(null, 'Invalid payload', 400);
+        }
+
+        if ($event['event'] === PaystackEvent::CHARGE_SUCCESS) {
             $data = $event['data'];
             $paymentType = $data['metadata']['payment_type'];
 
@@ -60,6 +64,23 @@ class PaymentService
                     Log::warning('Unknown payment type', ['payment_type' => $paymentType]);
                     break;
             }
+        }
+
+        $eventType = $event['event'];
+        $data = $event['data'];
+
+        switch ($eventType) {
+            case PaystackEvent::TRANSFER_SUCCESS:
+                PaystackService::handleTransferSuccess($data);
+                break;
+
+            case PaystackEvent::TRANSFER_FAILED:
+                PaystackService::handleTransferFailed($data);
+                break;
+
+            default:
+                Log::warning("Unhandled Paystack event: {$eventType}", $data);
+                break;
         }
 
         return response()->json(['status' => true], 200);
