@@ -19,18 +19,19 @@ use App\Enum\OrderStatus;
 use App\Models\B2bCompany;
 use App\Models\B2BProduct;
 use App\Models\UserWallet;
+use App\Enum\GeneralStatus;
 use App\Enum\ProductStatus;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
 use App\Models\Configuration;
 use App\Models\ShippingAgent;
 use App\Mail\B2BNewAdminEmail;
-use App\Models\CountryCurrency;
 use App\Models\SubscriptionPlan;
 use Illuminate\Support\Facades\DB;
 use App\Models\B2bWithdrawalMethod;
 use App\Models\BusinessInformation;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Resources\AdminUserResource;
 use App\Http\Resources\B2BSellerResource;
@@ -148,39 +149,59 @@ class AdminService
         ]);
         return $this->success(null, "Order Completed");
     }
+
     public function cancelOrder($id)
     {
-        $order = B2bOrder::findOrFail($id);
-        $order->update([
-            'status' => OrderStatus::CANCELLED
-        ]);
-        $product = B2BProduct::find($order->product_id);
-        if (!$order) {
-            return $this->error(null, "Product not found", 404);
-        }
-        $product->availability_quantity += $order->product_quantity;
-        $product->sold -= $order->product_quantity;
-        $product->save();
+        DB::beginTransaction();
 
-        return $this->success(null, "Order Cancelled successful");
+        try {
+            $order = B2bOrder::findOrFail($id);
+            $order->update([
+                'status' => OrderStatus::CANCELLED
+            ]);
+
+            $product = B2BProduct::find($order->product_id);
+            if (!$product) {
+                return $this->error(null, "Product not found", 404);
+            }
+
+            $product->availability_quantity += $order->product_quantity;
+            $product->sold -= $order->product_quantity;
+            $product->save();
+
+            DB::commit();
+
+            return $this->success(null, "Order cancelled successfully.");
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return $this->error(null, "Failed to cancel order: " . $e->getMessage(), 500);
+        }
     }
 
     //Sellers
     //Admin section
-
     public function allSellers()
     {
         $sellers = User::withCount('b2bProducts')
             ->where('type', UserType::B2B_SELLER)
-            ->latest('created_at')->get();
+            ->latest('created_at')
+            ->get();
 
-        $users = User::where('type', UserType::B2B_SELLER);
-        $inactive = User::whereIn('status', [UserStatus::PENDING, UserStatus::BLOCKED, UserStatus::SUSPENDED]);
+        $sellersCounts = User::where('type', UserType::B2B_SELLER)
+            ->selectRaw('
+                COUNT(*) as total,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as active,
+                SUM(CASE WHEN status IN (?, ?, ?) THEN 1 ELSE 0 END) as inactive
+            ', [
+                UserStatus::ACTIVE,
+                UserStatus::PENDING, UserStatus::BLOCKED, UserStatus::SUSPENDED
+            ])
+            ->first();
 
         $data = [
-            'sellers_count' => $users->count(),
-            'active' => $users->where('status', UserStatus::ACTIVE)->count(),
-            'inactive' => $inactive->count(),
+            'sellers_count' => $sellersCounts->total,
+            'active' => $sellersCounts->active,
+            'inactive' => $sellersCounts->inactive,
             'sellers' => $sellers,
         ];
         return $this->success($data, "sellers details");
@@ -188,11 +209,12 @@ class AdminService
 
     public function approveSeller($id)
     {
-        $user = User::where('type', UserType::B2B_SELLER)->findOrFail($id);
+        $user = User::where('type', UserType::B2B_SELLER)
+            ->where('id', $id)
+            ->firstOrFail();
 
         $user->is_admin_approve = !$user->is_admin_approve;
-        $user->status = $user->is_admin_approve ? 'active' : UserStatus::BLOCKED;
-
+        $user->status = $user->is_admin_approve ? UserStatus::ACTIVE : UserStatus::BLOCKED;
         $user->save();
 
         $status = $user->is_admin_approve ? "Approved successfully" : "Disapproved successfully";
@@ -202,7 +224,9 @@ class AdminService
 
     public function viewSeller($id)
     {
-        $user = User::where('type', UserType::B2B_SELLER)->findOrFail($id);
+        $user = User::where('type', UserType::B2B_SELLER)
+            ->where('id', $id)
+            ->firstOrFail();
 
         $search = request()->search;
         $data = new B2BSellerResource($user);
@@ -245,11 +269,12 @@ class AdminService
 
     public function banSeller($id)
     {
-        $user = User::where('type', UserType::B2B_SELLER)->findOrFail($id);
+        $user = User::where('type', UserType::B2B_SELLER)
+            ->where('id', $id)
+            ->firstOrFail();
 
         $user->status = UserStatus::BLOCKED;
         $user->is_admin_approve = 0;
-
         $user->save();
 
         return $this->success(null, "User has been blocked successfully");
@@ -257,30 +282,35 @@ class AdminService
 
     public function removeSeller($id)
     {
-        $user = User::where('type', UserType::B2B_SELLER)->findOrFail($id);
+        $user = User::where('type', UserType::B2B_SELLER)
+            ->where('id', $id)
+            ->firstOrFail();
 
         $user->delete();
-
         return $this->success(null, "User removed successfully");
     }
 
     public function bulkRemove($request)
     {
-        $users = User::where('type', UserType::B2B_SELLER)->whereIn('id', $request->user_ids)->get();
+        $users = User::where('type', UserType::B2B_SELLER)
+            ->whereIn('id', $request->user_ids)
+            ->get();
 
-        foreach ($users as $user) {
-            $user->status = UserStatus::DELETED;
-            $user->is_verified = 0;
-            $user->is_admin_approve = 0;
-            $user->save();
-
-            $user->delete();
+        if ($users->isEmpty()) {
+            return $this->error(null, "No matching users found.", 404);
         }
 
+        User::whereIn('id', $users->pluck('id'))->update([
+            'status' => UserStatus::DELETED,
+            'is_verified' => 0,
+            'is_admin_approve' => 0
+        ]);
+
+        User::whereIn('id', $users->pluck('id'))->delete();
         return $this->success(null, "User(s) have been removed successfully");
     }
-    //Seller Product
 
+    //Seller Product
     public function addSellerProduct($request)
     {
         $user = User::find($request->user_id);
@@ -427,18 +457,30 @@ class AdminService
 
     public function allBuyers()
     {
+        $buyerStats = User::where('type', UserType::B2B_BUYER)
+            ->selectRaw('
+                COUNT(*) as total_buyers,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as active_buyers,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as pending_buyers
+            ', [
+                UserStatus::ACTIVE,
+                UserStatus::PENDING
+            ])
+            ->first();
+
         $buyers = User::with('b2bCompany')
             ->where('type', UserType::B2B_BUYER)
             ->latest('created_at')
             ->get();
 
         $data = [
-            'buyers_count' => $buyers->count(),
-            'active_buyers' => $buyers->where('status', UserStatus::ACTIVE)->count(),
-            'pending_buyers' => $buyers->where('status', UserStatus::PENDING)->count(),
+            'buyers_count' => $buyerStats->total_buyers,
+            'active_buyers' => $buyerStats->active_buyers,
+            'pending_buyers' => $buyerStats->pending_buyers,
             'buyers' => $buyers,
         ];
-        return $this->success($data, "buyers ");
+
+        return $this->success($data, "Buyers retrieved successfully.");
     }
 
     public function viewBuyer($id)
@@ -446,17 +488,17 @@ class AdminService
         $user = User::select('id', 'first_name', 'last_name', 'email', 'image')
             ->with('b2bCompany')
             ->where('type', UserType::B2B_BUYER)
-            ->findOrFail($id);
+            ->where('id', $id)
+            ->firstOrFail();
         return $this->success($user, "Buyer details");
     }
 
     public function editBuyer($id, $data)
     {
         $user = User::findOrFail($id);
-        $check = User::where('email', $data->email)->first();
 
-        if ($check && $check->email != $user->email) {
-            return $this->error(null, "Email already exist");
+        if (!empty($data->email) && User::where('email', $data->email)->where('id', '!=', $id)->exists()) {
+            return $this->error(null, "Email already exists.");
         }
 
         $image = $data->hasFile('image') ? uploadUserImage($data, 'image', $user) : $user->image;
@@ -500,18 +542,20 @@ class AdminService
     {
         $users = User::whereIn('id', $request->user_ids)->get();
 
-        foreach ($users as $user) {
-            $user->status = UserStatus::DELETED;
-            $user->is_verified = 0;
-            $user->is_admin_approve = 0;
-            $user->save();
-
-            $user->delete();
+        if ($users->isEmpty()) {
+            return $this->error(null, "No matching users found.", 404);
         }
+
+        User::whereIn('id', $users->pluck('id'))->update([
+            'status' => UserStatus::DELETED,
+            'is_verified' => 0,
+            'is_admin_approve' => 0
+        ]);
+
+        User::whereIn('id', $users->pluck('id'))->delete();
 
         return $this->success(null, "User(s) have been removed successfully");
     }
-
 
     public function approveBuyer($id)
     {
@@ -543,7 +587,9 @@ class AdminService
     public function adminProfile()
     {
         $authUser = userAuth();
-        $user = Admin::where('type', AdminType::B2B)->findOrFail($authUser->id);
+        $user = Admin::where('type', AdminType::B2B)
+            ->where('id', $authUser->id)
+            ->firstOrFail();
         $data = new AdminUserResource($user);
 
         return $this->success($data, 'Profile detail');
@@ -552,7 +598,10 @@ class AdminService
     public function updateAdminProfile($data)
     {
         $authUser = userAuth();
-        $user = Admin::where('type', AdminType::B2B)->findOrFail($authUser->id);
+        $user = Admin::where('type', AdminType::B2B)
+            ->where('id', $authUser->id)
+            ->firstOrFail();
+
         $user->update([
             'first_name' => $data->first_name,
             'last_name' => $data->last_name,
@@ -567,7 +616,10 @@ class AdminService
     public function enableTwoFactor($data)
     {
         $authUser = userAuth();
-        $user = Admin::where('type', AdminType::B2B)->findOrFail($authUser->id);
+        $user = Admin::where('type', AdminType::B2B)
+            ->where('id', $authUser->id)
+            ->firstOrFail();
+
         $user->update([
             'two_factor_enabled' => $data->two_factor_enabled,
         ]);
@@ -578,48 +630,32 @@ class AdminService
     public function updateAdminPassword($data)
     {
         $authUser = userAuth();
-        $user = Admin::where('type', AdminType::B2B)->findOrFail($authUser->id);
+        $user = Admin::where('type', AdminType::B2B)
+            ->where('id', $authUser->id)
+            ->firstOrFail();
+
         $user->update([
-            'password' => Hash::make($data->password),
+            'password' => bcrypt($data->password),
         ]);
         return $this->success(null, 'Password updated');
     }
 
     public function getConfigDetails()
     {
-        $config = Configuration::first();
+        $config = Configuration::firstOrFail();
         return $this->success($config, 'Config details');
     }
 
     public function updateConfigDetails($data)
     {
-        $configData = [
-            'usd_rate' => $data->usd_rate,
-            'company_profit' => $data->company_profit,
-            'email_verify' => $data->email_verify,
-            'currency_code' => $data->currency_code,
-            'currency_symbol' => $data->currency_symbol,
-            'promotion_start_date' => $data->promotion_start_date,
-            'promotion_end_date' => $data->promotion_end_date,
-            'min_deposit' => $data->min_deposit,
-            'max_deposit' => $data->max_deposit,
-            'min_withdrawal' => $data->min_withdrawal,
-            'withdrawal_frequency' => $data->withdrawal_frequency,
-            'withdrawal_status' => $data->withdrawal_status,
-            'max_withdrawal' => $data->max_withdrawal,
-            'withdrawal_fee' => $data->withdrawal_fee,
-            'seller_perc' => $data->seller_perc,
-            'paystack_perc' => $data->paystack_perc,
-            'paystack_fixed' => $data->paystack_fixed,
-        ];
+        $configData = $data->only([
+            'usd_rate', 'company_profit', 'email_verify', 'currency_code', 'currency_symbol',
+            'promotion_start_date', 'promotion_end_date', 'min_deposit', 'max_deposit',
+            'min_withdrawal', 'withdrawal_frequency', 'withdrawal_status', 'max_withdrawal',
+            'withdrawal_fee', 'seller_perc', 'paystack_perc', 'paystack_fixed'
+        ]);
 
-        $config = Configuration::first();
-
-        if ($config) {
-            $config->update($configData);
-        } else {
-            Configuration::create($configData);
-        }
+        Configuration::updateOrCreate([], $configData);
 
         return $this->success(null, 'Details updated');
     }
@@ -642,8 +678,10 @@ class AdminService
     public function viewWidthrawalRequest($id)
     {
         $payout =  Payout::with(['user' => function ($query): void {
-            $query->select('id', 'first_name', 'last_name')->where('type', UserType::B2B_SELLER);
-        }])->findOrFail($id);
+                $query->select('id', 'first_name', 'last_name')->where('type', UserType::B2B_SELLER);
+            }])
+            ->where('id', $id)
+            ->firstOrFail();
 
         return $this->success($payout, 'request details');
     }
@@ -659,9 +697,9 @@ class AdminService
         return $this->success(null, 'request Approved successfully');
     }
 
-    public function cancelWidthrawalRequest($id)
+    public function cancelWithdrawalRequest($id)
     {
-        $payout =  Payout::findOrFail($id);
+        $payout = Payout::findOrFail($id);
         $wallet = UserWallet::where('user_id', $payout->seller_id)->first();
 
         if (!$wallet) {
@@ -671,19 +709,18 @@ class AdminService
         DB::beginTransaction();
 
         try {
-            $wallet->master_wallet += $payout->amount;
-            $wallet->save();
+            $wallet->increment('master_wallet', $payout->amount);
 
             $payout->update([
-                'status' => 'cancelled',
+                'status' => GeneralStatus::CANCELLED,
             ]);
 
             DB::commit();
 
-            return $this->success(null, 'request cancelled');
+            return $this->success(null, 'Withdrawal request cancelled successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->error(null, 'transaction failed, please try again', 500);
+            return $this->error(null, 'Transaction failed, please try again.', 500);
         }
     }
 
@@ -703,13 +740,13 @@ class AdminService
     {
         $account =  B2bWithdrawalMethod::with('user.businessInformation')->findOrFail($id);
 
-        $business = BusinessInformation::select(['business_location', 'business_type', 'business_name', 'business_reg_number', 'business_phone', 'business_reg_document', 'identification_type_document', 'user_id'])->with(['user' => function ($query): void {
-            $query->where('type', UserType::B2B_SELLER)->select('id', 'first_name', 'last_name');
-        }])->where('user_id', $account->user_id)->first();
-
-        if ($account->isEmpty()) {
-            return $this->error(null, 'No record found', 404);
-        }
+        $business = BusinessInformation::select([
+                'business_location', 'business_type', 'business_name', 'business_reg_number', 'business_phone', 'business_reg_document', 'identification_type_document', 'user_id'
+                ])
+                ->with(['user' => function ($query): void {
+                    $query->where('type', UserType::B2B_SELLER)->select('id', 'first_name', 'last_name');
+            }])
+            ->where('user_id', $account->user_id)->firstOrFail();
 
         $data = [
             'account_info' => $account,
@@ -786,36 +823,46 @@ class AdminService
         return $this->success(null, 'Comment Submitted successfully');
     }
 
-
     //Admin User Management
     public function adminUsers()
     {
         $searchQuery = request()->input('search');
-        $users =  User::all();
 
-        $admins = Admin::with(['permissions' => function ($query): void {
-            $query->select('permission_id', 'name');
-        }])->select('id', 'first_name', 'last_name', 'email', 'created_at')
-            ->latest('created_at')->when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
-                $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
-                    $subQuery->where('type', AdminType::B2B)
-                        ->orWhere('first_name', 'LIKE', '%' . $searchQuery . '%')
+        $userStats = User::selectRaw('
+                SUM(CASE WHEN type = ? THEN 1 ELSE 0 END) as buyers,
+                SUM(CASE WHEN type = ? THEN 1 ELSE 0 END) as sellers,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as pending_approval
+            ', [
+                UserType::B2B_BUYER,
+                UserType::B2B_SELLER,
+                UserStatus::PENDING
+            ])
+            ->first();
+
+        $admins = Admin::with('permissions:id,name')
+            ->where('type', AdminType::B2B)
+            ->select('id', 'first_name', 'last_name', 'email', 'created_at')
+            ->latest('created_at')
+            ->when($searchQuery, function ($queryBuilder) use ($searchQuery) {
+                $queryBuilder->where(function ($subQuery) use ($searchQuery) {
+                    $subQuery->where('first_name', 'LIKE', '%' . $searchQuery . '%')
                         ->orWhere('email', 'LIKE', '%' . $searchQuery . '%');
                 });
-            })->get();
+            })
+            ->get();
 
         $data = [
-            'buyers' => $users->where('type', UserType::B2B_BUYER)->count(),
-            'sellers' => $users->where('type', UserType::B2B_SELLER)->count(),
-            'pending_approval' => $users->where('status', UserStatus::PENDING)->count(),
+            'buyers' => $userStats->buyers,
+            'sellers' => $userStats->sellers,
+            'pending_approval' => $userStats->pending_approval,
             'admin_users' => $admins,
         ];
+
         return $this->success($data, 'All Admin Users');
     }
 
     public function addAdmin($data)
     {
-
         DB::beginTransaction();
         try {
             $password = 'pass@12345';
@@ -826,7 +873,7 @@ class AdminService
                 'type' => AdminType::B2B,
                 'status' => AdminStatus::ACTIVE,
                 'phone_number' => $data->phone_number,
-                'password' => bcrypt($data->password),
+                'password' => bcrypt($password),
             ]);
             $admin->permissions()->sync($data->permissions);
             $loginDetails = [
@@ -836,9 +883,9 @@ class AdminService
             ];
             DB::commit();
 
-            send_email($data->email, new B2BNewAdminEmail($loginDetails));
+            defer(fn () => send_email($data->email, new B2BNewAdminEmail($loginDetails)));
 
-            return $this->success($admin, 'Admin user added successfully', 200);
+            return $this->success($admin, 'Admin user added successfully', 201);
         } catch (\Throwable $th) {
             DB::rollBack();
             throw $th;
@@ -891,7 +938,6 @@ class AdminService
         return $this->success(null, 'Deleted successfully');
     }
 
-
     //Shipping Agents
     public function shippingAgents()
     {
@@ -902,7 +948,6 @@ class AdminService
 
     public function addShippingAgent($data)
     {
-
         $agent = ShippingAgent::create([
             'name' => $data->name,
             'type' => $data->type,
@@ -916,7 +961,6 @@ class AdminService
         return $this->success($agent, 'Agent added successfully', 201);
     }
 
-
     public function viewShippingAgent($id)
     {
         $agent = ShippingAgent::findOrFail($id);
@@ -926,7 +970,9 @@ class AdminService
 
     public function getCountryList()
     {
-        $countries = Country::all();
+        $countries = Cache::rememberForever('countries', function () {
+            return Country::select('id', 'name', 'phonecode', 'is_allowed')->get();
+        });
         return $this->success($countries, 'countries list');
     }
 
@@ -979,7 +1025,6 @@ class AdminService
         return $this->success($plan, 'Plan added successfully', 201);
     }
 
-
     public function viewSubscriptionPlan($id)
     {
         $plan = SubscriptionPlan::where('type', PlanType::B2B)->find($id);
@@ -1011,14 +1056,22 @@ class AdminService
         ]);
         return $this->success(null, 'Details updated successfully');
     }
+
     public function deleteSubscriptionPlan($id)
     {
-        $plan = SubscriptionPlan::where('type', PlanType::B2B)->find($id);
-        if (!$plan) {
-            return $this->error(null, 'Plan not found', 404);
+        $plan = SubscriptionPlan::findOrFail($id);
+
+        if ($plan->type !== PlanType::B2B) {
+            return $this->error(null, 'Invalid plan type', 400);
+        }
+
+        if ($plan->subscriptions()->exists()) {
+            return $this->error(null, 'Plan cannot be deleted because it has active subscriptions', 400);
         }
 
         $plan->delete();
-        return $this->success(null,'Plan deleted successfully');
+
+        return $this->success(null, 'Plan deleted successfully.');
     }
+
 }

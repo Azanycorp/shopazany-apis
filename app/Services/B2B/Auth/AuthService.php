@@ -6,7 +6,6 @@ use App\Models\User;
 use App\Enum\UserLog;
 use App\Trait\SignUp;
 use App\Enum\UserType;
-use App\Models\Action;
 use App\Enum\UserStatus;
 use App\Enum\MailingEnum;
 use App\Trait\HttpResponse;
@@ -46,14 +45,14 @@ class AuthService
                     ->first();
 
                 if (!$affiliate) {
-                    return $this->error(null, 'No Affiliate found with this code', 404);
+                    return $this->error(null, 'No Affiliate found!', 404);
                 }
 
                 $this->handleReferrers($request->referrer_code, $user);
             }
 
             $description = "User with email: {$request->email} signed up as b2b seller";
-            $response = $this->success(null, "Created successfully");
+            $response = $this->success(null, "Created successfully", 201);
             $action = UserLog::CREATED;
 
             logUserAction($request, $action, $description, $response, $user);
@@ -151,6 +150,7 @@ class AuthService
 
         try {
             $code = generateVerificationCode();
+            $currencyCode = $this->currencyCode($request);
 
             $user = User::create([
                 'first_name' => $request->name,
@@ -162,6 +162,7 @@ class AuthService
                 'company_size' => $request->company_size,
                 'website' => $request->website,
                 'country' => $request->country_id,
+                'default_currency' => $currencyCode,
                 'email_verified_at' => null,
                 'verification_code' => $code,
                 'is_verified' => 0,
