@@ -24,6 +24,7 @@ class SubscriptionPlanResource extends JsonResource
             'tier' => (int)$this->tier,
             'type' => (string)$this->type,
             'designation' => (string)$this->designation,
+            'tagline' => (string)$this->tagline,
             'details' => (string)$this->details,
             'status' => (string)$this->status,
         ];
