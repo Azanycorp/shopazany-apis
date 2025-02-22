@@ -19,19 +19,17 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\App;
 use App\Http\Resources\AdminUserResource;
 use App\Http\Resources\SubscriptionPlanResource;
+use App\Trait\SignUp;
 
 class SettingsService
 {
-    use HttpResponse;
+    use HttpResponse, SignUp;
 
     public function addSeo($request)
     {
-        $folder = null;
-
+        $folder = '/stag/seo';
         if (App::environment('production')) {
             $folder = '/prod/seo';
-        } elseif (App::environment(['staging', 'local'])) {
-            $folder = '/stag/seo';
         }
 
         $path = uploadImage($request, 'image', $folder);
@@ -45,7 +43,7 @@ class SettingsService
                 'image' => $path,
             ]
         );
-        return $this->success(null, "Successful");
+        return $this->success(null, "Successful", 201);
     }
 
     public function getSeo()
@@ -53,12 +51,12 @@ class SettingsService
         $seo = SeoConfiguration::first();
 
         if (! $seo) {
-            return $this->error([], "Empty", 403);
+            return $this->error(null, "Empty", 404);
         }
 
         $data = [
             'id' => $seo->id,
-            'keywords' => json_decode($seo->keywords),
+            'keywords' => $seo->keywords,
             'description' => $seo->description,
             'social_title' => $seo->social_title,
             'social_description' => $seo->social_description,
@@ -78,7 +76,7 @@ class SettingsService
                 'description' => $request->description,
             ]
         );
-        return $this->success(null, "Successful");
+        return $this->success(null, "Successful", 201);
     }
 
     public function getTermsService()
@@ -86,7 +84,7 @@ class SettingsService
         $terms = TermsService::first();
 
         if (! $terms) {
-            return $this->error([], "Empty", 403);
+            return $this->error([], "Empty", 404);
         }
 
         $data = [
@@ -109,7 +107,7 @@ class SettingsService
                 'status' => $request->status,
             ]
         );
-        return $this->success(null, "Successful");
+        return $this->success(null, "Successful", 201);
     }
 
     public function getCookiePolicy()
@@ -117,7 +115,7 @@ class SettingsService
         $cookie = CookiePolicy::first();
 
         if (! $cookie) {
-            return $this->error([], "Empty", 403);
+            return $this->error([], "Empty", 404);
         }
 
         $data = [
@@ -132,11 +130,9 @@ class SettingsService
 
     public function addAboutUs($request)
     {
-        $folder = null;
+        $folder = '/stag/settings/about';
         if (App::environment('production')) {
             $folder = '/prod/settings/about';
-        } elseif (App::environment(['staging', 'local'])) {
-            $folder = '/stag/settings/about';
         }
         $imageOne = uploadImage($request, 'image_one', $folder);
         $imageTwo = uploadImage($request, 'image_two', $folder);
@@ -151,7 +147,7 @@ class SettingsService
                 'image_two' => $imageTwo,
             ]
         );
-        return $this->success(null, "Successful");
+        return $this->success(null, "Successful", 201);
     }
 
     public function getAboutUs()
@@ -159,7 +155,7 @@ class SettingsService
         $about = AboutUs::first();
 
         if (! $about) {
-            return $this->error([], "Empty", 403);
+            return $this->error([], "Empty", 404);
         }
 
         $data = [
@@ -193,7 +189,7 @@ class SettingsService
         $contact = ContactInfo::first();
 
         if (! $contact) {
-            return $this->error([], "Empty", 403);
+            return $this->error([], "Empty", 404);
         }
 
         $data = [
@@ -221,7 +217,7 @@ class SettingsService
         $contact = ContactInfo::first();
 
         if (! $contact) {
-            return $this->error([], "Empty", 403);
+            return $this->error([], "Empty", 404);
         }
 
         $data = [
@@ -234,12 +230,12 @@ class SettingsService
 
     public function addPlan($request)
     {
-        $currency = CountryCurrency::where('id', $request->country_id)->first();
+        $currencyCode = $this->currencyCode($request);
         SubscriptionPlan::create([
             'title' => $request->title,
             'cost' => $request->cost,
             'country_id' => $request->country_id,
-            'currency' => $currency->currency,
+            'currency' => $currencyCode,
             'period' => $request->period,
             'tier' => $request->tier,
             'tagline' => $request->tagline,
@@ -248,7 +244,7 @@ class SettingsService
             'type' => PlanType::B2C,
             'status' => PlanStatus::ACTIVE
         ]);
-        return $this->success(null, 'Plan added successfully');
+        return $this->success(null, 'Plan added successfully', 201);
     }
 
     public function getPlanById($id)
@@ -315,7 +311,7 @@ class SettingsService
 
             defer(fn() => send_email($request->email, new AdminUserMail($admin, $password)));
 
-            return $this->success(null, 'Created successfully');
+            return $this->success(null, 'Created successfully', 201);
         } catch (\Throwable $th) {
             DB::rollBack();
 
