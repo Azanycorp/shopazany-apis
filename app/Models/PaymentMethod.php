@@ -15,11 +15,21 @@ class PaymentMethod extends Model
         'type',
         'bank_name',
         'account_number',
-        'account_holder_name',
-        'swift',
-        'bank_branch',
-        'paypal_email',
+        'account_name',
+        'recipient_code',
+        'data',
+        'platform',
+        'routing_number',
+        'is_default',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'data' => 'array',
+            'is_default' => 'boolean',
+        ];
+    }
 
     public function user(): BelongsTo
     {

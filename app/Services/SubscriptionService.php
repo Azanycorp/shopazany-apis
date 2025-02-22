@@ -18,10 +18,14 @@ class SubscriptionService
 
     public function getPlanByCountry($countryId)
     {
-        $plan = SubscriptionPlan::where('country_id', $countryId)->get();
+        $type = request()->query('type', 'b2c');
+
+        $plan = SubscriptionPlan::where('country_id', $countryId)
+            ->where('type', $type)
+            ->get();
         $data = SubscriptionPlanResource::collection($plan);
 
-        return $this->success($data, "Subscription plan");
+        return $this->success($data, "Subscription plans");
     }
 
     public function subscriptionPayment($request)
@@ -44,13 +48,11 @@ class SubscriptionService
 
         if($user->is_subscribed) {
             $currentPlan = $user?->subscription_plan?->subscriptionPlan;
-
             $newPlan = SubscriptionPlan::findOrFail($request->input('subscription_plan_id'));
 
             if ($newPlan->tier < $currentPlan->tier) {
                 return $this->error(null, 'You cannot downgrade your subscription plan', 403);
             }
-
             if ($newPlan->id == $currentPlan->id) {
                 return $this->error(null, 'You are already subscribed to this plan', 403);
             }
@@ -62,7 +64,7 @@ class SubscriptionService
             'currency' => 'NGN',
             'metadata' => json_encode([
                 'user_id' => $request->input('user_id'),
-                'referrer_id' => $user->referrer->first()->id,
+                'referrer_id' => $user->referrer->first()?->id,
                 'subscription_plan_id' => $request->input('subscription_plan_id'),
                 'payment_method' => 'paystack',
                 'payment_type' => PaymentType::RECURRINGCHARGE,
@@ -87,16 +89,24 @@ class SubscriptionService
         ->append('subscription_history');
 
         $data = SubscriptionHistoryResource::collection($user->subscription_history);
-
-        return $this->success($data, "Subscription history");
+        return $this->success($data, "Subscription histories");
     }
 
     public static function creditAffiliate($user, $amount)
     {
-        $wallet = $user->wallet()->firstOrCreate([], [
-            'balance' => 0.00,
-            'reward_point' => 0,
-        ]);
+        if(!$user) {
+            return;
+        }
+
+        $wallet = $user->wallet()->firstOrCreate(
+            [
+                'user_id' => $user->id,
+            ],
+            [
+                'balance' => 0.00,
+                'reward_point' => 0,
+            ]
+        );
 
         $subcriptionBonus = $amount * 0.05;
         $wallet->increment('balance', $subcriptionBonus);

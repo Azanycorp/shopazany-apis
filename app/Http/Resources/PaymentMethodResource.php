@@ -19,10 +19,10 @@ class PaymentMethodResource extends JsonResource
             "type" => (string)$this->type,
             "bank_name" => (string)$this->bank_name,
             "account_number" => (string)$this->account_number,
-            "account_holder_name" => (string)$this->account_holder_name,
-            "swift" => (string)$this->swift,
-            "bank_branch" => (string)$this->bank_branch,
-            "paypal_email" => (string)$this->paypal_email
+            "account_name" => (string)$this->account_name,
+            'platform' => (string)$this->platform,
+            'routing_number' => (string)$this->routing_number,
+            'is_default' => (bool)$this->is_default,
         ];
     }
 }

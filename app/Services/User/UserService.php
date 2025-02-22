@@ -3,23 +3,26 @@
 namespace App\Services\User;
 
 use App\Enum\TransactionStatus;
+use App\Enum\UserType;
+use App\Enum\WithdrawalStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\PaymentMethodResource;
 use App\Http\Resources\ProfileResource;
 use App\Http\Resources\TransactionResource;
 use App\Models\BankAccount;
-use App\Models\PaymentMethod;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Wallet;
 use App\Models\WithdrawalRequest;
 use App\Services\TransactionService;
 use App\Trait\HttpResponse;
+use App\Trait\Payment;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class UserService extends Controller
 {
-    use HttpResponse;
+    use HttpResponse, Payment;
 
     public function profile()
     {
@@ -53,6 +56,7 @@ class UserService extends Controller
             'first_name' => $request->first_name ?? $user->first_name,
             'last_name' => $request->last_name ?? $user->last_name,
             'middlename' => $request->middlename ?? $user->middlename,
+            'company_name' => $request->business_name ?? $user->company_name,
             'address' => $request->address ?? $user->address,
             'phone' => $request->phone_number ?? $user->phone,
             'country' => $request->country_id ?? $user->country,
@@ -99,37 +103,52 @@ class UserService extends Controller
 
     public function withdraw($request)
     {
-        $user = User::with('wallet')->find($request->user_id);
+        $auth = Auth::user();
 
-        if(!$user){
+        if (!$auth || $auth->type === UserType::CUSTOMER || !$auth->is_affiliate_member || $auth->id !== $request->user_id) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+
+        $user = User::with(['wallet', 'paymentMethods'])
+                    ->where('id', $request->user_id)
+                    ->first();
+
+        if (!$user) {
             return $this->error(null, "User not found", 404);
+        }
+
+        if ($user->paymentMethods->isEmpty()) {
+            return $this->error(null, "No payment method found", 404);
         }
 
         $wallet = $user->wallet;
 
-        if(!$wallet){
+        if (!$wallet) {
             return $this->error(null, "Wallet not found", 404);
         }
 
-        if($wallet->balance >= $request->amount){
-            $current = $wallet->balance - $request->amount;
+        if ($wallet->balance < $request->amount) {
+            return $this->error(null, "Insufficient balance for withdrawal", 400);
+        }
+
+        // Use a database transaction to prevent race conditions
+        DB::transaction(function () use ($wallet, $user, $request) {
+            $newBalance = $wallet->balance - $request->amount;
 
             WithdrawalRequest::create([
-                'user_id' => $request->user_id,
+                'user_id' => $user->id,
+                'user_type' => 'b2c_affiliate',
                 'amount' => $request->amount,
-                'previous_balance' => $wallet?->balance,
-                'current_balance' => $current
+                'previous_balance' => $wallet->balance,
+                'current_balance' => $newBalance
             ]);
 
-            $wallet->update([
-                'balance' => $current
-            ]);
+            $wallet->update(['balance' => $newBalance]);
 
-            (new TransactionService($user, 'withdrawal', $request->amount))->logTransaction();
+            (new TransactionService($user, TransactionStatus::WITHDRAWAL, $request->amount))->logTransaction();
+        });
 
-            return $this->success(null, "Request sent successfully");
-        }
-        return $this->error(null, "Sorry you can't withdraw above your balance", 400);
+        return $this->success(null, "Request sent successfully");
     }
 
     public function userKyc($request)
@@ -195,18 +214,20 @@ class UserService extends Controller
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $user = User::with(['wallet', 'withdrawalRequest'])
-        ->find($id);
+        $user = User::with(['wallet', 'withdrawalRequest', 'paymentMethods'])
+            ->find($id);
 
         if(! $user) {
             return $this->error(null, "User not found", 404);
         }
 
-        $pending = $user->withdrawalRequest->where('status', 'pending')->sum('amount');
+        $pending = $user->withdrawalRequest->where('status', WithdrawalStatus::PENDING)
+            ->sum('amount');
 
         $data = [
             'current_balance' => $user?->wallet?->balance,
             'pending_withdrawals' => $pending,
+            'payment_method' => optional($user?->paymentMethods->where('is_default', 1)->first())->account_number,
         ];
 
         return $this->success($data, "Dashboard analytics");
@@ -231,17 +252,53 @@ class UserService extends Controller
             $query->where('status', $status);
         }
 
-        $trnx = $query->get();
-        $data = TransactionResource::collection($trnx);
+        $transactions = $query->get()->map(function ($transaction) {
+            return [
+                'id' => $transaction->id,
+                'transaction_id' => $transaction->transaction_id,
+                'type' => 'transaction',
+                'date' => $transaction->created_at->format('Y-m-d'),
+                'amount' => $transaction->amount,
+                'status' => $transaction->status,
+            ];
+        });
+
+        $withdrawalQuery = WithdrawalRequest::where('user_id', $userId);
+
+        if ($status) {
+            $withdrawalQuery->where('status', $status);
+        }
+
+        $withdrawals = $withdrawalQuery->get()->map(function ($withdrawal) {
+            return [
+                'id' => $withdrawal->id,
+                'transaction_id' => $withdrawal->reference,
+                'type' => 'withdrawal',
+                'date' => $withdrawal->created_at->format('Y-m-d'),
+                'amount' => $withdrawal->amount,
+                'status' => $withdrawal->status,
+            ];
+        });
+
+        $data = $transactions->merge($withdrawals)->sortByDesc('date')->values();
 
         return $this->success($data, "Transaction history");
     }
 
+
     public function addPaymentMethod($request)
     {
-        $currentUserId = Auth::id();
+        $auth = Auth::user();
 
-        if ($currentUserId != $request->user_id) {
+        if (!$auth) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+
+        if($auth->type === UserType::CUSTOMER) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+
+        if ($auth->id !== $request->user_id || !$auth->is_affiliate_member) {
             return $this->error(null, "Unauthorized action.", 401);
         }
 
@@ -249,6 +306,10 @@ class UserService extends Controller
 
         if(! $user){
             return $this->error(null, "User not found", 404);
+        }
+
+        if ($user->paymentMethods->count() >= 3) {
+            return $this->error(null, "You can only add up to 3 payment methods", 400);
         }
 
         switch ($request->type) {
@@ -264,10 +325,7 @@ class UserService extends Controller
                 return $this->error(null, "Invalid type", 400);
         }
 
-        if ($methodAdded) {
-            return $this->success(null, "Added successfully");
-        }
-        return $this->error(null, "Failed to add payment method", 500);
+        return $methodAdded;
     }
 
     public function getPaymentMethod($userId)
@@ -278,11 +336,8 @@ class UserService extends Controller
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $user = User::with('paymentMethods')->find($userId);
-
-        if(! $user){
-            return $this->error(null, "User not found", 404);
-        }
+        $user = User::with('paymentMethods')
+            ->findOrFail($userId);
 
         $data = PaymentMethodResource::collection($user->paymentMethods);
 

@@ -24,11 +24,15 @@ use App\Actions\UserLogAction;
 use App\Enum\SubscriptionType;
 use App\Mail\CustomerOrderMail;
 use App\Actions\PaymentLogAction;
+use App\Enum\WithdrawalStatus;
 use Illuminate\Support\Facades\DB;
 use App\Models\UserShippingAddress;
 use Illuminate\Support\Facades\Log;
 use App\Models\BuyerShippingAddress;
 use App\Http\Resources\B2BBuyerShippingAddressResource;
+use App\Models\WithdrawalRequest;
+use App\Notifications\WithdrawalNotification;
+use App\Services\Curl\PostCurl;
 use App\Services\SubscriptionService;
 
 class PaystackService
@@ -57,7 +61,7 @@ class PaystackService
                 $authData = $paymentData['authorization'];
 
                 $user = User::findOrFail($userId);
-                $referrer = User::with(['wallet'])->findOrFail($referrerId);
+                $referrer = User::with(['wallet'])->find($referrerId);
 
                 $activeSubscription = $user->subscription_plan;
                 if ($activeSubscription) {
@@ -97,7 +101,7 @@ class PaystackService
                     'expired_at' => null,
                 ]);
 
-                SubscriptionService::creditAffiliate($referrer, $amount);
+                SubscriptionService::creditAffiliate($referrer, $formattedAmount);
             });
         } catch (\Exception $e) {
             Log::error('Error in handleRecurringCharge: ' . $e->getMessage());
@@ -336,6 +340,74 @@ class PaystackService
         }
     }
 
+    public static function handleTransferSuccess($event): void
+    {
+        $reference = $event['reference'];
+        $withdrawal = WithdrawalRequest::with('user')
+            ->where('reference', $reference)
+            ->first();
+
+        if (!$withdrawal) {
+            Log::error("Transfer success: No matching withdrawal found for reference: {$reference}");
+            return;
+        }
+
+        DB::beginTransaction();
+        try {
+            $withdrawal->update(['status' => WithdrawalStatus::COMPLETED]);
+
+            $user = $withdrawal->user;
+            $user->notify(new WithdrawalNotification($withdrawal, 'completed'));
+
+            Log::info("Transfer successful for withdrawal ID {$withdrawal->id} - Reference: {$reference}");
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("Error processing transfer success: " . $e->getMessage());
+        }
+    }
+
+    public static function handleTransferFailed($event)
+    {
+        $reference = $event['reference'];
+        $withdrawal = WithdrawalRequest::with('user')
+            ->where('reference', $reference)
+            ->first();
+
+        if (!$withdrawal) {
+            Log::error("Transfer success: No matching withdrawal found for reference: {$reference}");
+            return;
+        }
+
+        DB::beginTransaction();
+        try {
+            $withdrawal->update(['status' => WithdrawalStatus::FAILED]);
+
+            $user = $withdrawal->user;
+            $user->notify(new WithdrawalNotification($withdrawal, 'failed'));
+
+            Log::info("Transfer failed for withdrawal ID {$withdrawal->id} - Reference: {$reference}");
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("Error processing transfer success: " . $e->getMessage());
+        }
+    }
+
+    public static function createRecipient($fields, $method)
+    {
+        $url = "https://api.paystack.co/transferrecipient";
+        $token = config('paystack.secretKey');
+        $headers = [
+            'Accept' => 'application/json',
+            'Authorization' => 'Bearer ' . $token,
+        ];
+        $data = (new PostCurl($url, $headers, $fields))->execute();
+        self::logTransfer($data, $method);
+    }
+
     private static function orderNo(): string
     {
         do {
@@ -353,5 +425,13 @@ class PaystackService
     private static function sendOrderConfirmationEmail($user, $orderedItems, $orderNo, string $totalAmount): void
     {
         defer(fn() => send_email($user->email, new CustomerOrderMail($user, $orderedItems, $orderNo, $totalAmount)));
+    }
+
+    private static function logTransfer($data, $method)
+    {
+        $method->update([
+            'recipient_code' => $data['recipient_code'],
+            'data' => $data,
+        ]);
     }
 }

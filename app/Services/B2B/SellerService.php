@@ -399,7 +399,7 @@ class SellerService extends Controller
 
         $user = User::with('b2bSellerShippingAddresses')->findOrFail($request->user_id);
 
-            $data = [
+        $data = [
             'user_id' => $request->user_id,
             'address_name' => $request->address_name,
             'name' => $request->name,
@@ -629,7 +629,7 @@ class SellerService extends Controller
 
     public function getOrderDetails($id)
     {
-        $order = B2bOrder::with(['buyer','seller'])->findOrFail($id);
+        $order = B2bOrder::with(['buyer', 'seller'])->findOrFail($id);
 
         $data = new B2BOrderResource($order);
         return $this->success($data, 'order details');
@@ -638,23 +638,25 @@ class SellerService extends Controller
     //Rfq
     public function getAllRfq()
     {
-        $currentUserId = userAuthId();
+        $searchQuery = request()->input('search');
+        $orders_count = B2bOrder::where('seller_id', userAuthId())->count();
 
         $rfqs = Rfq::with('buyer')
-            ->where('seller_id', $currentUserId)
+            ->where('seller_id', userAuthId())
             ->latest('id')
             ->get();
 
-        $orders = B2bOrder::with('buyer')
-            ->where('seller_id', $currentUserId)
-            ->latest('id')
-            ->get();
-
+        $orders = B2bOrder::when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
+            $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
+                $subQuery->where('seller_id', userAuthId())
+                    ->orWhere('order_no', 'LIKE', '%' . $searchQuery . '%');
+            });
+        })->get();
 
         $data = [
             'total_rfqs' => $rfqs->count(),
             'rfqs' => $rfqs,
-            'total_orders' => $orders->count(),
+            'total_orders' => $orders_count,
             'orders' => $orders,
         ];
 
@@ -676,11 +678,21 @@ class SellerService extends Controller
     public function markShipped($data)
     {
         $order = B2bOrder::findOrFail($data->order_id);
-
+        $user = User::findOrFail($order->buyer_id);
         $order->update([
             'status' => OrderStatus::SHIPPED,
             'shipped_date' => now()->toDateString(),
         ]);
+        $orderedItems = [
+            'quantity' => $order->product_quantity,
+            'price' => $order->total_amount,
+            'buyer_name' => $user->first_name . ' ' . $user->last_name,
+            'order_number' => $order->order_no,
+        ];
+        $type = MailingEnum::ORDER_EMAIL;
+        $subject = "B2B Order Shipped Confirmation";
+        $mail_class = "App\Mail\B2BSHippedOrderMail";
+        mailSend($type, $user, $subject, $mail_class, 'orderedItems');
 
         return $this->success($order, 'order Shipped successfully');
     }
@@ -714,11 +726,21 @@ class SellerService extends Controller
     public function markDelivered($data)
     {
         $order = B2bOrder::findOrFail($data->order_id);
-
+        $user = User::findOrFail($order->buyer_id);
         $order->update([
             'status' => OrderStatus::DELIVERED,
             'delivery_date' => now()->toDateString()
         ]);
+        $orderedItems = [
+            'quantity' => $order->product_quantity,
+            'price' => $order->total_amount,
+            'buyer_name' => $user->first_name . ' ' . $user->last_name,
+            'order_number' => $order->order_no,
+        ];
+        $type = MailingEnum::ORDER_EMAIL;
+        $subject = "B2B Order Delivery Confirmation";
+        $mail_class = "App\Mail\B2BDeliveredOrderMail";
+        mailSend($type, $user, $subject, $mail_class, 'orderedItems');
         return $this->success($order, 'Order marked delivered successfully');
     }
 
@@ -779,7 +801,7 @@ class SellerService extends Controller
             $type = MailingEnum::ORDER_EMAIL;
             $subject = "B2B Order Confirmation";
             $mail_class = "App\Mail\B2BOrderEmail";
-            mailSend($type, $buyer, $subject, $mail_class,'orderedItems');
+            mailSend($type, $buyer, $subject, $mail_class, 'orderedItems');
 
             return $this->success($order, 'Payment Confirmed successfully');
         } catch (\Exception $e) {

@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Models\User;
 use Illuminate\Http\Request;
 use App\Services\Auth\AuthService;
 use App\Http\Requests\LoginRequest;

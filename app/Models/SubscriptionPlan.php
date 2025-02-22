@@ -14,10 +14,13 @@ class SubscriptionPlan extends Model
         'cost',
         'country_id',
         'period',
+        'designation',
         'tagline',
         'details',
         'status',
         'tier',
+        'currency',
+        'type',
     ];
 
     protected function casts(): array

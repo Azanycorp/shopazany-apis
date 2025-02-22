@@ -35,7 +35,6 @@ use App\Http\Resources\CustomerResource;
 use App\Http\Resources\B2BBannerResource;
 use App\Http\Resources\B2BProductResource;
 use App\Http\Resources\B2BCategoryResource;
-use App\Http\Resources\SellerProductResource;
 use App\Http\Resources\B2BSellerProductResource;
 use App\Http\Resources\B2BBuyerShippingAddressResource;
 
@@ -248,18 +247,17 @@ class BuyerService
     }
     public function categories()
     {
-        $categories = B2bProductCategory::where('featured', 1)
+        $categories = B2bProductCategory::with(['subcategory','products'])
+            ->where('featured', 1)
             ->take(10)
             ->get();
 
-        $data = B2BCategoryResource::collection($categories);
-
-        return $this->success($data, "Categories");
+        return $this->success($categories, "Categories");
     }
     public function getCategoryProducts()
     {
         $categories = B2BProductCategory::select('id','name','slug','image')
-            ->with('products.b2bProductReview','products.b2bLikes')
+            ->with(['products.b2bProductReview','products.b2bLikes'])
             ->get();
             $data = B2BCategoryResource::collection($categories);
         return $this->success($data, "Categories products");

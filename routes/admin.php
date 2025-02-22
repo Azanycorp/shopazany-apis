@@ -129,7 +129,7 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function (): void
 
     Route::prefix('product')->controller(AdminProductController::class)->group(function (): void {
         Route::post('/add', 'addProduct');
-        Route::get('/', 'getProduct');
+        Route::get('/', 'getProducts');
         Route::get('/{slug}', 'getOneProduct');
         Route::patch('/featured', 'changeFeatured');
     });
@@ -211,7 +211,7 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function (): void
             Route::get('/details/{id}', 'viewShippingAgent')->middleware('cacheResponse:300');
             Route::post('/update/{id}', 'editShippingAgent');
             Route::delete('/delete/{id}', 'deleteShippingAgent');
-    });
+        });
 
     // Affiliate
     Route::prefix('affiliate')
@@ -222,7 +222,7 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function (): void
             Route::get('/user/{id}', 'userDetail');
             Route::patch('/suspend/{id}', 'suspend');
             Route::post('/reset-password', 'resetPassword');
-    });
+        });
 
     //b2b admin
     Route::prefix('b2b')->group(function () {
@@ -322,6 +322,15 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function (): void
             Route::get('/view/{id}', 'viewWidthrawalMethod')->middleware('cacheResponse:300');
             Route::post('/approve/{id}', 'approveWidthrawalMethod');
             Route::post('/reject/{id}', 'rejectWidthrawalMethod');
+        });
+
+        //Subscriprion plans
+        Route::prefix('subscription-plans')->controller(B2BAdminController::class)->group(function (): void {
+            Route::get('/', 'b2bSubscriptionPlans');
+            Route::post('add/', 'addSubscriptionPlan');
+            Route::get('/details/{id}', 'viewSubscriptionPlan');
+            Route::post('/update/{id}', 'editSubscriptionPlan');
+            Route::delete('/remove/{id}', 'deleteSubscriptionPlan');
         });
 
 

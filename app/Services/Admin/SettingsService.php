@@ -2,33 +2,34 @@
 
 namespace App\Services\Admin;
 
-use App\Http\Resources\AdminUserResource;
-use App\Http\Resources\SubscriptionPlanResource;
-use App\Mail\AdminUserMail;
-use App\Models\AboutUs;
 use App\Models\Admin;
+use App\Enum\PlanType;
+use App\Models\AboutUs;
+use App\Enum\PlanStatus;
+use App\Mail\AdminUserMail;
 use App\Models\ContactInfo;
-use App\Models\CookiePolicy;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
+use App\Models\CookiePolicy;
 use App\Models\TermsService;
+use App\Models\CountryCurrency;
 use App\Models\SeoConfiguration;
 use App\Models\SubscriptionPlan;
-use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\App;
+use App\Http\Resources\AdminUserResource;
+use App\Http\Resources\SubscriptionPlanResource;
+use App\Trait\SignUp;
 
 class SettingsService
 {
-    use HttpResponse;
+    use HttpResponse, SignUp;
 
     public function addSeo($request)
     {
-        $folder = null;
-
-        if(App::environment('production')){
+        $folder = '/stag/seo';
+        if (App::environment('production')) {
             $folder = '/prod/seo';
-        } elseif(App::environment(['staging', 'local'])) {
-            $folder = '/stag/seo';
         }
 
         $path = uploadImage($request, 'image', $folder);
@@ -42,20 +43,20 @@ class SettingsService
                 'image' => $path,
             ]
         );
-        return $this->success(null, "Successful");
+        return $this->success(null, "Successful", 201);
     }
 
     public function getSeo()
     {
         $seo = SeoConfiguration::first();
 
-        if(! $seo) {
-            return $this->error([], "Empty", 403);
+        if (! $seo) {
+            return $this->error(null, "Empty", 404);
         }
 
         $data = [
             'id' => $seo->id,
-            'keywords' => json_decode($seo->keywords),
+            'keywords' => $seo->keywords,
             'description' => $seo->description,
             'social_title' => $seo->social_title,
             'social_description' => $seo->social_description,
@@ -75,15 +76,15 @@ class SettingsService
                 'description' => $request->description,
             ]
         );
-        return $this->success(null, "Successful");
+        return $this->success(null, "Successful", 201);
     }
 
     public function getTermsService()
     {
         $terms = TermsService::first();
 
-        if(! $terms) {
-            return $this->error([], "Empty", 403);
+        if (! $terms) {
+            return $this->error([], "Empty", 404);
         }
 
         $data = [
@@ -106,15 +107,15 @@ class SettingsService
                 'status' => $request->status,
             ]
         );
-        return $this->success(null, "Successful");
+        return $this->success(null, "Successful", 201);
     }
 
     public function getCookiePolicy()
     {
         $cookie = CookiePolicy::first();
 
-        if(! $cookie) {
-            return $this->error([], "Empty", 403);
+        if (! $cookie) {
+            return $this->error([], "Empty", 404);
         }
 
         $data = [
@@ -129,11 +130,9 @@ class SettingsService
 
     public function addAboutUs($request)
     {
-        $folder = null;
-        if(App::environment('production')){
+        $folder = '/stag/settings/about';
+        if (App::environment('production')) {
             $folder = '/prod/settings/about';
-        } elseif(App::environment(['staging', 'local'])) {
-            $folder = '/stag/settings/about';
         }
         $imageOne = uploadImage($request, 'image_one', $folder);
         $imageTwo = uploadImage($request, 'image_two', $folder);
@@ -148,15 +147,15 @@ class SettingsService
                 'image_two' => $imageTwo,
             ]
         );
-        return $this->success(null, "Successful");
+        return $this->success(null, "Successful", 201);
     }
 
     public function getAboutUs()
     {
         $about = AboutUs::first();
 
-        if(! $about) {
-            return $this->error([], "Empty", 403);
+        if (! $about) {
+            return $this->error([], "Empty", 404);
         }
 
         $data = [
@@ -189,8 +188,8 @@ class SettingsService
     {
         $contact = ContactInfo::first();
 
-        if(! $contact) {
-            return $this->error([], "Empty", 403);
+        if (! $contact) {
+            return $this->error([], "Empty", 404);
         }
 
         $data = [
@@ -217,8 +216,8 @@ class SettingsService
     {
         $contact = ContactInfo::first();
 
-        if(! $contact) {
-            return $this->error([], "Empty", 403);
+        if (! $contact) {
+            return $this->error([], "Empty", 404);
         }
 
         $data = [
@@ -231,22 +230,26 @@ class SettingsService
 
     public function addPlan($request)
     {
+        $currencyCode = $this->currencyCode($request);
         SubscriptionPlan::create([
             'title' => $request->title,
             'cost' => $request->cost,
             'country_id' => $request->country_id,
+            'currency' => $currencyCode,
             'period' => $request->period,
             'tier' => $request->tier,
             'tagline' => $request->tagline,
+            'designation' => $request->designation,
             'details' => $request->details,
-            'status' => 'active'
+            'type' => PlanType::B2C,
+            'status' => PlanStatus::ACTIVE
         ]);
-        return $this->success(null, 'Plan added successfully');
+        return $this->success(null, 'Plan added successfully', 201);
     }
 
     public function getPlanById($id)
     {
-        $plan = SubscriptionPlan::findOrFail($id);
+        $plan = SubscriptionPlan::where('type', PlanType::B2C)->findOrFail($id);
         $data = new SubscriptionPlanResource($plan);
 
         return $this->success($data, "Subscription plan detail");
@@ -254,7 +257,9 @@ class SettingsService
 
     public function getPlanByCountry($countryId)
     {
-        $plan = SubscriptionPlan::where('country_id', $countryId)->get();
+        $plan = SubscriptionPlan::where('country_id', $countryId)
+            ->where('type', PlanType::B2C)
+            ->get();
         $data = SubscriptionPlanResource::collection($plan);
 
         return $this->success($data, "Subscription plan");
@@ -262,8 +267,7 @@ class SettingsService
 
     public function updatePlan($request, $id)
     {
-        $plan = SubscriptionPlan::findOrFail($id);
-
+        $plan = SubscriptionPlan::where('type', PlanType::B2C)->findOrFail($id);
         $plan->update([
             'title' => $request->title,
             'cost' => $request->cost,
@@ -271,8 +275,9 @@ class SettingsService
             'period' => $request->period,
             'tier' => $request->tier,
             'tagline' => $request->tagline,
+            'designation' => $request->designation,
             'details' => $request->details,
-            'status' => 'active',
+            'status' => PlanStatus::ACTIVE
         ]);
 
         return $this->success(null, 'Plan updated successfully');
@@ -280,7 +285,7 @@ class SettingsService
 
     public function deletePlan($id)
     {
-        $plan = SubscriptionPlan::findOrFail($id);
+        $plan = SubscriptionPlan::where('type', PlanType::B2C)->findOrFail($id);
         $plan->delete();
 
         return $this->success(null, 'Plan deleted successfully');
@@ -301,15 +306,12 @@ class SettingsService
                 'password' => bcrypt($password),
                 'status' => 'active'
             ]);
-
-            // $admin->roles()->sync($request->role_id);
             $admin->permissions()->sync($request->permissions);
-
             DB::commit();
 
             defer(fn() => send_email($request->email, new AdminUserMail($admin, $password)));
 
-            return $this->success(null, 'Created successfully');
+            return $this->success(null, 'Created successfully', 201);
         } catch (\Throwable $th) {
             DB::rollBack();
 
@@ -322,10 +324,10 @@ class SettingsService
         $search = trim(request()->input('search'));
 
         $users = Admin::with(['permissions', 'roles.permissions'])
-            ->where(function ($query) use($search): void {
+            ->where(function ($query) use ($search): void {
                 $query->where('first_name', 'LIKE', '%' . $search . '%')
-                ->orWhere('last_name', 'LIKE', '%' . $search . '%')
-                ->orWhere('email', 'LIKE', '%' . $search . '%');
+                    ->orWhere('last_name', 'LIKE', '%' . $search . '%')
+                    ->orWhere('email', 'LIKE', '%' . $search . '%');
             })
             ->paginate(25);
 
@@ -379,10 +381,3 @@ class SettingsService
         return $this->success(null, 'Deleted successfully');
     }
 }
-
-
-
-
-
-
-

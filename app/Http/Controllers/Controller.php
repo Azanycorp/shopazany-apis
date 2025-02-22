@@ -115,36 +115,6 @@ abstract class Controller
         return $this->success(['file_url' => $fileUrl], "Product export successful.");
     }
 
-    protected function addBankTransfer($request, User $user): bool
-    {
-        try {
-            $user->paymentMethods()->create([
-                'type' => $request->type,
-                'bank_name' => $request->bank_name,
-                'account_number' => $request->account_number,
-                'account_holder_name' => $request->account_holder_name,
-                'swift' => $request->swift,
-                'bank_branch' => $request->bank_branch
-            ]);
-            return true;
-        } catch (\Exception $e) {
-            return false;
-        }
-    }
-
-    protected function addPayPal($request, User $user): bool
-    {
-        try {
-            $user->paymentMethods()->create([
-                'type' => $request->type,
-                'paypal_email' => $request->paypal_email
-            ]);
-            return true;
-        } catch (\Exception $e) {
-            return false;
-        }
-    }
-
     protected function isAccountUnverifiedOrInactive($user, $request)
     {
         return $user->email_verified_at === null && $user->verification_code !== null;
