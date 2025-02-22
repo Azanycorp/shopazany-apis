@@ -38,7 +38,6 @@ class AuthService
                 'verification_code' => $code,
                 'is_verified' => 0,
                 'info_source' => $request->info_source ?? null,
-                'referrer_code' => $request->referrer_code ?? null,
                 'password' => bcrypt($request->password)
             ]);
             if ($request->referrer_code) {

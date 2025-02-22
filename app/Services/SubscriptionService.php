@@ -25,7 +25,7 @@ class SubscriptionService
             ->get();
         $data = SubscriptionPlanResource::collection($plan);
 
-        return $this->success($data, "Subscription plan");
+        return $this->success($data, "Subscription plans");
     }
 
     public function subscriptionPayment($request)
@@ -89,7 +89,7 @@ class SubscriptionService
         ->append('subscription_history');
 
         $data = SubscriptionHistoryResource::collection($user->subscription_history);
-        return $this->success($data, "Subscription history");
+        return $this->success($data, "Subscription histories");
     }
 
     public static function creditAffiliate($user, $amount)

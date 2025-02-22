@@ -3,13 +3,14 @@
 namespace App\Http\Controllers\Api\B2B;
 
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use App\Services\B2B\AdminService;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Http\Response;
 use App\Http\Requests\AdminUserRequest;
 use App\Http\Requests\ShippingAgentRequest;
 use App\Http\Requests\ChangeAdminPasswordRequest;
+use App\Http\Requests\Admin\SubscriptionPlanRequest;
 
 class B2BAdminController extends Controller
 {
@@ -194,7 +195,7 @@ class B2BAdminController extends Controller
         return $this->adminService->removeAdmin($id);
     }
 
-    //ShippingCountry section
+    //ShippingAgents section
     public function shippingAgents()
     {
         return $this->adminService->shippingAgents();
@@ -222,5 +223,32 @@ class B2BAdminController extends Controller
     public function deleteShippingAgent($id)
     {
         return $this->adminService->deleteShippingAgent($id);
+    }
+
+    //Subscription plans
+    public function b2bSubscriptionPlans()
+    {
+        return $this->adminService->b2bSubscriptionPlans();
+    }
+
+    public function addSubscriptionPlan(SubscriptionPlanRequest $request)
+    {
+        return $this->adminService->addSubscriptionPlan($request);
+    }
+
+
+    public function viewSubscriptionPlan($id)
+    {
+        return $this->adminService->viewSubscriptionPlan($id);
+    }
+
+    public function editSubscriptionPlan($id, SubscriptionPlanRequest $request)
+    {
+        return $this->adminService->editSubscriptionPlan($id, $request);
+    }
+
+    public function deleteSubscriptionPlan($id)
+    {
+        return $this->adminService->deleteSubscriptionPlan($id);
     }
 }
