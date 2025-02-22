@@ -288,8 +288,21 @@ if(!function_exists('generate_referrer_link')) {
         if (App::environment('production')) {
             return config('services.seller_baseurl') . '?referrer=' . $referrer_code;
         }
-
-        return config('services.staging_seller_baseurl') . '?referrer=' . $referrer_code;
+        $referralLinks = [
+            [
+                'name' => 'agricom',
+                'link' => config('services.agrstaging_seller_baseurl') . '?referrer=' . $referrer_code,
+            ],
+            [
+                'name' => 'b2b',
+                'link' => config('services.b2b_staging_seller_baseurl') . '?referrer=' . $referrer_code,
+            ],
+            [
+                'name' => 'b2c',
+                'link' => config('services.staging_seller_baseurl') . '?referrer=' . $referrer_code,
+            ],
+        ];
+        return json_encode($referralLinks);
     }
 }
 

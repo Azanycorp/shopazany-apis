@@ -990,6 +990,7 @@ class SellerService extends Controller
             return $this->error(null, 'An error occurred while processing your request', 500);
         }
     }
+   
 
     //Withdrawal method
     public function addNewMethod($data)

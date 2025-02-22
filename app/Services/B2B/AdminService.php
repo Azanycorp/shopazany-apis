@@ -1018,6 +1018,7 @@ class AdminService
             'period' => $data->period,
             'tier' => $data->tier,
             'designation' => $data->designation,
+            'tagline' => $data->tagline,
             'details' => $data->details,
             'type' => PlanType::B2B,
             'status' => PlanStatus::ACTIVE
@@ -1051,6 +1052,7 @@ class AdminService
             'period' => $data->period,
             'tier' => $data->tier,
             'designation' => $data->designation,
+            'tagline' => $data->tagline,
             'details' => $data->details,
             'status' => $data->status ?? PlanStatus::ACTIVE
         ]);
