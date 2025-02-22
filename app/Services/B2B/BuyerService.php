@@ -247,7 +247,7 @@ class BuyerService
     }
     public function categories()
     {
-        $categories = B2bProductCategory::with(['products'])
+        $categories = B2bProductCategory::with(['subcategory','products'])
             ->where('featured', 1)
             ->take(10)
             ->get();
