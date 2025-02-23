@@ -286,9 +286,37 @@ if(!function_exists('generate_referral_code')) {
 if(!function_exists('generate_referrer_link')) {
     function generate_referrer_link(string $referrer_code): string {
         if (App::environment('production')) {
-            return config('services.seller_baseurl') . '?referrer=' . $referrer_code;
+            return config('services.frontend.seller_baseurl') . '?referrer=' . $referrer_code;
         }
-        return config('services.staging_seller_baseurl') . '?referrer=' . $referrer_code;
+        return config('services.frontend.staging_seller_baseurl') . '?referrer=' . $referrer_code;
+    }
+}
+
+if (!function_exists('generate_referrer_links')) {
+    function generate_referrer_links(string $referrer_code): array {
+        $environment = app()->environment();
+
+        $baseUrls = [
+            'production' => [
+                'b2c' => config('services.frontend.seller_baseurl'),
+                'b2b' => config('services.frontend.b2b_baseurl'),
+                'agriecom' => config('services.frontend.agriecom_baseurl'),
+            ],
+            'staging' => [
+                'b2c' => config('services.frontend.staging_seller_baseurl'),
+                'b2b' => config('services.frontend.b2b_staging_baseurl'),
+                'agriecom' => config('services.frontend.agricom_staging_baseurl'),
+            ],
+        ];
+
+        $selectedBaseUrls = in_array($environment, ['local', 'staging'])
+            ? $baseUrls['staging']
+            : ($baseUrls[$environment] ?? $baseUrls['staging']);
+
+        return array_map(fn ($key, $url) => [
+            'name' => $key,
+            'link' => $url . '?referrer=' . $referrer_code
+        ], array_keys($selectedBaseUrls), $selectedBaseUrls);
     }
 }
 
