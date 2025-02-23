@@ -14,7 +14,7 @@ return new class extends Migration
     {
 
         Schema::table('users', function (Blueprint $table) {
-            $table->longText('referrer_link')->nullable()->change();
+            $table->longText('referrer_link')->change();
         });
     }
 
@@ -24,7 +24,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->longText('referrer_link')->nullable()->change();
+            $table->string('referrer_link')->nullable()->change();
         });
     }
 };
