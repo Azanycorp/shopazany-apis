@@ -29,7 +29,7 @@ class UserObserver implements ShouldHandleEventsAfterCommit
 
         if ($user->is_affiliate_member) {
             $user->referrer_code = generate_referral_code();
-            $user->referrer_link = generate_referrer_link($user->referrer_code);
+            $user->referrer_link = generate_referrer_links($user->referrer_code);
             $user->save();
         }
 

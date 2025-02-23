@@ -71,7 +71,7 @@ class CouponService
 
     public function getCoupon(): array
     {
-        $coupons = Coupon::select('id', 'name', 'code', 'link', 'used', 'type', 'expire_at', 'status')
+        $coupons = Coupon::select('id', 'name', 'code', 'link', 'used', 'max_use', 'total_used', 'type', 'expire_at', 'status')
             ->orderBy('created_at', 'desc')
             ->paginate(25);
 

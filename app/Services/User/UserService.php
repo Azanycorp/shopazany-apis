@@ -3,12 +3,12 @@
 namespace App\Services\User;
 
 use App\Enum\TransactionStatus;
+use App\Enum\UserStatus;
 use App\Enum\UserType;
 use App\Enum\WithdrawalStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\PaymentMethodResource;
 use App\Http\Resources\ProfileResource;
-use App\Http\Resources\TransactionResource;
 use App\Models\BankAccount;
 use App\Models\Transaction;
 use App\Models\User;
@@ -27,7 +27,8 @@ class UserService extends Controller
     public function profile()
     {
         $auth = $this->userAuth();
-        $user = User::with(['wallet', 'referrals', 'bankAccount', 'userbusinessinfo', 'userSubscriptions', 'userShippingAddress'])
+        $user = User::with(['wallet', 'bankAccount', 'userbusinessinfo', 'userSubscriptions', 'userShippingAddress'])
+            ->withCount('referrals')
             ->findOrFail($auth->id)
             ->append(['is_subscribed', 'subscription_plan']);
 
@@ -370,6 +371,58 @@ class UserService extends Controller
         ]);
 
         return $this->success(null, "Settings changed successfully");
+    }
+
+    public function referralManagement($userId)
+    {
+        $currentUserId = Auth::id();
+
+        if ($currentUserId !== (int) $userId) {
+            return $this->error(null, "Unauthorized action.", 403);
+        }
+
+        $searchQuery = request()->query('search');
+        $statusFilter = request()->query('status');
+
+        $user = User::with(['referrals' => function ($query) use ($searchQuery, $statusFilter) {
+                $query->select(
+                    'users.id',
+                    'users.first_name',
+                    'users.last_name',
+                    'users.email',
+                    'users.phone',
+                    'users.status',
+                    'users.created_at'
+                )
+                ->filterReferrals($searchQuery, $statusFilter);
+            }])
+            ->withCount('referrals')
+            ->find($userId);
+
+        if(! $user){
+            return $this->error(null, "User not found", 404);
+        }
+
+        $totalSignedUp = $user->referrals()
+            ->where('status', UserStatus::ACTIVE)
+            ->count();
+
+        $data = [
+            'total_referrals' => $user->referrals_count,
+            'total_signed_up' => $totalSignedUp,
+            'referrals' => $user->referrals ? $user->referrals->map(function ($referral) {
+                return [
+                    'id' => $referral->id,
+                    'name' => $referral->first_name . ' ' . $referral->last_name,
+                    'phone' => $referral->phone,
+                    'email' => $referral->email,
+                    'status' => $referral->status,
+                    'referral_date' => $referral->created_at->format('Y-m-d'),
+                ];
+            })->toArray() : [],
+        ];
+
+        return $this->success($data, "Referral management");
     }
 }
 
