@@ -32,10 +32,12 @@ use Illuminate\Support\Facades\Hash;
 use App\Http\Resources\BuyerResource;
 use App\Http\Resources\PaymentResource;
 use App\Http\Resources\B2BOrderResource;
+use App\Http\Resources\B2BQuoteResource;
 use App\Http\Resources\CustomerResource;
 use App\Http\Resources\B2BBannerResource;
 use App\Http\Resources\B2BProductResource;
 use App\Http\Resources\B2BCategoryResource;
+use App\Http\Resources\B2BWishListResource;
 use App\Http\Resources\B2BSellerProductResource;
 use App\Http\Resources\B2BBuyerShippingAddressResource;
 
@@ -364,11 +366,11 @@ class BuyerService
     public function allQuotes()
     {
         $userId = userAuthId();
-
-        $quotes = B2bQuote::where('buyer_id', $userId)
+        $quotes = B2bQuote::with(['product'])->where('buyer_id', $userId)
             ->latest('id')
             ->get();
-        return $this->success($quotes, 'quotes lists');
+        $data = B2BQuoteResource::collection($quotes);
+        return $this->success($data, 'quotes lists');
     }
 
     public function sendMutipleQuotes()
@@ -676,7 +678,7 @@ class BuyerService
     public function myWishList()
     {
         $userId = userAuthId();
-        $wishes =  B2bWishList::with('product')
+       $wishes =  B2bWishList::with('product')
             ->where('user_id', $userId)
             ->latest('id')
             ->get();
@@ -684,8 +686,8 @@ class BuyerService
         if ($wishes->isEmpty()) {
             return $this->error(null, 'No record found to send', 404);
         }
-
-        return $this->success($wishes, 'My Wish List');
+        $data = B2BWishListResource::collection($wishes);
+        return $this->success($data, 'My Wish List');
     }
 
     public function removeItem($id)
