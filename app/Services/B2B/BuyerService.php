@@ -677,7 +677,7 @@ class BuyerService
     //wish list
     public function myWishList()
     {
-        $userId = userAuthId();
+       $userId = userAuthId();
        $wishes =  B2bWishList::with('product')
             ->where('user_id', $userId)
             ->latest('id')
