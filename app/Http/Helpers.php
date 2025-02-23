@@ -288,7 +288,6 @@ if(!function_exists('generate_referrer_link')) {
         if (App::environment('production')) {
             return config('services.seller_baseurl') . '?referrer=' . $referrer_code;
         }
-
         return config('services.staging_seller_baseurl') . '?referrer=' . $referrer_code;
     }
 }
