@@ -52,14 +52,16 @@ return [
     'staging_frontend_baseurl' => env('STAGING_FRONTEND_BASEURL'),
     'baseurl' => env('BASEURL'),
 
-    'agricom_seller_baseurl' => 'https://shopazany.com/en/seller-signup',
-    'agricom_staging_seller_baseurl' => 'https://fe-staging.shopazany.com/en/seller-signup',
+    'frontend' => [
+        'seller_baseurl' => 'https://shopazany.com/en/seller-signup',
+        'staging_seller_baseurl' => 'https://fe-staging.shopazany.com/en/seller-signup',
 
-    'seller_baseurl' => 'https://shopazany.com/en/seller-signup',
-    'staging_seller_baseurl' => 'https://fe-staging.shopazany.com/en/seller-signup',
+        'b2b_baseurl' => 'https://b2b.shopazany.com/en/seller-signup',
+        'b2b_staging_baseurl' => 'https://b2b-staging.shopazany.com/en/seller-signup',
 
-    'b2b_seller_baseurl' => 'https://shopazany.com/en/seller-signup',
-    'b2b_staging_seller_baseurl' => 'https://fe-staging.shopazany.com/en/seller-signup',
+        'agricom_baseurl' => 'https://agriecom.shopazany.com/en/seller-signup',
+        'agricom_staging_baseurl' => 'https://agriecom-staging.shopazany.com/en/seller-signup',
+    ],
 
     'paystack' => [
         'mode' => env('PAYSTACK'),

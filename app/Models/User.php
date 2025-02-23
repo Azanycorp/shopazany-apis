@@ -162,4 +162,22 @@ class User extends Authenticatable
         });
     }
 
+    public function scopeFilterReferrals($query, $searchQuery, $statusFilter)
+    {
+        if (!empty($searchQuery)) {
+            $query->where(function ($q) use ($searchQuery) {
+                $q->where('first_name', 'LIKE', "%$searchQuery%")
+                ->orWhere('last_name', 'LIKE', "%$searchQuery%")
+                ->orWhere('email', 'LIKE', "%$searchQuery%");
+            });
+        }
+
+        if (!empty($statusFilter)) {
+            $query->where('status', $statusFilter);
+        }
+
+        return $query;
+    }
+
+
 }
