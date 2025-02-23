@@ -147,6 +147,7 @@ Route::group(['middleware' => ['auth:api'], 'prefix' => 'user'], function (): vo
             Route::get('/transaction/{user_id}', 'transactionHistory');
             Route::post('/payment-method', 'addPaymentMethod');
             Route::get('/payment-method/{user_id}', 'getPaymentMethod');
+            Route::get('/referral/management/{user_id}', 'referralManagement');
         });
 
         Route::post('/update-profile/{user_id}', 'updateProfile');
