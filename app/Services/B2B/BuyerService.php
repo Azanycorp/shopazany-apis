@@ -39,6 +39,7 @@ use App\Http\Resources\B2BProductResource;
 use App\Http\Resources\B2BCategoryResource;
 use App\Http\Resources\B2BWishListResource;
 use App\Http\Resources\B2BSellerProductResource;
+use App\Http\Resources\B2BBestSellingProductResource;
 use App\Http\Resources\B2BBuyerShippingAddressResource;
 
 class BuyerService
@@ -268,14 +269,15 @@ class BuyerService
 
     public function bestSelling()
     {
-        $bestSellingProducts = B2bOrder::select('product_id', DB::raw('SUM(product_quantity) as total_sold'))
-            ->groupBy('product_id')
+        $bestSellingProducts = B2bOrder::select('id','product_id', DB::raw('SUM(product_quantity) as total_sold'))
+            ->groupBy('product_id','id')
             ->orderByDesc('total_sold')
             ->take(10)
-            ->with('product')
+            ->with(['product', 'product.b2bProductReview'])
             ->where('status', OrderStatus::DELIVERED)
             ->get();
-        return $this->success($bestSellingProducts, "Best selling products");
+            $data = B2BBestSellingProductResource::collection($bestSellingProducts);
+        return $this->success($data, "Best selling products");
     }
 
     public function featuredProduct()

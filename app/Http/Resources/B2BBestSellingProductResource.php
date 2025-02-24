@@ -17,9 +17,9 @@ class B2BBestSellingProductResource extends JsonResource
         $average_rating = $this->b2bProductReview->avg('rating');
 
         return [
-            'id' => (int)$this->id,
+            'id' => $this->product_id,
             'product' => $this->product,
-            'qty' => $this->qty,
+            'total_sold' => $this->total_sold,
             'rating' => floatval($average_rating),
             'review_count' => (int)$this->b2bProductReview?->count(),
         ];
