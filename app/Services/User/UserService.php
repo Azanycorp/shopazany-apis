@@ -256,7 +256,7 @@ class UserService extends Controller
         $transactions = $query->get()->map(function ($transaction) {
             return [
                 'id' => $transaction->id,
-                'transaction_id' => $transaction->transaction_id,
+                'transaction_id' => $transaction->id,
                 'type' => 'transaction',
                 'date' => $transaction->created_at->format('Y-m-d'),
                 'amount' => $transaction->amount,
