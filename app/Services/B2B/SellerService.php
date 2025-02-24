@@ -649,7 +649,7 @@ class SellerService extends Controller
         $orders = B2bOrder::when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
             $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
                 $subQuery->where('seller_id', userAuthId())
-                    ->orWhere('order_no', 'LIKE', '%' . $searchQuery . '%');
+                    ->where('order_no', 'LIKE', '%' . $searchQuery . '%');
             });
         })->get();
 
