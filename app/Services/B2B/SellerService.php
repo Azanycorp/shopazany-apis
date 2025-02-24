@@ -941,7 +941,7 @@ class SellerService extends Controller
 
         $config = Configuration::first();
         if (!$config) {
-            return $this->error(null, 'Configuration not found', 500);
+            return $this->error(null, 'Configuration setting not found', 404);
         }
 
         $min = $config->withdrawal_min ?? 0;
@@ -966,7 +966,7 @@ class SellerService extends Controller
 
         $paymentInfo = B2bWithdrawalMethod::where('status', WithdrawalStatus::ACTIVE)->find($data->account_id);
         if (!$paymentInfo) {
-            return $this->error(null, 'Invalid account selected for withdrawal', 422);
+            return $this->error(null, 'Invalid account selected for withdrawal or account is not active', 422);
         }
 
         $pendingRequest = Payout::where(['seller_id' => $currentUserId, 'status' => 'pending'])->exists();
@@ -985,7 +985,10 @@ class SellerService extends Controller
             Payout::create([
                 'seller_id' => $currentUserId,
                 'amount' => $netAmount,
-                'fee' => $fee,
+                'account_name' => $paymentInfo->account_name,
+                'account_number' => $paymentInfo->account_number,
+                'bank' => $paymentInfo->bank_name,
+                'status' => WithdrawalStatus::PENDING,
                 'b2b_withdrawal_method' => $paymentInfo->id,
             ]);
 
