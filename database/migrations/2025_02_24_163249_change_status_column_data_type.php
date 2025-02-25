@@ -22,7 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('payouts', function (Blueprint $table) {
-            $table->enum('status',['pending','paid','declined'])->default('pending');
+           
         });
     }
 };
