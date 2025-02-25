@@ -10,7 +10,6 @@ use App\Http\Controllers\Controller;
 use App\Mail\SignUpVerifyMail;
 use App\Mail\UserWelcomeMail;
 use App\Models\Action;
-use App\Models\Country;
 use App\Models\User;
 use App\Trait\HttpResponse;
 use App\Trait\SignUp;
