@@ -14,7 +14,7 @@ class SuperAdminService
     // //Collation centers
     public function allCollationCentres()
     {
-        return $centers = CollationCenter::latest('id')->get();
+         $centers = CollationCenter::latest('id')->get();
         $data = CollationCentreResource::collection($centers);
         return $this->success($data, 'All available collation centres');
     }
