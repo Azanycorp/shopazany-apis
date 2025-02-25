@@ -26,6 +26,7 @@ use Illuminate\Support\Str;
 use App\Models\Configuration;
 use App\Models\ShippingAgent;
 use App\Mail\B2BNewAdminEmail;
+use App\Models\CollationCenter;
 use App\Models\SubscriptionPlan;
 use Illuminate\Support\Facades\DB;
 use App\Models\B2bWithdrawalMethod;
@@ -38,6 +39,7 @@ use App\Http\Resources\B2BSellerResource;
 use App\Http\Resources\B2BProductResource;
 use App\Repositories\B2BProductRepository;
 use App\Http\Resources\ShippingAgentResource;
+use App\Http\Resources\CollationCentreResource;
 use App\Http\Resources\SubscriptionPlanResource;
 use App\Repositories\B2BSellerShippingRepository;
 
@@ -194,7 +196,9 @@ class AdminService
                 SUM(CASE WHEN status IN (?, ?, ?) THEN 1 ELSE 0 END) as inactive
             ', [
                 UserStatus::ACTIVE,
-                UserStatus::PENDING, UserStatus::BLOCKED, UserStatus::SUSPENDED
+                UserStatus::PENDING,
+                UserStatus::BLOCKED,
+                UserStatus::SUSPENDED
             ])
             ->first();
 
@@ -649,10 +653,23 @@ class AdminService
     public function updateConfigDetails($data)
     {
         $configData = $data->only([
-            'usd_rate', 'company_profit', 'email_verify', 'currency_code', 'currency_symbol',
-            'promotion_start_date', 'promotion_end_date', 'min_deposit', 'max_deposit',
-            'min_withdrawal', 'withdrawal_frequency', 'withdrawal_status', 'max_withdrawal',
-            'withdrawal_fee', 'seller_perc', 'paystack_perc', 'paystack_fixed'
+            'usd_rate',
+            'company_profit',
+            'email_verify',
+            'currency_code',
+            'currency_symbol',
+            'promotion_start_date',
+            'promotion_end_date',
+            'min_deposit',
+            'max_deposit',
+            'min_withdrawal',
+            'withdrawal_frequency',
+            'withdrawal_status',
+            'max_withdrawal',
+            'withdrawal_fee',
+            'seller_perc',
+            'paystack_perc',
+            'paystack_fixed'
         ]);
 
         Configuration::updateOrCreate([], $configData);
@@ -678,8 +695,8 @@ class AdminService
     public function viewWidthrawalRequest($id)
     {
         $payout =  Payout::with(['user' => function ($query): void {
-                $query->select('id', 'first_name', 'last_name')->where('type', UserType::B2B_SELLER);
-            }])
+            $query->select('id', 'first_name', 'last_name')->where('type', UserType::B2B_SELLER);
+        }])
             ->where('id', $id)
             ->firstOrFail();
 
@@ -741,10 +758,17 @@ class AdminService
         $account =  B2bWithdrawalMethod::with('user.businessInformation')->findOrFail($id);
 
         $business = BusinessInformation::select([
-                'business_location', 'business_type', 'business_name', 'business_reg_number', 'business_phone', 'business_reg_document', 'identification_type_document', 'user_id'
-                ])
-                ->with(['user' => function ($query): void {
-                    $query->where('type', UserType::B2B_SELLER)->select('id', 'first_name', 'last_name');
+            'business_location',
+            'business_type',
+            'business_name',
+            'business_reg_number',
+            'business_phone',
+            'business_reg_document',
+            'identification_type_document',
+            'user_id'
+        ])
+            ->with(['user' => function ($query): void {
+                $query->where('type', UserType::B2B_SELLER)->select('id', 'first_name', 'last_name');
             }])
             ->where('user_id', $account->user_id)->firstOrFail();
 
@@ -833,10 +857,10 @@ class AdminService
                 SUM(CASE WHEN type = ? THEN 1 ELSE 0 END) as sellers,
                 SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as pending_approval
             ', [
-                UserType::B2B_BUYER,
-                UserType::B2B_SELLER,
-                UserStatus::PENDING
-            ])
+            UserType::B2B_BUYER,
+            UserType::B2B_SELLER,
+            UserStatus::PENDING
+        ])
             ->first();
 
         $admins = Admin::with('permissions:id,name')
@@ -883,7 +907,7 @@ class AdminService
             ];
             DB::commit();
 
-            defer(fn () => send_email($data->email, new B2BNewAdminEmail($loginDetails)));
+            defer(fn() => send_email($data->email, new B2BNewAdminEmail($loginDetails)));
 
             return $this->success($admin, 'Admin user added successfully', 201);
         } catch (\Throwable $th) {
@@ -1079,58 +1103,46 @@ class AdminService
     // //Collation centers
     public function allCollationCentres()
     {
-        $plans = SubscriptionPlan::where('type', PlanType::B2B)->latest('id')->get();
-        $data = SubscriptionPlanResource::collection($plans);
-        return $this->success($data, 'All B2B Plans');
+        $centers = CollationCenter::latest('id')->get();
+        $data = CollationCentreResource::collection($centers);
+        return $this->success($data, 'All available collation centres');
     }
 
     public function addCollationCentre($data)
     {
-        $currencyCode = $this->currencyCode($data);
-        $plan = SubscriptionPlan::create([
-            'title' => $data->title,
-            'cost' => $data->cost,
-            'country_id' => $data->country_id,
-            'currency' => $currencyCode,
-            'period' => $data->period,
-            'tier' => $data->tier,
-            'designation' => $data->designation,
-            'tagline' => $data->tagline,
-            'details' => $data->details,
-            'type' => PlanType::B2B,
+        $centre = CollationCenter::create([
+            'name' => $data->name,
+            'location' => $data->location,
+            'status' => $data->status,
+            'note' => $data->note,
             'status' => PlanStatus::ACTIVE
         ]);
-        return $this->success($plan, 'Plan added successfully', 201);
+        $data = new CollationCentreResource($centre);
+        return $this->success($data, 'Centre added successfully', 201);
     }
 
     public function viewCollationCentre($id)
     {
-        $plan = SubscriptionPlan::where('type', PlanType::B2B)->find($id);
-        if (!$plan) {
-            return $this->error(null, 'Plan not found', 404);
+        $centre = CollationCenter::find($id);
+        if (!$centre) {
+            return $this->error(null, 'Centre not found', 404);
         }
 
-        $data = new SubscriptionPlanResource($plan);
-        return $this->success($data, 'Plan details');
+        $data = new CollationCentreResource($centre);
+        return $this->success($data, 'Centre details');
     }
 
     public function editCollationCentre($id, $data)
     {
-        $plan = SubscriptionPlan::where('type', PlanType::B2B)->find($id);
-        if (!$plan) {
-            return $this->error(null, 'Plan not found', 404);
+        $centre = CollationCenter::find($id);
+        if (!$centre) {
+            return $this->error(null, 'Centre not found', 404);
         }
-        $currencyCode = $this->currencyCode($data);
-        $plan->update([
-            'title' => $data->title,
-            'cost' => $data->cost,
-            'country_id' => $data->country_id,
-            'currency' => $data->country_id ? $currencyCode : $plan->currency,
-            'period' => $data->period,
-            'tier' => $data->tier,
-            'designation' => $data->designation,
-            'tagline' => $data->tagline,
-            'details' => $data->details,
+
+        $centre->update([
+            'name' => $data->name,
+            'location' => $data->location,
+            'note' => $data->note,
             'status' => $data->status ?? PlanStatus::ACTIVE
         ]);
         return $this->success(null, 'Details updated successfully');
@@ -1138,19 +1150,12 @@ class AdminService
 
     public function deleteCollationCentre($id)
     {
-        $plan = SubscriptionPlan::findOrFail($id);
+        $centre = CollationCenter::find($id);
 
-        if ($plan->type !== PlanType::B2B) {
-            return $this->error(null, 'Invalid plan type', 400);
+        if (!$centre) {
+            return $this->error(null, 'Centre not found', 404);
         }
-
-        if ($plan->subscriptions()->exists()) {
-            return $this->error(null, 'Plan cannot be deleted because it has active subscriptions', 400);
-        }
-
-        $plan->delete();
-
-        return $this->success(null, 'Plan deleted successfully.');
+        $centre->delete();
+        return $this->success(null, 'Centre deleted successfully.');
     }
-
 }

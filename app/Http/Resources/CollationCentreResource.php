@@ -15,7 +15,7 @@ class CollationCentreResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => (int)$this->id,
+            'id' => $this->id,
             'name' => (string)$this->name,
             'location' => (string)$this->location,
             'city' => (string)$this->city,

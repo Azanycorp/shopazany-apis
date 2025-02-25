@@ -9,8 +9,6 @@ class CollationCenter extends Model
     protected $fillable = [
         'name',
         'location',
-        'city',
-        'country',
         'status',
         'note',
     ];
