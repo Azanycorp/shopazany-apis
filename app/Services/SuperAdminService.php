@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\B2B;
+namespace App\Services;
 
 use App\Trait\SignUp;
 use App\Enum\PlanStatus;
@@ -14,7 +14,7 @@ class SuperAdminService
     // //Collation centers
     public function allCollationCentres()
     {
-        $centers = CollationCenter::latest('id')->get();
+        return $centers = CollationCenter::latest('id')->get();
         $data = CollationCentreResource::collection($centers);
         return $this->success($data, 'All available collation centres');
     }

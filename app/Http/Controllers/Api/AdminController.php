@@ -1,9 +1,10 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
 use Illuminate\Http\Request;
-use App\Services\B2B\SuperAdminService;
+use App\Http\Controllers\Controller;
+use App\Services\SuperAdminService;
 use App\Http\Requests\Admin\CollationCentreRequest;
 
 class AdminController extends Controller

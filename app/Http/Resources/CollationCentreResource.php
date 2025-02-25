@@ -18,8 +18,7 @@ class CollationCentreResource extends JsonResource
             'id' => $this->id,
             'name' => (string)$this->name,
             'location' => (string)$this->location,
-            'city' => (string)$this->city,
-            'country_id' => $this->country?->name,
+            'note' => (string)$this->note,
             'status' => (string)$this->status,
         ];
     }

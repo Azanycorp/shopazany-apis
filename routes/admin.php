@@ -1,12 +1,12 @@
 <?php
 
-use App\Http\Controllers\Api\AdminAffiliateController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\ApiController;
 use App\Http\Controllers\Api\FaqController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\SizeController;
 use App\Http\Controllers\Api\UnitController;
+use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\BrandController;
 use App\Http\Controllers\Api\ColorController;
 use App\Http\Controllers\Api\OrderController;
@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\RewardPointController;
 use App\Http\Controllers\Api\AdminProductController;
 use App\Http\Controllers\Api\B2B\B2BAdminController;
 use App\Http\Controllers\Api\AdminCustomerController;
+use App\Http\Controllers\Api\AdminAffiliateController;
 use App\Http\Controllers\Api\B2B\B2BAdminBuyerController;
 use App\Http\Controllers\Api\B2B\B2BAdminSellerController;
 use App\Http\Controllers\Api\B2B\B2BBannerPromoController;
@@ -222,6 +223,16 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function (): void
             Route::get('/user/{id}', 'userDetail');
             Route::patch('/suspend/{id}', 'suspend');
             Route::post('/reset-password', 'resetPassword');
+        });
+    //super admin route
+    Route::prefix('collation-centre')
+        ->controller(AdminController::class)
+        ->group(function () {
+            Route::get('/', 'allCollationCentres')->middleware('cacheResponse:300');
+            Route::post('/add', 'addCollationCentre');
+            Route::get('/details/{id}', 'viewCollationCentre');
+            Route::patch('/update/{id}', 'editCollationCentre');
+            Route::delete('/delete/{id}', 'deleteCollationCentre');
         });
 
     //b2b admin
