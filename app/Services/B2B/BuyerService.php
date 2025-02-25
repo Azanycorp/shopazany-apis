@@ -247,17 +247,17 @@ class BuyerService
     }
     public function categories()
     {
-        $categories = B2bProductCategory::with(['subcategory','products'])
+        $categories = B2bProductCategory::with(['subcategory','products','products.b2bProductReview','products.b2bLikes'])
             ->where('featured', 1)
             ->take(10)
             ->get();
-
-        return $this->success($categories, "Categories");
+            $data = B2BCategoryResource::collection($categories);
+        return $this->success($data, "Categories");
     }
     public function getCategoryProducts()
     {
         $categories = B2BProductCategory::select('id','name','slug','image')
-            ->with(['products.b2bProductReview','products.b2bLikes'])
+            ->with(['products.b2bProductReview','products.b2bLikes','subcategory'])
             ->get();
             $data = B2BCategoryResource::collection($categories);
         return $this->success($data, "Categories products");

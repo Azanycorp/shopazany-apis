@@ -11,6 +11,7 @@ class CollationCenter extends Model
         'location',
         'city',
         'country',
-        'status'
+        'status',
+        'note',
     ];
 }

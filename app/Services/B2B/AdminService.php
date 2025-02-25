@@ -1076,4 +1076,81 @@ class AdminService
         return $this->success(null, 'Plan deleted successfully.');
     }
 
+    // //Collation centers
+    public function allCollationCentres()
+    {
+        $plans = SubscriptionPlan::where('type', PlanType::B2B)->latest('id')->get();
+        $data = SubscriptionPlanResource::collection($plans);
+        return $this->success($data, 'All B2B Plans');
+    }
+
+    public function addCollationCentre($data)
+    {
+        $currencyCode = $this->currencyCode($data);
+        $plan = SubscriptionPlan::create([
+            'title' => $data->title,
+            'cost' => $data->cost,
+            'country_id' => $data->country_id,
+            'currency' => $currencyCode,
+            'period' => $data->period,
+            'tier' => $data->tier,
+            'designation' => $data->designation,
+            'tagline' => $data->tagline,
+            'details' => $data->details,
+            'type' => PlanType::B2B,
+            'status' => PlanStatus::ACTIVE
+        ]);
+        return $this->success($plan, 'Plan added successfully', 201);
+    }
+
+    public function viewCollationCentre($id)
+    {
+        $plan = SubscriptionPlan::where('type', PlanType::B2B)->find($id);
+        if (!$plan) {
+            return $this->error(null, 'Plan not found', 404);
+        }
+
+        $data = new SubscriptionPlanResource($plan);
+        return $this->success($data, 'Plan details');
+    }
+
+    public function editCollationCentre($id, $data)
+    {
+        $plan = SubscriptionPlan::where('type', PlanType::B2B)->find($id);
+        if (!$plan) {
+            return $this->error(null, 'Plan not found', 404);
+        }
+        $currencyCode = $this->currencyCode($data);
+        $plan->update([
+            'title' => $data->title,
+            'cost' => $data->cost,
+            'country_id' => $data->country_id,
+            'currency' => $data->country_id ? $currencyCode : $plan->currency,
+            'period' => $data->period,
+            'tier' => $data->tier,
+            'designation' => $data->designation,
+            'tagline' => $data->tagline,
+            'details' => $data->details,
+            'status' => $data->status ?? PlanStatus::ACTIVE
+        ]);
+        return $this->success(null, 'Details updated successfully');
+    }
+
+    public function deleteCollationCentre($id)
+    {
+        $plan = SubscriptionPlan::findOrFail($id);
+
+        if ($plan->type !== PlanType::B2B) {
+            return $this->error(null, 'Invalid plan type', 400);
+        }
+
+        if ($plan->subscriptions()->exists()) {
+            return $this->error(null, 'Plan cannot be deleted because it has active subscriptions', 400);
+        }
+
+        $plan->delete();
+
+        return $this->success(null, 'Plan deleted successfully.');
+    }
+
 }

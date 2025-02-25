@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('city');
             $table->string('country');
             $table->string('status');
+            $table->text('note')->nullable();
             $table->timestamps();
         });
     }
