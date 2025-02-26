@@ -22,6 +22,7 @@ class OrderResource extends JsonResource
             'order_date' => (string)$this->order_date,
             'total_amount' => (string)$this->total_amount,
             'payment_method' => (string)$this->payment_method,
+            'currency' => (string)$this->product?->default_currency,
             'status' => (string)$this->status
         ];
     }
