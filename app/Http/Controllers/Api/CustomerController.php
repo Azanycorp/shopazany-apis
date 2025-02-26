@@ -86,7 +86,7 @@ class CustomerController extends Controller
     {
         return $this->service->activity($userId);
     }
-    
+
     public function redeemPoint(Request $request)
     {
         return $this->service->redeemPoint($request);
