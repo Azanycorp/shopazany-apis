@@ -130,7 +130,7 @@ class CustomerService
             return $this->error(null, "User not found", 404);
         }
 
-        $orders = Order::with('user')
+        $orders = Order::with(['user', 'product'])
             ->where('user_id', $userId)
             ->orderBy('created_at', 'desc')
             ->paginate(25);
