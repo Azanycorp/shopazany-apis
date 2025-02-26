@@ -228,18 +228,18 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function (): void
     Route::prefix('collation-centre')
         ->controller(AdminController::class)
         ->group(function () {
-            Route::get('/', 'allCollationCentres')->middleware('cacheResponse:300');
+            Route::get('/', 'allCollationCentres');
             Route::post('/add', 'addCollationCentre');
             Route::get('/details/{id}', 'viewCollationCentre');
             Route::patch('/update/{id}', 'editCollationCentre');
             Route::delete('/delete/{id}', 'deleteCollationCentre');
             Route::prefix('hubs')
                 ->group(function () {
-                    Route::get('/', 'allCollationCentresHubs')->middleware('cacheResponse:300');
+                    Route::get('/', 'allCollationCentreHubs');
                     Route::post('/add', 'addHub');
-                    Route::get('/details/{id}', 'viewCollationCentre');
-                    Route::patch('/update/{id}', 'editCollationCentre');
-                    Route::delete('/delete/{id}', 'deleteCollationCentre');
+                    Route::get('/details/{id}', 'viewHub');
+                    Route::patch('/update/{id}', 'editHub');
+                    Route::delete('/delete/{id}', 'deleteHub');
                 });
         });
 

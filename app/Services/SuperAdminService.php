@@ -18,9 +18,18 @@ class SuperAdminService
     // //Collation centers
     public function allCollationCentres()
     {
-        $centers = CollationCenter::with(['country','hubs'])->withCount('hubs')->latest('id')->get();
+        $total_centers = CollationCenter::count();
+        $active_centers = CollationCenter::where('status', PlanStatus::ACTIVE)->count();
+        $inactive_centers = CollationCenter::where('status', PlanStatus::INACTIVE)->count();
+        $centers = CollationCenter::with(['country', 'hubs.country'])->latest('id')->get();
         $data = CollationCentreResource::collection($centers);
-        return $this->success($data, 'All available collation centres');
+        $collation_details = [
+            'total_centers' => $total_centers,
+            'active_centers' => $active_centers,
+            'inactive_centers' => $inactive_centers,
+            'centers' => $data,
+        ];
+        return $this->success($collation_details, 'All available collation centres');
     }
 
     public function addCollationCentre($data)
@@ -34,13 +43,12 @@ class SuperAdminService
             'country_id' => $data->country_id,
             'status' => PlanStatus::ACTIVE
         ]);
-        $data = new CollationCentreResource($centre);
-        return $this->success($data, 'Centre added successfully', 201);
+        return $this->success($centre, 'Centre added successfully', 201);
     }
 
     public function viewCollationCentre($id)
     {
-        $centre = CollationCenter::find($id);
+        $centre = CollationCenter::with(['country', 'hubs.country'])->find($id);
         if (!$centre) {
             return $this->error(null, 'Centre not found', 404);
         }
@@ -74,15 +82,18 @@ class SuperAdminService
         if (!$centre) {
             return $this->error(null, 'Centre not found', 404);
         }
+        if ($centre->hubs) {
+            return $this->error(null, "Category can not be deleted because it has content", 422);
+        }
         $centre->delete();
         return $this->success(null, 'Centre deleted successfully.');
     }
 
     // Hubs under Collation centers
-    public function allCollationCentreHUbs($id)
+    public function allCollationCentreHUbs()
     {
-        $centers = PickupStation::with('country')->latest('id')->get();
-        $data = CollationCentreResource::collection($centers);
+        $centers = PickupStation::with(['country', 'collationCenter'])->latest('id')->get();
+        $data = HubResource::collection($centers);
         return $this->success($data, 'All available collation centres hubs');
     }
 
@@ -97,19 +108,18 @@ class SuperAdminService
             'country_id' => $data->country_id,
             'status' => PlanStatus::ACTIVE
         ]);
-        $data = new HubResource($hub);
-        return $this->success($data, 'Centre added successfully', 201);
+        return $this->success($hub, 'Hub added successfully', 201);
     }
 
     public function viewHub($id)
     {
-        $centre = CollationCenter::find($id);
+        $centre = PickupStation::with(['country', 'collationCenter'])->find($id);
         if (!$centre) {
-            return $this->error(null, 'Centre not found', 404);
+            return $this->error(null, 'Hub not found', 404);
         }
 
-        $data = new CollationCentreResource($centre);
-        return $this->success($data, 'Centre details');
+        $data = new HubResource($centre);
+        return $this->success($data, 'Hub details');
     }
 
     public function editHub($id, $data)
@@ -120,7 +130,7 @@ class SuperAdminService
         }
 
         $hub->update([
-            'collation_center_id' => $data->collation_center_id,
+            'collation_center_id' => $data->collation_center_id ?? $hub->collation_center_id,
             'name' => $data->name ?? $hub->name,
             'location' => $data->location ?? $hub->location,
             'note' => $data->note ?? $hub->note,
