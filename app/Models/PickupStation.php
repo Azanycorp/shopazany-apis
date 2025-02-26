@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use App\Models\CollationCenter;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PickupStation extends Model
 {
@@ -15,4 +17,12 @@ class PickupStation extends Model
         'city',
         'country_id'
     ];
+    public function country(): BelongsTo
+    {
+        return $this->belongsTo(Country::class, 'country_id');
+    }
+    public function collationCenter(): BelongsTo
+    {
+        return $this->belongsTo(CollationCenter::class, 'collation_center_id');
+    }
 }

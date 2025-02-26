@@ -7,6 +7,7 @@ use App\Enum\PlanStatus;
 use App\Trait\HttpResponse;
 use App\Models\PickupStation;
 use App\Models\CollationCenter;
+use App\Http\Resources\HubResource;
 use Illuminate\Contracts\Pipeline\Hub;
 use App\Http\Resources\CollationCentreResource;
 
@@ -17,7 +18,7 @@ class SuperAdminService
     // //Collation centers
     public function allCollationCentres()
     {
-        $centers = CollationCenter::latest('id')->get();
+        $centers = CollationCenter::with(['country','hubs'])->withCount('hubs')->latest('id')->get();
         $data = CollationCentreResource::collection($centers);
         return $this->success($data, 'All available collation centres');
     }
@@ -80,9 +81,9 @@ class SuperAdminService
     // Hubs under Collation centers
     public function allCollationCentreHUbs($id)
     {
-        $centers = PickupStation::latest('id')->get();
+        $centers = PickupStation::with('country')->latest('id')->get();
         $data = CollationCentreResource::collection($centers);
-        return $this->success($data, 'All available collation centres');
+        return $this->success($data, 'All available collation centres hubs');
     }
 
     public function addHub($data)

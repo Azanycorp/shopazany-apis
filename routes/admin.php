@@ -233,6 +233,14 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function (): void
             Route::get('/details/{id}', 'viewCollationCentre');
             Route::patch('/update/{id}', 'editCollationCentre');
             Route::delete('/delete/{id}', 'deleteCollationCentre');
+            Route::prefix('hubs')
+                ->group(function () {
+                    Route::get('/', 'allCollationCentresHubs')->middleware('cacheResponse:300');
+                    Route::post('/add', 'addHub');
+                    Route::get('/details/{id}', 'viewCollationCentre');
+                    Route::patch('/update/{id}', 'editCollationCentre');
+                    Route::delete('/delete/{id}', 'deleteCollationCentre');
+                });
         });
 
     //b2b admin
