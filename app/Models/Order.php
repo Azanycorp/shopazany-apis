@@ -45,9 +45,9 @@ class Order extends Model
         return $this->belongsTo(User::class, 'seller_id')->where('type', 'seller');
     }
 
-    public function products(): HasMany
+    public function product(): BelongsTo
     {
-        return $this->hasMany(Product::class, 'id', 'product_id');
+        return $this->belongsTo(Product::class, 'product_id');
     }
 
     public static function saveOrder($user, $payment, $seller, $item, $orderNo, $address, $method, $status): self
