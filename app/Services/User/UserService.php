@@ -132,7 +132,6 @@ class UserService extends Controller
             return $this->error(null, "Insufficient balance for withdrawal", 400);
         }
 
-        // Use a database transaction to prevent race conditions
         DB::transaction(function () use ($wallet, $user, $request) {
             $newBalance = $wallet->balance - $request->amount;
 
@@ -141,7 +140,8 @@ class UserService extends Controller
                 'user_type' => 'b2c_affiliate',
                 'amount' => $request->amount,
                 'previous_balance' => $wallet->balance,
-                'current_balance' => $newBalance
+                'current_balance' => $newBalance,
+                'status' => WithdrawalStatus::PENDING,
             ]);
 
             $wallet->update(['balance' => $newBalance]);
@@ -161,7 +161,6 @@ class UserService extends Controller
         }
 
         try {
-
             $parts = explode('@', $user->email);
             $name = $parts[0];
 
@@ -243,17 +242,18 @@ class UserService extends Controller
         }
 
         $status = request()->query('status');
-        $query = Transaction::where('user_id', $userId);
+        $perPage = request()->query('per_page', 25);
+        $page = request()->query('page', 1);
 
+        $transactionQuery = Transaction::where('user_id', $userId);
         if ($status) {
             if (!in_array($status, [TransactionStatus::SUCCESSFUL, TransactionStatus::PENDING, TransactionStatus::REJECTED])) {
                 return $this->error(null, "Invalid status", 400);
             }
-
-            $query->where('status', $status);
+            $transactionQuery->where('status', $status);
         }
 
-        $transactions = $query->get()->map(function ($transaction) {
+        $transactions = $transactionQuery->get()->map(function ($transaction) {
             return [
                 'id' => $transaction->id,
                 'transaction_id' => $transaction->id,
@@ -265,7 +265,6 @@ class UserService extends Controller
         });
 
         $withdrawalQuery = WithdrawalRequest::where('user_id', $userId);
-
         if ($status) {
             $withdrawalQuery->where('status', $status);
         }
@@ -281,11 +280,25 @@ class UserService extends Controller
             ];
         });
 
-        $data = $transactions->merge($withdrawals)->sortByDesc('date')->values();
+        $mergedData = collect($transactions)->merge(collect($withdrawals))->sortByDesc('date')->values();
 
-        return $this->success($data, "Transaction history");
+        $total = $mergedData->count();
+        $paginatedData = $mergedData->slice(($page - 1) * $perPage, $perPage)->values();
+
+        return response()->json([
+            'status' => 'true',
+            'message' => 'Transaction history',
+            'data' => $paginatedData,
+            'pagination' => [
+                'current_page' => (int) $page,
+                'last_page' => ceil($total / $perPage),
+                'per_page' => (int) $perPage,
+                'total' => $total,
+                'prev_page_url' => $page > 1 ? request()->url() . '?page=' . ($page - 1) . '&per_page=' . $perPage : null,
+                'next_page_url' => $page < ceil($total / $perPage) ? request()->url() . '?page=' . ($page + 1) . '&per_page=' . $perPage : null,
+            ],
+        ]);
     }
-
 
     public function addPaymentMethod($request)
     {

@@ -114,7 +114,13 @@ Route::middleware('validate.header')
             });
 
             // Buyer
-            Route::group(['middleware' => 'b2b_buyer.auth','check.user.country', 'prefix' => 'buyer', 'controller' => B2BBuyerController::class], function (): void {
+            Route::group(
+                [
+                    'middleware' => 'b2b_buyer.auth',
+                    'check.user.country',
+                    'prefix' => 'buyer',
+                    'controller' => B2BBuyerController::class
+                ], function (): void {
 
                 Route::post('add-quote', 'requestQuote');
                 Route::get('send-all-quotes', 'sendAllQuotes');
