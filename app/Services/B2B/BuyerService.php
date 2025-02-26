@@ -2,6 +2,7 @@
 
 namespace App\Services\B2B;
 
+use Carbon\Carbon;
 use App\Models\Rfq;
 use App\Models\User;
 use App\Enum\UserType;
@@ -31,11 +32,14 @@ use Illuminate\Support\Facades\Hash;
 use App\Http\Resources\BuyerResource;
 use App\Http\Resources\PaymentResource;
 use App\Http\Resources\B2BOrderResource;
+use App\Http\Resources\B2BQuoteResource;
 use App\Http\Resources\CustomerResource;
 use App\Http\Resources\B2BBannerResource;
 use App\Http\Resources\B2BProductResource;
 use App\Http\Resources\B2BCategoryResource;
+use App\Http\Resources\B2BWishListResource;
 use App\Http\Resources\B2BSellerProductResource;
+use App\Http\Resources\B2BBestSellingProductResource;
 use App\Http\Resources\B2BBuyerShippingAddressResource;
 
 class BuyerService
@@ -219,7 +223,7 @@ class BuyerService
 
     public function getBanners()
     {
-        $banners = B2bBanner::where('status',ProductStatus::ACTIVE)
+        $banners = B2bBanner::where('status', ProductStatus::ACTIVE)
             ->get();
 
         $data = B2BBannerResource::collection($banners);
@@ -247,7 +251,7 @@ class BuyerService
     }
     public function categories()
     {
-        $categories = B2bProductCategory::with(['subcategory','products'])
+        $categories = B2bProductCategory::with(['subcategory', 'products'])
             ->where('featured', 1)
             ->take(10)
             ->get();
@@ -256,23 +260,32 @@ class BuyerService
     }
     public function getCategoryProducts()
     {
-        $categories = B2BProductCategory::select('id','name','slug','image')
-            ->with(['products.b2bProductReview','products.b2bLikes'])
+        $categories = B2BProductCategory::select('id', 'name', 'slug', 'image')
+            ->with(['products.b2bProductReview','subcategory','subcategory.products','products.b2bLikes'])
             ->get();
-            $data = B2BCategoryResource::collection($categories);
+        $data = B2BCategoryResource::collection($categories);
         return $this->success($data, "Categories products");
     }
+    // public function getSubCategoryProducts()
+    // {
+    //     $categories = B2BProductCategory::select('id', 'name', 'slug', 'image')
+    //         ->with(['products.b2bProductReview', 'products.b2bLikes'])
+    //         ->get();
+    //     $data = B2BCategoryResource::collection($categories);
+    //     return $this->success($data, "Categories products");
+    // }
 
     public function bestSelling()
     {
-        $bestSellingProducts = B2bOrder::select('product_id', DB::raw('SUM(product_quantity) as total_sold'))
-            ->groupBy('product_id')
+        $bestSellingProducts = B2bOrder::select('id','product_id', DB::raw('SUM(product_quantity) as total_sold'))
+            ->groupBy('product_id','id')
             ->orderByDesc('total_sold')
             ->take(10)
-            ->with('product')
+            ->with(['product', 'product.b2bProductReview'])
             ->where('status', OrderStatus::DELIVERED)
             ->get();
-        return $this->success($bestSellingProducts, "Best selling products");
+            $data = B2BBestSellingProductResource::collection($bestSellingProducts);
+        return $this->success($data, "Best selling products");
     }
 
     public function featuredProduct()
@@ -334,6 +347,7 @@ class BuyerService
         $product = B2BProduct::with(['category', 'user', 'b2bLikes', 'country', 'b2bProductImages', 'b2bProductReview'])
             ->where('slug', $slug)
             ->firstOrFail();
+        $quote_count = B2bQuote::where('product_id', $product->id)->count();
 
         $b2bProductReview = B2bProdctReview::with(['user' => function ($query): void {
             $query->select('id', 'first_name', 'last_name')->where('type', UserType::B2B_BUYER);
@@ -350,6 +364,7 @@ class BuyerService
         $response = [
             'data' => $data,
             'reviews' => $b2bProductReview,
+            'other_people' => $quote_count,
             'more_from_seller' => B2BProductResource::collection($moreFromSeller),
             'related_products' => B2BProductResource::collection($relatedProducts),
         ];
@@ -361,11 +376,11 @@ class BuyerService
     public function allQuotes()
     {
         $userId = userAuthId();
-
-        $quotes = B2bQuote::where('buyer_id', $userId)
+        $quotes = B2bQuote::with(['product'])->where('buyer_id', $userId)
             ->latest('id')
             ->get();
-        return $this->success($quotes, 'quotes lists');
+        $data = B2BQuoteResource::collection($quotes);
+        return $this->success($data, 'quotes lists');
     }
 
     public function sendMutipleQuotes()
@@ -405,7 +420,7 @@ class BuyerService
             return $this->success(null, 'rfq sent successfully');
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->error(null, 'transaction failed, please try again: '.$e->getMessage(), 422);
+            return $this->error(null, 'transaction failed, please try again: ' . $e->getMessage(), 422);
         }
     }
 
@@ -430,7 +445,7 @@ class BuyerService
 
             return $this->success(null, 'rfq sent successfully');
         } catch (\Exception $e) {
-            return $this->error(null, 'transaction failed, please try again: '.$e->getMessage(), 422);
+            return $this->error(null, 'transaction failed, please try again: ' . $e->getMessage(), 422);
         }
     }
 
@@ -466,19 +481,15 @@ class BuyerService
         return $this->success($quote, 'quote Added successfully');
     }
 
-    //dasboard
+    //dashboard
     public function getDashboardDetails()
     {
         $currentUserId = userAuthId();
-        $startDate = now()->subDays(7); // 7 days ago
-        $endDate = now(); // Current date and time
-
         $rfqStats = Rfq::where('buyer_id', $currentUserId);
         $deals = B2bOrder::where('buyer_id', $currentUserId);
 
         $orderStats = B2bOrder::where('buyer_id', $currentUserId)
             ->where('status', OrderStatus::DELIVERED)
-            ->whereBetween('created_at', [$startDate, $endDate])
             ->sum('total_amount');
 
         $uniqueSellersCount = B2bOrder::where(['buyer_id' => $currentUserId, 'status' => OrderStatus::DELIVERED])
@@ -492,9 +503,22 @@ class BuyerService
             ->take(10)
             ->get();
 
+        $seven_days_partners = B2bOrder::where(['seller_id' => $currentUserId, 'status' => OrderStatus::DELIVERED])
+            ->distinct('buyer_id')
+            ->where('created_at', '<=', Carbon::today()->subDays(7))
+            ->count('buyer_id');
+
+
+        $seven_days_orderStats = B2bOrder::where([
+            'seller_id' => $currentUserId,
+            'status' => OrderStatus::DELIVERED
+        ])->where('created_at', '<=', Carbon::today()->subDays(7))->sum('total_amount');
+
         $data = [
             'total_purchase' => $orderStats,
             'partners' => $uniqueSellersCount,
+            'seven_days_sales' => $seven_days_orderStats,
+            'seven_days_partners' => $seven_days_partners,
             'rfq_sent' => $rfqStats->where('status', RfqStatus::PENDING)->count() ?? 0,
             'rfq_accepted' => $rfqStats->where('status', RfqStatus::COMPLETED)->count() ?? 0,
             'deals_in_progress' => $deals->where('status', OrderStatus::PENDING)->count() ?? 0,
@@ -538,7 +562,7 @@ class BuyerService
 
     public function orderDetails($id)
     {
-        $order = B2bOrder::with(['seller','buyer'])->findOrFail($id);
+        $order = B2bOrder::with(['seller', 'buyer'])->findOrFail($id);
 
         $data = new B2BOrderResource($order);
         return $this->success($data, 'order details');
@@ -663,9 +687,8 @@ class BuyerService
     //wish list
     public function myWishList()
     {
-        $userId = userAuthId();
-
-        $wishes =  B2bWishList::with('product')
+       $userId = userAuthId();
+       $wishes =  B2bWishList::with('product')
             ->where('user_id', $userId)
             ->latest('id')
             ->get();
@@ -673,8 +696,8 @@ class BuyerService
         if ($wishes->isEmpty()) {
             return $this->error(null, 'No record found to send', 404);
         }
-
-        return $this->success($wishes, 'My Wish List');
+        $data = B2BWishListResource::collection($wishes);
+        return $this->success($data, 'My Wish List');
     }
 
     public function removeItem($id)
@@ -686,20 +709,20 @@ class BuyerService
 
     public function sendFromWishList($data)
     {
-         $quote = B2bWishList::findOrFail($data->id);
+        $quote = B2bWishList::findOrFail($data->id);
 
         if (!$quote) {
             return $this->error(null, 'No record found', 404);
         }
         $product = B2BProduct::findOrFail($quote->product_id);
-      //  return $product;
+        //  return $product;
 
         if ($data->qty < $product->minimum_order_quantity) {
             return $this->error(null, 'Your peferred quantity can not be less than the one already set', 422);
         }
 
         try {
-           $amount = total_amount($product->unit_price, $data->qty);
+            $amount = total_amount($product->unit_price, $data->qty);
 
             Rfq::create([
                 'buyer_id' => $quote->user_id,
@@ -715,7 +738,7 @@ class BuyerService
             $quote->delete();
             return $this->success(null, 'rfq sent successfully');
         } catch (\Exception $e) {
-            return $this->error(null, 'transaction failed, please try again: '.$e->getMessage(), 422);
+            return $this->error(null, 'transaction failed, please try again: ' . $e->getMessage(), 422);
         }
     }
     //Account section
@@ -832,14 +855,14 @@ class BuyerService
     public function getAllShippingAddress()
     {
         $currentUserId = userAuthId();
-        $addresses = BuyerShippingAddress::with(['state','country'])->where('user_id', $currentUserId)->get();
+        $addresses = BuyerShippingAddress::with(['state', 'country'])->where('user_id', $currentUserId)->get();
         $data = B2BBuyerShippingAddressResource::collection($addresses);
         return $this->success($data, 'All address');
     }
 
     public function getShippingAddress($id)
     {
-        $address = BuyerShippingAddress::with(['state','country'])->findOrFail($id);
+        $address = BuyerShippingAddress::with(['state', 'country'])->findOrFail($id);
 
         $data = new B2BBuyerShippingAddressResource($address);
         return $this->success($data, 'Address detail');
