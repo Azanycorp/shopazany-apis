@@ -20,6 +20,7 @@ class B2BCategoryResource extends JsonResource
             'name' => (string)$this->name,
             'slug' => (string)$this->slug,
             'image' => (string)$this->image,
+            'subcategory' => $this->subcategory,
             'products' => $this->products ? $this->products->map(function ($product): array {
                 return [
                     'name' => $product?->name,
@@ -31,7 +32,7 @@ class B2BCategoryResource extends JsonResource
                     'keywords' => $product?->keywords,
                     'moq' => (string)$product?->minimum_order_quantity,
                     'status' => (string)$product?->status,
-                    'rating' => 3.5,
+                    'rating' => (int)$product?->b2bProductReview?->avg('rating'),
                     'review_count' => (int)$product?->b2bProductReview?->count(),
                     'b2bLikes' => $product?->b2bLikes->count(),
                 ];
