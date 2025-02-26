@@ -376,7 +376,7 @@ class BuyerService
     public function allQuotes()
     {
         $userId = userAuthId();
-        $quotes = B2bQuote::with(['product'])->where('buyer_id', $userId)
+        $quotes = B2bQuote::with(['product','b2bProductReview'])->where('buyer_id', $userId)
             ->latest('id')
             ->get();
         $data = B2BQuoteResource::collection($quotes);
@@ -688,7 +688,7 @@ class BuyerService
     public function myWishList()
     {
        $userId = userAuthId();
-       $wishes =  B2bWishList::with('product')
+       $wishes =  B2bWishList::with(['product','b2bProductReview'])
             ->where('user_id', $userId)
             ->latest('id')
             ->get();
