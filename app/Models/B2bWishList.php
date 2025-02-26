@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enum\UserType;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class B2bWishList extends Model
 {
@@ -18,5 +19,9 @@ class B2bWishList extends Model
     public function product()
     {
         return $this->belongsTo(B2BProduct::class);
+    }
+    public function b2bProductReview(): HasMany
+    {
+        return $this->hasMany(B2bProdctReview::class, 'product_id');
     }
 }

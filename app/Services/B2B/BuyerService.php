@@ -669,7 +669,7 @@ class BuyerService
     {
         $userId = userAuthId();
 
-        $wishes =  B2bWishList::with('product')
+        $wishes =  B2bWishList::with(['product','b2bProductReview'])
             ->where('user_id', $userId)
             ->latest('id')
             ->get();
