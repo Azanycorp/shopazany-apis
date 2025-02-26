@@ -2,18 +2,17 @@
 
 namespace App\Models;
 
-use App\Trait\ClearsResponseCache;
 use Illuminate\Database\Eloquent\Model;
 
-class CollationCenter extends Model
+class PickupStation extends Model
 {
-    use ClearsResponseCache;
     protected $fillable = [
+        'collation_center_id',
         'name',
         'location',
         'status',
         'note',
         'city',
-        'country_id',
+        'country_id'
     ];
 }
