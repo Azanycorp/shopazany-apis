@@ -18,9 +18,9 @@ class AdminController extends Controller
         private SuperAdminService $superAdminService
     ) {}
 
-    public function dashboard()
+    public function deliveryOverview()
     {
-        return $this->superAdminService->getDashboardDetails();
+        return $this->superAdminService->deliveryOverview();
     }
     //Collation Centers
     public function allCollationCentres()

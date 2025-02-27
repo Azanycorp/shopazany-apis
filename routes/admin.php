@@ -226,9 +226,7 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function (): void
             Route::post('/reset-password', 'resetPassword');
         });
     Route::controller(AdminController::class)->group(function () {
-        Route::get('/superadmin-dashboard', 'dashboard');
         //Admin users
-
         Route::prefix('admin-users')->group(function () {
             Route::get('/', 'adminUsers')->middleware('cacheResponse:300');
             Route::post('/add', 'addAdmin');
@@ -238,7 +236,8 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function (): void
             Route::post('/verify-password', 'verifyPassword');
             Route::delete('/delete-account/{id}', 'removeAdmin');
         });
-        //collation centers and hubs
+        //delivery (collation centers and hubs)
+        Route::get('/delivery-overview', 'deliveryOverview');
         Route::prefix('collation-centre')
             ->group(function () {
                 Route::get('/', 'allCollationCentres');

@@ -9,6 +9,7 @@ use App\Enum\AdminType;
 use App\Enum\PlanStatus;
 use App\Enum\UserStatus;
 use App\Enum\AdminStatus;
+use App\Enum\OrderStatus;
 use App\Trait\HttpResponse;
 use App\Models\PickupStation;
 use App\Mail\B2BNewAdminEmail;
@@ -18,6 +19,7 @@ use App\Http\Resources\HubResource;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Contracts\Pipeline\Hub;
 use App\Http\Resources\CollationCentreResource;
+use App\Models\B2bOrder;
 
 class SuperAdminService
 {
@@ -40,6 +42,23 @@ class SuperAdminService
     }
 
     // //Collation centers
+    public function deliveryOverview()
+    {
+
+        $total_shippments = B2bOrder::count();
+        $out_for_delivery = B2bOrder::where('status',  OrderStatus::SHIPPED)->count();
+        $delivered = B2bOrder::where('status', OrderStatus::DELIVERED)->count();
+        $collation_centers = CollationCenter::where('status', PlanStatus::ACTIVE)->count();
+        $hubs = PickupStation::where('status', PlanStatus::ACTIVE)->count();
+        $data = [
+            'total_shippments' => $total_shippments,
+            'out_for_delivery' => $out_for_delivery,
+            'delivered' => $delivered,
+            'hubs' => $hubs,
+            'collation_centers' => $collation_centers,
+        ];
+        return $this->success($data, 'delivery overview');
+    }
     public function allCollationCentres()
     {
         $total_centers = CollationCenter::count();
