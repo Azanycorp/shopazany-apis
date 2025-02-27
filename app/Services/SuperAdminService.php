@@ -8,9 +8,11 @@ use App\Enum\UserType;
 use App\Enum\AdminType;
 use App\Enum\PlanStatus;
 use App\Enum\UserStatus;
+use App\Models\B2bOrder;
 use App\Enum\AdminStatus;
 use App\Enum\OrderStatus;
 use App\Trait\HttpResponse;
+use Illuminate\Support\Str;
 use App\Models\PickupStation;
 use App\Mail\B2BNewAdminEmail;
 use App\Models\CollationCenter;
@@ -19,7 +21,6 @@ use App\Http\Resources\HubResource;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Contracts\Pipeline\Hub;
 use App\Http\Resources\CollationCentreResource;
-use App\Models\B2bOrder;
 
 class SuperAdminService
 {
@@ -27,37 +28,43 @@ class SuperAdminService
 
     public function getDashboardDetails()
     {
-        $total_centers = CollationCenter::count();
-        $active_centers = CollationCenter::where('status', PlanStatus::ACTIVE)->count();
-        $inactive_centers = CollationCenter::where('status', PlanStatus::INACTIVE)->count();
         $centers = CollationCenter::with(['country', 'hubs.country'])->latest('id')->get();
-        $data = CollationCentreResource::collection($centers);
+
+        $collation_counts = CollationCenter::selectRaw('
+        COUNT(*) as total_centers,
+        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as active_centers,
+        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as inactive_centers
+    ', [PlanStatus::ACTIVE, PlanStatus::INACTIVE])
+            ->first();
+
         $collation_details = [
-            'total_centers' => $total_centers,
-            'active_centers' => $active_centers,
-            'inactive_centers' => $inactive_centers,
-            'centers' => $data,
+            'total_centers' => $collation_counts->total_centers ?? 0,
+            'active_centers' => $collation_counts->active_centers ?? 0,
+            'inactive_centers' => $collation_counts->inactive_centers ?? 0,
+            'centers' => CollationCentreResource::collection($centers),
         ];
         return $this->success($collation_details, 'All available collation centres');
     }
 
-    // //Collation centers
+     //Collation centers
     public function deliveryOverview()
     {
-
-        $total_shippments = B2bOrder::count();
-        $out_for_delivery = B2bOrder::where('status',  OrderStatus::SHIPPED)->count();
-        $delivered = B2bOrder::where('status', OrderStatus::DELIVERED)->count();
+        $order_counts = B2bOrder::selectRaw('
+        COUNT(*) as total_orders,
+        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as out_for_delivery,
+        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as delivered
+    ', [OrderStatus::SHIPPED, OrderStatus::DELIVERED])
+            ->first();
         $collation_centers = CollationCenter::where('status', PlanStatus::ACTIVE)->count();
         $hubs = PickupStation::where('status', PlanStatus::ACTIVE)->count();
-        $data = [
-            'total_shippments' => $total_shippments,
-            'out_for_delivery' => $out_for_delivery,
-            'delivered' => $delivered,
+        $details = [
+            'total_shippments' => $order_counts->total_orders ?? 0,
+            'out_for_delivery' => $order_counts->out_for_delivery ?? 0,
+            'delivered' => $order_counts->delivered ?? 0,
             'hubs' => $hubs,
             'collation_centers' => $collation_centers,
         ];
-        return $this->success($data, 'delivery overview');
+        return $this->success($details, 'delivery overview');
     }
     public function allCollationCentres()
     {
@@ -219,7 +226,7 @@ class SuperAdminService
     {
         DB::beginTransaction();
         try {
-            $password = 'pass@12345';
+            $password = Str::random(5);
             $admin = Admin::create([
                 'first_name' => $data->first_name,
                 'last_name' => $data->last_name,
@@ -259,6 +266,7 @@ class SuperAdminService
             'first_name' => $data->first_name,
             'last_name' => $data->last_name,
             'email' => $data->email,
+            'type' => $data->type,
             'phone_number' => $data->phone_number,
         ]);
         $admin->roles()->sync($data->role_id);

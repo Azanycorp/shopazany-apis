@@ -270,16 +270,6 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function (): void
             Route::post('/update-config', 'updateConfigDetails');
         });
 
-        Route::controller(B2BAdminController::class)->prefix('admin-users')->group(function () {
-            Route::get('/', 'adminUsers')->middleware('cacheResponse:300');
-            Route::post('/add', 'addAdmin');
-            Route::get('/details/{id}', 'viewAdminUser');
-            Route::post('/update/{id}', 'editAdminUser');
-            Route::post('/revoke-access/{id}', 'revokeAccess');
-            Route::post('/verify-password', 'verifyPassword');
-            Route::delete('/delete-account/{id}', 'removeAdmin');
-        });
-
         Route::prefix('category')->controller(ProductCategoryController::class)->group(function () {
             Route::post('/create', 'createCategory');
             Route::get('/all', 'adminCategories')->middleware('cacheResponse:300');

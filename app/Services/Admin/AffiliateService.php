@@ -169,7 +169,7 @@ class AffiliateService
     {
        $user = User::find($request->user_id);
         if(!$user) {
-            return $this->error(null,"User not found", 422);
+            return $this->error(null,"User not found", 404);
         }
 
         $status = Password::broker('users')->sendResetLink(
