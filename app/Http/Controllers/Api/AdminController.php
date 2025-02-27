@@ -14,6 +14,10 @@ class AdminController extends Controller
         private SuperAdminService $superAdminService
     ) {}
 
+    public function dashboard()
+    {
+        return $this->superAdminService->getDashboardDetails();
+    }
     //Collation Centers
     public function allCollationCentres()
     {

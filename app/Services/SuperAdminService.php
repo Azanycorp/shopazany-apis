@@ -15,6 +15,22 @@ class SuperAdminService
 {
     use HttpResponse, SignUp;
 
+    public function getDashboardDetails()
+    {
+        $total_centers = CollationCenter::count();
+        $active_centers = CollationCenter::where('status', PlanStatus::ACTIVE)->count();
+        $inactive_centers = CollationCenter::where('status', PlanStatus::INACTIVE)->count();
+        $centers = CollationCenter::with(['country', 'hubs.country'])->latest('id')->get();
+        $data = CollationCentreResource::collection($centers);
+        $collation_details = [
+            'total_centers' => $total_centers,
+            'active_centers' => $active_centers,
+            'inactive_centers' => $inactive_centers,
+            'centers' => $data,
+        ];
+        return $this->success($collation_details, 'All available collation centres');
+    }
+
     // //Collation centers
     public function allCollationCentres()
     {
