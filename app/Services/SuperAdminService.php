@@ -2,12 +2,18 @@
 
 namespace App\Services;
 
+use App\Models\Admin;
 use App\Trait\SignUp;
+use App\Enum\AdminType;
 use App\Enum\PlanStatus;
+use App\Enum\AdminStatus;
 use App\Trait\HttpResponse;
 use App\Models\PickupStation;
+use App\Mail\B2BNewAdminEmail;
 use App\Models\CollationCenter;
+use Illuminate\Support\Facades\DB;
 use App\Http\Resources\HubResource;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Contracts\Pipeline\Hub;
 use App\Http\Resources\CollationCentreResource;
 
@@ -166,5 +172,122 @@ class SuperAdminService
         }
         $hub->delete();
         return $this->success(null, 'Hub deleted successfully.');
+    }
+
+    //Admins
+
+    //Admin User Management
+    public function adminUsers()
+    {
+        $searchQuery = request()->input('search');
+
+        $userStats = User::selectRaw('
+                SUM(CASE WHEN type = ? THEN 1 ELSE 0 END) as buyers,
+                SUM(CASE WHEN type = ? THEN 1 ELSE 0 END) as sellers,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as pending_approval
+            ', [
+            UserType::B2B_BUYER,
+            UserType::B2B_SELLER,
+            UserStatus::PENDING
+        ])
+            ->first();
+
+        $admins = Admin::with('permissions:id,name')
+            ->where('type', AdminType::B2B)
+            ->select('id', 'first_name', 'last_name', 'email', 'created_at')
+            ->latest('created_at')
+            ->when($searchQuery, function ($queryBuilder) use ($searchQuery) {
+                $queryBuilder->where(function ($subQuery) use ($searchQuery) {
+                    $subQuery->where('first_name', 'LIKE', '%' . $searchQuery . '%')
+                        ->orWhere('email', 'LIKE', '%' . $searchQuery . '%');
+                });
+            })
+            ->get();
+
+        $data = [
+            'buyers' => $userStats->buyers,
+            'sellers' => $userStats->sellers,
+            'pending_approval' => $userStats->pending_approval,
+            'admin_users' => $admins,
+        ];
+
+        return $this->success($data, 'All Admin Users');
+    }
+
+    public function addAdmin($data)
+    {
+        DB::beginTransaction();
+        try {
+            $password = 'pass@12345';
+            $admin = Admin::create([
+                'first_name' => $data->first_name,
+                'last_name' => $data->last_name,
+                'email' => $data->email,
+                'type' => $data->type,
+                'status' => AdminStatus::ACTIVE,
+                'phone_number' => $data->phone_number,
+                'password' => bcrypt($password),
+            ]);
+            $admin->permissions()->sync($data->permissions);
+            $loginDetails = [
+                'name' => $data->first_name,
+                'email' => $data->email,
+                'password' => $password,
+            ];
+            DB::commit();
+
+            defer(fn() => send_email($data->email, new B2BNewAdminEmail($loginDetails)));
+
+            return $this->success($admin, 'Admin user added successfully', 201);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            throw $th;
+        }
+    }
+
+    public function viewAdmin($id)
+    {
+        $admin = Admin::findOrFail($id);
+        return $this->success($admin, 'Admin details');
+    }
+
+    public function editAdmin($id, $data)
+    {
+        $admin = Admin::findOrFail($id);
+        $admin->update([
+            'first_name' => $data->first_name,
+            'last_name' => $data->last_name,
+            'email' => $data->email,
+            'phone_number' => $data->phone_number,
+        ]);
+        $admin->roles()->sync($data->role_id);
+        if ($data->permissions) {
+            $admin->permissions()->sync($data->permissions);
+        }
+        return $this->success($admin, 'Details updated successfully');
+    }
+
+    public function verifyPassword($data)
+    {
+        $currentUserId = userAuthId();
+        $admin = Admin::findOrFail($currentUserId);
+        if (Hash::check($data->password, $admin->password)) {
+            return $this->success(null, 'Password matched');
+        }
+        return $this->error(null, 'Password do not match');
+    }
+    public function revokeAccess($id)
+    {
+        $admin = Admin::findOrFail($id);
+        $admin->permissions()->detach();
+        return $this->success(null, 'Access Revoked');
+    }
+
+    public function removeAdmin($id)
+    {
+        $admin = Admin::findOrFail($id);
+        $admin->permissions()->detach();
+        $admin->delete();
+        return $this->success(null, 'Deleted successfully');
     }
 }

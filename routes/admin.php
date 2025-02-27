@@ -214,6 +214,7 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function (): void
             Route::delete('/delete/{id}', 'deleteShippingAgent');
         });
 
+    //super admin route
     // Affiliate
     Route::prefix('affiliate')
         ->controller(AdminAffiliateController::class)
@@ -224,12 +225,21 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function (): void
             Route::patch('/suspend/{id}', 'suspend');
             Route::post('/reset-password', 'resetPassword');
         });
-    //super admin route
     Route::prefix('collation-centre')
         ->controller(AdminController::class)
         ->group(function () {
             Route::get('/superadmin-dashboard', 'dashboard');
-            
+            //Admin users
+
+            Route::prefix('admin-users')->group(function () {
+                Route::get('/', 'adminUsers')->middleware('cacheResponse:300');
+                Route::post('/add', 'addAdmin');
+                Route::get('/details/{id}', 'viewAdminUser');
+                Route::post('/update/{id}', 'editAdminUser');
+                Route::post('/revoke-access/{id}', 'revokeAccess');
+                Route::post('/verify-password', 'verifyPassword');
+                Route::delete('/delete-account/{id}', 'removeAdmin');
+            });
             //collation centers and hubs
             Route::prefix('collation-centre')
                 ->group(function () {

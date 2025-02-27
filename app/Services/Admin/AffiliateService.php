@@ -167,10 +167,9 @@ class AffiliateService
 
     public function resetPassword($request)
     {
-        $user = User::find($request->user_id);
-
-        if(! $user) {
-            return $this->error(null, "User not found", 404);
+       $user = User::find($request->user_id);
+        if(!$user) {
+            return $this->error(null,"User not found", 422);
         }
 
         $status = Password::broker('users')->sendResetLink(

@@ -3,13 +3,17 @@
 namespace App\Http\Controllers\Api;
 
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use App\Services\SuperAdminService;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Gate;
 use App\Http\Requests\Admin\HubRequest;
+use App\Http\Requests\AdminUserRequest;
 use App\Http\Requests\Admin\CollationCentreRequest;
 
 class AdminController extends Controller
 {
+    const MESSAGE = '403 Forbidden';
     public function __construct(
         private SuperAdminService $superAdminService
     ) {}
@@ -67,5 +71,49 @@ class AdminController extends Controller
     public function deleteHub($id)
     {
         return $this->superAdminService->deleteHub($id);
+    }
+
+
+    //Admin Users
+    public function adminUsers()
+    {
+        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+        return $this->superAdminService->adminUsers();
+    }
+
+    public function addAdmin(AdminUserRequest $request)
+    {
+        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+        return $this->superAdminService->addAdmin($request);
+    }
+
+    public function viewAdminUser($id)
+    {
+        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+        return $this->superAdminService->viewAdmin($id);
+    }
+
+    public function editAdminUser($id, Request $request)
+    {
+        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+        return $this->superAdminService->editAdmin($id, $request);
+    }
+
+    public function verifyPassword(Request $request)
+    {
+        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+        return $this->superAdminService->verifyPassword($request);
+    }
+
+    public function revokeAccess($id)
+    {
+        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+        return $this->superAdminService->revokeAccess($id);
+    }
+
+    public function removeAdmin($id)
+    {
+        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+        return $this->superAdminService->removeAdmin($id);
     }
 }
