@@ -3,12 +3,12 @@
 namespace App\Services\User;
 
 use App\Enum\TransactionStatus;
+use App\Enum\UserStatus;
 use App\Enum\UserType;
 use App\Enum\WithdrawalStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\PaymentMethodResource;
 use App\Http\Resources\ProfileResource;
-use App\Http\Resources\TransactionResource;
 use App\Models\BankAccount;
 use App\Models\Transaction;
 use App\Models\User;
@@ -27,7 +27,8 @@ class UserService extends Controller
     public function profile()
     {
         $auth = $this->userAuth();
-        $user = User::with(['wallet', 'referrals', 'bankAccount', 'userbusinessinfo', 'userSubscriptions', 'userShippingAddress'])
+        $user = User::with(['wallet', 'bankAccount', 'userbusinessinfo', 'userSubscriptions', 'userShippingAddress'])
+            ->withCount('referrals')
             ->findOrFail($auth->id)
             ->append(['is_subscribed', 'subscription_plan']);
 
@@ -131,7 +132,6 @@ class UserService extends Controller
             return $this->error(null, "Insufficient balance for withdrawal", 400);
         }
 
-        // Use a database transaction to prevent race conditions
         DB::transaction(function () use ($wallet, $user, $request) {
             $newBalance = $wallet->balance - $request->amount;
 
@@ -140,7 +140,8 @@ class UserService extends Controller
                 'user_type' => 'b2c_affiliate',
                 'amount' => $request->amount,
                 'previous_balance' => $wallet->balance,
-                'current_balance' => $newBalance
+                'current_balance' => $newBalance,
+                'status' => WithdrawalStatus::PENDING,
             ]);
 
             $wallet->update(['balance' => $newBalance]);
@@ -160,7 +161,6 @@ class UserService extends Controller
         }
 
         try {
-
             $parts = explode('@', $user->email);
             $name = $parts[0];
 
@@ -242,20 +242,21 @@ class UserService extends Controller
         }
 
         $status = request()->query('status');
-        $query = Transaction::where('user_id', $userId);
+        $perPage = request()->query('per_page', 25);
+        $page = request()->query('page', 1);
 
+        $transactionQuery = Transaction::where('user_id', $userId);
         if ($status) {
             if (!in_array($status, [TransactionStatus::SUCCESSFUL, TransactionStatus::PENDING, TransactionStatus::REJECTED])) {
                 return $this->error(null, "Invalid status", 400);
             }
-
-            $query->where('status', $status);
+            $transactionQuery->where('status', $status);
         }
 
-        $transactions = $query->get()->map(function ($transaction) {
+        $transactions = $transactionQuery->get()->map(function ($transaction) {
             return [
                 'id' => $transaction->id,
-                'transaction_id' => $transaction->transaction_id,
+                'transaction_id' => $transaction->id,
                 'type' => 'transaction',
                 'date' => $transaction->created_at->format('Y-m-d'),
                 'amount' => $transaction->amount,
@@ -264,7 +265,6 @@ class UserService extends Controller
         });
 
         $withdrawalQuery = WithdrawalRequest::where('user_id', $userId);
-
         if ($status) {
             $withdrawalQuery->where('status', $status);
         }
@@ -280,11 +280,25 @@ class UserService extends Controller
             ];
         });
 
-        $data = $transactions->merge($withdrawals)->sortByDesc('date')->values();
+        $mergedData = collect($transactions)->merge(collect($withdrawals))->sortByDesc('date')->values();
 
-        return $this->success($data, "Transaction history");
+        $total = $mergedData->count();
+        $paginatedData = $mergedData->slice(($page - 1) * $perPage, $perPage)->values();
+
+        return response()->json([
+            'status' => 'true',
+            'message' => 'Transaction history',
+            'data' => $paginatedData,
+            'pagination' => [
+                'current_page' => (int) $page,
+                'last_page' => ceil($total / $perPage),
+                'per_page' => (int) $perPage,
+                'total' => $total,
+                'prev_page_url' => $page > 1 ? request()->url() . '?page=' . ($page - 1) . '&per_page=' . $perPage : null,
+                'next_page_url' => $page < ceil($total / $perPage) ? request()->url() . '?page=' . ($page + 1) . '&per_page=' . $perPage : null,
+            ],
+        ]);
     }
-
 
     public function addPaymentMethod($request)
     {
@@ -370,6 +384,58 @@ class UserService extends Controller
         ]);
 
         return $this->success(null, "Settings changed successfully");
+    }
+
+    public function referralManagement($userId)
+    {
+        $currentUserId = Auth::id();
+
+        if ($currentUserId !== (int) $userId) {
+            return $this->error(null, "Unauthorized action.", 403);
+        }
+
+        $searchQuery = request()->query('search');
+        $statusFilter = request()->query('status');
+
+        $user = User::with(['referrals' => function ($query) use ($searchQuery, $statusFilter) {
+                $query->select(
+                    'users.id',
+                    'users.first_name',
+                    'users.last_name',
+                    'users.email',
+                    'users.phone',
+                    'users.status',
+                    'users.created_at'
+                )
+                ->filterReferrals($searchQuery, $statusFilter);
+            }])
+            ->withCount('referrals')
+            ->find($userId);
+
+        if(! $user){
+            return $this->error(null, "User not found", 404);
+        }
+
+        $totalSignedUp = $user->referrals()
+            ->where('status', UserStatus::ACTIVE)
+            ->count();
+
+        $data = [
+            'total_referrals' => $user->referrals_count,
+            'total_signed_up' => $totalSignedUp,
+            'referrals' => $user->referrals ? $user->referrals->map(function ($referral) {
+                return [
+                    'id' => $referral->id,
+                    'name' => $referral->first_name . ' ' . $referral->last_name,
+                    'phone' => $referral->phone,
+                    'email' => $referral->email,
+                    'status' => $referral->status,
+                    'referral_date' => $referral->created_at->format('Y-m-d'),
+                ];
+            })->toArray() : [],
+        ];
+
+        return $this->success($data, "Referral management");
     }
 }
 

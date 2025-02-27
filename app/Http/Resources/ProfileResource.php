@@ -30,7 +30,7 @@ class ProfileResource extends JsonResource
             "state_id" => (string)$this->state_id,
             "default_currency" => (string)$this->default_currency,
             "referrer_code" => (string)$this->referrer_code,
-            "referrer_link" => (string)$this->referrer_link,
+            "referrer_link" => $this->referrer_link,
             "date_of_birth" => (string)$this->date_of_birth,
             "is_verified" => (boolean)$this->is_verified,
             "income_type" => (string)$this->income_type,
@@ -44,7 +44,7 @@ class ProfileResource extends JsonResource
                 'total_income' => 0,
                 'total_withdrawal' => 0
             ],
-            "no_of_referrals" => $this->referrals->count(),
+            "no_of_referrals" => $this->referrals_count,
             "bank_account" => (object)[
                 'account_name' => optional($this->bankAccount)->account_name,
                 'bank_name' => optional($this->bankAccount)->bank_name,

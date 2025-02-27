@@ -108,14 +108,14 @@ class AdminService
         $international_orders = B2bOrder::when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
             $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
                 $subQuery->where('country_id', '!=', 160)
-                    ->orWhere('order_no', 'LIKE', '%' . $searchQuery . '%');
+                    ->where('order_no', 'LIKE', '%' . $searchQuery . '%');
             });
         })->get();
 
         $local_orders = B2bOrder::with(['buyer', 'seller'])->when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
             $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
                 $subQuery->where('country_id', 160)
-                    ->orWhere('order_no', 'LIKE', '%' . $searchQuery . '%');
+                    ->where('order_no', 'LIKE', '%' . $searchQuery . '%');
             });
         })->get();
 
@@ -1018,6 +1018,7 @@ class AdminService
             'period' => $data->period,
             'tier' => $data->tier,
             'designation' => $data->designation,
+            'tagline' => $data->tagline,
             'details' => $data->details,
             'type' => PlanType::B2B,
             'status' => PlanStatus::ACTIVE
@@ -1051,6 +1052,7 @@ class AdminService
             'period' => $data->period,
             'tier' => $data->tier,
             'designation' => $data->designation,
+            'tagline' => $data->tagline,
             'details' => $data->details,
             'status' => $data->status ?? PlanStatus::ACTIVE
         ]);

@@ -3,10 +3,10 @@
 namespace App\Models;
 
 use App\Models\Country;
-use App\Enum\OrderStatus;
 use App\Trait\ClearsResponseCache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class B2bOrder extends Model
@@ -58,7 +58,10 @@ class B2bOrder extends Model
         ];
     }
 
-
+    public function b2bProductReview(): HasMany
+    {
+        return $this->hasMany(B2bProdctReview::class, 'product_id');
+    }
 
     public static function orderStats()
     {
