@@ -269,7 +269,7 @@ class BuyerService
     public function bestSelling()
     {
         $bestSellingProducts = B2bOrder::with([
-                'product:id,name,front_image,price',
+                'product:id,name,front_image,unit_price',
                 'product.b2bProductReview:id,product_id,rating',
                 'b2bProductReview'
             ])
