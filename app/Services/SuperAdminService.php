@@ -4,8 +4,10 @@ namespace App\Services;
 
 use App\Models\Admin;
 use App\Trait\SignUp;
+use App\Enum\UserType;
 use App\Enum\AdminType;
 use App\Enum\PlanStatus;
+use App\Enum\UserStatus;
 use App\Enum\AdminStatus;
 use App\Trait\HttpResponse;
 use App\Models\PickupStation;
@@ -180,22 +182,9 @@ class SuperAdminService
     public function adminUsers()
     {
         $searchQuery = request()->input('search');
-
-        $userStats = User::selectRaw('
-                SUM(CASE WHEN type = ? THEN 1 ELSE 0 END) as buyers,
-                SUM(CASE WHEN type = ? THEN 1 ELSE 0 END) as sellers,
-                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as pending_approval
-            ', [
-            UserType::B2B_BUYER,
-            UserType::B2B_SELLER,
-            UserStatus::PENDING
-        ])
-            ->first();
-
         $admins = Admin::with('permissions:id,name')
-            ->where('type', AdminType::B2B)
             ->select('id', 'first_name', 'last_name', 'email', 'created_at')
-            ->latest('created_at')
+            ->orderByDESC('created_at')
             ->when($searchQuery, function ($queryBuilder) use ($searchQuery) {
                 $queryBuilder->where(function ($subQuery) use ($searchQuery) {
                     $subQuery->where('first_name', 'LIKE', '%' . $searchQuery . '%')
@@ -204,14 +193,7 @@ class SuperAdminService
             })
             ->get();
 
-        $data = [
-            'buyers' => $userStats->buyers,
-            'sellers' => $userStats->sellers,
-            'pending_approval' => $userStats->pending_approval,
-            'admin_users' => $admins,
-        ];
-
-        return $this->success($data, 'All Admin Users');
+        return $this->success($admins, 'All Admin Users');
     }
 
     public function addAdmin($data)

@@ -225,40 +225,38 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function (): void
             Route::patch('/suspend/{id}', 'suspend');
             Route::post('/reset-password', 'resetPassword');
         });
-    Route::prefix('collation-centre')
-        ->controller(AdminController::class)
-        ->group(function () {
-            Route::get('/superadmin-dashboard', 'dashboard');
-            //Admin users
+    Route::controller(AdminController::class)->group(function () {
+        Route::get('/superadmin-dashboard', 'dashboard');
+        //Admin users
 
-            Route::prefix('admin-users')->group(function () {
-                Route::get('/', 'adminUsers')->middleware('cacheResponse:300');
-                Route::post('/add', 'addAdmin');
-                Route::get('/details/{id}', 'viewAdminUser');
-                Route::post('/update/{id}', 'editAdminUser');
-                Route::post('/revoke-access/{id}', 'revokeAccess');
-                Route::post('/verify-password', 'verifyPassword');
-                Route::delete('/delete-account/{id}', 'removeAdmin');
-            });
-            //collation centers and hubs
-            Route::prefix('collation-centre')
-                ->group(function () {
-                    Route::get('/', 'allCollationCentres');
-                    Route::post('/add', 'addCollationCentre');
-                    Route::get('/details/{id}', 'viewCollationCentre');
-                    Route::patch('/update/{id}', 'editCollationCentre');
-                    Route::delete('/delete/{id}', 'deleteCollationCentre');
-
-                    Route::prefix('hubs')
-                        ->group(function () {
-                            Route::get('/', 'allCollationCentreHubs');
-                            Route::post('/add', 'addHub');
-                            Route::get('/details/{id}', 'viewHub');
-                            Route::patch('/update/{id}', 'editHub');
-                            Route::delete('/delete/{id}', 'deleteHub');
-                        });
-                });
+        Route::prefix('admin-users')->group(function () {
+            Route::get('/', 'adminUsers')->middleware('cacheResponse:300');
+            Route::post('/add', 'addAdmin');
+            Route::get('/details/{id}', 'viewAdminUser');
+            Route::post('/update/{id}', 'editAdminUser');
+            Route::post('/revoke-access/{id}', 'revokeAccess');
+            Route::post('/verify-password', 'verifyPassword');
+            Route::delete('/delete-account/{id}', 'removeAdmin');
         });
+        //collation centers and hubs
+        Route::prefix('collation-centre')
+            ->group(function () {
+                Route::get('/', 'allCollationCentres');
+                Route::post('/add', 'addCollationCentre');
+                Route::get('/details/{id}', 'viewCollationCentre');
+                Route::patch('/update/{id}', 'editCollationCentre');
+                Route::delete('/delete/{id}', 'deleteCollationCentre');
+
+                Route::prefix('hubs')
+                    ->group(function () {
+                        Route::get('/', 'allCollationCentreHubs');
+                        Route::post('/add', 'addHub');
+                        Route::get('/details/{id}', 'viewHub');
+                        Route::patch('/update/{id}', 'editHub');
+                        Route::delete('/delete/{id}', 'deleteHub');
+                    });
+            });
+    });
 
     //b2b admin
     Route::prefix('b2b')->group(function () {
