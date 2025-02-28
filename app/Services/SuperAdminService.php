@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Admin;
+use App\Models\Order;
 use App\Trait\SignUp;
 use App\Enum\UserType;
 use App\Enum\AdminType;
@@ -46,7 +47,7 @@ class SuperAdminService
         return $this->success($collation_details, 'All available collation centres');
     }
 
-     //Collation centers
+    //Collation centers
     public function deliveryOverview()
     {
         $order_counts = B2bOrder::selectRaw('
@@ -102,9 +103,41 @@ class SuperAdminService
         if (!$centre) {
             return $this->error(null, 'Centre not found', 404);
         }
+        $b2b_order_counts = B2bOrder::selectRaw('
+        COUNT(*) as total_orders,
+        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as completed,
+        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as pending,
+        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as cancelled
+    ', [
+            OrderStatus::DELIVERED,
+            OrderStatus::PENDING,
+            OrderStatus::CANCELLED
+        ])->where('centre_id', $centre->id)->first();
+        $b2c_order_counts = Order::selectRaw('
+        COUNT(*) as total_orders,
+        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as completed,
+        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as pending,
+        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as cancelled
+    ', [
+            OrderStatus::DELIVERED,
+            OrderStatus::PENDING,
+            OrderStatus::CANCELLED
+        ])->where('centre_id', $centre->id)->first();
+
+        $total_deliveries = ($b2b_order_counts->total_orders) + ($b2c_order_counts->total_orders);
+        $completed = ($b2b_order_counts->completed) + ($b2c_order_counts->total_orders);
+        $pending = ($b2b_order_counts->pending) + ($b2c_order_counts->pending);
+        $cancelled = ($b2b_order_counts->cancelled) + ($b2c_order_counts->cancelled);
 
         $data = new CollationCentreResource($centre);
-        return $this->success($data, 'Centre details');
+        $detatils = [
+            'total_deliveries' => $total_deliveries,
+            'completed' => $completed,
+            'pending' => $pending,
+            'cancelled' => $cancelled,
+            'center' => $data,
+        ];
+        return $this->success($detatils, 'Centre details');
     }
 
     public function editCollationCentre($id, $data)
