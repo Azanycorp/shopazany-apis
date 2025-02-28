@@ -113,6 +113,7 @@ class SuperAdminService
             OrderStatus::PENDING,
             OrderStatus::CANCELLED
         ])->where('centre_id', $centre->id)->first();
+        
         $b2c_order_counts = Order::selectRaw('
         COUNT(*) as total_orders,
         SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as completed,

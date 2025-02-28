@@ -214,7 +214,9 @@ Route::group(['middleware' => ['auth:sanctum', 'auth-gates']], function (): void
             Route::delete('/delete/{id}', 'deleteShippingAgent');
         });
 
-    //super admin route
+
+        
+        //super admin route
     // Affiliate
     Route::prefix('affiliate')
         ->controller(AdminAffiliateController::class)
