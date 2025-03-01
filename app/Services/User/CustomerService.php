@@ -106,7 +106,7 @@ class CustomerService
             return $this->error(null, "User not found", 404);
         }
 
-        $orders = Order::with(['user', 'product'])
+        $orders = Order::with(['user', 'product.shopCountry'])
             ->where('user_id', $userId)
             ->orderBy('created_at', 'desc')
             ->take(7)
