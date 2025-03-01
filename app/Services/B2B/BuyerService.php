@@ -260,7 +260,7 @@ class BuyerService
     public function getCategoryProducts()
     {
         $categories = B2BProductCategory::select('id', 'name', 'slug', 'image')
-            ->with(['products.b2bProductReview','subcategory','subcategory.products','products.b2bLikes'])
+            ->with(['products.b2bProductReview', 'subcategory', 'subcategory.products', 'products.b2bLikes'])
             ->get();
         $data = B2BCategoryResource::collection($categories);
         return $this->success($data, "Categories products");
@@ -269,22 +269,23 @@ class BuyerService
     public function bestSelling()
     {
         $bestSellingProducts = B2bOrder::with([
-                'product:id,name,front_image,unit_price',
-                'product.b2bProductReview:id,product_id,rating',
-                'b2bProductReview'
-            ])
+            'product:id,name,front_image,unit_price',
+            'product.b2bProductReview:id,product_id,rating',
+            'b2bProductReview'
+        ])
             ->select(
+                'id',
                 'product_id',
                 DB::raw('SUM(product_quantity) as total_sold')
             )
             ->where('status', OrderStatus::DELIVERED)
-            ->groupBy('product_id')
+            ->groupBy('product_id', 'id')
             ->orderByDesc('total_sold')
             ->limit(10)
             ->get();
 
-        $data = B2BBestSellingProductResource::collection($bestSellingProducts);
 
+        $data = B2BBestSellingProductResource::collection($bestSellingProducts);
         return $this->success($data, "Best selling products");
     }
 
@@ -387,17 +388,13 @@ class BuyerService
     public function allQuotes()
     {
         $userId = userAuthId();
-        $quotes = B2bQuote::with([
-                'product',
-                'b2bProductReview'
-            ])
-            ->where('buyer_id', $userId)
+        $quotes = B2bQuote::with(['product', 'b2bProductReview'])->where('buyer_id', $userId)
             ->latest('id')
             ->get();
-
         $data = B2BQuoteResource::collection($quotes);
         return $this->success($data, 'quotes lists');
     }
+
 
     public function sendMutipleQuotes()
     {
@@ -642,7 +639,7 @@ class BuyerService
         }
 
         $rfq->update([
-            'status' => 'in-progress',
+            'status' => OrderStatus::INPROGRESS,
         ]);
 
         return $this->success($rfq, 'Quote Accepted successfully');
@@ -703,14 +700,17 @@ class BuyerService
     }
 
     //wish list
-    public function myWishList()
+      public function myWishList()
     {
-       $userId = userAuthId();
-       $wishes =  B2bWishList::with(['product', 'b2bProductReview'])
+        $userId = userAuthId();
+        $wishes =  B2bWishList::with(['product', 'b2bProductReview'])
             ->where('user_id', $userId)
             ->latest('id')
             ->get();
 
+        if ($wishes->isEmpty()) {
+            return $this->error(null, 'No record found to send', 404);
+        }
         $data = B2BWishListResource::collection($wishes);
         return $this->success($data, 'My Wish List');
     }
@@ -731,8 +731,6 @@ class BuyerService
             return $this->error(null, 'No record found', 404);
         }
         $product = B2BProduct::findOrFail($quote->product_id);
-        //  return $product;
-
         if ($data->qty < $product->minimum_order_quantity) {
             return $this->error(null, 'Your peferred quantity can not be less than the one already set', 422);
         }
@@ -757,12 +755,11 @@ class BuyerService
             return $this->error(null, 'transaction failed, please try again: ' . $e->getMessage(), 422);
         }
     }
-    //Account section
 
+    //Account section
     public function profile()
     {
         $auth = userAuth();
-
         $user = User::with('b2bCompany')
             ->where('type', UserType::B2B_BUYER)
             ->find($auth->id);
@@ -772,14 +769,16 @@ class BuyerService
         }
 
         $data = new BuyerResource($user);
-
         return $this->success($data, 'Buyer profile');
     }
 
     public function editAccount($request)
     {
         $auth = Auth::user();
-        $user = User::findOrFail($auth->id);
+        $user = User::find($auth->id);
+        if (!$user) {
+            return $this->error(null, 'User does not exist');
+        }
         $image = $request->hasFile('image') ? uploadUserImage($request, 'image', $user) : $user->image;
 
         $user->update([
@@ -787,7 +786,7 @@ class BuyerService
             'last_name' => $request->last_name ?? $user->last_name,
             'middlename' => $request->middlename ?? $user->middlename,
             'email' => $request->email ?? $user->email,
-            'phone' => $request->phone,
+            'phone' => $request->phone ?? $user->phone,
             'image' => $image
         ]);
 
@@ -805,7 +804,7 @@ class BuyerService
 
             return $this->success(null, 'Password Successfully Updated');
         }
-        return $this->error(null, 422, 'Old Password did not match');
+        return $this->error(null,'Old Password did not match');
     }
     public function change2FA($data)
     {
