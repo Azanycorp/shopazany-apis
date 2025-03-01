@@ -62,7 +62,8 @@ class Order extends Model
         $data->order_no = $orderNo;
         $data->shipping_address = $address;
         $data->order_date = now();
-        $data->total_amount = $item['total_amount'] ?? $item['unitPrice'];
+        $product = Product::find($data->product_id);
+        $data->total_amount = $item['total_amount'] ?? currencyConvert($product?->default_currency, $item['unitPrice']);
         $data->payment_method = $method;
         $data->payment_status = $status;
         $data->status = OrderStatus::PENDING;

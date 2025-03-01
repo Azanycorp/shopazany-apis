@@ -206,6 +206,7 @@ class ChargeCardService implements PaymentStrategy
 
         return $this->success(null, $tresponse->getMessages()[0]->getDescription());
     }
+
     private function getMerchantAuthentication(): \net\authorize\api\contract\v1\MerchantAuthenticationType
     {
         $merchantAuthentication = new AnetAPI\MerchantAuthenticationType();
