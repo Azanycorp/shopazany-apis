@@ -27,7 +27,6 @@ Route::middleware('validate.header')
             Route::prefix('connect')
                 ->controller(AuthController::class)
                 ->group(function (): void {
-
                     Route::post('/login', 'login')
                         ->middleware('login.attempt');
                     Route::post('/login/verify', 'loginVerify');
@@ -38,7 +37,6 @@ Route::middleware('validate.header')
                     Route::post('/logout', 'logout');
                     Route::post('/verify/email', 'verify');
                     Route::post('/seller/signup', 'sellerSignup');
-
                     Route::post('/affiliate/signup', 'affiliateSignup');
                 });
 
@@ -95,7 +93,8 @@ Route::middleware('validate.header')
                 });
             });
 
-        Route::post('/payment/webhook', [PaymentController::class, 'webhook']);
+        Route::post('/payment/webhook', [PaymentController::class, 'webhook'])
+            ->withoutMiddleware('validate.header');
 
         Route::group(['middleware' => ['auth:api', 'auth.check'], 'prefix' => 'user'], function (): void {
             // Product
