@@ -54,6 +54,10 @@ class Order extends Model
     {
         $data = new self();
 
+        $proId = $item['product_id'] ?? $item['itemId'];
+        $product = Product::with('shopCountry')->find($proId);
+        $user = User::find($user->id);
+
         $data->user_id = $user->id;
         $data->seller_id = $seller->id;
         $data->product_id = $item['product_id'] ?? $item['itemId'];
@@ -62,8 +66,11 @@ class Order extends Model
         $data->order_no = $orderNo;
         $data->shipping_address = $address;
         $data->order_date = now();
-        $product = Product::find($data->product_id);
-        $data->total_amount = $item['total_amount'] ?? currencyConvert($product?->default_currency, $item['unitPrice']);
+        $data->total_amount = $item['total_amount'] ?? currencyConvert(
+            $product->shopCountry?->currency,
+            $item['unitPrice'],
+            $user->default_currency
+        );
         $data->payment_method = $method;
         $data->payment_status = $status;
         $data->status = OrderStatus::PENDING;
