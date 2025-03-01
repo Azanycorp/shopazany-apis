@@ -29,6 +29,7 @@ use Illuminate\Support\Facades\Auth;
 use net\authorize\api\contract\v1 as AnetAPI;
 use net\authorize\api\controller as AnetController;
 use App\Http\Resources\B2BBuyerShippingAddressResource;
+use App\Models\UserShippingAddress;
 
 class ChargeCardService implements PaymentStrategy
 {
@@ -379,6 +380,20 @@ class ChargeCardService implements PaymentStrategy
                 continue;
             }
         }
+
+        UserShippingAddress::updateOrCreate([
+            [
+                'user_id' => $user->id,
+            ],
+            'first_name' => $paymentDetails['billTo']['firstName'],
+            'last_name' => $paymentDetails['billTo']['lastName'],
+            'email' => $paymentDetails['customer']['email'],
+            'phone' => "0000000000",
+            'street_address' => $paymentDetails['billTo']['address'],
+            'state' => $paymentDetails['billTo']['state'],
+            'city' => $paymentDetails['billTo']['city'],
+            'zip' => $paymentDetails['billTo']['zip'],
+        ]);
 
         Cart::where('user_id', $user->id)->delete();
 
