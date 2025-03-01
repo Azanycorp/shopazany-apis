@@ -261,30 +261,32 @@ class BuyerService
     public function getCategoryProducts()
     {
         $categories = B2BProductCategory::select('id', 'name', 'slug', 'image')
-            ->with(['products.b2bProductReview','subcategory','subcategory.products','products.b2bLikes'])
+            ->with(['products.b2bProductReview', 'subcategory', 'subcategory.products', 'products.b2bLikes'])
             ->get();
         $data = B2BCategoryResource::collection($categories);
         return $this->success($data, "Categories products");
     }
-    // public function getSubCategoryProducts()
-    // {
-    //     $categories = B2BProductCategory::select('id', 'name', 'slug', 'image')
-    //         ->with(['products.b2bProductReview', 'products.b2bLikes'])
-    //         ->get();
-    //     $data = B2BCategoryResource::collection($categories);
-    //     return $this->success($data, "Categories products");
-    // }
 
     public function bestSelling()
     {
-        $bestSellingProducts = B2bOrder::select('id','product_id', DB::raw('SUM(product_quantity) as total_sold'))
-            ->groupBy('product_id','id')
-            ->orderByDesc('total_sold')
-            ->take(10)
-            ->with(['product', 'product.b2bProductReview'])
+        $bestSellingProducts = B2bOrder::with([
+            'product:id,name,front_image,unit_price',
+            'product.b2bProductReview:id,product_id,rating',
+            'b2bProductReview'
+        ])
+            ->select(
+                'id',
+                'product_id',
+                DB::raw('SUM(product_quantity) as total_sold')
+            )
             ->where('status', OrderStatus::DELIVERED)
+            ->groupBy('product_id', 'id')
+            ->orderByDesc('total_sold')
+            ->limit(10)
             ->get();
-            $data = B2BBestSellingProductResource::collection($bestSellingProducts);
+
+
+        $data = B2BBestSellingProductResource::collection($bestSellingProducts);
         return $this->success($data, "Best selling products");
     }
 
@@ -376,7 +378,7 @@ class BuyerService
     public function allQuotes()
     {
         $userId = userAuthId();
-        $quotes = B2bQuote::with(['product','b2bProductReview'])->where('buyer_id', $userId)
+        $quotes = B2bQuote::with(['product', 'b2bProductReview'])->where('buyer_id', $userId)
             ->latest('id')
             ->get();
         $data = B2BQuoteResource::collection($quotes);
@@ -687,8 +689,8 @@ class BuyerService
     //wish list
     public function myWishList()
     {
-       $userId = userAuthId();
-       $wishes =  B2bWishList::with(['product','b2bProductReview'])
+        $userId = userAuthId();
+        $wishes =  B2bWishList::with(['product', 'b2bProductReview'])
             ->where('user_id', $userId)
             ->latest('id')
             ->get();
