@@ -385,14 +385,16 @@ class ChargeCardService implements PaymentStrategy
             [
                 'user_id' => $user->id,
             ],
-            'first_name' => $paymentDetails['billTo']['firstName'],
-            'last_name' => $paymentDetails['billTo']['lastName'],
-            'email' => $paymentDetails['customer']['email'],
-            'phone' => "0000000000",
-            'street_address' => $paymentDetails['billTo']['address'],
-            'state' => $paymentDetails['billTo']['state'],
-            'city' => $paymentDetails['billTo']['city'],
-            'zip' => $paymentDetails['billTo']['zip'],
+            [
+                'first_name' => $paymentDetails['billTo']['firstName'],
+                'last_name' => $paymentDetails['billTo']['lastName'],
+                'email' => $paymentDetails['customer']['email'],
+                'phone' => "0000000000",
+                'street_address' => $paymentDetails['billTo']['address'],
+                'state' => $paymentDetails['billTo']['state'],
+                'city' => $paymentDetails['billTo']['city'],
+                'zip' => $paymentDetails['billTo']['zip'],
+            ]
         ]);
 
         Cart::where('user_id', $user->id)->delete();
