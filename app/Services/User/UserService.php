@@ -52,6 +52,7 @@ class UserService extends Controller
         }
 
         $image = $request->hasFile('image') ? uploadUserImage($request, 'image', $user) : $user->image;
+        $currencyCode = currencyCodeByCountryId($request->country_id);
 
         $user->update([
             'first_name' => $request->first_name ?? $user->first_name,
@@ -61,6 +62,7 @@ class UserService extends Controller
             'address' => $request->address ?? $user->address,
             'phone' => $request->phone_number ?? $user->phone,
             'country' => $request->country_id ?? $user->country,
+            'default_currency' => $currencyCode ?? $user->default_currency,
             'state_id' => $request->state_id ?? $user->state_id,
             'date_of_birth' => $request->date_of_birth ?? $user->date_of_birth,
             'image' => $image,
