@@ -623,7 +623,7 @@ class BuyerService
         }
 
         $rfq->update([
-            'status' => 'in-progress',
+            'status' => OrderStatus::INPROGRESS,
         ]);
 
         return $this->success($rfq, 'Quote Accepted successfully');
@@ -717,8 +717,6 @@ class BuyerService
             return $this->error(null, 'No record found', 404);
         }
         $product = B2BProduct::findOrFail($quote->product_id);
-        //  return $product;
-
         if ($data->qty < $product->minimum_order_quantity) {
             return $this->error(null, 'Your peferred quantity can not be less than the one already set', 422);
         }
@@ -743,12 +741,11 @@ class BuyerService
             return $this->error(null, 'transaction failed, please try again: ' . $e->getMessage(), 422);
         }
     }
-    //Account section
 
+    //Account section
     public function profile()
     {
         $auth = userAuth();
-
         $user = User::with('b2bCompany')
             ->where('type', UserType::B2B_BUYER)
             ->find($auth->id);
@@ -758,16 +755,16 @@ class BuyerService
         }
 
         $data = new BuyerResource($user);
-
         return $this->success($data, 'Buyer profile');
     }
 
     public function editAccount($request)
     {
         $auth = Auth::user();
-
-        $user = User::findOrFail($auth->id);
-
+        $user = User::find($auth->id);
+        if (!$user) {
+            return $this->error(null, 'User does not exist');
+        }
         $image = $request->hasFile('image') ? uploadUserImage($request, 'image', $user) : $user->image;
 
         $user->update([
@@ -775,7 +772,7 @@ class BuyerService
             'last_name' => $request->last_name ?? $user->last_name,
             'middlename' => $request->middlename ?? $user->middlename,
             'email' => $request->email ?? $user->email,
-            'phone' => $request->phone,
+            'phone' => $request->phone ?? $user->phone,
             'image' => $image
         ]);
 
@@ -793,7 +790,7 @@ class BuyerService
 
             return $this->success(null, 'Password Successfully Updated');
         }
-        return $this->error(null, 422, 'Old Password did not match');
+        return $this->error(null,'Old Password did not match');
     }
     public function change2FA($data)
     {

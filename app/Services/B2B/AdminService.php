@@ -194,7 +194,9 @@ class AdminService
                 SUM(CASE WHEN status IN (?, ?, ?) THEN 1 ELSE 0 END) as inactive
             ', [
                 UserStatus::ACTIVE,
-                UserStatus::PENDING, UserStatus::BLOCKED, UserStatus::SUSPENDED
+                UserStatus::PENDING,
+                UserStatus::BLOCKED,
+                UserStatus::SUSPENDED
             ])
             ->first();
 
@@ -649,10 +651,23 @@ class AdminService
     public function updateConfigDetails($data)
     {
         $configData = $data->only([
-            'usd_rate', 'company_profit', 'email_verify', 'currency_code', 'currency_symbol',
-            'promotion_start_date', 'promotion_end_date', 'min_deposit', 'max_deposit',
-            'min_withdrawal', 'withdrawal_frequency', 'withdrawal_status', 'max_withdrawal',
-            'withdrawal_fee', 'seller_perc', 'paystack_perc', 'paystack_fixed'
+            'usd_rate',
+            'company_profit',
+            'email_verify',
+            'currency_code',
+            'currency_symbol',
+            'promotion_start_date',
+            'promotion_end_date',
+            'min_deposit',
+            'max_deposit',
+            'min_withdrawal',
+            'withdrawal_frequency',
+            'withdrawal_status',
+            'max_withdrawal',
+            'withdrawal_fee',
+            'seller_perc',
+            'paystack_perc',
+            'paystack_fixed'
         ]);
 
         Configuration::updateOrCreate([], $configData);
@@ -678,8 +693,8 @@ class AdminService
     public function viewWidthrawalRequest($id)
     {
         $payout =  Payout::with(['user' => function ($query): void {
-                $query->select('id', 'first_name', 'last_name')->where('type', UserType::B2B_SELLER);
-            }])
+            $query->select('id', 'first_name', 'last_name')->where('type', UserType::B2B_SELLER);
+        }])
             ->where('id', $id)
             ->firstOrFail();
 
@@ -690,7 +705,7 @@ class AdminService
     {
         $payout =  Payout::findOrFail($id);
         $payout->update([
-            'status' => 'paid',
+            'status' => OrderStatus::PAID,
             'date_paid' => now()->toDateString(),
         ]);
 
@@ -741,10 +756,17 @@ class AdminService
         $account =  B2bWithdrawalMethod::with('user.businessInformation')->findOrFail($id);
 
         $business = BusinessInformation::select([
-                'business_location', 'business_type', 'business_name', 'business_reg_number', 'business_phone', 'business_reg_document', 'identification_type_document', 'user_id'
-                ])
-                ->with(['user' => function ($query): void {
-                    $query->where('type', UserType::B2B_SELLER)->select('id', 'first_name', 'last_name');
+            'business_location',
+            'business_type',
+            'business_name',
+            'business_reg_number',
+            'business_phone',
+            'business_reg_document',
+            'identification_type_document',
+            'user_id'
+        ])
+            ->with(['user' => function ($query): void {
+                $query->where('type', UserType::B2B_SELLER)->select('id', 'first_name', 'last_name');
             }])
             ->where('user_id', $account->user_id)->firstOrFail();
 
@@ -761,7 +783,7 @@ class AdminService
         $account =  B2bWithdrawalMethod::findOrFail($id);
 
         $account->update([
-            'status' => 'active',
+            'status' => UserStatus::ACTIVE,
         ]);
 
         return $this->success(null, 'Account Approved');
@@ -833,10 +855,10 @@ class AdminService
                 SUM(CASE WHEN type = ? THEN 1 ELSE 0 END) as sellers,
                 SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as pending_approval
             ', [
-                UserType::B2B_BUYER,
-                UserType::B2B_SELLER,
-                UserStatus::PENDING
-            ])
+            UserType::B2B_BUYER,
+            UserType::B2B_SELLER,
+            UserStatus::PENDING
+        ])
             ->first();
 
         $admins = Admin::with('permissions:id,name')
@@ -865,7 +887,7 @@ class AdminService
     {
         DB::beginTransaction();
         try {
-            $password = 'pass@12345';
+            $password = Str::random(10);
             $admin = Admin::create([
                 'first_name' => $data->first_name,
                 'last_name' => $data->last_name,
@@ -883,7 +905,7 @@ class AdminService
             ];
             DB::commit();
 
-            defer(fn () => send_email($data->email, new B2BNewAdminEmail($loginDetails)));
+            defer(fn() => send_email($data->email, new B2BNewAdminEmail($loginDetails)));
 
             return $this->success($admin, 'Admin user added successfully', 201);
         } catch (\Throwable $th) {
@@ -1075,5 +1097,4 @@ class AdminService
 
         return $this->success(null, 'Plan deleted successfully.');
     }
-
 }
