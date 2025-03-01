@@ -381,7 +381,7 @@ class ChargeCardService implements PaymentStrategy
             }
         }
 
-        UserShippingAddress::updateOrCreate([
+        UserShippingAddress::updateOrCreate(
             [
                 'user_id' => $user->id,
             ],
@@ -395,7 +395,7 @@ class ChargeCardService implements PaymentStrategy
                 'city' => $paymentDetails['billTo']['city'],
                 'zip' => $paymentDetails['billTo']['zip'],
             ]
-        ]);
+        );
 
         Cart::where('user_id', $user->id)->delete();
 
