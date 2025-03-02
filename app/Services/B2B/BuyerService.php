@@ -409,7 +409,7 @@ class BuyerService
             return $this->success(null, 'rfq sent successfully');
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->error(null, 'transaction failed, please try again: ' . $e->getMessage(), 422);
+            return $this->error(null, 'transaction failed, please try again: ' . $e->getMessage(), 500);
         }
     }
 
@@ -434,7 +434,7 @@ class BuyerService
 
             return $this->success(null, 'rfq sent successfully');
         } catch (\Exception $e) {
-            return $this->error(null, 'transaction failed, please try again: ' . $e->getMessage(), 422);
+            return $this->error(null, 'transaction failed, please try again: ' . $e->getMessage(), 500);
         }
     }
 
@@ -719,7 +719,7 @@ class BuyerService
             $quote->delete();
             return $this->success(null, 'rfq sent successfully');
         } catch (\Exception $e) {
-            return $this->error(null, 'transaction failed, please try again: ' . $e->getMessage(), 422);
+            return $this->error(null, 'transaction failed, please try again: ' . $e->getMessage(), 500);
         }
     }
     //Account section
