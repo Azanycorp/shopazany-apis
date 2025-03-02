@@ -27,6 +27,10 @@ class SignUpTest extends TestCase
      */
     public function test_user_can_sign_up_successfully(): void
     {
+        $headers = [
+            config('security.header_key', 'X-SHPAZY-AUTH') => config('security.header_value'),
+        ];
+
         $password = 'ValidPass123!@#';
         $email = 'test'. rand(00, 99) . '@gmail.com';
 
@@ -39,7 +43,7 @@ class SignUpTest extends TestCase
             'terms' => true,
         ];
 
-        $response = $this->postJson('/api/connect/signup', $payload);
+        $response = $this->postJson('/api/connect/signup', $payload, $headers);
 
         $response->assertStatus(200)
                  ->assertJson(['message' => 'Created successfully']);
@@ -57,6 +61,10 @@ class SignUpTest extends TestCase
      */
     public function test_user_signup_validation_errors(): void
     {
+        $headers = [
+            config('security.header_key', 'X-SHPAZY-AUTH') => config('security.header_value'),
+        ];
+
         $payload = [
             'first_name' => '',
             'last_name' => '',
@@ -66,7 +74,7 @@ class SignUpTest extends TestCase
             'terms' => null,
         ];
 
-        $response = $this->postJson('/api/connect/signup', $payload);
+        $response = $this->postJson('/api/connect/signup', $payload, $headers);
 
         $response->assertStatus(422)
                  ->assertJsonValidationErrors(['first_name', 'last_name', 'email', 'password', 'terms']);
@@ -77,6 +85,10 @@ class SignUpTest extends TestCase
      */
     public function test_user_signup_with_referral_code(): void
     {
+        $headers = [
+            config('security.header_key', 'X-SHPAZY-AUTH') => config('security.header_value'),
+        ];
+
         User::factory()->create([
             'referrer_code' => 'REF1234'
         ]);
@@ -93,7 +105,7 @@ class SignUpTest extends TestCase
             'terms' => true,
         ];
 
-        $response = $this->postJson('/api/connect/signup?referrer=REF1234', $payload);
+        $response = $this->postJson('/api/connect/signup?referrer=REF1234', $payload, $headers);
 
         $response->assertStatus(200)
                  ->assertJson(['message' => 'Created successfully']);

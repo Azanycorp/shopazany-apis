@@ -95,4 +95,9 @@ class UserController extends Controller
     {
         return $this->service->changeSettings($request, $userId);
     }
+
+    public function referralManagement($userId)
+    {
+        return $this->service->referralManagement($userId);
+    }
 }

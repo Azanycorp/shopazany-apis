@@ -4,7 +4,6 @@ namespace App\Http\Resources;
 
 use App\Enum\OrderStatus;
 use App\Models\Order;
-use App\Models\ShopCountry;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 

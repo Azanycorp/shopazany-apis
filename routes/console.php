@@ -38,6 +38,9 @@ Schedule::command('usersubscriptions:charge')
     ->withoutOverlapping();
 
 // Withdrawal request processing
-Schedule::command('withdraw-request:process')
-    ->hourly()
-    ->withoutOverlapping();
+Schedule::hourly()
+    ->withoutOverlapping()
+    ->group(function () {
+        Schedule::command('withdraw-request:process');
+        Schedule::command('b2b-payout-request');
+    });

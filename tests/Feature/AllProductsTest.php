@@ -20,6 +20,10 @@ class AllProductsTest extends TestCase
 
     public function testAllProductsAreReturned(): void
     {
+        $headers = [
+            config('security.header_key', 'X-SHPAZY-AUTH') => config('security.header_value'),
+        ];
+
         $category = Category::factory()->create();
         $subCategory = SubCategory::factory()->create();
         $brand = Brand::factory()->create();
@@ -52,7 +56,7 @@ class AllProductsTest extends TestCase
         ProductImage::factory()->create(['product_id' => $activeProduct1->id]);
         ProductImage::factory()->create(['product_id' => $activeProduct2->id]);
 
-        $response = $this->getJson('/api/all/products');
+        $response = $this->getJson('/api/all/products', $headers);
 
         $response->assertStatus(200)
             ->assertJsonStructure([
@@ -110,7 +114,7 @@ class AllProductsTest extends TestCase
         $this->assertEquals($category->id, $data[0]['category']['category_id']);
         $this->assertEquals($subCategory->id, $data[0]['category']['sub_category_id']);
 
-        $responseWithCountry = $this->getJson('/api/all/products?country_id=1');
+        $responseWithCountry = $this->getJson('/api/all/products?country_id=1', $headers);
 
         $responseWithCountry->assertStatus(200)
             ->assertJsonStructure([

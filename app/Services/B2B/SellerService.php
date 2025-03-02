@@ -649,7 +649,7 @@ class SellerService extends Controller
         $orders = B2bOrder::when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
             $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
                 $subQuery->where('seller_id', userAuthId())
-                    ->orWhere('order_no', 'LIKE', '%' . $searchQuery . '%');
+                    ->where('order_no', 'LIKE', '%' . $searchQuery . '%');
             });
         })->get();
 
@@ -870,10 +870,19 @@ class SellerService extends Controller
             ->distinct('buyer_id')
             ->count('buyer_id');
 
+        $seven_days_partners = B2bOrder::where(['seller_id' => $currentUserId, 'status' => OrderStatus::DELIVERED])
+            ->distinct('buyer_id')
+            ->where('created_at', '<=', Carbon::today()->subDays(7))
+            ->count('buyer_id');
+
         $orderStats =  B2bOrder::where([
             'seller_id' => $currentUserId,
-            'created_at' => Carbon::today()->subDays(7)
         ])->where('status', OrderStatus::DELIVERED)->sum('total_amount');
+
+        $seven_days_orderStats = B2bOrder::where([
+            'seller_id' => $currentUserId,
+            'status' => OrderStatus::DELIVERED
+        ])->where('created_at', '<=', Carbon::today()->subDays(7))->sum('total_amount');
 
         $rfqs =  Rfq::with('buyer')->where('seller_id', $currentUserId)->get();
         $payouts =  Payout::where('seller_id', $currentUserId)->get();
@@ -887,8 +896,10 @@ class SellerService extends Controller
 
         $data = [
             'total_sales' => $orderStats,
+            'seven_days_sales' => $seven_days_orderStats,
             'rfq_recieved' => $rfqs->count(),
             'partners' => $uniqueSellersCount,
+            'seven_days_partners' => $seven_days_partners,
             'rfq_processed' => $rfqs->where('status', OrderStatus::COMPLETED)->count(),
             'deals_in_progress' => $orders->where('status', OrderStatus::PAID)->count(),
             'deals_in_completed' => $orders->where('status', OrderStatus::DELIVERED)->count(),
@@ -930,7 +941,7 @@ class SellerService extends Controller
 
         $config = Configuration::first();
         if (!$config) {
-            return $this->error(null, 'Configuration not found', 500);
+            return $this->error(null, 'Configuration setting not found', 404);
         }
 
         $min = $config->withdrawal_min ?? 0;
@@ -955,7 +966,7 @@ class SellerService extends Controller
 
         $paymentInfo = B2bWithdrawalMethod::where('status', WithdrawalStatus::ACTIVE)->find($data->account_id);
         if (!$paymentInfo) {
-            return $this->error(null, 'Invalid account selected for withdrawal', 422);
+            return $this->error(null, 'Invalid account selected for withdrawal or account is not active', 422);
         }
 
         $pendingRequest = Payout::where(['seller_id' => $currentUserId, 'status' => 'pending'])->exists();
@@ -974,7 +985,10 @@ class SellerService extends Controller
             Payout::create([
                 'seller_id' => $currentUserId,
                 'amount' => $netAmount,
-                'fee' => $fee,
+                'account_name' => $paymentInfo->account_name,
+                'account_number' => $paymentInfo->account_number,
+                'bank' => $paymentInfo->bank_name,
+                'status' => WithdrawalStatus::PENDING,
                 'b2b_withdrawal_method' => $paymentInfo->id,
             ]);
 
@@ -990,6 +1004,7 @@ class SellerService extends Controller
             return $this->error(null, 'An error occurred while processing your request', 500);
         }
     }
+
 
     //Withdrawal method
     public function addNewMethod($data)

@@ -34,6 +34,7 @@ use App\Models\WithdrawalRequest;
 use App\Notifications\WithdrawalNotification;
 use App\Services\Curl\PostCurl;
 use App\Services\SubscriptionService;
+use Carbon\Carbon;
 
 class PaystackService
 {
@@ -43,16 +44,32 @@ class PaystackService
             DB::transaction(function () use ($event, $status): void {
 
                 $paymentData = $event['data'];
-
+                $ref = $paymentData['reference'];
                 $userId = $paymentData['metadata']['user_id'];
-                $referrerId = $paymentData['metadata']['referrer_id'];
                 $amount = $paymentData['amount'];
                 $formattedAmount = number_format($amount / 100, 2, '.', '');
-                $ref = $paymentData['reference'];
                 $channel = $paymentData['channel'];
+                $paid_at = Carbon::parse($paymentData['paid_at']);
+
+                if (Payment::where('reference', $ref)->exists()) {
+                    Log::info("Duplicate payment detected: {$ref}, skipping processing.");
+                    return;
+                }
+
+                $duplicatePayment = Payment::where('user_id', $userId)
+                    ->where('amount', $formattedAmount)
+                    ->where('channel', $channel)
+                    ->whereBetween('created_at', [$paid_at->subMinutes(5), $paid_at->addMinutes(5)])
+                    ->exists();
+
+                if ($duplicatePayment) {
+                    Log::info("Duplicate payment detected for user {$userId}, skipping processing.");
+                    return;
+                }
+
+                $referrerId = $paymentData['metadata']['referrer_id'];
                 $currency = $paymentData['currency'];
                 $ip_address = $paymentData['ip_address'];
-                $paid_at = $paymentData['paid_at'];
                 $createdAt = $paymentData['created_at'];
                 $transaction_date = $paymentData['paid_at'];
                 $payStatus = $paymentData['status'];
@@ -294,14 +311,6 @@ class PaystackService
                     'status' => OrderStatus::PENDING,
                 ]);
 
-                $orderedItems = [
-                    'product_name' => $product->name,
-                    'image' => $product->front_image,
-                    'quantity' => $rfq->product_quantity,
-                    'price' => $rfq->total_amount,
-                    'buyer_name' => $user->first_name . ' ' . $user->last_name,
-                    'order_number' => $orderNo,
-                ];
                 $product->quantity -= $rfq->product_quantity;
                 $product->sold += $rfq->product_quantity;
                 $product->save();

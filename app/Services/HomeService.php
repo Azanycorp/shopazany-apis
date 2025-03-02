@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Enum\OrderStatus;
 use App\Enum\ProductReviewStatus;
 use App\Enum\ProductStatus;
-use App\Enum\UserType;
 use App\Http\Resources\ReviewResource;
 use App\Http\Resources\SellerDetailResource;
 use App\Models\User;
