@@ -154,7 +154,6 @@ class PaystackService
 
                 $data = (object)[
                     'user_id' => $userId,
-                    'centre_id' => $centerId ?? null,
                     'first_name' => $user->first_name,
                     'last_name' => $user->last_name,
                     'email' => $user->email,
@@ -271,7 +270,6 @@ class PaystackService
 
                 $data = (object)[
                     'user_id' => $userId,
-                    'centre_id' => $centerId ?? null,
                     'first_name' => $user->first_name,
                     'last_name' => $user->last_name,
                     'email' => $user->email,
