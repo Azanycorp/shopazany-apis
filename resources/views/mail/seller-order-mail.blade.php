@@ -188,14 +188,14 @@
                 <div class="product-info">
                     <h3>{{ $order['product_name'] }}</h3>
                     <p class="price">
-                        @if($item['currency'] === 'USD')
+                        @if($order['currency'] === 'USD')
                             $
-                        @elseif($item['currency'] === 'NGN')
+                        @elseif($order['currency'] === 'NGN')
                             ₦
                         @else
-                            {{ $item['currency'] }}
+                            {{ $order['currency'] }}
                         @endif
-                        {{ number_format($item['price']) }}
+                        {{ number_format($order['price']) }}
                     </p>
                     <p>QTY: {{ $order['quantity'] }}</p>
                 </div>

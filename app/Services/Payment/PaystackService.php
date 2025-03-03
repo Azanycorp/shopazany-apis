@@ -127,9 +127,6 @@ class PaystackService
 
     public static function handlePaymentSuccess($event, $status): void
     {
-        $paymentData = null;
-        $user = null;
-
         try {
             DB::transaction(function () use ($event, $status): void {
 
@@ -194,7 +191,7 @@ class PaystackService
                         'image' => $product->image,
                         'quantity' => $item['product_quantity'],
                         'price' => $item['total_amount'],
-                        'currency' => $product->shopCountry?->currency,
+                        'currency' => $user->default_currency,
                     ];
 
                     $product->decrement('current_stock_quantity', $item['product_quantity']);
