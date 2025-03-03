@@ -2,30 +2,30 @@
 
 namespace App\Console\Commands;
 
-use App\Enum\WithdrawalStatus;
 use App\Models\User;
-use App\Notifications\WithdrawalNotification;
-use App\Services\PayoutService;
 use Illuminate\Support\Str;
+use App\Enum\WithdrawalStatus;
+use App\Services\PayoutService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Notifications\WithdrawalNotification;
 
-class WithdrawRequestPayout extends Command
+class B2BWithdrawRequestPayout extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'withdraw-request:process';
+    protected $signature = 'b2b-payout-request';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Payout system for withdrawal requests';
+    protected $description = 'Payout scheduler for b2b seller\'s withdrawal requests';
 
     /**
      * Execute the console command.
@@ -34,10 +34,10 @@ class WithdrawRequestPayout extends Command
     {
         $this->info('Processing pending withdrawal requests...');
 
-        User::with(['withdrawalRequests' => function ($query) {
+        User::with(['payout' => function ($query) {
             $query->where('status', WithdrawalStatus::PENDING)->limit(1);
-        }, 'paymentMethods'])
-        ->whereHas('withdrawalRequests', function ($query) {
+        }, 'B2bWithdrawalMethod'])
+        ->whereHas('payout', function ($query) {
             $query->where('status', WithdrawalStatus::PENDING);
         })
         ->chunk(100, function ($users) {
@@ -51,12 +51,12 @@ class WithdrawRequestPayout extends Command
 
     private function withdraw($user)
     {
-        if ($user->paymentMethods->isEmpty()) {
+        if ($user->B2bWithdrawalMethod->isEmpty()) {
             $this->warn("Skipping user {$user->id}: No payment method found.");
             return;
         }
 
-        foreach ($user->withdrawalRequests as $request) {
+        foreach ($user->payout as $request) {
             if ($request->status !== WithdrawalStatus::PENDING) {
                 continue;
             }
@@ -65,7 +65,7 @@ class WithdrawRequestPayout extends Command
                 $this->warn("Skipping user {$user->id}, withdrawal ID {$request->id}: Invalid withdrawal amount.");
                 continue;
             }
-            $defaultPaymentMethod = $user->paymentMethods->where('is_default', true)->first();
+            $defaultPaymentMethod = $user->B2bWithdrawalMethod->where('is_default',1)->first();
             if (!$defaultPaymentMethod) {
                 $this->warn("Skipping user {$user->id}: No default payment method found.");
                 return;

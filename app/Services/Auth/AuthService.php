@@ -10,7 +10,6 @@ use App\Http\Controllers\Controller;
 use App\Mail\SignUpVerifyMail;
 use App\Mail\UserWelcomeMail;
 use App\Models\Action;
-use App\Models\Country;
 use App\Models\User;
 use App\Trait\HttpResponse;
 use App\Trait\SignUp;
@@ -219,9 +218,19 @@ class AuthService extends Controller
         $mail_class = "App\Mail\UserWelcomeMail";
         mailSend($type, $user, $subject, $mail_class, 'user');
 
+        $user->tokens()->delete();
+        $token = $user->createToken('API Token of '. $user->email);
+
         $description = "User with email address {$request->email} verified OTP";
         $action = UserLog::CREATED;
-        $response = $this->success(null, "Verified successfully");
+        $response = $this->success([
+            'user_id' => $user->id,
+            'user_type' => $user->type,
+            'has_signed_up' => true,
+            'is_affiliate_member' => $user->is_affiliate_member === 1,
+            'token' => $token->plainTextToken,
+            'expires_at' => $token->accessToken->expires_at,
+        ], "Verified successfully");
 
         logUserAction($request, $action, $description, $response, $user);
 

@@ -26,46 +26,56 @@ class B2BBuyerController extends Controller
     {
         return $this->buyerService->sendQuote($request);
     }
+
     //Quotes
     public function allQuotes()
     {
         return $this->buyerService->allQuotes();
     }
+
     public function sendAllQuotes()
     {
         return $this->buyerService->sendMutipleQuotes();
     }
+
     public function sendSingleQuote(Request $request)
     {
         return $this->buyerService->sendRfq($request);
     }
+
     public function removeQuote($id)
     {
         return $this->buyerService->removeQuote($id);
     }
+
     //Dasbaord
     public function dashboard()
     {
         return $this->buyerService->getDashboardDetails();
     }
+
     //Orders
     public function allOrders()
     {
         return $this->buyerService->allOrders();
     }
+
     public function getOrderDetails($id)
     {
         return $this->buyerService->orderDetails($id);
     }
+
     //Rfq
     public function getAllRfqs()
     {
         return $this->buyerService->allRfqs();
     }
+
     public function getRfqDetails($id)
     {
         return $this->buyerService->rfqDetails($id);
     }
+
     public function reviewRequest(Request $request)
     {
         return $this->buyerService->sendReviewRequest($request);
@@ -75,6 +85,7 @@ class B2BBuyerController extends Controller
     {
         return $this->buyerService->acceptQuote($request);
     }
+
     //Wish list
     public function addTowishList(Request $request)
     {
@@ -85,6 +96,7 @@ class B2BBuyerController extends Controller
     {
         return $this->buyerService->myWishList();
     }
+
     public function removeItem($id)
     {
         return $this->buyerService->removeItem($id);
@@ -100,11 +112,6 @@ class B2BBuyerController extends Controller
     {
         return $this->buyerService->addReview($request);
     }
-    //Rate Product
-    public function addRating(Request $request)
-    {
-        return $this->buyerService->addRating($request);
-    }
 
     //Product Review
     public function likeProduct(Request $request)
@@ -118,11 +125,6 @@ class B2BBuyerController extends Controller
         return $this->buyerService->profile();
     }
 
-    public function companyInfo()
-    {
-        return $this->buyerService->companyInfo();
-    }
-
     public function editAccount(Request $request)
     {
         return $this->buyerService->editAccount($request);
@@ -132,6 +134,7 @@ class B2BBuyerController extends Controller
     {
         return $this->buyerService->changePassword($request);
     }
+
     public function change2Fa(Request $request)
     {
         return $this->buyerService->change2FA($request);

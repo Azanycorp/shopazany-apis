@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\AuthCheck;
 use App\Http\Middleware\B2BBuyer;
 use App\Http\Middleware\AuthGates;
 use App\Http\Middleware\B2BSeller;
@@ -14,6 +15,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Spatie\ResponseCache\Middlewares\CacheResponse;
 use App\Http\Middleware\BlockUserAfterFailedAttempts;
 use App\Http\Middleware\CheckUserCountry;
+use App\Http\Middleware\ValidateHeader;
 use Spatie\ResponseCache\Middlewares\DoNotCacheResponse;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -44,6 +46,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'check.user.country' => CheckUserCountry::class,
             'cacheResponse' => CacheResponse::class,
             'doNotCacheResponse' => DoNotCacheResponse::class,
+            'auth.check' => AuthCheck::class,
+            'validate.header' => ValidateHeader::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

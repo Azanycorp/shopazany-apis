@@ -13,11 +13,15 @@ trait SignUp
     protected function createUser($request)
     {
         $code = generateVerificationCode();
+        $currencyCode = $this->currencyCode($request);
         return User::create([
             'first_name' => $request->first_name,
             'last_name' => $request->last_name,
             'email' => $request->email,
             'type' => UserType::CUSTOMER,
+            'country' => $request->country_id,
+            'state_id' => $request->state_id,
+            'default_currency' => $currencyCode,
             'email_verified_at' => null,
             'verification_code' => $code,
             'is_verified' => 0,

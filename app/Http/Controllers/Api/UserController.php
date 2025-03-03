@@ -95,4 +95,36 @@ class UserController extends Controller
     {
         return $this->service->changeSettings($request, $userId);
     }
+
+    public function referralManagement($userId)
+    {
+        return $this->service->referralManagement($userId);
+    }
+
+    public function addMethod(Request $request)
+    {
+        $request->validate([
+            'user_id' => ['required', 'integer', 'exists:users,id'],
+            'type' => ['required', 'in:bank_transfer'],
+            'platform' => ['required', 'in:paystack,authorize'],
+            'is_default' => ['required', 'boolean'],
+        ]);
+
+        return $this->service->addPaymentMethod($request);
+    }
+
+    public function withdrawalMethod($userId)
+    {
+        return $this->service->getPaymentMethod($userId);
+    }
+
+    public function withdrawalRequest(WithdrawalRequest $request)
+    {
+        return $this->service->withdraw($request);
+    }
+
+    public function withdrawalHistory($userId)
+    {
+        return $this->service->withdrawalHistory($userId);
+    }
 }
