@@ -187,9 +187,16 @@
                 <img src="{{ $order['image'] }}" alt="{{ $order['product_name'] }}">
                 <div class="product-info">
                     <h3>{{ $order['product_name'] }}</h3>
-                    <p class="price">${{ number_format($order['price']) }}</p>
-                    {{-- <p>COLOUR: PURPLE</p>
-                    <p>SIZE: XL</p> --}}
+                    <p class="price">
+                        @if($item['currency'] === 'USD')
+                            $
+                        @elseif($item['currency'] === 'NGN')
+                            ₦
+                        @else
+                            {{ $item['currency'] }}
+                        @endif
+                        {{ number_format($item['price']) }}
+                    </p>
                     <p>QTY: {{ $order['quantity'] }}</p>
                 </div>
             </div>
