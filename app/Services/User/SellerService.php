@@ -6,6 +6,7 @@ use App\Enum\OrderStatus;
 use App\Enum\ProductStatus;
 use App\Enum\UserType;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\OrderDetailResource;
 use App\Models\User;
 use App\Models\Order;
 use App\Models\Product;
@@ -332,7 +333,7 @@ class SellerService extends Controller
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        if (in_array($status, [
+        if (!in_array($status, [
                 OrderStatus::PENDING,
                 OrderStatus::CONFIRMED,
                 OrderStatus::PROCESSING,
@@ -363,6 +364,49 @@ class SellerService extends Controller
                 'next_page_url' => $orders->nextPageUrl(),
             ],
         ];
+    }
+
+    public function getOrderDetail($userId, $id)
+    {
+        $currentUserId = Auth::id();
+
+        if ($currentUserId != $userId) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+
+        $order = Order::with(['user.userShippingAddress', 'product.shopCountry'])
+            ->where('seller_id', $userId)
+            ->where('id', $id)
+            ->first();
+
+        if (!$order) {
+            return $this->error(null, "Order not found", 404);
+        }
+
+        $data = new OrderDetailResource($order);
+
+        return $this->success($data, "Order retrieved successfully");
+    }
+
+    public function updateOrderStatus($userId, $id, $request)
+    {
+        $currentUserId = Auth::id();
+
+        if ($currentUserId != $userId) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+
+        $order = Order::find($id);
+
+        if (!$order) {
+            return $this->error(null, "Order not found", 404);
+        }
+
+        $order->update([
+            'status' => $request->status
+        ]);
+
+        return $this->success(null, "Order updated successfully");
     }
 
     public function getTemplate()
