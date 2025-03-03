@@ -34,10 +34,10 @@ class WithdrawRequestPayout extends Command
     {
         $this->info('Processing pending withdrawal requests...');
 
-        User::with(['withdrawalRequest' => function ($query) {
+        User::with(['withdrawalRequests' => function ($query) {
             $query->where('status', WithdrawalStatus::PENDING)->limit(1);
         }, 'paymentMethods'])
-        ->whereHas('withdrawalRequest', function ($query) {
+        ->whereHas('withdrawalRequests', function ($query) {
             $query->where('status', WithdrawalStatus::PENDING);
         })
         ->chunk(100, function ($users) {
@@ -56,7 +56,7 @@ class WithdrawRequestPayout extends Command
             return;
         }
 
-        foreach ($user->withdrawalRequest as $request) {
+        foreach ($user->withdrawalRequests as $request) {
             if ($request->status !== WithdrawalStatus::PENDING) {
                 continue;
             }

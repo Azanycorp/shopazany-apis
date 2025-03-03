@@ -63,7 +63,7 @@ trait UserRelationship
         return $this->hasOne(BankAccount::class, 'user_id');
     }
 
-    public function withdrawalRequest(): HasMany
+    public function withdrawalRequests(): HasMany
     {
         return $this->hasMany(WithdrawalRequest::class, 'user_id');
     }
