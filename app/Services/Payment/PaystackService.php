@@ -172,7 +172,7 @@ class PaystackService
 
                 $orderedItems = [];
                 foreach ($items as $item) {
-                    $product = Product::with(['user', 'shopCountry'])
+                    $product = Product::with(['user.wallet', 'shopCountry'])
                         ->findOrFail($item['product_id']);
 
                     Order::saveOrder(
@@ -195,6 +195,15 @@ class PaystackService
                     ];
 
                     $product->decrement('current_stock_quantity', $item['product_quantity']);
+
+                    if ($product->user) {
+                        $wallet = UserWallet::firstOrCreate(
+                            ['user_id' => $product->user->id],
+                            ['balance' => 0]
+                        );
+
+                        $wallet->increment('balance', $item['total_amount']);
+                    }
                 }
 
                 if ($userShippingId === 0) {

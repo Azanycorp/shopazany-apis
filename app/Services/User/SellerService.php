@@ -544,7 +544,7 @@ class SellerService extends Controller
             ])
             ->first();
 
-        return $this->success([
+        $data = [
             'total_products' => $totalProducts,
             'total_orders' => $totalOrders,
             'completed_sales' => $orderCounts->completed_sales ?? 0,
@@ -554,7 +554,9 @@ class SellerService extends Controller
             'shipped_count' => $orderCounts->shipped_count ?? 0,
             'delivered_count' => $orderCounts->delivered_count ?? 0,
             'cancelled_count' => $orderCounts->cancelled_count ?? 0,
-        ], "Analytics");
+        ];
+
+        return $this->success($data, "Analytics");
     }
 
     public function getOrderSummary($userId)
