@@ -543,31 +543,8 @@ class SellerService extends Controller
             ])
             ->first();
 
-        $topRateds = Product::select('id', 'name', 'price', 'image', 'user_id')
-            ->with('user:id,first_name,last_name,image')
-            ->withCount('productReviews')
-            ->where('user_id', $userId)
-            ->withCount(['orders as sold_count' => function ($query) {
-                $query->select(DB::raw('COUNT(*)'));
-            }])
-            ->orderByDesc('sold_count')
-            ->limit(5)
-            ->get();
-
-        $mostFavorites = Product::select('id', 'name', 'price', 'image', 'user_id')
-            ->with('user:id,first_name,last_name,image')
-            ->withCount('productReviews')
-            ->where('user_id', $userId)
-            ->withCount(['orders as sold_count' => function ($query) {
-                $query->select(DB::raw('COUNT(*)'));
-            }])
-            ->withCount(['wishlists as wishlist_count' => function ($query) {
-                $query->select(DB::raw('COUNT(*)'));
-            }])
-            ->orderByDesc('wishlist_count')
-            ->orderByDesc('sold_count')
-            ->limit(5)
-            ->get();
+        $topRateds = Product::topRated($userId)->limit(5)->get();
+        $mostFavorites = Product::mostFavorite($userId)->limit(5)->get();
 
         $data = [
             'total_products' => $totalProducts,
