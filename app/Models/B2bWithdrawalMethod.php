@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 class B2bWithdrawalMethod extends Model
 {
     use ClearsResponseCache;
-    
+
     protected $fillable = [
         'country_id',
         'user_id',
@@ -17,6 +17,11 @@ class B2bWithdrawalMethod extends Model
         'account_number',
         'account_type',
         'bank_name',
+        'is_default',
+        'platform',
+        'recipient',
+        'reference',
+        'recipient_code',
         'routing_number',
         'bic_swift_code',
     ];

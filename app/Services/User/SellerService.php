@@ -331,7 +331,7 @@ class SellerService extends Controller
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $orders = Order::with('user')
+        $orders = Order::with(['user', 'product'])
             ->where('seller_id', $id)
             ->orderBy('created_at', 'desc')
             ->paginate(25);
@@ -360,7 +360,7 @@ class SellerService extends Controller
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $orders = Order::with('user')
+        $orders = Order::with(['user', 'product'])
             ->where('seller_id', $id)
             ->where('status', OrderStatus::CONFIRMED)
             ->orderBy('created_at', 'desc')
@@ -369,7 +369,6 @@ class SellerService extends Controller
         $data = OrderResource::collection($orders);
 
         return $this->success($data, "Confirmed Orders");
-
     }
 
     public function getCancelledOrders($id)
@@ -380,7 +379,7 @@ class SellerService extends Controller
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $orders = Order::with('user')
+        $orders = Order::with(['user', 'product'])
             ->where('seller_id', $id)
             ->where('status', OrderStatus::CANCELLED)
             ->orderBy('created_at', 'desc')
@@ -389,7 +388,6 @@ class SellerService extends Controller
         $data = OrderResource::collection($orders);
 
         return $this->success($data, "Cancelled Orders");
-
     }
 
     public function getDeliveredOrders($id)
@@ -400,7 +398,7 @@ class SellerService extends Controller
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $orders = Order::with('user')
+        $orders = Order::with(['user', 'product'])
             ->where('seller_id', $id)
             ->where('status', OrderStatus::DELIVERED)
             ->orderBy('created_at', 'desc')
@@ -409,7 +407,6 @@ class SellerService extends Controller
         $data = OrderResource::collection($orders);
 
         return $this->success($data, "Delivered Orders");
-
     }
 
     public function getPendingOrders($id)
@@ -420,7 +417,7 @@ class SellerService extends Controller
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $orders = Order::with('user')
+        $orders = Order::with(['user', 'product'])
             ->where('seller_id', $id)
             ->where('status', OrderStatus::PENDING)
             ->orderBy('created_at', 'desc')
@@ -439,7 +436,7 @@ class SellerService extends Controller
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $orders = Order::with('user')
+        $orders = Order::with(['user', 'product'])
             ->where('seller_id', $id)
             ->where('status', OrderStatus::PROCESSING)
             ->orderBy('created_at', 'desc')
@@ -458,7 +455,7 @@ class SellerService extends Controller
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $orders = Order::with('user')
+        $orders = Order::with(['user', 'product'])
             ->where('seller_id', $id)
             ->where('status', OrderStatus::SHIPPED)
             ->orderBy('created_at', 'desc')
@@ -547,7 +544,7 @@ class SellerService extends Controller
             ])
             ->first();
 
-        return $this->success([
+        $data = [
             'total_products' => $totalProducts,
             'total_orders' => $totalOrders,
             'completed_sales' => $orderCounts->completed_sales ?? 0,
@@ -557,7 +554,9 @@ class SellerService extends Controller
             'shipped_count' => $orderCounts->shipped_count ?? 0,
             'delivered_count' => $orderCounts->delivered_count ?? 0,
             'cancelled_count' => $orderCounts->cancelled_count ?? 0,
-        ], "Analytics");
+        ];
+
+        return $this->success($data, "Analytics");
     }
 
     public function getOrderSummary($userId)
@@ -568,7 +567,7 @@ class SellerService extends Controller
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $orders = Order::with('user')
+        $orders = Order::with(['user', 'product'])
             ->where('seller_id', $userId)
             ->orderBy('created_at', 'desc')
             ->take(8)
