@@ -782,6 +782,9 @@ class BuyerService
         if (!$user) {
             return $this->error(null, 'User does not exist');
         }
+        if (!empty($request->email) && User::where('email', $request->email)->where('id', '!=', $user->id)->exists()) {
+            return $this->error(null, "Email already exists.");
+        }
         $image = $request->hasFile('image') ? uploadUserImage($request, 'image', $user) : $user->image;
 
         $user->update([
