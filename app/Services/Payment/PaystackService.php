@@ -30,6 +30,7 @@ use App\Models\UserShippingAddress;
 use Illuminate\Support\Facades\Log;
 use App\Models\BuyerShippingAddress;
 use App\Http\Resources\B2BBuyerShippingAddressResource;
+use App\Models\Wallet;
 use App\Models\WithdrawalRequest;
 use App\Notifications\WithdrawalNotification;
 use App\Services\Curl\PostCurl;
@@ -197,7 +198,7 @@ class PaystackService
                     $product->decrement('current_stock_quantity', $item['product_quantity']);
 
                     if ($product->user) {
-                        $wallet = UserWallet::firstOrCreate(
+                        $wallet = Wallet::firstOrCreate(
                             ['user_id' => $product->user->id],
                             ['balance' => 0]
                         );
