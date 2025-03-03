@@ -187,9 +187,16 @@
                 <img src="{{ $order['image'] }}" alt="{{ $order['product_name'] }}">
                 <div class="product-info">
                     <h3>{{ $order['product_name'] }}</h3>
-                    <p class="price">${{ number_format($order['price']) }}</p>
-                    {{-- <p>COLOUR: PURPLE</p>
-                    <p>SIZE: XL</p> --}}
+                    <p class="price">
+                        @if($order['currency'] === 'USD')
+                            $
+                        @elseif($order['currency'] === 'NGN')
+                            ₦
+                        @else
+                            {{ $order['currency'] }}
+                        @endif
+                        {{ number_format($order['price']) }}
+                    </p>
                     <p>QTY: {{ $order['quantity'] }}</p>
                 </div>
             </div>
@@ -198,21 +205,61 @@
                 $subtotal += $order['price'] * $order['quantity'];
             @endphp
         @endforeach
+
+        @php
+            $currency = $items[0]['currency'] ?? 'USD';
+        @endphp
         <div class="total">
             <span>Subtotal</span>
-            <span>${{ number_format($subtotal) }}</span>
+            <span>
+                @if($currency === 'USD')
+                    $
+                @elseif($currency === 'NGN')
+                    ₦
+                @else
+                    {{ $currency }}
+                @endif
+                {{ number_format($subtotal) }}
+            </span>
         </div>
         <div class="total">
             <span>Tax</span>
-            <span>$00.00</span>
+            <span>
+                @if($currency === 'USD')
+                    $
+                @elseif($currency === 'NGN')
+                    ₦
+                @else
+                    {{ $currency }}
+                @endif
+                00.00
+            </span>
         </div>
         <div class="total">
             <span>Shipping</span>
-            <span>$00.00</span>
+            <span>
+                @if($currency === 'USD')
+                    $
+                @elseif($currency === 'NGN')
+                    ₦
+                @else
+                    {{ $currency }}
+                @endif
+                00.00
+            </span>
         </div>
         <div class="total">
             <span>Total</span>
-            <span>${{ number_format($totalAmount) }}</span>
+            <span>
+                @if($currency === 'USD')
+                    $
+                @elseif($currency === 'NGN')
+                    ₦
+                @else
+                    {{ $currency }}
+                @endif
+                {{ number_format($totalAmount) }}
+            </span>
         </div>
     </div>
 

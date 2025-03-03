@@ -7,6 +7,7 @@ use App\Models\Language;
 use App\Models\Transaction;
 use Illuminate\Support\Str;
 use App\Models\BusinessSetting;
+use App\Models\Country;
 use App\Models\Currency;
 use App\Models\Mailing;
 use App\Models\Order;
@@ -2466,6 +2467,15 @@ if (! function_exists('mailSend')) {
     }
 }
 
-
+if (! function_exists('currencyCodeByCountryId')) {
+    function currencyCodeByCountryId($countryId) {
+        $currencyCode = 'NGN';
+        if($countryId) {
+            $country = Country::findOrFail($countryId);
+            $currencyCode = getCurrencyCode($country->sortname);
+        }
+        return $currencyCode;
+    }
+}
 
 
