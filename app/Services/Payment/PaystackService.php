@@ -175,7 +175,7 @@ class PaystackService
 
                 $orderedItems = [];
                 foreach ($items as $item) {
-                    $product = Product::with('user')
+                    $product = Product::with(['user', 'shopCountry'])
                         ->findOrFail($item['product_id']);
 
                     Order::saveOrder(
@@ -194,6 +194,7 @@ class PaystackService
                         'image' => $product->image,
                         'quantity' => $item['product_quantity'],
                         'price' => $item['total_amount'],
+                        'currency' => $product->shopCountry?->currency,
                     ];
 
                     $product->decrement('current_stock_quantity', $item['product_quantity']);
