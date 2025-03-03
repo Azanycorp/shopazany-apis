@@ -114,12 +114,14 @@ class ChargeCardService implements PaymentStrategy
     private function handleB2bSuccessResponse($response, $tresponse, $user, array $paymentDetails, $orderNo, $payment)
     {
         $rfqId = $paymentDetails['rfq_id'];
+        $centerId = $paymentDetails['centre_id'];
         $shipping_address_id = $paymentDetails['shipping_address_id'];
         $shipping_agent_id = $paymentDetails['shipping_agent_id'];
         $billing_address = $paymentDetails['billTo'];
         $amount = $paymentDetails['amount'];
         $data = (object)[
             'user_id' => $user->id,
+            'centre_id' => $centerId ?? null,
             'first_name' => $user->first_name,
             'last_name' => $user->last_name,
             'email' => $user->email,
@@ -149,6 +151,7 @@ class ChargeCardService implements PaymentStrategy
 
         B2bOrder::create([
             'buyer_id' => $user->id,
+            'centre_id' => $centerId ?? null,
             'seller_id' => $rfq->seller_id,
             'product_id' => $rfq->product_id,
             'product_quantity' => $rfq->product_quantity,
@@ -195,7 +198,7 @@ class ChargeCardService implements PaymentStrategy
         $type = MailingEnum::ORDER_EMAIL;
         $subject = "B2B Order Confirmation";
         $mail_class = "App\Mail\B2BOrderEmail";
-        mailSend($type, $user, $subject, $mail_class,'orderedItems');
+        mailSend($type, $user, $subject, $mail_class, 'orderedItems');
 
         (new UserLogAction(
             request(),
@@ -323,6 +326,7 @@ class ChargeCardService implements PaymentStrategy
     private function handleSuccessResponse($response, $tresponse, $user, array $paymentDetails, $orderNo, $payment)
     {
         $amount = $paymentDetails['amount'];
+        $centerId = $paymentDetails['centre_id'];
         $data = (object)[
             'user_id' => $user->id,
             'first_name' => $user->first_name,
@@ -358,6 +362,7 @@ class ChargeCardService implements PaymentStrategy
                     $paymentDetails['billTo']['address'],
                     "authorizenet",
                     "success",
+                    $centerId ?? null,
                 );
 
                 $orderedItems[] = [

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Enum\PaymentType;
 use Illuminate\Http\Request;
 use App\Models\ShippingAgent;
+use App\Models\CollationCenter;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PaymentRequest;
 use App\Services\Payment\PaymentService;
@@ -28,8 +29,13 @@ class PaymentController extends Controller
     public function getShippingAgents()
     {
         $agents = ShippingAgent::latest('id')->get();
+        $centres = CollationCenter::with('hubs')->latest('id')->get();
         $data = ShippingAgentResource::collection($agents);
-        return $this->success($data, 'Available Agents');
+        $details = [
+            'centres' => $centres,
+            'agents' => $data
+        ];
+        return $this->success($details, 'Available Agents and Collation centres');
     }
 
     public function processPayment(PaymentRequest $request)

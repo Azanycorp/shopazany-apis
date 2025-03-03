@@ -107,7 +107,7 @@ class B2BAdminController extends Controller
 
     public function cancelWidthrawalRequest($id)
     {
-        return $this->adminService->cancelWidthrawalRequest($id);
+        return $this->adminService->cancelWithdrawalRequest($id);
     }
 
     //Withdrawal Method Requests

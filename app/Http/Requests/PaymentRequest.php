@@ -24,6 +24,7 @@ class PaymentRequest extends FormRequest
         return [
             'user_id' => ['required', 'integer', 'exists:users,id'],
             'shipping_agent_id' => ['nullable', 'integer', 'exists:shipping_agents,id'],
+            'centre_id' => ['nullable', 'integer','exists:collation_centers,id'],
             'email' => ['required', 'email', 'email:rfc,dns'],
             'amount' => ['required', 'integer'],
             'currency' => ['required', 'string', 'in:NGN,USD'],

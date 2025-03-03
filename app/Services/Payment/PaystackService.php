@@ -133,6 +133,7 @@ class PaystackService
 
                 $paymentData = $event['data'];
                 $userId = $paymentData['metadata']['user_id'];
+                $centerId = $paymentData['metadata']['centre_id'];
                 $items = $paymentData['metadata']['items'];
                 $method = $paymentData['metadata']['payment_method'];
                 $ref = $paymentData['reference'];
@@ -185,6 +186,7 @@ class PaystackService
                         $address,
                         $method,
                         $payStatus,
+                        $centerId,
                     );
 
                     $orderedItems[] = [
@@ -246,6 +248,7 @@ class PaystackService
             DB::transaction(function () use ($event, $status): void {
                 $paymentData = $event['data'];
                 $userId = $paymentData['metadata']['user_id'];
+                $centerId = $paymentData['metadata']['centre_id'];
                 $rfqId = $paymentData['metadata']['rfq_id'];
                 $shipping_address_id = $paymentData['metadata']['shipping_address_id'];
                 $shipping_agent_id = $paymentData['metadata']['shipping_agent_id'];
@@ -297,6 +300,7 @@ class PaystackService
 
                 B2bOrder::create([
                     'buyer_id' => $userId,
+                    'centre_id' => $centerId ?? null,
                     'seller_id' => $rfq->seller_id,
                     'product_id' => $rfq->product_id,
                     'product_quantity' => $rfq->product_quantity,
@@ -333,7 +337,7 @@ class PaystackService
                 $type = MailingEnum::ORDER_EMAIL;
                 $subject = "B2B Order Confirmation";
                 $mail_class = "App\Mail\B2BOrderEmail";
-                mailSend($type, $user, $subject, $mail_class,'orderedItems');
+                mailSend($type, $user, $subject, $mail_class, 'orderedItems');
 
                 (new UserLogAction(
                     request(),

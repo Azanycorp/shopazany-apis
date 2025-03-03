@@ -29,6 +29,7 @@ class B2bOrder extends Model
         'status',
         'delivery_date',
         'shipped_date',
+        'centre_id',
         'country_id'
     ];
 
@@ -39,6 +40,10 @@ class B2bOrder extends Model
     public function seller(): BelongsTo
     {
         return $this->belongsTo(User::class, 'seller_id', 'id');
+    }
+    public function collationCentre(): BelongsTo
+    {
+        return $this->belongsTo(CollationCenter::class, 'centre_id');
     }
     public function country(): BelongsTo
     {

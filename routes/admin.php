@@ -1,12 +1,12 @@
 <?php
 
-use App\Http\Controllers\Api\AdminAffiliateController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\ApiController;
 use App\Http\Controllers\Api\FaqController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\SizeController;
 use App\Http\Controllers\Api\UnitController;
+use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\BrandController;
 use App\Http\Controllers\Api\ColorController;
 use App\Http\Controllers\Api\OrderController;
@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\RewardPointController;
 use App\Http\Controllers\Api\AdminProductController;
 use App\Http\Controllers\Api\B2B\B2BAdminController;
 use App\Http\Controllers\Api\AdminCustomerController;
+use App\Http\Controllers\Api\AdminAffiliateController;
 use App\Http\Controllers\Api\B2B\B2BAdminBuyerController;
 use App\Http\Controllers\Api\B2B\B2BAdminSellerController;
 use App\Http\Controllers\Api\B2B\B2BBannerPromoController;
@@ -109,8 +110,25 @@ Route::middleware('validate.header')
                 Route::post('/add', 'addCustomer');
                 Route::post('/edit', 'editCustomer');
 
+
                 Route::patch('/approve', 'approveCustomer');
                 Route::patch('/ban', 'banCustomer');
+
+
+                Route::prefix('category')->controller(ProductCategoryController::class)->group(function () {
+                    Route::post('/create', 'createCategory');
+                    Route::get('/all', 'adminCategories')->middleware('cacheResponse:300');
+                    Route::get('/analytics', 'categoryAnalytic');
+                    Route::post('/update/{id}', 'updateCategory');
+                    Route::post('/change/{category_id}', 'featuredStatus');
+                    Route::delete('/delete/{id}', 'deleteCategory');
+
+                    Route::post('/create/subcategory', 'createSubCategory');
+                    Route::get('/subcategory', 'getAdminSubcategory');
+                    Route::get('/{category_id}/subcategory', 'getSubcategory')->middleware('cacheResponse:300');
+                    Route::post('/subcategory/status/{sub_category_id}', 'subStatus');
+                    Route::delete('/subcategory/delete/{id}', 'deleteSubCategory');
+                });
 
                 Route::delete('/remove', 'removeCustomer');
             });
@@ -119,6 +137,7 @@ Route::middleware('validate.header')
                 Route::get('/', 'allSellers');
                 Route::get('/{user_id}', 'viewSeller');
                 Route::get('/payment-history/{user_id}', 'paymentHistory');
+
 
                 Route::patch('/{user_id}/edit', 'editSeller');
                 Route::delete('/remove/{user_id}', 'removeSeller');
@@ -205,9 +224,7 @@ Route::middleware('validate.header')
             Route::get('/generate/users/link', [ApiController::class, 'referralGenerate']);
 
             //Shipping Agency
-            Route::prefix('shipping-management')
-                ->controller(B2BAdminController::class)
-                ->group(function (): void {
+            Route::prefix('shipping-management')->controller(B2BAdminController::class)->group(function (): void {
                     Route::get('/', 'shippingAgents')->middleware('cacheResponse:300');
                     Route::post('/add', 'addShippingAgent');
                     Route::get('/details/{id}', 'viewShippingAgent')->middleware('cacheResponse:300');
@@ -215,15 +232,45 @@ Route::middleware('validate.header')
                     Route::delete('/delete/{id}', 'deleteShippingAgent');
                 });
 
-            // Affiliate
-            Route::prefix('affiliate')
-                ->controller(AdminAffiliateController::class)
-                ->group(function () {
-                    Route::get('/overview', 'overview')->middleware('cacheResponse:600');
-                    Route::get('/users', 'allUsers')->middleware('cacheResponse:900');
-                    Route::get('/user/{id}', 'userDetail');
-                    Route::patch('/suspend/{id}', 'suspend');
-                    Route::post('/reset-password', 'resetPassword');
+                //super admin route
+                // Affiliate
+                Route::prefix('affiliate')->controller(AdminAffiliateController::class)->group(function () {
+                        Route::get('/overview', 'overview')->middleware('cacheResponse:600');
+                        Route::get('/users', 'allUsers')->middleware('cacheResponse:900');
+                        Route::get('/user/{id}', 'userDetail');
+                        Route::patch('/suspend/{id}', 'suspend');
+                        Route::post('/reset-password', 'resetPassword');
+                });
+
+                Route::controller(AdminController::class)->group(function () {
+                    //Admin users
+                    Route::prefix('admin-users')->group(function () {
+                        Route::get('/', 'adminUsers')->middleware('cacheResponse:300');
+                        Route::post('/add', 'addAdmin');
+                        Route::get('/details/{id}', 'viewAdminUser');
+                        Route::post('/update/{id}', 'editAdminUser');
+                        Route::post('/revoke-access/{id}', 'revokeAccess');
+                        Route::post('/verify-password', 'verifyPassword');
+                        Route::delete('/delete-account/{id}', 'removeAdmin');
+                    });
+
+                    //delivery (collation centers and hubs)
+                    Route::get('/delivery-overview', 'deliveryOverview');
+                    Route::prefix('collation-centre')->group(function () {
+                            Route::get('/', 'allCollationCentres');
+                            Route::post('/add', 'addCollationCentre');
+                            Route::get('/details/{id}', 'viewCollationCentre');
+                            Route::patch('/update/{id}', 'editCollationCentre');
+                            Route::delete('/delete/{id}', 'deleteCollationCentre');
+
+                            Route::prefix('hubs')->group(function () {
+                                    Route::get('/', 'allCollationCentreHubs');
+                                    Route::post('/add', 'addHub');
+                                    Route::get('/details/{id}', 'viewHub');
+                                    Route::patch('/update/{id}', 'editHub');
+                                    Route::delete('/delete/{id}', 'deleteHub');
+                            });
+                    });
                 });
 
             //b2b admin
