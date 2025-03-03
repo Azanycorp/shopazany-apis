@@ -41,6 +41,10 @@ class B2bOrder extends Model
     {
         return $this->belongsTo(User::class, 'seller_id', 'id');
     }
+    public function collationCentre(): BelongsTo
+    {
+        return $this->belongsTo(CollationCenter::class, 'centre_id');
+    }
     public function country(): BelongsTo
     {
         return $this->belongsTo(Country::class);
