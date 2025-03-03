@@ -205,21 +205,61 @@
                 $subtotal += $order['price'] * $order['quantity'];
             @endphp
         @endforeach
+
+        @php
+            $currency = $items[0]['currency'] ?? 'USD';
+        @endphp
         <div class="total">
             <span>Subtotal</span>
-            <span>${{ number_format($subtotal) }}</span>
+            <span>
+                @if($currency === 'USD')
+                    $
+                @elseif($currency === 'NGN')
+                    ₦
+                @else
+                    {{ $currency }}
+                @endif
+                {{ number_format($subtotal) }}
+            </span>
         </div>
         <div class="total">
             <span>Tax</span>
-            <span>$00.00</span>
+            <span>
+                @if($currency === 'USD')
+                    $
+                @elseif($currency === 'NGN')
+                    ₦
+                @else
+                    {{ $currency }}
+                @endif
+                00.00
+            </span>
         </div>
         <div class="total">
             <span>Shipping</span>
-            <span>$00.00</span>
+            <span>
+                @if($currency === 'USD')
+                    $
+                @elseif($currency === 'NGN')
+                    ₦
+                @else
+                    {{ $currency }}
+                @endif
+                00.00
+            </span>
         </div>
         <div class="total">
             <span>Total</span>
-            <span>${{ number_format($totalAmount) }}</span>
+            <span>
+                @if($currency === 'USD')
+                    $
+                @elseif($currency === 'NGN')
+                    ₦
+                @else
+                    {{ $currency }}
+                @endif
+                {{ number_format($totalAmount) }}
+            </span>
         </div>
     </div>
 
