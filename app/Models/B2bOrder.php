@@ -29,6 +29,7 @@ class B2bOrder extends Model
         'status',
         'delivery_date',
         'shipped_date',
+        'centre_id',
         'country_id'
     ];
 

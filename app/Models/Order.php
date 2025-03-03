@@ -26,6 +26,7 @@ class Order extends Model
         'payment_status',
         'status',
         'country_id',
+        'centre_id'
     ];
 
     protected function casts(): array
@@ -50,7 +51,7 @@ class Order extends Model
         return $this->belongsTo(Product::class, 'product_id');
     }
 
-    public static function saveOrder($user, $payment, $seller, $item, $orderNo, $address, $method, $status): self
+    public static function saveOrder($user, $payment, $seller, $item, $orderNo, $address, $method, $status, $centerId = null): self
     {
         $data = new self();
 
@@ -73,6 +74,7 @@ class Order extends Model
         );
         $data->payment_method = $method;
         $data->payment_status = $status;
+        $data->centre_id = $centerId ?? null;
         $data->status = OrderStatus::PENDING;
         $data->country_id = $user->country ?? 160;
 
@@ -85,5 +87,4 @@ class Order extends Model
     {
         return $this->hasMany(Payment::class,  'payment_id');
     }
-
 }

@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('b2b_orders', function (Blueprint $table) {
             //
-            $table->unsignedBigInteger('center_id');
+            $table->unsignedBigInteger('center_id')->nullable();
         });
     }
 
@@ -24,7 +24,7 @@ return new class extends Migration
     {
         Schema::table('b2b_orders', function (Blueprint $table) {
             //
-            $table->unsignedBigInteger('center_id');
+            $table->unsignedBigInteger('center_id')->nullable();
         });
     }
 };

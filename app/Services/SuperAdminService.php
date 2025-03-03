@@ -97,49 +97,52 @@ class SuperAdminService
         return $this->success($centre, 'Centre added successfully', 201);
     }
 
+
     public function viewCollationCentre($id)
     {
+
         $centre = CollationCenter::with(['country', 'hubs.country'])->find($id);
+
         if (!$centre) {
             return $this->error(null, 'Centre not found', 404);
         }
-        $b2b_order_counts = B2bOrder::selectRaw('
-        COUNT(*) as total_orders,
-        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as completed,
-        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as pending,
-        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as cancelled
-    ', [
-            OrderStatus::DELIVERED,
-            OrderStatus::PENDING,
-            OrderStatus::CANCELLED
-        ])->where('centre_id', $centre->id)->first();
 
-        $b2c_order_counts = Order::selectRaw('
-        COUNT(*) as total_orders,
-        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as completed,
-        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as pending,
-        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as cancelled
-    ', [
-            OrderStatus::DELIVERED,
-            OrderStatus::PENDING,
-            OrderStatus::CANCELLED
-        ])->where('centre_id', $centre->id)->first();
+        // Fetch order statistics for B2B and B2C
+        $b2b_order_counts = $this->getOrderCounts(B2bOrder::where('centre_id', $centre->id));
+        $b2c_order_counts = $this->getOrderCounts(Order::where('centre_id', $centre->id));
 
-        $total_deliveries = ($b2b_order_counts->total_orders) + ($b2c_order_counts->total_orders);
-        $completed = ($b2b_order_counts->completed) + ($b2c_order_counts->total_orders);
-        $pending = ($b2b_order_counts->pending) + ($b2c_order_counts->pending);
-        $cancelled = ($b2b_order_counts->cancelled) + ($b2c_order_counts->cancelled);
+        // Ensure I avoid null values by providing default 0 values
+        $total_deliveries = ($b2b_order_counts['total_orders'] ?? 0) + ($b2c_order_counts['total_orders'] ?? 0);
+        $completed = ($b2b_order_counts['completed'] ?? 0) + ($b2c_order_counts['completed'] ?? 0);
+        $pending = ($b2b_order_counts['pending'] ?? 0) + ($b2c_order_counts['pending'] ?? 0);
+        $cancelled = ($b2b_order_counts['cancelled'] ?? 0) + ($b2c_order_counts['cancelled'] ?? 0);
 
+        // Using resource transformation
         $data = new CollationCentreResource($centre);
-        $detatils = [
+
+        return $this->success([
             'total_deliveries' => $total_deliveries,
             'completed' => $completed,
             'pending' => $pending,
             'cancelled' => $cancelled,
             'center' => $data,
-        ];
-        return $this->success($detatils, 'Centre details');
+        ], 'Centre details.');
     }
+
+    private function getOrderCounts($query)
+    {
+        return $query->selectRaw('
+        COUNT(*) as total_orders,
+        COALESCE(SUM(CASE WHEN status = ? THEN 1 ELSE 0 END), 0) as completed,
+        COALESCE(SUM(CASE WHEN status = ? THEN 1 ELSE 0 END), 0) as pending,
+        COALESCE(SUM(CASE WHEN status = ? THEN 1 ELSE 0 END), 0) as cancelled
+    ', [
+            OrderStatus::DELIVERED,
+            OrderStatus::PENDING,
+            OrderStatus::CANCELLED
+        ])->first()->toArray() ?? ['total_orders' => 0, 'completed' => 0, 'pending' => 0, 'cancelled' => 0];
+    }
+
 
     public function editCollationCentre($id, $data)
     {
