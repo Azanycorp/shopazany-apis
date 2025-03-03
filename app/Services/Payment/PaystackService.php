@@ -245,21 +245,23 @@ class PaystackService
         try {
             DB::transaction(function () use ($event, $status): void {
                 $paymentData = $event['data'];
-                $userId = $paymentData['metadata']['user_id'];
-                $rfqId = $paymentData['metadata']['rfq_id'];
-                $shipping_address_id = $paymentData['metadata']['shipping_address_id'];
-                $shipping_agent_id = $paymentData['metadata']['shipping_agent_id'];
-                $method = $paymentData['metadata']['payment_method'];
-                $ref = $paymentData['reference'];
-                $amount = $paymentData['amount'];
+                $metadata = $paymentData['metadata'] ?? [];
+
+                $userId = $metadata['user_id'] ?? null;
+                $rfqId = $metadata['rfq_id'] ?? null;
+                $shipping_address_id = $metadata['shipping_address_id'] ?? null;
+                $shipping_agent_id = $metadata['shipping_agent_id'] ?? null;
+                $method = $metadata['payment_method'] ?? null;
+                $ref = $paymentData['reference'] ?? null;
+                $amount = $paymentData['amount'] ?? 0;
                 $formattedAmount = number_format($amount / 100, 2, '.', '');
-                $channel = $paymentData['channel'];
-                $currency = $paymentData['currency'];
-                $ip_address = $paymentData['ip_address'];
-                $paid_at = $paymentData['paid_at'];
-                $createdAt = $paymentData['created_at'];
-                $transaction_date = $paymentData['paid_at'];
-                $payStatus = $paymentData['status'];
+                $channel = $paymentData['channel'] ?? null;
+                $currency = $paymentData['currency'] ?? null;
+                $ip_address = $paymentData['ip_address'] ?? null;
+                $paid_at = $paymentData['paid_at'] ?? null;
+                $createdAt = $paymentData['created_at'] ?? null;
+                $transaction_date = $paymentData['paid_at'] ?? null;
+                $payStatus = $paymentData['status'] ?? null;
 
                 $user = User::findOrFail($userId);
 
@@ -285,15 +287,19 @@ class PaystackService
 
                 (new PaymentLogAction($data, $paymentData, $method, $status))->execute();
 
+                $shipping_agent = null;
                 if ($shipping_agent_id) {
-                    $shipping_agent =  ShippingAgent::findOrFail(2);
+                    $shipping_agent = ShippingAgent::findOrFail($shipping_agent_id);
                 }
 
                 $rfq = Rfq::findOrFail($rfqId);
                 $seller = User::findOrFail($rfq->seller_id);
                 $product = B2BProduct::findOrFail($rfq->product_id);
-                $shipping_address = BuyerShippingAddress::with(['state', 'country'])->findOrFail($shipping_address_id);
-                $address = new B2BBuyerShippingAddressResource($shipping_address);
+                $shipping_address = null;
+                if ($shipping_address_id) {
+                    $shipping_address = BuyerShippingAddress::with(['state', 'country'])->find($shipping_address_id);
+                }
+                $address = $shipping_address ? new B2BBuyerShippingAddressResource($shipping_address) : null;
 
                 B2bOrder::create([
                     'buyer_id' => $userId,
