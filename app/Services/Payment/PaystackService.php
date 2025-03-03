@@ -229,6 +229,7 @@ class PaystackService
             });
         } catch (\Exception $e) {
             Log::error('Error in handlePaymentSuccess: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine());
+            throw $e;
         }
     }
 
@@ -337,6 +338,7 @@ class PaystackService
             });
         } catch (\Exception $e) {
             Log::error('Error in handlePaymentSuccess: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine());
+            throw $e;
         }
     }
 
@@ -365,6 +367,7 @@ class PaystackService
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error("Error processing transfer success: " . $e->getMessage());
+            throw $e;
         }
     }
 
@@ -393,6 +396,7 @@ class PaystackService
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error("Error processing transfer success: " . $e->getMessage());
+            throw $e;
         }
     }
 
