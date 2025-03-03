@@ -331,7 +331,7 @@ class SellerService extends Controller
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $orders = Order::with(['user', 'product'])
+        $orders = Order::with(['user', 'product.shopCountry'])
             ->where('seller_id', $id)
             ->orderBy('created_at', 'desc')
             ->paginate(25);
@@ -360,7 +360,7 @@ class SellerService extends Controller
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $orders = Order::with(['user', 'product'])
+        $orders = Order::with(['user', 'product.shopCountry'])
             ->where('seller_id', $id)
             ->where('status', OrderStatus::CONFIRMED)
             ->orderBy('created_at', 'desc')
@@ -379,7 +379,7 @@ class SellerService extends Controller
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $orders = Order::with(['user', 'product'])
+        $orders = Order::with(['user', 'product.shopCountry'])
             ->where('seller_id', $id)
             ->where('status', OrderStatus::CANCELLED)
             ->orderBy('created_at', 'desc')
@@ -398,7 +398,7 @@ class SellerService extends Controller
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $orders = Order::with(['user', 'product'])
+        $orders = Order::with(['user', 'product.shopCountry'])
             ->where('seller_id', $id)
             ->where('status', OrderStatus::DELIVERED)
             ->orderBy('created_at', 'desc')
@@ -417,7 +417,7 @@ class SellerService extends Controller
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $orders = Order::with(['user', 'product'])
+        $orders = Order::with(['user', 'product.shopCountry'])
             ->where('seller_id', $id)
             ->where('status', OrderStatus::PENDING)
             ->orderBy('created_at', 'desc')
@@ -436,7 +436,7 @@ class SellerService extends Controller
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $orders = Order::with(['user', 'product'])
+        $orders = Order::with(['user', 'product.shopCountry'])
             ->where('seller_id', $id)
             ->where('status', OrderStatus::PROCESSING)
             ->orderBy('created_at', 'desc')
@@ -455,7 +455,7 @@ class SellerService extends Controller
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $orders = Order::with(['user', 'product'])
+        $orders = Order::with(['user', 'product.shopCountry'])
             ->where('seller_id', $id)
             ->where('status', OrderStatus::SHIPPED)
             ->orderBy('created_at', 'desc')
@@ -521,7 +521,6 @@ class SellerService extends Controller
         }
 
         $totalProducts = Product::where('user_id', $userId)->count();
-
         $totalOrders = Order::where('seller_id', $userId)->count();
 
         $orderCounts = Order::where('seller_id', $userId)
@@ -544,6 +543,32 @@ class SellerService extends Controller
             ])
             ->first();
 
+        $topRateds = Product::select('id', 'name', 'price', 'image', 'user_id')
+            ->with('user:id,first_name,last_name,image')
+            ->withCount('productReviews')
+            ->where('user_id', $userId)
+            ->withCount(['orders as sold_count' => function ($query) {
+                $query->select(DB::raw('COUNT(*)'));
+            }])
+            ->orderByDesc('sold_count')
+            ->limit(5)
+            ->get();
+
+        $mostFavorites = Product::select('id', 'name', 'price', 'image', 'user_id')
+            ->with('user:id,first_name,last_name,image')
+            ->withCount('productReviews')
+            ->where('user_id', $userId)
+            ->withCount(['orders as sold_count' => function ($query) {
+                $query->select(DB::raw('COUNT(*)'));
+            }])
+            ->withCount(['wishlists as wishlist_count' => function ($query) {
+                $query->select(DB::raw('COUNT(*)'));
+            }])
+            ->orderByDesc('wishlist_count')
+            ->orderByDesc('sold_count')
+            ->limit(5)
+            ->get();
+
         $data = [
             'total_products' => $totalProducts,
             'total_orders' => $totalOrders,
@@ -554,6 +579,8 @@ class SellerService extends Controller
             'shipped_count' => $orderCounts->shipped_count ?? 0,
             'delivered_count' => $orderCounts->delivered_count ?? 0,
             'cancelled_count' => $orderCounts->cancelled_count ?? 0,
+            'top_rated' => $topRateds,
+            'most_favorite' => $mostFavorites,
         ];
 
         return $this->success($data, "Analytics");
@@ -567,7 +594,7 @@ class SellerService extends Controller
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $orders = Order::with(['user', 'product'])
+        $orders = Order::with(['user', 'product.shopCountry'])
             ->where('seller_id', $userId)
             ->orderBy('created_at', 'desc')
             ->take(8)
