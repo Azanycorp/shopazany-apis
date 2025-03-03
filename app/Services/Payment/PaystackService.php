@@ -228,17 +228,7 @@ class PaystackService
                 ))->run();
             });
         } catch (\Exception $e) {
-            $msg = 'Error in handlePaymentSuccess: ' . $e->getMessage();
-
-            (new UserLogAction(
-                request(),
-                UserLog::PAYMENT,
-                $msg,
-                json_encode($paymentData),
-                $user
-            ))->run();
-
-            Log::error('Error in handlePaymentSuccess: ' . $e->getMessage());
+            Log::error('Error in handlePaymentSuccess: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine());
         }
     }
 
@@ -346,7 +336,7 @@ class PaystackService
                 ))->run();
             });
         } catch (\Exception $e) {
-            Log::error('Error in handlePaymentSuccess: ' . $e->getMessage());
+            Log::error('Error in handlePaymentSuccess: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine());
         }
     }
 
