@@ -221,12 +221,6 @@ Route::middleware('validate.header')
                 // Orders Routes
                 Route::prefix('orders/{user_id}')->group(function (): void {
                     Route::get('/', 'getAllOrders');
-                    Route::get('/confirmed', 'getConfirmedOrders');
-                    Route::get('/cancelled', 'getCancelledOrders');
-                    Route::get('/delivered', 'getDeliveredOrders');
-                    Route::get('/pending', 'getPendingOrders');
-                    Route::get('/processing', 'getProcessingOrders');
-                    Route::get('/shipped', 'getShippedOrders');
                     Route::get('/summary', 'getOrderSummary');
                 });
             });
