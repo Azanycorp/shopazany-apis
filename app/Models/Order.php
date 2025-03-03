@@ -59,7 +59,7 @@ class Order extends Model
         $user = User::find($user->id);
 
         $data->user_id = $user->id;
-        $data->seller_id = $seller->id;
+        $data->seller_id = $seller?->id;
         $data->product_id = $item['product_id'] ?? $item['itemId'];
         $data->payment_id = $payment->id;
         $data->product_quantity = $item['product_quantity'] ?? $item['quantity'];
