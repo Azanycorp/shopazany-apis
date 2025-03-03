@@ -91,7 +91,7 @@ class SuperAdminService
             'status' => $data->status,
             'note' => $data->note,
             'city' => $data->city,
-            'country_id' => $data->country_id,
+            'country_id' => $data->country_id ?? 160,
             'status' => PlanStatus::ACTIVE
         ]);
         return $this->success($centre, 'Centre added successfully', 201);
@@ -113,7 +113,7 @@ class SuperAdminService
             OrderStatus::PENDING,
             OrderStatus::CANCELLED
         ])->where('centre_id', $centre->id)->first();
-        
+
         $b2c_order_counts = Order::selectRaw('
         COUNT(*) as total_orders,
         SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as completed,
@@ -166,7 +166,7 @@ class SuperAdminService
         if (!$centre) {
             return $this->error(null, 'Centre not found', 404);
         }
-        if ($centre->hubs) {
+        if ($centre->hubs->exists()) {
             return $this->error(null, "Category can not be deleted because it has content", 422);
         }
         $centre->delete();
