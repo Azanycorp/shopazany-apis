@@ -145,6 +145,13 @@ Route::middleware('validate.header')
                 Route::post('/kyc', 'userKyc');
                 Route::post('/earning-option', 'earningOption');
 
+                Route::prefix('withdrawal')->group(function (): void {
+                    Route::post('/', 'addMethod');
+                    Route::get('/history/{user_id}', 'withdrawalHistory');
+                    Route::get('/method/{user_id}', 'withdrawalMethod');
+                    Route::post('/request', 'withdrawalRequest');
+                });
+
                 Route::prefix('affiliate')->group(function (): void {
                     Route::get('/dashboard-analytic/{user_id}', 'dashboardAnalytic');
                     Route::get('/transaction/{user_id}', 'transactionHistory');

@@ -104,7 +104,11 @@ class UserService extends Controller
     {
         $auth = Auth::user();
 
-        if (!$auth || $auth->type === UserType::CUSTOMER || !$auth->is_affiliate_member || $auth->id !== $request->user_id) {
+        if (
+            !$auth || $auth->type === UserType::CUSTOMER ||
+            (!$auth->is_affiliate_member && $auth->type !== UserType::SELLER) ||
+            $auth->id !== $request->user_id
+        ) {
             return $this->error(null, "Unauthorized action.", 401);
         }
 
@@ -130,12 +134,14 @@ class UserService extends Controller
             return $this->error(null, "Insufficient balance for withdrawal", 400);
         }
 
-        DB::transaction(function () use ($wallet, $user, $request) {
+        DB::transaction(function () use ($wallet, $user, $request, $auth) {
             $newBalance = $wallet->balance - $request->amount;
+
+            $userType = $auth->type === UserType::SELLER ? 'b2c_seller' : 'b2c_affiliate';
 
             WithdrawalRequest::create([
                 'user_id' => $user->id,
-                'user_type' => 'b2c_affiliate',
+                'user_type' => $userType,
                 'amount' => $request->amount,
                 'previous_balance' => $wallet->balance,
                 'current_balance' => $newBalance,
@@ -212,14 +218,14 @@ class UserService extends Controller
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $user = User::with(['wallet', 'withdrawalRequest', 'paymentMethods'])
+        $user = User::with(['wallet', 'withdrawalRequests', 'paymentMethods'])
             ->find($id);
 
         if(! $user) {
             return $this->error(null, "User not found", 404);
         }
 
-        $pending = $user->withdrawalRequest->where('status', WithdrawalStatus::PENDING)
+        $pending = $user->withdrawalRequests->where('status', WithdrawalStatus::PENDING)
             ->sum('amount');
 
         $data = [
@@ -310,7 +316,7 @@ class UserService extends Controller
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        if ($auth->id !== $request->user_id || !$auth->is_affiliate_member) {
+        if ($auth->id !== $request->user_id || (!$auth->is_affiliate_member && $auth->type !== UserType::SELLER)) {
             return $this->error(null, "Unauthorized action.", 401);
         }
 
@@ -434,6 +440,85 @@ class UserService extends Controller
         ];
 
         return $this->success($data, "Referral management");
+    }
+
+    public function withdrawalHistory($userId)
+    {
+        $currentUserId = Auth::id();
+
+        if ($currentUserId != $userId) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+
+        $user = User::with(['wallet', 'withdrawalRequests'])
+            ->findOrFail($userId);
+
+        $status = request()->query('status');
+        $perPage = request()->query('per_page', 25);
+        $page = request()->query('page', 1);
+
+        $transactionQuery = Transaction::where('user_id', $userId);
+        if ($status) {
+            if (!in_array($status, [TransactionStatus::SUCCESSFUL, TransactionStatus::PENDING, TransactionStatus::REJECTED])) {
+                return $this->error(null, "Invalid status", 400);
+            }
+            $transactionQuery->where('status', $status);
+        }
+
+        $transactions = $transactionQuery->get()->map(function ($transaction) {
+            return [
+                'id' => $transaction->id,
+                'transaction_id' => $transaction->id,
+                'type' => 'transaction',
+                'date' => $transaction->created_at->format('Y-m-d'),
+                'amount' => $transaction->amount,
+                'status' => $transaction->status,
+            ];
+        });
+
+        $withdrawalQuery = WithdrawalRequest::where('user_id', $userId);
+
+        if ($status) {
+            $withdrawalQuery->where('status', $status);
+        }
+
+        $withdrawals = $withdrawalQuery->get()->map(function ($withdrawal) {
+            return [
+                'id' => $withdrawal->id,
+                'transaction_id' => $withdrawal->reference,
+                'type' => 'withdrawal',
+                'date' => $withdrawal->created_at->format('Y-m-d'),
+                'amount' => $withdrawal->amount,
+                'status' => $withdrawal->status,
+            ];
+        });
+
+        $mergedData = collect($transactions)->merge(collect($withdrawals))->sortByDesc('date')->values();
+
+        $total = $mergedData->count();
+        $paginatedData = $mergedData->slice(($page - 1) * $perPage, $perPage)->values();
+
+        $data = [
+            'balance' => (float)$user->wallet?->balance,
+            'pending_withdrawals' => (float)$user->withdrawalRequests()->where('status', WithdrawalStatus::PENDING)->sum('amount'),
+            'rejected_withdrawals' => (float)$user->withdrawalRequests()->where('status', WithdrawalStatus::FAILED)->sum('amount'),
+            'total_withdrawals' => (float)$user->withdrawalRequests()->sum('amount'),
+            'transactions' => $paginatedData,
+        ];
+
+        return response()->json([
+            'status' => 'true',
+            'message' => 'Transaction history',
+            'data' => $data,
+            'pagination' => [
+                'current_page' => (int) $page,
+                'last_page' => ceil($total / $perPage),
+                'per_page' => (int) $perPage,
+                'total' => $total,
+                'prev_page_url' => $page > 1 ? request()->url() . '?page=' . ($page - 1) . '&per_page=' . $perPage : null,
+                'next_page_url' => $page < ceil($total / $perPage) ? request()->url() . '?page=' . ($page + 1) . '&per_page=' . $perPage : null,
+            ],
+        ]);
     }
 }
 
