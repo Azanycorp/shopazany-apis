@@ -3,10 +3,12 @@
 namespace App\Models;
 
 use App\Trait\ClearsResponseCache;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 
 class Product extends Model
 {
@@ -112,5 +114,54 @@ class Product extends Model
     public function productReviews(): HasMany
     {
         return $this->hasMany(ProductReview::class, 'product_id');
+    }
+
+    // Scopes
+    public function scopeTopRated(Builder $query, $userId)
+    {
+        return $query->select(
+                'products.id',
+                'products.name',
+                'products.price',
+                'products.image',
+                'products.user_id',
+                DB::raw('CAST(COALESCE(ROUND(AVG(product_reviews.rating), 1), 0) AS DECIMAL(2,1)) as average_rating')
+            )
+            ->with('user:id,first_name,last_name,image')
+            ->withCount('productReviews')
+            ->where('products.user_id', $userId)
+            ->leftJoin('product_reviews', 'products.id', '=', 'product_reviews.product_id')
+            ->withCount(['orders as sold_count' => function ($query) {
+                $query->select(DB::raw('COUNT(*)'));
+            }])
+            ->groupBy('products.id', 'products.name', 'products.price', 'products.image', 'products.user_id')
+            ->orderByDesc('average_rating')
+            ->orderByDesc('sold_count');
+    }
+
+    public function scopeMostFavorite(Builder $query, $userId)
+    {
+        return $query->select(
+                'products.id',
+                'products.name',
+                'products.price',
+                'products.image',
+                'products.user_id',
+                DB::raw('CAST(COALESCE(ROUND(AVG(product_reviews.rating), 1), 0) AS DECIMAL(2,1)) as average_rating')
+            )
+            ->with('user:id,first_name,last_name,image')
+            ->withCount('productReviews')
+            ->where('products.user_id', $userId)
+            ->leftJoin('product_reviews', 'products.id', '=', 'product_reviews.product_id')
+            ->withCount(['orders as sold_count' => function ($query) {
+                $query->select(DB::raw('COUNT(*)'));
+            }])
+            ->withCount(['wishlists as wishlist_count' => function ($query) {
+                $query->select(DB::raw('COUNT(*)'));
+            }])
+            ->groupBy('products.id', 'products.name', 'products.price', 'products.image', 'products.user_id')
+            ->orderByDesc('wishlist_count')
+            ->orderByDesc('average_rating')
+            ->orderByDesc('sold_count');
     }
 }
