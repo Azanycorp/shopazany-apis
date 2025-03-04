@@ -40,7 +40,7 @@ class CustomerService
         $data = [
             'total_order' => $total_order,
             'total_affiliate_invite' => 0,
-            'points_earned' => $user->wallet?->points ?? 0,
+            'points_earned' => $user->wallet?->reward_point ?? 0,
         ];
 
         return $this->success($data, "Dashboard analytics");
