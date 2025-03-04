@@ -24,6 +24,7 @@ use App\Actions\UserLogAction;
 use App\Enum\SubscriptionType;
 use App\Mail\CustomerOrderMail;
 use App\Actions\PaymentLogAction;
+use App\Enum\UserType;
 use App\Enum\WithdrawalStatus;
 use Illuminate\Support\Facades\DB;
 use App\Models\UserShippingAddress;
@@ -225,6 +226,10 @@ class PaystackService
                         'city' => $address['city'],
                         'zip' => $address['zip'],
                     ]);
+                }
+
+                if ($user->type === UserType::CUSTOMER) {
+                    reward_user($user, 'purchase_item', 'completed');
                 }
 
                 Cart::where('user_id', $userId)->delete();
