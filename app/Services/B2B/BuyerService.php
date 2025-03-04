@@ -265,6 +265,10 @@ class BuyerService
     {
         $categories = B2BProductCategory::select('id', 'name', 'slug', 'image')
             ->with(['products.b2bProductReview', 'products.b2bLikes', 'subcategory'])
+            ->withCount('products')
+            ->with(['products' => function ($query) {
+                $query->withCount('b2bProductReview'); // Count reviews for each product
+            }])
             ->get();
         $data = B2BCategoryResource::collection($categories);
         return $this->success($data, "Categories products");
