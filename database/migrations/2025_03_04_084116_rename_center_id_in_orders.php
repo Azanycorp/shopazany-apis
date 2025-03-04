@@ -19,10 +19,5 @@ return new class extends Migration
     /**
      * Reverse the migrations.
      */
-    public function down(): void
-    {
-        Schema::table('orders', function (Blueprint $table) {
-            $table->renameColumn('centre_id', 'center_id');
-        });
-    }
+   
 };
