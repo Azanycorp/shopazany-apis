@@ -24,6 +24,7 @@ use App\Actions\UserLogAction;
 use App\Enum\SubscriptionType;
 use App\Mail\CustomerOrderMail;
 use App\Actions\PaymentLogAction;
+use App\Enum\UserType;
 use App\Enum\WithdrawalStatus;
 use Illuminate\Support\Facades\DB;
 use App\Models\UserShippingAddress;
@@ -133,7 +134,6 @@ class PaystackService
 
                 $paymentData = $event['data'];
                 $userId = $paymentData['metadata']['user_id'];
-                $centerId = $paymentData['metadata']['centre_id'];
                 $items = $paymentData['metadata']['items'];
                 $method = $paymentData['metadata']['payment_method'];
                 $ref = $paymentData['reference'];
@@ -186,7 +186,6 @@ class PaystackService
                         $address,
                         $method,
                         $payStatus,
-                        $centerId,
                     );
 
                     $orderedItems[] = [
@@ -205,7 +204,13 @@ class PaystackService
                             ['balance' => 0]
                         );
 
-                        $wallet->increment('balance', $item['total_amount']);
+                        $amount = currencyConvert(
+                            $user->default_currency,
+                            $item['total_amount'],
+                            $product->shopCountry->currency,
+                        );
+
+                        $wallet->increment('balance', $amount);
                     }
                 }
 
@@ -221,6 +226,10 @@ class PaystackService
                         'city' => $address['city'],
                         'zip' => $address['zip'],
                     ]);
+                }
+
+                if ($user->type === UserType::CUSTOMER) {
+                    reward_user($user, 'purchase_item', 'completed');
                 }
 
                 Cart::where('user_id', $userId)->delete();
@@ -248,19 +257,11 @@ class PaystackService
             DB::transaction(function () use ($event, $status): void {
                 $paymentData = $event['data'];
 
-                $userId = $paymentData['metadata']['user_id'];
-                $centerId = $paymentData['metadata']['centre_id'];
-                $rfqId = $paymentData['metadata']['rfq_id'];
-                $shipping_address_id = $paymentData['metadata']['shipping_address_id'];
-                $shipping_agent_id = $paymentData['metadata']['shipping_agent_id'];
-                $method = $paymentData['metadata']['payment_method'];
-                $ref = $paymentData['reference'];
-                $amount = $paymentData['amount'];
-
                 $metadata = $paymentData['metadata'] ?? [];
 
                 $userId = $metadata['user_id'] ?? null;
                 $rfqId = $metadata['rfq_id'] ?? null;
+                $centerId = $metadata['center_id'] ?? null;
                 $shipping_address_id = $metadata['shipping_address_id'] ?? null;
                 $shipping_agent_id = $metadata['shipping_agent_id'] ?? null;
                 $method = $metadata['payment_method'] ?? null;

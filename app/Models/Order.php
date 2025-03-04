@@ -26,7 +26,6 @@ class Order extends Model
         'payment_status',
         'status',
         'country_id',
-        'centre_id'
     ];
 
     protected function casts(): array
@@ -51,7 +50,7 @@ class Order extends Model
         return $this->belongsTo(Product::class, 'product_id');
     }
 
-    public static function saveOrder($user, $payment, $seller, $item, $orderNo, $address, $method, $status, $centerId = null): self
+    public static function saveOrder($user, $payment, $seller, $item, $orderNo, $address, $method, $status): self
     {
         $data = new self();
 
@@ -67,14 +66,13 @@ class Order extends Model
         $data->order_no = $orderNo;
         $data->shipping_address = $address;
         $data->order_date = now();
-        $data->total_amount = $item['total_amount'] ?? currencyConvert(
+        $data->total_amount = currencyConvert(
+            $user->default_currency,
+            $item['total_amount'] ?? $item['unitPrice'],
             $product->shopCountry?->currency,
-            $item['unitPrice'],
-            $user->default_currency
         );
         $data->payment_method = $method;
         $data->payment_status = $status;
-        $data->centre_id = $centerId ?? null;
         $data->status = OrderStatus::PENDING;
         $data->country_id = $user->country ?? 160;
 
