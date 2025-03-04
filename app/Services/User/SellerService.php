@@ -327,27 +327,34 @@ class SellerService extends Controller
     public function getAllOrders($id)
     {
         $currentUserId = Auth::id();
-        $status = request()->query('status', OrderStatus::PENDING);
+        $status = request()->query('status');
 
         if ($currentUserId != $id) {
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        if (!in_array($status, [
-                OrderStatus::PENDING,
-                OrderStatus::CONFIRMED,
-                OrderStatus::PROCESSING,
-                OrderStatus::SHIPPED,
-                OrderStatus::DELIVERED,
-                OrderStatus::CANCELLED,
-            ])) {
-            return $this->error(null, "Invalid status", 400);
-        }
+        $validStatuses = [
+            OrderStatus::PENDING,
+            OrderStatus::CONFIRMED,
+            OrderStatus::PROCESSING,
+            OrderStatus::SHIPPED,
+            OrderStatus::DELIVERED,
+            OrderStatus::CANCELLED,
+        ];
 
         $orders = Order::with(['user', 'product.shopCountry'])
             ->where('seller_id', $id)
-            ->where('status', $status)
-            ->orderBy('created_at', 'desc')
+            ->when($status, function ($query) use ($status, $validStatuses) {
+                if (!in_array($status, $validStatuses)) {
+                    abort(response()->json([
+                        'status' => false,
+                        'mesage' => 'Invalid status',
+                        'data' => null,
+                    ], 400));
+                }
+                return $query->where('status', $status);
+            })
+            ->latest()
             ->paginate(25);
 
         $data = OrderResource::collection($orders);
