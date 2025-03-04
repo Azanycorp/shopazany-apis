@@ -25,10 +25,10 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('b2b_withdrawal_methods', function (Blueprint $table) {
-            $table->string('platform')->nullable();
-            $table->string('recipient')->nullable();
-            $table->text('reference')->nullable();
-            $table->text('recipient_code')->nullable();
+            $table->dropColumn('platform');
+            $table->dropColumn('recipient');
+            $table->dropColumn('reference');
+            $table->dropColumn('recipient_code');
         });
     }
 };

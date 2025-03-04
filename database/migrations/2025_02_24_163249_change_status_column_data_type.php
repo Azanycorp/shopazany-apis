@@ -15,9 +15,4 @@ return new class extends Migration
             $table->string('status')->nullable()->default('pending')->change();
         });
     }
-
-    /**
-     * Reverse the migrations.
-     */
-  
 };
