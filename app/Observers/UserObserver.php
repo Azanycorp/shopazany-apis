@@ -36,6 +36,7 @@ class UserObserver implements ShouldHandleEventsAfterCommit
 
         match ($user->type) {
             UserType::B2B_SELLER => UserWallet::create(['seller_id' => $user->id]),
+            UserType::CUSTOMER => Wallet::create(['user_id' => $user->id]),
             UserType::SELLER => Wallet::create(['user_id' => $user->id]),
             default => null,
         };
