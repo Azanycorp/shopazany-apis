@@ -203,7 +203,13 @@ class PaystackService
                             ['balance' => 0]
                         );
 
-                        $wallet->increment('balance', $item['total_amount']);
+                        $amount = currencyConvert(
+                            $product->shopCountry->currency,
+                            $item['total_amount'],
+                            $product->user->default_currency
+                        );
+
+                        $wallet->increment('balance', $amount);
                     }
                 }
 
@@ -245,6 +251,7 @@ class PaystackService
         try {
             DB::transaction(function () use ($event, $status): void {
                 $paymentData = $event['data'];
+
                 $metadata = $paymentData['metadata'] ?? [];
 
                 $userId = $metadata['user_id'] ?? null;
@@ -254,6 +261,7 @@ class PaystackService
                 $method = $metadata['payment_method'] ?? null;
                 $ref = $paymentData['reference'] ?? null;
                 $amount = $paymentData['amount'] ?? 0;
+
                 $formattedAmount = number_format($amount / 100, 2, '.', '');
                 $channel = $paymentData['channel'] ?? null;
                 $currency = $paymentData['currency'] ?? null;
@@ -303,6 +311,7 @@ class PaystackService
 
                 B2bOrder::create([
                     'buyer_id' => $userId,
+                    'centre_id' => $centerId ?? null,
                     'seller_id' => $rfq->seller_id,
                     'product_id' => $rfq->product_id,
                     'product_quantity' => $rfq->product_quantity,
@@ -339,7 +348,7 @@ class PaystackService
                 $type = MailingEnum::ORDER_EMAIL;
                 $subject = "B2B Order Confirmation";
                 $mail_class = "App\Mail\B2BOrderEmail";
-                mailSend($type, $user, $subject, $mail_class,'orderedItems');
+                mailSend($type, $user, $subject, $mail_class, 'orderedItems');
 
                 (new UserLogAction(
                     request(),
