@@ -2450,7 +2450,7 @@ if (! function_exists('currencyConvert')) {
 }
 
 if (! function_exists('mailSend')) {
-    function mailSend($type, $recipient, $subject, $mail_class, $payloadKey = 'user') {
+    function mailSend($type, $recipient, $subject, $mail_class, $payloadKey) {
         $data = [
             'type' => $type,
             'email' => $recipient->email,
@@ -2459,7 +2459,7 @@ if (! function_exists('mailSend')) {
             'mailable' => $mail_class,
             'scheduled_at' => now(),
             'payload' => [
-                $payloadKey => $recipient
+                $payloadKey
             ]
         ];
 

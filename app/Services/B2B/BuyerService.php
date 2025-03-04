@@ -248,7 +248,7 @@ class BuyerService
 
         return $this->success($data, 'Products');
     }
-   public function categories()
+    public function categories()
     {
         $categories = B2bProductCategory::with(['subcategory', 'products', 'products.b2bProductReview', 'products.b2bLikes'])
             ->withCount('products') // Count products in the category
@@ -302,12 +302,12 @@ class BuyerService
         $countryId = request()->query('country_id');
 
         $query = B2BProduct::with([
-                'category',
-                'subCategory',
-                'shopCountry',
-                'orders',
-                'b2bProductReview',
-            ])
+            'category',
+            'subCategory',
+            'shopCountry',
+            'orders',
+            'b2bProductReview',
+        ])
             ->where('status', ProductStatus::ACTIVE);
 
         if ($countryId) {
@@ -367,9 +367,9 @@ class BuyerService
         $quote_count = B2bQuote::where('product_id', $product->id)->count();
 
         $b2bProductReview = B2bProdctReview::with(['user' => function ($query): void {
-                $query->select('id', 'first_name', 'last_name')
-                    ->where('type', UserType::B2B_BUYER);
-            }])
+            $query->select('id', 'first_name', 'last_name')
+                ->where('type', UserType::B2B_BUYER);
+        }])
             ->where('product_id', $product->id)
             ->get();
 
@@ -432,7 +432,7 @@ class BuyerService
                     'product_quantity' => $quote->qty,
                     'total_amount' => $quote->product_data['unit_price'] * $quote->qty,
                     'p_unit_price' => $quote->product_data['unit_price'],
-                    'product_data' => $quote->product_data,
+                    'product_data' => json_encode($quote->product_data),
                     'created_at' => now(),
                     'updated_at' => now(),
                 ];
@@ -486,6 +486,9 @@ class BuyerService
     public function sendQuote($data)
     {
         $product = B2BProduct::findOrFail($data->product_id);
+        if ($product->availability_quantity < 1) {
+            return $this->error(null, 'This product is currently not available for purchase', 422);
+        }
         $quote = B2bQuote::where('product_id', $data->product_id)->first();
 
         if ($quote) {
@@ -696,7 +699,9 @@ class BuyerService
         if (!$product) {
             return $this->error(null, 'No record found to send', 404);
         }
-
+        if ($product->availability_quantity < 1) {
+            return $this->error(null, 'This product is currently not available for purchase', 422);
+        }
         B2bWishList::create([
             'user_id' => $userId,
             'product_id' => $product->id,
@@ -707,10 +712,10 @@ class BuyerService
     }
 
     //wish list
-      public function myWishList()
+    public function myWishList()
     {
         $userId = userAuthId();
-        $wishes =  B2bWishList::with(['product','b2bProductReview'])
+        $wishes =  B2bWishList::with(['product', 'b2bProductReview'])
             ->where('user_id', $userId)
             ->latest('id')
             ->get();
@@ -814,7 +819,7 @@ class BuyerService
 
             return $this->success(null, 'Password Successfully Updated');
         }
-        return $this->error(null,'Old Password did not match');
+        return $this->error(null, 'Old Password did not match');
     }
     public function change2FA($data)
     {
@@ -877,7 +882,7 @@ class BuyerService
     }
     public function getAllShippingAddress()
     {
-        $currentUserId = userAuthId();
+         $currentUserId = userAuthId();
         $addresses = BuyerShippingAddress::with(['state', 'country'])->where('user_id', $currentUserId)->get();
         $data = B2BBuyerShippingAddressResource::collection($addresses);
         return $this->success($data, 'All address');
