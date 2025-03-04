@@ -29,7 +29,7 @@ class CustomerService
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $user = User::with('userOrders')->find($userId);
+        $user = User::with(['userOrders', 'wallet'])->find($userId);
 
         if (!$user) {
             return $this->error(null, "User not found", 404);
@@ -40,7 +40,7 @@ class CustomerService
         $data = [
             'total_order' => $total_order,
             'total_affiliate_invite' => 0,
-            'points_earned' => 0,
+            'points_earned' => $user->wallet?->reward_point ?? 0,
         ];
 
         return $this->success($data, "Dashboard analytics");
@@ -106,10 +106,11 @@ class CustomerService
             return $this->error(null, "User not found", 404);
         }
 
-        $orders = Order::with('user')->where('user_id', $userId)
-        ->orderBy('created_at', 'desc')
-        ->take(7)
-        ->get();
+        $orders = Order::with(['user', 'product.shopCountry'])
+            ->where('user_id', $userId)
+            ->orderBy('created_at', 'desc')
+            ->take(7)
+            ->get();
 
         $data = OrderResource::collection($orders);
 
@@ -130,7 +131,7 @@ class CustomerService
             return $this->error(null, "User not found", 404);
         }
 
-        $orders = Order::with('user')
+        $orders = Order::with(['user', 'product.shopCountry'])
             ->where('user_id', $userId)
             ->orderBy('created_at', 'desc')
             ->paginate(25);

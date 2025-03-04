@@ -3,10 +3,10 @@
 namespace App\Models;
 
 use App\Models\Country;
-use App\Enum\OrderStatus;
 use App\Trait\ClearsResponseCache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class B2bOrder extends Model
@@ -29,6 +29,7 @@ class B2bOrder extends Model
         'status',
         'delivery_date',
         'shipped_date',
+        'centre_id',
         'country_id'
     ];
 
@@ -39,6 +40,10 @@ class B2bOrder extends Model
     public function seller(): BelongsTo
     {
         return $this->belongsTo(User::class, 'seller_id', 'id');
+    }
+    public function collationCentre(): BelongsTo
+    {
+        return $this->belongsTo(CollationCenter::class, 'centre_id');
     }
     public function country(): BelongsTo
     {
@@ -58,7 +63,10 @@ class B2bOrder extends Model
         ];
     }
 
-
+    public function b2bProductReview(): HasMany
+    {
+        return $this->hasMany(B2bProdctReview::class, 'product_id');
+    }
 
     public static function orderStats()
     {

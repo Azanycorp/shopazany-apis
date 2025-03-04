@@ -85,6 +85,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_affiliate_member' => 'boolean',
+            'referrer_link' => 'array',
         ];
     }
 
@@ -160,5 +161,23 @@ class User extends Authenticatable
             return "{$this->first_name} {$this->last_name}";
         });
     }
+
+    public function scopeFilterReferrals($query, $searchQuery, $statusFilter)
+    {
+        if (!empty($searchQuery)) {
+            $query->where(function ($q) use ($searchQuery) {
+                $q->where('first_name', 'LIKE', "%$searchQuery%")
+                ->orWhere('last_name', 'LIKE', "%$searchQuery%")
+                ->orWhere('email', 'LIKE', "%$searchQuery%");
+            });
+        }
+
+        if (!empty($statusFilter)) {
+            $query->where('status', $statusFilter);
+        }
+
+        return $query;
+    }
+
 
 }

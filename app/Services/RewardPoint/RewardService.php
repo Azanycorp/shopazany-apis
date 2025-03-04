@@ -2,6 +2,7 @@
 
 namespace App\Services\RewardPoint;
 
+use App\Enum\UserType;
 use App\Models\Action;
 use App\Models\UserAction;
 
@@ -40,6 +41,20 @@ class RewardService
             $wallet->refresh();
 
             $user->referrals()->syncWithoutDetaching($newUser);
+        }
+
+        if ($user->type === UserType::CUSTOMER) {
+            $wallet = $user->wallet()->firstOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'balance' => 0.00,
+                    'reward_point' => 0,
+                ]
+            );
+
+            $points = $action->points ?? 0;
+            $wallet->increment('reward_point', $points);
+            $wallet->refresh();
         }
 
         log_user_activity($user, $action, $status);

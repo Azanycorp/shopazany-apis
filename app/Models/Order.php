@@ -45,24 +45,32 @@ class Order extends Model
         return $this->belongsTo(User::class, 'seller_id')->where('type', 'seller');
     }
 
-    public function products(): HasMany
+    public function product(): BelongsTo
     {
-        return $this->hasMany(Product::class, 'id', 'product_id');
+        return $this->belongsTo(Product::class, 'product_id');
     }
 
     public static function saveOrder($user, $payment, $seller, $item, $orderNo, $address, $method, $status): self
     {
         $data = new self();
 
+        $proId = $item['product_id'] ?? $item['itemId'];
+        $product = Product::with('shopCountry')->find($proId);
+        $user = User::find($user->id);
+
         $data->user_id = $user->id;
-        $data->seller_id = $seller->id;
+        $data->seller_id = $seller?->id;
         $data->product_id = $item['product_id'] ?? $item['itemId'];
         $data->payment_id = $payment->id;
         $data->product_quantity = $item['product_quantity'] ?? $item['quantity'];
         $data->order_no = $orderNo;
         $data->shipping_address = $address;
         $data->order_date = now();
-        $data->total_amount = $item['total_amount'] ?? $item['unitPrice'];
+        $data->total_amount = currencyConvert(
+            $user->default_currency,
+            $item['total_amount'] ?? $item['unitPrice'],
+            $product->shopCountry?->currency,
+        );
         $data->payment_method = $method;
         $data->payment_status = $status;
         $data->status = OrderStatus::PENDING;
@@ -77,5 +85,4 @@ class Order extends Model
     {
         return $this->hasMany(Payment::class,  'payment_id');
     }
-
 }

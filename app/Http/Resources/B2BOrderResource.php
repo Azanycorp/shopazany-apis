@@ -20,6 +20,7 @@ class B2BOrderResource extends JsonResource
             'order_no' => (string)$this->order_no,
             'shipping_address' => $this->shipping_address,
             'shipping_agent' => $this->shipping_agent,
+            'collation_center' => $this->collationCentre?->name,
             'billing_address' => $this->billing_address,
             'product_data' => $this->product_data,
             'total_amount' => (string)$this->total_amount,

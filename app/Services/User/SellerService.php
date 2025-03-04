@@ -6,6 +6,7 @@ use App\Enum\OrderStatus;
 use App\Enum\ProductStatus;
 use App\Enum\UserType;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\OrderDetailResource;
 use App\Models\User;
 use App\Models\Order;
 use App\Models\Product;
@@ -326,14 +327,34 @@ class SellerService extends Controller
     public function getAllOrders($id)
     {
         $currentUserId = Auth::id();
+        $status = request()->query('status');
 
         if ($currentUserId != $id) {
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $orders = Order::with('user')
+        $validStatuses = [
+            OrderStatus::PENDING,
+            OrderStatus::CONFIRMED,
+            OrderStatus::PROCESSING,
+            OrderStatus::SHIPPED,
+            OrderStatus::DELIVERED,
+            OrderStatus::CANCELLED,
+        ];
+
+        $orders = Order::with(['user', 'product.shopCountry'])
             ->where('seller_id', $id)
-            ->orderBy('created_at', 'desc')
+            ->when($status, function ($query) use ($status, $validStatuses) {
+                if (!in_array($status, $validStatuses)) {
+                    abort(response()->json([
+                        'status' => false,
+                        'mesage' => 'Invalid status',
+                        'data' => null,
+                    ], 400));
+                }
+                return $query->where('status', $status);
+            })
+            ->latest()
             ->paginate(25);
 
         $data = OrderResource::collection($orders);
@@ -352,121 +373,47 @@ class SellerService extends Controller
         ];
     }
 
-    public function getConfirmedOrders($id)
+    public function getOrderDetail($userId, $id)
     {
         $currentUserId = Auth::id();
 
-        if ($currentUserId != $id) {
+        if ($currentUserId != $userId) {
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $orders = Order::with('user')
-            ->where('seller_id', $id)
-            ->where('status', OrderStatus::CONFIRMED)
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $order = Order::with(['user.userShippingAddress', 'product.shopCountry'])
+            ->where('seller_id', $userId)
+            ->where('id', $id)
+            ->first();
 
-        $data = OrderResource::collection($orders);
+        if (!$order) {
+            return $this->error(null, "Order not found", 404);
+        }
 
-        return $this->success($data, "Confirmed Orders");
+        $data = new OrderDetailResource($order);
 
+        return $this->success($data, "Order retrieved successfully");
     }
 
-    public function getCancelledOrders($id)
+    public function updateOrderStatus($userId, $id, $request)
     {
         $currentUserId = Auth::id();
 
-        if ($currentUserId != $id) {
+        if ($currentUserId != $userId) {
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $orders = Order::with('user')
-            ->where('seller_id', $id)
-            ->where('status', OrderStatus::CANCELLED)
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $order = Order::find($id);
 
-        $data = OrderResource::collection($orders);
-
-        return $this->success($data, "Cancelled Orders");
-
-    }
-
-    public function getDeliveredOrders($id)
-    {
-        $currentUserId = Auth::id();
-
-        if ($currentUserId != $id) {
-            return $this->error(null, "Unauthorized action.", 401);
+        if (!$order) {
+            return $this->error(null, "Order not found", 404);
         }
 
-        $orders = Order::with('user')
-            ->where('seller_id', $id)
-            ->where('status', OrderStatus::DELIVERED)
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $order->update([
+            'status' => $request->status
+        ]);
 
-        $data = OrderResource::collection($orders);
-
-        return $this->success($data, "Delivered Orders");
-
-    }
-
-    public function getPendingOrders($id)
-    {
-        $currentUserId = Auth::id();
-
-        if ($currentUserId != $id) {
-            return $this->error(null, "Unauthorized action.", 401);
-        }
-
-        $orders = Order::with('user')
-            ->where('seller_id', $id)
-            ->where('status', OrderStatus::PENDING)
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        $data = OrderResource::collection($orders);
-
-        return $this->success($data, "Pending Orders");
-    }
-
-    public function getProcessingOrders($id)
-    {
-        $currentUserId = Auth::id();
-
-        if ($currentUserId != $id) {
-            return $this->error(null, "Unauthorized action.", 401);
-        }
-
-        $orders = Order::with('user')
-            ->where('seller_id', $id)
-            ->where('status', OrderStatus::PROCESSING)
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        $data = OrderResource::collection($orders);
-
-        return $this->success($data, "Processing Orders");
-    }
-
-    public function getShippedOrders($id)
-    {
-        $currentUserId = Auth::id();
-
-        if ($currentUserId != $id) {
-            return $this->error(null, "Unauthorized action.", 401);
-        }
-
-        $orders = Order::with('user')
-            ->where('seller_id', $id)
-            ->where('status', OrderStatus::SHIPPED)
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        $data = OrderResource::collection($orders);
-
-        return $this->success($data, "Shipped Orders");
+        return $this->success(null, "Order updated successfully");
     }
 
     public function getTemplate()
@@ -524,7 +471,6 @@ class SellerService extends Controller
         }
 
         $totalProducts = Product::where('user_id', $userId)->count();
-
         $totalOrders = Order::where('seller_id', $userId)->count();
 
         $orderCounts = Order::where('seller_id', $userId)
@@ -547,7 +493,10 @@ class SellerService extends Controller
             ])
             ->first();
 
-        return $this->success([
+        $topRateds = Product::topRated($userId)->limit(5)->get();
+        $mostFavorites = Product::mostFavorite($userId)->limit(5)->get();
+
+        $data = [
             'total_products' => $totalProducts,
             'total_orders' => $totalOrders,
             'completed_sales' => $orderCounts->completed_sales ?? 0,
@@ -557,7 +506,11 @@ class SellerService extends Controller
             'shipped_count' => $orderCounts->shipped_count ?? 0,
             'delivered_count' => $orderCounts->delivered_count ?? 0,
             'cancelled_count' => $orderCounts->cancelled_count ?? 0,
-        ], "Analytics");
+            'top_rated' => $topRateds,
+            'most_favorite' => $mostFavorites,
+        ];
+
+        return $this->success($data, "Analytics");
     }
 
     public function getOrderSummary($userId)
@@ -568,7 +521,7 @@ class SellerService extends Controller
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $orders = Order::with('user')
+        $orders = Order::with(['user', 'product.shopCountry'])
             ->where('seller_id', $userId)
             ->orderBy('created_at', 'desc')
             ->take(8)

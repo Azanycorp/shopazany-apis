@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\UserWallet;
 use App\Enum\ProductStatus;
 use App\Mail\SignUpVerifyMail;
+use App\Models\Wallet;
 use Illuminate\Contracts\Events\ShouldHandleEventsAfterCommit;
 
 class UserObserver implements ShouldHandleEventsAfterCommit
@@ -20,24 +21,25 @@ class UserObserver implements ShouldHandleEventsAfterCommit
     {
         $type = MailingEnum::SIGN_UP_OTP;
         $subject = "Verify Account";
-        $mail_class = "App\Mail\SignUpVerifyMail";
+        $mail_class = SignUpVerifyMail::class;
         mailSend($type, $user, $subject, $mail_class, 'user');
 
-        if ($user->type === UserType::CUSTOMER || $user->type === UserType::SELLER) {
+        if (in_array($user->type, [UserType::CUSTOMER, UserType::SELLER])) {
             reward_user($user, 'create_account', 'completed');
         }
 
         if ($user->is_affiliate_member) {
             $user->referrer_code = generate_referral_code();
-            $user->referrer_link = generate_referrer_link($user->referrer_code);
+            $user->referrer_link = generate_referrer_links($user->referrer_code);
             $user->save();
         }
 
-        if ($user->type === UserType::B2B_SELLER) {
-            UserWallet::create([
-                'seller_id' => $user->id
-            ]);
-        }
+        match ($user->type) {
+            UserType::B2B_SELLER => UserWallet::create(['seller_id' => $user->id]),
+            UserType::CUSTOMER => Wallet::create(['user_id' => $user->id]),
+            UserType::SELLER => Wallet::create(['user_id' => $user->id]),
+            default => null,
+        };
     }
 
     /**

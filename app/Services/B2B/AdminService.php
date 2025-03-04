@@ -26,6 +26,7 @@ use Illuminate\Support\Str;
 use App\Models\Configuration;
 use App\Models\ShippingAgent;
 use App\Mail\B2BNewAdminEmail;
+use App\Models\CollationCenter;
 use App\Models\SubscriptionPlan;
 use Illuminate\Support\Facades\DB;
 use App\Models\B2bWithdrawalMethod;
@@ -38,6 +39,7 @@ use App\Http\Resources\B2BSellerResource;
 use App\Http\Resources\B2BProductResource;
 use App\Repositories\B2BProductRepository;
 use App\Http\Resources\ShippingAgentResource;
+use App\Http\Resources\CollationCentreResource;
 use App\Http\Resources\SubscriptionPlanResource;
 use App\Repositories\B2BSellerShippingRepository;
 
@@ -108,14 +110,14 @@ class AdminService
         $international_orders = B2bOrder::when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
             $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
                 $subQuery->where('country_id', '!=', 160)
-                    ->orWhere('order_no', 'LIKE', '%' . $searchQuery . '%');
+                    ->where('order_no', 'LIKE', '%' . $searchQuery . '%');
             });
         })->get();
 
         $local_orders = B2bOrder::with(['buyer', 'seller'])->when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
             $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
                 $subQuery->where('country_id', 160)
-                    ->orWhere('order_no', 'LIKE', '%' . $searchQuery . '%');
+                    ->where('order_no', 'LIKE', '%' . $searchQuery . '%');
             });
         })->get();
 
@@ -194,7 +196,9 @@ class AdminService
                 SUM(CASE WHEN status IN (?, ?, ?) THEN 1 ELSE 0 END) as inactive
             ', [
                 UserStatus::ACTIVE,
-                UserStatus::PENDING, UserStatus::BLOCKED, UserStatus::SUSPENDED
+                UserStatus::PENDING,
+                UserStatus::BLOCKED,
+                UserStatus::SUSPENDED
             ])
             ->first();
 
@@ -649,10 +653,23 @@ class AdminService
     public function updateConfigDetails($data)
     {
         $configData = $data->only([
-            'usd_rate', 'company_profit', 'email_verify', 'currency_code', 'currency_symbol',
-            'promotion_start_date', 'promotion_end_date', 'min_deposit', 'max_deposit',
-            'min_withdrawal', 'withdrawal_frequency', 'withdrawal_status', 'max_withdrawal',
-            'withdrawal_fee', 'seller_perc', 'paystack_perc', 'paystack_fixed'
+            'usd_rate',
+            'company_profit',
+            'email_verify',
+            'currency_code',
+            'currency_symbol',
+            'promotion_start_date',
+            'promotion_end_date',
+            'min_deposit',
+            'max_deposit',
+            'min_withdrawal',
+            'withdrawal_frequency',
+            'withdrawal_status',
+            'max_withdrawal',
+            'withdrawal_fee',
+            'seller_perc',
+            'paystack_perc',
+            'paystack_fixed'
         ]);
 
         Configuration::updateOrCreate([], $configData);
@@ -678,8 +695,8 @@ class AdminService
     public function viewWidthrawalRequest($id)
     {
         $payout =  Payout::with(['user' => function ($query): void {
-                $query->select('id', 'first_name', 'last_name')->where('type', UserType::B2B_SELLER);
-            }])
+            $query->select('id', 'first_name', 'last_name')->where('type', UserType::B2B_SELLER);
+        }])
             ->where('id', $id)
             ->firstOrFail();
 
@@ -690,7 +707,7 @@ class AdminService
     {
         $payout =  Payout::findOrFail($id);
         $payout->update([
-            'status' => 'paid',
+            'status' => OrderStatus::PAID,
             'date_paid' => now()->toDateString(),
         ]);
 
@@ -741,10 +758,17 @@ class AdminService
         $account =  B2bWithdrawalMethod::with('user.businessInformation')->findOrFail($id);
 
         $business = BusinessInformation::select([
-                'business_location', 'business_type', 'business_name', 'business_reg_number', 'business_phone', 'business_reg_document', 'identification_type_document', 'user_id'
-                ])
-                ->with(['user' => function ($query): void {
-                    $query->where('type', UserType::B2B_SELLER)->select('id', 'first_name', 'last_name');
+            'business_location',
+            'business_type',
+            'business_name',
+            'business_reg_number',
+            'business_phone',
+            'business_reg_document',
+            'identification_type_document',
+            'user_id'
+        ])
+            ->with(['user' => function ($query): void {
+                $query->where('type', UserType::B2B_SELLER)->select('id', 'first_name', 'last_name');
             }])
             ->where('user_id', $account->user_id)->firstOrFail();
 
@@ -761,7 +785,7 @@ class AdminService
         $account =  B2bWithdrawalMethod::findOrFail($id);
 
         $account->update([
-            'status' => 'active',
+            'status' => UserStatus::ACTIVE,
         ]);
 
         return $this->success(null, 'Account Approved');
@@ -823,121 +847,6 @@ class AdminService
         return $this->success(null, 'Comment Submitted successfully');
     }
 
-    //Admin User Management
-    public function adminUsers()
-    {
-        $searchQuery = request()->input('search');
-
-        $userStats = User::selectRaw('
-                SUM(CASE WHEN type = ? THEN 1 ELSE 0 END) as buyers,
-                SUM(CASE WHEN type = ? THEN 1 ELSE 0 END) as sellers,
-                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as pending_approval
-            ', [
-                UserType::B2B_BUYER,
-                UserType::B2B_SELLER,
-                UserStatus::PENDING
-            ])
-            ->first();
-
-        $admins = Admin::with('permissions:id,name')
-            ->where('type', AdminType::B2B)
-            ->select('id', 'first_name', 'last_name', 'email', 'created_at')
-            ->latest('created_at')
-            ->when($searchQuery, function ($queryBuilder) use ($searchQuery) {
-                $queryBuilder->where(function ($subQuery) use ($searchQuery) {
-                    $subQuery->where('first_name', 'LIKE', '%' . $searchQuery . '%')
-                        ->orWhere('email', 'LIKE', '%' . $searchQuery . '%');
-                });
-            })
-            ->get();
-
-        $data = [
-            'buyers' => $userStats->buyers,
-            'sellers' => $userStats->sellers,
-            'pending_approval' => $userStats->pending_approval,
-            'admin_users' => $admins,
-        ];
-
-        return $this->success($data, 'All Admin Users');
-    }
-
-    public function addAdmin($data)
-    {
-        DB::beginTransaction();
-        try {
-            $password = 'pass@12345';
-            $admin = Admin::create([
-                'first_name' => $data->first_name,
-                'last_name' => $data->last_name,
-                'email' => $data->email,
-                'type' => AdminType::B2B,
-                'status' => AdminStatus::ACTIVE,
-                'phone_number' => $data->phone_number,
-                'password' => bcrypt($password),
-            ]);
-            $admin->permissions()->sync($data->permissions);
-            $loginDetails = [
-                'name' => $data->first_name,
-                'email' => $data->email,
-                'password' => $password,
-            ];
-            DB::commit();
-
-            defer(fn () => send_email($data->email, new B2BNewAdminEmail($loginDetails)));
-
-            return $this->success($admin, 'Admin user added successfully', 201);
-        } catch (\Throwable $th) {
-            DB::rollBack();
-            throw $th;
-        }
-    }
-
-    public function viewAdmin($id)
-    {
-        $admin = Admin::findOrFail($id);
-        return $this->success($admin, 'Admin details');
-    }
-
-    public function editAdmin($id, $data)
-    {
-        $admin = Admin::findOrFail($id);
-        $admin->update([
-            'first_name' => $data->first_name,
-            'last_name' => $data->last_name,
-            'email' => $data->email,
-            'phone_number' => $data->phone_number,
-        ]);
-        $admin->roles()->sync($data->role_id);
-        if ($data->permissions) {
-            $admin->permissions()->sync($data->permissions);
-        }
-        return $this->success($admin, 'Details updated successfully');
-    }
-
-    public function verifyPassword($data)
-    {
-        $currentUserId = userAuthId();
-        $admin = Admin::findOrFail($currentUserId);
-        if (Hash::check($data->password, $admin->password)) {
-            return $this->success(null, 'Password matched');
-        }
-        return $this->error(null, 'Password do not match');
-    }
-    public function revokeAccess($id)
-    {
-        $admin = Admin::findOrFail($id);
-        $admin->permissions()->detach();
-        return $this->success(null, 'Access Revoked');
-    }
-
-    public function removeAdmin($id)
-    {
-        $admin = Admin::findOrFail($id);
-        $admin->permissions()->detach();
-        $admin->delete();
-        return $this->success(null, 'Deleted successfully');
-    }
-
     //Shipping Agents
     public function shippingAgents()
     {
@@ -992,6 +901,7 @@ class AdminService
         ]);
         return $this->success(null, 'Details updated successfully');
     }
+    
     public function deleteShippingAgent($id)
     {
         $agent = ShippingAgent::findOrFail($id);
@@ -1018,6 +928,7 @@ class AdminService
             'period' => $data->period,
             'tier' => $data->tier,
             'designation' => $data->designation,
+            'tagline' => $data->tagline,
             'details' => $data->details,
             'type' => PlanType::B2B,
             'status' => PlanStatus::ACTIVE
@@ -1051,6 +962,7 @@ class AdminService
             'period' => $data->period,
             'tier' => $data->tier,
             'designation' => $data->designation,
+            'tagline' => $data->tagline,
             'details' => $data->details,
             'status' => $data->status ?? PlanStatus::ACTIVE
         ]);
@@ -1073,5 +985,4 @@ class AdminService
 
         return $this->success(null, 'Plan deleted successfully.');
     }
-
 }

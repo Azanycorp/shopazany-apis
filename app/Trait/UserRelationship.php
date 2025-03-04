@@ -28,6 +28,7 @@ use App\Models\BusinessInformation;
 use App\Models\UserShippingAddress;
 use App\Models\UserBusinessInformation;
 use App\Models\B2BSellerShippingAddress;
+use App\Models\Payout;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -62,9 +63,14 @@ trait UserRelationship
         return $this->hasOne(BankAccount::class, 'user_id');
     }
 
-    public function withdrawalRequest(): HasMany
+    public function withdrawalRequests(): HasMany
     {
         return $this->hasMany(WithdrawalRequest::class, 'user_id');
+    }
+
+    public function payout(): HasMany
+    {
+        return $this->hasMany(Payout::class, 'seller_id');
     }
 
     public function kyc(): HasOne
@@ -111,6 +117,7 @@ trait UserRelationship
     {
         return $this->hasMany(PaymentMethod::class, 'user_id');
     }
+
 
     public function orderRate(): HasMany
     {

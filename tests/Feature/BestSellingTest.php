@@ -28,6 +28,10 @@ class BestSellingTest extends TestCase
 
     public function testBestSellingProductsAreReturned(): void
     {
+        $headers = [
+            config('security.header_key', 'X-SHPAZY-AUTH') => config('security.header_value'),
+        ];
+
         $product1 = Product::factory()->create(['country_id' => 1]);
         $product2 = Product::factory()->create(['country_id' => 1]);
         $product3 = Product::factory()->create(['country_id' => 2]);
@@ -37,7 +41,7 @@ class BestSellingTest extends TestCase
         Order::factory()->create(['product_id' => $product2->id, 'status' => OrderStatus::DELIVERED, 'country_id' => 1]);
         Order::factory()->create(['product_id' => $product3->id, 'status' => OrderStatus::DELIVERED, 'country_id' => 2]);
 
-        $response = $this->getJson('/api/best/selling');
+        $response = $this->getJson('/api/best/selling', $headers);
 
         $response->assertStatus(200)
             ->assertJsonStructure(['data' => [['id', 'name', 'slug', 'image', 'price', 'description', 'category_id', 'country_id', 'currency', 'total_orders']]]);
@@ -47,7 +51,7 @@ class BestSellingTest extends TestCase
         $this->assertEquals($product2->id, $data[1]['id']);
         $this->assertCount(3, $data);
 
-        $responseWithCountry = $this->getJson('/api/best/selling?country_id=1');
+        $responseWithCountry = $this->getJson('/api/best/selling?country_id=1', $headers);
 
         $responseWithCountry->assertStatus(200)
             ->assertJsonStructure(['data' => [['id', 'name', 'slug', 'image', 'price', 'description', 'category_id', 'country_id', 'currency', 'total_orders']]]);

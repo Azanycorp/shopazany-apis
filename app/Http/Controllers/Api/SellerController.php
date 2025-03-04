@@ -53,34 +53,18 @@ class SellerController extends Controller
         return $this->service->getAllOrders($userId);
     }
 
-    public function getConfirmedOrders($userId)
+    public function getOrderDetail($userId, $id)
     {
-        return $this->service->getConfirmedOrders($userId);
+        return $this->service->getOrderDetail($userId, $id);
     }
 
-    public function getCancelledOrders($userId)
+    public function updateOrderStatus($userId, $id, Request $request)
     {
-        return $this->service->getCancelledOrders($userId);
-    }
+        $request->validate([
+            'status' => ['required', 'string']
+        ]);
 
-    public function getDeliveredOrders($userId)
-    {
-        return $this->service->getDeliveredOrders($userId);
-    }
-
-    public function getPendingOrders($userId)
-    {
-        return $this->service->getPendingOrders($userId);
-    }
-
-    public function getProcessingOrders($userId)
-    {
-        return $this->service->getProcessingOrders($userId);
-    }
-
-    public function getShippedOrders($userId)
-    {
-        return $this->service->getShippedOrders($userId);
+        return $this->service->updateOrderStatus($userId, $id, $request);
     }
 
     public function getTemplate()

@@ -47,7 +47,7 @@ class CategoryController extends Controller
 
     public function getSubcategory($id)
     {
-        abort_if(Gate::denies('sub_category'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+        //abort_if(Gate::denies('sub_category'), Response::HTTP_FORBIDDEN, self::MESSAGE);
         return $this->service->getSubcategory($id);
     }
 

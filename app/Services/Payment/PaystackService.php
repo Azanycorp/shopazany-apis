@@ -24,16 +24,19 @@ use App\Actions\UserLogAction;
 use App\Enum\SubscriptionType;
 use App\Mail\CustomerOrderMail;
 use App\Actions\PaymentLogAction;
+use App\Enum\UserType;
 use App\Enum\WithdrawalStatus;
 use Illuminate\Support\Facades\DB;
 use App\Models\UserShippingAddress;
 use Illuminate\Support\Facades\Log;
 use App\Models\BuyerShippingAddress;
 use App\Http\Resources\B2BBuyerShippingAddressResource;
+use App\Models\Wallet;
 use App\Models\WithdrawalRequest;
 use App\Notifications\WithdrawalNotification;
 use App\Services\Curl\PostCurl;
 use App\Services\SubscriptionService;
+use Carbon\Carbon;
 
 class PaystackService
 {
@@ -43,16 +46,32 @@ class PaystackService
             DB::transaction(function () use ($event, $status): void {
 
                 $paymentData = $event['data'];
-
+                $ref = $paymentData['reference'];
                 $userId = $paymentData['metadata']['user_id'];
-                $referrerId = $paymentData['metadata']['referrer_id'];
                 $amount = $paymentData['amount'];
                 $formattedAmount = number_format($amount / 100, 2, '.', '');
-                $ref = $paymentData['reference'];
                 $channel = $paymentData['channel'];
+                $paid_at = Carbon::parse($paymentData['paid_at']);
+
+                if (Payment::where('reference', $ref)->exists()) {
+                    Log::info("Duplicate payment detected: {$ref}, skipping processing.");
+                    return;
+                }
+
+                $duplicatePayment = Payment::where('user_id', $userId)
+                    ->where('amount', $formattedAmount)
+                    ->where('channel', $channel)
+                    ->whereBetween('created_at', [$paid_at->subMinutes(5), $paid_at->addMinutes(5)])
+                    ->exists();
+
+                if ($duplicatePayment) {
+                    Log::info("Duplicate payment detected for user {$userId}, skipping processing.");
+                    return;
+                }
+
+                $referrerId = $paymentData['metadata']['referrer_id'];
                 $currency = $paymentData['currency'];
                 $ip_address = $paymentData['ip_address'];
-                $paid_at = $paymentData['paid_at'];
                 $createdAt = $paymentData['created_at'];
                 $transaction_date = $paymentData['paid_at'];
                 $payStatus = $paymentData['status'];
@@ -110,9 +129,6 @@ class PaystackService
 
     public static function handlePaymentSuccess($event, $status): void
     {
-        $paymentData = null;
-        $user = null;
-
         try {
             DB::transaction(function () use ($event, $status): void {
 
@@ -158,7 +174,7 @@ class PaystackService
 
                 $orderedItems = [];
                 foreach ($items as $item) {
-                    $product = Product::with('user')
+                    $product = Product::with(['user.wallet', 'shopCountry'])
                         ->findOrFail($item['product_id']);
 
                     Order::saveOrder(
@@ -177,9 +193,25 @@ class PaystackService
                         'image' => $product->image,
                         'quantity' => $item['product_quantity'],
                         'price' => $item['total_amount'],
+                        'currency' => $user->default_currency,
                     ];
 
                     $product->decrement('current_stock_quantity', $item['product_quantity']);
+
+                    if ($product->user) {
+                        $wallet = Wallet::firstOrCreate(
+                            ['user_id' => $product->user->id],
+                            ['balance' => 0]
+                        );
+
+                        $amount = currencyConvert(
+                            $user->default_currency,
+                            $item['total_amount'],
+                            $product->shopCountry->currency,
+                        );
+
+                        $wallet->increment('balance', $amount);
+                    }
                 }
 
                 if ($userShippingId === 0) {
@@ -196,6 +228,10 @@ class PaystackService
                     ]);
                 }
 
+                if ($user->type === UserType::CUSTOMER) {
+                    reward_user($user, 'purchase_item', 'completed');
+                }
+
                 Cart::where('user_id', $userId)->delete();
 
                 self::sendOrderConfirmationEmail($user, $orderedItems, $orderNo, $formattedAmount);
@@ -210,17 +246,8 @@ class PaystackService
                 ))->run();
             });
         } catch (\Exception $e) {
-            $msg = 'Error in handlePaymentSuccess: ' . $e->getMessage();
-
-            (new UserLogAction(
-                request(),
-                UserLog::PAYMENT,
-                $msg,
-                json_encode($paymentData),
-                $user
-            ))->run();
-
-            Log::error('Error in handlePaymentSuccess: ' . $e->getMessage());
+            Log::error('Error in handlePaymentSuccess: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine());
+            throw $e;
         }
     }
 
@@ -229,21 +256,26 @@ class PaystackService
         try {
             DB::transaction(function () use ($event, $status): void {
                 $paymentData = $event['data'];
-                $userId = $paymentData['metadata']['user_id'];
-                $rfqId = $paymentData['metadata']['rfq_id'];
-                $shipping_address_id = $paymentData['metadata']['shipping_address_id'];
-                $shipping_agent_id = $paymentData['metadata']['shipping_agent_id'];
-                $method = $paymentData['metadata']['payment_method'];
-                $ref = $paymentData['reference'];
-                $amount = $paymentData['amount'];
+
+                $metadata = $paymentData['metadata'] ?? [];
+
+                $userId = $metadata['user_id'] ?? null;
+                $rfqId = $metadata['rfq_id'] ?? null;
+                $centerId = $metadata['center_id'] ?? null;
+                $shipping_address_id = $metadata['shipping_address_id'] ?? null;
+                $shipping_agent_id = $metadata['shipping_agent_id'] ?? null;
+                $method = $metadata['payment_method'] ?? null;
+                $ref = $paymentData['reference'] ?? null;
+                $amount = $paymentData['amount'] ?? 0;
+
                 $formattedAmount = number_format($amount / 100, 2, '.', '');
-                $channel = $paymentData['channel'];
-                $currency = $paymentData['currency'];
-                $ip_address = $paymentData['ip_address'];
-                $paid_at = $paymentData['paid_at'];
-                $createdAt = $paymentData['created_at'];
-                $transaction_date = $paymentData['paid_at'];
-                $payStatus = $paymentData['status'];
+                $channel = $paymentData['channel'] ?? null;
+                $currency = $paymentData['currency'] ?? null;
+                $ip_address = $paymentData['ip_address'] ?? null;
+                $paid_at = $paymentData['paid_at'] ?? null;
+                $createdAt = $paymentData['created_at'] ?? null;
+                $transaction_date = $paymentData['paid_at'] ?? null;
+                $payStatus = $paymentData['status'] ?? null;
 
                 $user = User::findOrFail($userId);
 
@@ -269,18 +301,23 @@ class PaystackService
 
                 (new PaymentLogAction($data, $paymentData, $method, $status))->execute();
 
+                $shipping_agent = null;
                 if ($shipping_agent_id) {
-                    $shipping_agent =  ShippingAgent::findOrFail(2);
+                    $shipping_agent = ShippingAgent::findOrFail($shipping_agent_id);
                 }
 
                 $rfq = Rfq::findOrFail($rfqId);
                 $seller = User::findOrFail($rfq->seller_id);
                 $product = B2BProduct::findOrFail($rfq->product_id);
-                $shipping_address = BuyerShippingAddress::with(['state', 'country'])->findOrFail($shipping_address_id);
-                $address = new B2BBuyerShippingAddressResource($shipping_address);
+                $shipping_address = null;
+                if ($shipping_address_id) {
+                    $shipping_address = BuyerShippingAddress::with(['state', 'country'])->find($shipping_address_id);
+                }
+                $address = $shipping_address ? new B2BBuyerShippingAddressResource($shipping_address) : null;
 
                 B2bOrder::create([
                     'buyer_id' => $userId,
+                    'centre_id' => $centerId ?? null,
                     'seller_id' => $rfq->seller_id,
                     'product_id' => $rfq->product_id,
                     'product_quantity' => $rfq->product_quantity,
@@ -294,14 +331,6 @@ class PaystackService
                     'status' => OrderStatus::PENDING,
                 ]);
 
-                $orderedItems = [
-                    'product_name' => $product->name,
-                    'image' => $product->front_image,
-                    'quantity' => $rfq->product_quantity,
-                    'price' => $rfq->total_amount,
-                    'buyer_name' => $user->first_name . ' ' . $user->last_name,
-                    'order_number' => $orderNo,
-                ];
                 $product->quantity -= $rfq->product_quantity;
                 $product->sold += $rfq->product_quantity;
                 $product->save();
@@ -325,7 +354,7 @@ class PaystackService
                 $type = MailingEnum::ORDER_EMAIL;
                 $subject = "B2B Order Confirmation";
                 $mail_class = "App\Mail\B2BOrderEmail";
-                mailSend($type, $user, $subject, $mail_class,'orderedItems');
+                mailSend($type, $user, $subject, $mail_class, 'orderedItems');
 
                 (new UserLogAction(
                     request(),
@@ -336,7 +365,8 @@ class PaystackService
                 ))->run();
             });
         } catch (\Exception $e) {
-            Log::error('Error in handlePaymentSuccess: ' . $e->getMessage());
+            Log::error('Error in handlePaymentSuccess: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine());
+            throw $e;
         }
     }
 
@@ -365,6 +395,7 @@ class PaystackService
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error("Error processing transfer success: " . $e->getMessage());
+            throw $e;
         }
     }
 
@@ -393,6 +424,7 @@ class PaystackService
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error("Error processing transfer success: " . $e->getMessage());
+            throw $e;
         }
     }
 
