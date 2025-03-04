@@ -248,19 +248,23 @@ class BuyerService
 
         return $this->success($data, 'Products');
     }
-    public function categories()
+   public function categories()
     {
-        $categories = B2bProductCategory::with(['subcategory', 'products'])
+        $categories = B2bProductCategory::with(['subcategory', 'products', 'products.b2bProductReview', 'products.b2bLikes'])
+            ->withCount('products') // Count products in the category
+            ->with(['products' => function ($query) {
+                $query->withCount('b2bProductReview'); // Count reviews for each product
+            }])
             ->where('featured', 1)
             ->take(10)
             ->get();
-
-        return $this->success($categories, "Categories");
+        $data = B2BCategoryResource::collection($categories);
+        return $this->success($data, "Categories");
     }
     public function getCategoryProducts()
     {
         $categories = B2BProductCategory::select('id', 'name', 'slug', 'image')
-            ->with(['products.b2bProductReview', 'subcategory', 'subcategory.products', 'products.b2bLikes'])
+            ->with(['products.b2bProductReview', 'products.b2bLikes', 'subcategory'])
             ->get();
         $data = B2BCategoryResource::collection($categories);
         return $this->success($data, "Categories products");
@@ -438,7 +442,7 @@ class BuyerService
             return $this->success(null, 'RFQ sent successfully');
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->error(null, 'Transaction failed, please try again: ' . $e->getMessage(), 422);
+            return $this->error(null, 'transaction failed, please try again: ' . $e->getMessage(), 500);
         }
     }
 
@@ -463,7 +467,7 @@ class BuyerService
 
             return $this->success(null, 'rfq sent successfully');
         } catch (\Exception $e) {
-            return $this->error(null, 'transaction failed, please try again: ' . $e->getMessage(), 422);
+            return $this->error(null, 'transaction failed, please try again: ' . $e->getMessage(), 500);
         }
     }
 
@@ -581,7 +585,6 @@ class BuyerService
     {
         $order = B2bOrder::with(['seller', 'buyer'])->findOrFail($id);
         $data = new B2BOrderResource($order);
-
         return $this->success($data, 'order details');
     }
     public function rfqDetails($id)
@@ -703,7 +706,7 @@ class BuyerService
       public function myWishList()
     {
         $userId = userAuthId();
-        $wishes =  B2bWishList::with(['product', 'b2bProductReview'])
+        $wishes =  B2bWishList::with(['product','b2bProductReview'])
             ->where('user_id', $userId)
             ->latest('id')
             ->get();
@@ -752,7 +755,7 @@ class BuyerService
             $quote->delete();
             return $this->success(null, 'rfq sent successfully');
         } catch (\Exception $e) {
-            return $this->error(null, 'transaction failed, please try again: ' . $e->getMessage(), 422);
+            return $this->error(null, 'transaction failed, please try again: ' . $e->getMessage(), 500);
         }
     }
 
@@ -778,6 +781,9 @@ class BuyerService
         $user = User::find($auth->id);
         if (!$user) {
             return $this->error(null, 'User does not exist');
+        }
+        if (!empty($request->email) && User::where('email', $request->email)->where('id', '!=', $user->id)->exists()) {
+            return $this->error(null, "Email already exists.");
         }
         $image = $request->hasFile('image') ? uploadUserImage($request, 'image', $user) : $user->image;
 
