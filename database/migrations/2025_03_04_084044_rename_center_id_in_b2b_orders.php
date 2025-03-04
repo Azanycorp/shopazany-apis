@@ -15,9 +15,4 @@ return new class extends Migration
             $table->renameColumn('center_id', 'centre_id');
         });
     }
-
-    /**
-     * Reverse the migrations.
-     */
-   
 };
