@@ -15,11 +15,11 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('collation_center_id');
             $table->string('name');
-            $table->string('location');
-            $table->string('status')->default('active');
-            $table->text('note')->nullable();
+            $table->text('location');
+            $table->longText('note')->nullable();
             $table->text('city')->nullable();
-            $table->unsignedBigInteger('country_id')->nullable();
+            $table->integer('country_id')->nullable();
+            $table->string('status')->default('active');
             $table->timestamps();
         });
     }

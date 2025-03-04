@@ -133,7 +133,6 @@ class PaystackService
 
                 $paymentData = $event['data'];
                 $userId = $paymentData['metadata']['user_id'];
-                $centerId = $paymentData['metadata']['centre_id'];
                 $items = $paymentData['metadata']['items'];
                 $method = $paymentData['metadata']['payment_method'];
                 $ref = $paymentData['reference'];
@@ -186,7 +185,6 @@ class PaystackService
                         $address,
                         $method,
                         $payStatus,
-                        $centerId,
                     );
 
                     $orderedItems[] = [
@@ -205,7 +203,13 @@ class PaystackService
                             ['balance' => 0]
                         );
 
-                        $wallet->increment('balance', $item['total_amount']);
+                        $amount = currencyConvert(
+                            $product->shopCountry->currency,
+                            $item['total_amount'],
+                            $product->user->default_currency
+                        );
+
+                        $wallet->increment('balance', $amount);
                     }
                 }
 
@@ -247,15 +251,6 @@ class PaystackService
         try {
             DB::transaction(function () use ($event, $status): void {
                 $paymentData = $event['data'];
-
-                $userId = $paymentData['metadata']['user_id'];
-                $centerId = $paymentData['metadata']['centre_id'];
-                $rfqId = $paymentData['metadata']['rfq_id'];
-                $shipping_address_id = $paymentData['metadata']['shipping_address_id'];
-                $shipping_agent_id = $paymentData['metadata']['shipping_agent_id'];
-                $method = $paymentData['metadata']['payment_method'];
-                $ref = $paymentData['reference'];
-                $amount = $paymentData['amount'];
 
                 $metadata = $paymentData['metadata'] ?? [];
 

@@ -17,6 +17,8 @@ return new class extends Migration
             $table->string('location');
             $table->string('status');
             $table->text('note')->nullable();
+            $table->text('city')->nullable();
+            $table->integer('country_id')->nullable();
             $table->timestamps();
         });
     }
