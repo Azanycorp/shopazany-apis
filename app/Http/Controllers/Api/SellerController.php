@@ -60,6 +60,10 @@ class SellerController extends Controller
 
     public function updateOrderStatus($userId, $id, Request $request)
     {
+        $request->validate([
+            'status' => ['required', 'string']
+        ]);
+
         return $this->service->updateOrderStatus($userId, $id, $request);
     }
 
