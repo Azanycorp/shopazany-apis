@@ -14,7 +14,18 @@ class OrderResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $amount = currencyConvert($this->product?->shopCountry->currency, $this->total_amount, $this->user?->default_currency);
+        $user = $request->user();
+
+        $productCurrency = $this->product?->shopCountry->currency ?? 'USD';
+
+        $userCurrency = $user?->default_currency ?? $productCurrency;
+
+        $amount = currencyConvert(
+            $productCurrency,
+            $this->total_amount,
+            $userCurrency
+        );
+
         return [
             'id' => (int)$this->id,
             'order_no' => (string)$this->order_no,
