@@ -26,7 +26,7 @@ class ProcessEmails extends Command
      */
     public function handle(MailingService $emailService)
     {
-       return $emailService->sendEmails(15);
+        $emailService->sendEmails(15);
         $this->info('Emails processed successfully.');
     }
 }
