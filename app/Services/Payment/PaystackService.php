@@ -204,9 +204,9 @@ class PaystackService
                         );
 
                         $amount = currencyConvert(
-                            $product->shopCountry->currency,
+                            $user->default_currency,
                             $item['total_amount'],
-                            $user->default_currency
+                            $product->shopCountry->currency,
                         );
 
                         $wallet->increment('balance', $amount);
