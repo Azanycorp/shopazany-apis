@@ -67,9 +67,9 @@ class Order extends Model
         $data->shipping_address = $address;
         $data->order_date = now();
         $data->total_amount = $item['total_amount'] ?? currencyConvert(
-            $product->shopCountry?->currency,
+            $seller->default_currency,
             $item['unitPrice'],
-            $seller->default_currency
+            $product->shopCountry?->currency
         );
         $data->payment_method = $method;
         $data->payment_status = $status;
