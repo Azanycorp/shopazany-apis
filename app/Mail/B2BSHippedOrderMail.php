@@ -25,7 +25,7 @@ class B2BSHippedOrderMail extends Mailable
     {
         return $this->subject('Order Shipped Confirmation Mail from' . config('app.name'))
             ->view(
-                'mail.b2b-ordershipprd-mail',
+                'mail.b2b-ordershipped-mail',
                 [
                     'orderedItems' => $this->orderedItems
                 ]

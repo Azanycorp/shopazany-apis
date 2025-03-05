@@ -92,15 +92,15 @@ class SubscriptionService
         return $this->success($data, "Subscription histories");
     }
 
-    public static function creditAffiliate($user, $amount)
+    public static function creditAffiliate($referrer, $amount, $user)
     {
-        if(!$user) {
+        if(!$referrer) {
             return;
         }
 
-        $wallet = $user->wallet()->firstOrCreate(
+        $wallet = $referrer->wallet()->firstOrCreate(
             [
-                'user_id' => $user->id,
+                'user_id' => $referrer->id,
             ],
             [
                 'balance' => 0.00,
@@ -108,7 +108,9 @@ class SubscriptionService
             ]
         );
 
-        $subcriptionBonus = $amount * 0.05;
+        $convertAmount = currencyConvert($user->default_currency, $amount, $referrer->default_currency);
+
+        $subcriptionBonus = $convertAmount * 0.05;
         $wallet->increment('balance', $subcriptionBonus);
     }
 }

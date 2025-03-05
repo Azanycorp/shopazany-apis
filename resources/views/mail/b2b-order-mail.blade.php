@@ -205,7 +205,7 @@
 
         <div class="message">
             <h2>We Appreciate Your Purchase!</h2>
-            <p>Hello {{ $orderedItems['buyer_name'] }}, We're Getting Your Order Ready For Dispatch.<br>We'll Notify You
+            <p>Hello {{ $orderedItems['buyer_name'] }}, We're Getting Your Order <b>{{$orderedItems['order_number']}}</b>  Ready For Dispatch.<br>We'll Notify You
                 As Soon As It's On Its Way.</p>
             <p>— Azany Team</p>
         </div>

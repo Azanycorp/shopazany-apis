@@ -199,7 +199,7 @@
 
         <div class="message">
             <p>
-                "Hi{{ $orderedItems['buyer_name'] }}, your order has been successfully delivered! We hope you enjoy it.
+                "Hi{{ $orderedItems['buyer_name'] }}, your order <b>{{$orderedItems['order_number']}}</b> has been successfully delivered! We hope you enjoy it.
                 <br>
                 If you have any questions, please reply to this message viz <a
                     href="mailto:support@azany.com">support@azany.com</a>.

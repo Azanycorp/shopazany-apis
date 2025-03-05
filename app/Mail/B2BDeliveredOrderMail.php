@@ -23,7 +23,7 @@ class B2BDeliveredOrderMail extends Mailable
 
     public function build()
     {
-        return $this->subject('Order Shipped Confirmation Mail from' . config('app.name'))
+        return $this->subject('Order Delivery Confirmation Mail from ' . config('app.name'))
             ->view(
                 'mail.b2b-orderdelivery-mail',
                 [
