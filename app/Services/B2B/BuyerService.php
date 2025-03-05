@@ -485,11 +485,12 @@ class BuyerService
 
     public function sendQuote($data)
     {
+        $userId = userAuthId();
         $product = B2BProduct::findOrFail($data->product_id);
         if ($product->availability_quantity < 1) {
             return $this->error(null, 'This product is currently not available for purchase', 422);
         }
-        $quote = B2bQuote::where('product_id', $data->product_id)->first();
+        $quote = B2bQuote::where('product_id', $product->id)->where('buyer_id', $userId)->first();
 
         if ($quote) {
             return $this->error(null, 'Product already exist');
@@ -702,6 +703,12 @@ class BuyerService
         if ($product->availability_quantity < 1) {
             return $this->error(null, 'This product is currently not available for purchase', 422);
         }
+
+        $check = B2bWishList::where('product_id', $product->id)->where('user_id', $userId)->first();
+
+        if ($check) {
+            return $this->error(null, 'Product already exist');
+        }
         B2bWishList::create([
             'user_id' => $userId,
             'product_id' => $product->id,
@@ -882,7 +889,7 @@ class BuyerService
     }
     public function getAllShippingAddress()
     {
-         $currentUserId = userAuthId();
+        $currentUserId = userAuthId();
         $addresses = BuyerShippingAddress::with(['state', 'country'])->where('user_id', $currentUserId)->get();
         $data = B2BBuyerShippingAddressResource::collection($addresses);
         return $this->success($data, 'All address');
