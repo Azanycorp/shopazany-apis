@@ -331,7 +331,7 @@ class PaystackService
                     'status' => OrderStatus::PENDING,
                 ]);
 
-                $product->quantity -= $rfq->product_quantity;
+                $product->availability_quantity -= $rfq->product_quantity;
                 $product->sold += $rfq->product_quantity;
                 $product->save();
 
@@ -350,11 +350,18 @@ class PaystackService
                     'payment_status' => OrderStatus::PAID,
                     'status' => OrderStatus::COMPLETED
                 ]);
-
+                $orderedItems = [
+                    'product_name' => $product->name,
+                    'image' => $product->front_image,
+                    'quantity' => $rfq->product_quantity,
+                    'price' => $rfq->total_amount,
+                    'buyer_name' => $user->first_name . ' ' . $user->last_name,
+                    'order_number' => $orderNo,
+                ];
                 $type = MailingEnum::ORDER_EMAIL;
                 $subject = "B2B Order Confirmation";
-                $mail_class = "App\Mail\B2BOrderEmail";
-                mailSend($type, $user, $subject, $mail_class, 'orderedItems');
+                $mail_class = B2BOrderEmail::class;
+                mailSend($type, $user, $subject, $mail_class, $orderedItems);
 
                 (new UserLogAction(
                     request(),

@@ -248,7 +248,7 @@ class BuyerService
 
         return $this->success($data, 'Products');
     }
-   public function categories()
+    public function categories()
     {
         $categories = B2bProductCategory::with(['subcategory', 'products', 'products.b2bProductReview', 'products.b2bLikes'])
             ->withCount('products') // Count products in the category
@@ -277,7 +277,7 @@ class BuyerService
     public function bestSelling()
     {
         $bestSellingProducts = B2bOrder::with([
-            'product:id,name,front_image,unit_price',
+            'product:id,name,front_image,unit_price,slug,default_currency',
             'product.b2bProductReview:id,product_id,rating',
             'b2bProductReview'
         ])
@@ -302,12 +302,12 @@ class BuyerService
         $countryId = request()->query('country_id');
 
         $query = B2BProduct::with([
-                'category',
-                'subCategory',
-                'shopCountry',
-                'orders',
-                'b2bProductReview',
-            ])
+            'category',
+            'subCategory',
+            'shopCountry',
+            'orders',
+            'b2bProductReview',
+        ])
             ->where('status', ProductStatus::ACTIVE);
 
         if ($countryId) {
@@ -367,9 +367,9 @@ class BuyerService
         $quote_count = B2bQuote::where('product_id', $product->id)->count();
 
         $b2bProductReview = B2bProdctReview::with(['user' => function ($query): void {
-                $query->select('id', 'first_name', 'last_name')
-                    ->where('type', UserType::B2B_BUYER);
-            }])
+            $query->select('id', 'first_name', 'last_name')
+                ->where('type', UserType::B2B_BUYER);
+        }])
             ->where('product_id', $product->id)
             ->get();
 
@@ -417,14 +417,12 @@ class BuyerService
         DB::beginTransaction();
 
         try {
-            $rfqData = [];
-
             foreach ($quotes as $quote) {
                 if (empty($quote->product_data['unit_price']) || empty($quote->qty)) {
                     throw new \Exception('Invalid product data for quote ID: ' . $quote->id);
                 }
 
-                $rfqData[] = [
+                Rfq::create([
                     'buyer_id' => $quote->buyer_id,
                     'seller_id' => $quote->seller_id,
                     'quote_no' => strtoupper(Str::random(10) . $userId),
@@ -435,10 +433,8 @@ class BuyerService
                     'product_data' => $quote->product_data,
                     'created_at' => now(),
                     'updated_at' => now(),
-                ];
+                ]);
             }
-
-            Rfq::insert($rfqData);
             B2bQuote::where('buyer_id', $userId)->delete();
 
             DB::commit();
@@ -485,8 +481,12 @@ class BuyerService
 
     public function sendQuote($data)
     {
+        $userId = userAuthId();
         $product = B2BProduct::findOrFail($data->product_id);
-        $quote = B2bQuote::where('product_id', $data->product_id)->first();
+        if ($product->availability_quantity < 1) {
+            return $this->error(null, 'This product is currently not available for purchase', 422);
+        }
+        $quote = B2bQuote::where('product_id', $product->id)->where('buyer_id', $userId)->first();
 
         if ($quote) {
             return $this->error(null, 'Product already exist');
@@ -495,7 +495,9 @@ class BuyerService
         if ($data->qty < $product->minimum_order_quantity) {
             return $this->error(null, 'Your peferred quantity can not be less than the one already set', 422);
         }
-
+        if ($data->qty > $product->availability_quantity) {
+            return $this->error(null, 'Your peferred quantity is greater than the availability quantity : ' . $product->availability_quantity, 422);
+        }
         $quote = B2bQuote::create([
             'buyer_id' => userAuthId(),
             'seller_id' => $product->user_id,
@@ -696,7 +698,15 @@ class BuyerService
         if (!$product) {
             return $this->error(null, 'No record found to send', 404);
         }
+        if ($product->availability_quantity < 1) {
+            return $this->error(null, 'This product is currently not available for purchase', 422);
+        }
 
+        $check = B2bWishList::where('product_id', $product->id)->where('user_id', $userId)->first();
+
+        if ($check) {
+            return $this->error(null, 'Product already exist');
+        }
         B2bWishList::create([
             'user_id' => $userId,
             'product_id' => $product->id,
@@ -707,10 +717,10 @@ class BuyerService
     }
 
     //wish list
-      public function myWishList()
+    public function myWishList()
     {
         $userId = userAuthId();
-        $wishes =  B2bWishList::with(['product','b2bProductReview'])
+        $wishes =  B2bWishList::with(['product', 'b2bProductReview'])
             ->where('user_id', $userId)
             ->latest('id')
             ->get();
@@ -740,6 +750,9 @@ class BuyerService
         $product = B2BProduct::findOrFail($quote->product_id);
         if ($data->qty < $product->minimum_order_quantity) {
             return $this->error(null, 'Your peferred quantity can not be less than the one already set', 422);
+        }
+        if ($data->qty > $product->availability_quantity) {
+            return $this->error(null, 'Your peferred quantity is greater than the availability quantity : ' . $product->availability_quantity, 422);
         }
 
         try {
@@ -814,7 +827,7 @@ class BuyerService
 
             return $this->success(null, 'Password Successfully Updated');
         }
-        return $this->error(null,'Old Password did not match');
+        return $this->error(null, 'Old Password did not match');
     }
     public function change2FA($data)
     {
