@@ -179,7 +179,6 @@ class ChargeCardService implements PaymentStrategy
         $product->sold += $rfq->product_quantity;
         $product->save();
 
-
         $config = Configuration::first();
 
         if ($config) {

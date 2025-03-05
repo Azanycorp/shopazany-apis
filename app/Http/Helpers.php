@@ -2462,7 +2462,7 @@ if (! function_exists('currencyConvert')) {
 }
 
 if (! function_exists('mailSend')) {
-    function mailSend($type, $recipient, $subject, $mail_class, $payloadKey = 'user')
+    function mailSend($type, $recipient, $subject, $mail_class, $payloadData = [])
     {
         $data = [
             'type' => $type,
@@ -2471,9 +2471,7 @@ if (! function_exists('mailSend')) {
             'body' => "",
             'mailable' => $mail_class,
             'scheduled_at' => now(),
-            'payload' => [
-                $payloadKey => $recipient
-            ]
+            'payload' => array_merge($payloadData)
         ];
 
         Mailing::saveData($data);
