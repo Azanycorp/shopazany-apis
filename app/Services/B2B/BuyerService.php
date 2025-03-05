@@ -277,7 +277,7 @@ class BuyerService
     public function bestSelling()
     {
         $bestSellingProducts = B2bOrder::with([
-            'product:id,name,front_image,unit_price',
+            'product:id,name,front_image,unit_price,slug,default_currency',
             'product.b2bProductReview:id,product_id,rating',
             'b2bProductReview'
         ])
@@ -417,14 +417,12 @@ class BuyerService
         DB::beginTransaction();
 
         try {
-            $rfqData = [];
-
             foreach ($quotes as $quote) {
                 if (empty($quote->product_data['unit_price']) || empty($quote->qty)) {
                     throw new \Exception('Invalid product data for quote ID: ' . $quote->id);
                 }
 
-                $rfqData[] = [
+                Rfq::create([
                     'buyer_id' => $quote->buyer_id,
                     'seller_id' => $quote->seller_id,
                     'quote_no' => strtoupper(Str::random(10) . $userId),
@@ -432,13 +430,11 @@ class BuyerService
                     'product_quantity' => $quote->qty,
                     'total_amount' => $quote->product_data['unit_price'] * $quote->qty,
                     'p_unit_price' => $quote->product_data['unit_price'],
-                    'product_data' => json_encode($quote->product_data),
+                    'product_data' => $quote->product_data,
                     'created_at' => now(),
                     'updated_at' => now(),
-                ];
+                ]);
             }
-
-            Rfq::insert($rfqData);
             B2bQuote::where('buyer_id', $userId)->delete();
 
             DB::commit();
