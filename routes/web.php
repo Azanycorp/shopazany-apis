@@ -6,4 +6,4 @@ use App\Console\Commands\ProcessEmails;
 
 Route::get('/', function () {
     return view('welcome');
-});
+})->name('login');
