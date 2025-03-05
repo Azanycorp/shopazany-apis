@@ -47,7 +47,6 @@ class RolePermissionService
     public function assignPermission($request)
     {
         $role = Role::findOrFail($request->role_id);
-
         $role->permissions()->sync($request->permissions);
 
         return $this->success(null, 'Assigned successfully');
