@@ -120,7 +120,7 @@ class PaystackService
                     'expired_at' => null,
                 ]);
 
-                SubscriptionService::creditAffiliate($referrer, $formattedAmount);
+                SubscriptionService::creditAffiliate($referrer, $formattedAmount, $user);
             });
         } catch (\Exception $e) {
             Log::error('Error in handleRecurringCharge: ' . $e->getMessage());

@@ -107,7 +107,7 @@ class ChargeUserSubscriptions extends Command
                     'expired_at' => null,
                 ]);
 
-                SubscriptionService::creditAffiliate($referrer, $amount);
+                SubscriptionService::creditAffiliate($referrer, $amount, $user);
 
                 Log::info('Subscription charged successfully: ' . $subscription->id);
                 DB::commit();
