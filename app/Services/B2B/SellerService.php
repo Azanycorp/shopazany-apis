@@ -282,7 +282,7 @@ class SellerService extends Controller
         if ($currentUserId != $user_id) {
             return $this->error(null, "Unauthorized action.", 401);
         }
-  if ($currentUserId != $user_id) {
+        if ($currentUserId != $user_id) {
             return $this->error(null, "Unauthorized action.", 401);
         }
         $prod = $this->b2bProductRepository->find($product_id);
@@ -601,8 +601,8 @@ class SellerService extends Controller
         $endDate = now(); // Current date and time
 
         $currentUserId = userAuthId();
-        $totalSales =  Rfq::where('seller_id', $currentUserId)
-            ->where('status', 'delivered')
+        $totalSales =  B2bOrder::where('seller_id', $currentUserId)
+            ->where('status', OrderStatus::DELIVERED)
             ->sum('total_amount');
 
         $payouts =  Payout::where('seller_id', $currentUserId)->get();
@@ -610,21 +610,19 @@ class SellerService extends Controller
         //payouts this month
         $monthlyPayout =  Payout::where([
             'seller_id' => $currentUserId,
-            'status' => 'paid'
+            'status' => OrderStatus::PAID
         ])->whereBetween('created_at', [$startDate, $endDate])->sum('amount');
         //order this month
         $monthlyOrder =  Rfq::where([
             'seller_id' => $currentUserId,
-            'status' => 'delivered'
+            'status' => OrderStatus::DELIVERED
         ])->whereBetween('created_at', [$startDate, $endDate])->sum('total_amount');
 
         $data = (object) [
             'total_sales_alltime' => $totalSales,
             'sales_this_month' => $monthlyOrder,
-            'total_payout' => $payouts->where('status', 'paid')->sum('amount'),
-            'payout_this_month' => $monthlyPayout,
-            'total_category' => 0,
-            'total_brand' => 0,
+            'total_payout' => $payouts->where('status',OrderStatus::PAID)->sum('amount'),
+            'payout_this_month' => $monthlyPayout
         ];
         return $this->success($data, "Earning details");
     }

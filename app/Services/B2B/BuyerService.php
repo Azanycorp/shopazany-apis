@@ -499,7 +499,9 @@ class BuyerService
         if ($data->qty < $product->minimum_order_quantity) {
             return $this->error(null, 'Your peferred quantity can not be less than the one already set', 422);
         }
-
+        if ($data->qty > $product->availability_quantity) {
+            return $this->error(null, 'Your peferred quantity is greater than the availability quantity : ' . $product->availability_quantity, 422);
+        }
         $quote = B2bQuote::create([
             'buyer_id' => userAuthId(),
             'seller_id' => $product->user_id,
@@ -752,6 +754,9 @@ class BuyerService
         $product = B2BProduct::findOrFail($quote->product_id);
         if ($data->qty < $product->minimum_order_quantity) {
             return $this->error(null, 'Your peferred quantity can not be less than the one already set', 422);
+        }
+        if ($data->qty > $product->availability_quantity) {
+            return $this->error(null, 'Your peferred quantity is greater than the availability quantity : ' . $product->availability_quantity, 422);
         }
 
         try {

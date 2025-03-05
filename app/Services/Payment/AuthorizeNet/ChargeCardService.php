@@ -175,9 +175,10 @@ class ChargeCardService implements PaymentStrategy
             'order_number' => $orderNo,
         ];
 
-        $product->quantity -= $rfq->product_quantity;
+        $product->availability_quantity -= $rfq->product_quantity;
         $product->sold += $rfq->product_quantity;
         $product->save();
+
 
         $config = Configuration::first();
 

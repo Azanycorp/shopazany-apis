@@ -331,7 +331,7 @@ class PaystackService
                     'status' => OrderStatus::PENDING,
                 ]);
 
-                $product->quantity -= $rfq->product_quantity;
+                $product->availability_quantity -= $rfq->product_quantity;
                 $product->sold += $rfq->product_quantity;
                 $product->save();
 
