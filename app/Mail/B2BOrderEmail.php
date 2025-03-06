@@ -12,37 +12,27 @@ use Illuminate\Queue\SerializesModels;
 class B2BOrderEmail extends Mailable
 {
     use Queueable, SerializesModels;
-
+    protected $orderedItems;
     /**
      * Create a new message instance.
      */
-    public function __construct(protected $orderedItems)
-    {}
-
-    /**
-     * Get the message envelope.
-     */
-    public function envelope(): Envelope
+    public function __construct($orderedItems)
     {
-        return new Envelope(
-            subject: 'Order Confirmation Mail from' . config('app.name'),
-        );
+        $this->orderedItems = $orderedItems;
     }
 
 
-    /**
-     * Get the message content definition.
-     */
+
     public function build()
     {
-        return new Content(
-            view: 'mail.b2b-order-mail',
-            with: [
-                'orderedItems' => $this->orderedItems
-            ]
-        );
+        return $this->subject('Order Confirmation Mail from' . config('app.name'))
+            ->view(
+                'mail.b2b-order-mail',
+                [
+                    'orderedItems' => $this->orderedItems
+                ]
+            );
     }
-
     /**
      * Get the attachments for the message.
      *
