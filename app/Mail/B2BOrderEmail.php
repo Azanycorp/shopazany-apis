@@ -16,7 +16,7 @@ class B2BOrderEmail extends Mailable
     /**
      * Create a new message instance.
      */
-    public function __construct(protected array $orderedItems)
+    public function __construct(protected $orderedItems)
     {}
 
     /**
