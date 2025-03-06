@@ -173,6 +173,7 @@ class ChargeCardService implements PaymentStrategy
             'price' => $rfq->total_amount,
             'buyer_name' => $user->first_name . ' ' . $user->last_name,
             'order_number' => $orderNo,
+            'currency' => $user->default_currency,
         ];
 
         $orderItemData = [
@@ -181,13 +182,18 @@ class ChargeCardService implements PaymentStrategy
 
         $product->availability_quantity -= $rfq->product_quantity;
         $product->sold += $rfq->product_quantity;
+        $seller_amount = currencyConvert(
+            $user->default_currency,
+            $amount,
+            $product->shopCountry->currency,
+        );
         $product->save();
 
         $config = Configuration::first();
 
         if ($config) {
             $sellerPerc = $config->seller_perc ?? 0;
-            $credit = ($sellerPerc / 100) * $amount;
+            $credit = ($sellerPerc / 100) * $seller_amount;
 
             $wallet = UserWallet::firstOrNew(['seller_id' => $seller->id]);
             $wallet->master_wallet = ($wallet->master_wallet ?? 0) + $credit;
