@@ -154,9 +154,9 @@ class CustomerService
 
     public function getOrderDetail($orderNo)
     {
-        $order = Order::with(['products', 'user'])
-        ->where('order_no', $orderNo)
-        ->get();
+        $order = Order::with(['product', 'user'])
+            ->where('order_no', $orderNo)
+            ->get();
 
         $data = OrderDetailResource::collection($order);
 
