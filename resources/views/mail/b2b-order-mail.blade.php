@@ -210,7 +210,7 @@
             <p>— Azany Team</p>
         </div>
 
-        <a href="#" class="btn">Track your Purchase</a>
+        <a href="#" class="btn" style="color: #f4f4f4">Track your Purchase</a>
 
         <div class="purchase-details">
             <h2>Purchase Details</h2>
@@ -226,19 +226,19 @@
             </div>
 
             <div class="total">
-                <span>Subtotal</span>
+                <span>Subtotal</span>&nbsp;
                 <span>${{ number_format($orderedItems['price']) }}</span>
             </div>
             <div class="total">
-                <span>Tax</span>
+                <span>Tax</span>&nbsp;
                 <span>$00.00</span>
             </div>
             <div class="total">
-                <span>Shipping</span>
+                <span>Shipping</span>&nbsp;
                 <span>$00.00</span>
             </div>
             <div class="total">
-                <span>Total</span>
+                <span>Total</span>&nbsp;
                 <span>${{ number_format($orderedItems['price']) }}</span>
             </div>
         </div>

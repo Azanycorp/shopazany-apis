@@ -648,7 +648,7 @@ class SellerService extends Controller
             ->latest('id')
             ->get();
 
-        $orders = B2bOrder::when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
+        $orders = B2bOrder::where('seller_id', userAuthId())->when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
             $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
                 $subQuery->where('seller_id', userAuthId())
                     ->where('order_no', 'LIKE', '%' . $searchQuery . '%');
