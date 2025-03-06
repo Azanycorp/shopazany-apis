@@ -5,10 +5,7 @@ namespace App\Services;
 use App\Models\Admin;
 use App\Models\Order;
 use App\Trait\SignUp;
-use App\Enum\UserType;
-use App\Enum\AdminType;
 use App\Enum\PlanStatus;
-use App\Enum\UserStatus;
 use App\Models\B2bOrder;
 use App\Enum\AdminStatus;
 use App\Enum\OrderStatus;
@@ -97,10 +94,8 @@ class SuperAdminService
         return $this->success($centre, 'Centre added successfully', 201);
     }
 
-
     public function viewCollationCentre($id)
     {
-
         $centre = CollationCenter::with(['country', 'hubs.country'])->find($id);
 
         if (!$centre) {
@@ -109,13 +104,13 @@ class SuperAdminService
 
         // Fetch order statistics for B2B and B2C
         $b2b_order_counts = $this->getOrderCounts(B2bOrder::where('centre_id', $centre->id));
-        $b2c_order_counts = $this->getOrderCounts(Order::where('centre_id', $centre->id));
+        //$b2c_order_counts = $this->getOrderCounts(Order::where('centre_id', $centre->id));
 
         // Ensure I avoid null values by providing default 0 values
-        $total_deliveries = ($b2b_order_counts['total_orders'] ?? 0) + ($b2c_order_counts['total_orders'] ?? 0);
-        $completed = ($b2b_order_counts['completed'] ?? 0) + ($b2c_order_counts['completed'] ?? 0);
-        $pending = ($b2b_order_counts['pending'] ?? 0) + ($b2c_order_counts['pending'] ?? 0);
-        $cancelled = ($b2b_order_counts['cancelled'] ?? 0) + ($b2c_order_counts['cancelled'] ?? 0);
+        $total_deliveries = ($b2b_order_counts['total_orders'] ?? 0);
+        $completed = ($b2b_order_counts['completed'] ?? 0);
+        $pending = ($b2b_order_counts['pending'] ?? 0);
+        $cancelled = ($b2b_order_counts['cancelled'] ?? 0);
 
         // Using resource transformation
         $data = new CollationCentreResource($centre);
@@ -225,6 +220,7 @@ class SuperAdminService
             'country_id' => $data->country_id ?? $hub->country_id,
             'status' => $data->status ?? PlanStatus::ACTIVE
         ]);
+
         return $this->success(null, 'Details updated successfully');
     }
 

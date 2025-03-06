@@ -381,7 +381,7 @@ class SellerService extends Controller
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $order = Order::with(['user.userShippingAddress', 'product.shopCountry'])
+        $order = Order::with(['user.userShippingAddress', 'product.shopCountry', 'products'])
             ->where('seller_id', $userId)
             ->where('id', $id)
             ->first();
