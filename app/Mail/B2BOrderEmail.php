@@ -36,7 +36,7 @@ class B2BOrderEmail extends Mailable
     public function build()
     {
         return new Content(
-            markdown: 'mail.b2b-order-mail',
+            view: 'mail.b2b-order-mail',
             with: [
                 'orderedItems' => $this->orderedItems
             ]
