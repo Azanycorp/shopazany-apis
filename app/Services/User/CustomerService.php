@@ -154,7 +154,7 @@ class CustomerService
 
     public function getOrderDetail($orderNo)
     {
-        $order = Order::with(['product', 'user'])
+        $order = Order::with(['user.userShippingAddress', 'product.shopCountry', 'products'])
             ->where('order_no', $orderNo)
             ->get();
 

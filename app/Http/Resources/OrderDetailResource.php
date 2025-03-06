@@ -35,15 +35,17 @@ class OrderDetailResource extends JsonResource
                 'email' => $this->user?->email,
                 'phone' => $this->user?->phone,
             ],
-            'product' => (object) [
-                'id' => $this->product?->id,
-                'name' => $this->product?->name,
-                'description' => $this->product?->description,
-                'price' => $this->product?->price,
-                'quantity' => $this->product_quantity,
-                'sub_total' => $this->product?->price * $this->product_quantity,
-                'image' => $this->product?->image,
-            ],
+            'products' => $this->products ? $this->products->map(function ($product) {
+                return [
+                    'id' => $product?->id,
+                    'name' => $product?->name,
+                    'description' => $product?->description,
+                    'price' => $product?->price,
+                    'quantity' => $this->product_quantity,
+                    'sub_total' => $product?->price * $this->product_quantity,
+                    'image' => $product?->image,
+                ];
+            })->toArray() : [],
             'shipping_address' => (object) [
                 'name' => $this->user?->userShippingAddress()->first()?->first_name . ' ' . $this->user?->userShippingAddress()->first()?->last_name,
                 'phone' => $this->user?->userShippingAddress()->first()?->phone,

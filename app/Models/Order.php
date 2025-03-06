@@ -50,6 +50,11 @@ class Order extends Model
         return $this->belongsTo(Product::class, 'product_id');
     }
 
+    public function products(): HasMany
+    {
+        return $this->hasMany(Product::class, 'product_id');
+    }
+
     public static function saveOrder($user, $payment, $seller, $item, $orderNo, $address, $method, $status): self
     {
         $data = new self();
