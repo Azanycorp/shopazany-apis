@@ -330,7 +330,6 @@ class ChargeCardService implements PaymentStrategy
     private function handleSuccessResponse($response, $tresponse, $user, array $paymentDetails, $orderNo, $payment)
     {
         $amount = $paymentDetails['amount'];
-        $centerId = $paymentDetails['centre_id'];
         $data = (object)[
             'user_id' => $user->id,
             'first_name' => $user->first_name,
@@ -366,7 +365,6 @@ class ChargeCardService implements PaymentStrategy
                     $paymentDetails['billTo']['address'],
                     "authorizenet",
                     "success",
-                    $centerId ?? null,
                 );
 
                 $orderedItems[] = [
