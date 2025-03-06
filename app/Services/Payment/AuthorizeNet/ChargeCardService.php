@@ -175,6 +175,10 @@ class ChargeCardService implements PaymentStrategy
             'order_number' => $orderNo,
         ];
 
+        $orderItemData = [
+            'orderedItems' => $orderedItems
+        ];
+
         $product->availability_quantity -= $rfq->product_quantity;
         $product->sold += $rfq->product_quantity;
         $product->save();
@@ -198,7 +202,7 @@ class ChargeCardService implements PaymentStrategy
         $type = MailingEnum::ORDER_EMAIL;
         $subject = "B2B Order Confirmation";
         $mail_class = B2BOrderEmail::class;
-        mailSend($type, $user, $subject, $mail_class, $orderedItems);
+        mailSend($type, $user, $subject, $mail_class, $orderItemData);
 
         (new UserLogAction(
             request(),

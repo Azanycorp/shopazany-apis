@@ -350,6 +350,7 @@ class PaystackService
                     'payment_status' => OrderStatus::PAID,
                     'status' => OrderStatus::COMPLETED
                 ]);
+
                 $orderedItems = [
                     'product_name' => $product->name,
                     'image' => $product->front_image,
@@ -358,10 +359,15 @@ class PaystackService
                     'buyer_name' => $user->first_name . ' ' . $user->last_name,
                     'order_number' => $orderNo,
                 ];
+
+                $orderItemData = [
+                    'orderedItems' => $orderedItems
+                ];
+
                 $type = MailingEnum::ORDER_EMAIL;
                 $subject = "B2B Order Confirmation";
                 $mail_class = B2BOrderEmail::class;
-                mailSend($type, $user, $subject, $mail_class, $orderedItems);
+                mailSend($type, $user, $subject, $mail_class, $orderItemData);
 
                 (new UserLogAction(
                     request(),
