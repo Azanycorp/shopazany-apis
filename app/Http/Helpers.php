@@ -2494,12 +2494,17 @@ if (! function_exists('currencyCodeByCountryId')) {
 if (! function_exists('logOrderActivity')) {
     function logOrderActivity($orderId, $message, $status)
     {
-        OrderActivity::create([
-            'order_id' => $orderId,
-            'message' => $message,
-            'status' => $status,
-            'date' => now(),
-        ]);
+        OrderActivity::updateOrCreate(
+            [
+                'order_id' => $orderId,
+                'status' => $status
+            ],
+            [
+                'message' => $message,
+                'status' => $status,
+                'date' => now(),
+            ]
+        );
     }
 }
 

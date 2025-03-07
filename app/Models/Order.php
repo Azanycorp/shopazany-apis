@@ -52,7 +52,7 @@ class Order extends Model
     public function products()
     {
         return $this->belongsToMany(Product::class, 'order_items')
-                    ->withPivot('product_quantity', 'price', 'sub_total');
+                    ->withPivot('product_quantity', 'price', 'sub_total', 'status');
     }
 
     // Deprecated method - Do not use
