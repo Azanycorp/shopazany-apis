@@ -198,6 +198,9 @@ class PaystackService
                     'status' => OrderStatus::PENDING,
                 ]);
 
+                $msg = "Your order has been placed successfully.";
+                logOrderActivity($order->id, $msg, OrderStatus::PENDING);
+
                 $orderedItems = [];
                 $product = null;
                 foreach ($items as $item) {

@@ -92,4 +92,9 @@ class Order extends Model
     {
         return $this->hasMany(Payment::class,  'payment_id');
     }
+
+    public function orderActivities(): HasMany
+    {
+        return $this->hasMany(OrderActivity::class, 'order_id');
+    }
 }
