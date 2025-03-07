@@ -420,6 +420,9 @@ class SellerService extends Controller
             'status' => $request->status
         ]);
 
+        $msg = getOrderStatusMessage($request->status);
+        logOrderActivity($order->id, $msg, $request->status);
+
         return $this->success(null, "Order updated successfully");
     }
 
