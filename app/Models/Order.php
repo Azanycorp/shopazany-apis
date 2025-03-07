@@ -14,8 +14,6 @@ class Order extends Model
 
     protected $fillable = [
         'user_id',
-        'seller_id',
-        'product_id',
         'payment_id',
         'product_quantity',
         'order_no',
@@ -40,6 +38,7 @@ class Order extends Model
         return $this->belongsTo(User::class, 'user_id')->where('type', 'customer');
     }
 
+    // Deprecated method - Do not use
     public function seller(): BelongsTo
     {
         return $this->belongsTo(User::class, 'seller_id')->where('type', 'seller');
