@@ -217,6 +217,7 @@ class PaystackService
                         'product_quantity' => $item['product_quantity'],
                         'price' => $convertedPrice,
                         'sub_total' => $convertedPrice * $item['product_quantity'],
+                        'status' => OrderStatus::PENDING,
                     ]);
 
                     $orderedItems[] = [
