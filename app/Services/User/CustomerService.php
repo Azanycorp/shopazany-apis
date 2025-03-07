@@ -5,6 +5,8 @@ namespace App\Services\User;
 use App\Enum\RedeemPointStatus;
 use App\Enum\UserType;
 use App\Http\Resources\AccountOverviewResource;
+use App\Http\Resources\CustomerOrderDetailResource;
+use App\Http\Resources\CustomerOrderResource;
 use App\Http\Resources\OrderDetailResource;
 use App\Http\Resources\OrderResource;
 use App\Http\Resources\SellerProductResource;
@@ -131,12 +133,12 @@ class CustomerService
             return $this->error(null, "User not found", 404);
         }
 
-        $orders = Order::with(['user', 'product.shopCountry'])
+        $orders = Order::with(['user', 'products.shopCountry'])
             ->where('user_id', $userId)
             ->orderBy('created_at', 'desc')
             ->paginate(25);
 
-        $data = OrderResource::collection($orders);
+        $data = CustomerOrderResource::collection($orders);
 
         return [
             'status' => 'true',
@@ -154,11 +156,18 @@ class CustomerService
 
     public function getOrderDetail($orderNo)
     {
-        $order = Order::with(['product', 'user'])
+        $order = Order::with([
+                'user.userShippingAddress',
+                'products.shopCountry'
+            ])
             ->where('order_no', $orderNo)
-            ->get();
+            ->first();
 
-        $data = OrderDetailResource::collection($order);
+        if (!$order) {
+            return $this->error("Order not found", 404);
+        }
+
+        $data = new CustomerOrderDetailResource($order);
 
         return $this->success($data, "Order detail");
     }

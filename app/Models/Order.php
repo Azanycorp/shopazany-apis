@@ -50,6 +50,13 @@ class Order extends Model
         return $this->belongsTo(Product::class, 'product_id');
     }
 
+    public function products()
+    {
+        return $this->belongsToMany(Product::class, 'order_items')
+                    ->withPivot('product_quantity', 'price', 'sub_total');
+    }
+
+    // Deprecated method - Do not use
     public static function saveOrder($user, $payment, $seller, $item, $orderNo, $address, $method, $status): self
     {
         $data = new self();
@@ -59,10 +66,10 @@ class Order extends Model
         $user = User::find($user->id);
 
         $data->user_id = $user->id;
-        $data->seller_id = $seller?->id;
-        $data->product_id = $item['product_id'] ?? $item['itemId'];
+        // $data->seller_id = $seller?->id;
+        // $data->product_id = $item['product_id'] ?? $item['itemId'];
         $data->payment_id = $payment->id;
-        $data->product_quantity = $item['product_quantity'] ?? $item['quantity'];
+        // $data->product_quantity = $item['product_quantity'] ?? $item['quantity'];
         $data->order_no = $orderNo;
         $data->shipping_address = $address;
         $data->order_date = now();
