@@ -402,7 +402,7 @@ class SellerService extends Controller
         return $this->success($data, "Order retrieved successfully");
     }
 
-    public function updateOrderStatus($userId, $id, $request)
+    public function updateOrderStatus($userId, $orderId, $request)
     {
         $currentUserId = Auth::id();
 
@@ -410,18 +410,30 @@ class SellerService extends Controller
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $order = Order::find($id);
+        $order = Order::find($orderId);
 
         if (!$order) {
             return $this->error(null, "Order not found", 404);
         }
 
-        $order->update([
-            'status' => $request->status
-        ]);
+        $sellerProducts = $order->products()
+            ->whereHas('user', function ($query) use ($currentUserId) {
+                $query->where('user_id', $currentUserId);
+            })->get();
+
+        if ($sellerProducts->isEmpty()) {
+            return $this->error(null, "No products found for this seller in the order.", 404);
+        }
+
+        foreach ($sellerProducts as $product) {
+            DB::table('order_product')
+                ->where('order_id', $orderId)
+                ->where('product_id', $product->id)
+                ->update(['status' => $request->status]);
+        }
 
         $msg = getOrderStatusMessage($request->status);
-        logOrderActivity($order->id, $msg, $request->status);
+        logOrderActivity($orderId, $msg, $request->status);
 
         return $this->success(null, "Order updated successfully");
     }
