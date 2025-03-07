@@ -63,6 +63,13 @@ class CustomerOrderDetailResource extends JsonResource
                 'state' => $this->user?->userShippingAddress()->first()?->state,
                 'zip' => $this->user?->userShippingAddress()->first()?->zip,
             ],
+            'activities' => $this->orderActivities->map(function ($activity) {
+                return [
+                    'message' => $activity->message,
+                    'status' => $activity->status,
+                    'date' => Carbon::parse($activity->date)->format('d M Y h:i A'),
+                ];
+            }),
             'order_date' => Carbon::parse($this->created_at)->format('d M Y'),
             'order_time' => Carbon::parse($this->created_at)->format('h:i A'),
             'payment_status' => strtolower($this->payment_status) === "success" ? "paid" : "not-paid",

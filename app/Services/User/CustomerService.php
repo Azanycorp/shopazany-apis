@@ -156,7 +156,8 @@ class CustomerService
     {
         $order = Order::with([
                 'user.userShippingAddress',
-                'products.shopCountry'
+                'products.shopCountry',
+                'orderActivities',
             ])
             ->where('order_no', $orderNo)
             ->first();

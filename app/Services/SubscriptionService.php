@@ -85,8 +85,8 @@ class SubscriptionService
         }
 
         $user = User::with(['userSubscriptions.subscriptionPlan'])
-        ->findOrFail($userId)
-        ->append('subscription_history');
+            ->findOrFail($userId)
+            ->append('subscription_history');
 
         $data = SubscriptionHistoryResource::collection($user->subscription_history);
         return $this->success($data, "Subscription histories");
