@@ -228,9 +228,9 @@ Route::middleware('validate.header')
                 // Orders Routes
                 Route::prefix('orders/{user_id}')->group(function (): void {
                     Route::get('/', 'getAllOrders');
+                    Route::get('/summary', 'getOrderSummary');
                     Route::get('/{id}', 'getOrderDetail');
                     Route::patch('/update-status/{id}', 'updateOrderStatus');
-                    Route::get('/summary', 'getOrderSummary');
                 });
             });
         });
