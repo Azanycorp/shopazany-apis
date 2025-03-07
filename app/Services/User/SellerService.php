@@ -342,15 +342,17 @@ class SellerService extends Controller
             OrderStatus::CANCELLED,
         ];
 
-        $orders = Order::with(['user', 'product.shopCountry'])
-            ->where('seller_id', $id)
+        $orders = Order::whereHas('products', function ($query) use ($id) {
+                $query->where('user_id', $id);
+            })
+            ->with(['user', 'products.shopCountry'])
             ->when($status, function ($query) use ($status, $validStatuses) {
                 if (!in_array($status, $validStatuses)) {
-                    abort(response()->json([
+                    return response()->json([
                         'status' => false,
-                        'mesage' => 'Invalid status',
+                        'message' => 'Invalid status',
                         'data' => null,
-                    ], 400));
+                    ], 400)->throwResponse();
                 }
                 return $query->where('status', $status);
             })
@@ -381,8 +383,13 @@ class SellerService extends Controller
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $order = Order::with(['user.userShippingAddress', 'product.shopCountry', 'products'])
-            ->where('seller_id', $userId)
+        $order = Order::whereHas('products', function ($query) use ($userId) {
+                $query->where('user_id', $userId);
+            })
+            ->with([
+                'user.userShippingAddress',
+                'products.shopCountry'
+            ])
             ->where('id', $id)
             ->first();
 

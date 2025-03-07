@@ -10,11 +10,11 @@ class PaymentDetailsService
     public static function paystackPayDetails($request): array
     {
         if($request->input('currency') === 'USD') {
-            return response()->json([
+            return [
                 'status' => false,
                 'message' => "Currrency not available at the moment",
                 'data' => null
-            ], 400);
+            ];
         }
 
         $user = User::findOrFail($request->input('user_id'));
@@ -25,7 +25,7 @@ class PaymentDetailsService
 
         if ($userShippingId === 0 && $request->input('shipping_address')) {
             $shippingAddress = $request->input('shipping_address');
-            $address = (object) [
+            $address = (object)[
                 'first_name' => $shippingAddress['first_name'] ?? '',
                 'last_name' => $shippingAddress['last_name'] ?? '',
                 'email' => $shippingAddress['email'] ?? '',
@@ -36,13 +36,12 @@ class PaymentDetailsService
                 'zip' => $shippingAddress['zip'] ?? '',
             ];
         } else {
-            $addr = $user->userShippingAddress()->where('id', $userShippingId)->first();
-            $address = $addr;
+            $address = $user->userShippingAddress()->where('id', $userShippingId)->first();
         }
 
         $callbackUrl = $request->input('payment_redirect_url');
         if (!filter_var($callbackUrl, FILTER_VALIDATE_URL)) {
-            return response()->json(['error' => 'Invalid callback URL'], 400);
+            return ['error' => 'Invalid callback URL'];
         }
 
         return [
@@ -64,11 +63,11 @@ class PaymentDetailsService
     public static function b2bPaystackPayDetails($request): array
     {
         if($request->input('currency') === 'USD') {
-            return response()->json([
+            return [
                 'status' => false,
                 'message' => "Currrency not available at the moment",
                 'data' => null
-            ], 400);
+            ];
         }
 
         User::findOrFail($request->input('user_id'));
@@ -76,7 +75,7 @@ class PaymentDetailsService
         $amount = $request->input('amount') * 100;
         $callbackUrl = $request->input('payment_redirect_url');
         if (!filter_var($callbackUrl, FILTER_VALIDATE_URL)) {
-            return response()->json(['error' => 'Invalid callback URL'], 400);
+            return ['error' => 'Invalid callback URL'];
         }
 
         return [
