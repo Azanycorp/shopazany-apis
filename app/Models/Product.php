@@ -81,9 +81,10 @@ class Product extends Model
         return $this->hasMany(Wishlist::class, 'product_id');
     }
 
-    public function orders(): HasMany
+    public function orders()
     {
-        return $this->hasMany(Order::class, 'product_id');
+        return $this->belongsToMany(Order::class, 'order_items')
+                    ->withPivot('product_quantity', 'price', 'sub_total');
     }
 
     public function size(): BelongsTo

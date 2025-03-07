@@ -6,7 +6,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class OrderDetailResource extends JsonResource
+class CustomerOrderDetailResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -16,13 +16,11 @@ class OrderDetailResource extends JsonResource
     public function toArray(Request $request): array
     {
         $user = $request->user();
-        $sellerProducts = $this->products->filter(function ($product) use ($user) {
-            return $product->user_id === $user->id;
-        });
         $userCurrency = $user?->default_currency ?? 'USD';
+
         $totalConvertedAmount = 0;
 
-        $products = $sellerProducts->map(function ($product) use ($userCurrency, &$totalConvertedAmount) {
+        $products = $this->products->map(function ($product) use ($userCurrency, &$totalConvertedAmount) {
             $productCurrency = optional($product->shopCountry)->currency ?? 'USD';
 
             $convertedSubTotal = currencyConvert(
