@@ -725,9 +725,6 @@ class BuyerService
             ->latest('id')
             ->get();
 
-        if ($wishes->isEmpty()) {
-            return $this->error(null, 'No record found to send', 404);
-        }
         $data = B2BWishListResource::collection($wishes);
         return $this->success($data, 'My Wish List');
     }
