@@ -7,7 +7,6 @@ use App\Enum\UserType;
 use App\Http\Resources\AccountOverviewResource;
 use App\Http\Resources\CustomerOrderDetailResource;
 use App\Http\Resources\CustomerOrderResource;
-use App\Http\Resources\OrderResource;
 use App\Http\Resources\SellerProductResource;
 use App\Http\Resources\WishlistResource;
 use App\Models\Country;
@@ -113,7 +112,7 @@ class CustomerService
             ->take(7)
             ->get();
 
-        $data = OrderResource::collection($orders);
+        $data = CustomerOrderResource::collection($orders);
 
         return $this->success($data, "Recent Orders");
     }
