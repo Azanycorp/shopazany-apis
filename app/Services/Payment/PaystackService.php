@@ -120,7 +120,7 @@ class PaystackService
                     'expired_at' => null,
                 ]);
 
-                SubscriptionService::creditAffiliate($referrer, $formattedAmount);
+                SubscriptionService::creditAffiliate($referrer, $formattedAmount, $user);
             });
         } catch (\Exception $e) {
             Log::error('Error in handleRecurringCharge: ' . $e->getMessage());
@@ -147,7 +147,7 @@ class PaystackService
                 $transaction_date = $paymentData['paid_at'];
                 $payStatus = $paymentData['status'];
 
-                $user = User::findOrFail($userId);
+                $user = User::with('wallet')->findOrFail($userId);
                 $address = $paymentData['metadata']['shipping_address'];
                 $userShippingId = $paymentData['metadata']['user_shipping_address_id'];
                 $orderNo = self::orderNo();
@@ -171,22 +171,50 @@ class PaystackService
                 ];
 
                 $payment = (new PaymentLogAction($data, $paymentData, $method, $status))->execute();
+                $totalAmount = 0;
 
-                $orderedItems = [];
                 foreach ($items as $item) {
                     $product = Product::with(['user.wallet', 'shopCountry'])
                         ->findOrFail($item['product_id']);
 
-                    Order::saveOrder(
-                        $user,
-                        $payment,
-                        $product->user,
-                        $item,
-                        $orderNo,
-                        $address,
-                        $method,
-                        $payStatus,
+                    $convertedPrice = currencyConvert(
+                        $user->default_currency,
+                        $item['total_amount'],
+                        $product->shopCountry?->currency
                     );
+                    $totalAmount += $convertedPrice * $item['product_quantity'];
+                }
+
+                $order = Order::create([
+                    'user_id' => $user->id,
+                    'payment_id' => $payment->id,
+                    'order_no' => $orderNo,
+                    'total_amount' => $totalAmount,
+                    'payment_method' => $method,
+                    'payment_status' => $payStatus,
+                    'order_date' => now(),
+                    'shipping_address' => $address,
+                    'country_id' => $user->country ?? 160,
+                    'status' => OrderStatus::PENDING,
+                ]);
+
+                $orderedItems = [];
+                $product = null;
+                foreach ($items as $item) {
+                    $product = Product::with(['user.wallet', 'shopCountry'])
+                        ->findOrFail($item['product_id']);
+
+                    $convertedPrice = currencyConvert(
+                        $user->default_currency,
+                        $item['total_amount'],
+                        $product->shopCountry?->currency
+                    );
+
+                    $order->products()->attach($product->id, [
+                        'product_quantity' => $item['product_quantity'],
+                        'price' => $convertedPrice,
+                        'sub_total' => $convertedPrice * $item['product_quantity'],
+                    ]);
 
                     $orderedItems[] = [
                         'product_name' => $product->name,
@@ -215,27 +243,32 @@ class PaystackService
                 }
 
                 if ($userShippingId === 0) {
-                    UserShippingAddress::create([
-                        'user_id' => $userId,
-                        'first_name' => $address['first_name'],
-                        'last_name' => $address['last_name'],
-                        'email' => $address['email'],
-                        'phone' => $address['phone'],
-                        'street_address' => $address['street_address'],
-                        'state' => $address['state'],
-                        'city' => $address['city'],
-                        'zip' => $address['zip'],
-                    ]);
+                    UserShippingAddress::updateOrCreate(
+                        [
+                            'user_id' => $userId,
+                            'street_address' => $address['street_address'],
+                        ],
+                        [
+                            'first_name' => $address['first_name'],
+                            'last_name' => $address['last_name'],
+                            'email' => $address['email'],
+                            'phone' => $address['phone'],
+                            'state' => $address['state'],
+                            'city' => $address['city'],
+                            'zip' => $address['zip'],
+                        ]
+                    );
                 }
 
                 if ($user->type === UserType::CUSTOMER) {
+                    Log::info("Rewarding user for purchase " . $user);
                     reward_user($user, 'purchase_item', 'completed');
                 }
 
                 Cart::where('user_id', $userId)->delete();
 
                 self::sendOrderConfirmationEmail($user, $orderedItems, $orderNo, $formattedAmount);
-                self::sendSellerOrderEmail($product->user, $orderedItems, $orderNo, $formattedAmount);
+                self::sendSellerOrderEmail($product?->user, $orderedItems, $orderNo, $formattedAmount);
 
                 (new UserLogAction(
                     request(),
@@ -331,15 +364,20 @@ class PaystackService
                     'status' => OrderStatus::PENDING,
                 ]);
 
-                $product->quantity -= $rfq->product_quantity;
+                $product->availability_quantity -= $rfq->product_quantity;
                 $product->sold += $rfq->product_quantity;
+                $seller_amount = currencyConvert(
+                    $user->default_currency,
+                    $amount,
+                    $product->shopCountry->currency,
+                );
                 $product->save();
 
                 $config = Configuration::first();
 
                 if ($config) {
                     $sellerPerc = $config->seller_perc ?? 0;
-                    $credit = ($sellerPerc / 100) * $amount;
+                    $credit = ($sellerPerc / 100) * $seller_amount;
 
                     $wallet = UserWallet::firstOrNew(['seller_id' => $seller->id]);
                     $wallet->master_wallet = ($wallet->master_wallet ?? 0) + $credit;
@@ -351,10 +389,24 @@ class PaystackService
                     'status' => OrderStatus::COMPLETED
                 ]);
 
+                $orderedItems = [
+                    'product_name' => $product->name,
+                    'image' => $product->front_image,
+                    'quantity' => $rfq->product_quantity,
+                    'price' => $rfq->total_amount,
+                    'buyer_name' => $user->first_name . ' ' . $user->last_name,
+                    'order_number' => $orderNo,
+                    'currency' => $user->default_currency,
+                ];
+
+                $orderItemData = [
+                    'orderedItems' => $orderedItems
+                ];
+
                 $type = MailingEnum::ORDER_EMAIL;
                 $subject = "B2B Order Confirmation";
-                $mail_class = "App\Mail\B2BOrderEmail";
-                mailSend($type, $user, $subject, $mail_class, 'orderedItems');
+                $mail_class = B2BOrderEmail::class;
+                mailSend($type, $user, $subject, $mail_class, $orderItemData);
 
                 (new UserLogAction(
                     request(),

@@ -5,7 +5,7 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class OrderResource extends JsonResource
+class CustomerOrderResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -16,11 +16,7 @@ class OrderResource extends JsonResource
     {
         $user = $request->user();
 
-        $sellerProducts = $this->products->filter(function ($product) use ($user) {
-            return $product->user_id === $user->id;
-        });
-
-        $totalAmountForSeller = $sellerProducts->sum(function ($product) use ($user) {
+        $totalAmountForSeller = $this->products->sum(function ($product) use ($user) {
             return currencyConvert(
                 $product->shopCountry->currency ?? 'USD',
                 $product->pivot->sub_total,

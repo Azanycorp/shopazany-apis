@@ -3,9 +3,11 @@
 namespace App\Services\Admin;
 
 use App\Models\Admin;
+use App\Trait\SignUp;
 use App\Enum\PlanType;
 use App\Models\AboutUs;
 use App\Enum\PlanStatus;
+use App\Enum\UserStatus;
 use App\Mail\AdminUserMail;
 use App\Models\ContactInfo;
 use App\Trait\HttpResponse;
@@ -19,7 +21,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\App;
 use App\Http\Resources\AdminUserResource;
 use App\Http\Resources\SubscriptionPlanResource;
-use App\Trait\SignUp;
 
 class SettingsService
 {
@@ -303,8 +304,9 @@ class SettingsService
                 'last_name' => $request->last_name,
                 'email' => $request->email,
                 'phone_number' => $request->phone_number,
+                'type' => $request->type,
                 'password' => bcrypt($password),
-                'status' => 'active'
+                'status' => UserStatus::ACTIVE
             ]);
             $admin->permissions()->sync($request->permissions);
             DB::commit();

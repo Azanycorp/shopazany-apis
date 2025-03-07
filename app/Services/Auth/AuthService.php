@@ -111,8 +111,11 @@ class AuthService extends Controller
 
             $type = MailingEnum::RESEND_CODE;
             $subject = "Resend code";
-            $mail_class = "App\Mail\SignUpVerifyMail";
-            mailSend($type, $user, $subject, $mail_class, 'user');
+            $mail_class = SignUpVerifyMail::class;
+            $data = [
+                'user' => $user
+            ];
+            mailSend($type, $user, $subject, $mail_class, $data);
 
             $description = "User with email address {$request->email} has requested a code to be resent.";
             $action = UserLog::CODE_RESENT;
@@ -215,8 +218,11 @@ class AuthService extends Controller
 
         $type = MailingEnum::EMAIL_VERIFICATION;
         $subject = "Email verification";
-        $mail_class = "App\Mail\UserWelcomeMail";
-        mailSend($type, $user, $subject, $mail_class, 'user');
+        $mail_class = UserWelcomeMail::class;
+        $data = [
+            'user' => $user
+        ];
+        mailSend($type, $user, $subject, $mail_class, $data);
 
         $user->tokens()->delete();
         $token = $user->createToken('API Token of '. $user->email);
@@ -426,8 +432,11 @@ class AuthService extends Controller
                 // Send email to user to verify account
                 $type = MailingEnum::SIGN_UP_OTP;
                 $subject = "Verify Account";
-                $mail_class = "App\Mail\SignUpVerifyMail";
-                mailSend($type, $user, $subject, $mail_class, 'user');
+                $mail_class = SignUpVerifyMail::class;
+                $data = [
+                    'user' => $user
+                ];
+                mailSend($type, $user, $subject, $mail_class, $data);
             }
 
         } else {

@@ -90,7 +90,10 @@ class AuthService
         $type = MailingEnum::EMAIL_VERIFICATION;
         $subject = "Email verification";
         $mail_class = "App\Mail\UserWelcomeMail";
-        mailSend($type, $user, $subject, $mail_class, 'user');
+        $data = [
+            'user' => $user,
+        ];
+        mailSend($type, $user, $subject, $mail_class, $data);
 
         $description = "User with email address {$request->email} verified OTP";
         $action = UserLog::CREATED;
@@ -124,7 +127,10 @@ class AuthService
             $type = MailingEnum::RESEND_CODE;
             $subject = "Resend code";
             $mail_class = "App\Mail\SignUpVerifyMail";
-            mailSend($type, $user, $subject, $mail_class, 'user');
+            $data = [
+                'user' => $user,
+            ];
+            mailSend($type, $user, $subject, $mail_class, $data);
 
             $description = "User with email address {$request->email} has requested a code to be resent.";
             $action = UserLog::CODE_RESENT;

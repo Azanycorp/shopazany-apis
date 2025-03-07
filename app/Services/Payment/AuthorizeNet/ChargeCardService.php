@@ -30,6 +30,7 @@ use net\authorize\api\contract\v1 as AnetAPI;
 use net\authorize\api\controller as AnetController;
 use App\Http\Resources\B2BBuyerShippingAddressResource;
 use App\Models\UserShippingAddress;
+use App\Models\Wallet;
 
 class ChargeCardService implements PaymentStrategy
 {
@@ -175,7 +176,11 @@ class ChargeCardService implements PaymentStrategy
             'order_number' => $orderNo,
         ];
 
-        $product->quantity -= $rfq->product_quantity;
+        $orderItemData = [
+            'orderedItems' => $orderedItems
+        ];
+
+        $product->availability_quantity -= $rfq->product_quantity;
         $product->sold += $rfq->product_quantity;
         $product->save();
 
@@ -197,8 +202,8 @@ class ChargeCardService implements PaymentStrategy
 
         $type = MailingEnum::ORDER_EMAIL;
         $subject = "B2B Order Confirmation";
-        $mail_class = "App\Mail\B2BOrderEmail";
-        mailSend($type, $user, $subject, $mail_class, 'orderedItems');
+        $mail_class = B2BOrderEmail::class;
+        mailSend($type, $user, $subject, $mail_class, $orderItemData);
 
         (new UserLogAction(
             request(),
@@ -326,7 +331,6 @@ class ChargeCardService implements PaymentStrategy
     private function handleSuccessResponse($response, $tresponse, $user, array $paymentDetails, $orderNo, $payment)
     {
         $amount = $paymentDetails['amount'];
-        $centerId = $paymentDetails['centre_id'];
         $data = (object)[
             'user_id' => $user->id,
             'first_name' => $user->first_name,
@@ -346,33 +350,85 @@ class ChargeCardService implements PaymentStrategy
         ];
         $pay = (new PaymentLogAction($data, $payment, 'authorizenet', 'success'))->execute();
 
+        $totalAmount = 0;
+
+        foreach ($paymentDetails['lineItems'] as $item) {
+            $product = Product::with('user', 'shopCountry')->findOrFail($item['itemId']);
+
+            $convertedPrice = currencyConvert(
+                $user->default_currency,
+                $item['unitPrice'],
+                $product->shopCountry?->currency
+            );
+            $totalAmount += $convertedPrice * $item['quantity'];
+        }
+
+        $order = Order::create([
+            'user_id' => $user->id,
+            'payment_id' => $pay->id,
+            'order_no' => $orderNo,
+            'total_amount' => $totalAmount,
+            'payment_method' => "authorizenet",
+            'payment_status' => "success",
+            'order_date' => now(),
+            'shipping_address' => $paymentDetails['billTo']['address'],
+            'country_id' => $user->country ?? 160,
+            'status' => "pending",
+        ]);
+
         $orderedItems = [];
         $product = null;
 
         foreach ($paymentDetails['lineItems'] as $item) {
             try {
-                $product = Product::with('user')->findOrFail($item['itemId']);
+                $product = Product::with(['user', 'shopCountry'])->findOrFail($item['itemId']);
 
-                Order::saveOrder(
-                    $user,
-                    $pay,
-                    $product->user,
-                    $item,
-                    $orderNo,
-                    $paymentDetails['billTo']['address'],
-                    "authorizenet",
-                    "success",
-                    $centerId ?? null,
+                $convertedPrice = currencyConvert(
+                    $user->default_currency,
+                    $item['unitPrice'],
+                    $product->shopCountry?->currency
                 );
+
+                $order->products()->attach($product->id, [
+                    'product_quantity' => $item['quantity'],
+                    'price' => $convertedPrice,
+                    'sub_total' => $convertedPrice * $item['quantity'],
+                ]);
 
                 $orderedItems[] = [
                     'product_name' => $product->name,
                     'image' => $product->image,
                     'quantity' => $item['quantity'],
-                    'price' => $item['unitPrice'],
+                    'price' => $convertedPrice,
                 ];
 
                 $product->decrement('current_stock_quantity', $item['quantity']);
+
+                if ($product->user) {
+                    $wallet = Wallet::firstOrCreate(
+                        ['user_id' => $product->user->id],
+                        ['balance' => 0]
+                    );
+
+                    $amount = currencyConvert(
+                        $user->default_currency,
+                        $item['unitPrice'],
+                        $product->shopCountry->currency,
+                    );
+
+                    $wallet->increment('balance', $amount);
+                }
+
+                // Order::saveOrder(
+                //     $user,
+                //     $pay,
+                //     $product->user,
+                //     $item,
+                //     $orderNo,
+                //     $paymentDetails['billTo']['address'],
+                //     "authorizenet",
+                //     "success",
+                // );
             } catch (\Exception $e) {
                 (new UserLogAction(
                     request(),

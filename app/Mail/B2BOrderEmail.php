@@ -21,14 +21,8 @@ class B2BOrderEmail extends Mailable
         $this->orderedItems = $orderedItems;
     }
 
-    /**
-     * Get the message envelope.
-     */
 
 
-    /**
-     * Get the message content definition.
-     */
     public function build()
     {
         return $this->subject('Order Confirmation Mail from' . config('app.name'))
@@ -39,7 +33,6 @@ class B2BOrderEmail extends Mailable
                 ]
             );
     }
-
     /**
      * Get the attachments for the message.
      *

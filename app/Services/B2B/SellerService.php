@@ -22,7 +22,9 @@ use App\Models\B2bOrderRating;
 use Illuminate\Support\Carbon;
 use App\Models\B2bOrderFeedback;
 use App\Imports\B2BProductImport;
+use App\Mail\B2BSHippedOrderMail;
 use Illuminate\Support\Facades\DB;
+use App\Mail\B2BDeliveredOrderMail;
 use App\Models\B2bWithdrawalMethod;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -280,7 +282,9 @@ class SellerService extends Controller
         if ($currentUserId != $user_id) {
             return $this->error(null, "Unauthorized action.", 401);
         }
-
+        if ($currentUserId != $user_id) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
         $prod = $this->b2bProductRepository->find($product_id);
         $data = new B2BProductResource($prod);
 
@@ -597,8 +601,8 @@ class SellerService extends Controller
         $endDate = now(); // Current date and time
 
         $currentUserId = userAuthId();
-        $totalSales =  Rfq::where('seller_id', $currentUserId)
-            ->where('status', 'delivered')
+        $totalSales =  B2bOrder::where('seller_id', $currentUserId)
+            ->where('status', OrderStatus::DELIVERED)
             ->sum('total_amount');
 
         $payouts =  Payout::where('seller_id', $currentUserId)->get();
@@ -606,21 +610,19 @@ class SellerService extends Controller
         //payouts this month
         $monthlyPayout =  Payout::where([
             'seller_id' => $currentUserId,
-            'status' => 'paid'
+            'status' => OrderStatus::PAID
         ])->whereBetween('created_at', [$startDate, $endDate])->sum('amount');
         //order this month
         $monthlyOrder =  Rfq::where([
             'seller_id' => $currentUserId,
-            'status' => 'delivered'
+            'status' => OrderStatus::DELIVERED
         ])->whereBetween('created_at', [$startDate, $endDate])->sum('total_amount');
 
         $data = (object) [
             'total_sales_alltime' => $totalSales,
             'sales_this_month' => $monthlyOrder,
-            'total_payout' => $payouts->where('status', 'paid')->sum('amount'),
-            'payout_this_month' => $monthlyPayout,
-            'total_category' => 0,
-            'total_brand' => 0,
+            'total_payout' => $payouts->where('status',OrderStatus::PAID)->sum('amount'),
+            'payout_this_month' => $monthlyPayout
         ];
         return $this->success($data, "Earning details");
     }
@@ -646,7 +648,7 @@ class SellerService extends Controller
             ->latest('id')
             ->get();
 
-        $orders = B2bOrder::when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
+        $orders = B2bOrder::where('seller_id', userAuthId())->when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
             $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
                 $subQuery->where('seller_id', userAuthId())
                     ->where('order_no', 'LIKE', '%' . $searchQuery . '%');
@@ -677,8 +679,15 @@ class SellerService extends Controller
 
     public function markShipped($data)
     {
-        $order = B2bOrder::findOrFail($data->order_id);
-        $user = User::findOrFail($order->buyer_id);
+        $order = B2bOrder::find($data->order_id);
+        if (!$order) {
+            return $this->error(null, 'order not found');
+        }
+        $user = User::find($order->buyer_id);
+        if (!$user) {
+            return $this->error(null, 'Buyer not found');
+        }
+
         $order->update([
             'status' => OrderStatus::SHIPPED,
             'shipped_date' => now()->toDateString(),
@@ -691,8 +700,8 @@ class SellerService extends Controller
         ];
         $type = MailingEnum::ORDER_EMAIL;
         $subject = "B2B Order Shipped Confirmation";
-        $mail_class = "App\Mail\B2BSHippedOrderMail";
-        mailSend($type, $user, $subject, $mail_class, 'orderedItems');
+        $mail_class = B2BSHippedOrderMail::class;
+        mailSend($type, $user, $subject, $mail_class, $orderedItems);
 
         return $this->success($order, 'order Shipped successfully');
     }
@@ -739,8 +748,8 @@ class SellerService extends Controller
         ];
         $type = MailingEnum::ORDER_EMAIL;
         $subject = "B2B Order Delivery Confirmation";
-        $mail_class = "App\Mail\B2BDeliveredOrderMail";
-        mailSend($type, $user, $subject, $mail_class, 'orderedItems');
+        $mail_class = B2BDeliveredOrderMail::class;
+        mailSend($type, $user, $subject, $mail_class, $orderedItems);
         return $this->success($order, 'Order marked delivered successfully');
     }
 
@@ -800,8 +809,8 @@ class SellerService extends Controller
 
             $type = MailingEnum::ORDER_EMAIL;
             $subject = "B2B Order Confirmation";
-            $mail_class = "App\Mail\B2BOrderEmail";
-            mailSend($type, $buyer, $subject, $mail_class, 'orderedItems');
+            $mail_class = B2BOrderEmail::class;
+            mailSend($type, $buyer, $subject, $mail_class, $orderedItems);
 
             return $this->success($order, 'Payment Confirmed successfully');
         } catch (\Exception $e) {

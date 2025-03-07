@@ -154,7 +154,7 @@ Route::middleware('validate.header')
 
                 // Shipping address
                 Route::prefix('shipping-address')->group(function (): void {
-                    Route::get('/', 'allShippingAddress')->middleware('cacheResponse:300');
+                    Route::get('/', 'allShippingAddress');
                     Route::post('/add', 'addShippingAddress');
                     Route::get('/details/{id}', 'getShippingAddress')->middleware('cacheResponse:300');
                     Route::post('/update/{id}', 'updateShippingAddress');

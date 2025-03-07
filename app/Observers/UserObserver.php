@@ -22,7 +22,10 @@ class UserObserver implements ShouldHandleEventsAfterCommit
         $type = MailingEnum::SIGN_UP_OTP;
         $subject = "Verify Account";
         $mail_class = SignUpVerifyMail::class;
-        mailSend($type, $user, $subject, $mail_class, 'user');
+        $data = [
+            'user' => $user
+        ];
+        mailSend($type, $user, $subject, $mail_class, $data);
 
         if (in_array($user->type, [UserType::CUSTOMER, UserType::SELLER])) {
             reward_user($user, 'create_account', 'completed');

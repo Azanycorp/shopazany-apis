@@ -342,15 +342,17 @@ class SellerService extends Controller
             OrderStatus::CANCELLED,
         ];
 
-        $orders = Order::with(['user', 'product.shopCountry'])
-            ->where('seller_id', $id)
+        $orders = Order::whereHas('products', function ($query) use ($id) {
+                $query->where('user_id', $id);
+            })
+            ->with(['user', 'products.shopCountry'])
             ->when($status, function ($query) use ($status, $validStatuses) {
                 if (!in_array($status, $validStatuses)) {
-                    abort(response()->json([
+                    return response()->json([
                         'status' => false,
-                        'mesage' => 'Invalid status',
+                        'message' => 'Invalid status',
                         'data' => null,
-                    ], 400));
+                    ], 400)->throwResponse();
                 }
                 return $query->where('status', $status);
             })
@@ -381,8 +383,13 @@ class SellerService extends Controller
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $order = Order::with(['user.userShippingAddress', 'product.shopCountry'])
-            ->where('seller_id', $userId)
+        $order = Order::whereHas('products', function ($query) use ($userId) {
+                $query->where('user_id', $userId);
+            })
+            ->with([
+                'user.userShippingAddress',
+                'products.shopCountry'
+            ])
             ->where('id', $id)
             ->first();
 
@@ -471,9 +478,13 @@ class SellerService extends Controller
         }
 
         $totalProducts = Product::where('user_id', $userId)->count();
-        $totalOrders = Order::where('seller_id', $userId)->count();
+        $totalOrders = Order::whereHas('products', function ($query) use ($userId) {
+                $query->where('user_id', $userId);
+            })->count();
 
-        $orderCounts = Order::where('seller_id', $userId)
+        $orderCounts = Order::whereHas('products', function ($query) use ($userId) {
+                $query->where('user_id', $userId);
+            })
             ->selectRaw('
                 SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as pending_count,
                 SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as confirmed_count,
@@ -521,8 +532,10 @@ class SellerService extends Controller
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $orders = Order::with(['user', 'product.shopCountry'])
-            ->where('seller_id', $userId)
+        $orders = Order::whereHas('products', function ($query) use ($userId) {
+                $query->where('user_id', $userId);
+            })
+            ->with(['user', 'products.shopCountry'])
             ->orderBy('created_at', 'desc')
             ->take(8)
             ->get();
@@ -540,13 +553,14 @@ class SellerService extends Controller
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $topSellingProducts = DB::table('orders')
-        ->select('product_id', DB::raw('SUM(product_quantity) as total_quantity'))
-        ->where('seller_id', $userId)
-        ->groupBy('product_id')
-        ->orderBy('total_quantity', 'desc')
-        ->limit(8)
-        ->get();
+        $topSellingProducts = DB::table('order_items')
+            ->join('products', 'order_items.product_id', '=', 'products.id')
+            ->where('products.user_id', $userId)
+            ->select('order_items.product_id', DB::raw('SUM(order_items.product_quantity) as total_quantity'))
+            ->groupBy('order_items.product_id')
+            ->orderBy('total_quantity', 'desc')
+            ->limit(8)
+            ->get();
 
         $productIds = $topSellingProducts->pluck('product_id');
         $products = Product::whereIn('id', $productIds)->get();
@@ -564,5 +578,6 @@ class SellerService extends Controller
 
         return $this->success($data, "Top Selling Products");
     }
+
 }
 

@@ -205,12 +205,13 @@
 
         <div class="message">
             <h2>We Appreciate Your Purchase!</h2>
-            <p>Hello {{ $orderedItems['buyer_name'] }}, We're Getting Your Order Ready For Dispatch.<br>We'll Notify You
+            <p>Hello {{ $orderedItems['buyer_name'] }}, We're Getting Your Order
+                <b>{{ $orderedItems['order_number'] }}</b> Ready For Dispatch.<br>We'll Notify You
                 As Soon As It's On Its Way.</p>
             <p>— Azany Team</p>
         </div>
 
-        <a href="#" class="btn">Track your Purchase</a>
+        <a href="#" class="btn" style="color: #f4f4f4">Track your Purchase</a>
 
         <div class="purchase-details">
             <h2>Purchase Details</h2>
@@ -218,28 +219,71 @@
                 <img src="{{ $orderedItems['image'] }}" alt="{{ $orderedItems['product_name'] }}">
                 <div class="product-info">
                     <h3>{{ $orderedItems['product_name'] }}</h3>
-                    <p class="price">${{ number_format($orderedItems['price']) }}</p>
-                    {{-- <p>COLOUR: PURPLE</p>
-                    <p>SIZE: XL</p> --}}
+                    <p class="price">
+                        @if ($orderedItems['currency'] === 'USD')
+                            $
+                        @elseif($orderedItems['currency'] === 'NGN')
+                            ₦
+                        @else
+                            {{ $orderedItems['currency'] }}
+                        @endif
+                        {{ number_format($orderedItems['price']) }}
+                    </p>
                     <p>QTY: {{ $orderedItems['quantity'] }}</p>
                 </div>
             </div>
 
             <div class="total">
-                <span>Subtotal</span>
-                <span>${{ number_format($orderedItems['price']) }}</span>
+                <span>Subtotal</span>&nbsp;
+                <span>
+                    @if ($orderedItems['currency'] === 'USD')
+                        $
+                    @elseif($orderedItems['currency'] === 'NGN')
+                        ₦
+                    @else
+                        {{ $orderedItems['currency'] }}
+                    @endif
+                    {{ number_format($orderedItems['price']) }}
+                </span>
             </div>
             <div class="total">
-                <span>Tax</span>
-                <span>$00.00</span>
+                <span>Tax</span>&nbsp;
+                <span>
+                    @if ($orderedItems['currency'] === 'USD')
+                        $
+                    @elseif($orderedItems['currency'] === 'NGN')
+                        ₦
+                    @else
+                        {{ $orderedItems['currency'] }}
+                    @endif
+                    00.00
+                </span>
             </div>
             <div class="total">
-                <span>Shipping</span>
-                <span>$00.00</span>
+                <span>Shipping</span>&nbsp;
+                <span>
+                    @if ($orderedItems['currency'] === 'USD')
+                        $
+                    @elseif($orderedItems['currency'] === 'NGN')
+                        ₦
+                    @else
+                        {{ $orderedItems['currency'] }}
+                    @endif
+                    00.00
+                </span>
             </div>
             <div class="total">
-                <span>Total</span>
-                <span>${{ number_format($orderedItems['price']) }}</span>
+                <span>Total</span>&nbsp;
+                <span>
+                    @if ($orderedItems['currency'] === 'USD')
+                        $
+                    @elseif($orderedItems['currency'] === 'NGN')
+                        ₦
+                    @else
+                        {{ $orderedItems['currency'] }}
+                    @endif
+                    {{ number_format($orderedItems['price']) }}
+                </span>
             </div>
         </div>
 
