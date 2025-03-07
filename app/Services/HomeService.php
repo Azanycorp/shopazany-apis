@@ -231,8 +231,12 @@ class HomeService
     {
         $countryId = request()->input('country_id');
 
-        $topSellersQuery = User::select(DB::raw('users.id as user_id, users.uuid, CONCAT(users.first_name, " ", users.last_name) as name, users.image as image, COUNT(orders.id) as total_sales'))
-            ->join('orders', 'users.id', '=', 'orders.seller_id')
+        $topSellersQuery = User::select(
+                DB::raw('users.id as user_id, users.uuid, CONCAT(users.first_name, " ", users.last_name) as name, users.image as image, COUNT(order_items.id) as total_sales')
+            )
+            ->join('products', 'users.id', '=', 'products.user_id')
+            ->join('order_items', 'products.id', '=', 'order_items.product_id')
+            ->join('orders', 'order_items.order_id', '=', 'orders.id')
             ->where('orders.status', OrderStatus::DELIVERED)
             ->groupBy('users.id', 'users.uuid', 'users.first_name', 'users.last_name', 'users.image')
             ->orderByDesc('total_sales');
