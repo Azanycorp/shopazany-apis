@@ -348,14 +348,14 @@ class BuyerService
 
     public function categoryBySlug($slug)
     {
-        $category = B2bProductCategory::with('products')
+        $category = B2bProductCategory::with(['products' => function ($query): void {
+            $query->where('status', ProductStatus::ACTIVE);
+        }])
             ->select('id', 'name', 'slug', 'image')
             ->where('slug', $slug)
             ->firstOrFail();
 
-        $products = $category->products->where('status', ProductStatus::ACTIVE);
-
-        return $this->success($products, 'Products by category');
+        return $this->success($category, 'Products by category');
     }
 
     public function getProductDetail($slug)

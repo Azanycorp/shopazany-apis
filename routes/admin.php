@@ -222,56 +222,56 @@ Route::middleware('validate.header')
             Route::resource('settings/faq', FaqController::class);
 
             Route::get('/generate/users/link', [ApiController::class, 'referralGenerate']);
+            //super admin route
+            // Affiliate
+            Route::prefix('affiliate')->controller(AdminAffiliateController::class)->group(function () {
+                Route::get('/overview', 'overview')->middleware('cacheResponse:600');
+                Route::get('/users', 'allUsers')->middleware('cacheResponse:900');
+                Route::get('/user/{id}', 'userDetail');
+                Route::patch('/suspend/{id}', 'suspend');
+                Route::post('/reset-password', 'resetPassword');
+            });
 
-            //Shipping Agency
-            Route::prefix('shipping-management')->controller(B2BAdminController::class)->group(function (): void {
+            Route::controller(AdminController::class)->group(function () {
+                //Admin users
+                Route::prefix('admin-users')->group(function () {
+                    Route::get('/', 'adminUsers')->middleware('cacheResponse:300');
+                    Route::post('/add', 'addAdmin');
+                    Route::get('/details/{id}', 'viewAdminUser');
+                    Route::post('/update/{id}', 'editAdminUser');
+                    Route::post('/revoke-access/{id}', 'revokeAccess');
+                    Route::post('/verify-password', 'verifyPassword');
+                    Route::delete('/delete-account/{id}', 'removeAdmin');
+                });
+
+                //delivery (collation centers and hubs)
+                Route::get('/delivery-overview', 'deliveryOverview');
+                
+                Route::prefix('collation-centre')->group(function () {
+                    Route::get('/', 'allCollationCentres');
+                    Route::post('/add', 'addCollationCentre');
+                    Route::get('/details/{id}', 'viewCollationCentre');
+                    Route::patch('/update/{id}', 'editCollationCentre');
+                    Route::delete('/delete/{id}', 'deleteCollationCentre');
+
+                    Route::prefix('hubs')->group(function () {
+                        Route::get('/', 'allCollationCentreHubs');
+                        Route::post('/add', 'addHub');
+                        Route::get('/details/{id}', 'viewHub');
+                        Route::patch('/update/{id}', 'editHub');
+                        Route::delete('/delete/{id}', 'deleteHub');
+                    });
+                });
+
+                //Shipping Agency
+                Route::prefix('shipping-management')->group(function (): void {
                     Route::get('/', 'shippingAgents')->middleware('cacheResponse:300');
                     Route::post('/add', 'addShippingAgent');
                     Route::get('/details/{id}', 'viewShippingAgent')->middleware('cacheResponse:300');
                     Route::post('/update/{id}', 'editShippingAgent');
                     Route::delete('/delete/{id}', 'deleteShippingAgent');
                 });
-
-                //super admin route
-                // Affiliate
-                Route::prefix('affiliate')->controller(AdminAffiliateController::class)->group(function () {
-                        Route::get('/overview', 'overview')->middleware('cacheResponse:600');
-                        Route::get('/users', 'allUsers')->middleware('cacheResponse:900');
-                        Route::get('/user/{id}', 'userDetail');
-                        Route::patch('/suspend/{id}', 'suspend');
-                        Route::post('/reset-password', 'resetPassword');
-                });
-
-                Route::controller(AdminController::class)->group(function () {
-                    //Admin users
-                    Route::prefix('admin-users')->group(function () {
-                        Route::get('/', 'adminUsers')->middleware('cacheResponse:300');
-                        Route::post('/add', 'addAdmin');
-                        Route::get('/details/{id}', 'viewAdminUser');
-                        Route::post('/update/{id}', 'editAdminUser');
-                        Route::post('/revoke-access/{id}', 'revokeAccess');
-                        Route::post('/verify-password', 'verifyPassword');
-                        Route::delete('/delete-account/{id}', 'removeAdmin');
-                    });
-
-                    //delivery (collation centers and hubs)
-                    Route::get('/delivery-overview', 'deliveryOverview');
-                    Route::prefix('collation-centre')->group(function () {
-                            Route::get('/', 'allCollationCentres');
-                            Route::post('/add', 'addCollationCentre');
-                            Route::get('/details/{id}', 'viewCollationCentre');
-                            Route::patch('/update/{id}', 'editCollationCentre');
-                            Route::delete('/delete/{id}', 'deleteCollationCentre');
-
-                            Route::prefix('hubs')->group(function () {
-                                    Route::get('/', 'allCollationCentreHubs');
-                                    Route::post('/add', 'addHub');
-                                    Route::get('/details/{id}', 'viewHub');
-                                    Route::patch('/update/{id}', 'editHub');
-                                    Route::delete('/delete/{id}', 'deleteHub');
-                            });
-                    });
-                });
+            });
 
             //b2b admin
             Route::prefix('b2b')->group(function () {

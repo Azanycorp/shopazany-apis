@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
 use App\Http\Requests\Admin\HubRequest;
 use App\Http\Requests\AdminUserRequest;
+use App\Http\Requests\ShippingAgentRequest;
 use App\Http\Requests\Admin\CollationCentreRequest;
 
 class AdminController extends Controller
@@ -116,4 +117,36 @@ class AdminController extends Controller
         abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
         return $this->superAdminService->removeAdmin($id);
     }
+
+
+    //ShippingAgents section
+    public function shippingAgents()
+    {
+        return $this->superAdminService->shippingAgents();
+    }
+
+    public function addShippingAgent(ShippingAgentRequest $request)
+    {
+        return $this->superAdminService->addShippingAgent($request);
+    }
+    public function getCountryList()
+    {
+        return $this->superAdminService->getCountryList();
+    }
+
+    public function viewShippingAgent($id)
+    {
+        return $this->superAdminService->viewShippingAgent($id);
+    }
+
+    public function editShippingAgent($id, ShippingAgentRequest $request)
+    {
+        return $this->superAdminService->editShippingAgent($id, $request);
+    }
+
+    public function deleteShippingAgent($id)
+    {
+        return $this->superAdminService->deleteShippingAgent($id);
+    }
+
 }
