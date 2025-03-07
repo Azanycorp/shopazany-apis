@@ -7,7 +7,6 @@ use App\Enum\UserType;
 use App\Http\Resources\AccountOverviewResource;
 use App\Http\Resources\CustomerOrderDetailResource;
 use App\Http\Resources\CustomerOrderResource;
-use App\Http\Resources\OrderDetailResource;
 use App\Http\Resources\OrderResource;
 use App\Http\Resources\SellerProductResource;
 use App\Http\Resources\WishlistResource;
@@ -108,7 +107,7 @@ class CustomerService
             return $this->error(null, "User not found", 404);
         }
 
-        $orders = Order::with(['user', 'product.shopCountry'])
+        $orders = Order::with(['user', 'products.shopCountry'])
             ->where('user_id', $userId)
             ->orderBy('created_at', 'desc')
             ->take(7)
