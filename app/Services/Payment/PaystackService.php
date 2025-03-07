@@ -198,6 +198,9 @@ class PaystackService
                     'status' => OrderStatus::PENDING,
                 ]);
 
+                $msg = "Your order has been placed successfully.";
+                logOrderActivity($order->id, $msg, OrderStatus::PENDING);
+
                 $orderedItems = [];
                 $product = null;
                 foreach ($items as $item) {
@@ -214,6 +217,7 @@ class PaystackService
                         'product_quantity' => $item['product_quantity'],
                         'price' => $convertedPrice,
                         'sub_total' => $convertedPrice * $item['product_quantity'],
+                        'status' => OrderStatus::PENDING,
                     ]);
 
                     $orderedItems[] = [
@@ -369,7 +373,7 @@ class PaystackService
                 $seller_amount = currencyConvert(
                     $user->default_currency,
                     $amount,
-                    $product->shopCountry->currency,
+                    $product->shopCountry->currency ?? 'NGN',
                 );
                 $product->save();
 
