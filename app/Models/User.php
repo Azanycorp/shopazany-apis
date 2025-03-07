@@ -132,7 +132,9 @@ class User extends Authenticatable
     protected function subscriptionHistory(): Attribute
     {
         return Attribute::make(get: function () {
-            return $this->userSubscriptions()->get();
+            return $this->userSubscriptions()
+                ->with('subscriptionPlan')
+                ->get();
         });
     }
 
