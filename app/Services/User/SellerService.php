@@ -2,6 +2,7 @@
 
 namespace App\Services\User;
 
+use App\Enum\MailingEnum;
 use App\Enum\OrderStatus;
 use App\Enum\ProductStatus;
 use App\Enum\UserType;
@@ -17,13 +18,15 @@ use App\Http\Resources\OrderResource;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Resources\SellerProductResource;
 use App\Imports\ProductImport;
+use App\Mail\OrderStatusUpdated;
+use App\Trait\General;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 
 class SellerService extends Controller
 {
-    use HttpResponse;
+    use HttpResponse, General;
 
     public function businessInfo($request)
     {
@@ -410,10 +413,23 @@ class SellerService extends Controller
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $order = Order::find($orderId);
+        $order = Order::with(['user', 'products'])->find($orderId);
 
         if (!$order) {
             return $this->error(null, "Order not found", 404);
+        }
+
+        $validStatuses = [
+            OrderStatus::PENDING,
+            OrderStatus::CONFIRMED,
+            OrderStatus::PROCESSING,
+            OrderStatus::SHIPPED,
+            OrderStatus::DELIVERED,
+            OrderStatus::CANCELLED,
+        ];
+
+        if (!in_array($request->status, $validStatuses)) {
+            return $this->error(null, "Invalid status", 400);
         }
 
         $sellerProducts = $order->products()
@@ -426,14 +442,32 @@ class SellerService extends Controller
         }
 
         foreach ($sellerProducts as $product) {
-            DB::table('order_product')
+            DB::table('order_items')
                 ->where('order_id', $orderId)
                 ->where('product_id', $product->id)
                 ->update(['status' => $request->status]);
         }
 
+        $remainingStatuses = DB::table('order_items')
+            ->where('order_id', $orderId)
+            ->pluck('status')
+            ->unique();
+
+        $newOrderStatus = $this->determineOrderStatus($remainingStatuses);
+        $order->update(['status' => $newOrderStatus]);
+
         $msg = getOrderStatusMessage($request->status);
         logOrderActivity($orderId, $msg, $request->status);
+
+        $type = MailingEnum::ORDER_STATUS_UPDATED;
+        $subject = "Order status update";
+        $mail_class = OrderStatusUpdated::class;
+        $data = [
+            'order' => $order,
+            'status' => $request->status,
+            'user' => $order->user
+        ];
+        mailSend($type, $order->user, $subject, $mail_class, $data);
 
         return $this->success(null, "Order updated successfully");
     }
