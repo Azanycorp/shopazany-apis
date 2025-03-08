@@ -692,13 +692,13 @@ class AdminService
         $banner_two = ($banner && $data->hasFile('banner_two') ? uploadImage($data, 'banner_two', 'home-banner') : $banner?->banner_two);
         $banner_three = ($banner && $data->hasFile('banner_three') ? uploadImage($data, 'banner_three', 'home-banner') : $banner?->banner_three);
 
-        $bannerData = $data->only([
-            'hero_banner',
-            'banner_one',
-            'banner_two',
-            'banner_three',
+        $banner->update([
+            'hero_banner'=>$hero_banner,
+            'banner_one'=>$banner_one,
+            'banner_two'=>$banner_two,
+            'banner_three'=>$banner_three,
         ]);
-        HomeBanner::updateOrCreate([], $bannerData);
+       // HomeBanner::updateOrCreate([], $bannerData);
 
         return $this->success(null, 'Details updated');
     }
