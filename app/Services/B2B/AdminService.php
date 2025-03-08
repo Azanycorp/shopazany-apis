@@ -676,6 +676,7 @@ class AdminService
 
         return $this->success(null, 'Details updated');
     }
+  
 
     //seller withdrawal request
     public function widthrawalRequests()
