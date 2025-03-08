@@ -15,6 +15,7 @@ use App\Enum\OrderStatus;
 use App\Models\B2bBanner;
 use App\Models\B2bCompany;
 use App\Models\B2BProduct;
+use App\Models\HomeBanner;
 use App\Models\RfqMessage;
 use App\Enum\ProductStatus;
 use App\Models\B2bWishList;
@@ -228,6 +229,11 @@ class BuyerService
         $data = B2BBannerResource::collection($banners);
 
         return $this->success($data, 'banners');
+    }
+    public function getHomeBanners()
+    {
+        $banners = HomeBanner::first();
+        return $this->success($banners, 'home-banners');
     }
 
     public function getProducts()
