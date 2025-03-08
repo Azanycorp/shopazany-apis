@@ -676,7 +676,27 @@ class AdminService
 
         return $this->success(null, 'Details updated');
     }
-  
+    public function getHomeBanners()
+    {
+        $config = Configuration::firstOrFail();
+        return $this->success($config, 'Config details');
+    }
+
+    public function updateBanner($data)
+    {
+        $configData = $data->only([
+            'hero_banner',
+            'banner_one',
+            'banner_two',
+            'banner_three',
+            'banner_four',
+            'banner_five',
+        ]);
+
+        Configuration::updateOrCreate([], $configData);
+
+        return $this->success(null, 'Details updated');
+    }
 
     //seller withdrawal request
     public function widthrawalRequests()
