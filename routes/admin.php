@@ -246,7 +246,7 @@ Route::middleware('validate.header')
 
                 //delivery (collation centers and hubs)
                 Route::get('/delivery-overview', 'deliveryOverview');
-                
+
                 Route::prefix('collation-centre')->group(function () {
                     Route::get('/', 'allCollationCentres');
                     Route::post('/add', 'addCollationCentre');
@@ -284,17 +284,11 @@ Route::middleware('validate.header')
                     Route::post('/enable-2fa', 'enable2FA');
                     Route::get('/get-config', 'getConfigDetails');
                     Route::post('/update-config', 'updateConfigDetails');
+
+                    Route::get('/get-home-banner', 'getHomeBanner');
+                    Route::post('/update-home-banner', 'updateHomeBanner');
                 });
 
-                Route::controller(B2BAdminController::class)->prefix('admin-users')->group(function () {
-                    Route::get('/', 'adminUsers')->middleware('cacheResponse:300');
-                    Route::post('/add', 'addAdmin');
-                    Route::get('/details/{id}', 'viewAdminUser');
-                    Route::post('/update/{id}', 'editAdminUser');
-                    Route::post('/revoke-access/{id}', 'revokeAccess');
-                    Route::post('/verify-password', 'verifyPassword');
-                    Route::delete('/delete-account/{id}', 'removeAdmin');
-                });
 
                 Route::prefix('category')->controller(ProductCategoryController::class)->group(function () {
                     Route::post('/create', 'createCategory');

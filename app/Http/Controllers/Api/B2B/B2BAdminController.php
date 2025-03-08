@@ -83,10 +83,18 @@ class B2BAdminController extends Controller
     {
         return $this->adminService->getConfigDetails();
     }
-
     public function UpdateConfigDetails(Request $request)
     {
         return $this->adminService->UpdateConfigDetails($request);
+    }
+    public function getHomeBanner()
+    {
+        return $this->adminService->getHomeBanners();
+    }
+
+    public function updateHomeBanner(Request $request)
+    {
+        return $this->adminService->updateHomeBanner($request);
     }
 
     //Withdrawal Requests
@@ -152,7 +160,7 @@ class B2BAdminController extends Controller
         return $this->adminService->rejectProduct($id, $request);
     }
 
-   
+
     //Subscription plans
     public function b2bSubscriptionPlans()
     {

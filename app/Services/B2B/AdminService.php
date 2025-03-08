@@ -18,6 +18,7 @@ use App\Enum\AdminStatus;
 use App\Enum\OrderStatus;
 use App\Models\B2bCompany;
 use App\Models\B2BProduct;
+use App\Models\HomeBanner;
 use App\Models\UserWallet;
 use App\Enum\GeneralStatus;
 use App\Enum\ProductStatus;
@@ -678,22 +679,26 @@ class AdminService
     }
     public function getHomeBanners()
     {
-        $config = Configuration::firstOrFail();
-        return $this->success($config, 'Config details');
+
+        $banner = HomeBanner::first();
+        return $this->success($banner, 'Banners');
     }
 
-    public function updateBanner($data)
+    public function updateHomeBanner($data)
     {
-        $configData = $data->only([
+        $banner = HomeBanner::first();
+        $hero_banner = ($banner && $data->hasFile('hero_banner') ? uploadImage($data, 'hero_banner', 'home-banner') : $banner?->hero_banner);
+        $banner_one = ($banner && $data->hasFile('banner_one') ? uploadImage($data, 'banner_one', 'home-banner') : $banner?->banner_one);
+        $banner_two = ($banner && $data->hasFile('banner_two') ? uploadImage($data, 'banner_two', 'home-banner') : $banner?->banner_two);
+        $banner_three = ($banner && $data->hasFile('banner_three') ? uploadImage($data, 'banner_three', 'home-banner') : $banner?->banner_three);
+
+        $bannerData = $data->only([
             'hero_banner',
             'banner_one',
             'banner_two',
             'banner_three',
-            'banner_four',
-            'banner_five',
         ]);
-
-        Configuration::updateOrCreate([], $configData);
+        HomeBanner::updateOrCreate([], $bannerData);
 
         return $this->success(null, 'Details updated');
     }
