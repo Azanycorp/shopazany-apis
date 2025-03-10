@@ -4,7 +4,7 @@ namespace App\Http\Requests\B2B;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class SellerShippingRequest extends FormRequest
+class WithdrawalMethodRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,13 +22,9 @@ class SellerShippingRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'address_name' => ['required', 'string', 'max:300'],
-            'name' => ['required', 'string', 'max:100'],
-            'surname' => ['required', 'string', 'max:100'],
-            'email' => ['required', 'email'],
-            'street' => ['required', 'string'],
-            'city' => ['required', 'string'],
-            'state_id' => ['required', 'integer','exists:states,id'],
+            'account_name' => ['required', 'string', 'max:300'],
+            'account_number' => ['required', 'string', 'max:11'],
+            'bank_name' => ['required', 'string', 'max:100'],
             'country_id' => ['required', 'integer','exists:countries,id']
         ];
     }

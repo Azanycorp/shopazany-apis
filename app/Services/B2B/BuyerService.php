@@ -15,6 +15,7 @@ use App\Enum\OrderStatus;
 use App\Models\B2bBanner;
 use App\Models\B2bCompany;
 use App\Models\B2BProduct;
+use App\Models\HomeBanner;
 use App\Models\RfqMessage;
 use App\Enum\ProductStatus;
 use App\Models\B2bWishList;
@@ -229,6 +230,11 @@ class BuyerService
 
         return $this->success($data, 'banners');
     }
+    public function getHomeBanners()
+    {
+        $banners = HomeBanner::first();
+        return $this->success($banners, 'home-banners');
+    }
 
     public function getProducts()
     {
@@ -348,14 +354,14 @@ class BuyerService
 
     public function categoryBySlug($slug)
     {
-        $category = B2bProductCategory::with('products')
+        $category = B2bProductCategory::with(['products' => function ($query): void {
+            $query->where('status', ProductStatus::ACTIVE);
+        }])
             ->select('id', 'name', 'slug', 'image')
             ->where('slug', $slug)
             ->firstOrFail();
 
-        $products = $category->products->where('status', ProductStatus::ACTIVE);
-
-        return $this->success($products, 'Products by category');
+        return $this->success($category, 'Products by category');
     }
 
     public function getProductDetail($slug)
@@ -725,9 +731,6 @@ class BuyerService
             ->latest('id')
             ->get();
 
-        if ($wishes->isEmpty()) {
-            return $this->error(null, 'No record found to send', 404);
-        }
         $data = B2BWishListResource::collection($wishes);
         return $this->success($data, 'My Wish List');
     }
