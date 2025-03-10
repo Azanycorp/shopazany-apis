@@ -37,6 +37,7 @@ class ChargeUserSubscriptions extends Command
     public function handle(): void
     {
         UserSubcription::where('plan_end', '<=', Carbon::now()->subDays(30))
+            ->where('subscription_type', PaymentType::PAYSTACK)
             ->whereNotNull('authorization_data')
             ->whereNull('expired_at')
             ->chunk(100, function ($subscriptions): void {
@@ -102,6 +103,7 @@ class ChargeUserSubscriptions extends Command
                     'payment_id' => $payment->id,
                     'plan_start' => now(),
                     'plan_end' => now()->addDays(30),
+                    'subscription_type' => PaymentType::PAYSTACK,
                     'authorization_data' => $authData,
                     'status' => SubscriptionType::ACTIVE,
                     'expired_at' => null,

@@ -16,6 +16,7 @@ class UserSubcription extends Model
         'plan_start',
         'plan_end',
         'status',
+        'subscription_type',
         'authorization_data',
         'expired_at',
     ];

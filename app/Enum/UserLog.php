@@ -16,4 +16,5 @@ enum UserLog: string
     const LOGOUT = 'logged out';
     const FAILED = 'failed';
     const PAYMENT = 'payment';
+    const SUBSCRIPTION_PAYMENT = 'subscription_payment';
 }

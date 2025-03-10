@@ -28,6 +28,7 @@ class SubscriptionService
         return $this->success($data, "Subscription plans");
     }
 
+    // Not in use anymore.
     public function subscriptionPayment($request)
     {
         $amount = $request->input('amount') * 100;
@@ -85,8 +86,8 @@ class SubscriptionService
         }
 
         $user = User::with(['userSubscriptions.subscriptionPlan'])
-        ->findOrFail($userId)
-        ->append('subscription_history');
+            ->findOrFail($userId)
+            ->append('subscription_history');
 
         $data = SubscriptionHistoryResource::collection($user->subscription_history);
         return $this->success($data, "Subscription histories");
