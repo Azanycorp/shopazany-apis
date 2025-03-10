@@ -23,6 +23,10 @@ class Admin extends Authenticatable
         'status'
     ];
 
+    protected $hidden = [
+        'password',
+    ];
+
     public function sendPasswordResetNotification($token): void
     {
         $email = $this->email;
@@ -46,7 +50,5 @@ class Admin extends Authenticatable
     {
         return $this->belongsToMany(Permission::class);
     }
-    protected $hidden = [
-        'password',
-    ];
+
 }

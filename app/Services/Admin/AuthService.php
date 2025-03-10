@@ -41,6 +41,9 @@ class AuthService
                         })->toArray()
                     ];
                 })->toArray() : [],
+                'user_permissions' => $user->permissions ? $user->permissions->flatMap(function ($permission): array {
+                    return [$permission->name];
+                })->toArray() : [],
             ]);
         }
 
