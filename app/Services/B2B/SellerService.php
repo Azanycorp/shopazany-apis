@@ -382,15 +382,8 @@ class SellerService extends Controller
     public function addShipping($request)
     {
         $currentUserId = userAuthId();
-
-        if ($currentUserId != $request->user_id) {
-            return $this->error(null, "Unauthorized action.", 401);
-        }
-
-        $user = User::with('b2bSellerShippingAddresses')->findOrFail($request->user_id);
-
         $data = [
-            'user_id' => $request->user_id,
+            'user_id' => $currentUserId,
             'address_name' => $request->address_name,
             'name' => $request->name,
             'surname' => $request->surname,
@@ -408,28 +401,17 @@ class SellerService extends Controller
         return $this->success(null, 'Added successfully');
     }
 
-    public function getAllShipping($user_id)
+    public function getAllShipping()
     {
         $currentUserId = userAuthId();
-
-        if ($currentUserId != $user_id) {
-            return $this->error(null, "Unauthorized action.", 401);
-        }
-
-        $address = $this->b2bSellerShippingRepository->all($user_id);
+        $address = $this->b2bSellerShippingRepository->all($currentUserId);
         $data = B2BSellerShippingAddressResource::collection($address);
 
         return $this->success($data, 'All address');
     }
 
-    public function getShippingById($user_id, $shipping_id)
+    public function getShippingById(int $shipping_id)
     {
-        $currentUserId = userAuthId();
-
-        if ($currentUserId != $user_id) {
-            return $this->error(null, "Unauthorized action.", 401);
-        }
-
         $shipping = $this->b2bSellerShippingRepository->find($shipping_id);
         $data = new B2BSellerShippingAddressResource($shipping);
 
@@ -475,15 +457,10 @@ class SellerService extends Controller
         return $this->success(null, 'Deleted successfully');
     }
 
-    public function setDefault($user_id, $shipping_id)
+    public function setDefault($shipping_id)
     {
         $currentUserId = userAuthId();
-
-        if ($currentUserId != $user_id) {
-            return $this->error(null, "Unauthorized action.", 401);
-        }
-
-        $shipping = B2BSellerShippingAddress::where('user_id', $user_id)
+        $shipping = B2BSellerShippingAddress::where('user_id', $currentUserId)
             ->where('id', $shipping_id)
             ->firstOrFail();
 
@@ -491,7 +468,7 @@ class SellerService extends Controller
             return $this->error(null, 'Already set at default', 400);
         }
 
-        B2BSellerShippingAddress::where('user_id', $user_id)->update(['is_default' => 0]);
+        B2BSellerShippingAddress::where('user_id', $currentUserId)->update(['is_default' => 0]);
 
         $shipping->update([
             'is_default' => 1
