@@ -14,7 +14,6 @@ use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
 use App\Models\CookiePolicy;
 use App\Models\TermsService;
-use App\Models\CountryCurrency;
 use App\Models\SeoConfiguration;
 use App\Models\SubscriptionPlan;
 use Illuminate\Support\Facades\DB;
@@ -364,7 +363,7 @@ class SettingsService
             ]);
 
             $admin->roles()->sync($request->role_id);
-            //$admin->permissions()->sync($request->permissions);
+            $admin->permissions()->sync($request->permissions);
 
             DB::commit();
 
