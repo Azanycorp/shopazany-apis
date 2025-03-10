@@ -28,6 +28,7 @@ class SubscriptionService
         return $this->success($data, "Subscription plans");
     }
 
+    // Not in use anymore.
     public function subscriptionPayment($request)
     {
         $amount = $request->input('amount') * 100;

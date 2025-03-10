@@ -115,6 +115,7 @@ class PaystackService
                     'payment_id' => $payment->id,
                     'plan_start' => now(),
                     'plan_end' => now()->addDays(30),
+                    'subscription_type' => PaymentType::PAYSTACK,
                     'authorization_data' => $authData,
                     'status' => SubscriptionType::ACTIVE,
                     'expired_at' => null,
