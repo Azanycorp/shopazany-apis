@@ -123,7 +123,7 @@ class AuthorizeNetSubscriptionPaymentProcessor implements PaymentStrategy
             'expired_at' => null,
         ]);
 
-        SubscriptionService::creditAffiliate($referrer,$paymentDetails['amount'], $subUser);
+        SubscriptionService::creditAffiliate($referrer, $paymentDetails['amount'], $subUser);
 
         (new UserLogAction(
             request(),

@@ -147,7 +147,7 @@ class PaymentDetailsService
 
     public static function authorizeNetSubcriptionPayDetails($request): array
     {
-        $amount = $request->input('amount') * 100;
+        $amount = $request->input('amount');
 
         $user = User::with([
             'referrer' => function ($query) {
