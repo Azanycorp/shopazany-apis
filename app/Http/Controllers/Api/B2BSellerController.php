@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Models\B2BProduct;
+use Illuminate\Http\Request;
+use App\Services\B2B\SellerService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\B2B\AddProductRequest;
-use App\Http\Requests\B2B\SellerShippingRequest;
 use App\Http\Requests\ChangePasswordRequest;
-use App\Services\B2B\SellerService;
-use Illuminate\Http\Request;
+use App\Http\Requests\B2B\UpdateProductRequest;
+use App\Http\Requests\B2B\SellerShippingRequest;
 
 class B2BSellerController extends Controller
 {
@@ -58,19 +60,19 @@ class B2BSellerController extends Controller
         return $this->service->getAllProduct($request);
     }
 
-    public function getProductById($product_id, $user_id)
+    public function getProductById($product_id)
     {
-        return $this->service->getProductById($product_id, $user_id);
+        return $this->service->getProductById($product_id);
     }
 
-    public function updateProduct(Request $request)
+    public function updateProduct(AddProductRequest $request)
     {
         return $this->service->updateProduct($request);
     }
 
-    public function deleteProduct($user_id, $product_id)
+    public function deleteProduct($product_id)
     {
-        return $this->service->deleteProduct($user_id, $product_id);
+        return $this->service->deleteProduct($product_id);
     }
 
     public function getAnalytics($user_id)

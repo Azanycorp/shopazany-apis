@@ -103,8 +103,8 @@ class SellerService extends Controller
 
     public function editAccount($request)
     {
-        $user = User::findOrFail($request->user_id);
-
+        $currentUserId = userAuthId();
+        $user = User::find($currentUserId);
         $image = $request->hasFile('logo') ? uploadUserImage($request, 'logo', $user) : $user->image;
 
         $user->update([
@@ -179,13 +179,12 @@ class SellerService extends Controller
 
     public function b2bproductImport($request)
     {
-        $currentUserId = Auth::id();
-
+        $currentUserId = userAuthId();
         if ($currentUserId != $request->user_id) {
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $seller = auth()->user();
+        $seller =  User::find($currentUserId);
 
         try {
             Excel::import(new B2BProductImport($seller), $request->file('file'));
@@ -197,10 +196,10 @@ class SellerService extends Controller
     }
     public function addProduct($request)
     {
-        $user = User::find($request->user_id);
-
-        if (!$user) {
-            return $this->error(null, "User not found", 404);
+        $currentUserId = userAuthId();
+        $user = User::find($currentUserId);
+        if ($currentUserId != $request->user_id) {
+            return $this->error(null, "Unauthorized action.", 401);
         }
 
         try {
@@ -258,15 +257,10 @@ class SellerService extends Controller
         }
     }
 
-    public function getAllProduct($request)
+    public function getAllProduct()
     {
         $currentUserId = userAuthId();
-
-        if ($currentUserId != $request->user_id) {
-            return $this->error(null, "Unauthorized action.", 401);
-        }
-
-        $user = User::select('id')->findOrFail($request->user_id)->id;
+        $user = User::select('id')->findOrFail($currentUserId)->id;
         $search = request()->input('search');
 
         $products = $this->b2bProductRepository->all($user, $search);
@@ -275,16 +269,8 @@ class SellerService extends Controller
         return $this->success($data, 'All products');
     }
 
-    public function getProductById(int $product_id, $user_id)
+    public function getProductById(int $product_id)
     {
-        $currentUserId = userAuthId();
-
-        if ($currentUserId != $user_id) {
-            return $this->error(null, "Unauthorized action.", 401);
-        }
-        if ($currentUserId != $user_id) {
-            return $this->error(null, "Unauthorized action.", 401);
-        }
         $prod = $this->b2bProductRepository->find($product_id);
         $data = new B2BProductResource($prod);
 
@@ -300,7 +286,10 @@ class SellerService extends Controller
         }
 
         $user = User::findOrFail($request->user_id);
-        $prod = B2BProduct::findOrFail($request->product_id);
+        $prod = B2BProduct::find($request->product_id);
+        if (!$prod) {
+            return $this->error(null, "No product found with this Id.", 404);
+        }
 
         $parts = explode('@', $user->email);
         $name = $parts[0];
@@ -359,13 +348,10 @@ class SellerService extends Controller
         return $this->success(null, 'Product updated successfully');
     }
 
-    public function deleteProduct($user_id, int $product_id)
+    public function deleteProduct(int $product_id)
     {
         $currentUserId = userAuthId();
-
-        if ($currentUserId != $user_id) {
-            return $this->error(null, "Unauthorized action.", 401);
-        }
+        $prod = B2BProduct::where('user_id', $currentUserId)->findOrFail($product_id);
         $this->b2bProductRepository->delete($product_id);
 
         return $this->success(null, 'Deleted successfully');
@@ -621,7 +607,7 @@ class SellerService extends Controller
         $data = (object) [
             'total_sales_alltime' => $totalSales,
             'sales_this_month' => $monthlyOrder,
-            'total_payout' => $payouts->where('status',OrderStatus::PAID)->sum('amount'),
+            'total_payout' => $payouts->where('status', OrderStatus::PAID)->sum('amount'),
             'payout_this_month' => $monthlyPayout
         ];
         return $this->success($data, "Earning details");
