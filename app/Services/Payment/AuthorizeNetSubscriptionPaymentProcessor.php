@@ -42,9 +42,7 @@ class AuthorizeNetSubscriptionPaymentProcessor implements PaymentStrategy
         $transactionRequestType = new AnetAPI\TransactionRequestType();
         $transactionRequestType->setTransactionType("authCaptureTransaction");
         $transactionRequestType->setAmount($paymentDetails['amount']);
-        // $transactionRequestType->setOrder($order);
         $transactionRequestType->setPayment($payment);
-        // $transactionRequestType->setBillTo($customerAddress);
         $transactionRequestType->setCustomer($customerData);
 
         $request = new AnetAPI\CreateTransactionRequest();
