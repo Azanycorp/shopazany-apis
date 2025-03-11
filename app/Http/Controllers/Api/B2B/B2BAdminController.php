@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
 use App\Http\Requests\AdminUserRequest;
 use App\Http\Requests\ShippingAgentRequest;
+use App\Http\Requests\Admin\NewBannerRequest;
 use App\Http\Requests\ChangeAdminPasswordRequest;
 use App\Http\Requests\Admin\SubscriptionPlanRequest;
 
@@ -87,15 +88,28 @@ class B2BAdminController extends Controller
     {
         return $this->adminService->UpdateConfigDetails($request);
     }
-    public function getHomeBanner()
+    public function getAllBanners()
     {
         return $this->adminService->getHomeBanners();
     }
 
-    public function updateHomeBanner(Request $request)
+    public function addNewBanner(NewBannerRequest $request)
     {
-        return $this->adminService->updateHomeBanner($request);
+        return $this->adminService->addHomeBanner($request);
     }
+    public function updateHomeBanner($id, Request $request)
+    {
+        return $this->adminService->updateHomeBanner($id, $request);
+    }
+    public function deleteHomeBanner($id)
+    {
+        return $this->adminService->deleteHomeBanner($id);
+    }
+    public function editHomeBanner($id)
+    {
+        return $this->adminService->getHomeBanner($id);
+    }
+
 
     //Withdrawal Requests
     public function widthrawalRequests()

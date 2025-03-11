@@ -11,6 +11,7 @@ use App\Enum\UserType;
 use App\Models\Payout;
 use App\Enum\AdminType;
 use App\Models\Country;
+use App\Enum\BannerType;
 use App\Enum\PlanStatus;
 use App\Enum\UserStatus;
 use App\Models\B2bOrder;
@@ -680,21 +681,44 @@ class AdminService
     public function getHomeBanners()
     {
 
-        $banners = HomeBanner::latest('id')->get();
+        $banners = HomeBanner::where('type', BannerType::B2B)->latest('id')->get();
         return $this->success($banners, 'Banners');
     }
 
-    public function updateHomeBanner($data)
+    public function updateHomeBanner($id, $data)
     {
-        $banner = HomeBanner::first();
+        $banner = HomeBanner::where('type', BannerType::B2B)->findOrFail($id);
         $banner_url = ($banner && $data->hasFile('banner_url') ? uploadImage($data, 'banner_url', 'home-banner') : $banner?->banner_url);
 
         $banner->update([
-            'page' => $data->page,
-            'section' => $data->section,
+            'page' => $data->page ?? $banner->page,
+            'section' => $data->section ?? $banner->section,
+            'type' => BannerType::B2B,
             'banner_url' => $banner_url,
         ]);
         return $this->success(null, 'Details updated');
+    }
+    public function addHomeBanner($data)
+    {
+        $banner_url = $data->hasFile('banner_url') ? uploadImage($data, 'banner_url', 'home-banner') : null;
+
+        HomeBanner::create([
+            'page' => $data->page,
+            'section' => $data->section,
+            'type' =>  BannerType::B2B,
+            'banner_url' => $banner_url,
+        ]);
+        return $this->success(null, 'Details updated');
+    }
+    public function getHomeBanner($id)
+    {
+        $banner = HomeBanner::where('type', BannerType::B2B)->findOrFail($id);
+        return $this->success($banner, 'Banner details');
+    }
+    public function deleteHomeBanner($id)
+    {
+        $banner = HomeBanner::where('type', BannerType::B2B)->findOrFail($id);
+        return $this->success(null, 'Details Deleted');
     }
 
     //seller withdrawal request

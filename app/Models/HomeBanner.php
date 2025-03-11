@@ -9,6 +9,7 @@ class HomeBanner extends Model
     protected $fillable = [
         'page',
         'section',
+        'type',
         'banner_url',
     ];
 }

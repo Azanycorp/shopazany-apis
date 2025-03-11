@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('home_banners', function (Blueprint $table) {
             $table->id();
             $table->string('page')->nullable();
+            $table->string('type')->nullable();
             $table->text('section')->nullable();
             $table->text('banner_url')->nullable();
             $table->timestamps();
