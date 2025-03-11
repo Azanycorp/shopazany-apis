@@ -17,7 +17,7 @@ class AdminOrderResource extends JsonResource
         return [
             'id' => (int)$this->id,
             'order_no' => (string)$this->order_no,
-            'quantity' => (string)$this->product_quantity,
+            'quantity' => (int) $this->products->sum('pivot.product_quantity'),
             'order_date' => (string)$this->order_date,
             'total_amount' => (string)$this->total_amount,
             'payment_method' => (string)$this->payment_method,
@@ -27,14 +27,15 @@ class AdminOrderResource extends JsonResource
                     'name' => $product?->name,
                     'category' => $product?->category?->name,
                     'image' => $product?->image,
+                    'quantity' => $product->pivot->product_quantity,
+                    'price' => $product->pivot->price,
+                    'sub_total' => $product->pivot->sub_total,
                 ];
             })->toArray() : [],
-            'seller' => (object) [
-                'name' => optional($this->seller)->first_name . ' ' . optional($this->seller)->last_name,
-                'location' => optional($this->seller)->address,
-                'state' => $this->seller?->state?->name,
-                'country' => $this->seller?->userCountry?->name,
-            ],
+            'seller' => $this->products->isNotEmpty() ? (object) [
+                'name' => optional($this->products->first()->user)->first_name . ' ' . optional($this->products->first()->user)->last_name,
+                'location' => optional($this->products->first()->user)->address,
+            ] : null,
             'customer' => (object) [
                 'name' => optional($this->user)->first_name . ' ' . optional($this->user)->last_name,
                 'phone' => optional($this->user)->phone,
