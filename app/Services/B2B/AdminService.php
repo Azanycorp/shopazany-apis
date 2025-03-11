@@ -20,6 +20,7 @@ use App\Enum\OrderStatus;
 use App\Models\B2bCompany;
 use App\Models\B2BProduct;
 use App\Models\HomeBanner;
+use App\Models\PageBanner;
 use App\Models\UserWallet;
 use App\Enum\GeneralStatus;
 use App\Enum\ProductStatus;
@@ -678,17 +679,17 @@ class AdminService
 
         return $this->success(null, 'Details updated');
     }
-    public function getHomeBanners()
+    public function getPageBanners()
     {
 
-        $banners = HomeBanner::where('type', BannerType::B2B)->latest('id')->get();
+        $banners = PageBanner::where('type', BannerType::B2B)->latest('id')->get();
         return $this->success($banners, 'Banners');
     }
 
-    public function updateHomeBanner($id, $data)
+    public function updatePageBanner($id, $data)
     {
-        $banner = HomeBanner::where('type', BannerType::B2B)->findOrFail($id);
-        $banner_url = ($banner && $data->hasFile('banner_url') ? uploadImage($data, 'banner_url', 'home-banner') : $banner?->banner_url);
+        $banner = PageBanner::where('type', BannerType::B2B)->findOrFail($id);
+        $banner_url = ($banner && $data->hasFile('banner_url') ? uploadImage($data, 'banner_url', 'home-banner') : $banner->banner_url);
 
         $banner->update([
             'page' => $data->page ?? $banner->page,
@@ -698,26 +699,27 @@ class AdminService
         ]);
         return $this->success(null, 'Details updated');
     }
-    public function addHomeBanner($data)
+    public function addPageBanner($data)
     {
         $banner_url = $data->hasFile('banner_url') ? uploadImage($data, 'banner_url', 'home-banner') : null;
 
-        HomeBanner::create([
+        PageBanner::create([
             'page' => $data->page,
             'section' => $data->section,
             'type' =>  BannerType::B2B,
             'banner_url' => $banner_url,
         ]);
-        return $this->success(null, 'Details updated');
+        return $this->success(null, 'Banner added');
     }
-    public function getHomeBanner($id)
+    public function getPageBanner($id)
     {
-        $banner = HomeBanner::where('type', BannerType::B2B)->findOrFail($id);
+        $banner = PageBanner::where('type', BannerType::B2B)->findOrFail($id);
         return $this->success($banner, 'Banner details');
     }
-    public function deleteHomeBanner($id)
+    public function deletePageBanner($id)
     {
-        $banner = HomeBanner::where('type', BannerType::B2B)->findOrFail($id);
+        $banner = PageBanner::where('type', BannerType::B2B)->findOrFail($id);
+        $banner->delete($id);
         return $this->success(null, 'Details Deleted');
     }
 

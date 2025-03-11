@@ -284,9 +284,13 @@ Route::middleware('validate.header')
                     Route::post('/enable-2fa', 'enable2FA');
                     Route::get('/get-config', 'getConfigDetails');
                     Route::post('/update-config', 'updateConfigDetails');
-
-                    Route::get('/get-home-banner', 'getHomeBanner');
-                    Route::post('/update-home-banner', 'updateHomeBanner');
+                    Route::prefix('page-banners')->group(function () {
+                        Route::get('/', 'getAllBanners');
+                        Route::post('/add', 'addNewBanner');
+                        Route::post('/update/{id}', 'updatePageBanner');
+                        Route::get('/view/{id}', 'editPageBanner');
+                        Route::delete('/delete/{id}', 'deletePageBanner');
+                    });
                 });
 
 

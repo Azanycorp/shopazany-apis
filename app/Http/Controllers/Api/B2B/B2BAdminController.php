@@ -90,24 +90,24 @@ class B2BAdminController extends Controller
     }
     public function getAllBanners()
     {
-        return $this->adminService->getHomeBanners();
+        return $this->adminService->getPageBanners();
     }
 
     public function addNewBanner(NewBannerRequest $request)
     {
-        return $this->adminService->addHomeBanner($request);
+        return $this->adminService->addPageBanner($request);
     }
-    public function updateHomeBanner($id, Request $request)
+    public function updatePageBanner($id, Request $request)
     {
-        return $this->adminService->updateHomeBanner($id, $request);
+        return $this->adminService->updatePageBanner($id, $request);
     }
-    public function deleteHomeBanner($id)
+    public function deletePageBanner($id)
     {
-        return $this->adminService->deleteHomeBanner($id);
+        return $this->adminService->deletePageBanner($id);
     }
-    public function editHomeBanner($id)
+    public function editPageBanner($id)
     {
-        return $this->adminService->getHomeBanner($id);
+        return $this->adminService->getPageBanner($id);
     }
 
 
