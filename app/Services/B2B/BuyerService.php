@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Enum\UserType;
 use App\Enum\RfqStatus;
 use App\Models\Payment;
+use App\Enum\BannerType;
 use App\Enum\UserStatus;
 use App\Models\B2bOrder;
 use App\Models\B2bQuote;
@@ -16,6 +17,7 @@ use App\Models\B2bBanner;
 use App\Models\B2bCompany;
 use App\Models\B2BProduct;
 use App\Models\HomeBanner;
+use App\Models\PageBanner;
 use App\Models\RfqMessage;
 use App\Enum\ProductStatus;
 use App\Models\B2bWishList;
@@ -230,9 +232,9 @@ class BuyerService
 
         return $this->success($data, 'banners');
     }
-    public function getHomeBanners()
+    public function getPageBanners($page)
     {
-        $banners = HomeBanner::first();
+        $banners = PageBanner::where('type', BannerType::B2B)->where('page', $page)->get();
         return $this->success($banners, 'home-banners');
     }
 

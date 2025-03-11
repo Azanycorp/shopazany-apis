@@ -92,9 +92,9 @@ class B2BController extends Controller
     {
         return $this->buyerService->getBanners();
     }
-    public function getHomeBanners()
+    public function getPageBanners($page)
     {
-        return $this->buyerService->getHomeBanners();
+        return $this->buyerService->getPageBanners($page);
     }
     public function getProducts()
     {
