@@ -184,16 +184,9 @@ class ChargeCardService implements PaymentStrategy
         $product->sold += $rfq->product_quantity;
         $product->save();
 
-        $config = Configuration::first();
-
-        if ($config) {
-            $sellerPerc = $config->seller_perc ?? 0;
-            $credit = ($sellerPerc / 100) * $amount;
-
-            $wallet = UserWallet::firstOrNew(['seller_id' => $seller->id]);
-            $wallet->master_wallet = ($wallet->master_wallet ?? 0) + $credit;
-            $wallet->save();
-        }
+        $wallet = UserWallet::firstOrNew(['seller_id' => $seller->id]);
+        $wallet->master_wallet = ($wallet->master_wallet ?? 0) + $amount;
+        $wallet->save();
 
         $rfq->update([
             'payment_status' => OrderStatus::PAID,

@@ -373,16 +373,10 @@ class PaystackService
                 );
                 $product->save();
 
-                $config = Configuration::first();
+                $wallet = UserWallet::firstOrNew(['seller_id' => $seller->id]);
+                $wallet->master_wallet = ($wallet->master_wallet ?? 0) + $seller_amount;
+                $wallet->save();
 
-                if ($config) {
-                    $sellerPerc = $config->seller_perc ?? 0;
-                    $credit = ($sellerPerc / 100) * $seller_amount;
-
-                    $wallet = UserWallet::firstOrNew(['seller_id' => $seller->id]);
-                    $wallet->master_wallet = ($wallet->master_wallet ?? 0) + $credit;
-                    $wallet->save();
-                }
 
                 $rfq->update([
                     'payment_status' => OrderStatus::PAID,
