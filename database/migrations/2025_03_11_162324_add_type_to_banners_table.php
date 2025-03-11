@@ -11,12 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('home_banners', function (Blueprint $table) {
-            $table->id();
-            $table->string('page')->nullable();
-            $table->text('section')->nullable();
-            $table->text('banner_url')->nullable();
-            $table->timestamps();
+        Schema::table('banners', function (Blueprint $table) {
+            $table->string('type')->nullable();
         });
     }
 
@@ -25,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('home_banners');
+        Schema::table('banners', function (Blueprint $table) {
+            //
+        });
     }
 };

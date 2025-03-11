@@ -680,26 +680,20 @@ class AdminService
     public function getHomeBanners()
     {
 
-        $banner = HomeBanner::first();
-        return $this->success($banner, 'Banners');
+        $banners = HomeBanner::latest('id')->get();
+        return $this->success($banners, 'Banners');
     }
 
     public function updateHomeBanner($data)
     {
         $banner = HomeBanner::first();
-        $hero_banner = ($banner && $data->hasFile('hero_banner') ? uploadImage($data, 'hero_banner', 'home-banner') : $banner?->hero_banner);
-        $banner_one = ($banner && $data->hasFile('banner_one') ? uploadImage($data, 'banner_one', 'home-banner') : $banner?->banner_one);
-        $banner_two = ($banner && $data->hasFile('banner_two') ? uploadImage($data, 'banner_two', 'home-banner') : $banner?->banner_two);
-        $banner_three = ($banner && $data->hasFile('banner_three') ? uploadImage($data, 'banner_three', 'home-banner') : $banner?->banner_three);
+        $banner_url = ($banner && $data->hasFile('banner_url') ? uploadImage($data, 'banner_url', 'home-banner') : $banner?->banner_url);
 
         $banner->update([
-            'hero_banner'=>$hero_banner,
-            'banner_one'=>$banner_one,
-            'banner_two'=>$banner_two,
-            'banner_three'=>$banner_three,
+            'page' => $data->page,
+            'section' => $data->section,
+            'banner_url' => $banner_url,
         ]);
-       // HomeBanner::updateOrCreate([], $bannerData);
-
         return $this->success(null, 'Details updated');
     }
 
