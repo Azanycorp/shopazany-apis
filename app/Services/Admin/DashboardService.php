@@ -45,10 +45,13 @@ class DashboardService
             ->leftJoin('products', 'users.id', '=', 'products.user_id')
             ->leftJoin('order_items', 'products.id', '=', 'order_items.product_id')
             ->leftJoin('orders', 'order_items.order_id', '=', 'orders.id')
-            ->selectRaw('SUM(CASE WHEN orders.status = "completed" THEN orders.total_amount ELSE 0 END) as total_revenue')
-            ->selectRaw('SUM(CASE WHEN orders.status = "delivered" THEN order_items.product_quantity ELSE 0 END) as sold_count')
-            ->selectRaw('COUNT(DISTINCT orders.id) as orders_count')
+            ->whereNotNull('orders.id')
+            ->whereIn('orders.status', [OrderStatus::SHIPPED, OrderStatus::DELIVERED])
+            ->selectRaw('COALESCE(SUM(CASE WHEN orders.status = ? THEN orders.total_amount ELSE 0 END), 0) as total_revenue', [OrderStatus::SHIPPED])
+            ->selectRaw('COALESCE(SUM(CASE WHEN orders.status = ? THEN order_items.product_quantity ELSE 0 END), 0) as sold_count', [OrderStatus::DELIVERED])
+            ->selectRaw('COALESCE(COUNT(DISTINCT orders.id), 0) as orders_count')
             ->groupBy('users.id', 'users.first_name', 'users.last_name')
+            ->havingRaw('total_revenue > 0 OR sold_count > 0 OR orders_count > 0')
             ->get();
 
         return $this->success($bestSellers, "Best sellers");
