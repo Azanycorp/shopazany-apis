@@ -15,6 +15,10 @@ use App\Models\PaymentService as ModelPaymentService;
 use App\Services\Curl\GetCurl;
 use App\Services\Payment\AuthorizeNet\ChargeCardService;
 use Illuminate\Support\Facades\Cache;
+use App\Services\Payment\HandlePaymentService;
+use App\Services\Payment\PaymentDetailsService;
+use App\Services\Payment\PaystackPaymentProcessor;
+use App\Services\Payment\B2BPaystackPaymentProcessor;
 
 class PaymentService
 {
@@ -25,6 +29,25 @@ class PaymentService
     public function __construct(ChargeCardService $chargeCardService)
     {
         $this->chargeCardService = $chargeCardService;
+    }
+
+    public function processPayment($request)
+    {
+        $paymentProcessor = match ($request->payment_method) {
+            PaymentType::PAYSTACK => new PaystackPaymentProcessor(),
+            PaymentType::B2B_PAYSTACK => new B2BPaystackPaymentProcessor(),
+            default => throw new \Exception("Unsupported payment method"),
+        };
+
+        $paymentService = new HandlePaymentService($paymentProcessor);
+
+        $paymentDetails = match ($request->payment_method) {
+            PaymentType::PAYSTACK => PaymentDetailsService::paystackPayDetails($request),
+            PaymentType::B2B_PAYSTACK => PaymentDetailsService::b2bPaystackPayDetails($request),
+            default => throw new \Exception("Unsupported payment method"),
+        };
+
+        return $paymentService->process($paymentDetails);
     }
 
     public function webhook($request)
