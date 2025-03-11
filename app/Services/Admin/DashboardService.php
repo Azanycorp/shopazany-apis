@@ -45,16 +45,17 @@ class DashboardService
             ->leftJoin('products', 'users.id', '=', 'products.user_id')
             ->leftJoin('order_items', 'products.id', '=', 'order_items.product_id')
             ->leftJoin('orders', 'order_items.order_id', '=', 'orders.id')
+            ->where('orders.status', OrderStatus::DELIVERED)
             ->whereNotNull('orders.id')
-            ->whereIn('orders.status', [OrderStatus::SHIPPED, OrderStatus::DELIVERED])
-            ->selectRaw('COALESCE(SUM(CASE WHEN orders.status = ? THEN orders.total_amount ELSE 0 END), 0) as total_revenue', [OrderStatus::SHIPPED])
-            ->selectRaw('COALESCE(SUM(CASE WHEN orders.status = ? THEN order_items.product_quantity ELSE 0 END), 0) as sold_count', [OrderStatus::DELIVERED])
+            ->selectRaw('COALESCE(SUM(orders.total_amount), 0) as total_revenue')
+            ->selectRaw('COALESCE(SUM(order_items.product_quantity), 0) as sold_count')
             ->selectRaw('COALESCE(COUNT(DISTINCT orders.id), 0) as orders_count')
             ->groupBy('users.id', 'users.first_name', 'users.last_name')
             ->havingRaw('total_revenue > 0 OR sold_count > 0 OR orders_count > 0')
+            ->orderByDesc('total_revenue')
             ->get();
 
-        return $this->success($bestSellers, "Best sellers");
+        return $this->success($bestSellers, "Best sellers based on delivered orders");
     }
 
     public function bestSellingCat()
