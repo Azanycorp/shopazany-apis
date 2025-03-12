@@ -1,0 +1,38 @@
+name: Build and Push Docker images to ECR
+
+on:
+  push:
+    branches:   ["deploy"]  # Trigger on push to the deploy branch
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write  # Required for OIDC
+      contents: read   # Required to checkout the code
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          role-to-assume: arn:aws:iam::547130927936:role/shopazany-apis-github.oidc  # IAM role ARN
+          aws-region: us-east-1  #  AWS region (e.g., us-east-1)
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build Docker image
+        run: |
+          docker build -t 547130927936.dkr.ecr.us-east-1.amazonaws.com/prod/shopazany-apis:latest .
+
+      - name: Tag Docker image
+        run: |
+          docker tag 547130927936.dkr.ecr.us-east-1.amazonaws.com/prod/shopazany-apis:latest 547130927936.dkr.ecr.us-east-1.amazonaws.com/prod/shopazany-apis:latest
+
+      - name: Push Docker image to ECR
+        run: |
+          docker push 547130927936.dkr.ecr.us-east-1.amazonaws.com/prod/shopazany-apis:latest
