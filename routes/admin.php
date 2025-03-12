@@ -309,12 +309,21 @@ Route::middleware('validate.header')
                     Route::delete('/subcategory/delete/{id}', 'deleteSubCategory');
                 });
 
-                Route::prefix('banner')->controller(B2BBannerPromoController::class)->group(function (): void {
-                    Route::post('/add', 'addBanner');
-                    Route::get('/', 'banners')->middleware('cacheResponse:300');
-                    Route::get('/{id}', 'getOneBanner');
-                    Route::post('/edit/{id}', 'editBanner');
-                    Route::delete('/delete/{id}', 'deleteBanner');
+                Route::controller(B2BBannerPromoController::class)->group(function (): void {
+                    Route::prefix('banner')->group(function (): void {
+                        Route::post('/add', 'addBanner');
+                        Route::get('/', 'banners')->middleware('cacheResponse:300');
+                        Route::get('/{id}', 'getOneBanner');
+                        Route::post('/edit/{id}', 'editBanner');
+                        Route::delete('/delete/{id}', 'deleteBanner');
+                    });
+                    Route::prefix('slider')->group(function (): void {
+                        Route::get('/', 'sliders');
+                        Route::post('/add', 'addSlider');
+                        Route::get('/view/{id}', 'viewSlider');
+                        Route::post('/update/{id}', 'updateSlider');
+                        Route::delete('/delete/{id}', 'deleteSlider');
+                    });
                 });
 
                 Route::prefix('promo')->controller(B2BBannerPromoController::class)->group(function (): void {

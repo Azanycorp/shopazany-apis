@@ -58,7 +58,6 @@ class B2BBannerPromoService
         $banner = Banner::where('type', BannerType::B2B)->findOrFail($id);
 
         if ($request->hasFile('image')) {
-            # code...
             $image = uploadImage($request, 'image', 'banner', null, $banner);
         }
         $banner->update([

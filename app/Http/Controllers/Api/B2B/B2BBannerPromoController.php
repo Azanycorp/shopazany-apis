@@ -4,20 +4,44 @@ namespace App\Http\Controllers\Api\B2B;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Services\Admin\B2BAdminService;
 use App\Services\Admin\BannerPromoService;
 use App\Http\Requests\Admin\AddPromoRequest;
 use App\Http\Requests\Admin\AddBannerRequest;
+use App\Http\Requests\Admin\NewSliderRequest;
 use App\Services\Admin\B2BBannerPromoService;
 use App\Http\Requests\Admin\B2BAddPromoRequest;
 
 class B2BBannerPromoController extends Controller
 {
-    protected \App\Services\Admin\B2BBannerPromoService $service;
+    public function __construct(
+        private B2BBannerPromoService $service,
+        private B2BAdminService $b2BAdminService
+    ) {}
 
-    public function __construct(B2BBannerPromoService $service)
+    //sliders
+    public function sliders()
     {
-        $this->service = $service;
+        return $this->b2BAdminService->sliders();
     }
+
+    public function addSlider(NewSliderRequest $request)
+    {
+        return $this->b2BAdminService->addSlider($request);
+    }
+    public function getSlider($id)
+    {
+        return $this->b2BAdminService->getSlider($id);
+    }
+    public function updateSlider($id, NewSliderRequest $request)
+    {
+        return $this->b2BAdminService->updateSlider($id, $request);
+    }
+    public function deleteSlider($id)
+    {
+        return $this->b2BAdminService->deleteSlider($id);
+    }
+
 
     public function addBanner(AddBannerRequest $request)
     {
@@ -62,5 +86,4 @@ class B2BBannerPromoController extends Controller
     {
         return $this->service->deletePromo($id);
     }
-
 }
