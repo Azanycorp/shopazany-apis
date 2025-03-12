@@ -457,7 +457,26 @@ class BuyerService
     public function sendRfq($data)
     {
         $quote = B2bQuote::findOrFail($data->rfq_id);
+        $localItems = $quote->filter(function ($quote): bool {
+            return $quote->product_data['country_id'] == 160;
+        });
+        $internationalItems = $quote->filter(function ($quote): bool {
+            return $quote->product_data['country_id'] != 160;
+        });
 
+       
+
+        $defaultCurrency = userAuth()->default_currency;
+
+        $totalLocalPrice = $localItems->sum(function ($item) use ($defaultCurrency): float {
+            $price = optional($item->product)->price * $item->quantity;
+            return currencyConvert(optional($item->product->shopCountry)->currency, $price, $defaultCurrency);
+        });
+
+        $totalInternationalPrice = $internationalItems->sum(function ($item) use ($defaultCurrency): float {
+            $price = optional($item->product)->price * $item->quantity;
+            return currencyConvert(optional($item->product->shopCountry)->currency, $price, $defaultCurrency);
+        });
         try {
             $amount = total_amount($quote->product_data['unit_price'], $quote->qty);
             Rfq::create([

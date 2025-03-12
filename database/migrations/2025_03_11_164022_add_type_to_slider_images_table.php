@@ -12,7 +12,6 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('slider_images', function (Blueprint $table) {
-            //
             $table->string('type')->nullable()->after('link');
         });
     }
@@ -20,10 +19,5 @@ return new class extends Migration
     /**
      * Reverse the migrations.
      */
-    public function down(): void
-    {
-        Schema::table('slider_images', function (Blueprint $table) {
-            //
-        });
-    }
+
 };
