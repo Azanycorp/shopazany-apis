@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y \
     libzip-dev \
     libpng-dev \
     libjpeg-dev \
-    libfreetype6-dev
+    libfreetype6-dev \
     libonig-dev
 
 # Install PHP extensions
