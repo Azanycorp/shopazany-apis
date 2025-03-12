@@ -21,6 +21,7 @@ use App\Models\PageBanner;
 use App\Models\RfqMessage;
 use App\Enum\ProductStatus;
 use App\Models\B2bWishList;
+use App\Models\SliderImage;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
 use App\Models\B2bProdctLike;
@@ -33,6 +34,7 @@ use App\Models\BuyerShippingAddress;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Resources\BuyerResource;
+use App\Http\Resources\SliderResource;
 use App\Http\Resources\PaymentResource;
 use App\Http\Resources\B2BOrderResource;
 use App\Http\Resources\B2BQuoteResource;
@@ -230,6 +232,15 @@ class BuyerService
 
         $data = B2BBannerResource::collection($banners);
 
+        return $this->success($data, 'banners');
+    }
+    public function getSliders()
+    {
+        $sliders = SliderImage::where('status', ProductStatus::ACTIVE)
+            ->where('type', BannerType::B2B)
+            ->latest('id')
+            ->get();
+            $data = SliderResource::collection($sliders);
         return $this->success($data, 'banners');
     }
     public function getPageBanners($page)

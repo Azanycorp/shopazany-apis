@@ -31,6 +31,7 @@ Route::middleware('validate.header')
             });
             Route::prefix('b2b')->controller(B2BController::class)->group(function (): void {
                 Route::get('/banners', 'getBanners');
+                Route::get('/sliders', 'getSliders');
                 Route::get('/page-banners/{page}', 'getPageBanners');
                 Route::get('/products', 'getProducts');
                 Route::get('/categories-products', 'getCategoryProducts');
