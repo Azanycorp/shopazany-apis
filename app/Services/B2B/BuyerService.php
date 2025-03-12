@@ -415,13 +415,12 @@ class BuyerService
     public function sendMutipleQuotes()
     {
         $userId = userAuthId();
-
         $quotes = B2bQuote::where('buyer_id', $userId)->latest('id')->get();
 
         if ($quotes->isEmpty()) {
             return $this->error(null, 'No record found to send', 404);
         }
-
+        $unit_price = '';
         DB::beginTransaction();
 
         try {
@@ -429,15 +428,19 @@ class BuyerService
                 if (empty($quote->product_data['unit_price']) || empty($quote->qty)) {
                     throw new \Exception('Invalid product data for quote ID: ' . $quote->id);
                 }
-
+                $unit_price = currencyConvert(
+                    userAuth()->default_currency,
+                    $quote->product_data['unit_price'],
+                    $product->shopCountry->currency ?? 'NGN',
+                );
                 Rfq::create([
                     'buyer_id' => $quote->buyer_id,
                     'seller_id' => $quote->seller_id,
                     'quote_no' => strtoupper(Str::random(10) . $userId),
                     'product_id' => $quote->product_id,
                     'product_quantity' => $quote->qty,
-                    'total_amount' => $quote->product_data['unit_price'] * $quote->qty,
-                    'p_unit_price' => $quote->product_data['unit_price'],
+                    'total_amount' => $unit_price * $quote->qty,
+                    'p_unit_price' => $unit_price,
                     'product_data' => $quote->product_data,
                     'created_at' => now(),
                     'updated_at' => now(),
@@ -457,28 +460,15 @@ class BuyerService
     public function sendRfq($data)
     {
         $quote = B2bQuote::findOrFail($data->rfq_id);
-        $localItems = $quote->filter(function ($quote): bool {
-            return $quote->product_data['country_id'] == 160;
-        });
-        $internationalItems = $quote->filter(function ($quote): bool {
-            return $quote->product_data['country_id'] != 160;
-        });
 
-       
-
-        $defaultCurrency = userAuth()->default_currency;
-
-        $totalLocalPrice = $localItems->sum(function ($item) use ($defaultCurrency): float {
-            $price = optional($item->product)->price * $item->quantity;
-            return currencyConvert(optional($item->product->shopCountry)->currency, $price, $defaultCurrency);
-        });
-
-        $totalInternationalPrice = $internationalItems->sum(function ($item) use ($defaultCurrency): float {
-            $price = optional($item->product)->price * $item->quantity;
-            return currencyConvert(optional($item->product->shopCountry)->currency, $price, $defaultCurrency);
-        });
         try {
-            $amount = total_amount($quote->product_data['unit_price'], $quote->qty);
+            $unit_price = currencyConvert(
+                userAuth()->default_currency,
+                $quote->product_data['unit_price'],
+                $product->shopCountry->currency ?? 'NGN',
+            );
+            $amount = total_amount($unit_price, $quote->qty);
+
             Rfq::create([
                 'buyer_id' => $quote->buyer_id,
                 'seller_id' => $quote->seller_id,
@@ -486,7 +476,7 @@ class BuyerService
                 'product_id' => $quote->product_id,
                 'product_quantity' => $quote->qty,
                 'total_amount' => $amount,
-                'p_unit_price' => $quote->product_data['unit_price'],
+                'p_unit_price' => $unit_price,
                 'product_data' => $quote->product_data,
             ]);
 

@@ -705,7 +705,6 @@ class SellerService extends Controller
         ]);
         $orderedItems = [
             'quantity' => $order->product_quantity,
-            'price' => $order->total_amount,
             'buyer_name' => $user->first_name . ' ' . $user->last_name,
             'order_number' => $order->order_no,
         ];
@@ -727,6 +726,11 @@ class SellerService extends Controller
 
         try {
             $amount = $rfq->total_amount;
+            $total_amount = currencyConvert(
+                userAuth()->default_currency,
+                $amount,
+                $product->shopCountry->currency ?? 'NGN',
+            );
             $order = B2bOrder::create([
                 'buyer_id' => $rfq->buyer_id,
                 'seller_id' => $rfq->seller_id,
@@ -734,35 +738,35 @@ class SellerService extends Controller
                 'product_quantity' => $rfq->product_quantity,
                 'order_no' => 'ORD-' . now()->timestamp . '-' . Str::random(8),
                 'product_data' => $product,
-                'total_amount' => $amount,
+                'total_amount' => $total_amount,
                 'payment_method' => PaymentType::OFFLINE,
                 'payment_status' => OrderStatus::PAID,
                 'status' => OrderStatus::PENDING,
             ]);
 
+          
             $orderedItems = [
                 'product_name' => $product->name,
                 'image' => $product->front_image,
                 'quantity' => $rfq->product_quantity,
-                'price' => $rfq->total_amount,
+                'price' => $total_amount,
                 'buyer_name' => $buyer->first_name . ' ' . $buyer->last_name,
                 'order_number' => $order->order_no,
+                'currency' => $buyer->default_currency,
             ];
 
+            $orderItemData = [
+                'orderedItems' => $orderedItems
+            ];
             $product->quantity -= $rfq->product_quantity;
             $product->sold += $rfq->product_quantity;
             $product->save();
 
-            $config = Configuration::first();
-            $sellerPercentage = $config->seller_perc ?? 0;
-            $credit = ($sellerPercentage / 100) * $amount;
+            $wallet = UserWallet::firstOrNew(['seller_id' => $seller->id]);
 
-            if ($credit > 0) {
-                $wallet = UserWallet::firstOrNew(['seller_id' => $seller->id]);
+            $wallet->master_wallet = ($wallet->master_wallet ?? 0) + $total_amount;
+            $wallet->save();
 
-                $wallet->master_wallet = ($wallet->master_wallet ?? 0) + $credit;
-                $wallet->save();
-            }
 
             $rfq->update([
                 'payment_status' => OrderStatus::PAID,
@@ -773,7 +777,7 @@ class SellerService extends Controller
             $type = MailingEnum::ORDER_EMAIL;
             $subject = "B2B Order Confirmation";
             $mail_class = B2BOrderEmail::class;
-            mailSend($type, $buyer, $subject, $mail_class, $orderedItems);
+            mailSend($type, $buyer, $subject, $mail_class, $orderItemData);
 
             return $this->success($order, 'Payment Confirmed successfully');
         } catch (\Exception $e) {
