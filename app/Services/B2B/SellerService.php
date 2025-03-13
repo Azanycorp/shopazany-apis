@@ -728,7 +728,6 @@ class SellerService extends Controller
 
         try {
             $amount = $rfq->total_amount;
-            $product = B2BProduct::findOrFail($rfq->product_id);
             $total_amount = currencyConvert(
                 userAuth()->default_currency,
                 $amount,
