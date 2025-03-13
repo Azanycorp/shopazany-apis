@@ -25,7 +25,7 @@ class AdminUserRequest extends FormRequest
             'first_name' => 'required',
             'last_name' => 'required',
             'phone_number' => 'required',
-            'email' => 'required|email|unique:admins,email'
+            'email' => 'required|email:rfc,dns|unique:admins,email'
         ];
     }
 }

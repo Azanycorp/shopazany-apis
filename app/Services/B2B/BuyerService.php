@@ -438,6 +438,7 @@ class BuyerService
                 if (empty($quote->product_data['unit_price']) || empty($quote->qty)) {
                     throw new \Exception('Invalid product data for quote ID: ' . $quote->id);
                 }
+                $product = B2BProduct::findOrFail($quote->product_id);
                 $unit_price = currencyConvert(
                     userAuth()->default_currency,
                     $quote->product_data['unit_price'],
@@ -472,6 +473,7 @@ class BuyerService
         $quote = B2bQuote::findOrFail($data->rfq_id);
 
         try {
+            $product = B2BProduct::findOrFail($quote->product_id);
             $unit_price = currencyConvert(
                 userAuth()->default_currency,
                 $quote->product_data['unit_price'],
@@ -646,15 +648,11 @@ class BuyerService
         DB::beginTransaction();
 
         try {
-            $unit_price = currencyConvert(
-                userAuth()->default_currency,
-                $data->p_unit_price,
-                $product->shopCountry->currency ?? 'NGN',
-            );
+
             $rfq->messages()->create([
                 'rfq_id' => $data->rfq_id,
                 'buyer_id' => userAuthId(),
-                'p_unit_price' => $unit_price,
+                'p_unit_price' => $data->p_unit_price,
                 'preferred_qty' => $rfq->product_quantity,
                 'note' => $data->note,
             ]);

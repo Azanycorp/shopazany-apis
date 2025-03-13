@@ -136,10 +136,10 @@ Route::middleware('validate.header')
                 Route::post('/wish/send-quote', 'sendFromWishList');
                 Route::get('quotes', 'allQuotes');
                 Route::get('/wish-list', 'wishList');
+                Route::get('rfq', 'getAllRfqs');
 
                 Route::middleware('cacheResponse:300')->group(function (): void {
                     Route::get('dashboard', 'dashboard');
-                    Route::get('rfq', 'getAllRfqs');
                     Route::get('rfq-details/{id}', 'getRfqDetails');
                     Route::get('orders', 'allOrders');
                     Route::get('order-details/{id}', 'getOrderDetails');
