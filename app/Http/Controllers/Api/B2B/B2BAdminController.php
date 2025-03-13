@@ -186,7 +186,6 @@ class B2BAdminController extends Controller
         return $this->adminService->addSubscriptionPlan($request);
     }
 
-
     public function viewSubscriptionPlan($id)
     {
         return $this->adminService->viewSubscriptionPlan($id);

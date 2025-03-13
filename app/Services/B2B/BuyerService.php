@@ -236,11 +236,10 @@ class BuyerService
     }
     public function getSliders()
     {
-        $sliders = SliderImage::where('status', ProductStatus::ACTIVE)
-            ->where('type', BannerType::B2B)
+        $sliders = SliderImage::where('type', BannerType::B2B)
             ->latest('id')
             ->get();
-            $data = SliderResource::collection($sliders);
+        $data = SliderResource::collection($sliders);
         return $this->success($data, 'banners');
     }
     public function getPageBanners($page)
@@ -431,7 +430,7 @@ class BuyerService
         if ($quotes->isEmpty()) {
             return $this->error(null, 'No record found to send', 404);
         }
-        $unit_price = '';
+
         DB::beginTransaction();
 
         try {
@@ -602,12 +601,13 @@ class BuyerService
 
     public function allOrders()
     {
-        $userId = userAuthId();
-
-        $orders = B2bOrder::with('seller')->where('buyer_id', $userId)
-            ->latest('id')
-            ->get();
-
+        $searchQuery = request()->input('search');
+        $orders = B2bOrder::with('seller')->where('buyer_id', userAuthId())->when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
+            $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
+                $subQuery->where('buyer_id', userAuthId())
+                    ->where('order_no', 'LIKE', '%' . $searchQuery . '%');
+            });
+        })->get();
         if ($orders->isEmpty()) {
             return $this->error(null, 'No record found to send', 404);
         }
@@ -617,13 +617,13 @@ class BuyerService
 
     public function orderDetails($id)
     {
-        $order = B2bOrder::with(['seller', 'buyer'])->findOrFail($id);
+        $order = B2bOrder::with(['seller', 'buyer'])->where('buyer_id', userAuthId())->findOrFail($id);
         $data = new B2BOrderResource($order);
         return $this->success($data, 'order details');
     }
     public function rfqDetails($id)
     {
-        $rfq = Rfq::with(['seller', 'messages'])->findOrFail($id);
+        $rfq = Rfq::with(['seller', 'messages'])->where('buyer_id', userAuthId())->findOrFail($id);
 
         $messages = RfqMessage::with(['seller', 'buyer'])->where('rfq_id', $rfq->id)->get();
         $data = [
@@ -646,17 +646,20 @@ class BuyerService
         DB::beginTransaction();
 
         try {
-
+            $unit_price = currencyConvert(
+                userAuth()->default_currency,
+                $data->p_unit_price,
+                $product->shopCountry->currency ?? 'NGN',
+            );
             $rfq->messages()->create([
                 'rfq_id' => $data->rfq_id,
                 'buyer_id' => userAuthId(),
-                'p_unit_price' => $data->p_unit_price,
+                'p_unit_price' => $unit_price,
                 'preferred_qty' => $rfq->product_quantity,
                 'note' => $data->note,
             ]);
 
             $rfq->update(['status' => 'review']);
-
             DB::commit();
 
             return $this->success($rfq, 'Review sent successfully with details.');

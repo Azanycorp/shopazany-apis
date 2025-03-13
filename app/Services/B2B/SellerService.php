@@ -352,7 +352,7 @@ class SellerService extends Controller
     {
         $currentUserId = userAuthId();
         $prod = B2BProduct::where('user_id', $currentUserId)->findOrFail($product_id);
-        $this->b2bProductRepository->delete($product_id);
+        $this->b2bProductRepository->delete($prod->id);
 
         return $this->success(null, 'Deleted successfully');
     }
@@ -360,7 +360,6 @@ class SellerService extends Controller
     public function getAnalytics($user_id)
     {
         $currentUserId = userAuthId();
-
         if ($currentUserId != $user_id) {
             return $this->error(null, "Unauthorized action.", 401);
         }
@@ -590,12 +589,9 @@ class SellerService extends Controller
         return $this->success($data, "Earning details");
     }
 
-
-
     public function getOrderDetails($id)
     {
-        $order = B2bOrder::with(['buyer', 'seller'])->findOrFail($id);
-
+        $order = B2bOrder::with(['buyer', 'seller'])->where('seller_id', userAuthId())->findOrFail($id);
         $data = new B2BOrderResource($order);
         return $this->success($data, 'order details');
     }
@@ -642,7 +638,7 @@ class SellerService extends Controller
 
     public function markShipped($data)
     {
-        $order = B2bOrder::find($data->order_id);
+        $order = B2bOrder::where('seller_id', userAuthId())->find($data->order_id);
         if (!$order) {
             return $this->error(null, 'order not found');
         }
@@ -697,15 +693,21 @@ class SellerService extends Controller
 
     public function markDelivered($data)
     {
-        $order = B2bOrder::findOrFail($data->order_id);
-        $user = User::findOrFail($order->buyer_id);
+        $order = B2bOrder::where('seller_id', userAuthId())->findOrFail($data->order_id);
+        $user = User::find($order->buyer_id);
+
+        if (!$user) {
+            return $this->error(null, 'Buyer details not found', 404);
+        }
+
         $order->update([
             'status' => OrderStatus::DELIVERED,
             'delivery_date' => now()->toDateString()
         ]);
+
         $orderedItems = [
             'quantity' => $order->product_quantity,
-            'buyer_name' => $user->first_name . ' ' . $user->last_name,
+            'buyer_name' => $user->buyerName(),
             'order_number' => $order->order_no,
         ];
         $type = MailingEnum::ORDER_EMAIL;
@@ -744,7 +746,7 @@ class SellerService extends Controller
                 'status' => OrderStatus::PENDING,
             ]);
 
-          
+
             $orderedItems = [
                 'product_name' => $product->name,
                 'image' => $product->front_image,
@@ -763,7 +765,6 @@ class SellerService extends Controller
             $product->save();
 
             $wallet = UserWallet::firstOrNew(['seller_id' => $seller->id]);
-
             $wallet->master_wallet = ($wallet->master_wallet ?? 0) + $total_amount;
             $wallet->save();
 
@@ -787,7 +788,7 @@ class SellerService extends Controller
 
     public function cancelOrder($data)
     {
-        $order = B2bOrder::find($data->order_id);
+        $order = B2bOrder::where('seller_id', userAuthId())->find($data->order_id);
         if (!$order) {
             return $this->error(null, "Order not found", 404);
         }
@@ -807,8 +808,8 @@ class SellerService extends Controller
 
     public function rateOrder($data)
     {
-        $order = B2bOrder::findOrFail($data->order_id);
         $userId = userAuthId();
+        $order = B2bOrder::where('seller_id', $userId)->findOrFail($data->order_id);
         B2bOrderRating::create([
             'seller_id' => $userId,
             'order_no' => $order->order_no,
@@ -821,10 +822,8 @@ class SellerService extends Controller
 
     public function orderFeeback($data)
     {
-        $order = B2bOrder::findOrFail($data->order_id);
-
         $userId = userAuthId();
-
+        $order = B2bOrder::where('seller_id', $userId)->findOrFail($data->order_id);
         B2bOrderFeedback::create([
             'seller_id' => $userId,
             'order_no' => $order->order_no,
@@ -987,7 +986,7 @@ class SellerService extends Controller
     {
         B2bWithdrawalMethod::create([
             'country_id' => $data->country_id,
-            'user_id' => Auth::id(),
+            'user_id' => userAuthId(),
             'account_name' => $data->account_name,
             'account_number' => $data->account_number,
             'account_type' => $data->account_type,
@@ -1041,7 +1040,7 @@ class SellerService extends Controller
 
         $method->update([
             'country_id' => $data->country_id,
-            'user_id' => Auth::id(),
+            'user_id' =>  userAuthId(),
             'account_name' => $data->account_name,
             'account_number' => $data->account_number,
             'account_type' => $data->account_type,
