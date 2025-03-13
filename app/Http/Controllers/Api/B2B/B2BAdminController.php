@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
 use App\Http\Requests\AdminUserRequest;
 use App\Http\Requests\ShippingAgentRequest;
+use App\Http\Requests\Admin\NewBannerRequest;
 use App\Http\Requests\ChangeAdminPasswordRequest;
 use App\Http\Requests\Admin\SubscriptionPlanRequest;
 
@@ -83,11 +84,32 @@ class B2BAdminController extends Controller
     {
         return $this->adminService->getConfigDetails();
     }
-
     public function UpdateConfigDetails(Request $request)
     {
         return $this->adminService->UpdateConfigDetails($request);
     }
+    public function getAllBanners()
+    {
+        return $this->adminService->getPageBanners();
+    }
+
+    public function addNewBanner(NewBannerRequest $request)
+    {
+        return $this->adminService->addPageBanner($request);
+    }
+    public function updatePageBanner($id, Request $request)
+    {
+        return $this->adminService->updatePageBanner($id, $request);
+    }
+    public function deletePageBanner($id)
+    {
+        return $this->adminService->deletePageBanner($id);
+    }
+    public function editPageBanner($id)
+    {
+        return $this->adminService->getPageBanner($id);
+    }
+
 
     //Withdrawal Requests
     public function widthrawalRequests()
@@ -152,78 +174,6 @@ class B2BAdminController extends Controller
         return $this->adminService->rejectProduct($id, $request);
     }
 
-    //Admin Users
-    public function adminUsers()
-    {
-        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
-        return $this->adminService->adminUsers();
-    }
-
-    public function addAdmin(AdminUserRequest $request)
-    {
-        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
-        return $this->adminService->addAdmin($request);
-    }
-
-    public function viewAdminUser($id)
-    {
-        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
-        return $this->adminService->viewAdmin($id);
-    }
-
-    public function editAdminUser($id, Request $request)
-    {
-        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
-        return $this->adminService->editAdmin($id, $request);
-    }
-
-    public function verifyPassword(Request $request)
-    {
-        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
-        return $this->adminService->verifyPassword($request);
-    }
-
-    public function revokeAccess($id)
-    {
-        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
-        return $this->adminService->revokeAccess($id);
-    }
-
-    public function removeAdmin($id)
-    {
-        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
-        return $this->adminService->removeAdmin($id);
-    }
-
-    //ShippingAgents section
-    public function shippingAgents()
-    {
-        return $this->adminService->shippingAgents();
-    }
-
-    public function addShippingAgent(ShippingAgentRequest $request)
-    {
-        return $this->adminService->addShippingAgent($request);
-    }
-    public function getCountryList()
-    {
-        return $this->adminService->getCountryList();
-    }
-
-    public function viewShippingAgent($id)
-    {
-        return $this->adminService->viewShippingAgent($id);
-    }
-
-    public function editShippingAgent($id, ShippingAgentRequest $request)
-    {
-        return $this->adminService->editShippingAgent($id, $request);
-    }
-
-    public function deleteShippingAgent($id)
-    {
-        return $this->adminService->deleteShippingAgent($id);
-    }
 
     //Subscription plans
     public function b2bSubscriptionPlans()
@@ -235,7 +185,6 @@ class B2BAdminController extends Controller
     {
         return $this->adminService->addSubscriptionPlan($request);
     }
-
 
     public function viewSubscriptionPlan($id)
     {

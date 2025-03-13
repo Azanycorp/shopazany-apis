@@ -10,6 +10,7 @@ use App\Models\Brand;
 use App\Models\Color;
 use App\Models\State;
 use App\Models\Country;
+use App\Enum\BannerType;
 use App\Enum\BannerStatus;
 use App\Models\ShopCountry;
 use App\Models\SliderImage;
@@ -29,26 +30,27 @@ class B2BAdminService
 {
     use HttpResponse;
 
-    public function addSlider($request)
+    public function addSlider($data)
     {
         try {
 
             $folder = null;
 
-            if(App::environment('production')){
+            if (App::environment('production')) {
                 $folder = '/prod/slider_image';
-            } elseif(App::environment(['staging', 'local'])) {
+            } elseif (App::environment(['staging', 'local'])) {
                 $folder = '/stag/slider_image';
             }
 
-            if ($request->file('image')) {
-                $path = $request->file('image')->store($folder, 's3');
+            if ($data->file('image')) {
+                $path = $data->file('image')->store($folder, 's3');
                 $url = Storage::disk('s3')->url($path);
             }
 
             SliderImage::create([
                 'image' => $url,
-                'link' => $request->link
+                'type' => BannerType::B2B,
+                'link' => $data->link
             ]);
 
             return $this->success(null, "Created successfully");
@@ -56,11 +58,51 @@ class B2BAdminService
             return $this->error(null, $e->getMessage(), 500);
         }
     }
+    public function updateSlider($id, $data)
+    {
+        $slider = SliderImage::where('type', BannerType::B2B)->findOrFail($id);
+        try {
 
-    public function slider()
+            $folder = null;
+
+            if (App::environment('production')) {
+                $folder = '/prod/slider_image';
+            } elseif (App::environment(['staging', 'local'])) {
+                $folder = '/stag/slider_image';
+            }
+
+            if ($data->file('image')) {
+                $path = $data->file('image')->store($folder, 's3');
+                $url = Storage::disk('s3')->url($path);
+            }
+
+            $slider->update([
+                'image' => $url ?? $slider->image,
+                'link' => $data->link
+            ]);
+
+            return $this->success(null, "Details Updated successfully");
+        } catch (\Exception $e) {
+            return $this->error(null, $e->getMessage(), 500);
+        }
+    }
+    public function getSlider($id)
+    {
+        $slider = SliderImage::where('type', BannerType::B2B)->findOrFail($id);
+        $data = new SliderResource($slider);
+        return $this->success($data, "Slider details");
+    }
+    public function deleteSlider($id)
+    {
+        $slider = SliderImage::where('type', BannerType::B2B)->findOrFail($id);
+        $slider->delete();
+        return $this->success(null, "details deleted");
+    }
+
+    public function sliders()
     {
         $sliders = Cache::rememberForever('home_sliders', function () {
-            return SliderImage::orderBy('created_at', 'desc')->take(5)->get();
+            return SliderImage::where('type', BannerType::B2B)->latest('id')->take(5)->get();
         });
 
         $data = SliderResource::collection($sliders);
@@ -71,8 +113,8 @@ class B2BAdminService
     public function categories()
     {
         $categories = B2bProductCategory::where('featured', 1)
-        ->where('status', 'active')
-        ->get();
+            ->where('status', 'active')
+            ->get();
 
         $data = B2BCategoryResource::collection($categories);
 
@@ -139,15 +181,15 @@ class B2BAdminService
     {
         $country = Country::find($request->country_id);
 
-        if(! $country) {
+        if (! $country) {
             return $this->error(null, "Not found", 404);
         }
 
         $folder = null;
 
-        if(App::environment('production')){
+        if (App::environment('production')) {
             $folder = '/prod/shopcountryflag';
-        } elseif(App::environment(['staging', 'local'])) {
+        } elseif (App::environment(['staging', 'local'])) {
             $folder = '/stag/shopcountryflag';
         }
 
@@ -172,12 +214,12 @@ class B2BAdminService
     public function referralGenerate()
     {
         $users = User::whereNull('referrer_code')
-        ->orWhere('referrer_code', '')
-        ->orWhereNull('referrer_link')
-        ->orWhere('referrer_link', '')
-        ->get();
+            ->orWhere('referrer_code', '')
+            ->orWhereNull('referrer_link')
+            ->orWhere('referrer_link', '')
+            ->get();
 
-        foreach($users as $user) {
+        foreach ($users as $user) {
             if (!$user->referrer_code) {
                 $user->referrer_code = generate_referral_code();
             }
@@ -201,4 +243,3 @@ class B2BAdminService
         return $this->success($data, 'Profile detail');
     }
 }
-

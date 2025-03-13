@@ -11,14 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('b2b_banners', function (Blueprint $table): void {
+        Schema::create('page_banners', function (Blueprint $table) {
             $table->id();
-            $table->string('title');
-            $table->string('image');
-            $table->dateTime('start_date');
-            $table->dateTime('end_date');
-            $table->string('products');
-            $table->enum('status', ['active', 'inactive']);
+            $table->string('page')->nullable();
+            $table->string('type')->nullable();
+            $table->text('section')->nullable();
+            $table->text('banner_url')->nullable();
             $table->timestamps();
         });
     }
@@ -28,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('b2b_banners');
+        Schema::dropIfExists('page_banners');
     }
 };

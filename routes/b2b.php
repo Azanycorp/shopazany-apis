@@ -31,6 +31,8 @@ Route::middleware('validate.header')
             });
             Route::prefix('b2b')->controller(B2BController::class)->group(function (): void {
                 Route::get('/banners', 'getBanners');
+                Route::get('/sliders', 'getSliders');
+                Route::get('/page-banners/{page}', 'getPageBanners');
                 Route::get('/products', 'getProducts');
                 Route::get('/categories-products', 'getCategoryProducts');
                 Route::get('/product-categories', 'allCategories');
@@ -91,21 +93,21 @@ Route::middleware('validate.header')
 
                     // Product
                     Route::prefix('product')->group(function (): void {
+                        Route::get('/', 'getAllProduct');
                         Route::post('/add', 'addProduct');
                         Route::get('/analytic/{user_id}', 'getAnalytics');
-                        Route::get('/details/{product_id}/{user_id}', 'getProductById');
+                        Route::get('/details/{product_id}', 'getProductById');
                         Route::post('/update', 'updateProduct');
-                        Route::delete('/delete/{user_id}/{product_id}', 'deleteProduct');
+                        Route::delete('/delete/{product_id}', 'deleteProduct');
                         Route::post('import', 'productImport');
                         Route::post('export/{user_id}/{type}', 'export');
-                        Route::get('/{user_id}', 'getAllProduct');
                     });
 
                     // Shipping
                     Route::prefix('shipping')->group(function (): void {
-                        Route::post('/', 'addShipping');
-                        Route::get('/{user_id}', 'getAllShipping');
-                        Route::get('/{user_id}/{shipping_id}', 'getShippingById');
+                        Route::get('/', 'getAllShipping');
+                        Route::post('/add', 'addShipping');
+                        Route::get('/details/{shipping_id}', 'getShippingById');
                         Route::patch('/update/{shipping_id}', 'updateShipping');
                         Route::patch('/default/{user_id}/{shipping_id}', 'setDefault');
                         Route::delete('/delete/{user_id}/{shipping_id}', 'deleteShipping');
@@ -134,10 +136,10 @@ Route::middleware('validate.header')
                 Route::post('/wish/send-quote', 'sendFromWishList');
                 Route::get('quotes', 'allQuotes');
                 Route::get('/wish-list', 'wishList');
+                Route::get('rfq', 'getAllRfqs');
 
                 Route::middleware('cacheResponse:300')->group(function (): void {
                     Route::get('dashboard', 'dashboard');
-                    Route::get('rfq', 'getAllRfqs');
                     Route::get('rfq-details/{id}', 'getRfqDetails');
                     Route::get('orders', 'allOrders');
                     Route::get('order-details/{id}', 'getOrderDetails');
