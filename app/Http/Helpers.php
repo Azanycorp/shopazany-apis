@@ -1,6 +1,7 @@
 <?php
 
 use App\Actions\UserLogAction;
+use App\Models\Action;
 use App\Models\B2BRequestRefund;
 use App\Models\Upload;
 use App\Models\Language;
@@ -12,6 +13,7 @@ use App\Models\Currency;
 use App\Models\Mailing;
 use App\Models\Order;
 use App\Models\OrderActivity;
+use App\Models\RewardPointSetting;
 use App\Models\User;
 use App\Models\UserActivityLog;
 use App\Services\RewardPoint\RewardService;
@@ -2525,5 +2527,48 @@ if (! function_exists('getOrderStatusMessage')) {
         ];
 
         return $statusMessages[$status] ?? 'Your order status has been updated.';
+    }
+}
+
+if (! function_exists('getRewards')) {
+    function getRewards($countryId)
+    {
+        $id = (int)$countryId;
+        return Action::whereJsonContains('country_ids', $id)
+            ->select('id', 'name', 'description', 'icon', 'verification_type', 'points')
+            ->get();
+    }
+}
+
+if (! function_exists('userRewards')) {
+    function userRewards($userId)
+    {
+        $user = User::with(['userActions' => function ($query) {
+            $query->select('id', 'user_id', 'action_id', 'points')
+                ->with('action:id,name,icon,points');
+        }])->findOrFail($userId);
+
+        $userCurrency = $user->default_currency ?? 'USD';
+
+        return $user->userActions->map(function ($action) use ($userCurrency) {
+            $action->value = pointConvert($action->points, $userCurrency);
+            $action->currency = $userCurrency;
+            return $action;
+        });
+    }
+}
+
+if (! function_exists('pointConvert')) {
+    function pointConvert($point, $to)
+    {
+        $usdSetting = RewardPointSetting::where('currency', 'USD')->first();
+        if (!$usdSetting) {
+            throw new Exception("Reward point setting for USD not found.");
+        }
+
+        $usdValue = ($point * $usdSetting->value) / $usdSetting->point;
+        $convertedValue = currencyConvert('USD', $usdValue, $to);
+
+        return round($convertedValue, 2);
     }
 }
