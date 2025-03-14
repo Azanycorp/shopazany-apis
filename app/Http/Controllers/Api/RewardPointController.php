@@ -40,6 +40,13 @@ class RewardPointController extends Controller
     public function editPoints(Request $request, $id)
     {
         abort_if(Gate::denies('points_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+        $request->validate([
+            'name' => ['nullable', 'string'],
+            'icon' => ['nullable', 'image'],
+            'points' => ['nullable', 'integer'],
+            'verification_type' => ['nullable', 'string'],
+            'country_ids' => ['nullable', 'array'],
+        ]);
         return $this->service->editPoints($request, $id);
     }
 

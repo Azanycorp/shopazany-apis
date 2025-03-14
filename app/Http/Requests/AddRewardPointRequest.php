@@ -24,7 +24,7 @@ class AddRewardPointRequest extends FormRequest
         return [
             'name' => ['required', 'string'],
             'icon' => ['required', 'image'],
-            'points' => ['required'],
+            'points' => ['required', 'integer'],
             'verification_type' => ['required', 'string', 'in:manual,automatic'],
             'country_ids' => ['required', 'array'],
         ];
