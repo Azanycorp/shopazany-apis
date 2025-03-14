@@ -31,6 +31,7 @@ use App\Models\UserShippingAddress;
 use Illuminate\Support\Facades\Log;
 use App\Models\BuyerShippingAddress;
 use App\Http\Resources\B2BBuyerShippingAddressResource;
+use App\Models\Action;
 use App\Models\Wallet;
 use App\Models\WithdrawalRequest;
 use App\Notifications\WithdrawalNotification;
@@ -267,7 +268,11 @@ class PaystackService
 
                 if ($user->type === UserType::CUSTOMER) {
                     Log::info("Rewarding user for purchase " . $user);
-                    reward_user($user, 'purchase_item', 'completed');
+                    $actionSlug = Action::whereIn('name', ['Purchase item', 'Purchase an item'])
+                        ->orWhere('slug', 'purchase_an_item')
+                        ->value('slug');
+
+                    reward_user($user, $actionSlug, 'completed');
                 }
 
                 Cart::where('user_id', $userId)->delete();
