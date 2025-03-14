@@ -901,7 +901,7 @@ class AdminService
         ]);
         return $this->success(null, 'Details updated successfully');
     }
-    
+
     public function deleteShippingAgent($id)
     {
         $agent = ShippingAgent::findOrFail($id);

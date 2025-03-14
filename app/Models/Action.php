@@ -12,6 +12,17 @@ class Action extends Model
     protected $fillable = [
         'name',
         'slug',
-        'points'
+        'points',
+        'description',
+        'icon',
+        'verification_type',
+        'country_ids',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'country_ids' => 'array',
+        ];
+    }
 }
