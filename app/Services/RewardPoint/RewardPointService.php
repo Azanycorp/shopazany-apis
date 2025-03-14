@@ -101,8 +101,6 @@ class RewardPointService
         }
 
         $folder = app()->environment('production') ? '/prod/rewardpoint' : '/stag/rewardpoint';
-
-        $name = strtolower(str_replace(' ', '_', $request->name));
         $url = uploadImage($request, 'icon', $folder);
 
         if ($request->country_ids) {
@@ -114,8 +112,6 @@ class RewardPointService
         }
 
         $action->update([
-            'name' => $request->name ?? $action->name,
-            'slug' => $name ?? $action->slug,
             'description' => $request->description ?? $action->description,
             'icon' => $url ?? $action->icon,
             'verification_type' => $request->verification_type ?? $action->verification_type,
