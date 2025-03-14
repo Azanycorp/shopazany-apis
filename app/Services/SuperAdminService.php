@@ -337,7 +337,6 @@ class SuperAdminService
         return $this->success(null, 'Deleted successfully');
     }
 
-
     //Shipping Agents
     public function shippingAgents()
     {
@@ -366,14 +365,6 @@ class SuperAdminService
         $agent = ShippingAgent::findOrFail($id);
         $data = new ShippingAgentResource($agent);
         return $this->success($data, 'Agent details');
-    }
-
-    public function getCountryList()
-    {
-        $countries = Cache::rememberForever('countries', function () {
-            return Country::select('id', 'name', 'phonecode', 'is_allowed')->get();
-        });
-        return $this->success($countries, 'countries list');
     }
 
     public function editShippingAgent($id, $data)

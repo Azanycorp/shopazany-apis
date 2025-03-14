@@ -373,10 +373,11 @@ class PaystackService
                 );
                 $product->save();
 
-                $wallet = UserWallet::firstOrNew(['seller_id' => $seller->id]);
-                $wallet->master_wallet = ($wallet->master_wallet ?? 0) + $seller_amount;
-                $wallet->save();
-
+                $wallet = UserWallet::firstOrCreate(
+                    ['seller_id' => $seller->id],
+                    ['master_wallet' => 0]
+                );
+                $wallet->increment('master_wallet', $seller_amount);
 
                 $rfq->update([
                     'payment_status' => OrderStatus::PAID,

@@ -15,9 +15,4 @@ return new class extends Migration
             $table->string('type')->nullable()->after('link');
         });
     }
-
-    /**
-     * Reverse the migrations.
-     */
-
 };

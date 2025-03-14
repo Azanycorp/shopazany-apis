@@ -21,8 +21,7 @@ class B2BSellerShippingRepository implements B2BRepositoryInterface
 
     public function find(int $id)
     {
-        $currentUserId = userAuthId();
-        return B2BSellerShippingAddress::where('user_id',$currentUserId)->findOrFail($id);
+        return B2BSellerShippingAddress::findOrFail($id);
     }
 
     public function update(int $id, array $data)

@@ -29,9 +29,7 @@ class B2BProductRepository implements B2BRepositoryInterface
 
     public function find(int $id)
     {
-        $currentUserId = userAuthId();
-        return B2BProduct::with(['b2bProductImages', 'category', 'country', 'user', 'subCategory'])
-            ->where('user_id', $currentUserId)->findOrFail($id);
+        return B2BProduct::with(['b2bProductImages', 'category', 'country', 'user', 'subCategory'])->findOrFail($id);
     }
 
     public function update(int $id, array $data)

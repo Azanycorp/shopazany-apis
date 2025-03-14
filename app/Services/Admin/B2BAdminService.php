@@ -30,7 +30,7 @@ class B2BAdminService
 {
     use HttpResponse;
 
-    public function addSlider($data)
+    public function addSlider($request)
     {
         try {
 
@@ -42,15 +42,15 @@ class B2BAdminService
                 $folder = '/stag/slider_image';
             }
 
-            if ($data->file('image')) {
-                $path = $data->file('image')->store($folder, 's3');
+            if ($request->file('image')) {
+                $path = $request->file('image')->store($folder, 's3');
                 $url = Storage::disk('s3')->url($path);
             }
 
             SliderImage::create([
                 'image' => $url,
                 'type' => BannerType::B2B,
-                'link' => $data->link
+                'link' => $request->link
             ]);
 
             return $this->success(null, "Created successfully");
@@ -58,7 +58,7 @@ class B2BAdminService
             return $this->error(null, $e->getMessage(), 500);
         }
     }
-    public function updateSlider($id, $data)
+    public function updateSlider($id, $request)
     {
         $slider = SliderImage::where('type', BannerType::B2B)->findOrFail($id);
         try {
@@ -71,14 +71,14 @@ class B2BAdminService
                 $folder = '/stag/slider_image';
             }
 
-            if ($data->file('image')) {
-                $path = $data->file('image')->store($folder, 's3');
+            if ($request->file('image')) {
+                $path = $request->file('image')->store($folder, 's3');
                 $url = Storage::disk('s3')->url($path);
             }
 
             $slider->update([
                 'image' => $url ?? $slider->image,
-                'link' => $data->link
+                'link' => $request->link
             ]);
 
             return $this->success(null, "Details Updated successfully");
@@ -113,7 +113,7 @@ class B2BAdminService
     public function categories()
     {
         $categories = B2bProductCategory::where('featured', 1)
-            ->where('status', 'active')
+            ->where('status',BannerStatus::ACTIVE)
             ->get();
 
         $data = B2BCategoryResource::collection($categories);
