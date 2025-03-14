@@ -76,6 +76,8 @@ class ProfileResource extends JsonResource
                 'expired_at' => (string)$this->subscription_plan?->expired_at,
                 'status' => (string)$this->subscription_plan?->status,
             ],
+            'rewards' => getRewards($this->country),
+            'user_rewards' => userRewards($this->id),
         ];
     }
 }

@@ -1,6 +1,7 @@
 <?php
 
 use App\Actions\UserLogAction;
+use App\Models\Action;
 use App\Models\B2BRequestRefund;
 use App\Models\Upload;
 use App\Models\Language;
@@ -11,6 +12,8 @@ use App\Models\Country;
 use App\Models\Currency;
 use App\Models\Mailing;
 use App\Models\Order;
+use App\Models\OrderActivity;
+use App\Models\RewardPointSetting;
 use App\Models\User;
 use App\Models\UserActivityLog;
 use App\Services\RewardPoint\RewardService;
@@ -2487,5 +2490,85 @@ if (! function_exists('currencyCodeByCountryId')) {
             $currencyCode = getCurrencyCode($country->sortname);
         }
         return $currencyCode;
+    }
+}
+
+if (! function_exists('logOrderActivity')) {
+    function logOrderActivity($orderId, $message, $status)
+    {
+        OrderActivity::updateOrCreate(
+            [
+                'order_id' => $orderId,
+                'status' => $status
+            ],
+            [
+                'message' => $message,
+                'status' => $status,
+                'date' => now(),
+            ]
+        );
+    }
+}
+
+if (! function_exists('getOrderStatusMessage')) {
+    function getOrderStatusMessage(string $status): string
+    {
+        $statusMessages = [
+            'confirmed'   => 'Your order has been confirmed.',
+            'cancelled'   => 'Unfortunately, your order has been cancelled.',
+            'delivered'   => 'Great news! Your order has been delivered successfully.',
+            'completed'   => 'Your order has been completed. Thank you for shopping with us!',
+            'pending'     => 'Your order is currently pending. We will update you soon.',
+            'processing'  => 'Your order is being processed. Please wait while we prepare it.',
+            'in-progress' => 'Your order is in progress. Our team is working on it.',
+            'review'      => 'Your order is under review. We will notify you once it’s approved.',
+            'shipped'     => 'Your order has been shipped and is on its way!',
+            'paid'        => 'Payment received! Your order will be processed shortly.',
+        ];
+
+        return $statusMessages[$status] ?? 'Your order status has been updated.';
+    }
+}
+
+if (! function_exists('getRewards')) {
+    function getRewards($countryId)
+    {
+        $id = (int)$countryId;
+        return Action::whereJsonContains('country_ids', $id)
+            ->select('id', 'name', 'description', 'icon', 'verification_type', 'points')
+            ->get();
+    }
+}
+
+if (! function_exists('userRewards')) {
+    function userRewards($userId)
+    {
+        $user = User::with(['userActions' => function ($query) {
+            $query->select('id', 'user_id', 'action_id', 'points')
+                ->with('action:id,name,icon,points');
+        }])->findOrFail($userId);
+
+        $userCurrency = $user->default_currency ?? 'USD';
+
+        return $user->userActions->map(function ($action) use ($userCurrency) {
+            $action->value = pointConvert($action->points, $userCurrency);
+            $action->currency = $userCurrency;
+            return $action;
+        });
+    }
+}
+
+if (! function_exists('pointConvert')) {
+    function pointConvert($point, $to)
+    {
+        $usdSetting = RewardPointSetting::where('currency', 'USD')->first();
+        if (!$usdSetting) {
+            throw new Exception("Reward point setting for USD not found.");
+        }
+
+        $usdValue = ($point * $usdSetting->value) / $usdSetting->point;
+        $convertedValue = currencyConvert('USD', $usdValue, $to);
+
+        return round($convertedValue, 2);
     }
 }

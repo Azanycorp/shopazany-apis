@@ -58,45 +58,47 @@ class OrderService
 
         $orders = Order::with([
             'user',
-            'seller.state',
-            'seller.userCountry',
-            'products.category'
+            'products.category',
+            'products.user'
         ])
-            ->where('country_id', 160)
-            ->when($search, function ($query, $search): void {
-                $query->where(function ($query) use ($search): void {
-                    $query->whereHas('user', function ($query) use ($search): void {
-                        $query->where('first_name', 'like', "%{$search}%")
-                          ->orWhere('last_name', 'like', "%{$search}%");
-                    })->orWhereHas('seller', function ($query) use ($search): void {
-                        $query->where('first_name', 'like', "%{$search}%")
-                          ->orWhere('last_name', 'like', "%{$search}%");
-                    })->orWhere('order_no', 'like', "%{$search}%");
-                });
-            })
-            ->get()
-            ->groupBy('order_no')
-            ->map(function ($group) {
-                $firstOrder = $group->first();
-                $firstOrder->products = $group->pluck('products')->flatten();
-                return $firstOrder;
-            })
-            ->values();
+        ->where('country_id', 160)
+        ->when($search, function ($query, $search): void {
+            $query->where(function ($query) use ($search): void {
+                $query->whereHas('user', function ($query) use ($search): void {
+                    $query->where('first_name', 'like', "%{$search}%")
+                        ->orWhere('last_name', 'like', "%{$search}%");
+                })->orWhereHas('products.user', function ($query) use ($search): void {
+                    $query->where('first_name', 'like', "%{$search}%")
+                        ->orWhere('last_name', 'like', "%{$search}%");
+                })->orWhere('order_no', 'like', "%{$search}%");
+            });
+        })
+        ->get()
+        ->groupBy('order_no')
+        ->map(function ($group) {
+            $firstOrder = $group->first();
+            $firstOrder->products = $group->pluck('products')->flatten();
+            return $firstOrder;
+        })
+        ->values();
 
-        $orders = $orders->forPage(request()->input('page', 1), 25);
+        $currentPage = request()->input('page', 1);
+        $perPage = 25;
 
-        $data = AdminOrderResource::collection($orders);
+        $paginatedOrders = $orders->slice(($currentPage - 1) * $perPage, $perPage);
+
+        $data = AdminOrderResource::collection($paginatedOrders);
 
         return [
             'status' => 'true',
             'message' => 'Local Orders',
             'data' => $data,
             'pagination' => [
-                'current_page' => request()->input('page', 1),
-                'last_page' => ceil($orders->count() / 25),
-                'per_page' => 25,
-                'prev_page_url' => url()->previous(),
-                'next_page_url' => url()->current() . '?page=' . (request()->input('page', 1) + 1),
+                'current_page' => $currentPage,
+                'last_page' => ceil($orders->count() / $perPage),
+                'per_page' => $perPage,
+                'prev_page_url' => $currentPage > 1 ? url()->current() . '?page=' . ($currentPage - 1) : null,
+                'next_page_url' => $currentPage < ceil($orders->count() / $perPage) ? url()->current() . '?page=' . ($currentPage + 1) : null,
             ],
         ];
     }
@@ -105,42 +107,49 @@ class OrderService
     {
         $search = request()->input('search');
 
-        $orders = Order::with(['user', 'seller', 'products'])
-            ->where('country_id', '!=', 160)
-            ->when($search, function ($query, $search): void {
-                $query->where(function ($query) use ($search): void {
-                    $query->whereHas('user', function ($query) use ($search): void {
-                        $query->where('first_name', 'like', "%{$search}%")
-                          ->orWhere('last_name', 'like', "%{$search}%");
-                    })->orWhereHas('seller', function ($query) use ($search): void {
-                        $query->where('first_name', 'like', "%{$search}%")
-                          ->orWhere('last_name', 'like', "%{$search}%");
-                    })->orWhere('order_no', 'like', "%{$search}%");
-                });
-            })
-            ->get()
-            ->groupBy('order_no')
-            ->map(function ($group) {
-                $firstOrder = $group->first();
-                $firstOrder->products = $group->pluck('products')->flatten();
-                return $firstOrder;
-            })
-            ->values();
+        $orders = Order::with([
+            'user',
+            'products.category',
+            'products.user'
+        ])
+        ->where('country_id', '!=', 160)
+        ->when($search, function ($query, $search): void {
+            $query->where(function ($query) use ($search): void {
+                $query->whereHas('user', function ($query) use ($search): void {
+                    $query->where('first_name', 'like', "%{$search}%")
+                        ->orWhere('last_name', 'like', "%{$search}%");
+                })->orWhereHas('products.user', function ($query) use ($search): void {
+                    $query->where('first_name', 'like', "%{$search}%")
+                        ->orWhere('last_name', 'like', "%{$search}%");
+                })->orWhere('order_no', 'like', "%{$search}%");
+            });
+        })
+        ->get()
+        ->groupBy('order_no')
+        ->map(function ($group) {
+            $firstOrder = $group->first();
+            $firstOrder->products = $group->pluck('products')->flatten();
+            return $firstOrder;
+        })
+        ->values();
 
-        $orders = $orders->forPage(request()->input('page', 1), 25);
+        $currentPage = request()->input('page', 1);
+        $perPage = 25;
 
-        $data = AdminOrderResource::collection($orders);
+        $paginatedOrders = $orders->slice(($currentPage - 1) * $perPage, $perPage);
+
+        $data = AdminOrderResource::collection($paginatedOrders);
 
         return [
             'status' => 'true',
             'message' => 'International Orders',
             'data' => $data,
             'pagination' => [
-                'current_page' => request()->input('page', 1),
-                'last_page' => ceil($orders->count() / 25),
-                'per_page' => 25,
-                'prev_page_url' => url()->previous(),
-                'next_page_url' => url()->current() . '?page=' . (request()->input('page', 1) + 1),
+                'current_page' => $currentPage,
+                'last_page' => ceil($orders->count() / $perPage),
+                'per_page' => $perPage,
+                'prev_page_url' => $currentPage > 1 ? url()->current() . '?page=' . ($currentPage - 1) : null,
+                'next_page_url' => $currentPage < ceil($orders->count() / $perPage) ? url()->current() . '?page=' . ($currentPage + 1) : null,
             ],
         ];
     }

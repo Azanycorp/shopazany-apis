@@ -159,8 +159,11 @@ Route::middleware('validate.header')
                 Route::post('/action', 'addPoints');
                 Route::get('/action', 'getPoints');
                 Route::get('/action/{id}', 'getOnePoints');
-                Route::patch('/action/{id}', 'editPoints');
+                Route::post('/action/{id}', 'editPoints');
                 Route::delete('/delete/{id}', 'deletePoints');
+
+                Route::post('/point/setting', 'addPointSetting');
+                Route::get('/point/setting', 'getPointSetting');
             });
 
             Route::prefix('role')->controller(RoleController::class)->group(function (): void {

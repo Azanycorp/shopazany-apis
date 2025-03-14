@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\UserWallet;
 use App\Enum\ProductStatus;
 use App\Mail\SignUpVerifyMail;
+use App\Models\Action;
 use App\Models\Wallet;
 use Illuminate\Contracts\Events\ShouldHandleEventsAfterCommit;
 
@@ -28,7 +29,11 @@ class UserObserver implements ShouldHandleEventsAfterCommit
         mailSend($type, $user, $subject, $mail_class, $data);
 
         if (in_array($user->type, [UserType::CUSTOMER, UserType::SELLER])) {
-            reward_user($user, 'create_account', 'completed');
+            $actionSlug = Action::whereIn('name', ['Create account', 'Create an account', 'Create user'])
+                ->orWhere('slug', 'create_an_account')
+                ->value('slug');
+
+            reward_user($user, $actionSlug, 'completed');
         }
 
         if ($user->is_affiliate_member) {

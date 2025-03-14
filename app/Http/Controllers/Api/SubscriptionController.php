@@ -3,11 +3,15 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\SubscriptionPaymentRequest;
 use App\Services\SubscriptionService;
+use App\Trait\HttpResponse;
 use Illuminate\Http\Request;
 
 class SubscriptionController extends Controller
 {
+    use HttpResponse;
+
     protected \App\Services\SubscriptionService $service;
 
     public function __construct(SubscriptionService $service)
@@ -20,7 +24,7 @@ class SubscriptionController extends Controller
         return $this->service->getPlanByCountry($countryId);
     }
 
-    public function subscriptionPayment(Request $request)
+    public function subscriptionPayment(SubscriptionPaymentRequest $request)
     {
         return $this->service->subscriptionPayment($request);
     }

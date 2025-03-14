@@ -31,6 +31,7 @@ use App\Models\UserShippingAddress;
 use Illuminate\Support\Facades\Log;
 use App\Models\BuyerShippingAddress;
 use App\Http\Resources\B2BBuyerShippingAddressResource;
+use App\Models\Action;
 use App\Models\Wallet;
 use App\Models\WithdrawalRequest;
 use App\Notifications\WithdrawalNotification;
@@ -115,6 +116,7 @@ class PaystackService
                     'payment_id' => $payment->id,
                     'plan_start' => now(),
                     'plan_end' => now()->addDays(30),
+                    'subscription_type' => PaymentType::PAYSTACK,
                     'authorization_data' => $authData,
                     'status' => SubscriptionType::ACTIVE,
                     'expired_at' => null,
@@ -198,6 +200,9 @@ class PaystackService
                     'status' => OrderStatus::PENDING,
                 ]);
 
+                $msg = "Your order has been placed successfully.";
+                logOrderActivity($order->id, $msg, OrderStatus::PENDING);
+
                 $orderedItems = [];
                 $product = null;
                 foreach ($items as $item) {
@@ -214,6 +219,7 @@ class PaystackService
                         'product_quantity' => $item['product_quantity'],
                         'price' => $convertedPrice,
                         'sub_total' => $convertedPrice * $item['product_quantity'],
+                        'status' => OrderStatus::PENDING,
                     ]);
 
                     $orderedItems[] = [
@@ -262,7 +268,11 @@ class PaystackService
 
                 if ($user->type === UserType::CUSTOMER) {
                     Log::info("Rewarding user for purchase " . $user);
-                    reward_user($user, 'purchase_item', 'completed');
+                    $actionSlug = Action::whereIn('name', ['Purchase item', 'Purchase an item'])
+                        ->orWhere('slug', 'purchase_an_item')
+                        ->value('slug');
+
+                    reward_user($user, $actionSlug, 'completed');
                 }
 
                 Cart::where('user_id', $userId)->delete();
@@ -369,7 +379,7 @@ class PaystackService
                 $seller_amount = currencyConvert(
                     $user->default_currency,
                     $amount,
-                    $product->shopCountry->currency,
+                    $product->shopCountry->currency ?? 'NGN',
                 );
                 $product->save();
 

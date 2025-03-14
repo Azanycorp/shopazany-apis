@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Enum\PaymentType;
 use Illuminate\Http\Request;
 use App\Models\ShippingAgent;
 use App\Models\CollationCenter;
@@ -11,11 +10,7 @@ use App\Http\Requests\PaymentRequest;
 use App\Services\Payment\PaymentService;
 use App\Http\Resources\ShippingAgentResource;
 use App\Http\Requests\AuthorizeNetCardRequest;
-use App\Services\Payment\HandlePaymentService;
-use App\Services\Payment\PaymentDetailsService;
 use App\Http\Requests\B2BAuthorizeNetCardRequest;
-use App\Services\Payment\PaystackPaymentProcessor;
-use App\Services\Payment\B2BPaystackPaymentProcessor;
 
 class PaymentController extends Controller
 {
@@ -40,21 +35,7 @@ class PaymentController extends Controller
 
     public function processPayment(PaymentRequest $request)
     {
-        $paymentProcessor = match ($request->payment_method) {
-            PaymentType::PAYSTACK => new PaystackPaymentProcessor(),
-            PaymentType::B2B_PAYSTACK => new B2BPaystackPaymentProcessor(),
-            default => throw new \Exception("Unsupported payment method"),
-        };
-
-        $paymentService = new HandlePaymentService($paymentProcessor);
-
-        $paymentDetails = match ($request->payment_method) {
-            PaymentType::PAYSTACK => PaymentDetailsService::paystackPayDetails($request),
-            PaymentType::B2B_PAYSTACK => PaymentDetailsService::b2bPaystackPayDetails($request),
-            default => throw new \Exception("Unsupported payment method"),
-        };
-
-        return $paymentService->process($paymentDetails);
+        return $this->service->processPayment($request);
     }
 
     public function webhook(Request $request)

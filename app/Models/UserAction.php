@@ -22,4 +22,9 @@ class UserAction extends Model
     {
     	return $this->belongsTo(User::class, 'user_id');
     }
+
+    public function action(): BelongsTo
+    {
+        return $this->belongsTo(Action::class, 'action_id');
+    }
 }

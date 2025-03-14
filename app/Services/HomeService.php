@@ -13,6 +13,7 @@ use App\Trait\HttpResponse;
 use Illuminate\Support\Facades\DB;
 use App\Http\Resources\SellerProductResource;
 use App\Http\Resources\SingleProductResource;
+use App\Models\Action;
 use App\Models\Brand;
 use App\Models\Cart;
 use App\Models\Category;
@@ -303,6 +304,8 @@ class HomeService
 
     public function productReview($request)
     {
+        $user = User::findOrFail($request->user_id);
+
         $product = Product::with('productReviews')
         ->findOrFail($request->product_id);
 
@@ -312,6 +315,12 @@ class HomeService
             'review' => $request->review,
             'status' => ProductReviewStatus::APPROVED,
         ]);
+
+        $actionSlug = Action::whereIn('name', ['Write a product review', 'Product review'])
+            ->orWhere('slug', 'write_a_product_review')
+            ->value('slug');
+
+        reward_user($user, $actionSlug, 'completed');
 
         return $this->success(null, "Review added successfully");
     }

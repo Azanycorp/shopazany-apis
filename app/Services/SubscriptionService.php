@@ -3,14 +3,16 @@
 namespace App\Services;
 
 use App\Enum\PaymentType;
-use App\Enum\UserStatus;
 use App\Http\Resources\SubscriptionHistoryResource;
 use App\Http\Resources\SubscriptionPlanResource;
 use App\Models\SubscriptionPlan;
+use App\Services\Payment\AuthorizeNetSubscriptionPaymentProcessor;
+use App\Services\Payment\HandlePaymentService;
+use App\Services\Payment\PaymentDetailsService;
+use App\Services\Payment\PaystackPaymentProcessor;
 use App\Models\User;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Facades\Auth;
-use Unicodeveloper\Paystack\Facades\Paystack;
 
 class SubscriptionService
 {
@@ -30,50 +32,25 @@ class SubscriptionService
 
     public function subscriptionPayment($request)
     {
-        $amount = $request->input('amount') * 100;
+        $paymentProcessor = match ($request->type) {
+            PaymentType::PAYSTACK => new PaystackPaymentProcessor(),
+            PaymentType::AUTHORIZE => new AuthorizeNetSubscriptionPaymentProcessor(),
+            default => throw new \Exception("Unsupported payment method"),
+        };
 
-        $callbackUrl = $request->input('redirect_url');
-        if (!filter_var($callbackUrl, FILTER_VALIDATE_URL)) {
-            return $this->error(null, 'Invalid callback URL', 400);
+        $paymentService = new HandlePaymentService($paymentProcessor);
+
+        $paymentDetails = match($request->type) {
+            PaymentType::PAYSTACK => PaymentDetailsService::paystackSubcriptionPayDetails($request),
+            PaymentType::AUTHORIZE => PaymentDetailsService::authorizeNetSubcriptionPayDetails($request),
+            default => throw new \Exception("Unsupported payment method"),
+        };
+
+        if (isset($paymentDetails['error'])) {
+            return $this->error(null, $paymentDetails['error'], 400);
         }
 
-        $user = User::with([
-            'referrer' => function ($query) {
-                $query->with('wallet');
-            },
-            'userSubscriptions' => function ($query) {
-                $query->where('status', UserStatus::ACTIVE);
-            }
-        ])->findOrFail($request->user_id);
-
-        if($user->is_subscribed) {
-            $currentPlan = $user?->subscription_plan?->subscriptionPlan;
-            $newPlan = SubscriptionPlan::findOrFail($request->input('subscription_plan_id'));
-
-            if ($newPlan->tier < $currentPlan->tier) {
-                return $this->error(null, 'You cannot downgrade your subscription plan', 403);
-            }
-            if ($newPlan->id == $currentPlan->id) {
-                return $this->error(null, 'You are already subscribed to this plan', 403);
-            }
-        }
-
-        $paymentDetails = [
-            'email' => $request->input('email'),
-            'amount' => $amount,
-            'currency' => 'NGN',
-            'metadata' => json_encode([
-                'user_id' => $request->input('user_id'),
-                'referrer_id' => $user->referrer->first()?->id,
-                'subscription_plan_id' => $request->input('subscription_plan_id'),
-                'payment_method' => 'paystack',
-                'payment_type' => PaymentType::RECURRINGCHARGE,
-            ]),
-            'callback_url' => $callbackUrl
-        ];
-
-        $paystackInstance = Paystack::getAuthorizationUrl($paymentDetails);
-        return response()->json($paystackInstance);
+        return $paymentService->process($paymentDetails);
     }
 
     public function subscriptionHistory($userId)
@@ -85,8 +62,8 @@ class SubscriptionService
         }
 
         $user = User::with(['userSubscriptions.subscriptionPlan'])
-        ->findOrFail($userId)
-        ->append('subscription_history');
+            ->findOrFail($userId)
+            ->append('subscription_history');
 
         $data = SubscriptionHistoryResource::collection($user->subscription_history);
         return $this->success($data, "Subscription histories");

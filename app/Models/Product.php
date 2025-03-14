@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Support\Facades\Auth;
 
 class Product extends Model
 {
@@ -84,7 +86,7 @@ class Product extends Model
     public function orders()
     {
         return $this->belongsToMany(Order::class, 'order_items')
-                    ->withPivot('product_quantity', 'price', 'sub_total');
+                    ->withPivot('product_quantity', 'price', 'sub_total', 'status');
     }
 
     public function size(): BelongsTo
@@ -115,6 +117,22 @@ class Product extends Model
     public function productReviews(): HasMany
     {
         return $this->hasMany(ProductReview::class, 'product_id');
+    }
+
+    protected function isInWishlist(): Attribute
+    {
+        return Attribute::make(
+            get: function () {
+                if (!Auth::guard('sanctum')->check()) {
+                    return false;
+                }
+
+                return Wishlist::where([
+                    ['user_id', Auth::guard('sanctum')->id()],
+                    ['product_id', $this->id]
+                ])->exists();
+            }
+        );
     }
 
     // Scopes

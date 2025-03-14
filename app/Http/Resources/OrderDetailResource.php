@@ -42,6 +42,7 @@ class OrderDetailResource extends JsonResource
                 'sub_total' => (float) $convertedSubTotal,
                 'original_currency' => (string) $productCurrency,
                 'image' => (string) $product->image,
+                'status' => (string) $product->pivot->status,
             ];
         })->toArray();
 
