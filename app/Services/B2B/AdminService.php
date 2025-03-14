@@ -679,10 +679,10 @@ class AdminService
 
         return $this->success(null, 'Details updated');
     }
+
     public function getPageBanners()
     {
-
-        $banners = PageBanner::where('type', BannerType::B2B)->latest('id')->get();
+        $banners = PageBanner::select('id','page','section','type','banner_url')->where('type', BannerType::B2B)->latest('id')->get();
         return $this->success($banners, 'Banners');
     }
 
@@ -713,7 +713,7 @@ class AdminService
     }
     public function getPageBanner($id)
     {
-        $banner = PageBanner::where('type', BannerType::B2B)->findOrFail($id);
+        $banner = PageBanner::select('id','page','section','type','banner_url')->where('type', BannerType::B2B)->findOrFail($id);
         return $this->success($banner, 'Banner details');
     }
     public function deletePageBanner($id)

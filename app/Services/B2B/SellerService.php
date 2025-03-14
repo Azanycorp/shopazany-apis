@@ -181,11 +181,13 @@ class SellerService extends Controller
     {
         $currentUserId = userAuthId();
         if ($currentUserId != $request->user_id) {
-            return $this->error(null, "Unauthorized action.", 401);
+            return $this->error(null, "Unauthorized action.", 404);
         }
 
         $seller =  User::find($currentUserId);
-
+        if (!$seller) {
+            return $this->error(null, "User details not found.", 404);
+        }
         try {
             Excel::import(new B2BProductImport($seller), $request->file('file'));
 
@@ -197,11 +199,13 @@ class SellerService extends Controller
     public function addProduct($request)
     {
         $currentUserId = userAuthId();
-        $user = User::find($currentUserId);
         if ($currentUserId != $request->user_id) {
-            return $this->error(null, "Unauthorized action.", 401);
+            return $this->error(null, "Unauthorized action.", 404);
         }
-
+        $user = User::find($currentUserId);
+        if (!$user) {
+            return $this->error(null, "User details not found.", 404);
+        }
         try {
 
             $parts = explode('@', $user->email);
@@ -764,10 +768,11 @@ class SellerService extends Controller
             $product->sold += $rfq->product_quantity;
             $product->save();
 
-            $wallet = UserWallet::firstOrNew(['seller_id' => $seller->id]);
-            $wallet->master_wallet = ($wallet->master_wallet ?? 0) + $total_amount;
-            $wallet->save();
-
+            $wallet = UserWallet::firstOrCreate(
+                ['seller_id' => $seller->id],
+                ['master_wallet' => 0]
+            );
+            $wallet->increment('master_wallet', $total_amount);
 
             $rfq->update([
                 'payment_status' => OrderStatus::PAID,

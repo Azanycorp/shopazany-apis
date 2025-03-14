@@ -244,7 +244,7 @@ class BuyerService
     }
     public function getPageBanners($page)
     {
-        $banners = PageBanner::where('type', BannerType::B2B)->where('page', $page)->get();
+        $banners = PageBanner::select('id','page','section','type','banner_url')->where('type', BannerType::B2B)->where('page', $page)->get();
         return $this->success($banners, 'home-banners');
     }
 
