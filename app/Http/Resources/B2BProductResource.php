@@ -36,7 +36,7 @@ class B2BProductResource extends JsonResource
             'country' => (string)$this->country?->name,
             'reviews' => $this->b2bProductReview ? $this->b2bProductReview->map(function ($b2bProductReview): array {
                 return [
-                    'buyer' => $b2bProductReview->user?->buyerName(),
+                    'buyer' => $b2bProductReview->user?->buyerName,
                     "rating" => floatval($b2bProductReview->rating),
                     "title" => $b2bProductReview->title,
                     "note" => $b2bProductReview->title,

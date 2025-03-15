@@ -711,7 +711,7 @@ class SellerService extends Controller
 
         $orderedItems = [
             'quantity' => $order->product_quantity,
-            'buyer_name' => $user->buyerName(),
+            'buyer_name' => $user->buyerName,
             'order_number' => $order->order_no,
         ];
         $type = MailingEnum::ORDER_EMAIL;
