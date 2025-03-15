@@ -244,7 +244,7 @@ class BuyerService
     }
     public function getPageBanners($page)
     {
-        $banners = PageBanner::select('id','page','section','type','banner_url')->where('type', BannerType::B2B)->where('page', $page)->get();
+        $banners = PageBanner::select('id', 'page', 'section', 'type', 'banner_url')->where('type', BannerType::B2B)->where('page', $page)->get();
         return $this->success($banners, 'home-banners');
     }
 
@@ -366,14 +366,17 @@ class BuyerService
 
     public function categoryBySlug($slug)
     {
-        $category = B2bProductCategory::with(['products' => function ($query): void {
-            $query->where('status', ProductStatus::ACTIVE);
-        }])
-            ->select('id', 'name', 'slug', 'image')
-            ->where('slug', $slug)
-            ->firstOrFail();
 
-        return $this->success($category, 'Products by category');
+        $category = B2bProductCategory::with(['subcategory', 'products', 'products.b2bProductReview', 'products.b2bLikes'])
+            ->withCount('products')
+            ->with(['products' => function ($query) {
+                $query->withCount('b2bProductReview');
+            }])
+            ->select('id', 'name', 'slug', 'image')
+            ->where(['featured' => 1, 'slug' => $slug])
+            ->firstOrFail();
+        $data = new B2BCategoryResource($category);
+        return $this->success($data, 'Products by category');
     }
 
     public function getProductDetail($slug)
