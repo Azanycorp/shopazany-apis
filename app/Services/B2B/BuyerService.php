@@ -366,7 +366,6 @@ class BuyerService
 
     public function categoryBySlug($slug)
     {
-
         $category = B2bProductCategory::with(['subcategory', 'products', 'products.b2bProductReview', 'products.b2bLikes'])
             ->withCount('products')
             ->with(['products' => function ($query) {
@@ -423,7 +422,6 @@ class BuyerService
         $data = B2BQuoteResource::collection($quotes);
         return $this->success($data, 'quotes lists');
     }
-
 
     public function sendMutipleQuotes()
     {
