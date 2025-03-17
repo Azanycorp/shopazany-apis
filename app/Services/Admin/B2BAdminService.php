@@ -187,11 +187,9 @@ class B2BAdminService
 
         $folder = null;
 
-        if (App::environment('production')) {
-            $folder = '/prod/shopcountryflag';
-        } elseif (App::environment(['staging', 'local'])) {
-            $folder = '/stag/shopcountryflag';
-        }
+        $folder = App::environment('production')
+        ? '/prod/shopcountryflag'
+        : (App::environment(['staging', 'local']) ? '/stag/shopcountryflag' : '/default/shopcountryflag');
 
         $url = uploadImage($request, 'flag', $folder);
         ShopCountry::create([

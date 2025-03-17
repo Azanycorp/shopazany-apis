@@ -719,7 +719,7 @@ class AdminService
     public function deletePageBanner($id)
     {
         $banner = PageBanner::where('type', BannerType::B2B)->findOrFail($id);
-        $banner->delete($id);
+        $banner->delete();
         return $this->success(null, 'Details Deleted');
     }
 

@@ -264,7 +264,7 @@ class SellerService extends Controller
     public function getAllProduct()
     {
         $currentUserId = userAuthId();
-        $user = User::select('id')->findOrFail($currentUserId)->id;
+        $user = User::findOrFail($currentUserId)->id;
         $search = request()->input('search');
 
         $products = $this->b2bProductRepository->all($user, $search);
@@ -459,7 +459,6 @@ class SellerService extends Controller
 
         return $this->success(null, 'Deleted successfully');
     }
-
     public function setDefault($shipping_id)
     {
         $currentUserId = userAuthId();
@@ -732,10 +731,10 @@ class SellerService extends Controller
             $amount = $rfq->total_amount;
             $total_amount = currencyConvert(
                 userAuth()->default_currency,
-                $amount,
+                30,
                 $product->shopCountry->currency ?? 'USD',
             );
-            // return $total_amount;
+             return $product->shopCountry->currency ?? 'USD';
             $order = B2bOrder::create([
                 'buyer_id' => $rfq->buyer_id,
                 'seller_id' => $rfq->seller_id,

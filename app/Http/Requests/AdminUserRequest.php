@@ -22,9 +22,9 @@ class AdminUserRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'first_name' => 'required',
-            'last_name' => 'required',
-            'phone_number' => 'required',
+            'first_name' => 'required|string|max:240',
+            'last_name' => 'required|string|max:240',
+            'phone_number' => 'required|string|max:20',
             'email' => 'required|email:rfc,dns|unique:admins,email'
         ];
     }
