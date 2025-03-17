@@ -118,7 +118,7 @@ class B2BBannerPromoService
 
         return $this->success($data, "All Products");
     }
-    
+
     public function promos()
     {
         $promos = B2bPromo::get();

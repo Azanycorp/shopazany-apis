@@ -393,6 +393,7 @@ class ChargeCardService implements PaymentStrategy
                     'product_quantity' => $item['quantity'],
                     'price' => $convertedPrice,
                     'sub_total' => $convertedPrice * $item['quantity'],
+                    'status' => OrderStatus::PENDING,
                 ]);
 
                 $orderedItems[] = [
