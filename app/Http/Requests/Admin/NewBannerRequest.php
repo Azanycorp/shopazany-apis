@@ -22,8 +22,8 @@ class NewBannerRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'page' => 'required',
-            'section' => 'required',
+            'page' => 'required|string|max:240',
+            'section' => 'required|string|max:240',
             'banner_url' => 'required|image',
         ];
     }

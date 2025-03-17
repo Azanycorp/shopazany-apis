@@ -157,7 +157,7 @@ class SellerService extends Controller
         return $this->success(null, "Updated successfully");
     }
 
-    public function exportSellerProduct($request,$userId)
+    public function exportSellerProduct($request, $userId)
     {
         $currentUserId = Auth::id();
 
@@ -463,21 +463,19 @@ class SellerService extends Controller
     public function setDefault($shipping_id)
     {
         $currentUserId = userAuthId();
-        $shipping = B2BSellerShippingAddress::where('user_id', $currentUserId)
-            ->where('id', $shipping_id)
-            ->firstOrFail();
-
-        if ($shipping->is_default) {
-            return $this->error(null, 'Already set at default', 400);
+        $shipping = B2BSellerShippingAddress::where('user_id', $currentUserId)->find($shipping_id);
+        if (!$shipping) {
+            return $this->error(null, 'No record found', 404);
         }
-
-        B2BSellerShippingAddress::where('user_id', $currentUserId)->update(['is_default' => 0]);
+        B2BSellerShippingAddress::where('user_id', userAuthId())
+            ->where('is_default', 1)
+            ->update(['is_default' => 0]);
 
         $shipping->update([
             'is_default' => 1
         ]);
 
-        return $this->success(null, 'Set successfully');
+        return $this->success(null, 'Address Set as default successfully');
     }
 
     public function getComplaints($user_id)
@@ -735,7 +733,7 @@ class SellerService extends Controller
             $total_amount = currencyConvert(
                 userAuth()->default_currency,
                 $amount,
-                $product->shopCountry->currency ?? 'NGN',
+                $product->shopCountry->currency ?? 'USD',
             );
             $order = B2bOrder::create([
                 'buyer_id' => $rfq->buyer_id,
@@ -1036,7 +1034,7 @@ class SellerService extends Controller
 
         return $this->success($method, 'Withdrawal details', 200);
     }
-    public function updateMethod($request,$id)
+    public function updateMethod($request, $id)
     {
         $method = B2bWithdrawalMethod::findOrFail($id);
         $method->update([

@@ -26,7 +26,8 @@ class AddBannerRequest extends FormRequest
             'image' => 'required|image',
             'start_date' => 'required|date_format:Y-m-d H:i:s',
             'end_date' => 'required|date_format:Y-m-d H:i:s',
-            'products' => 'required|exists:b2b_products,id',
+            'products' => 'required|array',
+            'products.*' => 'exists:b2b_products,id',
         ];
     }
 }
