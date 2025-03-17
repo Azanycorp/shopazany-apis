@@ -379,7 +379,7 @@ class PaystackService
                 $seller_amount = currencyConvert(
                     $user->default_currency,
                     $amount,
-                    $product->shopCountry->currency ?? 'NGN',
+                    $product->shopCountry->currency ?? 'USD',
                 );
                 $product->save();
 
