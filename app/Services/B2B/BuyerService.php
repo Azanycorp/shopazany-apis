@@ -469,16 +469,16 @@ class BuyerService
         }
     }
 
-    public function sendRfq($data)
+    public function sendRfq($request)
     {
-        $quote = B2bQuote::findOrFail($data->rfq_id);
+        $quote = B2bQuote::findOrFail($request->rfq_id);
 
         try {
             $product = B2BProduct::findOrFail($quote->product_id);
             $unit_price = currencyConvert(
                 userAuth()->default_currency,
                 $quote->product_data['unit_price'],
-                $product->shopCountry->currency ?? 'NGN',
+                $product->shopCountry->currency ?? 'USD',
             );
             $amount = total_amount($unit_price, $quote->qty);
 
@@ -509,10 +509,10 @@ class BuyerService
         return $this->success(null, 'Item removed successfully');
     }
 
-    public function sendQuote($data)
+    public function sendQuote($request)
     {
         $userId = userAuthId();
-        $product = B2BProduct::findOrFail($data->product_id);
+        $product = B2BProduct::findOrFail($request->product_id);
         if ($product->availability_quantity < 1) {
             return $this->error(null, 'This product is currently not available for purchase', 422);
         }
@@ -522,10 +522,10 @@ class BuyerService
             return $this->error(null, 'Product already exist');
         }
 
-        if ($data->qty < $product->minimum_order_quantity) {
+        if ($request->qty < $product->minimum_order_quantity) {
             return $this->error(null, 'Your peferred quantity can not be less than the one already set', 422);
         }
-        if ($data->qty > $product->availability_quantity) {
+        if ($request->qty > $product->availability_quantity) {
             return $this->error(null, 'Your peferred quantity is greater than the availability quantity : ' . $product->availability_quantity, 422);
         }
         $quote = B2bQuote::create([
@@ -533,7 +533,7 @@ class BuyerService
             'seller_id' => $product->user_id,
             'product_id' => $product->id,
             'product_data' => $product,
-            'qty' => $data->qty,
+            'qty' => $request->qty,
         ]);
 
         return $this->success($quote, 'quote Added successfully');
@@ -638,9 +638,9 @@ class BuyerService
     }
 
     //send review request to vendor
-    public function sendReviewRequest($data)
+    public function sendReviewRequest($request)
     {
-        $rfq = Rfq::find($data->rfq_id);
+        $rfq = Rfq::find($request->rfq_id);
 
         if (!$rfq) {
             return $this->error(null, 'No record found to send', 404);
@@ -651,11 +651,11 @@ class BuyerService
         try {
 
             $rfq->messages()->create([
-                'rfq_id' => $data->rfq_id,
+                'rfq_id' => $request->rfq_id,
                 'buyer_id' => userAuthId(),
-                'p_unit_price' => $data->p_unit_price,
+                'p_unit_price' => $request->p_unit_price,
                 'preferred_qty' => $rfq->product_quantity,
-                'note' => $data->note,
+                'note' => $request->note,
             ]);
 
             $rfq->update(['status' => 'review']);
@@ -669,9 +669,9 @@ class BuyerService
     }
 
     //send review request to vendor
-    public function acceptQuote($data)
+    public function acceptQuote($request)
     {
-        $rfq = Rfq::find($data->rfq_id);
+        $rfq = Rfq::find($request->rfq_id);
 
         if (!$rfq) {
             return $this->error(null, 'No record found to send', 404);
@@ -685,15 +685,15 @@ class BuyerService
     }
 
     //send review request to vendor
-    public function addReview($data)
+    public function addReview($request)
     {
         $userId = userAuthId();
         $review = B2bProdctReview::updateOrCreate(
-            ['buyer_id' => $userId, 'product_id' => $data->product_id],
+            ['buyer_id' => $userId, 'product_id' => $request->product_id],
             [
-                'rating' => $data->rating,
-                'title' => $data->title,
-                'note' => $data->note,
+                'rating' => $request->rating,
+                'title' => $request->title,
+                'note' => $request->note,
             ]
         );
 
@@ -702,12 +702,12 @@ class BuyerService
         return $this->success(null, $msg);
     }
 
-    public function likeProduct($data)
+    public function likeProduct($request)
     {
         $userId = userAuthId();
         $like = B2bProdctLike::firstOrNew([
             'buyer_id' => $userId,
-            'product_id' => $data->product_id
+            'product_id' => $request->product_id
         ]);
 
         if ($like->exists) {
@@ -720,10 +720,10 @@ class BuyerService
         return $this->success(null, 'Liked successfully');
     }
 
-    public function addToWishList($data)
+    public function addToWishList($request)
     {
         $userId = userAuthId();
-        $product = B2BProduct::find($data->product_id);
+        $product = B2BProduct::find($request->product_id);
 
         if (!$product) {
             return $this->error(null, 'No record found to send', 404);
@@ -767,30 +767,30 @@ class BuyerService
         return $this->success(null, 'Item Removed');
     }
 
-    public function sendFromWishList($data)
+    public function sendFromWishList($request)
     {
-        $quote = B2bWishList::findOrFail($data->id);
+        $quote = B2bWishList::findOrFail($request->id);
 
         if (!$quote) {
             return $this->error(null, 'No record found', 404);
         }
         $product = B2BProduct::findOrFail($quote->product_id);
-        if ($data->qty < $product->minimum_order_quantity) {
+        if ($request->qty < $product->minimum_order_quantity) {
             return $this->error(null, 'Your peferred quantity can not be less than the one already set', 422);
         }
-        if ($data->qty > $product->availability_quantity) {
+        if ($request->qty > $product->availability_quantity) {
             return $this->error(null, 'Your peferred quantity is greater than the availability quantity : ' . $product->availability_quantity, 422);
         }
 
         try {
-            $amount = total_amount($product->unit_price, $data->qty);
+            $amount = total_amount($product->unit_price, $request->qty);
 
             Rfq::create([
                 'buyer_id' => $quote->user_id,
                 'seller_id' => $product->user_id,
                 'quote_no' => strtoupper(Str::random(10) . Auth::user()->id),
                 'product_id' => $product->id,
-                'product_quantity' => $data->qty,
+                'product_quantity' => $request->qty,
                 'total_amount' => $amount,
                 'p_unit_price' => $product->unit_price,
                 'product_data' => $product,
@@ -897,21 +897,21 @@ class BuyerService
         return $this->success(null, "Details Updated successfully");
     }
 
-    public function addShippingAddress($data)
+    public function addShippingAddress($request)
     {
         $currentUserId = userAuthId();
         $address = BuyerShippingAddress::create([
             'user_id' => $currentUserId,
-            'address_name' => $data->address_name,
-            'name' => $data->name,
-            'surname' => $data->surname,
-            'email' => $data->email,
-            'phone' => $data->phone,
-            'street' => $data->street,
-            'city' => $data->city,
-            'postal_code' => $data->postal_code,
-            'state_id' => $data->state_id,
-            'country_id' => $data->country_id,
+            'address_name' => $request->address_name,
+            'name' => $request->name,
+            'surname' => $request->surname,
+            'email' => $request->email,
+            'phone' => $request->phone,
+            'street' => $request->street,
+            'city' => $request->city,
+            'postal_code' => $request->postal_code,
+            'state_id' => $request->state_id,
+            'country_id' => $request->country_id,
         ]);
         return $this->success($address, 'Address Added');
     }
@@ -931,23 +931,23 @@ class BuyerService
         return $this->success($data, 'Address detail');
     }
 
-    public function updateShippingAddress($id, $data)
+    public function updateShippingAddress($request,$id)
     {
         $address = BuyerShippingAddress::find($id);
         if (!$address) {
             return $this->error(null, 'No record found', 404);
         }
         $address->update([
-            'address_name' => $data->address_name ?? $address->address_name,
-            'name' => $data->name ?? $address->name,
-            'surname' => $data->surname ?? $address->surname,
-            'email' => $data->email ?? $address->email,
-            'phone' => $data->phone ?? $address->phone,
-            'street' => $data->street ?? $address->street,
-            'city' => $data->city ?? $address->city,
-            'postal_code' => $data->postal_code ?? $address->postal_code,
-            'state_id' => $data->state_id ?? $address->state_id,
-            'country_id' => $data->country_id ?? $address->country_id,
+            'address_name' => $request->address_name ?? $address->address_name,
+            'name' => $request->name ?? $address->name,
+            'surname' => $request->surname ?? $address->surname,
+            'email' => $request->email ?? $address->email,
+            'phone' => $request->phone ?? $address->phone,
+            'street' => $request->street ?? $address->street,
+            'city' => $request->city ?? $address->city,
+            'postal_code' => $request->postal_code ?? $address->postal_code,
+            'state_id' => $request->state_id ?? $address->state_id,
+            'country_id' => $request->country_id ?? $address->country_id,
         ]);
 
         return $this->success(null, 'Details Updated successfully');

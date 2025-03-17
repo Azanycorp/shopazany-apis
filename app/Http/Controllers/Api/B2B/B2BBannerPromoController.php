@@ -33,9 +33,9 @@ class B2BBannerPromoController extends Controller
     {
         return $this->b2BAdminService->getSlider($id);
     }
-    public function updateSlider($id, NewSliderRequest $request)
+    public function updateSlider(NewSliderRequest $request,$id)
     {
-        return $this->b2BAdminService->updateSlider($id, $request);
+        return $this->b2BAdminService->updateSlider($request,$id);
     }
     public function deleteSlider($id)
     {

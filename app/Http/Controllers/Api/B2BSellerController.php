@@ -26,9 +26,9 @@ class B2BSellerController extends Controller
         return $this->service->b2bproductImport($request);
     }
 
-    public function export($userId, Request $request)
+    public function export(Request $request,$userId)
     {
-        return $this->service->exportSellerProduct($userId, $request);
+        return $this->service->exportSellerProduct($request,$userId);
     }
 
     public function profile()
@@ -206,9 +206,9 @@ class B2BSellerController extends Controller
         return $this->service->makeAccounDefaultt($request);
     }
 
-    public function updateWithdrawalMethod($id, WithdrawalMethodRequest $request)
+    public function updateWithdrawalMethod(WithdrawalMethodRequest $request,$id)
     {
-        return $this->service->updateMethod($id, $request);
+        return $this->service->updateMethod($request,$id);
     }
 
     public function deleteWithdrawalMethod($id)

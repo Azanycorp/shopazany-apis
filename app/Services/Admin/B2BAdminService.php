@@ -58,7 +58,7 @@ class B2BAdminService
             return $this->error(null, $e->getMessage(), 500);
         }
     }
-    public function updateSlider($id, $request)
+    public function updateSlider($request,$id)
     {
         $slider = SliderImage::where('type', BannerType::B2B)->findOrFail($id);
         try {

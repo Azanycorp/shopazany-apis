@@ -97,9 +97,9 @@ class B2BAdminController extends Controller
     {
         return $this->adminService->addPageBanner($request);
     }
-    public function updatePageBanner($id, Request $request)
+    public function updatePageBanner(Request $request, $id)
     {
-        return $this->adminService->updatePageBanner($id, $request);
+        return $this->adminService->updatePageBanner($request, $id);
     }
     public function deletePageBanner($id)
     {
@@ -148,9 +148,9 @@ class B2BAdminController extends Controller
         return $this->adminService->approveWidthrawalMethod($id);
     }
 
-    public function rejectWidthrawalMethod($id, Request $request)
+    public function rejectWidthrawalMethod(Request $request, $id)
     {
-        return $this->adminService->rejectWidthrawalMethod($id, $request);
+        return $this->adminService->rejectWidthrawalMethod($request, $id);
     }
 
     //Seller Products Approval Request
@@ -169,9 +169,9 @@ class B2BAdminController extends Controller
         return $this->adminService->approveProduct($id);
     }
 
-    public function rejectProduct($id, Request $request)
+    public function rejectProduct(Request $request,$id)
     {
-        return $this->adminService->rejectProduct($id, $request);
+        return $this->adminService->rejectProduct($request,$id);
     }
 
 
@@ -191,9 +191,9 @@ class B2BAdminController extends Controller
         return $this->adminService->viewSubscriptionPlan($id);
     }
 
-    public function editSubscriptionPlan($id, SubscriptionPlanRequest $request)
+    public function editSubscriptionPlan(SubscriptionPlanRequest $request,$id)
     {
-        return $this->adminService->editSubscriptionPlan($id, $request);
+        return $this->adminService->editSubscriptionPlan($request,$id);
     }
 
     public function deleteSubscriptionPlan($id)

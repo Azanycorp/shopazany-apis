@@ -164,7 +164,7 @@ class B2BBuyerController extends Controller
 
     public function updateShippingAddress(Request $request,$id)
     {
-        return $this->buyerService->updateShippingAddress($id,$request);
+        return $this->buyerService->updateShippingAddress($request,$id);
     }
 
     public function deleteShippingAddress($id)

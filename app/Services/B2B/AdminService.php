@@ -381,7 +381,7 @@ class AdminService
         return $this->success($data, 'Product details');
     }
 
-    public function editSellerProduct($user_id, $product_id, $request)
+    public function editSellerProduct($request,$user_id, $product_id)
     {
         $prod = B2BProduct::find($product_id);
         $user = User::find($user_id);
@@ -500,25 +500,25 @@ class AdminService
         return $this->success($user, "Buyer details");
     }
 
-    public function editBuyer($id, $data)
+    public function editBuyer($request,$id)
     {
         $user = User::findOrFail($id);
 
-        if (!empty($data->email) && User::where('email', $data->email)->where('id', '!=', $id)->exists()) {
+        if (!empty($request->email) && User::where('email', $request->email)->where('id', '!=', $id)->exists()) {
             return $this->error(null, "Email already exists.");
         }
 
-        $image = $data->hasFile('image') ? uploadUserImage($data, 'image', $user) : $user->image;
+        $image = $request->hasFile('image') ? uploadUserImage($request, 'image', $user) : $user->image;
         $user->update([
-            'first_name' => $data->first_name ?? $user->first_name,
-            'last_name' => $data->last_name ?? $user->last_name,
-            'email' => $data->email ?? $user->email,
-            'image' => $data->image ? $image : $user->image,
+            'first_name' => $request->first_name ?? $user->first_name,
+            'last_name' => $request->last_name ?? $user->last_name,
+            'email' => $request->email ?? $user->email,
+            'image' => $request->image ? $image : $user->image,
         ]);
         return $this->success($user, "Buyer details");
     }
 
-    public function editBuyerCompany($id, $data)
+    public function editBuyerCompany($request,$id)
     {
         $user = User::findOrFail($id);
         $company = B2bCompany::where('user_id', $user->id)->first();
@@ -528,10 +528,10 @@ class AdminService
         }
 
         $company->update([
-            'business_name' => $data->business_name ?? $company->business_name,
-            'company_size' => $data->company_size ?? $company->company_size,
-            'website' => $data->website ?? $company->website,
-            'service_type' => $data->service_type ?? $company->service_type,
+            'business_name' => $request->business_name ?? $company->business_name,
+            'company_size' => $request->company_size ?? $company->company_size,
+            'website' => $request->website ?? $company->website,
+            'service_type' => $request->service_type ?? $company->service_type,
         ]);
 
         return $this->success($company, "company details");
@@ -602,7 +602,7 @@ class AdminService
         return $this->success($data, 'Profile detail');
     }
 
-    public function updateAdminProfile($data)
+    public function updateAdminProfile($request)
     {
         $authUser = userAuth();
         $user = Admin::where('type', AdminType::B2B)
@@ -610,17 +610,17 @@ class AdminService
             ->firstOrFail();
 
         $user->update([
-            'first_name' => $data->first_name,
-            'last_name' => $data->last_name,
-            'email' => $data->email,
-            'phone_number' => $data->phone_number,
+            'first_name' => $request->first_name,
+            'last_name' => $request->last_name,
+            'email' => $request->email,
+            'phone_number' => $request->phone_number,
         ]);
         $data = new AdminUserResource($user);
 
         return $this->success($data, 'Profile detail');
     }
 
-    public function enableTwoFactor($data)
+    public function enableTwoFactor($request)
     {
         $authUser = userAuth();
         $user = Admin::where('type', AdminType::B2B)
@@ -628,13 +628,13 @@ class AdminService
             ->firstOrFail();
 
         $user->update([
-            'two_factor_enabled' => $data->two_factor_enabled,
+            'two_factor_enabled' => $request->two_factor_enabled,
         ]);
 
         return $this->success('Settings updated');
     }
 
-    public function updateAdminPassword($data)
+    public function updateAdminPassword($request)
     {
         $authUser = userAuth();
         $user = Admin::where('type', AdminType::B2B)
@@ -642,7 +642,7 @@ class AdminService
             ->firstOrFail();
 
         $user->update([
-            'password' => bcrypt($data->password),
+            'password' => bcrypt($request->password),
         ]);
         return $this->success(null, 'Password updated');
     }
@@ -653,9 +653,9 @@ class AdminService
         return $this->success($config, 'Config details');
     }
 
-    public function updateConfigDetails($data)
+    public function updateConfigDetails($request)
     {
-        $configData = $data->only([
+        $configData = $request->only([
             'usd_rate',
             'company_profit',
             'email_verify',
@@ -686,26 +686,26 @@ class AdminService
         return $this->success($banners, 'Banners');
     }
 
-    public function updatePageBanner($id, $data)
+    public function updatePageBanner($request,$id)
     {
         $banner = PageBanner::where('type', BannerType::B2B)->findOrFail($id);
-        $banner_url = ($banner && $data->hasFile('banner_url') ? uploadImage($data, 'banner_url', 'home-banner') : $banner->banner_url);
+        $banner_url = ($banner && $request->hasFile('banner_url') ? uploadImage($request, 'banner_url', 'home-banner') : $banner->banner_url);
 
         $banner->update([
-            'page' => $data->page ?? $banner->page,
-            'section' => $data->section ?? $banner->section,
+            'page' => $request->page ?? $banner->page,
+            'section' => $request->section ?? $banner->section,
             'type' => BannerType::B2B,
             'banner_url' => $banner_url,
         ]);
         return $this->success(null, 'Details updated');
     }
-    public function addPageBanner($data)
+    public function addPageBanner($request)
     {
-        $banner_url = $data->hasFile('banner_url') ? uploadImage($data, 'banner_url', 'home-banner') : null;
+        $banner_url = $request->hasFile('banner_url') ? uploadImage($request, 'banner_url', 'home-banner') : null;
 
         PageBanner::create([
-            'page' => $data->page,
-            'section' => $data->section,
+            'page' => $request->page,
+            'section' => $request->section,
             'type' =>  BannerType::B2B,
             'banner_url' => $banner_url,
         ]);
@@ -837,13 +837,13 @@ class AdminService
         return $this->success(null, 'Account Approved');
     }
 
-    public function rejectWidthrawalMethod($id, $data)
+    public function rejectWidthrawalMethod($request,$id)
     {
         $account =  B2bWithdrawalMethod::findOrFail($id);
 
         $account->update([
             'status' => ProductStatus::DECLINED,
-            'admin_comment' => $data->note
+            'admin_comment' => $request->note
         ]);
 
         return $this->success(null, 'Comment Submitted successfully');
@@ -882,12 +882,12 @@ class AdminService
         return $this->success(null, 'Product Approved');
     }
 
-    public function rejectProduct($id, $data)
+    public function rejectProduct($request,$id)
     {
         $product = B2BProduct::findOrFail($id);
         $product->update([
             'status' => ProductStatus::DECLINED,
-            'admin_comment' => $data->note
+            'admin_comment' => $request->note
         ]);
 
         return $this->success(null, 'Comment Submitted successfully');
@@ -901,19 +901,19 @@ class AdminService
         return $this->success($data, 'All B2B Plans');
     }
 
-    public function addSubscriptionPlan($data)
+    public function addSubscriptionPlan($request)
     {
-        $currencyCode = $this->currencyCode($data);
+        $currencyCode = $this->currencyCode($request);
         $plan = SubscriptionPlan::create([
-            'title' => $data->title,
-            'cost' => $data->cost,
-            'country_id' => $data->country_id,
+            'title' => $request->title,
+            'cost' => $request->cost,
+            'country_id' => $request->country_id,
             'currency' => $currencyCode,
-            'period' => $data->period,
-            'tier' => $data->tier,
-            'designation' => $data->designation,
-            'tagline' => $data->tagline,
-            'details' => $data->details,
+            'period' => $request->period,
+            'tier' => $request->tier,
+            'designation' => $request->designation,
+            'tagline' => $request->tagline,
+            'details' => $request->details,
             'type' => PlanType::B2B,
             'status' => PlanStatus::ACTIVE
         ]);
@@ -931,24 +931,24 @@ class AdminService
         return $this->success($data, 'Plan details');
     }
 
-    public function editSubscriptionPlan($id, $data)
+    public function editSubscriptionPlan($request,$id)
     {
         $plan = SubscriptionPlan::where('type', PlanType::B2B)->find($id);
         if (!$plan) {
             return $this->error(null, 'Plan not found', 404);
         }
-        $currencyCode = $this->currencyCode($data);
+        $currencyCode = $this->currencyCode($request);
         $plan->update([
-            'title' => $data->title,
-            'cost' => $data->cost,
-            'country_id' => $data->country_id,
-            'currency' => $data->country_id ? $currencyCode : $plan->currency,
-            'period' => $data->period,
-            'tier' => $data->tier,
-            'designation' => $data->designation,
-            'tagline' => $data->tagline,
-            'details' => $data->details,
-            'status' => $data->status ?? PlanStatus::ACTIVE
+            'title' => $request->title,
+            'cost' => $request->cost,
+            'country_id' => $request->country_id,
+            'currency' => $request->country_id ? $currencyCode : $plan->currency,
+            'period' => $request->period,
+            'tier' => $request->tier,
+            'designation' => $request->designation,
+            'tagline' => $request->tagline,
+            'details' => $request->details,
+            'status' => $request->status ?? PlanStatus::ACTIVE
         ]);
         return $this->success(null, 'Details updated successfully');
     }
