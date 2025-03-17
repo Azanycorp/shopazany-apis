@@ -21,6 +21,7 @@ class WishlistResource extends JsonResource
             'product_name' => $this->product?->name,
             'product_category' => $this->product?->category?->name,
             'product_price' => $this->product?->price,
+            'currency' => $this->product?->shopCountry?->currency,
         ];
     }
 }

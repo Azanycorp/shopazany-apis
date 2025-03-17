@@ -893,7 +893,6 @@ class AdminService
         return $this->success(null, 'Comment Submitted successfully');
     }
 
-
     //Subscription Plans
     public function b2bSubscriptionPlans()
     {

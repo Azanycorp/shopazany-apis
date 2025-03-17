@@ -49,6 +49,7 @@ class SingleProductResource extends JsonResource
             'front_image' => (string)$this->image,
             'currency' => $this->shopCountry?->currency,
             'country_id' => (int)$this->country_id,
+            'is_in_wishlist' => (bool)$this->is_in_wishlist,
             'images' => $this->whenLoaded('productimages', function () {
                 return $this->productimages->map(function ($image): array {
                     return [

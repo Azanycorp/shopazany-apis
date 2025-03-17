@@ -3,7 +3,6 @@
 namespace Database\Factories;
 
 use App\Models\User;
-use App\Models\Product;
 use App\Enum\OrderStatus;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -22,8 +21,6 @@ class OrderFactory extends Factory
     {
         return [
             'user_id' => User::factory(),
-            'seller_id' => User::factory(),
-            'product_id' => Product::factory(),
             'status' => OrderStatus::DELIVERED,
             'country_id' => fake()->numberBetween(1, 5),
             'product_quantity' => fake()->numberBetween(1, 5),
