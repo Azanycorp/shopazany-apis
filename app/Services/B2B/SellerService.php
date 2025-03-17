@@ -735,6 +735,7 @@ class SellerService extends Controller
                 $amount,
                 $product->shopCountry->currency ?? 'USD',
             );
+            // return $total_amount;
             $order = B2bOrder::create([
                 'buyer_id' => $rfq->buyer_id,
                 'seller_id' => $rfq->seller_id,
@@ -756,7 +757,7 @@ class SellerService extends Controller
                 'price' => $total_amount,
                 'buyer_name' => $buyer->first_name . ' ' . $buyer->last_name,
                 'order_number' => $order->order_no,
-                'currency' => $buyer->default_currency,
+                'currency' => $buyer->default_currency ?? userAuth()->default_currency,
             ];
 
             $orderItemData = [
