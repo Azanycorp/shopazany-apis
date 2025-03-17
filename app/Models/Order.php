@@ -14,8 +14,6 @@ class Order extends Model
 
     protected $fillable = [
         'user_id',
-        'seller_id',
-        'product_id',
         'payment_id',
         'product_quantity',
         'order_no',
@@ -40,6 +38,7 @@ class Order extends Model
         return $this->belongsTo(User::class, 'user_id')->where('type', 'customer');
     }
 
+    // Deprecated method - Do not use
     public function seller(): BelongsTo
     {
         return $this->belongsTo(User::class, 'seller_id')->where('type', 'seller');
@@ -53,7 +52,7 @@ class Order extends Model
     public function products()
     {
         return $this->belongsToMany(Product::class, 'order_items')
-                    ->withPivot('product_quantity', 'price', 'sub_total');
+                    ->withPivot('product_quantity', 'price', 'sub_total', 'status');
     }
 
     // Deprecated method - Do not use
@@ -91,5 +90,10 @@ class Order extends Model
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class,  'payment_id');
+    }
+
+    public function orderActivities(): HasMany
+    {
+        return $this->hasMany(OrderActivity::class, 'order_id');
     }
 }

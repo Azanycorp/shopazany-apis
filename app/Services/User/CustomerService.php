@@ -16,6 +16,7 @@ use App\Models\Product;
 use App\Models\User;
 use App\Models\Wishlist;
 use App\Trait\HttpResponse;
+use Spatie\ResponseCache\Facades\ResponseCache;
 
 class CustomerService
 {
@@ -156,7 +157,8 @@ class CustomerService
     {
         $order = Order::with([
                 'user.userShippingAddress',
-                'products.shopCountry'
+                'products.shopCountry',
+                'orderActivities',
             ])
             ->where('order_no', $orderNo)
             ->first();
@@ -242,6 +244,8 @@ class CustomerService
             'product_id' => $product->id,
         ]);
 
+        ResponseCache::clear();
+
         return $this->success(null, "Product added to wishlist!");
     }
 
@@ -259,7 +263,7 @@ class CustomerService
             return $this->error(null, "User not found", 404);
         }
 
-        $wishlists = $user->wishlist()->with('product.category')->get();
+        $wishlists = $user->wishlist()->with(['product.category', 'product.shopCountry'])->get();
         $data = WishlistResource::collection($wishlists);
 
         return $this->success($data, "Wishlists");
