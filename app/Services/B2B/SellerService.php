@@ -261,10 +261,13 @@ class SellerService extends Controller
         }
     }
 
-    public function getAllProduct()
+    public function getAllProduct($user_id)
     {
         $currentUserId = userAuthId();
-        $user = User::findOrFail($currentUserId)->id;
+        if ($currentUserId != $user_id) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+        $user = User::findOrFail($user_id)->id;
         $search = request()->input('search');
 
         $products = $this->b2bProductRepository->all($user, $search);
@@ -273,8 +276,12 @@ class SellerService extends Controller
         return $this->success($data, 'All products');
     }
 
-    public function getProductById(int $product_id)
+    public function getProductById(int $product_id, $user_id)
     {
+        $currentUserId = userAuthId();
+        if ($currentUserId != $user_id) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
         $prod = $this->b2bProductRepository->find($product_id);
         $data = new B2BProductResource($prod);
 
@@ -352,10 +359,13 @@ class SellerService extends Controller
         return $this->success(null, 'Product updated successfully');
     }
 
-    public function deleteProduct(int $product_id)
+    public function deleteProduct(int $user_id, $product_id)
     {
         $currentUserId = userAuthId();
-        $prod = B2BProduct::where('user_id', $currentUserId)->firstOrFail($product_id);
+        if ($currentUserId != $user_id) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+        $prod = B2BProduct::where('user_id', $user_id)->firstOrFail($product_id);
         $this->b2bProductRepository->delete($prod->id);
 
         return $this->success(null, 'Deleted successfully');

@@ -61,9 +61,9 @@ class B2BSellerController extends Controller
         return $this->service->getAllProduct($request);
     }
 
-    public function getProductById($product_id)
+    public function getProductById($product_id, $user_id)
     {
-        return $this->service->getProductById($product_id);
+        return $this->service->getProductById($product_id, $user_id);
     }
 
     public function updateProduct(AddProductRequest $request)
@@ -71,9 +71,9 @@ class B2BSellerController extends Controller
         return $this->service->updateProduct($request);
     }
 
-    public function deleteProduct($product_id)
+    public function deleteProduct($user_id, $product_id)
     {
-        return $this->service->deleteProduct($product_id);
+        return $this->service->deleteProduct($user_id, $product_id);
     }
 
     public function getAnalytics($user_id)
