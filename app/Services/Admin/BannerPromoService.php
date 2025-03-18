@@ -2,13 +2,14 @@
 
 namespace App\Services\Admin;
 
-use App\Enum\BannerStatus;
-use App\Enum\CouponType;
-use App\Http\Resources\BannerResource;
-use App\Http\Resources\PromoResource;
-use App\Models\Banner;
 use App\Models\Promo;
+use App\Models\Banner;
+use App\Enum\CouponType;
+use App\Enum\BannerStatus;
 use App\Trait\HttpResponse;
+use Illuminate\Support\Str;
+use App\Http\Resources\PromoResource;
+use App\Http\Resources\BannerResource;
 
 class BannerPromoService
 {
@@ -17,12 +18,25 @@ class BannerPromoService
     public function addBanner($request)
     {
         $image = uploadImage($request, 'image', 'banner');
+
+        $products = $request->products;
+
+        $prods = array_map(function ($seat) {
+            return (int) trim($seat, '"');
+        }, $products);
+
+        $slug = Str::slug($request->title);
+        if (Banner::where('slug', $slug)->exists()) {
+            $slug = $slug . '-' . uniqid();
+        }
+
         Banner::create([
             'title' => $request->title,
+            'slug' => $slug,
             'image' => $image,
             'start_date' => $request->start_date,
             'end_date' => $request->end_date,
-            'products' => $request->products,
+            'products' => $prods,
             'status' => BannerStatus::ACTIVE,
         ]);
         return $this->success(null, "Added successfully");
