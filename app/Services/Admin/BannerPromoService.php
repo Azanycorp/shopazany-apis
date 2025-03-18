@@ -36,7 +36,7 @@ class BannerPromoService
             'image' => $image,
             'start_date' => $request->start_date,
             'end_date' => $request->end_date,
-            'products' => $prods,
+            'products' => $request->products,
             'status' => BannerStatus::ACTIVE,
         ]);
         return $this->success(null, "Added successfully");
