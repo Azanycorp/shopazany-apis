@@ -58,7 +58,7 @@ class B2BAdminService
             return $this->error(null, $e->getMessage(), 500);
         }
     }
-    public function updateSlider($request,$id)
+    public function updateSlider($request, $id)
     {
         $slider = SliderImage::where('type', BannerType::B2B)->findOrFail($id);
         try {
@@ -113,7 +113,7 @@ class B2BAdminService
     public function categories()
     {
         $categories = B2bProductCategory::where('featured', 1)
-            ->where('status',BannerStatus::ACTIVE)
+            ->where('status', BannerStatus::ACTIVE)
             ->get();
 
         $data = B2BCategoryResource::collection($categories);
@@ -185,12 +185,12 @@ class B2BAdminService
             return $this->error(null, "Not found", 404);
         }
 
-        $folder = null;
-
-        $folder = App::environment('production')
-        ? '/prod/shopcountryflag'
-        : (App::environment(['staging', 'local']) ? '/stag/shopcountryflag' : '/default/shopcountryflag');
-
+        $folder = match (true) {
+            App::environment('production') => '/prod/shopcountryflag',
+            App::environment(['staging', 'local']) => '/stag/shopcountryflag',
+            default => '/default/shopcountryflag',
+        };
+        
         $url = uploadImage($request, 'flag', $folder);
         ShopCountry::create([
             'country_id' => $country->id,

@@ -443,7 +443,7 @@ class BuyerService
                 $unit_price = currencyConvert(
                     userAuth()->default_currency,
                     $quote->product_data['unit_price'],
-                    $product->shopCountry->currency ?? 'NGN',
+                    $product->shopCountry->currency ?? 'USD',
                 );
                 Rfq::create([
                     'buyer_id' => $quote->buyer_id,

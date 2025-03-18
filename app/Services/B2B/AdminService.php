@@ -689,8 +689,9 @@ class AdminService
     public function updatePageBanner($request, $id)
     {
         $banner = PageBanner::where('type', BannerType::B2B)->findOrFail($id);
-        $banner_url = ($banner && $request->hasFile('banner_url') ? uploadImage($request, 'banner_url', 'home-banner') : $banner->banner_url);
-
+        $banner_url = $banner && $request->hasFile('banner_url')
+            ? uploadImage($request, 'banner_url', 'home-banner')
+            : ($banner ? $banner->banner_url : null);
         $banner->update([
             'page' => $request->page ?? $banner->page,
             'section' => $request->section ?? $banner->section,

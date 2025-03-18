@@ -261,13 +261,15 @@ class SellerService extends Controller
         }
     }
 
-    public function getAllProduct($user_id)
+    public function getAllProduct($request)
     {
         $currentUserId = userAuthId();
-        if ($currentUserId != $user_id) {
+
+        if ($currentUserId != $request->user_id) {
             return $this->error(null, "Unauthorized action.", 401);
         }
-        $user = User::findOrFail($user_id)->id;
+
+        $user = User::select('id')->findOrFail($request->user_id)->id;
         $search = request()->input('search');
 
         $products = $this->b2bProductRepository->all($user, $search);
@@ -275,7 +277,6 @@ class SellerService extends Controller
 
         return $this->success($data, 'All products');
     }
-
     public function getProductById(int $product_id, $user_id)
     {
         $currentUserId = userAuthId();

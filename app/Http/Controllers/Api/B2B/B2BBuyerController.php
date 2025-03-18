@@ -162,9 +162,9 @@ class B2BBuyerController extends Controller
         return $this->buyerService->getShippingAddress($id);
     }
 
-    public function updateShippingAddress(Request $request,$id)
+    public function updateShippingAddress(Request $request, $id)
     {
-        return $this->buyerService->updateShippingAddress($request,$id);
+        return $this->buyerService->updateShippingAddress($request, $id);
     }
 
     public function deleteShippingAddress($id)
@@ -176,5 +176,4 @@ class B2BBuyerController extends Controller
     {
         return $this->buyerService->setDefaultAddress($id);
     }
-
 }
