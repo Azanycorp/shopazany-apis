@@ -46,7 +46,7 @@ Route::middleware('validate.header')
 
         Route::group(['middleware' => ['auth:api', 'auth.check'], 'prefix' => 'b2b'], function (): void {
             // Seller
-            Route::group(['middleware' => 'b2b_seller.auth','check.user.country', 'prefix' => 'seller'], function (): void {
+            Route::group(['middleware' => 'b2b_seller.auth', 'check.user.country', 'prefix' => 'seller'], function (): void {
 
                 Route::controller(B2BSellerController::class)->group(function (): void {
                     //dashboard
@@ -105,11 +105,11 @@ Route::middleware('validate.header')
 
                     // Shipping
                     Route::prefix('shipping')->group(function (): void {
+                        Route::post('/', 'addShipping');
                         Route::get('/{user_id}', 'getAllShipping');
-                        Route::post('/add', 'addShipping');
+                        Route::get('/{user_id}/{shipping_id}', 'getShippingById');
                         Route::patch('/update/{shipping_id}', 'updateShipping');
                         Route::patch('/default/{user_id}/{shipping_id}', 'setDefault');
-                        Route::get('/details/{user_id}/{shipping_id}', 'getShippingById');
                         Route::delete('/delete/{user_id}/{shipping_id}', 'deleteShipping');
                     });
                 });
@@ -122,47 +122,49 @@ Route::middleware('validate.header')
                     'check.user.country',
                     'prefix' => 'buyer',
                     'controller' => B2BBuyerController::class
-                ], function (): void {
+                ],
+                function (): void {
 
-                Route::post('add-quote', 'requestQuote');
-                Route::get('send-all-quotes', 'sendAllQuotes');
-                Route::post('send-rfq', 'sendSingleQuote');
-                Route::delete('remove-rfq/{id}', 'removeQuote');
-                Route::post('request-review', 'reviewRequest');
-                Route::post('add-review', 'addReview');
-                Route::post('/add-to-wish', 'addTowishList');
-                Route::post('/like-product', 'likeProduct');
-                Route::delete('/wish/remove-item/{id}', 'removeItem');
-                Route::post('/wish/send-quote', 'sendFromWishList');
-                Route::get('quotes', 'allQuotes');
-                Route::get('/wish-list', 'wishList');
-                Route::get('rfq', 'getAllRfqs');
+                    Route::post('add-quote', 'requestQuote');
+                    Route::get('send-all-quotes', 'sendAllQuotes');
+                    Route::post('send-rfq', 'sendSingleQuote');
+                    Route::delete('remove-rfq/{id}', 'removeQuote');
+                    Route::post('request-review', 'reviewRequest');
+                    Route::post('add-review', 'addReview');
+                    Route::post('/add-to-wish', 'addTowishList');
+                    Route::post('/like-product', 'likeProduct');
+                    Route::delete('/wish/remove-item/{id}', 'removeItem');
+                    Route::post('/wish/send-quote', 'sendFromWishList');
+                    Route::get('quotes', 'allQuotes');
+                    Route::get('/wish-list', 'wishList');
+                    Route::get('rfq', 'getAllRfqs');
 
-                Route::middleware('cacheResponse:300')->group(function (): void {
-                    Route::get('dashboard', 'dashboard');
-                    Route::get('rfq-details/{id}', 'getRfqDetails');
-                    Route::get('orders', 'allOrders');
-                    Route::get('order-details/{id}', 'getOrderDetails');
-                });
+                    Route::middleware('cacheResponse:300')->group(function (): void {
+                        Route::get('dashboard', 'dashboard');
+                        Route::get('rfq-details/{id}', 'getRfqDetails');
+                        Route::get('orders', 'allOrders');
+                        Route::get('order-details/{id}', 'getOrderDetails');
+                    });
 
-                //profile
-                Route::get('/profile', 'profile')->middleware('cacheResponse:300');
-                Route::post('/edit-account', 'editAccount');
-                Route::patch('/change-password', 'changePassword');
-                Route::post('/change-2fa', 'change2Fa');
-                Route::get('/company-info', 'companyInfo')->middleware('cacheResponse:300');
-                Route::post('/edit-company', 'editCompany');
+                    //profile
+                    Route::get('/profile', 'profile')->middleware('cacheResponse:300');
+                    Route::post('/edit-account', 'editAccount');
+                    Route::patch('/change-password', 'changePassword');
+                    Route::post('/change-2fa', 'change2Fa');
+                    Route::get('/company-info', 'companyInfo')->middleware('cacheResponse:300');
+                    Route::post('/edit-company', 'editCompany');
 
 
-                // Shipping address
-                Route::prefix('shipping-address')->group(function (): void {
-                    Route::get('/', 'allShippingAddress');
-                    Route::post('/add', 'addShippingAddress');
-                    Route::get('/details/{id}', 'getShippingAddress')->middleware('cacheResponse:300');
-                    Route::post('/update/{id}', 'updateShippingAddress');
-                    Route::post('/make-default/{id}', 'setDefaultAddress');
-                    Route::delete('/delete/{id}', 'deleteShippingAddress');
-                });
-            });
+                    // Shipping address
+                    Route::prefix('shipping-address')->group(function (): void {
+                        Route::get('/', 'allShippingAddress');
+                        Route::post('/add', 'addShippingAddress');
+                        Route::get('/details/{id}', 'getShippingAddress')->middleware('cacheResponse:300');
+                        Route::post('/update/{id}', 'updateShippingAddress');
+                        Route::post('/make-default/{id}', 'setDefaultAddress');
+                        Route::delete('/delete/{id}', 'deleteShippingAddress');
+                    });
+                }
+            );
         });
     });
