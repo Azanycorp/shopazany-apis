@@ -16,13 +16,4 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        Schema::table('banners', function (Blueprint $table) {
-            $table->string('type')->nullable();
-        });
-    }
 };

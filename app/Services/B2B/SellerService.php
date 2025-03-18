@@ -181,7 +181,7 @@ class SellerService extends Controller
     {
         $currentUserId = userAuthId();
         if ($currentUserId != $request->user_id) {
-            return $this->error(null, "Unauthorized action.", 404);
+            return $this->error(null, "Unauthorized action.", 401);
         }
 
         $seller =  User::find($currentUserId);
@@ -200,7 +200,7 @@ class SellerService extends Controller
     {
         $currentUserId = userAuthId();
         if ($currentUserId != $request->user_id) {
-            return $this->error(null, "Unauthorized action.", 404);
+            return $this->error(null, "Unauthorized action.", 401);
         }
         $user = User::find($currentUserId);
         if (!$user) {
@@ -225,7 +225,7 @@ class SellerService extends Controller
             }
 
             $data = [
-                'user_id' => $user->id,
+                'user_id' => $request->user_id,
                 'name' => $request->name,
                 'slug' => $slug,
                 'category_id' => $request->category_id,
@@ -318,7 +318,7 @@ class SellerService extends Controller
         }
 
         $data = [
-            'user_id' => $user->id,
+            'user_id' => $request->user_id,
             'name' => $request->name ?? $prod->name,
             'slug' => $slug,
             'category_id' => $request->category_id ?? $prod->category_id,
@@ -355,7 +355,7 @@ class SellerService extends Controller
     public function deleteProduct(int $product_id)
     {
         $currentUserId = userAuthId();
-        $prod = B2BProduct::where('user_id', $currentUserId)->findOrFail($product_id);
+        $prod = B2BProduct::where('user_id', $currentUserId)->firstOrFail($product_id);
         $this->b2bProductRepository->delete($prod->id);
 
         return $this->success(null, 'Deleted successfully');
@@ -385,8 +385,11 @@ class SellerService extends Controller
     public function addShipping($request)
     {
         $currentUserId = userAuthId();
+        if ($currentUserId != $request->user_id) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
         $data = [
-            'user_id' => $currentUserId,
+            'user_id' => $request->user_id,
             'address_name' => $request->address_name,
             'name' => $request->name,
             'surname' => $request->surname,
@@ -404,17 +407,24 @@ class SellerService extends Controller
         return $this->success(null, 'Added successfully');
     }
 
-    public function getAllShipping()
+    public function getAllShipping($user_id)
     {
         $currentUserId = userAuthId();
-        $address = $this->b2bSellerShippingRepository->all($currentUserId);
+        if ($currentUserId != $user_id) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+        $address = $this->b2bSellerShippingRepository->all($user_id);
         $data = B2BSellerShippingAddressResource::collection($address);
 
         return $this->success($data, 'All address');
     }
 
-    public function getShippingById(int $shipping_id)
+    public function getShippingById($user_id, $shipping_id)
     {
+        $currentUserId = userAuthId();
+        if ($currentUserId != $user_id) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
         $shipping = $this->b2bSellerShippingRepository->find($shipping_id);
         $data = new B2BSellerShippingAddressResource($shipping);
 
@@ -459,14 +469,17 @@ class SellerService extends Controller
 
         return $this->success(null, 'Deleted successfully');
     }
-    public function setDefault($shipping_id)
+    public function setDefault($user_id, $shipping_id)
     {
         $currentUserId = userAuthId();
-        $shipping = B2BSellerShippingAddress::where('user_id', $currentUserId)->find($shipping_id);
+        if ($currentUserId != $user_id) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+        $shipping = B2BSellerShippingAddress::where('user_id', $currentUserId)->firstOrFail($shipping_id);
         if (!$shipping) {
             return $this->error(null, 'No record found', 404);
         }
-        B2BSellerShippingAddress::where('user_id', userAuthId())
+        B2BSellerShippingAddress::where('user_id', $currentUserId)
             ->where('is_default', 1)
             ->update(['is_default' => 0]);
 
@@ -479,6 +492,10 @@ class SellerService extends Controller
 
     public function getComplaints($user_id)
     {
+        $currentUserId = userAuthId();
+        if ($currentUserId != $user_id) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
         $user = User::with(['b2bProducts.b2bRequestRefunds'])->findOrFail($user_id);
 
         $refunds = $user->b2bProducts->flatMap(function ($product) {
@@ -731,10 +748,10 @@ class SellerService extends Controller
             $amount = $rfq->total_amount;
             $total_amount = currencyConvert(
                 userAuth()->default_currency,
-                30,
+                $amount,
                 $product->shopCountry->currency ?? 'USD',
             );
-             return $product->shopCountry->currency ?? 'USD';
+            return $product->shopCountry->currency ?? 'USD';
             $order = B2bOrder::create([
                 'buyer_id' => $rfq->buyer_id,
                 'seller_id' => $rfq->seller_id,

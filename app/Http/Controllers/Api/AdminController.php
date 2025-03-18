@@ -129,10 +129,6 @@ class AdminController extends Controller
     {
         return $this->superAdminService->addShippingAgent($request);
     }
-    public function getCountryList()
-    {
-        return $this->superAdminService->getCountryList();
-    }
 
     public function viewShippingAgent($id)
     {
@@ -141,7 +137,7 @@ class AdminController extends Controller
 
     public function editShippingAgent($id, ShippingAgentRequest $request)
     {
-        return $this->superAdminService->editShippingAgent($id, $request);
+        return $this->superAdminService->editShippingAgent($request,$id);
     }
 
     public function deleteShippingAgent($id)

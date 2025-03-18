@@ -105,11 +105,11 @@ Route::middleware('validate.header')
 
                     // Shipping
                     Route::prefix('shipping')->group(function (): void {
-                        Route::get('/', 'getAllShipping');
+                        Route::get('/{user_id}', 'getAllShipping');
                         Route::post('/add', 'addShipping');
-                        Route::get('/details/{shipping_id}', 'getShippingById');
                         Route::patch('/update/{shipping_id}', 'updateShipping');
                         Route::patch('/default/{user_id}/{shipping_id}', 'setDefault');
+                        Route::get('/details/{user_id}/{shipping_id}', 'getShippingById');
                         Route::delete('/delete/{user_id}/{shipping_id}', 'deleteShipping');
                     });
                 });

@@ -345,17 +345,17 @@ class SuperAdminService
         return $this->success($data, 'All Agents');
     }
 
-    public function addShippingAgent($data)
+    public function addShippingAgent($request)
     {
         $agent = ShippingAgent::create([
-            'name' => $data->name,
-            'type' => $data->type,
-            'country_ids' => $data->country_ids,
-            'account_email' => $data->account_email,
-            'account_password' => $data->account_password,
-            'api_live_key' => $data->api_live_key,
-            'api_test_key' => $data->api_test_key,
-            'status' => $data->status,
+            'name' => $request->name,
+            'type' => $request->type,
+            'country_ids' => $request->country_ids,
+            'account_email' => $request->account_email,
+            'account_password' => $request->account_password,
+            'api_live_key' => $request->api_live_key,
+            'api_test_key' => $request->api_test_key,
+            'status' => $request->status,
         ]);
         return $this->success($agent, 'Agent added successfully', 201);
     }
@@ -367,19 +367,19 @@ class SuperAdminService
         return $this->success($data, 'Agent details');
     }
 
-    public function editShippingAgent($id, $data)
+    public function editShippingAgent($request,$id)
     {
         $agent = ShippingAgent::findOrFail($id);
         $agent->update([
-            'name' => $data->name ?? $agent->name,
-            'type' => $data->type ?? $agent->type,
-            'logo' => $data->logo ?? $agent->logo,
-            'country_ids' => $data->country_ids ?? $agent->country_ids,
-            'account_email' => $data->account_email ?? $agent->account_email,
-            'account_password' => $data->account_password ?? $agent->account_password,
-            'api_live_key' => $data->api_live_key ?? $agent->api_live_key,
-            'api_test_key' => $data->api_test_key ?? $agent->api_test_key,
-            'status' => $data->status ?? $agent->status,
+            'name' => $request->name ?? $agent->name,
+            'type' => $request->type ?? $agent->type,
+            'logo' => $request->logo ?? $agent->logo,
+            'country_ids' => $request->country_ids ?? $agent->country_ids,
+            'account_email' => $request->account_email ?? $agent->account_email,
+            'account_password' => $request->account_password ?? $agent->account_password,
+            'api_live_key' => $request->api_live_key ?? $agent->api_live_key,
+            'api_test_key' => $request->api_test_key ?? $agent->api_test_key,
+            'status' => $request->status ?? $agent->status,
         ]);
         return $this->success(null, 'Details updated successfully');
     }

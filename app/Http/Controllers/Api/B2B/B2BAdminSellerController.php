@@ -75,10 +75,10 @@ class B2BAdminSellerController extends Controller
         return $this->service->viewSellerProduct($user_id, $product_id,);
     }
 
-    public function editSellerProduct( Request $request,$user_id, $product_id)
+    public function editSellerProduct(Request $request, $user_id, $product_id)
     {
         abort_if(Gate::denies('seller_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
-        return $this->service->editSellerProduct($request,$user_id, $product_id);
+        return $this->service->editSellerProduct($request, $user_id, $product_id);
     }
 
     public function removeSellerProduct($user_id, $product_id)

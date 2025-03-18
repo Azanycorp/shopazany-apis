@@ -26,9 +26,9 @@ class B2BSellerController extends Controller
         return $this->service->b2bproductImport($request);
     }
 
-    public function export(Request $request,$userId)
+    public function export(Request $request, $userId)
     {
-        return $this->service->exportSellerProduct($request,$userId);
+        return $this->service->exportSellerProduct($request, $userId);
     }
 
     public function profile()
@@ -86,14 +86,14 @@ class B2BSellerController extends Controller
         return $this->service->addShipping($request);
     }
 
-    public function getAllShipping()
+    public function getAllShipping($user_id)
     {
-        return $this->service->getAllShipping();
+        return $this->service->getAllShipping($user_id);
     }
 
-    public function getShippingById(int $shipping_id)
+    public function getShippingById($user_id, $shipping_id)
     {
-        return $this->service->getShippingById($shipping_id);
+        return $this->service->getShippingById($user_id, $shipping_id);
     }
 
     public function updateShipping(SellerShippingRequest $request, $shipping_id)
@@ -206,9 +206,9 @@ class B2BSellerController extends Controller
         return $this->service->makeAccounDefaultt($request);
     }
 
-    public function updateWithdrawalMethod(WithdrawalMethodRequest $request,$id)
+    public function updateWithdrawalMethod(WithdrawalMethodRequest $request, $id)
     {
-        return $this->service->updateMethod($request,$id);
+        return $this->service->updateMethod($request, $id);
     }
 
     public function deleteWithdrawalMethod($id)

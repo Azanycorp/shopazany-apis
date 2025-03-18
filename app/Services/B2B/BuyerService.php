@@ -931,7 +931,7 @@ class BuyerService
         return $this->success($data, 'Address detail');
     }
 
-    public function updateShippingAddress($request,$id)
+    public function updateShippingAddress($request, $id)
     {
         $address = BuyerShippingAddress::find($id);
         if (!$address) {

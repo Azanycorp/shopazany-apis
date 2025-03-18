@@ -381,7 +381,7 @@ class AdminService
         return $this->success($data, 'Product details');
     }
 
-    public function editSellerProduct($request,$user_id, $product_id)
+    public function editSellerProduct($request, $user_id, $product_id)
     {
         $prod = B2BProduct::find($product_id);
         $user = User::find($user_id);
@@ -500,7 +500,7 @@ class AdminService
         return $this->success($user, "Buyer details");
     }
 
-    public function editBuyer($request,$id)
+    public function editBuyer($request, $id)
     {
         $user = User::findOrFail($id);
 
@@ -518,7 +518,7 @@ class AdminService
         return $this->success($user, "Buyer details");
     }
 
-    public function editBuyerCompany($request,$id)
+    public function editBuyerCompany($request, $id)
     {
         $user = User::findOrFail($id);
         $company = B2bCompany::where('user_id', $user->id)->first();
@@ -682,11 +682,11 @@ class AdminService
 
     public function getPageBanners()
     {
-        $banners = PageBanner::select('id','page','section','type','banner_url')->where('type', BannerType::B2B)->latest('id')->get();
+        $banners = PageBanner::select('id', 'page', 'section', 'type', 'banner_url')->where('type', BannerType::B2B)->latest('id')->get();
         return $this->success($banners, 'Banners');
     }
 
-    public function updatePageBanner($request,$id)
+    public function updatePageBanner($request, $id)
     {
         $banner = PageBanner::where('type', BannerType::B2B)->findOrFail($id);
         $banner_url = ($banner && $request->hasFile('banner_url') ? uploadImage($request, 'banner_url', 'home-banner') : $banner->banner_url);
@@ -713,7 +713,7 @@ class AdminService
     }
     public function getPageBanner($id)
     {
-        $banner = PageBanner::select('id','page','section','type','banner_url')->where('type', BannerType::B2B)->findOrFail($id);
+        $banner = PageBanner::select('id', 'page', 'section', 'type', 'banner_url')->where('type', BannerType::B2B)->findOrFail($id);
         return $this->success($banner, 'Banner details');
     }
     public function deletePageBanner($id)
@@ -837,7 +837,7 @@ class AdminService
         return $this->success(null, 'Account Approved');
     }
 
-    public function rejectWidthrawalMethod($request,$id)
+    public function rejectWidthrawalMethod($request, $id)
     {
         $account =  B2bWithdrawalMethod::findOrFail($id);
 
@@ -882,7 +882,7 @@ class AdminService
         return $this->success(null, 'Product Approved');
     }
 
-    public function rejectProduct($request,$id)
+    public function rejectProduct($request, $id)
     {
         $product = B2BProduct::findOrFail($id);
         $product->update([
@@ -931,7 +931,7 @@ class AdminService
         return $this->success($data, 'Plan details');
     }
 
-    public function editSubscriptionPlan($request,$id)
+    public function editSubscriptionPlan($request, $id)
     {
         $plan = SubscriptionPlan::where('type', PlanType::B2B)->find($id);
         if (!$plan) {
