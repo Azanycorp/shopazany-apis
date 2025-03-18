@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enum\BannerStatus;
 use App\Enum\OrderStatus;
 use App\Enum\ProductReviewStatus;
 use App\Enum\ProductStatus;
@@ -14,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Resources\SellerProductResource;
 use App\Http\Resources\SingleProductResource;
 use App\Models\Action;
+use App\Models\Banner;
 use App\Models\Brand;
 use App\Models\Cart;
 use App\Models\Category;
@@ -500,6 +502,54 @@ class HomeService
         }
 
         return $this->error(null, 'Item not found in wishlist', 404);
+    }
+
+    public function flashDeals()
+    {
+        $deals = Banner::select('id', 'title', 'slug', 'image', 'start_date', 'end_date')
+            ->whereStatus(BannerStatus::ACTIVE)
+            ->get();
+
+        return $this->success($deals, 'Flash deals');
+    }
+
+    public function singleFlashDeal($slug)
+    {
+        $deal = Banner::where('slug', $slug)
+            ->whereStatus(BannerStatus::ACTIVE)
+            ->first();
+
+        if (!$deal) {
+            return $this->error(null, 'Flash deal not found', 404);
+        }
+
+        $productIds = $deal->products;
+        $products = Product::select(
+            'id',
+            'name',
+            'slug',
+            'description',
+            'category_id',
+            'sub_category_id',
+            'price',
+            'default_currency',
+            'image',
+        )
+            ->whereIn('id', $productIds)
+            ->with([
+                'category:id,name,slug',
+                'subCategory:id,name,slug',
+            ])
+            ->get();
+
+        unset($deal->products, $deal->status, $deal->created_at, $deal->updated_at);
+
+        $data = [
+            'deal' => $deal,
+            'products' => $products,
+        ];
+
+        return $this->success($data, 'Flash deal');
     }
 }
 
