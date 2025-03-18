@@ -101,4 +101,14 @@ class HomeController extends Controller
     {
         return $this->service->topProducts();
     }
+
+    public function flashDeals()
+    {
+        return $this->service->flashDeals();
+    }
+
+    public function singleFlashDeal($slug)
+    {
+        return $this->service->singleFlashDeal($slug);
+    }
 }
