@@ -34,19 +34,9 @@ class B2BAdminService
     {
         try {
 
-            $folder = null;
-
-            if (App::environment('production')) {
-                $folder = '/prod/slider_image';
-            } elseif (App::environment(['staging', 'local'])) {
-                $folder = '/stag/slider_image';
-            }
-
             if ($request->file('image')) {
-                $path = $request->file('image')->store($folder, 's3');
-                $url = Storage::disk('s3')->url($path);
+                $url = uploadImage($request, 'image', 'slider_image');
             }
-
             SliderImage::create([
                 'image' => $url,
                 'type' => BannerType::B2B,
@@ -185,13 +175,10 @@ class B2BAdminService
             return $this->error(null, "Not found", 404);
         }
 
-        $folder = match (true) {
-            App::environment('production') => '/prod/shopcountryflag',
-            App::environment(['staging', 'local']) => '/stag/shopcountryflag',
-            default => '/default/shopcountryflag',
-        };
-        
-        $url = uploadImage($request, 'flag', $folder);
+        if ($request->file('flag')) {
+            $url = uploadImage($request, 'flag', 'shopcountryflag');
+        }
+
         ShopCountry::create([
             'country_id' => $country->id,
             'name' => $country->name,

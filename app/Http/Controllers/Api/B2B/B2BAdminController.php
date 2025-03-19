@@ -169,9 +169,9 @@ class B2BAdminController extends Controller
         return $this->adminService->approveProduct($id);
     }
 
-    public function rejectProduct(Request $request,$id)
+    public function rejectProduct(Request $request, $id)
     {
-        return $this->adminService->rejectProduct($request,$id);
+        return $this->adminService->rejectProduct($request, $id);
     }
 
 
@@ -191,9 +191,9 @@ class B2BAdminController extends Controller
         return $this->adminService->viewSubscriptionPlan($id);
     }
 
-    public function editSubscriptionPlan(SubscriptionPlanRequest $request,$id)
+    public function editSubscriptionPlan(SubscriptionPlanRequest $request, $id)
     {
-        return $this->adminService->editSubscriptionPlan($request,$id);
+        return $this->adminService->editSubscriptionPlan($request, $id);
     }
 
     public function deleteSubscriptionPlan($id)

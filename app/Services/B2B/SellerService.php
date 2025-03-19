@@ -366,7 +366,7 @@ class SellerService extends Controller
         if ($currentUserId != $user_id) {
             return $this->error(null, "Unauthorized action.", 401);
         }
-        $prod = B2BProduct::where('user_id', $user_id)->firstOrFail($product_id);
+        $prod = B2BProduct::where('user_id', $user_id)->firstOrFail();
         $this->b2bProductRepository->delete($prod->id);
 
         return $this->success(null, 'Deleted successfully');
@@ -762,7 +762,6 @@ class SellerService extends Controller
                 $amount,
                 $product->shopCountry->currency ?? 'USD',
             );
-            return $product->shopCountry->currency ?? 'USD';
             $order = B2bOrder::create([
                 'buyer_id' => $rfq->buyer_id,
                 'seller_id' => $rfq->seller_id,
@@ -969,7 +968,7 @@ class SellerService extends Controller
             return $this->error(null, 'Maximum withdrawable amount is ' . number_format($max), 422);
         }
 
-        $paymentInfo = B2bWithdrawalMethod::where('status', WithdrawalStatus::ACTIVE)->find($data->account_id);
+        $paymentInfo = B2bWithdrawalMethod::where('status', WithdrawalStatus::ACTIVE)->find($request->account_id);
         if (!$paymentInfo) {
             return $this->error(null, 'Invalid account selected for withdrawal or account is not active', 422);
         }
@@ -995,9 +994,13 @@ class SellerService extends Controller
                 'b2b_withdrawal_method' => $paymentInfo->id,
             ]);
 
-            $wallet->master_wallet -= $request->amount;
-            $wallet->save();
-
+            // $wallet->master_wallet -= $request->amount;
+            // $wallet->save();
+            $wallet = UserWallet::firstOrCreate(
+                ['seller_id' => $currentUserId],
+                ['master_wallet' => 0]
+            );
+            $wallet->decrement('master_wallet', $$request->amoun);
             DB::commit();
 
             return $this->success('Payout request submitted successfully', 200);

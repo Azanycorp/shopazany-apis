@@ -39,9 +39,9 @@ class AdminController extends Controller
         return $this->superAdminService->viewCollationCentre($id);
     }
 
-    public function editCollationCentre($id, CollationCentreRequest $request)
+    public function editCollationCentre(CollationCentreRequest $request, $id)
     {
-        return $this->superAdminService->editCollationCentre($id, $request);
+        return $this->superAdminService->editCollationCentre($request, $id);
     }
 
     public function deleteCollationCentre($id)
@@ -64,9 +64,9 @@ class AdminController extends Controller
         return $this->superAdminService->viewHub($id);
     }
 
-    public function editHub($id, HubRequest $request)
+    public function editHub(HubRequest $request, $id)
     {
-        return $this->superAdminService->editHub($id, $request);
+        return $this->superAdminService->editHub($request, $id);
     }
 
     public function deleteHub($id)
@@ -94,10 +94,10 @@ class AdminController extends Controller
         return $this->superAdminService->viewAdmin($id);
     }
 
-    public function editAdminUser($id, Request $request)
+    public function editAdminUser(Request $request, $id)
     {
         abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
-        return $this->superAdminService->editAdmin($id, $request);
+        return $this->superAdminService->editAdmin($request, $id);
     }
 
     public function verifyPassword(Request $request)
@@ -135,14 +135,13 @@ class AdminController extends Controller
         return $this->superAdminService->viewShippingAgent($id);
     }
 
-    public function editShippingAgent($id, ShippingAgentRequest $request)
+    public function editShippingAgent(ShippingAgentRequest $request, $id)
     {
-        return $this->superAdminService->editShippingAgent($request,$id);
+        return $this->superAdminService->editShippingAgent($request, $id);
     }
 
     public function deleteShippingAgent($id)
     {
         return $this->superAdminService->deleteShippingAgent($id);
     }
-
 }
