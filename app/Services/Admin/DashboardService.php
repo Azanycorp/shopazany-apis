@@ -30,7 +30,7 @@ class DashboardService
         ->count();
 
         $data = [
-            'total_sales' => $total_sales,
+            'total_sales' => currencyConvertTo($total_sales, "USD"),
             'active_users' => $active_users,
             'inactive_sellers' => $inactive_sellers,
             'total_sellers' => $sellers,
