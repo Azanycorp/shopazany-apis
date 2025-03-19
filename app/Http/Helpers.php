@@ -2476,15 +2476,17 @@ if (! function_exists('currencyConvertTo')) {
             $rates[$cacheKey] = Cache::remember($cacheKey, now()->addHours(24), function () use ($to): int|float {
                 $toRate = Currency::where('code', $to)->value('exchange_rate');
 
-                if (!$toRate) {
-                    throw new Exception("Currency rate not found for '{$to}'.");
+                if (!$toRate || $toRate <= 0) {
+                    throw new Exception("Currency rate not found or invalid for '{$to}'.");
                 }
 
                 return $toRate;
             });
         }
 
-        return round($amount * $rates[$cacheKey], 2);
+        return $to === 'USD'
+            ? round($amount / $rates[$cacheKey], 2)
+            : round($amount * $rates[$cacheKey], 2);
     }
 }
 
