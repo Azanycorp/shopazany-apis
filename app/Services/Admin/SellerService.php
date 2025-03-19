@@ -147,10 +147,6 @@ class SellerService
             ->with('payments')
             ->get();
 
-        if ($orders->isEmpty()) {
-            return $this->error(null, "User not found", 404);
-        }
-
         $payments = $orders->flatMap->payments;
 
         $data = PaymentResource::collection($payments);
