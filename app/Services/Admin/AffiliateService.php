@@ -105,6 +105,7 @@ class AffiliateService
                 'first_name' => $user->first_name,
                 'last_name' => $user->last_name,
                 'earnings' => $user->wallet_balance ?? 0,
+                'default_currency' => $user->default_currency,
                 'referred' => $user->referrals_count ?? 0,
                 'referrer_code' => $user->referrer_code,
                 'referrer_link' => $user->referrer_link,
