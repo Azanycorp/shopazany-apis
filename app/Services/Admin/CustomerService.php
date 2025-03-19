@@ -19,7 +19,7 @@ class CustomerService
         $query = trim(request()->input('search'));
 
         $users = User::with(['userCountry', 'state', 'wallet', 'wishlist.product', 'payments.order'])
-            ->where('type', 'customer')
+            ->where('type', UserType::CUSTOMER)
             ->where(function($queryBuilder) use ($query): void {
                 $queryBuilder->where('first_name', 'LIKE', '%' . $query . '%')
                             ->orWhere('last_name', 'LIKE', '%' . $query . '%')
@@ -82,17 +82,14 @@ class CustomerService
 
     public function removeCustomer($request)
     {
-        $users = User::whereIn('id', $request->user_ids)->get();
-
-        foreach ($users as $user) {
-            $user->update([
+        User::whereIn('id', $request->user_ids)
+            ->update([
                 'status' => UserStatus::DELETED,
                 'is_verified' => 0,
                 'is_admin_approve' => 0,
             ]);
 
-            $user->delete();
-        }
+        User::whereIn('id', $request->user_ids)->delete();
 
         return $this->success(null, "User(s) have been removed successfully");
     }

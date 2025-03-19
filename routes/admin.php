@@ -235,11 +235,11 @@ Route::middleware('validate.header')
                     Route::delete('/delete/{id}', 'deleteShippingAgent');
                 });
 
-                //super admin route
-                // Affiliate
                 Route::prefix('affiliate')->controller(AdminAffiliateController::class)->group(function () {
-                        Route::get('/overview', 'overview')->middleware('cacheResponse:600');
-                        Route::get('/users', 'allUsers')->middleware('cacheResponse:900');
+                        Route::get('/overview', 'overview')
+                            ->middleware('cacheResponse:600');
+                        Route::get('/users', 'allUsers')
+                            ->middleware('cacheResponse:600');
                         Route::get('/user/{id}', 'userDetail');
                         Route::patch('/suspend/{id}', 'suspend');
                         Route::post('/reset-password', 'resetPassword');
