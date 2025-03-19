@@ -33,9 +33,10 @@ class CustomerResource extends JsonResource
             "is_approved" => $this->is_admin_approve,
             "status" => (string)$this->status,
             "wallet" => (object)[
-                'available_balance' => optional($this->wallet)->balance,
+                'available_balance' => currencyConvertTo($this->wallet?->balance, "USD"),
                 'total_income' => 0,
-                'total_withdrawal' => 0
+                'total_withdrawal' => 0,
+                'default_currency' => $this->default_currency,
             ],
             'wishlist' => $this->wishlist ? $this->wishlist->map(function ($list): array {
                 return [

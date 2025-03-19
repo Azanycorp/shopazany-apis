@@ -2464,6 +2464,30 @@ if (! function_exists('currencyConvert')) {
     }
 }
 
+if (! function_exists('currencyConvertTo')) {
+    function currencyConvertTo($amount, $to): float
+    {
+        static $rates = [];
+
+        $to = $to ?? 'USD';
+
+        $cacheKey = "USD_to_{$to}";
+        if (!isset($rates[$cacheKey])) {
+            $rates[$cacheKey] = Cache::remember($cacheKey, now()->addHours(24), function () use ($to): int|float {
+                $toRate = Currency::where('code', $to)->value('exchange_rate');
+
+                if (!$toRate) {
+                    throw new Exception("Currency rate not found for '{$to}'.");
+                }
+
+                return $toRate;
+            });
+        }
+
+        return round($amount * $rates[$cacheKey], 2);
+    }
+}
+
 if (! function_exists('mailSend')) {
     function mailSend($type, $recipient, $subject, $mail_class, $payloadData = [])
     {
