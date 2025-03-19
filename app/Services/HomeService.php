@@ -532,7 +532,6 @@ class HomeService
             'category_id',
             'sub_category_id',
             'price',
-            'default_currency',
             'country_id',
             'image',
         )
@@ -540,8 +539,14 @@ class HomeService
             ->with([
                 'category:id,name,slug',
                 'subCategory:id,name,slug',
+                'shopCurrency',
             ])
             ->get();
+
+        $products->each(function ($product) {
+            $product->default_currency = $product->shopCurrency?->currency ?? 'USD';
+            unset($product->shopCurrency);
+        });
 
         unset($deal->products, $deal->status, $deal->created_at, $deal->updated_at);
 
