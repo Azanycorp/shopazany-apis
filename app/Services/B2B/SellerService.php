@@ -1000,14 +1000,13 @@ class SellerService extends Controller
                 ['seller_id' => $currentUserId],
                 ['master_wallet' => 0]
             );
-            $wallet->decrement('master_wallet', $$request->amoun);
+            $wallet->decrement('master_wallet', $request->amount);
             DB::commit();
-
             return $this->success('Payout request submitted successfully', 200);
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return $this->error(null, 'An error occurred while processing your request', 500);
+            return $this->error(null, 'An error occurred while processing your request :'. $e->getMessage(), 500);
         }
     }
 
