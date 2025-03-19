@@ -23,23 +23,15 @@ class ProductCategoryService
     public function createCategory($request)
     {
         try {
-            $folder = null;
-
-            if (App::environment('production')) {
-                $folder = '/prod/category';
-            } elseif (App::environment(['staging', 'local'])) {
-                $folder = '/stag/category';
-            }
 
             if ($request->file('image')) {
-                $path = $request->file('image')->store($folder, 's3');
-                $url = Storage::disk('s3')->url($path);
+                $url = uploadImage($request, 'image', 'category');
             }
 
             B2BProductCategory::create([
                 'name' => $request->name,
                 'slug' => Str::slug($request->name),
-                'image' => $request->file('image') ? $url : null,
+                'image' =>  $url ?? null,
                 'featured' => 1,
             ]);
 
@@ -49,27 +41,17 @@ class ProductCategoryService
         }
     }
 
-    public function updateCategory($request,$id)
+    public function updateCategory($request, $id)
     {
         $category = B2BProductCategory::findOrFail($id);
         try {
-            $folder = null;
-
-            if (App::environment('production')) {
-                $folder = '/prod/category';
-            } elseif (App::environment(['staging', 'local'])) {
-                $folder = '/stag/category';
-            }
-
             if ($request->file('image')) {
-                $path = $request->file('image')->store($folder, 's3');
-                $url = Storage::disk('s3')->url($path);
+                $url = uploadImage($request, 'image', 'category');
             }
-
             $category->update([
                 'name' => $request->name,
                 'slug' => Str::slug($request->name),
-                'image' => $request->image ? $url : $category->image,
+                'image' =>  $url ?? $category->image,
             ]);
             return $this->success(null, "Category updated successfully");
         } catch (\Exception $e) {
@@ -113,24 +95,14 @@ class ProductCategoryService
         }
 
         try {
-            $folder = null;
-            $url = null;
 
-            if (App::environment('production')) {
-                $folder = '/prod/category/subcategory';
-            } elseif (App::environment(['staging', 'local'])) {
-                $folder = '/stag/category/subcategory';
+            if ($request->file('image')) {
+                $url = uploadImage($request, 'image', 'subcategory');
             }
-
-            if ($request->hasFile('image')) {
-                $path = $request->file('image')->store($folder, 's3');
-                $url = Storage::disk('s3')->url($path);
-            }
-
             $category->subcategory()->create([
                 'name' => $request->name,
                 'slug' => Str::slug($request->name),
-                'image' => $url
+                'image' => $url ?? null
             ]);
 
             return $this->success(null, "Created successfully");
@@ -193,7 +165,7 @@ class ProductCategoryService
     public function getAdminSubcategory()
     {
         $search = request()->query('search');
-         $subcats = B2BProductSubCategory::with(['products', 'category'])
+        $subcats = B2BProductSubCategory::with(['products', 'category'])
             ->withCount('products')
             ->when($search, function ($query, string $search): void {
                 $query->where('name', 'like', '%' . $search . '%');

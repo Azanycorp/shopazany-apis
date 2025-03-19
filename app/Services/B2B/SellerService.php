@@ -1004,7 +1004,7 @@ class SellerService extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return $this->error(null, 'An error occurred while processing your request :'. $e->getMessage(), 500);
+            return $this->error(null, 'An error occurred while processing your request :' . $e->getMessage(), 500);
         }
     }
 
