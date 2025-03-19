@@ -533,6 +533,7 @@ class HomeService
             'sub_category_id',
             'price',
             'default_currency',
+            'country_id',
             'image',
         )
             ->whereIn('id', $productIds)
