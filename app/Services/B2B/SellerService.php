@@ -994,8 +994,6 @@ class SellerService extends Controller
                 'b2b_withdrawal_method' => $paymentInfo->id,
             ]);
 
-            // $wallet->master_wallet -= $request->amount;
-            // $wallet->save();
             $wallet = UserWallet::firstOrCreate(
                 ['seller_id' => $currentUserId],
                 ['master_wallet' => 0]
