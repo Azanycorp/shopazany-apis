@@ -9,6 +9,7 @@ use App\Models\Category;
 use App\Models\Order;
 use App\Models\User;
 use App\Trait\HttpResponse;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class DashboardService
@@ -17,24 +18,45 @@ class DashboardService
 
     public function dashboardAnalytics()
     {
+        $period = request()->query('period', 'last_7_days');
+
+        switch ($period) {
+            case 'this_week':
+                $startDate = Carbon::now()->startOfWeek();
+                break;
+            case 'this_month':
+                $startDate = Carbon::now()->startOfMonth();
+                break;
+            case 'this_year':
+                $startDate = Carbon::now()->startOfYear();
+                break;
+            case 'last_7_days':
+            default:
+                $startDate = Carbon::now()->subDays(7);
+                break;
+        }
+
+        $endDate = Carbon::now();
+
         $total_sales = Order::select('shop_countries.currency', 'orders.total_amount')
-            ->join('shop_countries', 'orders.country_id', '=', 'shop_countries.country_id')
+            ->join('shop_countries', 'orders.shop_country_id', '=', 'shop_countries.id')
             ->where('orders.status', OrderStatus::DELIVERED)
+            ->whereBetween('orders.created_at', [$startDate, $endDate])
             ->get()
             ->sum(fn($order) => currencyConvert($order->currency, $order->total_amount, "USD"));
 
         $userStats = User::selectRaw("
-                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as active_users,
-                SUM(CASE WHEN type = ? AND status != ? THEN 1 ELSE 0 END) as inactive_sellers,
-                SUM(CASE WHEN type = ? THEN 1 ELSE 0 END) as total_sellers,
-                SUM(CASE WHEN is_affiliate_member = true AND status = ? THEN 1 ELSE 0 END) as active_affiliate_users,
-                SUM(CASE WHEN is_affiliate_member = true AND status != ? THEN 1 ELSE 0 END) as inactive_affiliate_users
+                SUM(CASE WHEN status = ? AND created_at >= ? THEN 1 ELSE 0 END) as active_users,
+                SUM(CASE WHEN type = ? AND status != ? AND created_at >= ? THEN 1 ELSE 0 END) as inactive_sellers,
+                SUM(CASE WHEN type = ? AND created_at >= ? THEN 1 ELSE 0 END) as total_sellers,
+                SUM(CASE WHEN is_affiliate_member = true AND status = ? AND created_at >= ? THEN 1 ELSE 0 END) as active_affiliate_users,
+                SUM(CASE WHEN is_affiliate_member = true AND status != ? AND created_at >= ? THEN 1 ELSE 0 END) as inactive_affiliate_users
             ", [
-                UserStatus::ACTIVE,
-                UserType::SELLER, UserStatus::ACTIVE,
-                UserType::SELLER,
-                UserStatus::ACTIVE,
-                UserStatus::ACTIVE
+                UserStatus::ACTIVE, $startDate,
+                UserType::SELLER, UserStatus::ACTIVE, $startDate,
+                UserType::SELLER, $startDate,
+                UserStatus::ACTIVE, $startDate,
+                UserStatus::ACTIVE, $startDate
             ])
             ->first();
 
@@ -44,10 +66,14 @@ class DashboardService
             'inactive_sellers' => $userStats->inactive_sellers,
             'total_sellers' => $userStats->total_sellers,
             'active_affiliate_users' => $userStats->active_affiliate_users,
-            'inactive_affiliate_users' => $userStats->inactive_affiliate_users,
+            'inActive_affiliate_users' => $userStats->inactive_affiliate_users,
+            'date_range' => [
+                'start_date' => $startDate->toDateString(),
+                'end_date' => $endDate->toDateString(),
+            ],
         ];
 
-        return $this->success($data, "Dashboard Analytics");
+        return $this->success($data, "Dashboard Analytics ($period)");
     }
 
     public function bestSellers()
