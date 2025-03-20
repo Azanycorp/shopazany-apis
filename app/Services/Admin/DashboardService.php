@@ -44,7 +44,7 @@ class DashboardService
             'inactive_sellers' => $userStats->inactive_sellers,
             'total_sellers' => $userStats->total_sellers,
             'active_affiliate_users' => $userStats->active_affiliate_users,
-            'inActive_affiliate_users' => $userStats->inactive_affiliate_users,
+            'inactive_affiliate_users' => $userStats->inactive_affiliate_users,
         ];
 
         return $this->success($data, "Dashboard Analytics");
