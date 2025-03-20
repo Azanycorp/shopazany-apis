@@ -358,6 +358,16 @@ class PaystackService
                 }
                 $address = $shipping_address ? new B2BBuyerShippingAddressResource($shipping_address) : null;
 
+
+                $product->availability_quantity -= $rfq->product_quantity;
+                $product->sold += $rfq->product_quantity;
+                $seller_amount = currencyConvert(
+                    $user->default_currency,
+                    $formattedAmount,
+                    $product->shopCountry->currency ?? 'USD',
+                );
+                $product->save();
+
                 B2bOrder::create([
                     'buyer_id' => $userId,
                     'centre_id' => $centerId ?? null,
@@ -368,21 +378,12 @@ class PaystackService
                     'product_data' => $product,
                     'shipping_agent' => $shipping_agent_id ? $shipping_agent->name : 'DHL',
                     'shipping_address' => $address,
-                    'total_amount' => $amount,
+                    'total_amount' => $formattedAmount,
                     'payment_method' => $method,
                     'payment_status' => OrderStatus::PAID,
                     'status' => OrderStatus::PENDING,
                 ]);
-
-                $product->availability_quantity -= $rfq->product_quantity;
-                $product->sold += $rfq->product_quantity;
-                $seller_amount = currencyConvert(
-                    $user->default_currency,
-                    $amount,
-                    $product->shopCountry->currency ?? 'USD',
-                );
-                $product->save();
-
+                
                 $wallet = UserWallet::firstOrCreate(
                     ['seller_id' => $seller->id],
                     ['master_wallet' => 0]

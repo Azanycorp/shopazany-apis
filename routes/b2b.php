@@ -142,9 +142,9 @@ Route::middleware('validate.header')
                     Route::middleware('cacheResponse:300')->group(function (): void {
                         Route::get('dashboard', 'dashboard');
                         Route::get('rfq-details/{id}', 'getRfqDetails');
-                        Route::get('orders', 'allOrders');
-                        Route::get('order-details/{id}', 'getOrderDetails');
                     });
+                    Route::get('orders', 'allOrders');
+                    Route::get('order-details/{id}', 'getOrderDetails');
 
                     //profile
                     Route::get('/profile', 'profile')->middleware('cacheResponse:300');
