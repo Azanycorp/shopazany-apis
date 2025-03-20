@@ -85,6 +85,8 @@ Route::middleware('validate.header')
                 Route::get('/top-brands', 'topBrands');
                 Route::get('/top-sellers', 'topSellers');
                 Route::get('/top-products', 'topProducts');
+                Route::get('/flash/deals', 'flashDeals');
+                Route::get('/flash/deal/{slug}', 'singleFlashDeal');
 
                 Route::prefix('seller')->group(function (): void {
                     Route::get('/{uuid}', 'sellerInfo');

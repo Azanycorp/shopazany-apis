@@ -6,6 +6,7 @@ use App\Enum\UserStatus;
 use App\Enum\UserType;
 use App\Http\Resources\PaymentResource;
 use App\Http\Resources\SellerResource;
+use App\Models\Order;
 use App\Models\User;
 use App\Trait\HttpResponse;
 
@@ -140,13 +141,13 @@ class SellerService
 
     public function paymentHistory($id)
     {
-        $user = User::with('sellerOrders.payments')->find($id);
+        $orders = Order::whereHas('products', function ($query) use ($id) {
+                $query->where('user_id', $id);
+            })
+            ->with('payments')
+            ->get();
 
-        if (!$user) {
-            return $this->error(null, "User not found", 404);
-        }
-
-        $payments = $user->sellerOrders->flatMap->payments;
+        $payments = $orders->flatMap->payments;
 
         $data = PaymentResource::collection($payments);
 
@@ -155,16 +156,14 @@ class SellerService
 
     public function bulkRemove($request)
     {
-        $users = User::whereIn('id', $request->user_ids)->get();
+        User::whereIn('id', $request->user_ids)
+            ->update([
+                'status' => UserStatus::DELETED,
+                'is_verified' => 0,
+                'is_admin_approve' => 0
+            ]);
 
-        foreach ($users as $user) {
-            $user->status = UserStatus::DELETED;
-            $user->is_verified = 0;
-            $user->is_admin_approve = 0;
-            $user->save();
-
-            $user->delete();
-        }
+        User::whereIn('id', $request->user_ids)->delete();
 
         return $this->success(null, "User(s) have been removed successfully");
     }
