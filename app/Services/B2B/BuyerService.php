@@ -256,7 +256,7 @@ class BuyerService
             'category',
             'user',
             'b2bLikes',
-            'b2bProductReview',
+            'b2bProductReview.user',
             'subCategory',
             'country',
             'b2bProductImages'
@@ -395,7 +395,14 @@ class BuyerService
 
     public function getProductDetail($slug)
     {
-        $product = B2BProduct::with(['category', 'user', 'b2bLikes', 'country', 'b2bProductImages', 'b2bProductReview'])
+        $product = B2BProduct::with([
+                'category',
+                'user',
+                'b2bLikes',
+                'country',
+                'b2bProductImages',
+                'b2bProductReview.user'
+            ])
             ->where('slug', $slug)
             ->firstOrFail();
 
@@ -404,15 +411,33 @@ class BuyerService
         $b2bProductReview = B2bProdctReview::with(['user' => function ($query): void {
             $query->select('id', 'first_name', 'last_name')
                 ->where('type', UserType::B2B_BUYER);
-        }])
+            }])
             ->where('product_id', $product->id)
             ->get();
 
-        $moreFromSeller = B2BProduct::with(['category', 'user', 'b2bLikes', 'subCategory', 'country', 'b2bProductImages', 'b2bProductReview'])
-            ->where('user_id', $product->user_id)->get();
+        $moreFromSeller = B2BProduct::with([
+                'category',
+                'user',
+                'b2bLikes',
+                'subCategory',
+                'country',
+                'b2bProductImages',
+                'b2bProductReview.user'
+            ])
+            ->where('user_id', $product->user_id)
+            ->get();
 
-        $relatedProducts = B2BProduct::with(['category', 'user', 'b2bLikes', 'subCategory', 'country', 'b2bProductImages', 'b2bProductReview'])
-            ->where('category_id', $product->category_id)->get();
+        $relatedProducts = B2BProduct::with([
+                'category',
+                'user',
+                'b2bLikes',
+                'subCategory',
+                'country',
+                'b2bProductImages',
+                'b2bProductReview.user'
+            ])
+            ->where('category_id', $product->category_id)
+            ->get();
 
         $data = new B2BProductResource($product);
 
