@@ -57,14 +57,8 @@ class B2BAdminService
         $slider = SliderImage::where('type', BannerType::B2B)->findOrFail($id);
         try {
 
-            $folder = null;
-
-            if (App::environment('production')) {
-                $folder = '/prod/slider_image';
-            } elseif (App::environment(['staging', 'local'])) {
-                $folder = '/stag/slider_image';
-            }
-
+            $folder = App::environment('production') ? '/prod/slider_image' : '/stag/slider_image';
+            
             if ($request->file('image')) {
                 $path = $request->file('image')->store($folder, 's3');
                 $url = Storage::disk('s3')->url($path);
@@ -180,7 +174,7 @@ class B2BAdminService
         }
 
         $folder = App::environment('production') ? '/prod/shopcountryflag' : '/stag/shopcountryflag';
-        
+
         if ($request->file('flag')) {
             $url = uploadImage($request, 'flag', $folder);
         }
