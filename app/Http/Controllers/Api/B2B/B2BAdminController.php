@@ -8,7 +8,10 @@ use App\Services\B2B\AdminService;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
 use App\Http\Requests\AdminUserRequest;
+use App\Http\Requests\Admin\BlogRequest;
 use App\Http\Requests\ShippingAgentRequest;
+use App\Http\Requests\Admin\NewBannerRequest;
+use App\Http\Requests\Admin\UpdateBlogRequest;
 use App\Http\Requests\ChangeAdminPasswordRequest;
 use App\Http\Requests\Admin\SubscriptionPlanRequest;
 
@@ -83,11 +86,32 @@ class B2BAdminController extends Controller
     {
         return $this->adminService->getConfigDetails();
     }
-
     public function UpdateConfigDetails(Request $request)
     {
         return $this->adminService->UpdateConfigDetails($request);
     }
+    public function getAllBanners()
+    {
+        return $this->adminService->getPageBanners();
+    }
+
+    public function addNewBanner(NewBannerRequest $request)
+    {
+        return $this->adminService->addPageBanner($request);
+    }
+    public function updatePageBanner(Request $request, $id)
+    {
+        return $this->adminService->updatePageBanner($request, $id);
+    }
+    public function deletePageBanner($id)
+    {
+        return $this->adminService->deletePageBanner($id);
+    }
+    public function editPageBanner($id)
+    {
+        return $this->adminService->getPageBanner($id);
+    }
+
 
     //Withdrawal Requests
     public function widthrawalRequests()
@@ -126,9 +150,9 @@ class B2BAdminController extends Controller
         return $this->adminService->approveWidthrawalMethod($id);
     }
 
-    public function rejectWidthrawalMethod($id, Request $request)
+    public function rejectWidthrawalMethod(Request $request, $id)
     {
-        return $this->adminService->rejectWidthrawalMethod($id, $request);
+        return $this->adminService->rejectWidthrawalMethod($request, $id);
     }
 
     //Seller Products Approval Request
@@ -147,83 +171,11 @@ class B2BAdminController extends Controller
         return $this->adminService->approveProduct($id);
     }
 
-    public function rejectProduct($id, Request $request)
+    public function rejectProduct(Request $request, $id)
     {
-        return $this->adminService->rejectProduct($id, $request);
+        return $this->adminService->rejectProduct($request, $id);
     }
 
-    //Admin Users
-    public function adminUsers()
-    {
-        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
-        return $this->adminService->adminUsers();
-    }
-
-    public function addAdmin(AdminUserRequest $request)
-    {
-        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
-        return $this->adminService->addAdmin($request);
-    }
-
-    public function viewAdminUser($id)
-    {
-        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
-        return $this->adminService->viewAdmin($id);
-    }
-
-    public function editAdminUser($id, Request $request)
-    {
-        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
-        return $this->adminService->editAdmin($id, $request);
-    }
-
-    public function verifyPassword(Request $request)
-    {
-        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
-        return $this->adminService->verifyPassword($request);
-    }
-
-    public function revokeAccess($id)
-    {
-        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
-        return $this->adminService->revokeAccess($id);
-    }
-
-    public function removeAdmin($id)
-    {
-        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
-        return $this->adminService->removeAdmin($id);
-    }
-
-    //ShippingAgents section
-    public function shippingAgents()
-    {
-        return $this->adminService->shippingAgents();
-    }
-
-    public function addShippingAgent(ShippingAgentRequest $request)
-    {
-        return $this->adminService->addShippingAgent($request);
-    }
-    public function getCountryList()
-    {
-        return $this->adminService->getCountryList();
-    }
-
-    public function viewShippingAgent($id)
-    {
-        return $this->adminService->viewShippingAgent($id);
-    }
-
-    public function editShippingAgent($id, ShippingAgentRequest $request)
-    {
-        return $this->adminService->editShippingAgent($id, $request);
-    }
-
-    public function deleteShippingAgent($id)
-    {
-        return $this->adminService->deleteShippingAgent($id);
-    }
 
     //Subscription plans
     public function b2bSubscriptionPlans()
@@ -236,19 +188,44 @@ class B2BAdminController extends Controller
         return $this->adminService->addSubscriptionPlan($request);
     }
 
-
     public function viewSubscriptionPlan($id)
     {
         return $this->adminService->viewSubscriptionPlan($id);
     }
 
-    public function editSubscriptionPlan($id, SubscriptionPlanRequest $request)
+    public function editSubscriptionPlan(SubscriptionPlanRequest $request, $id)
     {
-        return $this->adminService->editSubscriptionPlan($id, $request);
+        return $this->adminService->editSubscriptionPlan($request, $id);
     }
 
     public function deleteSubscriptionPlan($id)
     {
         return $this->adminService->deleteSubscriptionPlan($id);
+    }
+
+    //Blog Section
+    public function getBlogs()
+    {
+        return $this->adminService->allBlogs();
+    }
+
+    public function addBlog(BlogRequest $request)
+    {
+        return $this->adminService->addBlog($request);
+    }
+
+    public function getBlog($id)
+    {
+        return $this->adminService->getBlog($id);
+    }
+
+    public function updateBlog(UpdateBlogRequest $request, $id)
+    {
+        return $this->adminService->updateBlog($request, $id);
+    }
+
+    public function deleteBlog($id)
+    {
+        return $this->adminService->deleteBlog($id);
     }
 }

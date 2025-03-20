@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Admin;
 use App\Models\Order;
 use App\Trait\SignUp;
+use App\Models\Country;
 use App\Enum\PlanStatus;
 use App\Models\B2bOrder;
 use App\Enum\AdminStatus;
@@ -12,12 +13,15 @@ use App\Enum\OrderStatus;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
 use App\Models\PickupStation;
+use App\Models\ShippingAgent;
 use App\Mail\B2BNewAdminEmail;
 use App\Models\CollationCenter;
 use Illuminate\Support\Facades\DB;
 use App\Http\Resources\HubResource;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Contracts\Pipeline\Hub;
+use App\Http\Resources\ShippingAgentResource;
 use App\Http\Resources\CollationCentreResource;
 
 class SuperAdminService
@@ -80,15 +84,15 @@ class SuperAdminService
         return $this->success($collation_details, 'All available collation centres');
     }
 
-    public function addCollationCentre($data)
+    public function addCollationCentre($request)
     {
         $centre = CollationCenter::create([
-            'name' => $data->name,
-            'location' => $data->location,
-            'status' => $data->status,
-            'note' => $data->note,
-            'city' => $data->city,
-            'country_id' => $data->country_id ?? 160,
+            'name' => $request->name,
+            'location' => $request->location,
+            'status' => $request->status,
+            'note' => $request->note,
+            'city' => $request->city,
+            'country_id' => $request->country_id ?? 160,
             'status' => PlanStatus::ACTIVE
         ]);
         return $this->success($centre, 'Centre added successfully', 201);
@@ -139,7 +143,7 @@ class SuperAdminService
     }
 
 
-    public function editCollationCentre($id, $data)
+    public function editCollationCentre($request, $id)
     {
         $centre = CollationCenter::find($id);
         if (!$centre) {
@@ -147,12 +151,12 @@ class SuperAdminService
         }
 
         $centre->update([
-            'name' => $data->name ?? $centre->name,
-            'location' => $data->location ?? $centre->location,
-            'note' => $data->note ?? $centre->note,
-            'city' => $data->city ?? $centre->city,
-            'country_id' => $data->country_id ?? $centre->country_id,
-            'status' => $data->status ?? PlanStatus::ACTIVE
+            'name' => $request->name ?? $centre->name,
+            'location' => $request->location ?? $centre->location,
+            'note' => $request->note ?? $centre->note,
+            'city' => $request->city ?? $centre->city,
+            'country_id' => $request->country_id ?? $centre->country_id,
+            'status' => $request->status ?? PlanStatus::ACTIVE
         ]);
         return $this->success(null, 'Details updated successfully');
     }
@@ -179,15 +183,15 @@ class SuperAdminService
         return $this->success($data, 'All available collation centres hubs');
     }
 
-    public function addHub($data)
+    public function addHub($request)
     {
         $hub = PickupStation::create([
-            'collation_center_id' => $data->collation_center_id,
-            'name' => $data->name,
-            'location' => $data->location,
-            'note' => $data->note,
-            'city' => $data->city,
-            'country_id' => $data->country_id,
+            'collation_center_id' => $request->collation_center_id,
+            'name' => $request->name,
+            'location' => $request->location,
+            'note' => $request->note,
+            'city' => $request->city,
+            'country_id' => $request->country_id,
             'status' => PlanStatus::ACTIVE
         ]);
         return $this->success($hub, 'Hub added successfully', 201);
@@ -204,7 +208,7 @@ class SuperAdminService
         return $this->success($data, 'Hub details');
     }
 
-    public function editHub($id, $data)
+    public function editHub($request, $id)
     {
         $hub = PickupStation::find($id);
         if (!$hub) {
@@ -212,13 +216,13 @@ class SuperAdminService
         }
 
         $hub->update([
-            'collation_center_id' => $data->collation_center_id ?? $hub->collation_center_id,
-            'name' => $data->name ?? $hub->name,
-            'location' => $data->location ?? $hub->location,
-            'note' => $data->note ?? $hub->note,
-            'city' => $data->city ?? $hub->city,
-            'country_id' => $data->country_id ?? $hub->country_id,
-            'status' => $data->status ?? PlanStatus::ACTIVE
+            'collation_center_id' => $request->collation_center_id ?? $hub->collation_center_id,
+            'name' => $request->name ?? $hub->name,
+            'location' => $request->location ?? $hub->location,
+            'note' => $request->note ?? $hub->note,
+            'city' => $request->city ?? $hub->city,
+            'country_id' => $request->country_id ?? $hub->country_id,
+            'status' => $request->status ?? PlanStatus::ACTIVE
         ]);
 
         return $this->success(null, 'Details updated successfully');
@@ -255,29 +259,29 @@ class SuperAdminService
         return $this->success($admins, 'All Admin Users');
     }
 
-    public function addAdmin($data)
+    public function addAdmin($request)
     {
         DB::beginTransaction();
         try {
             $password = Str::random(5);
             $admin = Admin::create([
-                'first_name' => $data->first_name,
-                'last_name' => $data->last_name,
-                'email' => $data->email,
-                'type' => $data->type,
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'email' => $request->email,
+                'type' => $request->type,
                 'status' => AdminStatus::ACTIVE,
-                'phone_number' => $data->phone_number,
+                'phone_number' => $request->phone_number,
                 'password' => bcrypt($password),
             ]);
-            $admin->permissions()->sync($data->permissions);
+            $admin->permissions()->sync($request->permissions);
             $loginDetails = [
-                'name' => $data->first_name,
-                'email' => $data->email,
+                'name' => $request->first_name,
+                'email' => $request->email,
                 'password' => $password,
             ];
             DB::commit();
 
-            defer(fn() => send_email($data->email, new B2BNewAdminEmail($loginDetails)));
+            defer(fn() => send_email($request->email, new B2BNewAdminEmail($loginDetails)));
 
             return $this->success($admin, 'Admin user added successfully', 201);
         } catch (\Throwable $th) {
@@ -292,28 +296,28 @@ class SuperAdminService
         return $this->success($admin, 'Admin details');
     }
 
-    public function editAdmin($id, $data)
+    public function editAdmin($request, $id)
     {
         $admin = Admin::findOrFail($id);
         $admin->update([
-            'first_name' => $data->first_name,
-            'last_name' => $data->last_name,
-            'email' => $data->email,
-            'type' => $data->type,
-            'phone_number' => $data->phone_number,
+            'first_name' => $request->first_name,
+            'last_name' => $request->last_name,
+            'email' => $request->email,
+            'type' => $request->type,
+            'phone_number' => $request->phone_number,
         ]);
-        $admin->roles()->sync($data->role_id);
-        if ($data->permissions) {
-            $admin->permissions()->sync($data->permissions);
+        $admin->roles()->sync($request->role_id);
+        if ($request->permissions) {
+            $admin->permissions()->sync($request->permissions);
         }
         return $this->success($admin, 'Details updated successfully');
     }
 
-    public function verifyPassword($data)
+    public function verifyPassword($request)
     {
         $currentUserId = userAuthId();
         $admin = Admin::findOrFail($currentUserId);
-        if (Hash::check($data->password, $admin->password)) {
+        if (Hash::check($request->password, $admin->password)) {
             return $this->success(null, 'Password matched');
         }
         return $this->error(null, 'Password do not match');
@@ -331,5 +335,59 @@ class SuperAdminService
         $admin->permissions()->detach();
         $admin->delete();
         return $this->success(null, 'Deleted successfully');
+    }
+
+    //Shipping Agents
+    public function shippingAgents()
+    {
+        $agents = ShippingAgent::latest('id')->get();
+        $data = ShippingAgentResource::collection($agents);
+        return $this->success($data, 'All Agents');
+    }
+
+    public function addShippingAgent($request)
+    {
+        $agent = ShippingAgent::create([
+            'name' => $request->name,
+            'type' => $request->type,
+            'country_ids' => $request->country_ids,
+            'account_email' => $request->account_email,
+            'account_password' => $request->account_password,
+            'api_live_key' => $request->api_live_key,
+            'api_test_key' => $request->api_test_key,
+            'status' => $request->status,
+        ]);
+        return $this->success($agent, 'Agent added successfully', 201);
+    }
+
+    public function viewShippingAgent($id)
+    {
+        $agent = ShippingAgent::findOrFail($id);
+        $data = new ShippingAgentResource($agent);
+        return $this->success($data, 'Agent details');
+    }
+
+    public function editShippingAgent($request, $id)
+    {
+        $agent = ShippingAgent::findOrFail($id);
+        $agent->update([
+            'name' => $request->name ?? $agent->name,
+            'type' => $request->type ?? $agent->type,
+            'logo' => $request->logo ?? $agent->logo,
+            'country_ids' => $request->country_ids ?? $agent->country_ids,
+            'account_email' => $request->account_email ?? $agent->account_email,
+            'account_password' => $request->account_password ?? $agent->account_password,
+            'api_live_key' => $request->api_live_key ?? $agent->api_live_key,
+            'api_test_key' => $request->api_test_key ?? $agent->api_test_key,
+            'status' => $request->status ?? $agent->status,
+        ]);
+        return $this->success(null, 'Details updated successfully');
+    }
+
+    public function deleteShippingAgent($id)
+    {
+        $agent = ShippingAgent::findOrFail($id);
+        $agent->delete();
+        return $this->success(null, 'Details deleted successfully');
     }
 }

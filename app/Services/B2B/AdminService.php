@@ -3,6 +3,7 @@
 namespace App\Services\B2B;
 
 use App\Models\Rfq;
+use App\Models\Blog;
 use App\Models\User;
 use App\Models\Admin;
 use App\Trait\SignUp;
@@ -11,6 +12,7 @@ use App\Enum\UserType;
 use App\Models\Payout;
 use App\Enum\AdminType;
 use App\Models\Country;
+use App\Enum\BannerType;
 use App\Enum\PlanStatus;
 use App\Enum\UserStatus;
 use App\Models\B2bOrder;
@@ -18,6 +20,8 @@ use App\Enum\AdminStatus;
 use App\Enum\OrderStatus;
 use App\Models\B2bCompany;
 use App\Models\B2BProduct;
+use App\Models\HomeBanner;
+use App\Models\PageBanner;
 use App\Models\UserWallet;
 use App\Enum\GeneralStatus;
 use App\Enum\ProductStatus;
@@ -31,6 +35,7 @@ use App\Models\SubscriptionPlan;
 use Illuminate\Support\Facades\DB;
 use App\Models\B2bWithdrawalMethod;
 use App\Models\BusinessInformation;
+use App\Http\Resources\BlogResource;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
@@ -378,7 +383,7 @@ class AdminService
         return $this->success($data, 'Product details');
     }
 
-    public function editSellerProduct($user_id, $product_id, $request)
+    public function editSellerProduct($request, $user_id, $product_id)
     {
         $prod = B2BProduct::find($product_id);
         $user = User::find($user_id);
@@ -497,25 +502,25 @@ class AdminService
         return $this->success($user, "Buyer details");
     }
 
-    public function editBuyer($id, $data)
+    public function editBuyer($request, $id)
     {
         $user = User::findOrFail($id);
 
-        if (!empty($data->email) && User::where('email', $data->email)->where('id', '!=', $id)->exists()) {
+        if (!empty($request->email) && User::where('email', $request->email)->where('id', '!=', $id)->exists()) {
             return $this->error(null, "Email already exists.");
         }
 
-        $image = $data->hasFile('image') ? uploadUserImage($data, 'image', $user) : $user->image;
+        $image = $request->hasFile('image') ? uploadUserImage($request, 'image', $user) : $user->image;
         $user->update([
-            'first_name' => $data->first_name ?? $user->first_name,
-            'last_name' => $data->last_name ?? $user->last_name,
-            'email' => $data->email ?? $user->email,
-            'image' => $data->image ? $image : $user->image,
+            'first_name' => $request->first_name ?? $user->first_name,
+            'last_name' => $request->last_name ?? $user->last_name,
+            'email' => $request->email ?? $user->email,
+            'image' => $request->image ? $image : $user->image,
         ]);
         return $this->success($user, "Buyer details");
     }
 
-    public function editBuyerCompany($id, $data)
+    public function editBuyerCompany($request, $id)
     {
         $user = User::findOrFail($id);
         $company = B2bCompany::where('user_id', $user->id)->first();
@@ -525,10 +530,10 @@ class AdminService
         }
 
         $company->update([
-            'business_name' => $data->business_name ?? $company->business_name,
-            'company_size' => $data->company_size ?? $company->company_size,
-            'website' => $data->website ?? $company->website,
-            'service_type' => $data->service_type ?? $company->service_type,
+            'business_name' => $request->business_name ?? $company->business_name,
+            'company_size' => $request->company_size ?? $company->company_size,
+            'website' => $request->website ?? $company->website,
+            'service_type' => $request->service_type ?? $company->service_type,
         ]);
 
         return $this->success($company, "company details");
@@ -599,7 +604,7 @@ class AdminService
         return $this->success($data, 'Profile detail');
     }
 
-    public function updateAdminProfile($data)
+    public function updateAdminProfile($request)
     {
         $authUser = userAuth();
         $user = Admin::where('type', AdminType::B2B)
@@ -607,17 +612,17 @@ class AdminService
             ->firstOrFail();
 
         $user->update([
-            'first_name' => $data->first_name,
-            'last_name' => $data->last_name,
-            'email' => $data->email,
-            'phone_number' => $data->phone_number,
+            'first_name' => $request->first_name,
+            'last_name' => $request->last_name,
+            'email' => $request->email,
+            'phone_number' => $request->phone_number,
         ]);
         $data = new AdminUserResource($user);
 
         return $this->success($data, 'Profile detail');
     }
 
-    public function enableTwoFactor($data)
+    public function enableTwoFactor($request)
     {
         $authUser = userAuth();
         $user = Admin::where('type', AdminType::B2B)
@@ -625,13 +630,13 @@ class AdminService
             ->firstOrFail();
 
         $user->update([
-            'two_factor_enabled' => $data->two_factor_enabled,
+            'two_factor_enabled' => $request->two_factor_enabled,
         ]);
 
         return $this->success('Settings updated');
     }
 
-    public function updateAdminPassword($data)
+    public function updateAdminPassword($request)
     {
         $authUser = userAuth();
         $user = Admin::where('type', AdminType::B2B)
@@ -639,7 +644,7 @@ class AdminService
             ->firstOrFail();
 
         $user->update([
-            'password' => bcrypt($data->password),
+            'password' => bcrypt($request->password),
         ]);
         return $this->success(null, 'Password updated');
     }
@@ -650,9 +655,9 @@ class AdminService
         return $this->success($config, 'Config details');
     }
 
-    public function updateConfigDetails($data)
+    public function updateConfigDetails($request)
     {
-        $configData = $data->only([
+        $configData = $request->only([
             'usd_rate',
             'company_profit',
             'email_verify',
@@ -675,6 +680,50 @@ class AdminService
         Configuration::updateOrCreate([], $configData);
 
         return $this->success(null, 'Details updated');
+    }
+
+    public function getPageBanners()
+    {
+        $banners = PageBanner::select('id', 'page', 'section', 'type', 'banner_url')->where('type', BannerType::B2B)->latest('id')->get();
+        return $this->success($banners, 'Banners');
+    }
+
+    public function updatePageBanner($request, $id)
+    {
+        $banner = PageBanner::where('type', BannerType::B2B)->findOrFail($id);
+        $banner_url = $banner && $request->hasFile('banner_url')
+            ? uploadImage($request, 'banner_url', 'home-banner')
+            : ($banner ? $banner->banner_url : null);
+        $banner->update([
+            'page' => $request->page ?? $banner->page,
+            'section' => $request->section ?? $banner->section,
+            'type' => BannerType::B2B,
+            'banner_url' => $banner_url,
+        ]);
+        return $this->success(null, 'Details updated');
+    }
+    public function addPageBanner($request)
+    {
+        $banner_url = $request->hasFile('banner_url') ? uploadImage($request, 'banner_url', 'home-banner') : null;
+
+        PageBanner::create([
+            'page' => $request->page,
+            'section' => $request->section,
+            'type' =>  BannerType::B2B,
+            'banner_url' => $banner_url,
+        ]);
+        return $this->success(null, 'Banner added');
+    }
+    public function getPageBanner($id)
+    {
+        $banner = PageBanner::select('id', 'page', 'section', 'type', 'banner_url')->where('type', BannerType::B2B)->findOrFail($id);
+        return $this->success($banner, 'Banner details');
+    }
+    public function deletePageBanner($id)
+    {
+        $banner = PageBanner::where('type', BannerType::B2B)->findOrFail($id);
+        $banner->delete();
+        return $this->success(null, 'Details Deleted');
     }
 
     //seller withdrawal request
@@ -791,13 +840,13 @@ class AdminService
         return $this->success(null, 'Account Approved');
     }
 
-    public function rejectWidthrawalMethod($id, $data)
+    public function rejectWidthrawalMethod($request, $id)
     {
         $account =  B2bWithdrawalMethod::findOrFail($id);
 
         $account->update([
             'status' => ProductStatus::DECLINED,
-            'admin_comment' => $data->note
+            'admin_comment' => $request->note
         ]);
 
         return $this->success(null, 'Comment Submitted successfully');
@@ -836,77 +885,15 @@ class AdminService
         return $this->success(null, 'Product Approved');
     }
 
-    public function rejectProduct($id, $data)
+    public function rejectProduct($request, $id)
     {
         $product = B2BProduct::findOrFail($id);
         $product->update([
             'status' => ProductStatus::DECLINED,
-            'admin_comment' => $data->note
+            'admin_comment' => $request->note
         ]);
 
         return $this->success(null, 'Comment Submitted successfully');
-    }
-
-    //Shipping Agents
-    public function shippingAgents()
-    {
-        $agents = ShippingAgent::latest('id')->get();
-        $data = ShippingAgentResource::collection($agents);
-        return $this->success($data, 'All Agents');
-    }
-
-    public function addShippingAgent($data)
-    {
-        $agent = ShippingAgent::create([
-            'name' => $data->name,
-            'type' => $data->type,
-            'country_ids' => $data->country_ids,
-            'account_email' => $data->account_email,
-            'account_password' => $data->account_password,
-            'api_live_key' => $data->api_live_key,
-            'api_test_key' => $data->api_test_key,
-            'status' => $data->status,
-        ]);
-        return $this->success($agent, 'Agent added successfully', 201);
-    }
-
-    public function viewShippingAgent($id)
-    {
-        $agent = ShippingAgent::findOrFail($id);
-        $data = new ShippingAgentResource($agent);
-        return $this->success($data, 'Agent details');
-    }
-
-    public function getCountryList()
-    {
-        $countries = Cache::rememberForever('countries', function () {
-            return Country::select('id', 'name', 'phonecode', 'is_allowed')->get();
-        });
-        return $this->success($countries, 'countries list');
-    }
-
-    public function editShippingAgent($id, $data)
-    {
-        $agent = ShippingAgent::findOrFail($id);
-        $agent->update([
-            'name' => $data->name ?? $agent->name,
-            'type' => $data->type ?? $agent->type,
-            'logo' => $data->logo ?? $agent->logo,
-            'country_ids' => $data->country_ids ?? $agent->country_ids,
-            'account_email' => $data->account_email ?? $agent->account_email,
-            'account_password' => $data->account_password ?? $agent->account_password,
-            'api_live_key' => $data->api_live_key ?? $agent->api_live_key,
-            'api_test_key' => $data->api_test_key ?? $agent->api_test_key,
-            'status' => $data->status ?? $agent->status,
-        ]);
-        return $this->success(null, 'Details updated successfully');
-    }
-
-    public function deleteShippingAgent($id)
-    {
-        $agent = ShippingAgent::findOrFail($id);
-        $agent->delete();
-        return $this->success(null, 'Details deleted successfully');
     }
 
     //Subscription Plans
@@ -917,19 +904,19 @@ class AdminService
         return $this->success($data, 'All B2B Plans');
     }
 
-    public function addSubscriptionPlan($data)
+    public function addSubscriptionPlan($request)
     {
-        $currencyCode = $this->currencyCode($data);
+        $currencyCode = $this->currencyCode($request);
         $plan = SubscriptionPlan::create([
-            'title' => $data->title,
-            'cost' => $data->cost,
-            'country_id' => $data->country_id,
+            'title' => $request->title,
+            'cost' => $request->cost,
+            'country_id' => $request->country_id,
             'currency' => $currencyCode,
-            'period' => $data->period,
-            'tier' => $data->tier,
-            'designation' => $data->designation,
-            'tagline' => $data->tagline,
-            'details' => $data->details,
+            'period' => $request->period,
+            'tier' => $request->tier,
+            'designation' => $request->designation,
+            'tagline' => $request->tagline,
+            'details' => $request->details,
             'type' => PlanType::B2B,
             'status' => PlanStatus::ACTIVE
         ]);
@@ -947,24 +934,24 @@ class AdminService
         return $this->success($data, 'Plan details');
     }
 
-    public function editSubscriptionPlan($id, $data)
+    public function editSubscriptionPlan($request, $id)
     {
         $plan = SubscriptionPlan::where('type', PlanType::B2B)->find($id);
         if (!$plan) {
             return $this->error(null, 'Plan not found', 404);
         }
-        $currencyCode = $this->currencyCode($data);
+        $currencyCode = $this->currencyCode($request);
         $plan->update([
-            'title' => $data->title,
-            'cost' => $data->cost,
-            'country_id' => $data->country_id,
-            'currency' => $data->country_id ? $currencyCode : $plan->currency,
-            'period' => $data->period,
-            'tier' => $data->tier,
-            'designation' => $data->designation,
-            'tagline' => $data->tagline,
-            'details' => $data->details,
-            'status' => $data->status ?? PlanStatus::ACTIVE
+            'title' => $request->title,
+            'cost' => $request->cost,
+            'country_id' => $request->country_id,
+            'currency' => $request->country_id ? $currencyCode : $plan->currency,
+            'period' => $request->period,
+            'tier' => $request->tier,
+            'designation' => $request->designation,
+            'tagline' => $request->tagline,
+            'details' => $request->details,
+            'status' => $request->status ?? PlanStatus::ACTIVE
         ]);
         return $this->success(null, 'Details updated successfully');
     }
@@ -984,5 +971,55 @@ class AdminService
         $plan->delete();
 
         return $this->success(null, 'Plan deleted successfully.');
+    }
+
+    //Blog Section
+    public function allBlogs()
+    {
+        $currentUserId = userAuthId();
+        $blogs = Blog::with('user')->where('admin_id', $currentUserId)->latest('id')->get();
+        $data = BlogResource::collection($blogs);
+        return $this->success($data, 'Added Blogs');
+    }
+
+    public function addBlog($request)
+    {
+        $currentUserId = userAuthId();
+        $url =  uploadImage($request, 'image', 'blog');
+        $plan = Blog::create([
+            'admin_id' => $currentUserId,
+            'title' => $request->title,
+            'type' => BannerType::B2B,
+            'slug' => Str::slug($request->title),
+            'description' => $request->description,
+            'image' => $url,
+        ]);
+        return $this->success($plan, 'Plan added successfully', 201);
+    }
+
+    public function getBlog($id)
+    {
+        $blog = Blog::findOrFail($id);
+        $data = new BlogResource($blog);
+        return $this->success($data, 'Blog details');
+    }
+
+    public function updateBlog($request, $id)
+    {
+        $blog = Blog::findOrFail($id);
+        $url = $request->file('image') ? uploadImage($request, 'image', 'blog') : $blog->image;
+        $blog->update([
+            'title' => $request->title ?? $blog->title,
+            'description' => $request->description ?? $blog->description,
+            'image' => $url,
+        ]);
+        return $this->success('Details updated successfully');
+    }
+
+    public function deleteBlog($id)
+    {
+        $blog = Blog::findOrFail($id);
+        $blog->delete();
+        return $this->success('Blog deleted successfully.');
     }
 }

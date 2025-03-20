@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\B2B;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class AdminUserRequest extends FormRequest
+class CodeRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,10 +22,7 @@ class AdminUserRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'first_name' => 'required|string|max:240',
-            'last_name' => 'required|string|max:240',
-            'phone_number' => 'required|string|max:20',
-            'email' => 'required|email:rfc,dns|unique:admins,email'
+            'email' => 'required|email:rfc,dns|exists:users,email',
         ];
     }
 }

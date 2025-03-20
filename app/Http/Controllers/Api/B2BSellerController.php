@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Models\B2BProduct;
+use Illuminate\Http\Request;
+use App\Services\B2B\SellerService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\B2B\AddProductRequest;
-use App\Http\Requests\B2B\SellerShippingRequest;
 use App\Http\Requests\ChangePasswordRequest;
-use App\Services\B2B\SellerService;
-use Illuminate\Http\Request;
+use App\Http\Requests\B2B\UpdateProductRequest;
+use App\Http\Requests\B2B\SellerShippingRequest;
+use App\Http\Requests\B2B\WithdrawalMethodRequest;
 
 class B2BSellerController extends Controller
 {
@@ -23,9 +26,9 @@ class B2BSellerController extends Controller
         return $this->service->b2bproductImport($request);
     }
 
-    public function export($userId, Request $request)
+    public function export(Request $request, $userId)
     {
-        return $this->service->exportSellerProduct($userId, $request);
+        return $this->service->exportSellerProduct($request, $userId);
     }
 
     public function profile()
@@ -63,7 +66,7 @@ class B2BSellerController extends Controller
         return $this->service->getProductById($product_id, $user_id);
     }
 
-    public function updateProduct(Request $request)
+    public function updateProduct(AddProductRequest $request)
     {
         return $this->service->updateProduct($request);
     }
@@ -93,7 +96,7 @@ class B2BSellerController extends Controller
         return $this->service->getShippingById($user_id, $shipping_id);
     }
 
-    public function updateShipping(Request $request, $shipping_id)
+    public function updateShipping(SellerShippingRequest $request, $shipping_id)
     {
         return $this->service->updateShipping($request, $shipping_id);
     }
@@ -188,7 +191,7 @@ class B2BSellerController extends Controller
         return $this->service->getAllMethod();
     }
 
-    public function addWithdrawalMethod(Request $request)
+    public function addWithdrawalMethod(WithdrawalMethodRequest $request)
     {
         return $this->service->addNewMethod($request);
     }
@@ -203,9 +206,9 @@ class B2BSellerController extends Controller
         return $this->service->makeAccounDefaultt($request);
     }
 
-    public function updateWithdrawalMethod($id, Request $request)
+    public function updateWithdrawalMethod(WithdrawalMethodRequest $request, $id)
     {
-        return $this->service->updateMethod($id, $request);
+        return $this->service->updateMethod($request, $id);
     }
 
     public function deleteWithdrawalMethod($id)
