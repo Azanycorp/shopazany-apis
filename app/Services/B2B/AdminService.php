@@ -977,7 +977,7 @@ class AdminService
     public function allBlogs()
     {
         $currentUserId = userAuthId();
-        $blogs = Blog::where('admin_id', $currentUserId)->latest('id')->get();
+        $blogs = Blog::with('user')->where('admin_id', $currentUserId)->latest('id')->get();
         $data = BlogResource::collection($blogs);
         return $this->success($data, 'Added Blogs');
     }
@@ -986,7 +986,7 @@ class AdminService
     {
         $currentUserId = userAuthId();
         $url =  uploadImage($request, 'image', 'blog');
-        $plan = SubscriptionPlan::create([
+        $plan = Blog::create([
             'admin_id' => $currentUserId,
             'title' => $request->title,
             'type' => BannerType::B2B,
@@ -1012,13 +1012,13 @@ class AdminService
             'description' => $request->description ?? $blog->description,
             'image' => $url,
         ]);
-        return $this->success(null, 'Details updated successfully');
+        return $this->success('Details updated successfully');
     }
 
     public function deleteBlog($id)
     {
         $blog = Blog::findOrFail($id);
         $blog->delete();
-        return $this->success(null, 'Blog deleted successfully.');
+        return $this->success('Blog deleted successfully.');
     }
 }

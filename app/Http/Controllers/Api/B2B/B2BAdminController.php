@@ -206,7 +206,7 @@ class B2BAdminController extends Controller
     //Blog Section
     public function getBlogs()
     {
-        return $this->adminService->getBlogs();
+        return $this->adminService->allBlogs();
     }
 
     public function addBlog(BlogRequest $request)

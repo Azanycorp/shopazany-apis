@@ -9,6 +9,7 @@ class Blog extends Model
     protected $fillable = [
         'admin_id',
         'title',
+        'type',
         'image',
         'description',
     ];
