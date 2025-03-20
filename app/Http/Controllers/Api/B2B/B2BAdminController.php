@@ -8,8 +8,10 @@ use App\Services\B2B\AdminService;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
 use App\Http\Requests\AdminUserRequest;
+use App\Http\Requests\Admin\BlogRequest;
 use App\Http\Requests\ShippingAgentRequest;
 use App\Http\Requests\Admin\NewBannerRequest;
+use App\Http\Requests\Admin\UpdateBlogRequest;
 use App\Http\Requests\ChangeAdminPasswordRequest;
 use App\Http\Requests\Admin\SubscriptionPlanRequest;
 
@@ -199,5 +201,31 @@ class B2BAdminController extends Controller
     public function deleteSubscriptionPlan($id)
     {
         return $this->adminService->deleteSubscriptionPlan($id);
+    }
+
+    //Blog Section
+    public function getBlogs()
+    {
+        return $this->adminService->getBlogs();
+    }
+
+    public function addBlog(BlogRequest $request)
+    {
+        return $this->adminService->addBlog($request);
+    }
+
+    public function getBlog($id)
+    {
+        return $this->adminService->getBlog($id);
+    }
+
+    public function updateBlog(UpdateBlogRequest $request, $id)
+    {
+        return $this->adminService->updateBlog($request, $id);
+    }
+
+    public function deleteBlog($id)
+    {
+        return $this->adminService->deleteBlog($id);
     }
 }

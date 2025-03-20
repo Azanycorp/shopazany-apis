@@ -3,6 +3,7 @@
 namespace App\Services\B2B;
 
 use App\Models\Rfq;
+use App\Models\Blog;
 use App\Models\User;
 use App\Models\Admin;
 use App\Trait\SignUp;
@@ -34,6 +35,7 @@ use App\Models\SubscriptionPlan;
 use Illuminate\Support\Facades\DB;
 use App\Models\B2bWithdrawalMethod;
 use App\Models\BusinessInformation;
+use App\Http\Resources\BlogResource;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
@@ -969,5 +971,54 @@ class AdminService
         $plan->delete();
 
         return $this->success(null, 'Plan deleted successfully.');
+    }
+
+    //Blog Section
+    public function allBlogs()
+    {
+        $currentUserId = userAuthId();
+        $blogs = Blog::where('admin_id', $currentUserId)->latest('id')->get();
+        $data = BlogResource::collection($blogs);
+        return $this->success($data, 'Added Blogs');
+    }
+
+    public function addBlog($request)
+    {
+        $currentUserId = userAuthId();
+        $url =  uploadImage($request, 'image', 'blog');
+        $plan = SubscriptionPlan::create([
+            'admin_id' => $currentUserId,
+            'title' => $request->title,
+            'type' => BannerType::B2B,
+            'description' => $request->description,
+            'image' => $url,
+        ]);
+        return $this->success($plan, 'Plan added successfully', 201);
+    }
+
+    public function getBlog($id)
+    {
+        $blog = Blog::findOrFail($id);
+        $data = new BlogResource($blog);
+        return $this->success($data, 'Blog details');
+    }
+
+    public function updateBlog($request, $id)
+    {
+        $blog = Blog::findOrFail($id);
+        $url = $request->file('image') ? uploadImage($request, 'image', 'blog') : $blog->image;
+        $blog->update([
+            'title' => $request->title ?? $blog->title,
+            'description' => $request->description ?? $blog->description,
+            'image' => $url,
+        ]);
+        return $this->success(null, 'Details updated successfully');
+    }
+
+    public function deleteBlog($id)
+    {
+        $blog = Blog::findOrFail($id);
+        $blog->delete();
+        return $this->success(null, 'Blog deleted successfully.');
     }
 }
