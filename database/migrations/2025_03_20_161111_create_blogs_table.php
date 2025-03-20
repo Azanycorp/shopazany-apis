@@ -11,14 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('b2b_banners', function (Blueprint $table): void {
+        Schema::create('blogs', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('admin_id');
+            $table->string('type')->nullable();
             $table->string('title');
-            $table->string('image');
-            $table->dateTime('start_date');
-            $table->dateTime('end_date');
-            $table->string('products');
-            $table->enum('status', ['active', 'inactive']);
+            $table->string('slug');
+            $table->text('image');
+            $table->text('description');
             $table->timestamps();
         });
     }
@@ -28,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('b2b_banners');
+        Schema::dropIfExists('blogs');
     }
 };

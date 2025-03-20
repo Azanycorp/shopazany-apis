@@ -40,6 +40,10 @@ class Admin extends Authenticatable
     {
         return $this->hasMany(Product::class, 'admin_id');
     }
+    public function blogs()
+    {
+        return $this->hasMany(Blog::class, 'admin_id');
+    }
 
     public function roles()
     {

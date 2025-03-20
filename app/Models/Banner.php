@@ -16,6 +16,7 @@ class Banner extends Model
         'image',
         'start_date',
         'end_date',
+        'type',
         'products',
         'status',
     ];

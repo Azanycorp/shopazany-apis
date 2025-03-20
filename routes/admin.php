@@ -245,17 +245,17 @@ Route::middleware('validate.header')
                         Route::post('/reset-password', 'resetPassword');
                 });
 
-                Route::controller(AdminController::class)->group(function () {
-                    //Admin users
-                    Route::prefix('admin-users')->group(function () {
-                        Route::get('/', 'adminUsers')->middleware('cacheResponse:300');
-                        Route::post('/add', 'addAdmin');
-                        Route::get('/details/{id}', 'viewAdminUser');
-                        Route::post('/update/{id}', 'editAdminUser');
-                        Route::post('/revoke-access/{id}', 'revokeAccess');
-                        Route::post('/verify-password', 'verifyPassword');
-                        Route::delete('/delete-account/{id}', 'removeAdmin');
-                    });
+            Route::controller(AdminController::class)->group(function () {
+                //Admin users
+                Route::prefix('admin-users')->group(function () {
+                    Route::get('/', 'adminUsers')->middleware('cacheResponse:300');
+                    Route::post('/add', 'addAdmin');
+                    Route::get('/details/{id}', 'viewAdminUser');
+                    Route::post('/update/{id}', 'editAdminUser');
+                    Route::post('/revoke-access/{id}', 'revokeAccess');
+                    Route::post('/verify-password', 'verifyPassword');
+                    Route::delete('/delete-account/{id}', 'removeAdmin');
+                });
 
                     //delivery (collation centers and hubs)
                     Route::get('/delivery-overview', 'deliveryOverview');
@@ -276,6 +276,7 @@ Route::middleware('validate.header')
                     });
                 });
 
+
             //b2b admin
             Route::prefix('b2b')->group(function () {
                 Route::controller(B2BAdminController::class)->group(function () {
@@ -287,17 +288,22 @@ Route::middleware('validate.header')
                     Route::post('/enable-2fa', 'enable2FA');
                     Route::get('/get-config', 'getConfigDetails');
                     Route::post('/update-config', 'updateConfigDetails');
+                    Route::prefix('page-banners')->group(function () {
+                        Route::get('/', 'getAllBanners');
+                        Route::post('/add', 'addNewBanner');
+                        Route::post('/update/{id}', 'updatePageBanner');
+                        Route::get('/view/{id}', 'editPageBanner');
+                        Route::delete('/delete/{id}', 'deletePageBanner');
+                    });
+                    Route::prefix('blog')->group(function () {
+                        Route::get('/', 'getBlogs');
+                        Route::post('/create', 'addBlog');
+                        Route::get('/details/{id}', 'getBlog');
+                        Route::post('/update/{id}', 'updateBlog');
+                        Route::delete('/delete/{id}', 'deleteBlog');
+                    });
                 });
 
-                Route::controller(B2BAdminController::class)->prefix('admin-users')->group(function () {
-                    Route::get('/', 'adminUsers')->middleware('cacheResponse:300');
-                    Route::post('/add', 'addAdmin');
-                    Route::get('/details/{id}', 'viewAdminUser');
-                    Route::post('/update/{id}', 'editAdminUser');
-                    Route::post('/revoke-access/{id}', 'revokeAccess');
-                    Route::post('/verify-password', 'verifyPassword');
-                    Route::delete('/delete-account/{id}', 'removeAdmin');
-                });
 
                 Route::prefix('category')->controller(ProductCategoryController::class)->group(function () {
                     Route::post('/create', 'createCategory');
@@ -314,12 +320,22 @@ Route::middleware('validate.header')
                     Route::delete('/subcategory/delete/{id}', 'deleteSubCategory');
                 });
 
-                Route::prefix('banner')->controller(B2BBannerPromoController::class)->group(function (): void {
-                    Route::post('/add', 'addBanner');
-                    Route::get('/', 'banners')->middleware('cacheResponse:300');
-                    Route::get('/{id}', 'getOneBanner');
-                    Route::post('/edit/{id}', 'editBanner');
-                    Route::delete('/delete/{id}', 'deleteBanner');
+
+                Route::controller(B2BBannerPromoController::class)->group(function (): void {
+                    Route::prefix('banner')->group(function (): void {
+                        Route::post('/add', 'addBanner');
+                        Route::get('/', 'banners')->middleware('cacheResponse:300');
+                        Route::get('/{id}', 'getOneBanner');
+                        Route::post('/edit/{id}', 'editBanner');
+                        Route::delete('/delete/{id}', 'deleteBanner');
+                    });
+                    Route::prefix('slider')->group(function (): void {
+                        Route::get('/', 'sliders');
+                        Route::post('/add', 'addSlider');
+                        Route::get('/view/{id}', 'viewSlider');
+                        Route::post('/update/{id}', 'updateSlider');
+                        Route::delete('/delete/{id}', 'deleteSlider');
+                    });
                 });
 
                 Route::prefix('promo')->controller(B2BBannerPromoController::class)->group(function (): void {

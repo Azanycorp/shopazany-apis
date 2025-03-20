@@ -93,17 +93,16 @@ class User extends Authenticatable
     {
         parent::boot();
 
-        self::creating(function($model): void {
+        self::creating(function ($model): void {
             $model->uuid = (string) Str::uuid();
         });
-
     }
 
     public function sendPasswordResetNotification($token): void
     {
         $email = $this->email;
 
-        $url = config('services.reset_password_url').'?token='.$token.'&email='.$email;
+        $url = config('services.reset_password_url') . '?token=' . $token . '&email=' . $email;
 
         $this->notify(new ResetPasswordNotification($url));
     }
@@ -116,8 +115,8 @@ class User extends Authenticatable
     public static function getUserID($id)
     {
         return self::with(['userbusinessinfo', 'products', 'userOrders', 'sellerOrders'])
-        ->where('id', $id)
-        ->first();
+            ->where('id', $id)
+            ->first();
     }
 
     protected function isSubscribed(): Attribute
@@ -153,7 +152,7 @@ class User extends Authenticatable
     protected function subscriptionStatus(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->userSubscriptions()->latest()->value('status') ?? 'No Subscription'
+            get: fn() => $this->userSubscriptions()->latest()->value('status') ?? 'No Subscription'
         );
     }
 
@@ -163,14 +162,19 @@ class User extends Authenticatable
             return "{$this->first_name} {$this->last_name}";
         });
     }
-
+    protected function buyerName(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => "{$this->first_name} {$this->last_name}"
+        );
+    }
     public function scopeFilterReferrals($query, $searchQuery, $statusFilter)
     {
         if (!empty($searchQuery)) {
             $query->where(function ($q) use ($searchQuery) {
                 $q->where('first_name', 'LIKE', "%$searchQuery%")
-                ->orWhere('last_name', 'LIKE', "%$searchQuery%")
-                ->orWhere('email', 'LIKE', "%$searchQuery%");
+                    ->orWhere('last_name', 'LIKE', "%$searchQuery%")
+                    ->orWhere('email', 'LIKE', "%$searchQuery%");
             });
         }
 
@@ -180,6 +184,4 @@ class User extends Authenticatable
 
         return $query;
     }
-
-
 }

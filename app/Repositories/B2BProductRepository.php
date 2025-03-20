@@ -29,8 +29,7 @@ class B2BProductRepository implements B2BRepositoryInterface
 
     public function find(int $id)
     {
-        return B2BProduct::with(['b2bProductImages', 'category', 'country', 'user', 'subCategory'])
-            ->findOrFail($id);
+        return B2BProduct::with(['b2bProductImages', 'category', 'country', 'user', 'subCategory'])->findOrFail($id);
     }
 
     public function update(int $id, array $data)
@@ -49,4 +48,3 @@ class B2BProductRepository implements B2BRepositoryInterface
         return true;
     }
 }
-
