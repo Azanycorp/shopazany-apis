@@ -39,7 +39,7 @@ class DashboardService
         $endDate = Carbon::now();
 
         $total_sales = Order::select('shop_countries.currency', 'orders.total_amount')
-            ->join('shop_countries', 'orders.shop_country_id', '=', 'shop_countries.id')
+            ->join('shop_countries', 'orders.country_id', '=', 'shop_countries.country_id')
             ->where('orders.status', OrderStatus::DELIVERED)
             ->whereBetween('orders.created_at', [$startDate, $endDate])
             ->get()
