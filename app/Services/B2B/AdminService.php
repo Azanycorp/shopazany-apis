@@ -990,6 +990,7 @@ class AdminService
             'admin_id' => $currentUserId,
             'title' => $request->title,
             'type' => BannerType::B2B,
+            'slug' => Str::slug($request->title),
             'description' => $request->description,
             'image' => $url,
         ]);

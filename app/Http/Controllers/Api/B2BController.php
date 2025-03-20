@@ -77,6 +77,14 @@ class B2BController extends Controller
     {
         return $this->buyerService->categories();
     }
+    public function getBlogs()
+    {
+        return $this->buyerService->allBlogs();
+    }
+    public function getBlogDetails($slug)
+    {
+        return $this->buyerService->singleBlog($slug);
+    }
     public function categoryBySlug($slug)
     {
         return $this->buyerService->categoryBySlug($slug);

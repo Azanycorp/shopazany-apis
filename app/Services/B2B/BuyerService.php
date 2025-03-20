@@ -4,6 +4,7 @@ namespace App\Services\B2B;
 
 use Carbon\Carbon;
 use App\Models\Rfq;
+use App\Models\Blog;
 use App\Models\User;
 use App\Enum\UserType;
 use App\Enum\RfqStatus;
@@ -30,6 +31,7 @@ use App\Models\B2BRequestRefund;
 use App\Enum\RefundRequestStatus;
 use App\Models\B2bProductCategory;
 use Illuminate\Support\Facades\DB;
+use App\Http\Resources\BlogResource;
 use App\Models\BuyerShippingAddress;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -278,6 +280,19 @@ class BuyerService
             ->get();
         $data = B2BCategoryResource::collection($categories);
         return $this->success($data, "Categories");
+    }
+
+    public function allBlogs()
+    {
+        $blogs = Blog::with('user')->where('type', BannerType::B2B)->latest('id')->get();
+        $data = BlogResource::collection($blogs);
+        return $this->success($data, 'Blogs');
+    }
+    public function singleBlog($slug)
+    {
+        $blog = Blog::with('user')->where('type', BannerType::B2B)->where('slug', $slug)->firstOrFail();
+        $data = new BlogResource($blog);
+        return $this->success($data, "Blog details");
     }
     public function getCategoryProducts()
     {

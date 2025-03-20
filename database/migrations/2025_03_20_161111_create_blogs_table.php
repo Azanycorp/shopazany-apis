@@ -16,6 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('admin_id');
             $table->string('type')->nullable();
             $table->string('title');
+            $table->string('slug');
             $table->text('image');
             $table->text('description');
             $table->timestamps();

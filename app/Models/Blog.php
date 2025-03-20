@@ -11,6 +11,7 @@ class Blog extends Model
         'title',
         'type',
         'image',
+        'slug',
         'description',
     ];
     public function user()
