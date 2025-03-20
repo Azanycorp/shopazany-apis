@@ -16,21 +16,24 @@ class DashboardService
 
     public function dashboardAnalytics()
     {
-        $total_sales = Order::where('status', OrderStatus::DELIVERED)
-        ->sum('total_amount');
+        $orders = Order::with('shopCountry')
+            ->where('status', OrderStatus::DELIVERED)
+            ->get();
 
-        $active_users = User::where('status', UserStatus::ACTIVE)
-        ->count();
+        $total_sales = $orders->sum(function ($order) {
+            return currencyConvert($order->shopCountry->currency, $order->total_amount, "USD");
+        });
+
+        $active_users = User::where('status', UserStatus::ACTIVE)->count();
 
         $inactive_sellers = User::where('type', 'seller')
-        ->where('status', UserStatus::PENDING)
-        ->count();
+            ->where('status', UserStatus::PENDING)
+            ->count();
 
-        $sellers = User::where('type', 'seller')
-        ->count();
+        $sellers = User::where('type', 'seller')->count();
 
         $data = [
-            'total_sales' => currencyConvertTo($total_sales, "USD"),
+            'total_sales' => $total_sales,
             'active_users' => $active_users,
             'inactive_sellers' => $inactive_sellers,
             'total_sellers' => $sellers,
