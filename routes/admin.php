@@ -294,6 +294,13 @@ Route::middleware('validate.header')
                         Route::get('/view/{id}', 'editPageBanner');
                         Route::delete('/delete/{id}', 'deletePageBanner');
                     });
+                    Route::prefix('blog')->group(function () {
+                        Route::get('/', 'getBlogs');
+                        Route::post('/create', 'addBlog');
+                        Route::get('/details/{id}', 'getBlog');
+                        Route::post('/update/{id}', 'updateBlog');
+                        Route::delete('/delete/{id}', 'deleteBlog');
+                    });
                 });
 
 
@@ -311,6 +318,7 @@ Route::middleware('validate.header')
                     Route::post('/subcategory/status/{sub_category_id}', 'subStatus');
                     Route::delete('/subcategory/delete/{id}', 'deleteSubCategory');
                 });
+
 
                 Route::controller(B2BBannerPromoController::class)->group(function (): void {
                     Route::prefix('banner')->group(function (): void {
