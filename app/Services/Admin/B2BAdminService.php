@@ -34,9 +34,13 @@ class B2BAdminService
     {
         try {
 
+            $folder = App::environment('production') ? '/prod/slider_image' : '/stag/slider_image';
+
             if ($request->file('image')) {
-                $url = uploadImage($request, 'image', 'slider_image');
+                $path = $request->file('image')->store($folder, 's3');
+                $url = Storage::disk('s3')->url($path);
             }
+
             SliderImage::create([
                 'image' => $url,
                 'type' => BannerType::B2B,
@@ -175,8 +179,10 @@ class B2BAdminService
             return $this->error(null, "Not found", 404);
         }
 
+        $folder = App::environment('production') ? '/prod/shopcountryflag' : '/stag/shopcountryflag';
+        
         if ($request->file('flag')) {
-            $url = uploadImage($request, 'flag', 'shopcountryflag');
+            $url = uploadImage($request, 'flag', $folder);
         }
 
         ShopCountry::create([
