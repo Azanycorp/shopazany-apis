@@ -8,14 +8,12 @@ Artisan::command('inspire', function (): void {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote')->hourly();
 
-Schedule::everyMinute()
-    ->withoutOverlapping()
-    ->group(function () {
-        // Process queued emails every minute
-        Schedule::command('emails:process');
-        // Queue worker: ensures jobs are processed every minute
-        Schedule::command('queue:work --stop-when-empty');
-    });
+Schedule::command('emails:process')
+    ->everyMinute()
+    ->withoutOverlapping();
+Schedule::command('queue:work --stop-when-empty')
+    ->everyMinute()
+    ->withoutOverlapping();
 
 Schedule::daily()
     ->withoutOverlapping()
