@@ -19,6 +19,7 @@ class WishlistResource extends JsonResource
             'product_id' => $this->product?->id,
             'product_image' => $this->product?->image,
             'product_name' => $this->product?->name,
+            'slug' => $this->product?->slug,
             'product_category' => $this->product?->category?->name,
             'product_price' => $this->product?->price,
             'currency' => $this->product?->shopCountry?->currency,
