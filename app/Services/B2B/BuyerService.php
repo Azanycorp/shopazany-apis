@@ -597,7 +597,7 @@ class BuyerService
         $recentOrders = B2bOrder::with('seller')
             ->where('buyer_id', $currentUserId)
             ->where('status', OrderStatus::PENDING)
-            ->latest()
+            ->latest('id')
             ->take(10)
             ->get();
 

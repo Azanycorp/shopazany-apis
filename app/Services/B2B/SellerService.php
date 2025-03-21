@@ -641,7 +641,7 @@ class SellerService extends Controller
                 $subQuery->where('seller_id', userAuthId())
                     ->where('order_no', 'LIKE', '%' . $searchQuery . '%');
             });
-        })->get();
+        })->latest('id')->get();
 
         $data = [
             'total_rfqs' => $rfqs->count(),
