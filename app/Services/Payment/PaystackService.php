@@ -122,7 +122,7 @@ class PaystackService
                     'expired_at' => null,
                 ]);
 
-                SubscriptionService::creditAffiliate($referrer, $formattedAmount, $user);
+                SubscriptionService::creditAffiliate($referrer, $formattedAmount, $currency);
             });
         } catch (\Exception $e) {
             Log::error('Error in handleRecurringCharge: ' . $e->getMessage());
@@ -383,7 +383,7 @@ class PaystackService
                     'payment_status' => OrderStatus::PAID,
                     'status' => OrderStatus::PENDING,
                 ]);
-                
+
                 $wallet = UserWallet::firstOrCreate(
                     ['seller_id' => $seller->id],
                     ['master_wallet' => 0]
