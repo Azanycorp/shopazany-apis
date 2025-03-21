@@ -45,7 +45,7 @@ trait SignUp
         return $coupon;
     }
 
-    protected function handleReferrers(?string $referrerCode, $user)
+    protected function handleReferrers($referrerCode, $user)
     {
         if (!$referrerCode) {
             throw new \InvalidArgumentException('Referrer code is required');
