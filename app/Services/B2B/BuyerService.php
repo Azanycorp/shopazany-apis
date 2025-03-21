@@ -597,7 +597,7 @@ class BuyerService
         $recentOrders = B2bOrder::with('seller')
             ->where('buyer_id', $currentUserId)
             ->where('status', OrderStatus::PENDING)
-            ->latest()
+            ->latest('id')
             ->take(10)
             ->get();
 
@@ -636,7 +636,7 @@ class BuyerService
             ->get();
 
         if ($rfqs->isEmpty()) {
-            return $this->error(null, 'No record found to send', 404);
+            return $this->error(null, 'No record found', 404);
         }
 
         return $this->success($rfqs, 'rfqs lists');
@@ -652,7 +652,7 @@ class BuyerService
             });
         })->get();
         if ($orders->isEmpty()) {
-            return $this->error(null, 'No record found to send', 404);
+            return $this->error(null, 'No record found', 404);
         }
 
         return $this->success($orders, 'orders lists');
@@ -683,7 +683,7 @@ class BuyerService
         $rfq = Rfq::find($request->rfq_id);
 
         if (!$rfq) {
-            return $this->error(null, 'No record found to send', 404);
+            return $this->error(null, 'No record found', 404);
         }
 
         DB::beginTransaction();
@@ -714,7 +714,7 @@ class BuyerService
         $rfq = Rfq::find($request->rfq_id);
 
         if (!$rfq) {
-            return $this->error(null, 'No record found to send', 404);
+            return $this->error(null, 'No record found', 404);
         }
 
         $rfq->update([
@@ -766,7 +766,7 @@ class BuyerService
         $product = B2BProduct::find($request->product_id);
 
         if (!$product) {
-            return $this->error(null, 'No record found to send', 404);
+            return $this->error(null, 'No record found', 404);
         }
         if ($product->availability_quantity < 1) {
             return $this->error(null, 'This product is currently not available for purchase', 422);

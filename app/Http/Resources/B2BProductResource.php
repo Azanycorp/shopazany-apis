@@ -23,6 +23,7 @@ class B2BProductResource extends JsonResource
             'category' => (string)$this->category?->name,
             'subCategory' => (string)$this->subCategory?->name,
             'price' => (string)$this->unit_price,
+            'front_image' => (string)$this->front_image,
             'description' => (string)$this->description,
             'vendor' => UserResource::make($this->user),
             'quantity' => (string)$this->quantity,
