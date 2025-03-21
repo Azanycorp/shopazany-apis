@@ -176,7 +176,8 @@ class AuthService extends Controller
             }
 
             if ($referrer) {
-                $this->handleReferrers($referrer, $user);
+                // $this->handleReferrers($referrer, $user);
+                $user->update(['pending_referrer_code' => $referrer]);
             }
 
             $description = "Seller with email address {$request->email} just signed up";
@@ -214,6 +215,11 @@ class AuthService extends Controller
             'email_verified_at' => now(),
             'status' => UserStatus::ACTIVE
         ]);
+
+        if ($user->pending_referrer_code) {
+            $this->handleReferrers($user->pending_referrer_code, $user);
+            $user->update(['pending_referrer_code' => null]);
+        }
 
         $type = MailingEnum::EMAIL_VERIFICATION;
         $subject = "Email verification";
