@@ -106,14 +106,10 @@ Route::middleware('validate.header')
                 Route::get('/filter', 'filter');
                 Route::get('/{user_id}', 'viewCustomer');
                 Route::get('/payment/{id}', 'getPayment');
-
                 Route::post('/add', 'addCustomer');
                 Route::post('/edit', 'editCustomer');
-
-
                 Route::patch('/approve', 'approveCustomer');
                 Route::patch('/ban', 'banCustomer');
-
 
                 Route::prefix('category')->controller(ProductCategoryController::class)->group(function () {
                     Route::post('/create', 'createCategory');
