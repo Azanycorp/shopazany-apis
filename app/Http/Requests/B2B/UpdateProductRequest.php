@@ -4,7 +4,7 @@ namespace App\Http\Requests\B2B;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class AddProductRequest extends FormRequest
+class UpdateProductRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -31,10 +31,10 @@ class AddProductRequest extends FormRequest
             'description' => ['required', 'string', 'max:500'],
             'quantity' => ['required', 'integer', 'min:1'],
             'unit' => ['required', 'integer', 'min:1'],
-            'front_image' => ['required', 'image', 'mimes:png,jpg,jpeg', 'max:2048'],
+            'front_image' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:2048'],
             'minimum_order_quantity' => ['required', 'integer', 'min:1'],
             'fob_price' => ['required', 'numeric', 'min:0'],
-            'images' => ['required', 'array', 'min:1', 'max:5'],
+            'images' => ['nullable', 'array', 'min:1', 'max:5'],
             'images.*' => ['image', 'mimes:png,jpg,jpeg', 'max:2048'],
         ];
     }
