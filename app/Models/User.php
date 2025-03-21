@@ -62,6 +62,7 @@ class User extends Authenticatable
         'company_name',
         'company_size',
         'website',
+        'pending_referrer_code',
     ];
 
     /**
