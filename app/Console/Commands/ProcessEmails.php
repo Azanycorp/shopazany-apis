@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Services\Email\MailingService;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
 
 class ProcessEmails extends Command
 {
@@ -29,9 +30,10 @@ class ProcessEmails extends Command
         try {
             $emailService->sendEmails(15);
             $this->info('Emails processed successfully.');
-            return Command::SUCCESS; // or return 0;
+            return Command::SUCCESS;
         } catch (\Exception $e) {
-            throw $e->getMessage();
+            Log::error('emails:process failed: ' . $e->getMessage());
+            return Command::FAILURE;
         }
     }
 }
