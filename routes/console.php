@@ -8,13 +8,11 @@ Artisan::command('inspire', function (): void {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote')->hourly();
 
-Schedule::command('emails:process')
-    ->everyMinute()
-    ->withoutOverlapping();
 Schedule::command('queue:work --stop-when-empty')
     ->everyMinute()
     ->withoutOverlapping();
-
+Schedule::command('emails:process')
+    ->everyMinute();
 Schedule::daily()
     ->withoutOverlapping()
     ->group(function () {
