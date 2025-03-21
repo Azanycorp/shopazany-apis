@@ -7,8 +7,10 @@ use App\Services\B2B\BuyerService;
 use App\Http\Requests\LoginRequest;
 use App\Services\B2B\SellerService;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\B2B\CodeRequest;
 use App\Services\B2B\Auth\AuthService;
 use App\Http\Requests\B2B\SignupRequest;
+use App\Http\Requests\B2B\VerifyCodeRequest;
 use App\Http\Requests\B2B\BuyerOnboardingRequest;
 use App\Http\Requests\B2B\BusinessInformationRequest;
 
@@ -35,22 +37,13 @@ class B2BController extends Controller
         return $this->service->signup($request);
     }
 
-    public function verify(Request $request)
+    public function verify(VerifyCodeRequest $request)
     {
-        $request->validate([
-            'email' => 'required|email|exists:users,email',
-            'code' => 'required|string',
-        ]);
-
         return $this->service->verify($request);
     }
 
-    public function resendCode(Request $request)
+    public function resendCode(CodeRequest $request)
     {
-        $request->validate([
-            'email' => 'required|email|exists:users,email',
-        ]);
-
         return $this->service->resendCode($request);
     }
 
@@ -84,13 +77,29 @@ class B2BController extends Controller
     {
         return $this->buyerService->categories();
     }
+    public function getBlogs()
+    {
+        return $this->buyerService->allBlogs();
+    }
+    public function getBlogDetails($slug)
+    {
+        return $this->buyerService->singleBlog($slug);
+    }
     public function categoryBySlug($slug)
     {
         return $this->buyerService->categoryBySlug($slug);
     }
+    public function getSliders()
+    {
+        return $this->buyerService->getSliders();
+    }
     public function getBanners()
     {
         return $this->buyerService->getBanners();
+    }
+    public function getPageBanners($page)
+    {
+        return $this->buyerService->getPageBanners($page);
     }
     public function getProducts()
     {

@@ -24,7 +24,7 @@ class B2BProductResource extends JsonResource
             'subCategory' => (string)$this->subCategory?->name,
             'price' => (string)$this->unit_price,
             'description' => (string)$this->description,
-            'vendor' => $this->user,
+            'vendor' => UserResource::make($this->user),
             'quantity' => (string)$this->quantity,
             'default_currency' => (string)$this->default_currency,
             'availability_quantity' => (string)$this->availability_quantity,
@@ -34,7 +34,14 @@ class B2BProductResource extends JsonResource
             'status' => (string)$this->status,
             'rating' => floatval($average_rating),
             'country' => (string)$this->country?->name,
-            'reviews' => $this->b2bProductReview,
+            'reviews' => $this->b2bProductReview ? $this->b2bProductReview->map(function ($b2bProductReview): array {
+                return [
+                    'buyer' => $b2bProductReview->user?->buyerName,
+                    "rating" => floatval($b2bProductReview->rating),
+                    "title" => $b2bProductReview->title,
+                    "note" => $b2bProductReview->title,
+                ];
+            })->toArray() : [],
             'review_count' => (int)$this->b2bProductReview?->count(),
             'b2bLikes' => $this->b2bLikes->count(),
             'images' => $this->b2bProductImages ? $this->b2bProductImages->map(function ($image): array {

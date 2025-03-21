@@ -22,6 +22,7 @@ class BuyerResource extends JsonResource
             "middlename" => (string)$this->middlename,
             "phone" => (string)$this->phone,
             "email" => (string)$this->email,
+            "default_currency" => (string)$this->default_currency,
             "date_of_birth" => (string)$this->date_of_birth,
             "image" => (string)$this->image,
             "address" => (object)[

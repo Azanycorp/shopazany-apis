@@ -13,6 +13,7 @@ use App\Services\Payment\PaystackPaymentProcessor;
 use App\Models\User;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class SubscriptionService
 {
@@ -69,7 +70,7 @@ class SubscriptionService
         return $this->success($data, "Subscription histories");
     }
 
-    public static function creditAffiliate($referrer, $amount, $user)
+    public static function creditAffiliate($referrer, $amount, $currency)
     {
         if(!$referrer) {
             return;
@@ -85,9 +86,8 @@ class SubscriptionService
             ]
         );
 
-        $convertAmount = currencyConvert($user->default_currency, $amount, $referrer->default_currency);
-
-        $subcriptionBonus = $convertAmount * 0.05;
+        $convertedAmount = currencyConvert($currency, $amount, $referrer->default_currency);
+        $subcriptionBonus = round($convertedAmount * 0.05, 2);
         $wallet->increment('balance', $subcriptionBonus);
     }
 }

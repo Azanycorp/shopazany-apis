@@ -17,12 +17,14 @@ class Action extends Model
         'icon',
         'verification_type',
         'country_ids',
+        'default',
     ];
 
     protected function casts(): array
     {
         return [
             'country_ids' => 'array',
+            'default' => 'boolean',
         ];
     }
 }

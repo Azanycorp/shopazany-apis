@@ -55,6 +55,21 @@ class Order extends Model
                     ->withPivot('product_quantity', 'price', 'sub_total', 'status');
     }
 
+    public function shopCountry(): BelongsTo
+    {
+        return $this->belongsTo(ShopCountry::class, 'country_id', 'country_id');
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class, 'id', 'payment_id');
+    }
+
+    public function orderActivities(): HasMany
+    {
+        return $this->hasMany(OrderActivity::class, 'order_id');
+    }
+
     // Deprecated method - Do not use
     public static function saveOrder($user, $payment, $seller, $item, $orderNo, $address, $method, $status): self
     {
@@ -85,15 +100,5 @@ class Order extends Model
         $data->save();
 
         return $data;
-    }
-
-    public function payments(): HasMany
-    {
-        return $this->hasMany(Payment::class,  'payment_id');
-    }
-
-    public function orderActivities(): HasMany
-    {
-        return $this->hasMany(OrderActivity::class, 'order_id');
     }
 }

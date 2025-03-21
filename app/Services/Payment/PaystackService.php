@@ -122,7 +122,7 @@ class PaystackService
                     'expired_at' => null,
                 ]);
 
-                SubscriptionService::creditAffiliate($referrer, $formattedAmount, $user);
+                SubscriptionService::creditAffiliate($referrer, $formattedAmount, $currency);
             });
         } catch (\Exception $e) {
             Log::error('Error in handleRecurringCharge: ' . $e->getMessage());
@@ -358,6 +358,16 @@ class PaystackService
                 }
                 $address = $shipping_address ? new B2BBuyerShippingAddressResource($shipping_address) : null;
 
+
+                $product->availability_quantity -= $rfq->product_quantity;
+                $product->sold += $rfq->product_quantity;
+                $seller_amount = currencyConvert(
+                    $user->default_currency,
+                    $formattedAmount,
+                    $product->shopCountry->currency ?? 'USD',
+                );
+                $product->save();
+
                 B2bOrder::create([
                     'buyer_id' => $userId,
                     'centre_id' => $centerId ?? null,
@@ -368,31 +378,17 @@ class PaystackService
                     'product_data' => $product,
                     'shipping_agent' => $shipping_agent_id ? $shipping_agent->name : 'DHL',
                     'shipping_address' => $address,
-                    'total_amount' => $amount,
+                    'total_amount' => $formattedAmount,
                     'payment_method' => $method,
                     'payment_status' => OrderStatus::PAID,
                     'status' => OrderStatus::PENDING,
                 ]);
 
-                $product->availability_quantity -= $rfq->product_quantity;
-                $product->sold += $rfq->product_quantity;
-                $seller_amount = currencyConvert(
-                    $user->default_currency,
-                    $amount,
-                    $product->shopCountry->currency ?? 'NGN',
+                $wallet = UserWallet::firstOrCreate(
+                    ['seller_id' => $seller->id],
+                    ['master_wallet' => 0]
                 );
-                $product->save();
-
-                $config = Configuration::first();
-
-                if ($config) {
-                    $sellerPerc = $config->seller_perc ?? 0;
-                    $credit = ($sellerPerc / 100) * $seller_amount;
-
-                    $wallet = UserWallet::firstOrNew(['seller_id' => $seller->id]);
-                    $wallet->master_wallet = ($wallet->master_wallet ?? 0) + $credit;
-                    $wallet->save();
-                }
+                $wallet->increment('master_wallet', $seller_amount);
 
                 $rfq->update([
                     'payment_status' => OrderStatus::PAID,
@@ -403,7 +399,7 @@ class PaystackService
                     'product_name' => $product->name,
                     'image' => $product->front_image,
                     'quantity' => $rfq->product_quantity,
-                    'price' => $rfq->total_amount,
+                    'price' => $seller_amount,
                     'buyer_name' => $user->first_name . ' ' . $user->last_name,
                     'order_number' => $orderNo,
                     'currency' => $user->default_currency,
