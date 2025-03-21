@@ -15,7 +15,6 @@ use App\Trait\HttpResponse;
 use App\Trait\SignUp;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 
@@ -415,11 +414,6 @@ class AuthService extends Controller
                 'password' => bcrypt($request->password)
             ]);
 
-            $user->wallet()->create([
-                'balance' => 0.00,
-                'reward_point' => null
-            ]);
-
             $description = "User with email {$request->email} signed up as an affiliate";
             $action = UserLog::CREATED;
             $response = $this->success(null, "Created successfully");
@@ -453,11 +447,6 @@ class AuthService extends Controller
                 'is_verified' => 0,
                 'is_affiliate_member' => 1,
                 'password' => bcrypt($request->password)
-            ]);
-
-            $user->wallet()->create([
-                'balance' => 0.00,
-                'reward_point' => null
             ]);
 
             $description = "User with email {$request->email} signed up as an affiliate";
