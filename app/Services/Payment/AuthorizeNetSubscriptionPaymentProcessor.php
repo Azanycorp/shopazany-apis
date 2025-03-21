@@ -79,7 +79,7 @@ class AuthorizeNetSubscriptionPaymentProcessor implements PaymentStrategy
 
     private function handleSuccessResponse($response, $tresponse, $user, array $paymentDetails, $payment)
     {
-        $subUser = User::findOrFail($user->id);
+        //$subUser = User::findOrFail($user->id);
         $referrer = User::with(['wallet'])->find($paymentDetails['referrer_id']);
 
         $activeSubscription = $user->subscription_plan;
@@ -123,7 +123,7 @@ class AuthorizeNetSubscriptionPaymentProcessor implements PaymentStrategy
             'expired_at' => null,
         ]);
 
-        SubscriptionService::creditAffiliate($referrer, $paymentDetails['amount'], $subUser);
+        SubscriptionService::creditAffiliate($referrer, $paymentDetails['amount'], $paymentDetails['currency']);
 
         (new UserLogAction(
             request(),

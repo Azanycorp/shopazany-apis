@@ -124,7 +124,13 @@ class RewardPointService
 
     public function deletePoints($id)
     {
-        Action::findOrFail($id)->delete();
+        $action = Action::findOrFail($id);
+
+        if($action->default) {
+            return $this->error(null, "You can't delete this action", 400);
+        }
+
+        $action->delete();
 
         return $this->success(null, "Deleted successfully");
     }
