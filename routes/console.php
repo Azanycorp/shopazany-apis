@@ -34,7 +34,7 @@ Schedule::command('usersubscriptions:charge')
     ->withoutOverlapping();
 
 // Withdrawal request processing
-Schedule::hourly()
+Schedule::everyTenMinutes()
     ->withoutOverlapping()
     ->group(function () {
         Schedule::command('withdraw-request:process');
