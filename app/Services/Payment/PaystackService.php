@@ -460,7 +460,7 @@ class PaystackService
     public static function handleTransferFailed($event)
     {
         $reference = $event['reference'];
-        $withdrawal = WithdrawalRequest::with('user')
+        $withdrawal = WithdrawalRequest::with('user.wallet')
             ->where('reference', $reference)
             ->first();
 
@@ -474,6 +474,7 @@ class PaystackService
             $withdrawal->update(['status' => WithdrawalStatus::FAILED]);
 
             $user = $withdrawal->user;
+            $user->wallet->increment('balance', $withdrawal->amount);
             $user->notify(new WithdrawalNotification($withdrawal, 'failed'));
 
             Log::info("Transfer failed for withdrawal ID {$withdrawal->id} - Reference: {$reference}");

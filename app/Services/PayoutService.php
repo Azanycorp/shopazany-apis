@@ -25,7 +25,7 @@ class PayoutService
         if($data['status'] === false) {
             return [
                 'status' => false,
-                'message' => $data['message'],
+                'message' => null,
                 'data' => null
             ];
         }
@@ -39,7 +39,7 @@ class PayoutService
 
         return [
             'status' => true,
-            'message' => $data['message'],
+            'message' => null,
             'data' => $data
         ];
     }
