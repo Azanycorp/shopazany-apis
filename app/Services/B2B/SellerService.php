@@ -486,7 +486,7 @@ class SellerService extends Controller
         if ($currentUserId != $user_id) {
             return $this->error(null, "Unauthorized action.", 401);
         }
-        $shipping = B2BSellerShippingAddress::where('user_id', $currentUserId)->firstOrFail($shipping_id);
+        $shipping = B2BSellerShippingAddress::where('user_id', $currentUserId)->where('id', $shipping_id)->firstOrFail();
         if (!$shipping) {
             return $this->error(null, 'No record found', 404);
         }
@@ -1021,6 +1021,7 @@ class SellerService extends Controller
             'bank_name' => $request->bank_name,
             'routing_number' => $request->routing_number,
             'bic_swift_code' => $request->bic_swift_code,
+            'status' => WithdrawalStatus::ACTIVE
         ]);
 
         return $this->success(null, 'Method added successfully', 201);
