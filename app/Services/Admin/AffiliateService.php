@@ -5,6 +5,7 @@ namespace App\Services\Admin;
 use Carbon\Carbon;
 use App\Models\User;
 use App\Enum\UserStatus;
+use App\Enum\WithdrawalStatus;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Password;
@@ -28,16 +29,22 @@ class AffiliateService
             ->whereBetween('created_at', [$startDate, $endDate])
             ->count();
 
-        $affiliateData = DB::table('transactions')
-            ->whereBetween('created_at', [$startDate, $endDate])
-            ->selectRaw('
-                COUNT(DISTINCT user_id) as total_affiliate,
-                SUM(amount) as total_affiliate_earning,
-                SUM(CASE WHEN type = "withdrawal" THEN amount ELSE 0 END) as total_affiliate_withdraw,
-                COUNT(CASE WHEN status = "pending" AND type = "withdrawal" THEN id END) as total_affiliate_withdraw_request,
-                SUM(CASE WHEN status = "pending" AND type = "withdrawal" THEN amount ELSE 0 END) as total_affiliate_withdraw_request_amount
-            ')
-            ->first();
+        $totalPaidOutInUSD = User::where('is_affiliate_member', 1)
+            ->whereHas('transactions', function ($query) use ($startDate, $endDate) {
+                $query->where('type', )
+                      ->where('status', WithdrawalStatus::COMPLETED)
+                      ->whereBetween('created_at', [$startDate, $endDate]);
+            })
+            ->get()
+            ->sum(function ($user) use ($startDate, $endDate) {
+                $amount = $user->transactions()
+                    ->where('type', 'withdrawal')
+                    ->where('status', WithdrawalStatus::COMPLETED)
+                    ->whereBetween('created_at', [$startDate, $endDate])
+                    ->sum('amount');
+
+                return currencyConvert($user->default_currency, $amount, 'USD');
+            });
 
         $topAffiliates = User::where('is_affiliate_member', 1)
             ->whereHas('transactions')
@@ -77,7 +84,7 @@ class AffiliateService
             ->values();
 
         $data = [
-            'total_paid_out' => $affiliateData->total_affiliate_withdraw ?? 0,
+            'total_paid_out' => $totalPaidOutInUSD,
             'active_affiliates' => $activeAffiliates,
             'inactive_affiliates' => $inactiveAffiliates,
             'top_affiliates' => $topAffiliates,
