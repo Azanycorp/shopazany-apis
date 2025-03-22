@@ -27,7 +27,7 @@ class AddBannerRequest extends FormRequest
             'start_date' => ['required', 'date', 'date_format:Y-m-d H:i:s', 'after_or_equal:today'],
             'end_date' => ['required', 'date', 'date_format:Y-m-d H:i:s', 'after:start_date'],
             'products' => ['required', 'array', 'min:1'],
-            'products.*' => ['exists:b2b_products,id'],
+            'products.*' => ['exists:products,id'],
         ];
     }
 }
