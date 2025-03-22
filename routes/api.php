@@ -112,6 +112,7 @@ Route::middleware('validate.header')
                     // Paystack
                     Route::post('/paystack', 'processPayment');
                     Route::get('/verify/paystack/{user_id}/{reference}', 'verifyPayment');
+                    Route::post('/paystack/transfer/approve', 'approveTransfer');
 
                     // Account LookUp
                     Route::post('/account-lookup', 'accountLookup');

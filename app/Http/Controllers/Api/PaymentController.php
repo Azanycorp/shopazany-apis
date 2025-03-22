@@ -11,6 +11,8 @@ use App\Services\Payment\PaymentService;
 use App\Http\Resources\ShippingAgentResource;
 use App\Http\Requests\AuthorizeNetCardRequest;
 use App\Http\Requests\B2BAuthorizeNetCardRequest;
+use App\Models\WithdrawalRequest;
+use Illuminate\Support\Facades\Log;
 
 class PaymentController extends Controller
 {
@@ -75,5 +77,10 @@ class PaymentController extends Controller
             'bank_code' => ['required', 'string'],
         ]);
         return $this->service->accountLookup($request);
+    }
+
+    public function approveTransfer(Request $request)
+    {
+        return $this->service->approveTransfer($request);
     }
 }
