@@ -30,10 +30,13 @@ class PayoutService
             ];
         }
 
+        $amount = $fields['amount'];
+        $formattedAmount = number_format($amount / 100, 2, '.', '');
+
         (new TransactionService(
             $user,
             TransactionStatus::TRANSFER,
-            $fields['amount'],
+            $formattedAmount,
             $data['status']
         ))->logTransaction();
 
