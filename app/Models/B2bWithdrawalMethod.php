@@ -16,6 +16,8 @@ class B2bWithdrawalMethod extends Model
         'account_name',
         'account_number',
         'account_type',
+        'type',
+        'paypal_email',
         'bank_name',
         'is_default',
         'platform',

@@ -4,7 +4,9 @@ namespace App\Services\B2B;
 
 use App\Models\Rfq;
 use App\Models\User;
+use App\Enum\UserType;
 use App\Models\Payout;
+use App\Trait\Payment;
 use App\Models\B2bOrder;
 use App\Enum\MailingEnum;
 use App\Enum\OrderStatus;
@@ -23,6 +25,7 @@ use Illuminate\Support\Carbon;
 use App\Models\B2bOrderFeedback;
 use App\Imports\B2BProductImport;
 use App\Mail\B2BSHippedOrderMail;
+use App\Trait\VerifyPaymentMethod;
 use Illuminate\Support\Facades\DB;
 use App\Mail\B2BDeliveredOrderMail;
 use App\Models\B2bWithdrawalMethod;
@@ -42,7 +45,7 @@ use App\Http\Resources\B2BSellerShippingAddressResource;
 
 class SellerService extends Controller
 {
-    use HttpResponse;
+    use HttpResponse, VerifyPaymentMethod;
 
     protected \App\Repositories\B2BProductRepository $b2bProductRepository;
     protected \App\Repositories\B2BSellerShippingRepository $b2bSellerShippingRepository;
@@ -1008,23 +1011,48 @@ class SellerService extends Controller
         }
     }
 
-
     //Withdrawal method
     public function addNewMethod($request)
     {
-        B2bWithdrawalMethod::create([
-            'country_id' => $request->country_id,
-            'user_id' => userAuthId(),
-            'account_name' => $request->account_name,
-            'account_number' => $request->account_number,
-            'account_type' => $request->account_type,
-            'bank_name' => $request->bank_name,
-            'routing_number' => $request->routing_number,
-            'bic_swift_code' => $request->bic_swift_code,
-            'status' => WithdrawalStatus::ACTIVE
-        ]);
 
-        return $this->success(null, 'Method added successfully', 201);
+        $auth = Auth::user();
+
+        if (!$auth) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+
+        if($auth->type === UserType::B2B_BUYER) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+
+        if ($auth->id !== $request->user_id || (!$auth->is_affiliate_member && $auth->type !== UserType::SELLER)) {
+            return $this->error(null, "Unauthorized action.", 401);
+        }
+
+        $user = User::with('B2bWithdrawalMethod')->find($request->user_id);
+
+        if(! $user){
+            return $this->error(null, "User not found", 404);
+        }
+
+        if ($user->B2bWithdrawalMethod->count() >= 3) {
+            return $this->error(null, "You can only add up to 3 payment methods", 400);
+        }
+
+        switch ($request->type) {
+            case 'bank_transfer':
+                $methodAdded = $this->addBankTransfer($request, $user);
+                break;
+
+            case 'paypal':
+                $methodAdded = $this->addPayPal($request, $user);
+                break;
+
+            default:
+                return $this->error(null, "Invalid type", 400);
+        }
+
+        return $methodAdded;
     }
 
     public function getAllMethod()
