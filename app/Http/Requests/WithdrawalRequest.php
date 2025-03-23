@@ -23,7 +23,7 @@ class WithdrawalRequest extends FormRequest
     {
         return [
             'user_id' => ['required', 'integer', 'exists:users,id'],
-            'amount' => ['required', 'integer']
+            'amount' => ['required', 'integer', 'min:5000', 'max:1000000000']
         ];
     }
 }

@@ -19,10 +19,11 @@ use App\Services\Payment\HandlePaymentService;
 use App\Services\Payment\PaymentDetailsService;
 use App\Services\Payment\PaystackPaymentProcessor;
 use App\Services\Payment\B2BPaystackPaymentProcessor;
+use App\Trait\Transfer;
 
 class PaymentService
 {
-    use HttpResponse;
+    use HttpResponse, Transfer;
 
     protected \App\Services\Payment\AuthorizeNet\ChargeCardService $chargeCardService;
 
@@ -124,6 +125,19 @@ class PaymentService
         $data = new PaymentVerifyResource($verify);
 
         return $this->success($data, "Payment verify status");
+    }
+
+    public function approveTransfer($request)
+    {
+        $payload = json_decode($request->getContent(), true);
+
+        if (!$this->isValidTransferRequest($payload)) {
+            Log::warning('Paystack Transfer rejected:', $payload);
+            return response()->json(['message' => 'Invalid transfer request'], 400);
+        }
+
+        Log::info('Paystack Transfer approved:', $payload);
+        return response()->json(['message' => 'Transfer approved'], 200);
     }
 
     public function authorizeNetCard($request)
