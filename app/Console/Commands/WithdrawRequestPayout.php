@@ -6,6 +6,7 @@ use App\Enum\WithdrawalStatus;
 use App\Models\User;
 use App\Notifications\WithdrawalNotification;
 use App\Services\PayoutService;
+use App\Trait\Transfer;
 use Illuminate\Support\Str;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -13,6 +14,8 @@ use Illuminate\Support\Facades\Log;
 
 class WithdrawRequestPayout extends Command
 {
+    use Transfer;
+
     /**
      * The name and signature of the console command.
      *
@@ -46,6 +49,8 @@ class WithdrawRequestPayout extends Command
             }
         });
 
+        $this->processPaystackBulkTransfers();
+
         $this->info('Withdrawal request processing completed.');
     }
 
@@ -56,44 +61,32 @@ class WithdrawRequestPayout extends Command
             return;
         }
 
+        $defaultPaymentMethod = $user->paymentMethods->where('is_default', true)->first();
+        if (!$defaultPaymentMethod) {
+            $this->warn("Skipping user {$user->id}: No default payment method found.");
+            return;
+        }
+
+        $platform = $defaultPaymentMethod->platform;
+
+        if ($platform === 'paystack') {
+            return;
+        }
+
         foreach ($user->withdrawalRequests as $request) {
             if ($request->status !== WithdrawalStatus::PENDING) {
                 continue;
             }
+
             $withdrawalAmount = $request->amount;
             if ($withdrawalAmount <= 0) {
                 $this->warn("Skipping user {$user->id}, withdrawal ID {$request->id}: Invalid withdrawal amount.");
                 continue;
             }
-            $defaultPaymentMethod = $user->paymentMethods->where('is_default', true)->first();
-            if (!$defaultPaymentMethod) {
-                $this->warn("Skipping user {$user->id}: No default payment method found.");
-                return;
-            }
 
-            $platform = $defaultPaymentMethod->platform;
-            $recipient = $defaultPaymentMethod->recipient_code;
-            $reference = Str::uuid();
-
-            $fields = [
-                "source" => "balance",
-                "reason" => "Withdrawal",
-                "amount" => intval($withdrawalAmount * 100),
-                "reference" => $reference,
-                "recipient" => $recipient,
-            ];
-
-            if ($platform === 'paystack') {
-                $fields['reference'] = $reference;
-                $request->update([
-                    'status' => WithdrawalStatus::PROCESSING,
-                    'reference' => $reference,
-                ]);
-            } else {
-                $request->update([
-                    'status' => WithdrawalStatus::PROCESSING,
-                ]);
-            }
+            $request->update([
+                'status' => WithdrawalStatus::PROCESSING,
+            ]);
 
             $data = [
                 'platform' => $platform,
@@ -103,16 +96,16 @@ class WithdrawRequestPayout extends Command
             $maxRetries = 3;
             $attempt = 0;
 
-            $this->runPayount($attempt, $maxRetries, $request, $user, $fields, $withdrawalAmount, $data);
+            $this->runPayount($attempt, $maxRetries, $request, $user, $withdrawalAmount, $data);
         }
     }
 
-    private function runPayount($attempt, $maxRetries, $request, $user, $fields, $withdrawalAmount, $data)
+    private function runPayount($attempt, $maxRetries, $request, $user, $withdrawalAmount, $data)
     {
         while ($attempt < $maxRetries) {
             DB::beginTransaction();
             try {
-                $res = $this->executePayout($data, $request, $user, $fields);
+                $res = $this->executePayout($data, $request, $user);
 
                 if (!$res['status']) {
                     throw new \Exception("{$data['platform']} transfer failed: " . $res['message']);
@@ -123,7 +116,7 @@ class WithdrawRequestPayout extends Command
                     $user->notify(new WithdrawalNotification($request, 'completed'));
                     Log::info("Authorize.Net Transfer Completed: User ID {$user->id}, Withdrawal ID {$request->id}");
                 } else {
-                    Log::info("Withdrawal initiated: User ID {$user->id}, Withdrawal ID {$request->id}, Reference {$fields['reference']}");
+                    Log::info("Withdrawal initiated: User ID {$user->id}, Withdrawal ID {$request->id}");
                 }
 
                 $this->info("Payout processed for user {$user->id}, withdrawal ID {$request->id} - Amount: {$withdrawalAmount}");
@@ -139,11 +132,9 @@ class WithdrawRequestPayout extends Command
         }
     }
 
-    private function executePayout($data, $request, $user, $fields)
+    private function executePayout($data, $request, $user)
     {
-        if ($data['platform'] === 'paystack') {
-            return PayoutService::paystackTransfer($request, $user, $fields);
-        } elseif ($data['platform'] === 'authorize') {
+        if ($data['platform'] === 'authorize') {
             return PayoutService::authorizeTransfer($request, $user, $data['data']);
         } else {
             throw new \Exception("Unsupported payment platform: {$data['platform']}");
@@ -161,4 +152,23 @@ class WithdrawRequestPayout extends Command
             sleep(5);
         }
     }
+
+    private function processPaystackBulkTransfers()
+    {
+        $this->info('Processing Paystack bulk withdrawals...');
+
+        $paystackRequests = $this->collectPaystackRequests();
+
+        if (empty($paystackRequests)) {
+            $this->info('No Paystack withdrawals to process.');
+            return;
+        }
+
+        foreach (array_chunk($paystackRequests, 100) as $chunk) {
+            $this->handlePaystackChunk($chunk);
+        }
+
+        $this->info('Paystack bulk withdrawal processing done.');
+    }
+
 }

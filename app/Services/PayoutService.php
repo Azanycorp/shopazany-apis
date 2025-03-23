@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enum\TransactionStatus;
+use App\Models\User;
 use App\Services\Curl\PostCurl;
 use Illuminate\Support\Facades\Log;
 use net\authorize\api\contract\v1 as AnetAPI;
@@ -10,7 +11,7 @@ use net\authorize\api\controller as AnetController;
 
 class PayoutService
 {
-    public static function paystackTransfer($request, $user, $fields)
+    public static function paystackTransfer($user, $fields)
     {
         $url = "https://api.paystack.co/transfer";
         $token = config('paystack.secretKey');
@@ -44,6 +45,61 @@ class PayoutService
             'status' => true,
             'message' => null,
             'data' => $data
+        ];
+    }
+
+    public static function paystackBulkTransfer(array $transfers)
+    {
+        $url = "https://api.paystack.co/transfer/bulk";
+        $token = config('paystack.secretKey');
+
+        $headers = [
+            'Accept' => 'application/json',
+            'Authorization' => 'Bearer ' . $token,
+        ];
+
+        $body = [
+            'currency' => 'NGN',
+            'source' => 'balance',
+            'transfers' => array_map(function ($t) {
+                return [
+                    'reference' => $t['reference'],
+                    'amount' => $t['amount'],
+                    'recipient' => $t['recipient'],
+                    'reason' => $t['reason'],
+                ];
+            }, $transfers),
+        ];
+
+        $response = (new PostCurl($url, $headers, $body))->execute();
+
+        if (!isset($response['status']) || $response['status'] === false) {
+            return [
+                'status' => false,
+                'message' => $response['message'] ?? 'Unknown error',
+                'data' => null
+            ];
+        }
+
+        foreach ($transfers as $transfer) {
+            $user = User::find($transfer['user_id']);
+            if ($user) {
+                $amount = $transfer['amount'];
+                $formattedAmount = number_format($amount / 100, 2, '.', '');
+
+                (new TransactionService(
+                    $user,
+                    TransactionStatus::TRANSFER,
+                    $formattedAmount,
+                    $response['status']
+                ))->logTransaction();
+            }
+        }
+
+        return [
+            'status' => true,
+            'message' => 'Bulk transfer queued',
+            'data' => $response['data']
         ];
     }
 
