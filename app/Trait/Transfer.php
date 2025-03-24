@@ -72,8 +72,14 @@ trait Transfer
         try {
             $result = PayoutService::paystackBulkTransfer($chunk);
 
+            $success = $result['status'] === true;
+
             foreach ($chunk as $item) {
-                $this->handlePaystackResultItem($item, $result['status'], $result['message'] ?? null);
+                $this->handlePaystackResultItem(
+                    $item,
+                    $success,
+                    $success ? null : $result
+                );
             }
         } catch (\Exception $e) {
             Log::error('Paystack bulk transfer exception: ' . $e->getMessage());
