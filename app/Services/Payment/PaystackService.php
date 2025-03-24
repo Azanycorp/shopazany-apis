@@ -442,7 +442,10 @@ class PaystackService
 
         DB::beginTransaction();
         try {
-            $withdrawal->update(['status' => WithdrawalStatus::COMPLETED]);
+            $withdrawal->update([
+                'status' => WithdrawalStatus::COMPLETED,
+                'response' => $event['reason'],
+            ]);
 
             $user = $withdrawal->user;
             $user->notify(new WithdrawalNotification($withdrawal, 'completed'));
@@ -471,7 +474,43 @@ class PaystackService
 
         DB::beginTransaction();
         try {
-            $withdrawal->update(['status' => WithdrawalStatus::FAILED]);
+            $withdrawal->update([
+                'status' => WithdrawalStatus::FAILED,
+                'response' => $event['reason'],
+            ]);
+
+            $user = $withdrawal->user;
+            $user->wallet->increment('balance', $withdrawal->amount);
+            $user->notify(new WithdrawalNotification($withdrawal, 'failed'));
+
+            Log::info("Transfer failed for withdrawal ID {$withdrawal->id} - Reference: {$reference}");
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("Error processing transfer success: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    public static function handleTransferReversed($event)
+    {
+        $reference = $event['reference'];
+        $withdrawal = WithdrawalRequest::with('user.wallet')
+            ->where('reference', $reference)
+            ->first();
+
+        if (!$withdrawal) {
+            Log::error("Transfer success: No matching withdrawal found for reference: {$reference}");
+            return;
+        }
+
+        DB::beginTransaction();
+        try {
+            $withdrawal->update([
+                'status' => WithdrawalStatus::REVERSED,
+                'response' => $event['reason'],
+            ]);
 
             $user = $withdrawal->user;
             $user->wallet->increment('balance', $withdrawal->amount);

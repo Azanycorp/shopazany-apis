@@ -102,6 +102,10 @@ class PaymentService
                 PaystackService::handleTransferFailed($data);
                 break;
 
+            case PaystackEvent::TRANSFER_REVERSED:
+                PaystackService::handleTransferReversed($data);
+                break;
+
             default:
                 Log::warning("Unhandled Paystack event: {$eventType}", $data);
                 break;
