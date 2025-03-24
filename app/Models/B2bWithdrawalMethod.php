@@ -21,6 +21,7 @@ class B2bWithdrawalMethod extends Model
         'is_default',
         'platform',
         'recipient',
+        'routing_number',
         'reference',
         'recipient_code',
     ];

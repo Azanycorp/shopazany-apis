@@ -13,20 +13,9 @@ return new class extends Migration
     {
         Schema::table('b2b_withdrawal_methods', function (Blueprint $table) {
             $table->dropColumn('country_id');
-            $table->dropColumn('routing_number');
-            $table->dropColumn('bic_swift_code');
-            $table->dropColumn('routing_number');
             $table->dropColumn('account_type');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        Schema::table('b2b_withdrawal_methods', function (Blueprint $table) {
-            //
-        });
-    }
+    
 };
