@@ -17,7 +17,15 @@ class WithdrawalRequest extends Model
         'current_balance',
         'status',
         'reference',
+        'response',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'response' => 'array',
+        ];
+    }
 
     public function user()
     {

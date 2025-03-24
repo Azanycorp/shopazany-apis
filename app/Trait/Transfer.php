@@ -79,7 +79,7 @@ trait Transfer
             Log::error('Paystack bulk transfer exception: ' . $e->getMessage());
 
             foreach ($chunk as $item) {
-                $this->markRequestFailed($item['request_id'], $item['user_id']);
+                $this->markRequestFailed($item['request_id'], $item['user_id'], $e->getMessage());
             }
         }
     }
@@ -92,19 +92,23 @@ trait Transfer
         if ($success) {
             Log::info("Bulk transfer queued: Withdrawal ID {$request->id}, Ref: {$item['reference']}");
         } else {
-            $this->markRequestFailed($request->id, $user->id);
+            $this->markRequestFailed($request->id, $user->id, $errorMessage);
             Log::error("Failed to queue Paystack bulk transfer: {$errorMessage}");
         }
     }
 
-    private function markRequestFailed(int $requestId, int $userId): void
+    private function markRequestFailed(int $requestId, int $userId, $errorMessage = null): void
     {
         $request = WithdrawalRequest::find($requestId);
         $user = User::with(['wallet'])->find($userId);
 
         $user->wallet->increment('balance', $request->amount);
 
-        $request->update(['status' => WithdrawalStatus::FAILED]);
+        $request->update([
+            'status' => WithdrawalStatus::FAILED,
+            'response' => $errorMessage,
+        ]);
+
         $user->notify(new WithdrawalNotification($request, 'failed'));
     }
 
