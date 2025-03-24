@@ -28,7 +28,6 @@ class WithdrawalMethodRequest extends FormRequest
             'bank_name' => ['required', 'string', 'max:100'],
             'type' => ['required', 'in:bank_transfer'],
             'platform' => ['required', 'in:paystack,authorize'],
-            'is_default' => ['required', 'boolean'],
         ];
     }
 }

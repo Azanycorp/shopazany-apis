@@ -962,7 +962,7 @@ class SellerService extends Controller
         }
 
 
-        $paymentInfo = PaymentMethod::where('is_default',1)->find($request->account_id);
+        $paymentInfo = PaymentMethod::where('is_default', 1)->find($request->account_id);
         if (!$paymentInfo) {
             return $this->error(null, 'account selected for withdrawal not found', 422);
         }
@@ -1062,18 +1062,22 @@ class SellerService extends Controller
             'account_name',
             'account_number',
             'bank_name',
-        ])->findOrFail($id);
+        ])->where('user_id', userAuthId())->where('id', $id)->firstOrFail();
 
         return $this->success($method, 'Withdrawal details', 200);
     }
     public function updateMethod($request, $id)
     {
-        $method = PaymentMethod::findOrFail($id);
+        $userId = userAuthId();
+
+        if ($userId !== $request->user_id) {
+            return $this->error(null, 'Unauthorized', 401);
+        }
+
+        $method = PaymentMethod::where('user_id', userAuthId())->where('id', $id)->firstOrFail();
         $method->update([
-            'user_id' =>  userAuthId(),
             'account_name' => $request->account_name,
             'account_number' => $request->account_number,
-            'type' => $request->type,
             'bank_name' => $request->bank_name,
         ]);
 
