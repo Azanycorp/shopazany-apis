@@ -11,4 +11,5 @@ enum WithdrawalStatus: string
     const PROCESSING = 'processing';
     const COMPLETED = 'completed';
     const FAILED = 'failed';
+    const REVERSED = 'reversed';
 }
