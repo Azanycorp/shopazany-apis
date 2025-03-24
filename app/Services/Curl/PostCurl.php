@@ -13,12 +13,7 @@ class PostCurl
     public function __construct(string $url, array $headers = [], array $fields = [])
     {
         $this->url = $url;
-        $defaultHeaders = [
-            'Content-Type' => 'application/json',
-        ];
-
-        $allHeaders = array_merge($defaultHeaders, $headers);
-        foreach ($allHeaders as $key => $value) {
+        foreach ($headers as $key => $value) {
             $this->headers[] = "$key: $value";
         }
         $this->fields = $fields;
@@ -26,7 +21,7 @@ class PostCurl
 
     public function execute()
     {
-        $fields_string = json_encode($this->fields);
+        $fields_string = http_build_query($this->fields);
 
         $ch = curl_init();
 
@@ -36,9 +31,6 @@ class PostCurl
         curl_setopt($ch, CURLOPT_HTTPHEADER, $this->headers);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_TIMEOUT, 30);
-        curl_setopt($ch, CURLOPT_HEADER, true);
-        curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
-        curl_setopt($ch, CURLOPT_FAILONERROR, false);
 
         $response = curl_exec($ch);
 
@@ -54,6 +46,10 @@ class PostCurl
             throw new Exception('Invalid JSON response from API: ' . json_last_error_msg());
         }
 
-        return $result;
+        if (!isset($result['data'])) {
+            return $result;
+        }
+
+        return $result['data'];
     }
 }
