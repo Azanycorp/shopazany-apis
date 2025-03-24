@@ -98,7 +98,7 @@ class PayoutService
 
         return [
             'status' => true,
-            'message' => 'Bulk transfer queued',
+            'message' => $response['message'] ?? 'Bulk transfer queued',
             'data' => $response['data']
         ];
     }
