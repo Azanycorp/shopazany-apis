@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enum\TransactionStatus;
 use App\Models\User;
+use App\Services\Curl\CurlService;
 use App\Services\Curl\PostCurl;
 use Illuminate\Support\Facades\Log;
 use net\authorize\api\contract\v1 as AnetAPI;
@@ -54,8 +55,9 @@ class PayoutService
         $token = config('paystack.secretKey');
 
         $headers = [
-            'Accept' => 'application/json',
             'Authorization' => 'Bearer ' . $token,
+            'Accept' => 'application/json',
+            'Cache-Control' => 'no-cache',
         ];
 
         $body = [
@@ -71,7 +73,7 @@ class PayoutService
             }, $transfers),
         ];
 
-        $response = (new PostCurl($url, $headers, $body))->execute();
+        $response = (new CurlService($url, $headers, $body))->execute();
 
         if (!isset($response['status']) || $response['status'] === false) {
             return [
