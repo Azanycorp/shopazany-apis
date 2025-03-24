@@ -29,10 +29,20 @@ class CurlService
         curl_setopt($ch,CURLOPT_POST, true);
         curl_setopt($ch,CURLOPT_POSTFIELDS, $fields_string);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $this->headers);
-
         curl_setopt($ch,CURLOPT_RETURNTRANSFER, true);
 
-        return curl_exec($ch);
+        $response = curl_exec($ch);
+
+        if (curl_errno($ch)) {
+            return [
+                'status' => false,
+                'message' => curl_error($ch),
+                'data' => null,
+            ];
+        }
+
+        curl_close($ch);
+        return json_decode($response, true);
     }
 }
 
