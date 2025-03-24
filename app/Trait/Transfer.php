@@ -100,7 +100,9 @@ trait Transfer
     private function markRequestFailed(int $requestId, int $userId): void
     {
         $request = WithdrawalRequest::find($requestId);
-        $user = User::find($userId);
+        $user = User::with(['wallet'])->find($userId);
+
+        $user->wallet->increment('balance', $request->amount);
 
         $request->update(['status' => WithdrawalStatus::FAILED]);
         $user->notify(new WithdrawalNotification($request, 'failed'));
