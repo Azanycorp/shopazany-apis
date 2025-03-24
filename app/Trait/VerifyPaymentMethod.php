@@ -14,25 +14,19 @@ trait VerifyPaymentMethod
     protected function addBankTransfer($request, User $user)
     {
         return match ($request->platform) {
-            'paystack' => $this->addPaystackMethod($request, $user),
-            'authorize' => $this->addAuthorizeMethod($request, $user),
+            'paystack' => $this->addPaymentMethod($request, $user, 'paystack'),
+            'authorize' => $this->addPaymentMethod($request, $user, 'authorize'),
         };
     }
 
     protected function addPayPal($request, User $user): bool
     {
-        try {
-            $user->B2bWithdrawalMethod()->create([
-                'type' => $request->type,
-                'paypal_email' => $request->paypal_email
-            ]);
-            return true;
-        } catch (\Exception $e) {
-            return false;
-        }
+        return $this->createWithdrawalMethod($request, $user, [
+            'paypal_email' => $request->paypal_email,
+        ]) !== null;
     }
 
-    private function addPaystackMethod($request, User $user)
+    private function addPaymentMethod($request, User $user, string $platform)
     {
         try {
             DB::beginTransaction();
@@ -40,32 +34,19 @@ trait VerifyPaymentMethod
             if ($request->is_default) {
                 $user->paymentMethods()->update(['is_default' => false]);
             }
-            $method = $user->B2bWithdrawalMethod()->create([
-                'type' => $request->type,
-                'country_id' => $request->country_id,
-                'bank_name' => $request->bank_name,
+
+            $method = $this->createWithdrawalMethod($request, $user, [
+                'bank_name' => $request->bank_name ?? null,
                 'account_number' => $request->account_number,
                 'account_name' => $request->account_name,
-                'platform' => $request->platform,
-                'status' => WithdrawalStatus::ACTIVE,
+                'type' => $request->account_name,
+                'platform' => $platform,
+                'is_default' => $request->is_default ?? false,
             ]);
 
-
-            $bank = Bank::where([
-                'name' => $request->bank_name
-            ])->first();
-
-            if (! $bank) {
-                return $this->error(null, "Selected bank not found!", 404);
+            if ($platform === 'paystack') {
+                $this->processPaystackRecipient($request, $method);
             }
-            $fields = [
-                'type' => "nuban",
-                'name' => $request->account_name,
-                'account_number' => $request->account_number,
-                'bank_code' => $bank->code,
-                'currency' => $bank->currency
-            ];
-            PaystackService::createRecipient($fields, $method);
 
             DB::commit();
             return $this->success(null, "Added successfully");
@@ -75,20 +56,31 @@ trait VerifyPaymentMethod
         }
     }
 
-    private function addAuthorizeMethod($request, User $user)
+    private function createWithdrawalMethod($request, User $user, array $data): ?object
     {
-        if ($request->is_default) {
-            $user->paymentMethods()->update(['is_default' => false]);
+        return $this->getWithdrawalMethodRelation($user)->create($data);
+    }
+
+    private function getWithdrawalMethodRelation(User $user)
+    {
+        return $user->type === UserType::B2B_SELLER
+            ? $user->B2bWithdrawalMethod()
+            : $user->paymentMethods();
+    }
+
+    private function processPaystackRecipient($request, $method)
+    {
+        $bank = Bank::where('name', $request->bank_name)->first();
+        if (!$bank) {
+            return $this->error(null, "Selected bank not found!", 404);
         }
 
-        $user->paymentMethods()->create([
-            'type' => $request->type,
+        PaystackService::createRecipient([
+            'type' => "nuban",
+            'name' => $request->account_name,
             'account_number' => $request->account_number,
-            'account_name' => $request->account_name,
-            'platform' => $request->platform,
-            'routing_number' => $request->routing_number,
-            'is_default' => $request->is_default,
-        ]);
-        return $this->success(null, "Added successfully");
+            'bank_code' => $bank->code,
+            'currency' => $bank->currency,
+        ], $method);
     }
 }

@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::table('b2b_withdrawal_methods', function (Blueprint $table) {
             $table->string('type')->nullable();
             $table->string('paypal_email')->nullable();
+            $table->longText('data')->nullable();
         });
     }
 };

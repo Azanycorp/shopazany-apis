@@ -45,7 +45,7 @@ use App\Http\Resources\B2BSellerShippingAddressResource;
 
 class SellerService extends Controller
 {
-    use HttpResponse, VerifyPaymentMethod;
+    use HttpResponse, Payment;
 
     protected \App\Repositories\B2BProductRepository $b2bProductRepository;
     protected \App\Repositories\B2BSellerShippingRepository $b2bSellerShippingRepository;
@@ -947,31 +947,16 @@ class SellerService extends Controller
             return $this->error(null, 'User wallet not found', 404);
         }
 
-        $config = Configuration::first();
-        if (!$config) {
-            return $this->error(null, 'Configuration setting not found', 404);
-        }
-
-        $min = $config->withdrawal_min ?? 0;
-        $max = $config->withdrawal_max ?? $wallet->master_wallet;
-
-        if (strtolower($config->withdrawal_status) === WithdrawalStatus::DISABLED) {
-            return $this->error(null, 'Withrawal on this system is currently not available', 422);
-        }
-
         if ($request->amount > $wallet->master_wallet) {
             return $this->error(null, 'Insufficient balance', 422);
         }
 
-        if ($request->amount < $min) {
-            return $this->error(null, 'Minimum withdrawable amount is ' . number_format($min), 422);
+        if ($request->amount < 500) {
+            return $this->error(null, 'Minimum withdrawable amount is ' . number_format(500), 422);
         }
 
-        if ($request->amount > $max) {
-            return $this->error(null, 'Maximum withdrawable amount is ' . number_format($max), 422);
-        }
 
-        $paymentInfo = B2bWithdrawalMethod::where('status', WithdrawalStatus::ACTIVE)->find($request->account_id);
+        $paymentInfo = B2bWithdrawalMethod::where('is_default', 1)->find($request->account_id);
         if (!$paymentInfo) {
             return $this->error(null, 'Invalid account selected for withdrawal or account is not active', 422);
         }
@@ -1021,17 +1006,17 @@ class SellerService extends Controller
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        if($auth->type === UserType::B2B_BUYER) {
+        if ($auth->type === UserType::B2B_BUYER) {
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        if ($auth->id !== $request->user_id || (!$auth->is_affiliate_member && $auth->type !== UserType::SELLER)) {
+        if ($auth->id !== $request->user_id || (!$auth->is_affiliate_member && $auth->type !== UserType::B2B_SELLER)) {
             return $this->error(null, "Unauthorized action.", 401);
         }
 
         $user = User::with('B2bWithdrawalMethod')->find($request->user_id);
 
-        if(! $user){
+        if (! $user) {
             return $this->error(null, "User not found", 404);
         }
 
@@ -1081,12 +1066,7 @@ class SellerService extends Controller
             'account_number',
             'account_type',
             'bank_name',
-            'routing_number',
-            'bic_swift_code',
-            'country_id'
-        ])
-            ->with(['country:id,name'])
-            ->findOrFail($id);
+        ])->findOrFail($id);
 
 
         return $this->success($method, 'Withdrawal details', 200);
@@ -1095,14 +1075,11 @@ class SellerService extends Controller
     {
         $method = B2bWithdrawalMethod::findOrFail($id);
         $method->update([
-            'country_id' => $request->country_id,
             'user_id' =>  userAuthId(),
             'account_name' => $request->account_name,
             'account_number' => $request->account_number,
-            'account_type' => $request->account_type,
+            'type' => $request->type,
             'bank_name' => $request->bank_name,
-            'routing_number' => $request->routing_number,
-            'bic_swift_code' => $request->bic_swift_code,
         ]);
 
         return $this->success($method, 'Withdrawal details Updated', 200);

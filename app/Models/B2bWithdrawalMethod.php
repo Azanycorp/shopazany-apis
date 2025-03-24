@@ -11,11 +11,10 @@ class B2bWithdrawalMethod extends Model
     use ClearsResponseCache;
 
     protected $fillable = [
-        'country_id',
         'user_id',
         'account_name',
         'account_number',
-        'account_type',
+        'data',
         'type',
         'paypal_email',
         'bank_name',
@@ -24,8 +23,6 @@ class B2bWithdrawalMethod extends Model
         'recipient',
         'reference',
         'recipient_code',
-        'routing_number',
-        'bic_swift_code',
     ];
 
     public function country()
