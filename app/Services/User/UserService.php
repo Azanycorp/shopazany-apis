@@ -457,25 +457,6 @@ class UserService extends Controller
         $perPage = request()->query('per_page', 25);
         $page = request()->query('page', 1);
 
-        $transactionQuery = Transaction::where('user_id', $userId);
-        if ($status) {
-            if (!in_array($status, [TransactionStatus::SUCCESSFUL, TransactionStatus::PENDING, TransactionStatus::REJECTED])) {
-                return $this->error(null, "Invalid status", 400);
-            }
-            $transactionQuery->where('status', $status);
-        }
-
-        $transactions = $transactionQuery->get()->map(function ($transaction) {
-            return [
-                'id' => $transaction->id,
-                'transaction_id' => $transaction->id,
-                'type' => 'transaction',
-                'date' => $transaction->created_at->format('Y-m-d'),
-                'amount' => $transaction->amount,
-                'status' => $transaction->status,
-            ];
-        });
-
         $withdrawalQuery = WithdrawalRequest::where('user_id', $userId);
 
         if ($status) {
@@ -493,10 +474,8 @@ class UserService extends Controller
             ];
         });
 
-        $mergedData = collect($transactions)->merge(collect($withdrawals))->sortByDesc('date')->values();
-
-        $total = $mergedData->count();
-        $paginatedData = $mergedData->slice(($page - 1) * $perPage, $perPage)->values();
+        $total = $withdrawals->count();
+        $paginatedData = $withdrawals->sortByDesc('date')->values()->slice(($page - 1) * $perPage, $perPage)->values();
 
         $data = [
             'balance' => (float)$user->wallet?->balance,

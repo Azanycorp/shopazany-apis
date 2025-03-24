@@ -78,7 +78,7 @@ class PayoutService
         if (!isset($response['status']) || $response['status'] === false) {
             return [
                 'status' => false,
-                'message' => $response,
+                'message' => $response['message'],
                 'data' => null
             ];
         }
