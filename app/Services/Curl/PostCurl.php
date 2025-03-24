@@ -24,13 +24,16 @@ class PostCurl
         $fields_string = http_build_query($this->fields);
 
         $ch = curl_init();
-        
+
         curl_setopt($ch, CURLOPT_URL, $this->url);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $fields_string);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $this->headers);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); 
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+        curl_setopt($ch, CURLOPT_HEADER, true);
+        curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
+        curl_setopt($ch, CURLOPT_FAILONERROR, false);
 
         $response = curl_exec($ch);
 
@@ -50,6 +53,6 @@ class PostCurl
             return $result;
         }
 
-        return $result['data'];
+        return $result;
     }
 }
