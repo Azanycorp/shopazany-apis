@@ -78,7 +78,7 @@ class PayoutService
         if (!isset($response['status']) || $response['status'] === false) {
             return [
                 'status' => false,
-                'message' => $response['message'] ?? 'Unknown error',
+                'message' => $response,
                 'data' => null
             ];
         }
