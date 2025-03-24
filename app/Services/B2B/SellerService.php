@@ -1093,6 +1093,7 @@ class SellerService extends Controller
 
         $method->update([
             'is_default' => 1,
+            'status' => WithdrawalStatus::ACTIVE,
         ]);
 
         return $this->success($method, 'Withdrawal details set to default', 200);
