@@ -4,7 +4,6 @@ namespace App\Services\Payment;
 
 use App\Models\Payment;
 use App\Enum\PaymentType;
-use App\Enum\PaystackEvent;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
@@ -19,7 +18,7 @@ use App\Services\Payment\HandlePaymentService;
 use App\Services\Payment\PaymentDetailsService;
 use App\Services\Payment\PaystackPaymentProcessor;
 use App\Services\Payment\B2BPaystackPaymentProcessor;
-use App\Services\Paystack\PaystackEventHandler;
+use App\Services\Payment\PaystackEventHandler;
 use App\Trait\Transfer;
 
 class PaymentService
