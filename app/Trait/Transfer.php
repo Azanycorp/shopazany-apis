@@ -127,26 +127,26 @@ trait Transfer
             return false;
         }
 
-        $reference = $payload['reference'];
-        $amount = $payload['amount'];
-        $recipient = $payload['recipient'];
+        // $reference = $payload['reference'];
+        // $amount = $payload['amount'];
+        // $recipient = $payload['recipient'];
 
-        $request = WithdrawalRequest::where('reference', $reference)->first();
+        // $request = WithdrawalRequest::where('reference', $reference)->first();
 
-        if (!$request) {
-            return false;
-        }
+        // if (!$request) {
+        //     return false;
+        // }
 
-        if (
-            intval($request->amount * 100) !== intval($amount)
-        ) {
-            return false;
-        }
+        // if (
+        //     intval($request->amount * 100) !== intval($amount)
+        // ) {
+        //     return false;
+        // }
 
-        $paymentMethod = $request->user->paymentMethods()->where('is_default', true)->first();
-        if (!$paymentMethod || $paymentMethod->recipient_code !== $recipient) {
-            return false;
-        }
+        // $paymentMethod = $request->user->paymentMethods()->where('is_default', true)->first();
+        // if (!$paymentMethod || $paymentMethod->recipient_code !== $recipient) {
+        //     return false;
+        // }
 
         return true;
     }
