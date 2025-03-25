@@ -129,15 +129,13 @@ trait Transfer
     {
         if (
             !isset($payload['reference']) ||
-            !isset($payload['amount']) ||
-            !isset($payload['recipient'])
+            !isset($payload['amount'])
         ) {
             return false;
         }
 
         $reference = $payload['reference'];
-        $amount = $payload['amount'];
-        $recipient = $payload['recipient'];
+        $amount = intval($payload['amount']);
 
         $request = WithdrawalRequest::where('reference', $reference)->first();
 
@@ -145,19 +143,13 @@ trait Transfer
             return false;
         }
 
-        if (
-            intval($request->amount * 100) !== intval($amount)
-        ) {
-            return false;
-        }
-
-        $paymentMethod = $request->user->paymentMethods()->where('is_default', true)->first();
-        if (!$paymentMethod || $paymentMethod->recipient_code !== $recipient) {
+        if (intval($request->amount * 100) !== $amount) {
             return false;
         }
 
         return true;
     }
+
 }
 
 
