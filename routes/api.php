@@ -95,7 +95,12 @@ Route::middleware('validate.header')
                 });
             });
 
+        // Webhook Route
         Route::post('/payment/webhook', [PaymentController::class, 'webhook'])
+            ->withoutMiddleware('validate.header');
+
+        // Approval URL Route
+        Route::post('/payment/paystack/transfer/approve', [PaymentController::class, 'approveTransfer'])
             ->withoutMiddleware('validate.header');
 
         Route::group(['middleware' => ['auth:api', 'auth.check'], 'prefix' => 'user'], function (): void {
@@ -112,7 +117,6 @@ Route::middleware('validate.header')
                     // Paystack
                     Route::post('/paystack', 'processPayment');
                     Route::get('/verify/paystack/{user_id}/{reference}', 'verifyPayment');
-                    Route::post('/paystack/transfer/approve', 'approveTransfer');
 
                     // Account LookUp
                     Route::post('/account-lookup', 'accountLookup');
