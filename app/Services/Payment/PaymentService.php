@@ -93,12 +93,27 @@ class PaymentService
     {
         $payload = json_decode($request->getContent(), true);
 
-        if (!$this->isValidTransferRequest($payload)) {
-            Log::warning('Paystack Transfer rejected:', $payload);
+        $transfers = data_get($payload, 'data.transfers', []);
+
+        if (empty($transfers)) {
+            Log::warning('No transfers found in approval payload:', $payload);
             return response()->json(['message' => 'Invalid transfer request'], 400);
         }
 
-        Log::info('Paystack Transfer approved:', $payload);
+        foreach ($transfers as $transfer) {
+            $isValid = $this->isValidTransferRequest([
+                'reference' => $transfer['reference'] ?? null,
+                'amount' => $transfer['amount'] ?? null,
+                'recipient' => $transfer['recipient']['recipientCode'] ?? null,
+            ]);
+    
+            if (! $isValid) {
+                Log::warning('Transfer validation failed for one of the transfers:', $transfer);
+                return response()->json(['message' => 'Invalid transfer request'], 400);
+            }
+        }
+
+        Log::info('Paystack Transfer approved:', $transfers);
         return response()->json(['message' => 'Transfer approved'], 200);
     }
 
