@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\Paystack;
+namespace App\Services\Payment;
 
 use Illuminate\Support\Facades\Log;
 use App\Enum\PaystackEvent;
