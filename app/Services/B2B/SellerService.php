@@ -373,7 +373,7 @@ class SellerService extends Controller
         if ($currentUserId != $user_id) {
             return $this->error(null, "Unauthorized action.", 401);
         }
-        $prod = B2BProduct::where('user_id', $user_id)->firstOrFail();
+        $prod = B2BProduct::where('user_id', $user_id)->where('id', $product_id)->firstOrFail();
         $this->b2bProductRepository->delete($prod->id);
 
         return $this->success(null, 'Deleted successfully');
