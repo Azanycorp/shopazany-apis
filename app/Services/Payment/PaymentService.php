@@ -19,6 +19,7 @@ use App\Services\Payment\HandlePaymentService;
 use App\Services\Payment\PaymentDetailsService;
 use App\Services\Payment\PaystackPaymentProcessor;
 use App\Services\Payment\B2BPaystackPaymentProcessor;
+use App\Services\Paystack\PaystackEventHandler;
 use App\Trait\Transfer;
 
 class PaymentService
@@ -67,49 +68,7 @@ class PaymentService
             return $this->error(null, 'Invalid payload', 400);
         }
 
-        if ($event['event'] === PaystackEvent::CHARGE_SUCCESS) {
-            $data = $event['data'];
-            $paymentType = $data['metadata']['payment_type'];
-
-            switch ($paymentType) {
-                case PaymentType::RECURRINGCHARGE:
-                    PaystackService::handleRecurringCharge($event, $event['event']);
-                    break;
-
-                case PaymentType::USERORDER:
-                    PaystackService::handlePaymentSuccess($event, $event['event']);
-                    break;
-
-                case PaymentType::B2BUSERORDER:
-                    PaystackService::handleB2BPaymentSuccess($event, $event['event']);
-                    break;
-
-                default:
-                    Log::warning('Unknown payment type', ['payment_type' => $paymentType]);
-                    break;
-            }
-        }
-
-        $eventType = $event['event'];
-        $data = $event['data'];
-
-        switch ($eventType) {
-            case PaystackEvent::TRANSFER_SUCCESS:
-                PaystackService::handleTransferSuccess($data);
-                break;
-
-            case PaystackEvent::TRANSFER_FAILED:
-                PaystackService::handleTransferFailed($data);
-                break;
-
-            case PaystackEvent::TRANSFER_REVERSED:
-                PaystackService::handleTransferReversed($data);
-                break;
-
-            default:
-                Log::warning("Unhandled Paystack event: {$eventType}", $data);
-                break;
-        }
+        PaystackEventHandler::handle($event);
 
         return response()->json(['status' => true], 200);
     }
