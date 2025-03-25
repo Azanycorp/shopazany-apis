@@ -267,7 +267,6 @@ class PaystackService
                 }
 
                 if ($user->type === UserType::CUSTOMER) {
-                    Log::info("Rewarding user for purchase " . $user);
                     $actionSlug = Action::whereIn('name', ['Purchase item', 'Purchase an item'])
                         ->orWhere('slug', 'purchase_an_item')
                         ->value('slug');
