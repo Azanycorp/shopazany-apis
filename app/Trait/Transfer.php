@@ -73,14 +73,14 @@ trait Transfer
             $result = PayoutService::paystackBulkTransfer($chunk);
 
             $success = $result['status'] === true;
-            $transferCode = $result['data']['transfer_code'];
+            $data = $result['data'];
 
             foreach ($chunk as $item) {
                 $this->handlePaystackResultItem(
                     $item,
                     $success,
                     $success ? null : $result,
-                    $transferCode,
+                    $data,
                 );
             }
         } catch (\Exception $e) {
@@ -92,16 +92,19 @@ trait Transfer
         }
     }
 
-    private function handlePaystackResultItem(array $item, bool $success, $errorMessage = null, $transferCode = null): void
+    private function handlePaystackResultItem(array $item, bool $success, $errorMessage = null, $data = null): void
     {
         $request = WithdrawalRequest::find($item['request_id']);
         $user = User::with(['wallet'])->find($item['user_id']);
 
         if ($success) {
             Log::info("Bulk transfer queued: Withdrawal ID {$request->id}, Ref: {$item['reference']}");
-            $request->update([
-                'transfer_code' => $transferCode,
-            ]);
+            foreach ($data as $transfer) {
+                $transferCode = $transfer['transfer_code'];
+                $request->update([
+                    'transfer_code' => $transferCode,
+                ]);
+            }
         } else {
             $this->markRequestFailed($request->id, $user->id, $errorMessage);
             $user->wallet->increment('balance', $request->amount);
