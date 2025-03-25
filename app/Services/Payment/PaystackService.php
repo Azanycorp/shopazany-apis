@@ -462,6 +462,8 @@ class PaystackService
 
     public static function handleTransferFailed($event)
     {
+        Log::info("Event: {$event}");
+
         $reference = $event['reference'];
         $withdrawal = WithdrawalRequest::with('user.wallet')
             ->where('reference', $reference)
@@ -495,6 +497,8 @@ class PaystackService
 
     public static function handleTransferReversed($event)
     {
+        Log::info("Event: {$event}");
+
         $reference = $event['reference'];
         $withdrawal = WithdrawalRequest::with('user.wallet')
             ->where('reference', $reference)

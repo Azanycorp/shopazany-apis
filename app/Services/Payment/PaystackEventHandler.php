@@ -14,6 +14,8 @@ class PaystackEventHandler
         $eventType = $event['event'];
         $data = $event['data'];
 
+        Log::info("Event type: {$eventType}");
+
         switch ($eventType) {
             case PaystackEvent::CHARGE_SUCCESS:
                 self::handleChargeSuccess($event);
