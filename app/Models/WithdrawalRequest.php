@@ -18,6 +18,7 @@ class WithdrawalRequest extends Model
         'status',
         'reference',
         'response',
+        'transfer_code',
     ];
 
     protected function casts(): array
