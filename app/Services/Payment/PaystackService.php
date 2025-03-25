@@ -429,13 +429,15 @@ class PaystackService
 
     public static function handleTransferSuccess($event): void
     {
+        $transferCode = $event['transfer_code'];
         $reference = $event['reference'];
+
         $withdrawal = WithdrawalRequest::with('user')
-            ->where('reference', $reference)
+            ->where('transfer_code', $transferCode)
             ->first();
 
         if (!$withdrawal) {
-            Log::error("Transfer success: No matching withdrawal found for reference: {$reference}");
+            Log::error("Transfer success: No matching withdrawal found for transfer_code: {$transferCode}");
             return;
         }
 
@@ -461,15 +463,15 @@ class PaystackService
 
     public static function handleTransferFailed($event)
     {
-        Log::info("Event: {$event}");
-
+        $transferCode = $event['transfer_code'];
         $reference = $event['reference'];
-        $withdrawal = WithdrawalRequest::with('user.wallet')
-            ->where('reference', $reference)
+
+        $withdrawal = WithdrawalRequest::with('user')
+            ->where('transfer_code', $transferCode)
             ->first();
 
         if (!$withdrawal) {
-            Log::error("Transfer success: No matching withdrawal found for reference: {$reference}");
+            Log::error("Transfer success: No matching withdrawal found for transfer_code: {$transferCode}");
             return;
         }
 
@@ -496,15 +498,15 @@ class PaystackService
 
     public static function handleTransferReversed($event)
     {
-        Log::info("Event: {$event}");
-
+        $transferCode = $event['transfer_code'];
         $reference = $event['reference'];
-        $withdrawal = WithdrawalRequest::with('user.wallet')
-            ->where('reference', $reference)
+
+        $withdrawal = WithdrawalRequest::with('user')
+            ->where('transfer_code', $transferCode)
             ->first();
 
         if (!$withdrawal) {
-            Log::error("Transfer success: No matching withdrawal found for reference: {$reference}");
+            Log::error("Transfer success: No matching withdrawal found for transfer_code: {$transferCode}");
             return;
         }
 
