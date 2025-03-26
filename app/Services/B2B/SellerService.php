@@ -962,9 +962,9 @@ class SellerService extends Controller
         }
 
 
-        $paymentInfo = PaymentMethod::where('is_default', 1)->find($request->account_id);
+        $paymentInfo = PaymentMethod::where('is_default', true)->find($request->account_id);
         if (!$paymentInfo) {
-            return $this->error(null, 'account selected for withdrawal not found', 422);
+            return $this->error(null, 'account selected for withdrawal not found', 404);
         }
 
         $newBalance = $wallet->master_wallet - $request->amount;
@@ -1087,11 +1087,11 @@ class SellerService extends Controller
     {
         $method = PaymentMethod::findOrFail($request->id);
         PaymentMethod::where('user_id', userAuthId())
-            ->where('is_default', 1)
+            ->where('is_default', true)
             ->update(['is_default' => 0]);
 
         $method->update([
-            'is_default' => 1,
+            'is_default' => true,
         ]);
 
         return $this->success($method, 'Withdrawal details set to default', 200);
