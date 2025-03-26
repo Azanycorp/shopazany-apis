@@ -9,7 +9,6 @@ use App\Models\Admin;
 use App\Trait\SignUp;
 use App\Enum\PlanType;
 use App\Enum\UserType;
-use App\Models\Payout;
 use App\Enum\AdminType;
 use App\Models\Country;
 use App\Enum\BannerType;
@@ -32,6 +31,7 @@ use App\Models\ShippingAgent;
 use App\Mail\B2BNewAdminEmail;
 use App\Models\CollationCenter;
 use App\Models\SubscriptionPlan;
+use App\Models\WithdrawalRequest;
 use Illuminate\Support\Facades\DB;
 use App\Models\B2bWithdrawalMethod;
 use App\Models\BusinessInformation;
@@ -729,7 +729,7 @@ class AdminService
     //seller withdrawal request
     public function widthrawalRequests()
     {
-        $payouts =  Payout::select(['id', 'seller_id', 'amount', 'status', 'created_at'])
+        $payouts =  WithdrawalRequest::select(['id', 'user_id', 'amount', 'status', 'created_at'])
             ->with(['user' => function ($query): void {
                 $query->select('id', 'first_name', 'last_name')->where('type', UserType::B2B_SELLER);
             }])->latest('id')->get();
@@ -739,117 +739,6 @@ class AdminService
         }
 
         return $this->success($payouts, 'Withdrawal requests');
-    }
-
-    public function viewWidthrawalRequest($id)
-    {
-        $payout =  Payout::with(['user' => function ($query): void {
-            $query->select('id', 'first_name', 'last_name')->where('type', UserType::B2B_SELLER);
-        }])
-            ->where('id', $id)
-            ->firstOrFail();
-
-        return $this->success($payout, 'request details');
-    }
-
-    public function approveWidthrawalRequest($id)
-    {
-        $payout =  Payout::findOrFail($id);
-        $payout->update([
-            'status' => OrderStatus::PAID,
-            'date_paid' => now()->toDateString(),
-        ]);
-
-        return $this->success(null, 'request Approved successfully');
-    }
-
-    public function cancelWithdrawalRequest($id)
-    {
-        $payout = Payout::findOrFail($id);
-        $wallet = UserWallet::where('user_id', $payout->seller_id)->first();
-
-        if (!$wallet) {
-            return $this->error(null, 'No account found');
-        }
-
-        DB::beginTransaction();
-
-        try {
-            $wallet->increment('master_wallet', $payout->amount);
-
-            $payout->update([
-                'status' => GeneralStatus::CANCELLED,
-            ]);
-
-            DB::commit();
-
-            return $this->success(null, 'Withdrawal request cancelled successfully.');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return $this->error(null, 'Transaction failed, please try again.', 500);
-        }
-    }
-
-    //seller withdrawal method request
-    public function widthrawalMethods()
-    {
-        $accounts =  B2bWithdrawalMethod::where('status', 'pending')->latest('id')->get();
-
-        if ($accounts->isEmpty()) {
-            return $this->error(null, 'No record found', 404);
-        }
-
-        return $this->success($accounts, 'Withdrawal methods');
-    }
-
-    public function viewWidthrawalMethod($id)
-    {
-        $account =  B2bWithdrawalMethod::with('user.businessInformation')->findOrFail($id);
-
-        $business = BusinessInformation::select([
-            'business_location',
-            'business_type',
-            'business_name',
-            'business_reg_number',
-            'business_phone',
-            'business_reg_document',
-            'identification_type_document',
-            'user_id'
-        ])
-            ->with(['user' => function ($query): void {
-                $query->where('type', UserType::B2B_SELLER)->select('id', 'first_name', 'last_name');
-            }])
-            ->where('user_id', $account->user_id)->firstOrFail();
-
-        $data = [
-            'account_info' => $account,
-            'business_info' => $business,
-        ];
-
-        return $this->success($data, 'request details');
-    }
-
-    public function approveWidthrawalMethod($id)
-    {
-        $account =  B2bWithdrawalMethod::findOrFail($id);
-
-        $account->update([
-            'status' => UserStatus::ACTIVE,
-        ]);
-
-        return $this->success(null, 'Account Approved');
-    }
-
-    public function rejectWidthrawalMethod($request, $id)
-    {
-        $account =  B2bWithdrawalMethod::findOrFail($id);
-
-        $account->update([
-            'status' => ProductStatus::DECLINED,
-            'admin_comment' => $request->note
-        ]);
-
-        return $this->success(null, 'Comment Submitted successfully');
     }
 
     //seller Product request
