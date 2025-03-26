@@ -603,12 +603,11 @@ class SellerService extends Controller
             ->where('status', OrderStatus::DELIVERED)
             ->sum('total_amount');
 
-        $payouts =  Payout::where('seller_id', $currentUserId)->get();
-
+        $payouts =  WithdrawalRequest::where('user_id', $currentUserId)->get();
         //payouts this month
-        $monthlyPayout =  Payout::where([
-            'seller_id' => $currentUserId,
-            'status' => OrderStatus::PAID
+        $monthlyPayout =  WithdrawalRequest::where([
+            'user_id' => $currentUserId,
+            'status' => WithdrawalStatus::COMPLETED
         ])->whereBetween('created_at', [$startDate, $endDate])->sum('amount');
         //order this month
         $monthlyOrder =  Rfq::where([
