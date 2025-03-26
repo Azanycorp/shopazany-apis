@@ -38,5 +38,4 @@ Schedule::everyTenMinutes()
     ->withoutOverlapping()
     ->group(function () {
         Schedule::command('withdraw-request:process');
-        Schedule::command('b2b-payout-request');
     });
