@@ -666,7 +666,7 @@ class BuyerService
     }
     public function rfqDetails($id)
     {
-        $rfq = Rfq::with(['seller', 'messages'])->where('buyer_id', userAuthId())->findOrFail($id);
+       $rfq = Rfq::with(['seller', 'messages'])->where('buyer_id', userAuthId())->findOrFail($id);
 
         $messages = RfqMessage::with(['seller', 'buyer'])->where('rfq_id', $rfq->id)->get();
         $data = [
