@@ -5,7 +5,6 @@ namespace App\Services\B2B;
 use App\Models\Rfq;
 use App\Models\User;
 use App\Enum\UserType;
-use App\Models\Payout;
 use App\Trait\Payment;
 use App\Models\B2bOrder;
 use App\Enum\MailingEnum;
