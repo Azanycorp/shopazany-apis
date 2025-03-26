@@ -142,7 +142,7 @@ class ChargeCardService implements PaymentStrategy
         (new PaymentLogAction($data, $payment, 'authorizenet', 'success'))->execute();
 
         if ($shipping_agent_id) {
-            $shipping_agent =  ShippingAgent::findOrFail($shipping_agent_id);
+           $shipping_agent =  ShippingAgent::findOrFail($shipping_agent_id);
         }
         $rfq = Rfq::findOrFail($rfqId);
         $seller = User::findOrFail($rfq->seller_id);
@@ -183,7 +183,7 @@ class ChargeCardService implements PaymentStrategy
         $product->availability_quantity -= $rfq->product_quantity;
         $product->sold += $rfq->product_quantity;
         $product->save();
-        
+
         $wallet = UserWallet::firstOrCreate(
             ['seller_id' => $seller->id],
             ['master_wallet' => 0]

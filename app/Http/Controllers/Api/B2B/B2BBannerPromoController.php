@@ -11,6 +11,7 @@ use App\Http\Requests\Admin\AddBannerRequest;
 use App\Http\Requests\Admin\NewSliderRequest;
 use App\Services\Admin\B2BBannerPromoService;
 use App\Http\Requests\Admin\B2BAddPromoRequest;
+use App\Http\Requests\Admin\AddB2BBannerRequest;
 
 class B2BBannerPromoController extends Controller
 {
@@ -43,7 +44,7 @@ class B2BBannerPromoController extends Controller
     }
 
 
-    public function addBanner(AddBannerRequest $request)
+    public function addBanner(AddB2BBannerRequest $request)
     {
         return $this->service->addBanner($request);
     }
@@ -58,7 +59,7 @@ class B2BBannerPromoController extends Controller
         return $this->service->getOneBanner($id);
     }
 
-    public function editBanner(Request $request, $id)
+    public function editBanner(AddB2BBannerRequest $request, $id)
     {
         return $this->service->editBanner($request, $id);
     }

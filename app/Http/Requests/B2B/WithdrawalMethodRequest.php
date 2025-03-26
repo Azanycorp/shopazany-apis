@@ -22,10 +22,12 @@ class WithdrawalMethodRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'account_name' => ['required', 'string', 'max:300'],
+            'user_id' => ['required', 'integer', 'exists:users,id'],
+            'account_name' => ['required', 'string', 'max:250'],
             'account_number' => ['required', 'string', 'max:11'],
             'bank_name' => ['required', 'string', 'max:100'],
-            'country_id' => ['required', 'integer','exists:countries,id']
+            'type' => ['required', 'in:bank_transfer'],
+            'platform' => ['required', 'in:paystack,authorize'],
         ];
     }
 }
