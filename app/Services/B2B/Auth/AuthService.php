@@ -159,7 +159,8 @@ class AuthService
             $currencyCode = $this->currencyCode($request);
 
             $user = User::create([
-                'first_name' => $request->name,
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
                 'email' => $request->email,
                 'type' => UserType::B2B_BUYER,
                 'service_type' => $request->service_type,
