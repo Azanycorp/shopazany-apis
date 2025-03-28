@@ -7,6 +7,7 @@ use App\Models\Rfq;
 use App\Models\Blog;
 use App\Models\User;
 use App\Enum\UserType;
+use App\Models\Banner;
 use App\Enum\RfqStatus;
 use App\Models\Payment;
 use App\Enum\BannerType;
@@ -236,6 +237,12 @@ class BuyerService
 
         return $this->success($data, 'banners');
     }
+    public function promoBanners()
+    {
+        $banners = Banner::where('type', BannerType::B2B)->latest('id')->get();
+        $data = B2BBannerResource::collection($banners);
+        return $this->success($data, "Banners");
+    }
     public function getSliders()
     {
         $sliders = SliderImage::where('type', BannerType::B2B)
@@ -396,13 +403,13 @@ class BuyerService
     public function getProductDetail($slug)
     {
         $product = B2BProduct::with([
-                'category',
-                'user',
-                'b2bLikes',
-                'country',
-                'b2bProductImages',
-                'b2bProductReview.user'
-            ])
+            'category',
+            'user',
+            'b2bLikes',
+            'country',
+            'b2bProductImages',
+            'b2bProductReview.user'
+        ])
             ->where('slug', $slug)
             ->firstOrFail();
 
@@ -411,31 +418,31 @@ class BuyerService
         $b2bProductReview = B2bProdctReview::with(['user' => function ($query): void {
             $query->select('id', 'first_name', 'last_name')
                 ->where('type', UserType::B2B_BUYER);
-            }])
+        }])
             ->where('product_id', $product->id)
             ->get();
 
         $moreFromSeller = B2BProduct::with([
-                'category',
-                'user',
-                'b2bLikes',
-                'subCategory',
-                'country',
-                'b2bProductImages',
-                'b2bProductReview.user'
-            ])
+            'category',
+            'user',
+            'b2bLikes',
+            'subCategory',
+            'country',
+            'b2bProductImages',
+            'b2bProductReview.user'
+        ])
             ->where('user_id', $product->user_id)
             ->get();
 
         $relatedProducts = B2BProduct::with([
-                'category',
-                'user',
-                'b2bLikes',
-                'subCategory',
-                'country',
-                'b2bProductImages',
-                'b2bProductReview.user'
-            ])
+            'category',
+            'user',
+            'b2bLikes',
+            'subCategory',
+            'country',
+            'b2bProductImages',
+            'b2bProductReview.user'
+        ])
             ->where('category_id', $product->category_id)
             ->get();
 
@@ -666,7 +673,7 @@ class BuyerService
     }
     public function rfqDetails($id)
     {
-       $rfq = Rfq::with(['seller', 'messages'])->where('buyer_id', userAuthId())->findOrFail($id);
+        $rfq = Rfq::with(['seller', 'messages'])->where('buyer_id', userAuthId())->findOrFail($id);
 
         $messages = RfqMessage::with(['seller', 'buyer'])->where('rfq_id', $rfq->id)->get();
         $data = [
