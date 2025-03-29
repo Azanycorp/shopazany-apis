@@ -122,11 +122,22 @@ trait SignUp
 
     protected function currencyCode($request)
     {
-        $currencyCode = 'NGN';
+        $currencyCode = 'USD';
+
         if($request->country_id) {
             $country = Country::findOrFail($request->country_id);
             $currencyCode = getCurrencyCode($country->sortname);
+
+            $supportedCurrencies = [
+                'NGN', 'GHS', 'KES', 'ZAR', 'XOF',
+                'USD', 'CAD', 'GBP', 'EUR'
+            ];
+
+            if (in_array($currencyCode, $supportedCurrencies)) {
+                return $currencyCode;
+            }
         }
+
         return $currencyCode;
     }
 }
