@@ -283,6 +283,12 @@ class SellerService extends Controller
 
         return $this->success($data, 'All products');
     }
+
+    public function getProductByIds($ids)
+    {
+        $products = B2BProduct::whereIn('id', $ids)->get();
+        return $products;
+    }
     public function getProductById(int $product_id, $user_id)
     {
         $currentUserId = userAuthId();
