@@ -28,7 +28,7 @@ use App\Models\BusinessInformation;
 use App\Models\UserShippingAddress;
 use App\Models\UserBusinessInformation;
 use App\Models\B2BSellerShippingAddress;
-use App\Models\Payout;
+use App\Models\UserWallet;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -39,6 +39,10 @@ trait UserRelationship
     public function wallet(): HasOne
     {
         return $this->hasOne(Wallet::class, 'user_id');
+    }
+    public function userWallet(): HasOne
+    {
+        return $this->hasOne(UserWallet::class, 'seller_id');
     }
 
     // Returns users that this user referred (i.e., their downline)
@@ -68,11 +72,6 @@ trait UserRelationship
         return $this->hasMany(WithdrawalRequest::class, 'user_id');
     }
 
-    public function payout(): HasMany
-    {
-        return $this->hasMany(Payout::class, 'seller_id');
-    }
-
     public function kyc(): HasOne
     {
         return $this->hasOne(Kyc::class, 'user_id');
@@ -100,7 +99,7 @@ trait UserRelationship
 
     public function userCountry(): BelongsTo
     {
-        return $this->belongsTo(Country::class, 'country','id');
+        return $this->belongsTo(Country::class, 'country', 'id');
     }
 
     public function state(): BelongsTo

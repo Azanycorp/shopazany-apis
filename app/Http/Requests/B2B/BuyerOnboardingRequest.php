@@ -23,7 +23,8 @@ class BuyerOnboardingRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string'],
+            'first_name' => ['required', 'string'],
+            'last_name' => ['required', 'string'],
             'email' => ['required', 'email', 'email:rfc,dns', 'unique:users,email'],
             'service_type' => ['required', 'string'],
             'average_spend' => ['required', 'string'],
