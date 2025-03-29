@@ -482,8 +482,14 @@ class PaystackService
                 'response' => $event['reason'],
             ]);
 
-            $user = $withdrawal->user;
-            $user->wallet->increment('balance', $withdrawal->amount);
+            $user = $withdrawal->user->load(['wallet', 'userWallet']);
+
+            if ($user->type === UserType::B2B_SELLER) {
+                $user->userWallet->increment('master_wallet', $withdrawal->amount);
+            } else {
+                $user->wallet->increment('balance', $withdrawal->amount);
+            }
+
             $user->notify(new WithdrawalNotification($withdrawal, 'failed'));
 
             Log::info("Transfer failed for withdrawal ID {$withdrawal->id} - Reference: {$reference}");
@@ -517,8 +523,14 @@ class PaystackService
                 'response' => $event['reason'],
             ]);
 
-            $user = $withdrawal->user;
-            $user->wallet->increment('balance', $withdrawal->amount);
+            $user = $withdrawal->user->load(['wallet', 'userWallet']);
+
+            if ($user->type === UserType::B2B_SELLER) {
+                $user->userWallet->increment('master_wallet', $withdrawal->amount);
+            } else {
+                $user->wallet->increment('balance', $withdrawal->amount);
+            }
+            
             $user->notify(new WithdrawalNotification($withdrawal, 'failed'));
 
             Log::info("Transfer failed for withdrawal ID {$withdrawal->id} - Reference: {$reference}");
