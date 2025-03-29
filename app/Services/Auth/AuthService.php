@@ -176,7 +176,6 @@ class AuthService extends Controller
             }
 
             if ($referrer) {
-                // $this->handleReferrers($referrer, $user);
                 $user->update(['pending_referrer_code' => $referrer]);
             }
 
