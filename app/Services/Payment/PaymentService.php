@@ -108,12 +108,10 @@ class PaymentService
             ]);
     
             if (! $isValid) {
-                Log::warning('Transfer validation failed for one of the transfers:', $transfer);
                 return response()->json(['message' => 'Invalid transfer request'], 400);
             }
         }
 
-        Log::info('Paystack Transfer approved:', $transfers);
         return response()->json(['message' => 'Transfer approved'], 200);
     }
 

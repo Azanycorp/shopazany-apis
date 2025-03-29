@@ -364,7 +364,7 @@ class HomeService
                 $query->with(['category', 'subCategory']);
                 $query->withCount(['productReviews']);
                 $query->withCount(['orders as item_sold' => function ($query): void {
-                    $query->where('status', OrderStatus::DELIVERED);
+                    $query->where('orders.status', OrderStatus::DELIVERED);
                 }]);
             }
         ])->where('uuid', $uuid)
