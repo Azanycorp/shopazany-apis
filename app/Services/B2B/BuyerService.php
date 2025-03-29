@@ -7,6 +7,7 @@ use App\Models\Rfq;
 use App\Models\Blog;
 use App\Models\User;
 use App\Enum\UserType;
+use App\Models\Banner;
 use App\Enum\RfqStatus;
 use App\Models\Payment;
 use App\Enum\BannerType;
@@ -31,6 +32,7 @@ use App\Models\B2BRequestRefund;
 use App\Enum\RefundRequestStatus;
 use App\Models\B2bProductCategory;
 use Illuminate\Support\Facades\DB;
+use App\Services\B2B\SellerService;
 use App\Http\Resources\BlogResource;
 use App\Models\BuyerShippingAddress;
 use Illuminate\Support\Facades\Auth;
@@ -236,14 +238,23 @@ class BuyerService
 
         return $this->success($data, 'banners');
     }
+
+    public function promoBanners()
+    {
+        $banners = Banner::where('type', BannerType::B2B)->latest()->get();
+        $data = B2BBannerResource::collection($banners);
+        return $this->success($data, "Banners");
+    }
+
     public function getSliders()
     {
         $sliders = SliderImage::where('type', BannerType::B2B)
-            ->latest('id')
+            ->latest()
             ->get();
         $data = SliderResource::collection($sliders);
         return $this->success($data, 'banners');
     }
+
     public function getPageBanners($page)
     {
         $banners = PageBanner::select('id', 'page', 'section', 'type', 'banner_url')->where('type', BannerType::B2B)->where('page', $page)->get();
@@ -284,7 +295,7 @@ class BuyerService
 
     public function allBlogs()
     {
-        $blogs = Blog::with('user')->where('type', BannerType::B2B)->latest('id')->get();
+        $blogs = Blog::with('user')->where('type', BannerType::B2B)->latest()->get();
         $data = BlogResource::collection($blogs);
         return $this->success($data, 'Blogs');
     }
@@ -359,7 +370,7 @@ class BuyerService
         $searchQuery = request()->input('search');
         $products = B2BProduct::with([
             'country',
-            'b2bProductReview',
+            'b2bProductReview.user',
             'b2bLikes',
             'b2bProductImages',
             'category',
@@ -396,13 +407,13 @@ class BuyerService
     public function getProductDetail($slug)
     {
         $product = B2BProduct::with([
-                'category',
-                'user',
-                'b2bLikes',
-                'country',
-                'b2bProductImages',
-                'b2bProductReview.user'
-            ])
+            'category',
+            'user',
+            'b2bLikes',
+            'country',
+            'b2bProductImages',
+            'b2bProductReview.user'
+        ])
             ->where('slug', $slug)
             ->firstOrFail();
 
@@ -411,31 +422,31 @@ class BuyerService
         $b2bProductReview = B2bProdctReview::with(['user' => function ($query): void {
             $query->select('id', 'first_name', 'last_name')
                 ->where('type', UserType::B2B_BUYER);
-            }])
+        }])
             ->where('product_id', $product->id)
             ->get();
 
         $moreFromSeller = B2BProduct::with([
-                'category',
-                'user',
-                'b2bLikes',
-                'subCategory',
-                'country',
-                'b2bProductImages',
-                'b2bProductReview.user'
-            ])
+            'category',
+            'user',
+            'b2bLikes',
+            'subCategory',
+            'country',
+            'b2bProductImages',
+            'b2bProductReview.user'
+        ])
             ->where('user_id', $product->user_id)
             ->get();
 
         $relatedProducts = B2BProduct::with([
-                'category',
-                'user',
-                'b2bLikes',
-                'subCategory',
-                'country',
-                'b2bProductImages',
-                'b2bProductReview.user'
-            ])
+            'category',
+            'user',
+            'b2bLikes',
+            'subCategory',
+            'country',
+            'b2bProductImages',
+            'b2bProductReview.user'
+        ])
             ->where('category_id', $product->category_id)
             ->get();
 
@@ -457,7 +468,7 @@ class BuyerService
     {
         $userId = userAuthId();
         $quotes = B2bQuote::with(['product', 'b2bProductReview'])->where('buyer_id', $userId)
-            ->latest('id')
+            ->latest()
             ->get();
         $data = B2BQuoteResource::collection($quotes);
         return $this->success($data, 'quotes lists');
@@ -466,7 +477,7 @@ class BuyerService
     public function sendMutipleQuotes()
     {
         $userId = userAuthId();
-        $quotes = B2bQuote::where('buyer_id', $userId)->latest('id')->get();
+        $quotes = B2bQuote::where('buyer_id', $userId)->latest()->get();
 
         if ($quotes->isEmpty()) {
             return $this->error(null, 'No record found to send', 404);
@@ -632,7 +643,7 @@ class BuyerService
         $userId = userAuthId();
 
         $rfqs = Rfq::with('seller')->where('buyer_id', $userId)
-            ->latest('id')
+            ->latest()
             ->get();
 
         if ($rfqs->isEmpty()) {
@@ -666,7 +677,7 @@ class BuyerService
     }
     public function rfqDetails($id)
     {
-       $rfq = Rfq::with(['seller', 'messages'])->where('buyer_id', userAuthId())->findOrFail($id);
+        $rfq = Rfq::with(['seller', 'messages'])->where('buyer_id', userAuthId())->findOrFail($id);
 
         $messages = RfqMessage::with(['seller', 'buyer'])->where('rfq_id', $rfq->id)->get();
         $data = [
@@ -792,7 +803,7 @@ class BuyerService
         $userId = userAuthId();
         $wishes =  B2bWishList::with(['product', 'b2bProductReview'])
             ->where('user_id', $userId)
-            ->latest('id')
+            ->latest()
             ->get();
 
         $data = B2BWishListResource::collection($wishes);

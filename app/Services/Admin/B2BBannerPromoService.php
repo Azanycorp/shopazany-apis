@@ -37,7 +37,7 @@ class B2BBannerPromoService
 
     public function banners()
     {
-        $banners = Banner::where('type', BannerType::B2B)->latest('id')->get();
+        $banners = Banner::where('type', BannerType::B2B)->latest()->get();
         if ($banners->isEmpty()) {
             return $this->error(null, "No record found", 404);
         }

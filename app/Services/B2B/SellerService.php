@@ -283,6 +283,8 @@ class SellerService extends Controller
 
         return $this->success($data, 'All products');
     }
+
+  
     public function getProductById(int $product_id, $user_id)
     {
         $currentUserId = userAuthId();
