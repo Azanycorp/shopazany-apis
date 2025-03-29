@@ -3,8 +3,9 @@
 namespace App\Models;
 
 use App\Trait\ClearsResponseCache;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Banner extends Model
 {
@@ -26,5 +27,12 @@ class Banner extends Model
         return [
             'products' => 'array'
         ];
+    }
+
+    protected function products(): Attribute
+    {
+        return Attribute::make(
+            get: fn($value) => B2BProduct::whereIn('id', is_array($value) ? $value : json_decode($value, true))->get()
+        );
     }
 }

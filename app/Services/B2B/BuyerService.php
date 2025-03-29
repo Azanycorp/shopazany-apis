@@ -238,13 +238,14 @@ class BuyerService
 
         return $this->success($data, 'banners');
     }
-    public function promoBanners($sellerService)
+
+    public function promoBanners()
     {
         $banners = Banner::where('type', BannerType::B2B)->latest()->get();
-        B2BBannerResource::setSellerService($sellerService);
         $data = B2BBannerResource::collection($banners);
         return $this->success($data, "Banners");
     }
+
     public function getSliders()
     {
         $sliders = SliderImage::where('type', BannerType::B2B)
@@ -253,6 +254,7 @@ class BuyerService
         $data = SliderResource::collection($sliders);
         return $this->success($data, 'banners');
     }
+    
     public function getPageBanners($page)
     {
         $banners = PageBanner::select('id', 'page', 'section', 'type', 'banner_url')->where('type', BannerType::B2B)->where('page', $page)->get();

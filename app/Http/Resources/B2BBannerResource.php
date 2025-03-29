@@ -16,16 +16,8 @@ class B2BBannerResource extends JsonResource
      * @return array<string, mixed>
      */
 
-     private static SellerService $sellerService;
-
-     public static function setSellerService(SellerService $service): void
-     {
-         self::$sellerService = $service;
-     }
-
     public function toArray(Request $request): array
     {
-        $productIds = json_decode($this->products, true);
         return [
             'id' => (int)$this->id,
             'title' => (string)$this->title,
@@ -33,9 +25,7 @@ class B2BBannerResource extends JsonResource
             'image' => (string)$this->image,
             'start_date' => (string)$this->start_date,
             'end_date' => (string)$this->end_date,
-            'products' => B2BProductResource::collection(
-                self::$sellerService->getProductByIds($productIds)
-            ),
+            'products' => $this->products,
             'status' => (string)$this->status,
         ];
     }
