@@ -254,7 +254,7 @@ class BuyerService
         $data = SliderResource::collection($sliders);
         return $this->success($data, 'banners');
     }
-    
+
     public function getPageBanners($page)
     {
         $banners = PageBanner::select('id', 'page', 'section', 'type', 'banner_url')->where('type', BannerType::B2B)->where('page', $page)->get();
@@ -370,7 +370,7 @@ class BuyerService
         $searchQuery = request()->input('search');
         $products = B2BProduct::with([
             'country',
-            'b2bProductReview',
+            'b2bProductReview.user',
             'b2bLikes',
             'b2bProductImages',
             'category',
