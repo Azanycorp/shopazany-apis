@@ -2,9 +2,6 @@
 
 namespace App\Http\Resources;
 
-use App\Models\Product;
-use App\Models\B2BProduct;
-use App\Services\B2B\SellerService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -25,7 +22,7 @@ class B2BBannerResource extends JsonResource
             'image' => (string)$this->image,
             'start_date' => (string)$this->start_date,
             'end_date' => (string)$this->end_date,
-            'products' => $this->products,
+            'products' => $this->b2b_products,
             'status' => (string)$this->status,
         ];
     }
