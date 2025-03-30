@@ -32,6 +32,15 @@ class Banner extends Model
     protected function products(): Attribute
     {
         return Attribute::make(
+            get: fn($value) => Product::whereIn('id', is_array($value) ? $value : json_decode($value, true))
+                ->select(['id', 'name', 'product_price', 'description', 'discount_price','slug'])
+                ->get()
+        );
+    }
+
+    protected function b2bProducts(): Attribute
+    {
+        return Attribute::make(
             get: fn($value) => B2BProduct::whereIn('id', is_array($value) ? $value : json_decode($value, true))->get()
         );
     }
