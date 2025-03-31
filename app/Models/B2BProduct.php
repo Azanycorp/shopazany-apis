@@ -69,6 +69,7 @@ class B2BProduct extends Model
     {
         return $this->belongsTo(ShopCountry::class, 'country_id', 'country_id');
     }
+
     public function category(): BelongsTo
     {
         return $this->belongsTo(B2bProductCategory::class, 'category_id');
@@ -78,6 +79,7 @@ class B2BProduct extends Model
     {
         return $this->belongsTo(B2bProductSubCategory::class, 'category_id');
     }
+
     public function orders(): HasMany
     {
         return $this->hasMany(B2bOrder::class, 'product_id');
