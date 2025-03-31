@@ -16,16 +16,12 @@ use App\Http\Requests\B2B\BusinessInformationRequest;
 
 class B2BController extends Controller
 {
-    protected \App\Services\B2B\Auth\AuthService $service;
-    protected \App\Services\B2B\SellerService $sellerService;
-    protected \App\Services\B2B\BuyerService $buyerService;
-
-    public function __construct(AuthService $service, SellerService $sellerService, BuyerService $buyerService)
-    {
-        $this->service = $service;
-        $this->sellerService = $sellerService;
-        $this->buyerService = $buyerService;
-    }
+    public function __construct(
+        protected AuthService $service,
+        protected SellerService $sellerService,
+        protected BuyerService $buyerService,
+    )
+    {}
 
     public function login(LoginRequest $request)
     {
@@ -61,50 +57,62 @@ class B2BController extends Controller
     {
         return $this->buyerService->searchProduct();
     }
+
     public function getCategoryProducts()
     {
         return $this->buyerService->getCategoryProducts();
     }
+
     public function bestSellingProduct()
     {
         return $this->buyerService->bestSelling();
     }
+
     public function featuredProduct()
     {
         return $this->buyerService->featuredProduct();
     }
+
     public function allCategories()
     {
         return $this->buyerService->categories();
     }
+
     public function getBlogs()
     {
         return $this->buyerService->allBlogs();
     }
+
     public function getBlogDetails($slug)
     {
         return $this->buyerService->singleBlog($slug);
     }
+
     public function categoryBySlug($slug)
     {
         return $this->buyerService->categoryBySlug($slug);
     }
+
     public function getSliders()
     {
         return $this->buyerService->getSliders();
     }
+
     public function getBanners()
     {
         return $this->buyerService->getBanners();
     }
+
     public function promoBanners(SellerService $sellerService)
     {
         return $this->buyerService->promoBanners($sellerService);
     }
+
     public function getPageBanners($page)
     {
         return $this->buyerService->getPageBanners($page);
     }
+
     public function getProducts()
     {
         return $this->buyerService->getProducts();
