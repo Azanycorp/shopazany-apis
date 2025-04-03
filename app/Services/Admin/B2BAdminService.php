@@ -52,13 +52,14 @@ class B2BAdminService
             return $this->error(null, $e->getMessage(), 500);
         }
     }
+
     public function updateSlider($request, $id)
     {
         $slider = SliderImage::where('type', BannerType::B2B)->findOrFail($id);
         try {
 
             $folder = App::environment('production') ? '/prod/slider_image' : '/stag/slider_image';
-            
+
             if ($request->file('image')) {
                 $path = $request->file('image')->store($folder, 's3');
                 $url = Storage::disk('s3')->url($path);
@@ -74,6 +75,7 @@ class B2BAdminService
             return $this->error(null, $e->getMessage(), 500);
         }
     }
+
     public function getSlider($id)
     {
         $slider = SliderImage::where('type', BannerType::B2B)->findOrFail($id);
@@ -89,9 +91,8 @@ class B2BAdminService
 
     public function sliders()
     {
-        $sliders = Cache::rememberForever('home_sliders', function () {
-            return SliderImage::where('type', BannerType::B2B)->latest('id')->take(5)->get();
-        });
+
+        $sliders = SliderImage::where('type', BannerType::B2B)->latest()->take(5)->get();
 
         $data = SliderResource::collection($sliders);
 

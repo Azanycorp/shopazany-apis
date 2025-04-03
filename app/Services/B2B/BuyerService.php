@@ -277,6 +277,7 @@ class BuyerService
 
         return $this->success($data, 'Products');
     }
+
     public function categories()
     {
         $categories = B2bProductCategory::with(['subcategory', 'products', 'products.b2bProductReview', 'products.b2bLikes'])
@@ -297,12 +298,14 @@ class BuyerService
         $data = BlogResource::collection($blogs);
         return $this->success($data, 'Blogs');
     }
+
     public function singleBlog($slug)
     {
         $blog = Blog::with('user')->where('type', BannerType::B2B)->where('slug', $slug)->firstOrFail();
         $data = new BlogResource($blog);
         return $this->success($data, "Blog details");
     }
+
     public function getCategoryProducts()
     {
         $categories = B2BProductCategory::select('id', 'name', 'slug', 'image')
@@ -344,11 +347,15 @@ class BuyerService
         $countryId = request()->query('country_id');
 
         $query = B2BProduct::with([
-            'category',
-            'subCategory',
             'shopCountry',
             'orders',
-            'b2bProductReview',
+            'b2bProductReview.user',
+            'category',
+            'user',
+            'b2bLikes',
+            'subCategory',
+            'country',
+            'b2bProductImages'
         ])
             ->where('status', ProductStatus::ACTIVE);
 
@@ -358,7 +365,7 @@ class BuyerService
 
         $featuredProducts = $query->limit(8)->get();
 
-        $data = B2BSellerProductResource::collection($featuredProducts);
+        $data = B2BProductResource::collection($featuredProducts);
 
         return $this->success($data, "Featured products");
     }
