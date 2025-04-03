@@ -9,14 +9,11 @@ use Illuminate\Http\Request;
 
 class ApiController extends Controller
 {
-    protected \App\Services\Admin\AdminService $service;
-    protected \App\Services\User\CustomerService $customerService;
-
-    public function __construct(AdminService $adminService, CustomerService $customerService)
-    {
-        $this->service = $adminService;
-        $this->customerService = $customerService;
-    }
+    public function __construct(
+        protected AdminService $adminService,
+        protected CustomerService $customerService
+    )
+    {}
 
     public function addSlider(Request $request)
     {
@@ -24,47 +21,47 @@ class ApiController extends Controller
             'image' => ['required', 'image', 'mimes:png,jpg,jpeg']
         ]);
 
-        return $this->service->addSlider($request);
+        return $this->adminService->addSlider($request);
     }
 
     public function slider()
     {
-        return $this->service->slider();
+        return $this->adminService->slider();
     }
 
     public function categories()
     {
-        return $this->service->categories();
+        return $this->adminService->categories();
     }
 
     public function country()
     {
-        return $this->service->country();
+        return $this->adminService->country();
     }
 
     public function states($id)
     {
-        return $this->service->states($id);
+        return $this->adminService->states($id);
     }
 
     public function brands()
     {
-        return $this->service->brands();
+        return $this->adminService->brands();
     }
 
     public function colors()
     {
-        return $this->service->colors();
+        return $this->adminService->colors();
     }
 
     public function units()
     {
-        return $this->service->units();
+        return $this->adminService->units();
     }
 
     public function sizes()
     {
-        return $this->service->sizes();
+        return $this->adminService->sizes();
     }
 
     public function shopByCountry(Request $request)
@@ -74,12 +71,12 @@ class ApiController extends Controller
             'flag' => ['required', 'mimes:png,jpg,jpeg,svg']
         ]);
 
-        return $this->service->shopByCountry($request);
+        return $this->adminService->shopByCountry($request);
     }
 
     public function getShopByCountry()
     {
-        return $this->service->getShopByCountry();
+        return $this->adminService->getShopByCountry();
     }
 
     public function userShopByCountry($countryId)
@@ -89,11 +86,11 @@ class ApiController extends Controller
 
     public function referralGenerate()
     {
-        return $this->service->referralGenerate();
+        return $this->adminService->referralGenerate();
     }
 
     public function adminProfile()
     {
-        return $this->service->adminProfile();
+        return $this->adminService->adminProfile();
     }
 }
