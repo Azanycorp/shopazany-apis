@@ -12,12 +12,10 @@ class DashboardController extends Controller
 {
     const MESSAGE = '403 Forbidden';
 
-    protected \App\Services\Admin\DashboardService $service;
-
-    public function __construct(DashboardService $service)
-    {
-        $this->service = $service;
-    }
+    public function __construct(
+        protected DashboardService $service
+    )
+    {}
 
     public function dashboardAnalytics()
     {
@@ -39,17 +37,6 @@ class DashboardController extends Controller
 
         return $this->service->bestSellingCat();
     }
-
-
-
-
-
-
-
-
-
-
-
 
 
 }
