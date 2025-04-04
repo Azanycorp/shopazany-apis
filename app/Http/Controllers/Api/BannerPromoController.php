@@ -12,13 +12,12 @@ use Illuminate\Support\Facades\Gate;
 
 class BannerPromoController extends Controller
 {
-    protected \App\Services\Admin\BannerPromoService $service;
     const MESSAGE = '403 Forbidden';
 
-    public function __construct(BannerPromoService $service)
-    {
-        $this->service = $service;
-    }
+    public function __construct(
+        protected BannerPromoService $service
+    )
+    {}
 
     public function addBanner(AddBannerRequest $request)
     {
