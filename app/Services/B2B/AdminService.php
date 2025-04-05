@@ -67,7 +67,7 @@ class AdminService
     {
         $users =  User::all();
         $orders =  B2bOrder::orderStats();
-        $rfqs =  Rfq::with(['buyer', 'seller'])->latest('id')->get();
+        $rfqs =  Rfq::with(['buyer', 'seller'])->latest()->get();
         $completion_request =  B2bOrder::where('status', OrderStatus::SHIPPED)->take(3)->get();
         $data = [
             'buyers' => $users->where('type', UserType::B2B_BUYER)->count(),
@@ -87,7 +87,7 @@ class AdminService
 
     public function getAllRfq()
     {
-        $rfqs =  Rfq::with(['buyer', 'seller'])->latest('id')->get();
+        $rfqs =  Rfq::with(['buyer', 'seller'])->latest()->get();
         $active_rfqs =  Rfq::where('status', OrderStatus::COMPLETED)->count();
         $users =  User::all();
 
@@ -191,7 +191,7 @@ class AdminService
     {
         $sellers = User::withCount('b2bProducts')
             ->where('type', UserType::B2B_SELLER)
-            ->latest('created_at')
+            ->latest()
             ->get();
 
         $sellersCounts = User::where('type', UserType::B2B_SELLER)
@@ -479,7 +479,7 @@ class AdminService
 
         $buyers = User::with('b2bCompany')
             ->where('type', UserType::B2B_BUYER)
-            ->latest('created_at')
+            ->latest()
             ->get();
 
         $data = [
@@ -643,9 +643,9 @@ class AdminService
             ->where('id', $authUser->id)
             ->firstOrFail();
 
-            if (!Hash::check($request->old_password, $user->password)) {
-                return $this->error('Old password is incorrect.', 400);
-            }
+        if (!Hash::check($request->old_password, $user->password)) {
+            return $this->error('Old password is incorrect.', 400);
+        }
         $user->update([
             'password' => bcrypt($request->password),
         ]);
@@ -687,7 +687,7 @@ class AdminService
 
     public function getPageBanners()
     {
-        $banners = PageBanner::select('id', 'page', 'section', 'type', 'banner_url')->where('type', BannerType::B2B)->latest('id')->get();
+        $banners = PageBanner::select('id', 'page', 'section', 'type', 'banner_url')->where('type', BannerType::B2B)->latest()->get();
         return $this->success($banners, 'Banners');
     }
 
@@ -697,6 +697,7 @@ class AdminService
         $banner_url = $banner && $request->hasFile('banner_url')
             ? uploadImage($request, 'banner_url', 'home-banner')
             : ($banner ? $banner->banner_url : null);
+
         $banner->update([
             'page' => $request->page ?? $banner->page,
             'section' => $request->section ?? $banner->section,
@@ -722,6 +723,7 @@ class AdminService
         $banner = PageBanner::select('id', 'page', 'section', 'type', 'banner_url')->where('type', BannerType::B2B)->findOrFail($id);
         return $this->success($banner, 'Banner details');
     }
+
     public function deletePageBanner($id)
     {
         $banner = PageBanner::where('type', BannerType::B2B)->findOrFail($id);
@@ -735,7 +737,7 @@ class AdminService
         $payouts =  WithdrawalRequest::select(['id', 'user_id', 'amount', 'status', 'created_at'])
             ->with(['user' => function ($query): void {
                 $query->select('id', 'first_name', 'last_name')->where('type', UserType::B2B_SELLER);
-            }])->latest('id')->get();
+            }])->latest()->get();
 
         if ($payouts->isEmpty()) {
             return $this->error(null, 'No record found');
@@ -749,7 +751,7 @@ class AdminService
     {
         $products =  B2BProduct::with(['user' => function ($query): void {
             $query->select('id', 'first_name', 'last_name')->where('type', UserType::B2B_SELLER);
-        }])->where('status', OrderStatus::PENDING)->latest('id')->get();
+        }])->where('status', OrderStatus::PENDING)->latest()->get();
 
         if ($products->isEmpty()) {
             return $this->error(null, 'No record found', 404);
@@ -791,7 +793,7 @@ class AdminService
     //Subscription Plans
     public function b2bSubscriptionPlans()
     {
-        $plans = SubscriptionPlan::where('type', PlanType::B2B)->latest('id')->get();
+        $plans = SubscriptionPlan::where('type', PlanType::B2B)->latest()->get();
         $data = SubscriptionPlanResource::collection($plans);
         return $this->success($data, 'All B2B Plans');
     }
@@ -869,7 +871,7 @@ class AdminService
     public function allBlogs()
     {
         $currentUserId = userAuthId();
-        $blogs = Blog::with('user')->where('admin_id', $currentUserId)->latest('id')->get();
+        $blogs = Blog::with('user')->where('admin_id', $currentUserId)->where('type', BannerType::B2B)->latest()->get();
         $data = BlogResource::collection($blogs);
         return $this->success($data, 'Added Blogs');
     }
@@ -898,19 +900,21 @@ class AdminService
 
     public function updateBlog($request, $id)
     {
-        $blog = Blog::findOrFail($id);
+        $blog = Blog::where('id', $id)->where('type', BannerType::B2B)->firstOrFail();
         $url = $request->file('image') ? uploadImage($request, 'image', 'blog') : $blog->image;
+
         $blog->update([
             'title' => $request->title ?? $blog->title,
             'description' => $request->description ?? $blog->description,
             'image' => $url,
         ]);
+
         return $this->success('Details updated successfully');
     }
 
     public function deleteBlog($id)
     {
-        $blog = Blog::findOrFail($id);
+        $blog = Blog::where('id', $id)->where('type', BannerType::B2B)->firstOrFail();
         $blog->delete();
         return $this->success('Blog deleted successfully.');
     }
