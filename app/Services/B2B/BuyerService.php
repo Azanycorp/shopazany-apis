@@ -621,7 +621,7 @@ class BuyerService
         $recentOrders = B2bOrder::with('seller')
             ->where('buyer_id', $currentUserId)
             ->where('status', OrderStatus::PENDING)
-            ->latest('id')
+            ->latest()
             ->take(10)
             ->get();
 
@@ -940,7 +940,7 @@ class BuyerService
             return $this->success(null, 'Password Successfully Updated');
         }
 
-        return $this->error(null, 'Old Password did not match');
+        return $this->error(null, 'Old Password do not match');
     }
 
     public function change2FA($data)
