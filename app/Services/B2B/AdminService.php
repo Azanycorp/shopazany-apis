@@ -643,6 +643,9 @@ class AdminService
             ->where('id', $authUser->id)
             ->firstOrFail();
 
+            if (!Hash::check($request->old_password, $user->password)) {
+                return $this->error('Old password is incorrect.', 400);
+            }
         $user->update([
             'password' => bcrypt($request->password),
         ]);
