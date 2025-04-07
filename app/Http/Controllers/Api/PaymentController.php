@@ -6,32 +6,33 @@ use Illuminate\Http\Request;
 use App\Models\ShippingAgent;
 use App\Models\CollationCenter;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\AccountLookupRequest;
 use App\Http\Requests\PaymentRequest;
 use App\Services\Payment\PaymentService;
 use App\Http\Resources\ShippingAgentResource;
 use App\Http\Requests\AuthorizeNetCardRequest;
 use App\Http\Requests\B2BAuthorizeNetCardRequest;
-use App\Models\WithdrawalRequest;
-use Illuminate\Support\Facades\Log;
 
 class PaymentController extends Controller
 {
-    protected \App\Services\Payment\PaymentService $service;
-
-    public function __construct(PaymentService $service)
-    {
-        $this->service = $service;
-    }
+    public function __construct(
+        protected PaymentService $service
+    )
+    {}
 
     public function getShippingAgents()
     {
-        $agents = ShippingAgent::latest('id')->get();
-        $centres = CollationCenter::with('hubs')->latest('id')->get();
+        $agents = ShippingAgent::latest()->get();
+
+        $centres = CollationCenter::with('hubs')->latest()->get();
+
         $data = ShippingAgentResource::collection($agents);
+
         $details = [
             'centres' => $centres,
             'agents' => $data
         ];
+
         return $this->success($details, 'Available Agents and Collation centres');
     }
 
@@ -70,12 +71,8 @@ class PaymentController extends Controller
         return $this->service->getBanks();
     }
 
-    public function accountLookup(Request $request)
+    public function accountLookup(AccountLookupRequest $request)
     {
-        $request->validate([
-            'account_number' => ['required', 'string'],
-            'bank_code' => ['required', 'string'],
-        ]);
         return $this->service->accountLookup($request);
     }
 

@@ -11,13 +11,12 @@ use Illuminate\Support\Facades\Gate;
 
 class RewardPointController extends Controller
 {
-    protected \App\Services\RewardPoint\RewardPointService $service;
     const MESSAGE = '403 Forbidden';
 
-    public function __construct(RewardPointService $service)
-    {
-        $this->service = $service;
-    }
+    public function __construct(
+        protected RewardPointService $service
+    )
+    {}
 
     public function addPoints(AddRewardPointRequest $request)
     {
@@ -40,6 +39,7 @@ class RewardPointController extends Controller
     public function editPoints(Request $request, $id)
     {
         abort_if(Gate::denies('points_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+
         $request->validate([
             'name' => ['nullable', 'string'],
             'icon' => ['nullable', 'image'],
@@ -47,6 +47,7 @@ class RewardPointController extends Controller
             'verification_type' => ['nullable', 'string'],
             'country_ids' => ['nullable', 'array'],
         ]);
+
         return $this->service->editPoints($request, $id);
     }
 

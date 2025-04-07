@@ -27,9 +27,11 @@ class SizeController extends Controller
         $request->validate([
             'name' => ['required', 'string']
         ]);
+
         Size::create([
             'name' => $request->name
         ]);
+
         return $this->success(null, "Created successfully");
     }
 
