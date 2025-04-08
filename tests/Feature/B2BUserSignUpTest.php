@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use Tests\TestCase;
 use App\Models\User;
+use App\Enum\UserType;
 use App\Models\Action;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -39,12 +40,13 @@ class B2BUserSignUpTest extends TestCase
             'first_name' => $this->faker->firstName,
             'last_name' => $this->faker->lastName,
             'email' => $email,
+            'type' => UserType::B2B_SELLER,
             'password' => $password,
             'password_confirmation' => $password,
             'terms' => true,
         ];
 
-        $response = $this->postJson('/api/b2b/connect/seller/signup', $payload, $headers);
+        $response = $this->postJson('/b2b/connect/seller/signup', $payload, $headers);
 
         $response->assertStatus(200)
                  ->assertJson(['message' => 'Created successfully']);
@@ -75,7 +77,7 @@ class B2BUserSignUpTest extends TestCase
             'terms' => null,
         ];
 
-        $response = $this->postJson('/api/connect/signup', $payload, $headers);
+        $response = $this->postJson('/b2b/connect/seller/signup', $payload, $headers);
 
         $response->assertStatus(422)
                  ->assertJsonValidationErrors(['first_name', 'last_name', 'email', 'password', 'terms']);
@@ -101,12 +103,13 @@ class B2BUserSignUpTest extends TestCase
             'first_name' => $this->faker->firstName,
             'last_name' => $this->faker->lastName,
             'email' => $email,
+            'type' =>  UserType::B2B_SELLER,
             'password' => $password,
             'password_confirmation' => $password,
             'terms' => true,
         ];
 
-        $response = $this->postJson('/api/connect/signup?referrer=REF1234', $payload, $headers);
+        $response = $this->postJson('/b2b/connect/seller/signup?referrer=REF1234', $payload, $headers);
 
         $response->assertStatus(200)
                  ->assertJson(['message' => 'Created successfully']);
