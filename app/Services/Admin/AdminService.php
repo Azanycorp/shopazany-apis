@@ -2,6 +2,7 @@
 
 namespace App\Services\Admin;
 
+use App\Enum\CategoryStatus;
 use App\Http\Resources\AdminUserResource;
 use App\Http\Resources\CategoryResource;
 use App\Http\Resources\CountryResource;
@@ -31,14 +32,7 @@ class AdminService
     public function addSlider($request)
     {
         try {
-
-            $folder = null;
-
-            if(App::environment('production')){
-                $folder = '/prod/slider_image';
-            } elseif(App::environment(['staging', 'local'])) {
-                $folder = '/stag/slider_image';
-            }
+            $folder = App::environment('production') ? '/prod/slider_image' : '/stag/slider_image';
 
             if ($request->file('image')) {
                 $path = $request->file('image')->store($folder, 's3');
@@ -50,7 +44,7 @@ class AdminService
                 'link' => $request->link
             ]);
 
-            return $this->success(null, "Created successfully");
+            return $this->success(null, "Created successfully", 201);
         } catch (\Exception $e) {
             return $this->error(null, $e->getMessage(), 500);
         }
@@ -70,8 +64,8 @@ class AdminService
     public function categories()
     {
         $categories = Category::where('featured', 1)
-        ->where('status', 'active')
-        ->get();
+            ->whereStatus(CategoryStatus::ACTIVE)
+            ->get();
 
         $data = CategoryResource::collection($categories);
 
@@ -100,28 +94,36 @@ class AdminService
 
     public function brands()
     {
-        $brands = Brand::where('status', 'active')->get(['id', 'name', 'slug', 'image']);
+        $brands = Brand::select('id', 'name', 'slug', 'image')
+            ->whereStatus('active')
+            ->get();
 
         return $this->success($brands, "All brands");
     }
 
     public function colors()
     {
-        $colors = Color::where('status', 'active')->get(['id', 'name', 'code']);
+        $colors = Color::select('id', 'name', 'code')
+            ->whereStatus('active')
+            ->get();
 
         return $this->success($colors, "All colors");
     }
 
     public function units()
     {
-        $units = Unit::where('status', 'active')->get(['id', 'name']);
+        $units = Unit::select('id', 'name')
+            ->whereStatus('active')
+            ->get();
 
         return $this->success($units, "All units");
     }
 
     public function sizes()
     {
-        $sizes = Size::where('status', 'active')->get(['id', 'name']);
+        $sizes = Size::select('id', 'name')
+            ->whereStatus('active')
+            ->get();
 
         return $this->success($sizes, "All sizes");
     }
@@ -134,22 +136,18 @@ class AdminService
             return $this->error(null, "Not found", 404);
         }
 
-        $folder = null;
-
-        if(App::environment('production')){
-            $folder = '/prod/shopcountryflag';
-        } elseif(App::environment(['staging', 'local'])) {
-            $folder = '/stag/shopcountryflag';
-        }
+        $folder = App::environment('production') ? '/prod/shopcountryflag' : '/stag/shopcountryflag';
 
         $url = uploadImage($request, 'flag', $folder);
+
         ShopCountry::create([
             'country_id' => $country->id,
             'name' => $country->name,
             'flag' => $url,
             'currency' => $request->currency,
         ]);
-        return $this->success(null, "Added successfully");
+
+        return $this->success(null, "Added successfully", 201);
     }
 
     public function getShopByCountry(): array
@@ -174,10 +172,10 @@ class AdminService
     public function referralGenerate()
     {
         $users = User::whereNull('referrer_code')
-        ->orWhere('referrer_code', '')
-        ->orWhereNull('referrer_link')
-        ->orWhere('referrer_link', '')
-        ->get();
+            ->orWhere('referrer_code', '')
+            ->orWhereNull('referrer_link')
+            ->orWhere('referrer_link', '')
+            ->get();
 
         foreach($users as $user) {
             if (!$user->referrer_code) {
