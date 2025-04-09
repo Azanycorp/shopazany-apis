@@ -16,7 +16,7 @@ class FaqController extends Controller
      */
     public function index()
     {
-        $data = Faq::get(['id', 'question', 'answer']);
+        $data = Faq::select('id', 'question', 'answer')->get();
 
         return $this->success($data, "FAQs");
     }
@@ -30,7 +30,8 @@ class FaqController extends Controller
             'question' => $request->question,
             'answer' => $request->answer
         ]);
-        return $this->success(null, "Added successfully");
+
+        return $this->success(null, "Added successfully", 201);
     }
 
     /**
@@ -38,14 +39,7 @@ class FaqController extends Controller
      */
     public function show(Faq $faq)
     {
-        $data = Faq::findOrFail($faq->id);
-
-        $data = [
-            'id' => $data->id,
-            'question' => $data->question,
-            'answer' => $data->answer,
-        ];
-
+        $data = Faq::select('id', 'question', 'answer')->findOrFail($faq->id);
         return $this->success($data, "FAQ Detail");
     }
 

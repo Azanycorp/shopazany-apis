@@ -11,6 +11,7 @@ enum MailingEnum: string
     const RESEND_CODE = "resend_code";
     const EMAIL_VERIFICATION = "email_verification";
     const ORDER_STATUS_UPDATED = "order_status_updated";
+    const ADMIN_ACCOUNT = "Admin new account";
 
 
     // Status

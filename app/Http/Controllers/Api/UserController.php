@@ -12,12 +12,10 @@ use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
-    protected \App\Services\User\UserService $service;
-
-    public function __construct(UserService $userService)
-    {
-        $this->service = $userService;
-    }
+    public function __construct(
+        protected UserService $service
+    )
+    {}
 
     public function profile()
     {

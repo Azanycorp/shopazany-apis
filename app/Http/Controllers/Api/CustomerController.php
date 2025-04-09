@@ -10,12 +10,10 @@ use App\Http\Requests\CustomerSupportRequest;
 
 class CustomerController extends Controller
 {
-    protected \App\Services\User\CustomerService $service;
-
-    public function __construct(CustomerService $service)
-    {
-        $this->service = $service;
-    }
+    public function __construct(
+        protected CustomerService $service
+    )
+    {}
 
     public function dashboardAnalytics(int $userId)
     {

@@ -8,12 +8,10 @@ use Illuminate\Http\Request;
 
 class FinanceController extends Controller
 {
-    protected \App\Services\Admin\FinanceService $service;
-
-    public function __construct(FinanceService $service)
-    {
-        $this->service = $service;
-    }
+    public function __construct(
+        protected FinanceService $service
+    )
+    {}
 
     public function addPaymentService(Request $request)
     {

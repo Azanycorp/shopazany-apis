@@ -11,12 +11,10 @@ use Illuminate\Http\Request;
 
 class RoleController extends Controller
 {
-    protected \App\Services\Admin\RolePermissionService $service;
-
-    public function __construct(RolePermissionService $service)
-    {
-        $this->service = $service;
-    }
+    public function __construct(
+        protected RolePermissionService $service
+    )
+    {}
 
     public function addRole(AddRoleRequest $request)
     {

@@ -14,12 +14,10 @@ use App\Services\Payment\PaystackPaymentProcessor;
 
 class B2BPaymentController extends Controller
 {
-    protected \App\Services\Payment\PaymentService $service;
-
-    public function __construct(PaymentService $service)
-    {
-        $this->service = $service;
-    }
+    public function __construct(
+        protected PaymentService $service
+    )
+    {}
 
     public function processPayment(B2BPaymentRequest $request)
     {

@@ -9,44 +9,34 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\SignUpRequest;
 use App\Http\Requests\SellerSignUpRequest;
 use App\Http\Requests\AffiliateSignupRequest;
+use App\Http\Requests\ResetPasswordRequest;
+use App\Http\Requests\VerifyRequest;
 
 class AuthController extends Controller
 {
-    protected \App\Services\Auth\AuthService $service;
-
-    public function __construct(AuthService $authService)
-    {
-        $this->service = $authService;
-    }
+    public function __construct(
+        protected AuthService $authService
+    )
+    {}
 
     public function login(LoginRequest $request)
     {
-        return $this->service->login($request);
+        return $this->authService->login($request);
     }
 
-    public function loginVerify(Request $request)
+    public function loginVerify(VerifyRequest $request)
     {
-        $request->validate([
-            'email' => 'required|email|exists:users,email',
-            'code' => 'required|string',
-        ]);
-
-        return $this->service->loginVerify($request);
+        return $this->authService->loginVerify($request);
     }
 
     public function signup(SignUpRequest $request)
     {
-        return $this->service->signup($request);
+        return $this->authService->signup($request);
     }
 
-    public function verify(Request $request)
+    public function verify(VerifyRequest $request)
     {
-        $request->validate([
-            'email' => 'required|email|exists:users,email',
-            'code' => 'required|string',
-        ]);
-
-        return $this->service->verify($request);
+        return $this->authService->verify($request);
     }
 
     public function resendCode(Request $request)
@@ -55,7 +45,7 @@ class AuthController extends Controller
             'email' => 'required|email|exists:users,email',
         ]);
 
-        return $this->service->resendCode($request);
+        return $this->authService->resendCode($request);
     }
 
     public function forgot(Request $request)
@@ -64,32 +54,26 @@ class AuthController extends Controller
             'email' => ['required', 'email', 'email:rfc:dns']
         ]);
 
-        return $this->service->forgot($request);
+        return $this->authService->forgot($request);
     }
 
-    public function reset(Request $request)
+    public function reset(ResetPasswordRequest $request)
     {
-        $request->validate([
-            'email' => 'required|email',
-            'password' => 'required|confirmed|min:8',
-            'token' => 'required|string',
-        ]);
-
-        return $this->service->reset($request);
+        return $this->authService->reset($request);
     }
 
     public function logout()
     {
-        return $this->service->logout();
+        return $this->authService->logout();
     }
 
     public function affiliateSignup(AffiliateSignupRequest $request)
     {
-        return $this->service->affiliateSignup($request);
+        return $this->authService->affiliateSignup($request);
     }
 
     public function sellerSignup(SellerSignUpRequest $request)
     {
-        return $this->service->sellerSignup($request);
+        return $this->authService->sellerSignup($request);
     }
 }

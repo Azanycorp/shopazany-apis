@@ -10,12 +10,10 @@ use Illuminate\Http\Request;
 
 class HomeController extends Controller
 {
-    protected \App\Services\HomeService $service;
-
-    public function __construct(HomeService $service)
-    {
-        $this->service = $service;
-    }
+    public function __construct(
+        protected HomeService $service
+    )
+    {}
 
     public function bestSelling()
     {

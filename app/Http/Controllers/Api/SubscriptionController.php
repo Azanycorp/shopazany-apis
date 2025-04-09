@@ -12,12 +12,10 @@ class SubscriptionController extends Controller
 {
     use HttpResponse;
 
-    protected \App\Services\SubscriptionService $service;
-
-    public function __construct(SubscriptionService $service)
-    {
-        $this->service = $service;
-    }
+    public function __construct(
+        protected SubscriptionService $service
+    )
+    {}
 
     public function getPlanByCountry($countryId)
     {

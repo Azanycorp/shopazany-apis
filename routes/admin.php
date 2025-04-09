@@ -328,7 +328,7 @@ Route::middleware('validate.header')
                     Route::prefix('slider')->group(function (): void {
                         Route::get('/', 'sliders');
                         Route::post('/add', 'addSlider');
-                        Route::get('/view/{id}', 'viewSlider');
+                        Route::get('/view/{id}', 'getSlider');
                         Route::post('/update/{id}', 'updateSlider');
                         Route::delete('/delete/{id}', 'deleteSlider');
                     });
