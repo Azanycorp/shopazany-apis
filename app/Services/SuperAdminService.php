@@ -397,48 +397,4 @@ class SuperAdminService
         return $this->success(null, 'Details deleted successfully');
     }
 
-    //Social Links
-    public function getSocialLinks()
-    {
-        $links = SocialSetting::latest()->get();
-        $data = SocialLinkResource::collection($links);
-        return $this->success($data, 'Social links');
-    }
-
-    public function addSocialLink($request)
-    {
-        $link = SocialSetting::create([
-            'name' => $request->name,
-            'icon' => $request->icon,
-            'url' => $request->url,
-        ]);
-        $data = new SocialLinkResource($link);
-        return $this->success($data, 'link added successfully', 201);
-    }
-
-    public function viewLink($id)
-    {
-        $link = SocialSetting::findOrFail($id);
-        $data = new SocialLinkResource($link);
-        return $this->success($data, 'link details');
-    }
-
-    public function editLink($request, $id)
-    {
-        $link = SocialSetting::findOrFail($id);
-        $link->update([
-            'name' => $request->name ?? $link->name,
-            'icon' => $request->icon ?? $link->icon,
-            'url' => $request->url ?? $link->url,
-        ]);
-
-        return $this->success(null, 'Details updated successfully');
-    }
-
-    public function deleteLink($id)
-    {
-        $link = SocialSetting::findOrFail($id);
-        $link->delete();
-        return $this->success(null, 'Link deleted successfully.');
-    }
 }
