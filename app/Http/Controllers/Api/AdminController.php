@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
 use App\Http\Requests\Admin\HubRequest;
 use App\Http\Requests\AdminUserRequest;
+use App\Http\Requests\SocialLinkRequest;
 use App\Http\Requests\ShippingAgentRequest;
 use App\Http\Requests\Admin\CollationCentreRequest;
 
@@ -141,6 +142,33 @@ class AdminController extends Controller
     }
 
     public function deleteShippingAgent($id)
+    {
+        return $this->superAdminService->deleteShippingAgent($id);
+    }
+
+
+    //ShippingAgents section
+    public function socialLinks()
+    {
+        return $this->superAdminService->shippingAgents();
+    }
+
+    public function addLink(SocialLinkRequest $request)
+    {
+        return $this->superAdminService->addShippingAgent($request);
+    }
+
+    public function viewLink($id)
+    {
+        return $this->superAdminService->viewShippingAgent($id);
+    }
+
+    public function editLink(SocialLinkRequest $request, $id)
+    {
+        return $this->superAdminService->editShippingAgent($request, $id);
+    }
+
+    public function deleteLink($id)
     {
         return $this->superAdminService->deleteShippingAgent($id);
     }

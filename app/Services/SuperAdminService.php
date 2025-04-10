@@ -397,7 +397,6 @@ class SuperAdminService
     }
 
     //Social Links
-    // Hubs under Collation centers
     public function getSocialLinks()
     {
         $links = SocialSetting::latest()->get();
