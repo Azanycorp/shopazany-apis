@@ -23,6 +23,7 @@ use App\Http\Resources\HubResource;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Contracts\Pipeline\Hub;
+use App\Http\Resources\SocialLinkResource;
 use App\Http\Resources\ShippingAgentResource;
 use App\Http\Resources\CollationCentreResource;
 
@@ -400,7 +401,7 @@ class SuperAdminService
     public function getSocialLinks()
     {
         $links = SocialSetting::latest()->get();
-        $data = HubResource::collection($links);
+        $data = SocialLinkResource::collection($links);
         return $this->success($data, 'Social links');
     }
 
@@ -411,13 +412,14 @@ class SuperAdminService
             'icon' => $request->icon,
             'url' => $request->url,
         ]);
-        return $this->success($link, 'link added successfully', 201);
+        $data = new SocialLinkResource($link);
+        return $this->success($data, 'link added successfully', 201);
     }
 
     public function viewLink($id)
     {
         $link = SocialSetting::findOrFail($id);
-        $data = new HubResource($link);
+        $data = new SocialLinkResource($link);
         return $this->success($data, 'link details');
     }
 

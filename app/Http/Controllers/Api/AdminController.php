@@ -150,26 +150,26 @@ class AdminController extends Controller
     //ShippingAgents section
     public function socialLinks()
     {
-        return $this->superAdminService->shippingAgents();
+        return $this->superAdminService->getSocialLinks();
     }
 
     public function addLink(SocialLinkRequest $request)
     {
-        return $this->superAdminService->addShippingAgent($request);
+        return $this->superAdminService->addSocialLink($request);
     }
 
     public function viewLink($id)
     {
-        return $this->superAdminService->viewShippingAgent($id);
+        return $this->superAdminService->viewLink($id);
     }
 
     public function editLink(SocialLinkRequest $request, $id)
     {
-        return $this->superAdminService->editShippingAgent($request, $id);
+        return $this->superAdminService->editLink($request, $id);
     }
 
     public function deleteLink($id)
     {
-        return $this->superAdminService->deleteShippingAgent($id);
+        return $this->superAdminService->deleteLink($id);
     }
 }
