@@ -57,6 +57,10 @@ class B2BController extends Controller
     {
         return $this->buyerService->searchProduct();
     }
+    public function getSocialLinks()
+    {
+        return $this->buyerService->getSocialLinks();
+    }
 
     public function getCategoryProducts()
     {
