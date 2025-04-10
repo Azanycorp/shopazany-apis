@@ -15,6 +15,7 @@ use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
 use App\Models\PickupStation;
 use App\Models\ShippingAgent;
+use App\Models\SocialSetting;
 use App\Mail\B2BNewAdminEmail;
 use App\Models\CollationCenter;
 use Illuminate\Support\Facades\DB;
@@ -393,5 +394,50 @@ class SuperAdminService
         $agent = ShippingAgent::findOrFail($id);
         $agent->delete();
         return $this->success(null, 'Details deleted successfully');
+    }
+
+    //Social Links
+    // Hubs under Collation centers
+    public function getSocialLinks()
+    {
+        $links = SocialSetting::latest()->get();
+        $data = HubResource::collection($links);
+        return $this->success($data, 'Social links');
+    }
+
+    public function addSocialLink($request)
+    {
+        $link = SocialSetting::create([
+            'name' => $request->name,
+            'icon' => $request->icon,
+            'url' => $request->url,
+        ]);
+        return $this->success($link, 'link added successfully', 201);
+    }
+
+    public function viewLink($id)
+    {
+        $link = SocialSetting::findOrFail($id);
+        $data = new HubResource($link);
+        return $this->success($data, 'link details');
+    }
+
+    public function editLink($request, $id)
+    {
+        $link = SocialSetting::findOrFail($id);
+        $link->update([
+            'name' => $request->name ?? $link->name,
+            'icon' => $request->icon ?? $link->icon,
+            'url' => $request->url ?? $link->url,
+        ]);
+
+        return $this->success(null, 'Details updated successfully');
+    }
+
+    public function deleteLink($id)
+    {
+        $link = SocialSetting::findOrFail($id);
+        $link->delete();
+        return $this->success(null, 'Link deleted successfully.');
     }
 }
