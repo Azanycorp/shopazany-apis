@@ -13,6 +13,9 @@ return new class extends Migration
     {
         Schema::create('social_settings', function (Blueprint $table) {
             $table->id();
+            $table->string('name');
+            $table->longText('icon');
+            $table->text('url');
             $table->timestamps();
         });
     }
