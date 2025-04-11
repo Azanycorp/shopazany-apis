@@ -927,10 +927,10 @@ class AdminService
     {
         $clients = ClientLogo::latest()->get();
         $data = ClientLogoResource::collection($clients);
-        return $this->success($data, 'Added Blogs');
+        return $this->success($data, 'Added client Logos');
     }
 
-    public function addClienLogo($request)
+    public function addClientLogo($request)
     {
         $url =  uploadImage($request, 'logo', 'clients');
         $plan = ClientLogo::create([
@@ -940,14 +940,14 @@ class AdminService
         return $this->success($plan, 'Client Logo added successfully', 201);
     }
 
-    public function getClienLogo($id)
+    public function getClientLogo($id)
     {
         $client = ClientLogo::findOrFail($id);
         $data = new ClientLogoResource($client);
         return $this->success($data, 'Client details');
     }
 
-    public function updateClienLogo($request, $id)
+    public function updateClientLogo($request, $id)
     {
         $client = ClientLogo::where('id', $id)->firstOrFail();
         $url = $request->file('logo') ? uploadImage($request, 'logo', 'clients') : $client->logo;
@@ -960,7 +960,7 @@ class AdminService
         return $this->success('Details updated successfully');
     }
 
-    public function deleteClienLogo($id)
+    public function deleteClientLogo($id)
     {
         $client = ClientLogo::where('id', $id)->firstOrFail();
         $client->delete();

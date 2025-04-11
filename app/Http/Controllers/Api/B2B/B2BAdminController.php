@@ -11,6 +11,7 @@ use App\Http\Requests\AdminUserRequest;
 use App\Http\Requests\Admin\BlogRequest;
 use App\Http\Requests\ShippingAgentRequest;
 use App\Http\Requests\Admin\NewBannerRequest;
+use App\Http\Requests\Admin\ClientLogoRequest;
 use App\Http\Requests\Admin\UpdateBlogRequest;
 use App\Http\Requests\ChangeAdminPasswordRequest;
 use App\Http\Requests\Admin\SubscriptionPlanRequest;
@@ -113,48 +114,6 @@ class B2BAdminController extends Controller
     }
 
 
-    //Withdrawal Requests
-    public function widthrawalRequests()
-    {
-        return $this->adminService->widthrawalRequests();
-    }
-
-    public function viewWidthrawalRequest($id)
-    {
-        return $this->adminService->viewWidthrawalRequest($id);
-    }
-
-    public function approveWidthrawalRequest($id)
-    {
-        return $this->adminService->approveWidthrawalRequest($id);
-    }
-
-    public function cancelWidthrawalRequest($id)
-    {
-        return $this->adminService->cancelWithdrawalRequest($id);
-    }
-
-    //Withdrawal Method Requests
-    public function widthrawalMethods()
-    {
-        return $this->adminService->widthrawalMethods();
-    }
-
-    public function viewWidthrawalMethod($id)
-    {
-        return $this->adminService->viewWidthrawalMethod($id);
-    }
-
-    public function approveWidthrawalMethod($id)
-    {
-        return $this->adminService->approveWidthrawalMethod($id);
-    }
-
-    public function rejectWidthrawalMethod(Request $request, $id)
-    {
-        return $this->adminService->rejectWidthrawalMethod($request, $id);
-    }
-
     //Seller Products Approval Request
     public function allProducts()
     {
@@ -227,5 +186,31 @@ class B2BAdminController extends Controller
     public function deleteBlog($id)
     {
         return $this->adminService->deleteBlog($id);
+    }
+
+    //Client Logoff Section
+    public function allClientLogos()
+    {
+        return $this->adminService->allClientLogos();
+    }
+
+    public function addClienLogo(ClientLogoRequest $request)
+    {
+        return $this->adminService->addClientLogo($request);
+    }
+
+    public function getClienLogo($id)
+    {
+        return $this->adminService->getClientLogo($id);
+    }
+
+    public function updateClienLogo(Request $request, $id)
+    {
+        return $this->adminService->updateClientLogo($request, $id);
+    }
+
+    public function deleteClienLogo($id)
+    {
+        return $this->adminService->deleteClientLogo($id);
     }
 }
