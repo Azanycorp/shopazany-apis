@@ -19,6 +19,7 @@ use App\Enum\AdminStatus;
 use App\Enum\OrderStatus;
 use App\Models\B2bCompany;
 use App\Models\B2BProduct;
+use App\Models\ClientLogo;
 use App\Models\HomeBanner;
 use App\Models\PageBanner;
 use App\Models\UserWallet;
@@ -42,6 +43,7 @@ use Illuminate\Support\Facades\Storage;
 use App\Http\Resources\AdminUserResource;
 use App\Http\Resources\B2BSellerResource;
 use App\Http\Resources\B2BProductResource;
+use App\Http\Resources\ClientLogoResource;
 use App\Repositories\B2BProductRepository;
 use App\Http\Resources\ShippingAgentResource;
 use App\Http\Resources\CollationCentreResource;
@@ -916,6 +918,52 @@ class AdminService
     {
         $blog = Blog::where('id', $id)->where('type', BannerType::B2B)->firstOrFail();
         $blog->delete();
+        return $this->success('Blog deleted successfully.');
+    }
+
+
+    //Client Logo Section
+    public function allClientLogos()
+    {
+        $clients = ClientLogo::latest()->get();
+        $data = ClientLogoResource::collection($clients);
+        return $this->success($data, 'Added Blogs');
+    }
+
+    public function addClienLogo($request)
+    {
+        $url =  uploadImage($request, 'logo', 'clients');
+        $plan = ClientLogo::create([
+            'name' => $request->name,
+            'logo' => $url,
+        ]);
+        return $this->success($plan, 'Client Logo added successfully', 201);
+    }
+
+    public function getClienLogo($id)
+    {
+        $client = ClientLogo::findOrFail($id);
+        $data = new ClientLogoResource($client);
+        return $this->success($data, 'Client details');
+    }
+
+    public function updateClienLogo($request, $id)
+    {
+        $client = ClientLogo::where('id', $id)->firstOrFail();
+        $url = $request->file('logo') ? uploadImage($request, 'logo', 'clients') : $client->logo;
+
+        $client->update([
+            'name' => $request->name ?? $client->name,
+            'logo' => $url,
+        ]);
+
+        return $this->success('Details updated successfully');
+    }
+
+    public function deleteClienLogo($id)
+    {
+        $client = ClientLogo::where('id', $id)->firstOrFail();
+        $client->delete();
         return $this->success('Blog deleted successfully.');
     }
 }
