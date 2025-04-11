@@ -300,11 +300,11 @@ Route::middleware('validate.header')
                     });
 
                     Route::prefix('client-logo')->group(function () {
-                        Route::get('/', 'getBlogs');
-                        Route::post('/create', 'addBlog');
-                        Route::get('/details/{id}', 'getBlog');
-                        Route::post('/update/{id}', 'updateBlog');
-                        Route::delete('/delete/{id}', 'deleteBlog');
+                        Route::get('/', 'allClientLogos');
+                        Route::post('/create', 'addClientLogo');
+                        Route::get('/details/{id}', 'getClientLogo');
+                        Route::post('/update/{id}', 'updateClientLogo');
+                        Route::delete('/delete/{id}', 'deleteClientLogo');
                     });
                 });
 
