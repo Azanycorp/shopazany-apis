@@ -14,12 +14,10 @@ class CategoryController extends Controller
 {
     const MESSAGE = '403 Forbidden';
 
-    protected \App\Services\User\CategoryService $service;
-
-    public function __construct(CategoryService $categoryService)
-    {
-        $this->service = $categoryService;
-    }
+    public function __construct(
+        protected CategoryService $service
+    )
+    {}
 
     public function createCategory(CategoryRequest $request)
     {
@@ -47,7 +45,7 @@ class CategoryController extends Controller
 
     public function getSubcategory($id)
     {
-        //abort_if(Gate::denies('sub_category'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+        abort_if(Gate::denies('sub_category'), Response::HTTP_FORBIDDEN, self::MESSAGE);
         return $this->service->getSubcategory($id);
     }
 

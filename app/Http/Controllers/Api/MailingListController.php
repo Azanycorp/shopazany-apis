@@ -16,11 +16,14 @@ class MailingListController extends Controller
         ]);
 
         $user = User::findOrFail($request->user_id);
+
         MailingList::create([
             'user_id' => $request->user_id,
             'email' => $user->email,
         ]);
+
         reward_user($user, 'mailing_subscribe', 'completed');
+
         return $this->success(null, "Successfully subscribed to the mailing list.");
     }
 }

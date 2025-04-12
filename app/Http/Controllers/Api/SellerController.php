@@ -11,12 +11,10 @@ use Illuminate\Http\Request;
 
 class SellerController extends Controller
 {
-    protected \App\Services\User\SellerService $service;
-
-    public function __construct(SellerService $sellerService)
-    {
-        $this->service = $sellerService;
-    }
+    public function __construct(
+        protected SellerService $service
+    )
+    {}
 
     public function businessInfo(BusinessInfoRequest $request)
     {
