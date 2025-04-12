@@ -23,7 +23,7 @@ class SocialLinkRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:240',
-            'icon' => 'required',
+            'icon' => 'required|string',
             'url' => 'required|url',
         ];
     }

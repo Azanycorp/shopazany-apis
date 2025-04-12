@@ -925,7 +925,9 @@ class AdminService
     public function getSocialLinks()
     {
         $links = SocialSetting::latest()->get();
+
         $data = SocialLinkResource::collection($links);
+
         return $this->success($data, 'Social links');
     }
 
@@ -936,6 +938,7 @@ class AdminService
             'icon' => $request->icon,
             'url' => $request->url,
         ]);
+
         $data = new SocialLinkResource($link);
         return $this->success($data, 'link added successfully', 201);
     }
@@ -943,13 +946,16 @@ class AdminService
     public function viewLink($id)
     {
         $link = SocialSetting::findOrFail($id);
+
         $data = new SocialLinkResource($link);
+
         return $this->success($data, 'link details');
     }
 
     public function editLink($request, $id)
     {
         $link = SocialSetting::findOrFail($id);
+
         $link->update([
             'name' => $request->name ?? $link->name,
             'icon' => $request->icon ?? $link->icon,
@@ -962,6 +968,7 @@ class AdminService
     public function deleteLink($id)
     {
         $link = SocialSetting::findOrFail($id);
+
         $link->delete();
         return $this->success(null, 'Link deleted successfully.');
     }
