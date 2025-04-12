@@ -194,7 +194,7 @@ class B2BAdminController extends Controller
         return $this->adminService->allClientLogos();
     }
 
-    public function addClienLogo(ClientLogoRequest $request)
+    public function addClientLogo(ClientLogoRequest $request)
     {
         return $this->adminService->addClientLogo($request);
     }
