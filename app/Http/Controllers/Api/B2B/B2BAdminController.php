@@ -199,17 +199,17 @@ class B2BAdminController extends Controller
         return $this->adminService->addClientLogo($request);
     }
 
-    public function getClienLogo($id)
+    public function getClientLogo($id)
     {
         return $this->adminService->getClientLogo($id);
     }
 
-    public function updateClienLogo(Request $request, $id)
+    public function updateClientLogo(Request $request, $id)
     {
         return $this->adminService->updateClientLogo($request, $id);
     }
 
-    public function deleteClienLogo($id)
+    public function deleteClientLogo($id)
     {
         return $this->adminService->deleteClientLogo($id);
     }
