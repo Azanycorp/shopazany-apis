@@ -10,12 +10,10 @@ use Illuminate\Http\Request;
 
 class SettingsController extends Controller
 {
-    protected \App\Services\Admin\SettingsService $service;
-
-    public function __construct(SettingsService $service)
-    {
-        $this->service = $service;
-    }
+    public function __construct(
+        protected SettingsService $service
+    )
+    {}
 
     public function addSeo(Request $request)
     {

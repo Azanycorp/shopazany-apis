@@ -10,13 +10,12 @@ use Illuminate\Support\Facades\Gate;
 
 class OrderController extends Controller
 {
-    protected \App\Services\Admin\OrderService $service;
     const MESSAGE = '403 Forbidden';
 
-    public function __construct(OrderService $service)
-    {
-        $this->service = $service;
-    }
+    public function __construct(
+        protected OrderService $service
+    )
+    {}
 
     public function orderAnalytics()
     {

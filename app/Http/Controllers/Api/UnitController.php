@@ -27,9 +27,11 @@ class UnitController extends Controller
         $request->validate([
             'name' => ['required', 'string']
         ]);
+
         Unit::create([
             'name' => $request->name
         ]);
+
         return $this->success(null, "Created successfully");
     }
 

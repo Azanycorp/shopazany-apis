@@ -27,10 +27,12 @@ class ColorController extends Controller
         $request->validate([
             'name' => ['required', 'string']
         ]);
+
         Color::create([
             'name' => $request->name,
             'code' => $request->code
         ]);
+
         return $this->success(null, "Created successfully");
     }
 

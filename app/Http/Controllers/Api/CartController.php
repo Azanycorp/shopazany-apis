@@ -9,12 +9,10 @@ use Illuminate\Http\Request;
 
 class CartController extends Controller
 {
-    protected \App\Services\CartService $service;
-
-    public function __construct(CartService $service)
-    {
-        $this->service = $service;
-    }
+    public function __construct(
+        protected CartService $service
+    )
+    {}
 
     public function addToCart(CartRequest $request)
     {

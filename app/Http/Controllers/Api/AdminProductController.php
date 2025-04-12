@@ -11,13 +11,12 @@ use Illuminate\Support\Facades\Gate;
 
 class AdminProductController extends Controller
 {
-    protected \App\Services\Admin\ProductService $service;
     const MESSAGE = '403 Forbidden';
 
-    public function __construct(ProductService $service)
-    {
-        $this->service = $service;
-    }
+    public function __construct(
+        protected ProductService $service
+    )
+    {}
 
     public function addProduct(ProductRequest $request)
     {

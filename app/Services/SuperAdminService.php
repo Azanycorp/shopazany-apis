@@ -9,6 +9,7 @@ use App\Models\Country;
 use App\Enum\PlanStatus;
 use App\Models\B2bOrder;
 use App\Enum\AdminStatus;
+use App\Enum\MailingEnum;
 use App\Enum\OrderStatus;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
@@ -68,12 +69,13 @@ class SuperAdminService
         ];
         return $this->success($details, 'delivery overview');
     }
+
     public function allCollationCentres()
     {
         $total_centers = CollationCenter::count();
         $active_centers = CollationCenter::where('status', PlanStatus::ACTIVE)->count();
         $inactive_centers = CollationCenter::where('status', PlanStatus::INACTIVE)->count();
-        $centers = CollationCenter::with(['country', 'hubs.country'])->latest('id')->get();
+        $centers = CollationCenter::with(['country', 'hubs.country'])->latest()->get();
         $data = CollationCentreResource::collection($centers);
         $collation_details = [
             'total_centers' => $total_centers,
@@ -108,7 +110,6 @@ class SuperAdminService
 
         // Fetch order statistics for B2B and B2C
         $b2b_order_counts = $this->getOrderCounts(B2bOrder::where('centre_id', $centre->id));
-        //$b2c_order_counts = $this->getOrderCounts(Order::where('centre_id', $centre->id));
 
         // Ensure I avoid null values by providing default 0 values
         $total_deliveries = ($b2b_order_counts['total_orders'] ?? 0);
@@ -178,7 +179,7 @@ class SuperAdminService
     // Hubs under Collation centers
     public function allCollationCentreHUbs()
     {
-        $centers = PickupStation::with(['country', 'collationCenter'])->latest('id')->get();
+        $centers = PickupStation::with(['country', 'collationCenter'])->latest()->get();
         $data = HubResource::collection($centers);
         return $this->success($data, 'All available collation centres hubs');
     }
@@ -281,7 +282,10 @@ class SuperAdminService
             ];
             DB::commit();
 
-            defer(fn() => send_email($request->email, new B2BNewAdminEmail($loginDetails)));
+            $type = MailingEnum::ADMIN_ACCOUNT;
+            $subject = "Admin Account Creation email";
+            $mail_class = B2BNewAdminEmail::class;
+            mailSend($type, $admin, $subject, $mail_class, $loginDetails);
 
             return $this->success($admin, 'Admin user added successfully', 201);
         } catch (\Throwable $th) {
@@ -340,7 +344,7 @@ class SuperAdminService
     //Shipping Agents
     public function shippingAgents()
     {
-        $agents = ShippingAgent::latest('id')->get();
+        $agents = ShippingAgent::latest()->get();
         $data = ShippingAgentResource::collection($agents);
         return $this->success($data, 'All Agents');
     }
