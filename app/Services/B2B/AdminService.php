@@ -926,13 +926,16 @@ class AdminService
     public function allClientLogos()
     {
         $clients = ClientLogo::latest()->get();
+
         $data = ClientLogoResource::collection($clients);
+        
         return $this->success($data, 'Added client Logos');
     }
 
     public function addClientLogo($request)
     {
         $url =  uploadImage($request, 'logo', 'clients');
+
         $plan = ClientLogo::create([
             'name' => $request->name,
             'logo' => $url,
@@ -943,6 +946,7 @@ class AdminService
     public function getClientLogo($id)
     {
         $client = ClientLogo::findOrFail($id);
+
         $data = new ClientLogoResource($client);
         return $this->success($data, 'Client details');
     }
@@ -950,6 +954,7 @@ class AdminService
     public function updateClientLogo($request, $id)
     {
         $client = ClientLogo::where('id', $id)->firstOrFail();
+
         $url = $request->file('logo') ? uploadImage($request, 'logo', 'clients') : $client->logo;
 
         $client->update([
@@ -963,7 +968,9 @@ class AdminService
     public function deleteClientLogo($id)
     {
         $client = ClientLogo::where('id', $id)->firstOrFail();
+
         $client->delete();
+
         return $this->success('Blog deleted successfully.');
     }
 }
