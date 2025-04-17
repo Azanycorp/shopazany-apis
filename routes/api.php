@@ -230,6 +230,10 @@ Route::middleware('validate.header')
 
                     Route::post('import', 'productImport');
                     Route::get('export/{user_id}/{type}', 'export');
+
+                    // Product Attribute
+                    Route::get('/attribute/{user_id}', 'getProductAttribute');
+                    Route::post('/attribute', 'addAttribute');
                 });
 
                 // Orders Routes

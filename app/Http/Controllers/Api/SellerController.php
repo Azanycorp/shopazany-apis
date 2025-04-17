@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers\Api;
 
+use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\AddAttributeRequest;
+use App\Services\User\SellerService;
+use App\Http\Requests\ProductRequest;
 use App\Http\Requests\BusinessInfoRequest;
 use App\Http\Requests\ProductImportRequest;
-use App\Http\Requests\ProductRequest;
-use App\Services\User\SellerService;
-use Illuminate\Http\Request;
 
 class SellerController extends Controller
 {
@@ -93,6 +94,11 @@ class SellerController extends Controller
     public function topSelling($userId)
     {
         return $this->service->topSelling($userId);
+    }
+
+    public function addAttribute(AddAttributeRequest $request)
+    {
+        return $this->service->addAttribute($request);
     }
 }
 

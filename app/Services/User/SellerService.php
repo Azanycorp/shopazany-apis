@@ -86,18 +86,22 @@ class SellerService extends Controller
         if (!$user) {
             return $this->error(null, "User not found", 404);
         }
+
         $slug = Str::slug($request->name);
         if (Product::where('slug', $slug)->exists()) {
             $slug = $slug . '-' . uniqid();
         }
+
         $price = $request->product_price;
         if($request->discount_price > 0){
             $price = (int)$request->product_price - (int)$request->discount_price;
         }
+
         $folder = null;
         $frontImage = null;
         $parts = explode('@', $user->email);
         $name = $parts[0];
+
         if(App::environment('production')){
             $folder = "/prod/product/{$name}";
             $frontImage = "/prod/product/{$name}/front_image";
@@ -105,10 +109,12 @@ class SellerService extends Controller
             $folder = "/stag/product/{$name}";
             $frontImage = "/stag/product/{$name}/front_image";
         }
+
         if ($request->hasFile('front_image')) {
             $path = $request->file('front_image')->store($frontImage, 's3');
             $url = Storage::disk('s3')->url($path);
         }
+
         $product = $user->products()->create([
             'name' => $request->name,
             'slug' => $slug,
@@ -130,6 +136,7 @@ class SellerService extends Controller
             'country_id' => $user->country ?? 160,
             'default_currency' => $user->default_currency,
         ]);
+
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $image) {
                 $path = $image->store($folder, 's3');
@@ -140,6 +147,7 @@ class SellerService extends Controller
                 ]);
             }
         }
+
         return $this->success(null, "Added successfully");
     }
 
@@ -626,6 +634,22 @@ class SellerService extends Controller
         });
 
         return $this->success($data, "Top Selling Products");
+    }
+
+    public function addAttribute($request)
+    {
+        $user = User::with('productAttributes')
+            ->findOrFail($request->user_id);
+
+        foreach ($request->attributes as $attribute) {
+            $user->productAttributes()->create([
+                'name' => $attribute['name'],
+                'value' => $attribute['values'],
+                'use_for_variation' => $attribute['use_for_variation'],
+            ]);
+        }
+
+        return $this->success(null, "Attribute created successfully", 201);
     }
 
 }
