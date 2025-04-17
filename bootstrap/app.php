@@ -65,7 +65,11 @@ return Application::configure(basePath: dirname(__DIR__))
             if ($request->json()) {
                 return response()->json(['message' => 'Resource was not Found'], 404);
             }
-
             throw $e;
         });
+
+        $exceptions->shouldRenderJsonWhen(function ($request) {
+            return $request->is('api/*') || $request->expectsJson();
+        });
+
     })->create();
