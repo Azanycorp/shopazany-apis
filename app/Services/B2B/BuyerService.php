@@ -27,6 +27,7 @@ use App\Models\SliderImage;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
 use App\Models\B2bProdctLike;
+use App\Models\SocialSetting;
 use App\Models\B2bProdctReview;
 use App\Models\B2BRequestRefund;
 use App\Enum\RefundRequestStatus;
@@ -44,7 +45,11 @@ use App\Http\Resources\B2BQuoteResource;
 use App\Http\Resources\CustomerResource;
 use App\Http\Resources\B2BBannerResource;
 use App\Http\Resources\B2BProductResource;
+<<<<<<< HEAD
 use App\Http\Resources\ClientLogoResource;
+=======
+use App\Http\Resources\SocialLinkResource;
+>>>>>>> main
 use App\Http\Resources\B2BCategoryResource;
 use App\Http\Resources\B2BWishListResource;
 use App\Http\Resources\B2BSellerProductResource;
@@ -243,6 +248,13 @@ class BuyerService
         $clients = ClientLogo::latest()->get();
         $data = ClientLogoResource::collection($clients);
         return $this->success($data, 'Client Brands');
+    }
+
+    public function getSocialLinks()
+    {
+        $links = SocialSetting::latest()->get();
+        $data = SocialLinkResource::collection($links);
+        return $this->success($data, 'Social links');
     }
 
     public function promoBanners()

@@ -284,6 +284,7 @@ Route::middleware('validate.header')
                     Route::post('/enable-2fa', 'enable2FA');
                     Route::get('/get-config', 'getConfigDetails');
                     Route::post('/update-config', 'updateConfigDetails');
+
                     Route::prefix('page-banners')->group(function () {
                         Route::get('/', 'getAllBanners');
                         Route::post('/add', 'addNewBanner');
@@ -291,6 +292,7 @@ Route::middleware('validate.header')
                         Route::get('/view/{id}', 'editPageBanner');
                         Route::delete('/delete/{id}', 'deletePageBanner');
                     });
+
                     Route::prefix('blog')->group(function () {
                         Route::get('/', 'getBlogs');
                         Route::post('/create', 'addBlog');
@@ -305,6 +307,13 @@ Route::middleware('validate.header')
                         Route::get('/details/{id}', 'getClientLogo');
                         Route::post('/update/{id}', 'updateClientLogo');
                         Route::delete('/delete/{id}', 'deleteClientLogo');
+                    });
+                    Route::prefix('social-links')->group(function () {
+                        Route::get('/', 'socialLinks');
+                        Route::post('/add', 'addLink');
+                        Route::get('/details/{id}', 'viewLink');
+                        Route::post('/update/{id}', 'editLink');
+                        Route::delete('/delete/{id}', 'deleteLink');
                     });
                 });
 

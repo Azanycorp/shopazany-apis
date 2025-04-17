@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
 use App\Http\Requests\AdminUserRequest;
 use App\Http\Requests\Admin\BlogRequest;
+use App\Http\Requests\SocialLinkRequest;
 use App\Http\Requests\ShippingAgentRequest;
 use App\Http\Requests\Admin\NewBannerRequest;
 use App\Http\Requests\Admin\ClientLogoRequest;
@@ -212,5 +213,33 @@ class B2BAdminController extends Controller
     public function deleteClientLogo($id)
     {
         return $this->adminService->deleteClientLogo($id);
+
+    }
+    
+    //Social links section
+
+    public function socialLinks()
+    {
+        return $this->adminService->getSocialLinks();
+    }
+
+    public function addLink(SocialLinkRequest $request)
+    {
+        return $this->adminService->addSocialLink($request);
+    }
+
+    public function viewLink($id)
+    {
+        return $this->adminService->viewLink($id);
+    }
+
+    public function editLink(SocialLinkRequest $request, $id)
+    {
+        return $this->adminService->editLink($request, $id);
+    }
+
+    public function deleteLink($id)
+    {
+        return $this->adminService->deleteLink($id);
     }
 }
