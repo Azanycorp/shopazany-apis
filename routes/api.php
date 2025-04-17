@@ -219,21 +219,29 @@ Route::middleware('validate.header')
                 Route::get('/dashboard/analytic/{user_id}', 'dashboardAnalytics');
 
                 // Product Routes
-                Route::prefix('product')
-                    ->group(function (): void {
+                Route::prefix('product')->group(function (): void {
                     Route::post('/create', 'createProduct');
                     Route::post('/edit/{product_id}/{user_id}', 'updateProduct');
-                    Route::delete('/delete/{product_id}/{user_id}', 'deleteProduct');
-                    Route::get('/top-selling/{user_id}', 'topSelling');
                     Route::get('/{user_id}', 'getProduct');
+                    Route::get('/top-selling/{user_id}', 'topSelling');
+                    Route::delete('/delete/{product_id}/{user_id}', 'deleteProduct');
+                    Route::post('/import', 'productImport');
+                    Route::get('/export/{user_id}/{type}', 'export');
+
+                    // Product Attributes
+                    Route::prefix('attribute')->group(function (): void {
+                        Route::post('/create', 'createAttribute');
+                        Route::get('/{user_id}', 'getAttribute')
+                            ->middleware('ensure.user');
+                        Route::get('/{id}/{user_id}', 'getSingleAttribute')
+                            ->middleware('ensure.user');
+                        Route::patch('/edit/{id}/{user_id}', 'updateAttribute')
+                            ->middleware('ensure.user');
+                        Route::delete('/delete/{id}/{user_id}', 'deleteAttribute')
+                            ->middleware('ensure.user');
+                    });
+
                     Route::get('/{product_id}/{user_id}', 'getSingleProduct');
-
-                    Route::post('import', 'productImport');
-                    Route::get('export/{user_id}/{type}', 'export');
-
-                    // Product Attribute
-                    Route::get('/attribute/{user_id}', 'getProductAttribute');
-                    Route::post('/attribute', 'addAttribute');
                 });
 
                 // Orders Routes

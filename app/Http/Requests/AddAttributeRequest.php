@@ -23,9 +23,10 @@ class AddAttributeRequest extends FormRequest
     {
         return [
             'user_id' => ['required', 'integer', 'exists:users,id'],
-            'name' => ['required', 'string', 'max:100', 'unique:product_attributes,name'],
-            'value' => ['required', 'array'],
-            'use_for_variation' => ['required', 'boolean'],
+            'attributes' => ['required', 'array'],
+            'attributes.*.name' => ['required', 'string', 'max:100', 'unique:product_attributes,name'],
+            'attributes.*.values' => ['required', 'array'],
+            'attributes.*.use_for_variation' => ['required', 'boolean'],
         ];
     }
 }

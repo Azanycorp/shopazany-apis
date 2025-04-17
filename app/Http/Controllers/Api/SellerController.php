@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\AddAttributeRequest;
 use App\Services\User\SellerService;
 use App\Http\Requests\ProductRequest;
+use App\Http\Requests\AddAttributeRequest;
 use App\Http\Requests\BusinessInfoRequest;
 use App\Http\Requests\ProductImportRequest;
 
@@ -96,9 +96,29 @@ class SellerController extends Controller
         return $this->service->topSelling($userId);
     }
 
-    public function addAttribute(AddAttributeRequest $request)
+    public function createAttribute(AddAttributeRequest $request)
     {
-        return $this->service->addAttribute($request);
+        return $this->service->createAttribute($request);
+    }
+
+    public function getAttribute($userId)
+    {
+        return $this->service->getAttribute($userId);
+    }
+
+    public function getSingleAttribute($id, $userId)
+    {
+        return $this->service->getSingleAttribute($id, $userId);
+    }
+
+    public function updateAttribute(Request $request, $id, $userId)
+    {
+        return $this->service->updateAttribute($request, $id, $userId);
+    }
+
+    public function deleteAttribute($id, $userId)
+    {
+        return $this->service->deleteAttribute($id, $userId);
     }
 }
 

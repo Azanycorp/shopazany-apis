@@ -636,12 +636,12 @@ class SellerService extends Controller
         return $this->success($data, "Top Selling Products");
     }
 
-    public function addAttribute($request)
+    public function createAttribute($request)
     {
         $user = User::with('productAttributes')
             ->findOrFail($request->user_id);
 
-        foreach ($request->attributes as $attribute) {
+        foreach ($request['attributes'] as $attribute) {
             $user->productAttributes()->create([
                 'name' => $attribute['name'],
                 'value' => $attribute['values'],
@@ -650,6 +650,92 @@ class SellerService extends Controller
         }
 
         return $this->success(null, "Attribute created successfully", 201);
+    }
+
+    public function getAttribute($userId)
+    {
+        $user = User::with(['productAttributes' => function ($query) {
+                $query->select('id', 'user_id', 'name', 'value', 'use_for_variation');
+            }])
+            ->find($userId);
+
+        if (!$user) {
+            return $this->error(null, "User not found", 404);
+        }
+
+        $data = $user->productAttributes;
+
+        return $this->success($data, "All Attributes");
+    }
+
+    public function getSingleAttribute($attributeId, $userId)
+    {
+        $user = User::with(['productAttributes' => function ($query) {
+                $query->select('id', 'user_id', 'name', 'value', 'use_for_variation');
+            }])
+            ->find($userId);
+
+        if (!$user) {
+            return $this->error(null, "User not found", 404);
+        }
+
+        $attribute = $user->productAttributes()
+            ->select('id', 'user_id', 'name', 'value', 'use_for_variation')
+            ->find($attributeId);
+
+        if (!$attribute) {
+            return $this->error(null, "Attribute not found", 404);
+        }
+
+        return $this->success($attribute, "Attribute retrieved successfully");
+    }
+
+    public function updateAttribute($request, $attributeId, $userId)
+    {
+        $user = User::with(['productAttributes' => function ($query) {
+                $query->select('id', 'user_id', 'name', 'value', 'use_for_variation');
+            }])
+            ->find($userId);
+
+        if (!$user) {
+            return $this->error(null, "User not found", 404);
+        }
+
+        $attribute = $user->productAttributes()
+            ->select('id', 'user_id', 'name', 'value', 'use_for_variation')
+            ->find($attributeId);
+
+        if (!$attribute) {
+            return $this->error(null, "Attribute not found", 404);
+        }
+
+        $attribute->update([
+            'name' => $request->name,
+            'value' => $request->values,
+            'use_for_variation' => $request->use_for_variation,
+        ]);
+
+        return $this->success(null, "Attribute updated successfully");
+    }
+
+    public function deleteAttribute($attributeId, $userId)
+    {
+        $user = User::with('productAttributes')
+            ->find($userId);
+
+        if (!$user) {
+            return $this->error(null, "User not found", 404);
+        }
+
+        $attribute = $user->productAttributes()->find($attributeId);
+
+        if (!$attribute) {
+            return $this->error(null, "Attribute not found", 404);
+        }
+
+        $attribute->delete();
+
+        return $this->success(null, "Attribute deleted successfully");
     }
 
 }
