@@ -15,6 +15,7 @@ use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
 use App\Models\PickupStation;
 use App\Models\ShippingAgent;
+use App\Models\SocialSetting;
 use App\Mail\B2BNewAdminEmail;
 use App\Models\CollationCenter;
 use Illuminate\Support\Facades\DB;
@@ -22,6 +23,7 @@ use App\Http\Resources\HubResource;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Contracts\Pipeline\Hub;
+use App\Http\Resources\SocialLinkResource;
 use App\Http\Resources\ShippingAgentResource;
 use App\Http\Resources\CollationCentreResource;
 
@@ -394,4 +396,5 @@ class SuperAdminService
         $agent->delete();
         return $this->success(null, 'Details deleted successfully');
     }
+
 }
