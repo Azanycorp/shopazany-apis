@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
 use App\Http\Requests\AdminUserRequest;
 use App\Http\Requests\Admin\BlogRequest;
+use App\Http\Requests\SocialLinkRequest;
 use App\Http\Requests\ShippingAgentRequest;
 use App\Http\Requests\Admin\NewBannerRequest;
 use App\Http\Requests\Admin\UpdateBlogRequest;
@@ -112,49 +113,6 @@ class B2BAdminController extends Controller
         return $this->adminService->getPageBanner($id);
     }
 
-
-    //Withdrawal Requests
-    public function widthrawalRequests()
-    {
-        return $this->adminService->widthrawalRequests();
-    }
-
-    public function viewWidthrawalRequest($id)
-    {
-        return $this->adminService->viewWidthrawalRequest($id);
-    }
-
-    public function approveWidthrawalRequest($id)
-    {
-        return $this->adminService->approveWidthrawalRequest($id);
-    }
-
-    public function cancelWidthrawalRequest($id)
-    {
-        return $this->adminService->cancelWithdrawalRequest($id);
-    }
-
-    //Withdrawal Method Requests
-    public function widthrawalMethods()
-    {
-        return $this->adminService->widthrawalMethods();
-    }
-
-    public function viewWidthrawalMethod($id)
-    {
-        return $this->adminService->viewWidthrawalMethod($id);
-    }
-
-    public function approveWidthrawalMethod($id)
-    {
-        return $this->adminService->approveWidthrawalMethod($id);
-    }
-
-    public function rejectWidthrawalMethod(Request $request, $id)
-    {
-        return $this->adminService->rejectWidthrawalMethod($request, $id);
-    }
-
     //Seller Products Approval Request
     public function allProducts()
     {
@@ -227,5 +185,32 @@ class B2BAdminController extends Controller
     public function deleteBlog($id)
     {
         return $this->adminService->deleteBlog($id);
+    }
+
+
+    //Social links section
+    public function socialLinks()
+    {
+        return $this->adminService->getSocialLinks();
+    }
+
+    public function addLink(SocialLinkRequest $request)
+    {
+        return $this->adminService->addSocialLink($request);
+    }
+
+    public function viewLink($id)
+    {
+        return $this->adminService->viewLink($id);
+    }
+
+    public function editLink(SocialLinkRequest $request, $id)
+    {
+        return $this->adminService->editLink($request, $id);
+    }
+
+    public function deleteLink($id)
+    {
+        return $this->adminService->deleteLink($id);
     }
 }
