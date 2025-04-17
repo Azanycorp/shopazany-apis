@@ -15,6 +15,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Spatie\ResponseCache\Middlewares\CacheResponse;
 use App\Http\Middleware\BlockUserAfterFailedAttempts;
 use App\Http\Middleware\CheckUserCountry;
+use App\Http\Middleware\EnsureUserIsOwner;
 use App\Http\Middleware\ValidateHeader;
 use Spatie\ResponseCache\Middlewares\DoNotCacheResponse;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -48,6 +49,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'doNotCacheResponse' => DoNotCacheResponse::class,
             'auth.check' => AuthCheck::class,
             'validate.header' => ValidateHeader::class,
+            'ensure.user' => EnsureUserIsOwner::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
@@ -65,7 +67,11 @@ return Application::configure(basePath: dirname(__DIR__))
             if ($request->json()) {
                 return response()->json(['message' => 'Resource was not Found'], 404);
             }
-
             throw $e;
         });
+
+        $exceptions->shouldRenderJsonWhen(function ($request) {
+            return $request->is('api/*') || $request->expectsJson();
+        });
+
     })->create();
