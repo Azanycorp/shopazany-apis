@@ -20,13 +20,14 @@ use App\Http\Resources\SellerProductResource;
 use App\Imports\ProductImport;
 use App\Mail\OrderStatusUpdated;
 use App\Trait\General;
+use App\Trait\Product as TraitProduct;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 
 class SellerService extends Controller
 {
-    use HttpResponse, General;
+    use HttpResponse, General, TraitProduct;
 
     public function businessInfo($request)
     {
@@ -73,6 +74,109 @@ class SellerService extends Controller
         }
     }
 
+    // public function createProduct($request)
+    // {
+    //     $currentUser = userAuth();
+
+    //     if ($currentUser->id != $request->user_id || $currentUser->type != UserType::SELLER) {
+    //         return $this->error(null, "Unauthorized action.", 401);
+    //     }
+
+    //     $user = User::with('products')->find($request->user_id);
+
+    //     if (!$user) {
+    //         return $this->error(null, "User not found", 404);
+    //     }
+
+    //     $slug = Str::slug($request->name);
+    //     if (Product::where('slug', $slug)->exists()) {
+    //         $slug = $slug . '-' . uniqid();
+    //     }
+
+    //     $price = $request->product_price;
+    //     if($request->discount_price > 0){
+    //         $price = (int)$request->product_price - (int)$request->discount_price;
+    //     }
+
+    //     $parts = explode('@', $user->email);
+    //     $name = $parts[0];
+
+    //     $folderPath = folderNames('product', $name, 'front_image');
+
+    //     if ($request->hasFile('front_image')) {
+    //         $path = $request->file('front_image')->store($folderPath->frontImage, 's3');
+    //         $url = Storage::disk('s3')->url($path);
+    //     }
+
+    //     DB::beginTransaction();
+    //     try {
+
+    //         $product = $user->products()->create([
+    //             'name' => $request->name,
+    //             'slug' => $slug,
+    //             'description' => $request->description,
+    //             'category_id' => $request->category_id,
+    //             'sub_category_id' => $request->sub_category_id,
+    //             'brand_id' => $request->brand_id,
+    //             'color_id' => $request->color_id,
+    //             'unit_id' => $request->unit_id,
+    //             'size_id' => $request->size_id,
+    //             'product_sku' => $request->product_sku,
+    //             'product_price' => $request->product_price,
+    //             'price' => $price,
+    //             'discount_type' => $request->discount_type,
+    //             'discount_value' => $request->discount_value,
+    //             'current_stock_quantity' => $request->current_stock_quantity,
+    //             'minimum_order_quantity' => $request->minimum_order_quantity,
+    //             'image' => $url,
+    //             'added_by' => $user->type,
+    //             'country_id' => $user->country ?? 160,
+    //             'default_currency' => $user->default_currency,
+    //         ]);
+
+    //         if ($request->hasFile('images')) {
+    //             foreach ($request->file('images') as $image) {
+    //                 $path = $image->store($folderPath->folder, 's3');
+    //                 $url = Storage::disk('s3')->url($path);
+
+    //                 $product->productimages()->create([
+    //                     'image' => $url,
+    //                 ]);
+    //             }
+    //         }
+
+    //         $variations = collect($request->variation)->map(function ($item) {
+    //             return json_decode($item, true);
+    //         });
+
+    //         $variationImages = $request->file('variation_image', []);
+
+    //         foreach ($variations as $index => $variation) {
+    //             $imageUrl = null;
+
+    //             if (isset($variationImages[$index])) {
+    //                 $path = $variationImages[$index]->store('product/variations', 's3');
+    //                 $imageUrl = Storage::disk('s3')->url($path);
+    //             }
+
+    //             $product->productVariations()->create([
+    //                 'variation' => $variation['variation'],
+    //                 'sku' => $variation['sku'],
+    //                 'price' => $variation['price'],
+    //                 'stock' => $variation['stock'],
+    //                 'image' => $imageUrl
+    //             ]);
+    //         }
+
+    //         DB::commit();
+
+    //         return $this->success(null, "Added successfully");
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+    //         return $this->error(null, "Failed to create product: " . $e->getMessage(), 500);
+    //     }
+    // }
+
     public function createProduct($request)
     {
         $currentUser = userAuth();
@@ -82,83 +186,39 @@ class SellerService extends Controller
         }
 
         $user = User::with('products')->find($request->user_id);
-
         if (!$user) {
             return $this->error(null, "User not found", 404);
         }
 
         $slug = Str::slug($request->name);
         if (Product::where('slug', $slug)->exists()) {
-            $slug = $slug . '-' . uniqid();
+            $slug .= '-' . uniqid();
         }
 
-        $price = $request->product_price;
-        if($request->discount_price > 0){
-            $price = (int)$request->product_price - (int)$request->discount_price;
-        }
-
-        $folder = null;
-        $frontImage = null;
         $parts = explode('@', $user->email);
         $name = $parts[0];
+        $folderPath = folderNames('product', $name, 'front_image');
 
-        if(App::environment('production')){
-            $folder = "/prod/product/{$name}";
-            $frontImage = "/prod/product/{$name}/front_image";
-        } elseif(App::environment(['staging', 'local'])) {
-            $folder = "/stag/product/{$name}";
-            $frontImage = "/stag/product/{$name}/front_image";
+        DB::beginTransaction();
+        try {
+            $url = $this->uploadFrontImage($request, $folderPath);
+
+            $product = $this->createProductRecord($request, $user, $slug, $url);
+
+            $this->uploadAdditionalImages($request, $folderPath, $product);
+
+            $this->createProductVariations($request, $product);
+
+            DB::commit();
+            return $this->success(null, "Added successfully");
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return $this->error(null, "Failed to create product: " . $e->getMessage(), 500);
         }
-
-        if ($request->hasFile('front_image')) {
-            $path = $request->file('front_image')->store($frontImage, 's3');
-            $url = Storage::disk('s3')->url($path);
-        }
-
-        $product = $user->products()->create([
-            'name' => $request->name,
-            'slug' => $slug,
-            'description' => $request->description,
-            'category_id' => $request->category_id,
-            'sub_category_id' => $request->sub_category_id,
-            'brand_id' => $request->brand_id,
-            'color_id' => $request->color_id,
-            'unit_id' => $request->unit_id,
-            'size_id' => $request->size_id,
-            'product_sku' => $request->product_sku,
-            'product_price' => $request->product_price,
-            'discount_price' => $request->discount_price,
-            'price' => $price,
-            'current_stock_quantity' => $request->current_stock_quantity,
-            'minimum_order_quantity' => $request->minimum_order_quantity,
-            'image' => $url,
-            'added_by' => $user->type,
-            'country_id' => $user->country ?? 160,
-            'default_currency' => $user->default_currency,
-        ]);
-
-        if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $image) {
-                $path = $image->store($folder, 's3');
-                $url = Storage::disk('s3')->url($path);
-
-                $product->productimages()->create([
-                    'image' => $url,
-                ]);
-            }
-        }
-
-        return $this->success(null, "Added successfully");
     }
 
     public function updateProduct($request, $id, $userId)
     {
-        $currentUserId = Auth::id();
-
-        if ($currentUserId != $userId) {
-            return $this->error(null, "Unauthorized action.", 401);
-        }
-
         $user = User::find($userId);
 
         if (!$user) {
@@ -216,12 +276,6 @@ class SellerService extends Controller
 
     public function getProduct($userId)
     {
-        $currentUserId = Auth::id();
-
-        if ($currentUserId != $userId) {
-            return $this->error(null, "Unauthorized action.", 401);
-        }
-
         $user = User::with(['products'])->find($userId);
 
         if (!$user) {
@@ -279,12 +333,6 @@ class SellerService extends Controller
 
     public function getSingleProduct($productId, $userId)
     {
-        $currentUserId = Auth::id();
-
-        if ($currentUserId != $userId) {
-            return $this->error(null, "Unauthorized action.", 401);
-        }
-
         $user = User::find($userId);
 
         if (!$user) {
@@ -316,12 +364,6 @@ class SellerService extends Controller
 
     public function deleteProduct($id, $userId)
     {
-        $currentUserId = Auth::id();
-
-        if ($currentUserId != $userId) {
-            return $this->error(null, "Unauthorized action.", 401);
-        }
-
         $product = Product::find($id);
 
         if(!$product){
@@ -337,12 +379,7 @@ class SellerService extends Controller
 
     public function getAllOrders($id)
     {
-        $currentUserId = Auth::id();
         $status = request()->query('status');
-
-        if ($currentUserId != $id) {
-            return $this->error(null, "Unauthorized action.", 401);
-        }
 
         $validStatuses = [
             OrderStatus::PENDING,
@@ -604,12 +641,6 @@ class SellerService extends Controller
 
     public function topSelling($userId)
     {
-        $currentUserId = Auth::id();
-
-        if ($currentUserId != $userId) {
-            return $this->error(null, "Unauthorized action.", 401);
-        }
-
         $topSellingProducts = DB::table('order_items')
             ->join('products', 'order_items.product_id', '=', 'products.id')
             ->where('products.user_id', $userId)
