@@ -19,6 +19,7 @@ use App\Enum\AdminStatus;
 use App\Enum\OrderStatus;
 use App\Models\B2bCompany;
 use App\Models\B2BProduct;
+use App\Models\ClientLogo;
 use App\Models\HomeBanner;
 use App\Models\PageBanner;
 use App\Models\UserWallet;
@@ -28,6 +29,7 @@ use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
 use App\Models\Configuration;
 use App\Models\ShippingAgent;
+use App\Models\SocialSetting;
 use App\Mail\B2BNewAdminEmail;
 use App\Models\CollationCenter;
 use App\Models\SubscriptionPlan;
@@ -42,6 +44,8 @@ use Illuminate\Support\Facades\Storage;
 use App\Http\Resources\AdminUserResource;
 use App\Http\Resources\B2BSellerResource;
 use App\Http\Resources\B2BProductResource;
+use App\Http\Resources\ClientLogoResource;
+use App\Http\Resources\SocialLinkResource;
 use App\Repositories\B2BProductRepository;
 use App\Http\Resources\ShippingAgentResource;
 use App\Http\Resources\CollationCentreResource;
@@ -917,5 +921,110 @@ class AdminService
         $blog = Blog::where('id', $id)->where('type', BannerType::B2B)->firstOrFail();
         $blog->delete();
         return $this->success('Blog deleted successfully.');
+    }
+
+
+    //Client Logo Section
+    public function allClientLogos()
+    {
+        $clients = ClientLogo::latest()->get();
+
+        $data = ClientLogoResource::collection($clients);
+
+        return $this->success($data, 'Added client Logos');
+    }
+
+    public function addClientLogo($request)
+    {
+        $url =  uploadImage($request, 'logo', 'clients');
+
+        $plan = ClientLogo::create([
+            'name' => $request->name,
+            'logo' => $url,
+        ]);
+        return $this->success($plan, 'Client Logo added successfully', 201);
+    }
+
+    public function getClientLogo($id)
+    {
+        $client = ClientLogo::findOrFail($id);
+
+        $data = new ClientLogoResource($client);
+        return $this->success($data, 'Client details');
+    }
+
+    public function updateClientLogo($request, $id)
+    {
+        $client = ClientLogo::where('id', $id)->firstOrFail();
+
+        $url = $request->file('logo') ? uploadImage($request, 'logo', 'clients') : $client->logo;
+
+        $client->update([
+            'name' => $request->name ?? $client->name,
+            'logo' => $url,
+        ]);
+
+        return $this->success('Details updated successfully');
+    }
+
+    public function deleteClientLogo($id)
+    {
+        $client = ClientLogo::where('id', $id)->firstOrFail();
+
+        $client->delete();
+
+        return $this->success('Blog deleted successfully.');
+    //Social Links
+    }
+    
+    public function getSocialLinks()
+    {
+        $links = SocialSetting::latest()->get();
+
+        $data = SocialLinkResource::collection($links);
+
+        return $this->success($data, 'Social links');
+    }
+
+    public function addSocialLink($request)
+    {
+        $link = SocialSetting::create([
+            'name' => $request->name,
+            'icon' => $request->icon,
+            'url' => $request->url,
+        ]);
+
+        $data = new SocialLinkResource($link);
+        return $this->success($data, 'link added successfully', 201);
+    }
+
+    public function viewLink($id)
+    {
+        $link = SocialSetting::findOrFail($id);
+
+        $data = new SocialLinkResource($link);
+
+        return $this->success($data, 'link details');
+    }
+
+    public function editLink($request, $id)
+    {
+        $link = SocialSetting::findOrFail($id);
+
+        $link->update([
+            'name' => $request->name ?? $link->name,
+            'icon' => $request->icon ?? $link->icon,
+            'url' => $request->url ?? $link->url,
+        ]);
+
+        return $this->success(null, 'Details updated successfully');
+    }
+
+    public function deleteLink($id)
+    {
+        $link = SocialSetting::findOrFail($id);
+
+        $link->delete();
+        return $this->success(null, 'Link deleted successfully.');
     }
 }

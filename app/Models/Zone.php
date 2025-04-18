@@ -13,7 +13,8 @@ class Zone extends Model
 
     protected $fillable = ['name', 'status'];
 
-    public function carrier_range_prices(){
+    public function carrierRangePrices()
+    {
     	return $this->hasMany(CarrierRangePrice::class);
     }
 }

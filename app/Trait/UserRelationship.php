@@ -28,6 +28,7 @@ use App\Models\BusinessInformation;
 use App\Models\UserShippingAddress;
 use App\Models\UserBusinessInformation;
 use App\Models\B2BSellerShippingAddress;
+use App\Models\ProductAttribute;
 use App\Models\UserWallet;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -181,5 +182,10 @@ trait UserRelationship
     public function b2bCompany(): HasOne
     {
         return $this->hasOne(B2bCompany::class, 'user_id');
+    }
+
+    public function productAttributes(): HasMany
+    {
+        return $this->hasMany(ProductAttribute::class, 'user_id');
     }
 }

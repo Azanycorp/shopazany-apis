@@ -32,6 +32,8 @@ class Product extends Model
         'product_price',
         'discount_price',
         'price',
+        'discount_type',
+        'discount_value',
         'usd_price',
         'default_currency',
         'current_stock_quantity',
@@ -119,6 +121,12 @@ class Product extends Model
         return $this->hasMany(ProductReview::class, 'product_id');
     }
 
+    public function productVariations(): HasMany
+    {
+        return $this->hasMany(ProductVariation::class, 'product_id');
+    }
+
+    // Attributes
     protected function isInWishlist(): Attribute
     {
         return Attribute::make(
@@ -133,6 +141,22 @@ class Product extends Model
                 ])->exists();
             }
         );
+    }
+
+    public function discountedPrice(): Attribute
+    {
+        return Attribute::get(function () {
+            $discountType = $this->discount_type;
+            $discountValue = $this->discount_value;
+
+            if ($discountType === 'percentage') {
+                return $this->product_price - ($this->product_price * ($discountValue / 100));
+            } elseif ($discountType === 'flat') {
+                return $this->product_price - $discountValue;
+            }
+
+            return $this->product_price;
+        });
     }
 
     // Scopes
