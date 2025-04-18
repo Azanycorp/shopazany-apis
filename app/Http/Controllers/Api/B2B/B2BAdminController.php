@@ -12,6 +12,7 @@ use App\Http\Requests\Admin\BlogRequest;
 use App\Http\Requests\SocialLinkRequest;
 use App\Http\Requests\ShippingAgentRequest;
 use App\Http\Requests\Admin\NewBannerRequest;
+use App\Http\Requests\Admin\ClientLogoRequest;
 use App\Http\Requests\Admin\UpdateBlogRequest;
 use App\Http\Requests\ChangeAdminPasswordRequest;
 use App\Http\Requests\Admin\SubscriptionPlanRequest;
@@ -113,6 +114,7 @@ class B2BAdminController extends Controller
         return $this->adminService->getPageBanner($id);
     }
 
+
     //Seller Products Approval Request
     public function allProducts()
     {
@@ -187,8 +189,35 @@ class B2BAdminController extends Controller
         return $this->adminService->deleteBlog($id);
     }
 
+    //Client Logoff Section
+    public function allClientLogos()
+    {
+        return $this->adminService->allClientLogos();
+    }
 
+    public function addClientLogo(ClientLogoRequest $request)
+    {
+        return $this->adminService->addClientLogo($request);
+    }
+
+    public function getClientLogo($id)
+    {
+        return $this->adminService->getClientLogo($id);
+    }
+
+    public function updateClientLogo(Request $request, $id)
+    {
+        return $this->adminService->updateClientLogo($request, $id);
+    }
+
+    public function deleteClientLogo($id)
+    {
+        return $this->adminService->deleteClientLogo($id);
+
+    }
+    
     //Social links section
+
     public function socialLinks()
     {
         return $this->adminService->getSocialLinks();
