@@ -50,6 +50,7 @@ class SellerProductResource extends JsonResource
                     ];
                 })->toArray();
             }),
+            'variations' => $this->productVariations,
             'currency' => $this->shopCountry?->currency,
             'country_id' => (int)$this->country_id,
             'status' => (string)$this->status
