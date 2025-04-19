@@ -66,6 +66,7 @@ class SingleProductResource extends JsonResource
                     'date' => $review->created_at,
                 ];
             })->toArray() : [],
+            'variations' => $this->productVariations,
             'total_reviews' => $this->product_reviews_count,
             'average_rating' => round($average_rating, 1),
             'item_sold' => $item_sold,
