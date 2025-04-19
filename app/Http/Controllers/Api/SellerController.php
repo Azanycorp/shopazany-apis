@@ -113,6 +113,12 @@ class SellerController extends Controller
 
     public function updateAttribute(Request $request, $id, $userId)
     {
+        $request->validate([
+            'name' => ['required', 'string'],
+            'values' => ['required', 'array'],
+            'use_for_variation' => ['required', 'boolean']
+        ]);
+
         return $this->service->updateAttribute($request, $id, $userId);
     }
 

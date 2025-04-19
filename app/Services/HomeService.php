@@ -76,6 +76,7 @@ class HomeService
                 'size',
                 'orders',
                 'productReviews',
+                'productVariations',
             ])
             ->where('status', ProductStatus::ACTIVE);
 
@@ -115,6 +116,7 @@ class HomeService
                 'size',
                 'orders',
                 'productReviews',
+                'productVariations',
             ])
             ->where('is_featured', true)
             ->where('status', ProductStatus::ACTIVE);
@@ -144,6 +146,7 @@ class HomeService
                 'size',
                 'orders',
                 'productReviews',
+                'productVariations',
             ])
             ->where('status', ProductStatus::ACTIVE);
 
@@ -172,6 +175,7 @@ class HomeService
                 'size',
                 'orders',
                 'productReviews',
+                'productVariations',
             ]);
 
         if ($countryId) {
@@ -202,6 +206,7 @@ class HomeService
             'productReviews.user',
             'productimages',
             'shopCountry',
+            'productVariations',
             'user.userCountry' => function($query): void {
                 $query->with('shopCountry:country_id,flag');
             }
