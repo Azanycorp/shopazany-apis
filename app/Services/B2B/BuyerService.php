@@ -18,6 +18,7 @@ use App\Enum\OrderStatus;
 use App\Models\B2bBanner;
 use App\Models\B2bCompany;
 use App\Models\B2BProduct;
+use App\Models\ClientLogo;
 use App\Models\PageBanner;
 use App\Models\RfqMessage;
 use App\Enum\ProductStatus;
@@ -26,6 +27,7 @@ use App\Models\SliderImage;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
 use App\Models\B2bProdctLike;
+use App\Models\SocialSetting;
 use App\Models\B2bProdctReview;
 use App\Models\B2BRequestRefund;
 use App\Enum\RefundRequestStatus;
@@ -43,6 +45,11 @@ use App\Http\Resources\B2BQuoteResource;
 use App\Http\Resources\CustomerResource;
 use App\Http\Resources\B2BBannerResource;
 use App\Http\Resources\B2BProductResource;
+<<<<<<< HEAD
+use App\Http\Resources\ClientLogoResource;
+=======
+use App\Http\Resources\SocialLinkResource;
+>>>>>>> main
 use App\Http\Resources\B2BCategoryResource;
 use App\Http\Resources\B2BWishListResource;
 use App\Http\Resources\B2BSellerProductResource;
@@ -236,6 +243,19 @@ class BuyerService
 
         return $this->success($data, 'banners');
     }
+    public function getClientLogos()
+    {
+        $clients = ClientLogo::latest()->get();
+        $data = ClientLogoResource::collection($clients);
+        return $this->success($data, 'Client Brands');
+    }
+
+    public function getSocialLinks()
+    {
+        $links = SocialSetting::latest()->get();
+        $data = SocialLinkResource::collection($links);
+        return $this->success($data, 'Social links');
+    }
 
     public function promoBanners()
     {
@@ -416,7 +436,7 @@ class BuyerService
             'b2bProductImages',
             'b2bProductReview.user' => function ($query) {
                 $query->select('id', 'first_name', 'last_name')
-                      ->where('type', UserType::B2B_BUYER);
+                    ->where('type', UserType::B2B_BUYER);
             }
         ])
             ->where('slug', $slug)
@@ -910,7 +930,8 @@ class BuyerService
 
         if (!empty($request->email) && User::where('email', $request->email)
             ->where('id', '!=', $user->id)
-            ->exists()) {
+            ->exists()
+        ) {
             return $this->error(null, "Email already exists.");
         }
 
