@@ -176,7 +176,7 @@ Route::middleware('validate.header')
                 Route::post('/add', 'addToCart');
                 Route::delete('/{user_id}/clear', 'clearCart');
                 Route::delete('/{user_id}/remove/{cart_id}', 'removeCartItem');
-                Route::patch('/update-cart', [CartController::class, 'updateCart']);
+                Route::patch('/update-cart', 'updateCart');
             });
 
             Route::middleware('check.user.country')

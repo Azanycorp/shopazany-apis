@@ -45,16 +45,12 @@ use App\Http\Resources\B2BQuoteResource;
 use App\Http\Resources\CustomerResource;
 use App\Http\Resources\B2BBannerResource;
 use App\Http\Resources\B2BProductResource;
-<<<<<<< HEAD
-use App\Http\Resources\ClientLogoResource;
-=======
 use App\Http\Resources\SocialLinkResource;
->>>>>>> main
 use App\Http\Resources\B2BCategoryResource;
 use App\Http\Resources\B2BWishListResource;
-use App\Http\Resources\B2BSellerProductResource;
 use App\Http\Resources\B2BBestSellingProductResource;
 use App\Http\Resources\B2BBuyerShippingAddressResource;
+use App\Http\Resources\ClientLogoResource;
 
 class BuyerService
 {
