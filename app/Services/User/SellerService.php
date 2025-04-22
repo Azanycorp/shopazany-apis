@@ -333,7 +333,8 @@ class SellerService extends Controller
             })
             ->with([
                 'user.userShippingAddress',
-                'products.shopCountry'
+                'products.shopCountry',
+                'products.productVariations.product',
             ])
             ->where('id', $id)
             ->first();
@@ -429,7 +430,7 @@ class SellerService extends Controller
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $seller = auth()->user();
+        $seller = userAuth();
 
         try {
             Excel::import(new ProductImport($seller), $request->file('file'));

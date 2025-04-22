@@ -30,6 +30,7 @@ class CustomerOrderDetailResource extends JsonResource
             );
 
             $totalConvertedAmount += $convertedSubTotal;
+            $selectedVariation = $product->productVariations->firstWhere('id', $product->pivot->variation_id);
 
             return [
                 'id' => (int) $product->id,
@@ -41,6 +42,18 @@ class CustomerOrderDetailResource extends JsonResource
                 'original_currency' => (string) $productCurrency,
                 'image' => (string) $product->image,
                 'status' => (string) $product->pivot->status,
+                'variation' => $selectedVariation ? [
+                    'id' => $selectedVariation->id,
+                    'variation' => $selectedVariation->variation,
+                    'sku' => $selectedVariation->sku,
+                    'price' => (float) currencyConvert(
+                        optional(value: $selectedVariation->product->shopCountry)->currency,
+                        $selectedVariation->price,
+                        $userCurrency
+                    ),
+                    'image' => $selectedVariation->image,
+                    'stock' => (int) $selectedVariation->stock,
+                ] : null,
             ];
         })->toArray();
 

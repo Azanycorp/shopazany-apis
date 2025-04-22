@@ -13,12 +13,18 @@ class Cart extends Model
         'user_id',
         'product_id',
         'session_id',
-        'quantity'
+        'quantity',
+        'variation_id',
     ];
 
     public function product()
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function variation()
+    {
+        return $this->belongsTo(ProductVariation::class, 'variation_id');
     }
 }
 
