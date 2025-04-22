@@ -14,11 +14,16 @@ class CartResource extends JsonResource
         $pricePerItem = $this->calculatePrice();
         $totalPrice = $pricePerItem * $this->quantity;
 
-        $totalPrice = currencyConvert(optional($this->product->shopCountry)->currency, $totalPrice, $defaultCurrency);
+        $currency = $this->variation
+            ? optional($this->variation->product->shopCountry)->currency
+            : optional($this->product->shopCountry)->currency;
+
+        $totalPrice = currencyConvert($currency, $totalPrice, $defaultCurrency);
 
         return [
             'id' => (int) $this->id,
             'quantity' => (int) $this->quantity,
+            'variation' => $this->transformVariation($defaultCurrency),
             'product' => $this->transformProduct($defaultCurrency),
             'seller' => $this->transformSeller(),
             'total_price' => $totalPrice,
@@ -27,7 +32,7 @@ class CartResource extends JsonResource
 
     private function calculatePrice()
     {
-        return optional($this->product)->price;
+        return $this->variation ? $this->variation->price : optional($this->product)->price;
     }
 
     private function transformProduct($defaultCurrency): array
@@ -37,22 +42,39 @@ class CartResource extends JsonResource
             'name' => optional($this->product)->name,
             'slug' => optional($this->product)->slug,
             'description' => optional($this->product)->description,
-            'category' => [
-                'category_id' => optional($this->product)->category_id,
-                'category_name' => optional($this->product->category)->name,
-                'sub_category_id' => optional($this->product)->sub_category_id,
-                'sub_category_name' => optional($this->product->subCategory)->name,
-            ],
+            // 'category' => [
+            //     'category_id' => optional($this->product)->category_id,
+            //     'category_name' => optional($this->product->category)->name,
+            //     'sub_category_id' => optional($this->product)->sub_category_id,
+            //     'sub_category_name' => optional($this->product->subCategory)->name,
+            // ],
             'product_price' => $this->convertProductPrice($defaultCurrency),
             'discount_price' => $this->convertDiscountPrice($defaultCurrency),
             'price' => $this->convertPrice($defaultCurrency),
             'image' => optional($this->product)->image,
-            'color' => optional($this->product->color)->name,
-            'size' => optional($this->product->size)->name,
-            'unit' => optional($this->product->unit)->name,
             'brand' => optional($this->product->brand)->name,
             'country_id' => (int)optional($this->product)->country_id,
             'currency' => optional($this->product->shopCountry)->currency,
+        ];
+    }
+
+    private function transformVariation($defaultCurrency): ?array
+    {
+        if (!$this->variation) {
+            return null;
+        }
+
+        return [
+            'id' => $this->variation->id,
+            'variation' => $this->variation->variation,
+            'sku' => $this->variation->sku,
+            'price' => (float) currencyConvert(
+                optional($this->variation->product->shopCountry)->currency,
+                $this->variation->price,
+                $defaultCurrency
+            ),
+            'image' => $this->variation->image,
+            'stock' => (int) $this->variation->stock,
         ];
     }
 
@@ -77,7 +99,7 @@ class CartResource extends JsonResource
     {
         return (float) currencyConvert(
             optional($this->product->shopCountry)->currency,
-            optional($this->product)->price,
+            $this->product->discounted_price,
             $defaultCurrency
         );
     }
@@ -86,7 +108,7 @@ class CartResource extends JsonResource
     {
         return (float) currencyConvert(
             optional($this->product->shopCountry)->currency,
-            optional($this->product)->discount_price,
+            optional($this->product)->discount_value,
             $defaultCurrency
         );
     }

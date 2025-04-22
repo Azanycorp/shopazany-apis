@@ -20,7 +20,7 @@ class BlockUserAfterFailedAttempts
     public function handle(Request $request, Closure $next): Response
     {
         $email = $request->input('email');
-        $key = 'failed_attempts_' . $email;
+        $key = "failed_attempts_{$email}";
 
         $user = User::where('email', $email)->first();
         if ($user && $user->status === UserStatus::BLOCKED) {
