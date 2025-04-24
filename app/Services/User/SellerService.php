@@ -131,14 +131,18 @@ class SellerService extends Controller
         if (Product::where('slug', $slug)->exists()) {
             $slug = $slug . '-' . uniqid();
         }
-        $price = $request->product_price;
-        if($request->discount_price > 0){
-            $price = (int)$request->product_price - (int)$request->discount_price;
-        }
+
+        $price = $this->calculateFinalPrice(
+            $request->product_price,
+            $request->discount_type,
+            $request->discount_value
+        );
+
         $folder = null;
         $frontImage = null;
         $parts = explode('@', $user->email);
         $name = $parts[0];
+
         if(App::environment('production')){
             $folder = "/prod/product/{$name}";
             $frontImage = "/prod/product/{$name}/front_image";
@@ -146,6 +150,7 @@ class SellerService extends Controller
             $folder = "/stag/product/{$name}";
             $frontImage = "/stag/product/{$name}/front_image";
         }
+
         $image = uploadSingleProductImage($request, 'front_image', $frontImage, $product);
         $product->update([
             'name' => $request->name,
@@ -159,8 +164,9 @@ class SellerService extends Controller
             'size_id' => $request->size_id,
             'product_sku' => $request->product_sku,
             'product_price' => $request->product_price,
-            'discount_price' => $request->discount_price,
             'price' => $price,
+            'discount_type' => $request->discount_type,
+            'discount_value' => $request->discount_value,
             'current_stock_quantity' => $request->current_stock_quantity,
             'minimum_order_quantity' => $request->minimum_order_quantity,
             'image' => $image,
