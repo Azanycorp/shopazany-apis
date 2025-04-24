@@ -29,6 +29,7 @@ use Illuminate\Support\Facades\Auth;
 use net\authorize\api\contract\v1 as AnetAPI;
 use net\authorize\api\controller as AnetController;
 use App\Http\Resources\B2BBuyerShippingAddressResource;
+use App\Models\ProductVariation;
 use App\Models\UserShippingAddress;
 use App\Models\Wallet;
 
@@ -375,29 +376,60 @@ class ChargeCardService implements PaymentStrategy
 
         foreach ($paymentDetails['lineItems'] as $item) {
             try {
-                $product = Product::with(['user', 'shopCountry'])->findOrFail($item['itemId']);
+                $variationId = $item['variation_id'] ?? null;
 
-                $convertedPrice = currencyConvert(
-                    $user->default_currency,
-                    $item['unitPrice'],
-                    $product->shopCountry?->currency
-                );
+                if ($variationId && $variationId > 0) {
+                    $variation = ProductVariation::with('product.user.wallet', 'product.shopCountry')->findOrFail($variationId);
+                    $product = $variation->product;
 
-                $order->products()->attach($product->id, [
-                    'product_quantity' => $item['quantity'],
-                    'price' => $convertedPrice,
-                    'sub_total' => $convertedPrice * $item['quantity'],
-                    'status' => OrderStatus::PENDING,
-                ]);
+                    $convertedPrice = currencyConvert(
+                        $user->default_currency,
+                        $item['unitPrice'],
+                        $product->shopCountry?->currency
+                    );
 
-                $orderedItems[] = [
-                    'product_name' => $product->name,
-                    'image' => $product->image,
-                    'quantity' => $item['quantity'],
-                    'price' => $convertedPrice,
-                ];
+                    $order->products()->attach($product->id, [
+                        'product_quantity' => $item['quantity'],
+                        'variation_id' => $variation->id,
+                        'price' => $convertedPrice,
+                        'sub_total' => $convertedPrice * $item['quantity'],
+                        'status' => OrderStatus::PENDING,
+                    ]);
 
-                $product->decrement('current_stock_quantity', $item['quantity']);
+                    $orderedItems[] = [
+                        'product_name' => $product->name,
+                        'image' => $product->image,
+                        'quantity' => $item['quantity'],
+                        'price' => $convertedPrice,
+                    ];
+
+                    $variation->decrement('stock', $item['quantity']);
+                } else {
+                    $product = Product::with(['user', 'shopCountry'])->findOrFail($item['itemId']);
+
+                    $convertedPrice = currencyConvert(
+                        $user->default_currency,
+                        $item['unitPrice'],
+                        $product->shopCountry?->currency
+                    );
+
+                    $order->products()->attach($product->id, [
+                        'product_quantity' => $item['quantity'],
+                        'variation_id' => null,
+                        'price' => $convertedPrice,
+                        'sub_total' => $convertedPrice * $item['quantity'],
+                        'status' => OrderStatus::PENDING,
+                    ]);
+
+                    $orderedItems[] = [
+                        'product_name' => $product->name,
+                        'image' => $product->image,
+                        'quantity' => $item['quantity'],
+                        'price' => $convertedPrice,
+                    ];
+
+                    $product->decrement('current_stock_quantity', $item['quantity']);
+                }
 
                 if ($product->user) {
                     $wallet = Wallet::firstOrCreate(
@@ -414,16 +446,6 @@ class ChargeCardService implements PaymentStrategy
                     $wallet->increment('balance', $amount);
                 }
 
-                // Order::saveOrder(
-                //     $user,
-                //     $pay,
-                //     $product->user,
-                //     $item,
-                //     $orderNo,
-                //     $paymentDetails['billTo']['address'],
-                //     "authorizenet",
-                //     "success",
-                // );
             } catch (\Exception $e) {
                 (new UserLogAction(
                     request(),
