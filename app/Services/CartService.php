@@ -93,7 +93,7 @@ class CartService
             'product.subCategory',
             'product.brand',
             'product.shopCountry',
-            'variation.product',
+            'variation.product.shopCountry',
         ]);
 
         if (Auth::check()) {
