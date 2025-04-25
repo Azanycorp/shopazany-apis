@@ -93,6 +93,8 @@ class CartService
             'product.subCategory',
             'product.brand',
             'product.shopCountry',
+            'variation',
+            'variation.product',
             'variation.product.shopCountry',
         ]);
 
