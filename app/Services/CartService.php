@@ -106,8 +106,6 @@ class CartService
 
         $cartItems = $cartItemsQuery->get();
 
-        dd($cartItems);
-
         $localItems = $cartItems->filter(fn($cartItem) => $cartItem->product->country_id == 160);
         $internationalItems = $cartItems->filter(fn($cartItem) => $cartItem->product->country_id != 160);
         $defaultCurrency = userAuth()->default_currency;
