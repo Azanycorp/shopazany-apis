@@ -15,8 +15,8 @@ class CartResource extends JsonResource
         $totalPrice = $pricePerItem * $this->quantity;
 
         $currency = $this->variation
-            ? optional($this->variation->product->shopCountry)->currency
-            : optional($this->product->shopCountry)->currency;
+            ? $this->variation?->product?->shopCountry?->currency
+            : $this->product?->shopCountry?->currency;
 
         $totalPrice = currencyConvert($currency, $totalPrice, $defaultCurrency);
 
@@ -54,7 +54,7 @@ class CartResource extends JsonResource
             'image' => optional($this->product)->image,
             'brand' => optional($this->product->brand)->name,
             'country_id' => (int)optional($this->product)->country_id,
-            'currency' => optional($this->product->shopCountry)->currency,
+            'currency' => $this->product?->shopCountry?->currency,
         ];
     }
 
@@ -69,11 +69,11 @@ class CartResource extends JsonResource
             'variation' => $this->variation->variation,
             'sku' => $this->variation->sku,
             'price' => (float) currencyConvert(
-                optional($this->variation->product->shopCountry)->currency,
-                $this->variation->price,
+                $this->variation?->product?->shopCountry?->currency,
+                $this->variation?->price,
                 $defaultCurrency
             ),
-            'image' => $this->variation->image,
+            'image' => $this->variation?->image,
             'stock' => (int) $this->variation->stock,
         ];
     }
@@ -89,8 +89,8 @@ class CartResource extends JsonResource
     private function convertProductPrice($defaultCurrency)
     {
         return (float) currencyConvert(
-            optional($this->product->shopCountry)->currency,
-            optional($this->product) ->product_price,
+            $this->product?->shopCountry?->currency,
+            $this->product?->product_price,
             $defaultCurrency
         );
     }
@@ -98,8 +98,8 @@ class CartResource extends JsonResource
     private function convertPrice($defaultCurrency)
     {
         return (float) currencyConvert(
-            optional($this->product->shopCountry)->currency,
-            $this->product->discounted_price,
+            $this->product?->shopCountry?->currency,
+            $this->product?->discounted_price,
             $defaultCurrency
         );
     }
@@ -107,8 +107,8 @@ class CartResource extends JsonResource
     private function convertDiscountPrice($defaultCurrency)
     {
         return (float) currencyConvert(
-            optional($this->product->shopCountry)->currency,
-            optional($this->product)->discount_value,
+            $this->product?->shopCountry?->currency,
+            $this->product?->discount_value,
             $defaultCurrency
         );
     }
