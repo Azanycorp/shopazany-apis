@@ -106,19 +106,21 @@ class CartService
 
         $cartItems = $cartItemsQuery->get();
 
+        dd($cartItems);
+
         $localItems = $cartItems->filter(fn($cartItem) => $cartItem->product->country_id == 160);
         $internationalItems = $cartItems->filter(fn($cartItem) => $cartItem->product->country_id != 160);
         $defaultCurrency = userAuth()->default_currency;
 
         $totalLocalPrice = $localItems->sum(function ($item) use ($defaultCurrency): float {
             $price = ($item->variation?->price ?? $item->product?->price) * $item->quantity;
-            $currency = $item->product?->shopCountry?->currency;
+            $currency = $item->variation ? $item->variation?->product?->shopCountry?->currency : $item->product?->shopCountry?->currency;
             return currencyConvert($currency, $price, $defaultCurrency);
         });
 
         $totalInternationalPrice = $internationalItems->sum(function ($item) use ($defaultCurrency): float {
             $price = ($item->variation?->price ?? $item->product?->price) * $item->quantity;
-            $currency = $item->product?->shopCountry?->currency;
+            $currency = $item->variation ? $item->variation?->product?->shopCountry?->currency : $item->product?->shopCountry?->currency;
             return currencyConvert($currency, $price, $defaultCurrency);
         });
 

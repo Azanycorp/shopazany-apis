@@ -14,7 +14,9 @@ class CartResource extends JsonResource
         $pricePerItem = $this->calculatePrice();
         $totalPrice = $pricePerItem * $this->quantity;
 
-        $currency = $this->product?->shopCountry?->currency;
+        $currency = $this->variation
+            ? $this->variation?->product?->shopCountry?->currency
+            : $this->product?->shopCountry?->currency;
 
         $totalPrice = currencyConvert($currency, $totalPrice, $defaultCurrency);
 
