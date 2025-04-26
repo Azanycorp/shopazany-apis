@@ -22,9 +22,11 @@ return new class extends Migration
         });
 
         Schema::table('orders', function (Blueprint $table) {
-            $table->dropColumn('seller_id');
-            $table->dropColumn('product_id');
-            $table->dropColumn('product_quantity');
+            if (config('database.default') !== 'sqlite') {
+                $table->dropColumn('seller_id');
+                $table->dropColumn('product_id');
+                $table->dropColumn('product_quantity');
+            }
         });
     }
 
