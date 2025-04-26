@@ -104,10 +104,7 @@ class CartService
             $cartItemsQuery->where('session_id', $sessionId);
         }
 
-        $cartItems = $cartItemsQuery->get()->loadMissing([
-            'product.shopCountry',
-            'variation.product.shopCountry',
-        ]);
+        $cartItems = $cartItemsQuery->get();
 
         $localItems = $cartItems->filter(fn($cartItem) => $cartItem->product->country_id == 160);
         $internationalItems = $cartItems->filter(fn($cartItem) => $cartItem->product->country_id != 160);
@@ -115,13 +112,13 @@ class CartService
 
         $totalLocalPrice = $localItems->sum(function ($item) use ($defaultCurrency): float {
             $price = ($item->variation?->price ?? $item->product?->price) * $item->quantity;
-            $currency = $item->variation ? $item->variation?->product?->shopCountry?->currency : $item->product?->shopCountry?->currency;
+            $currency = $item->product?->shopCountry?->currency;
             return currencyConvert($currency, $price, $defaultCurrency);
         });
 
         $totalInternationalPrice = $internationalItems->sum(function ($item) use ($defaultCurrency): float {
             $price = ($item->variation?->price ?? $item->product?->price) * $item->quantity;
-            $currency = $item->variation ? $item->variation?->product?->shopCountry?->currency : $item->product?->shopCountry?->currency;
+            $currency = $item->product?->shopCountry?->currency;
             return currencyConvert($currency, $price, $defaultCurrency);
         });
 
