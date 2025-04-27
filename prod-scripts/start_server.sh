@@ -4,7 +4,7 @@
 set -e
 sudo su
 # update code
-cd /var/www/AZANY-BE-2024 
+cd /var/www/AZANY-BE-2024  
 
 #echo "Cleaning up untracked files..."
 #git clean -fd
@@ -15,7 +15,7 @@ cd /var/www/AZANY-BE-2024
 #git pull origin deploy --rebase
 
 # composer update
-composer update
+#composer update
 
 # clear php cache
 php artisan optimize
