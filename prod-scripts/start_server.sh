@@ -6,13 +6,13 @@ sudo su
 # update code
 cd /var/www/AZANY-BE-2024
 
-echo "Cleaning up untracked files..."
-git clean -fd
+#echo "Cleaning up untracked files..."
+#git clean -fd
 
-echo "Stashing local changes..."
-git stash --include-untracked
+#echo "Stashing local changes..."
+#git stash --include-untracked
 
-git pull origin deploy --rebase
+#git pull origin deploy --rebase
 
 # composer update
 composer update
