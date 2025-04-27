@@ -30,17 +30,17 @@ php composer-setup.php --install-dir=/usr/local/bin --filename=composer
 rm composer-setup.php
 
 # Install Laravel dependencies
-echo "Installing Laravel dependencies..."
-cd /var/www/AZANY-BE-2024
-/usr/local/bin/composer install --no-dev --optimize-autoloader
+#echo "Installing Laravel dependencies..."
+#cd /var/www/AZANY-BE-2024
+#/usr/local/bin/composer install --no-dev --optimize-autoloader
 
 # generate app key
-php artisan key:generate
+#php artisan key:generate
 
 # set permissions
-chown -R nginx:nginx /var/www/AZANY-BE-2024
-chmod -R 777 /var/www/AZANY-BE-2024
-chmod -R 777 /var/www/AZANY-BE-2024/storage
-chmod -R 777 /var/www/AZANY-BE-2024/bootstrap/cache
+#chown -R nginx:nginx /var/www/AZANY-BE-2024
+#chmod -R 777 /var/www/AZANY-BE-2024
+#chmod -R 777 /var/www/AZANY-BE-2024/storage
+#chmod -R 777 /var/www/AZANY-BE-2024/bootstrap/cache
 
 echo "Dependencies installed successfully."
