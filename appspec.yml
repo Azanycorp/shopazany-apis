@@ -6,7 +6,7 @@ files:
 
 hooks:
   BeforeInstall:
-    - location: prod-scripts/install_dependencies.sh
+    - location: prod-scripts/install_dependencies.sh 
       timeout: 300
       runas: root
   AfterInstall:
