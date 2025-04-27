@@ -2,7 +2,20 @@
 
 # Fail the script if any command fails
 set -e
-sudo su
+# Install Laravel dependencies
+echo "Installing Laravel dependencies..."
+cd /var/www/AZANY-BE-2024
+/usr/local/bin/composer install --no-dev --optimize-autoloader
+
+# generate app key
+php artisan key:generate
+
+# set permissions
+chown -R nginx:nginx /var/www/AZANY-BE-2024
+chmod -R 777 /var/www/AZANY-BE-2024
+chmod -R 777 /var/www/AZANY-BE-2024/storage
+chmod -R 777 /var/www/AZANY-BE-2024/bootstrap/cache
+
 echo "Validating PHP-FPM service..."
 if ! systemctl is-active --quiet php-fpm; then
     echo "PHP-FPM is not running. Starting PHP-FPM..."
