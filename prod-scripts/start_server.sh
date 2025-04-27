@@ -4,7 +4,7 @@
 set -e
 sudo su
 # update code
-cd /var/www/AZANY-BE-2024
+cd /var/www/AZANY-BE-2024 
 
 #echo "Cleaning up untracked files..."
 #git clean -fd
