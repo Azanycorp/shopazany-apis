@@ -15,7 +15,7 @@ cd /var/www/AZANY-BE-2024
 #git pull origin deploy --rebase
 
 # composer update
-composer update
+#composer update
 
 # clear php cache
 php artisan optimize
