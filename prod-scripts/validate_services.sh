@@ -7,6 +7,9 @@ echo "Installing Laravel dependencies..."
 cd /var/www/AZANY-BE-2024
 /usr/local/bin/composer install --no-dev --optimize-autoloader
 
+# download env from s3
+aws s3 cp s3://azany-env/prod/be.env ./.env
+
 # generate app key
 php artisan key:generate
 
