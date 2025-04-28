@@ -174,6 +174,8 @@ class SellerService extends Controller
         ]);
 
         uploadMultipleProductImage($request, 'images', $folder, $product);
+        $this->updateProductVariations($request, $product);
+
         return $this->success(null, "Updated successfully");
     }
 
