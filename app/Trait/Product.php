@@ -99,4 +99,51 @@ trait Product
         return $basePrice;
     }
 
+    public function updateProductVariations($request, $product)
+    {
+        $processedVariationIds = [];
+
+        $variations = collect($request->variation)->map(fn ($item) => json_decode($item, true));
+        $variationImages = $request->file('variation_image', []);
+
+        foreach ($variations as $index => $variation) {
+            $variationId = $variation['id'] ?? null;
+            $imageUrl = null;
+
+            if (isset($variationImages[$index])) {
+                $path = $variationImages[$index]->store('product/variations', 's3');
+                $imageUrl = Storage::disk('s3')->url($path);
+            }
+
+            if ($variationId) {
+                $existingVariation = $product->productVariations()->find($variationId);
+                if ($existingVariation) {
+                    $existingVariation->update([
+                        'variation' => $variation['variation'],
+                        'sku' => $variation['sku'],
+                        'price' => $variation['price'],
+                        'stock' => $variation['stock'],
+                        'image' => $imageUrl ?? $existingVariation->image,
+                    ]);
+
+                    $processedVariationIds[] = $existingVariation->id;
+                }
+            } else {
+                $newVariation = $product->productVariations()->create([
+                    'variation' => $variation['variation'],
+                    'sku' => $variation['sku'],
+                    'price' => $variation['price'],
+                    'stock' => $variation['stock'],
+                    'image' => $imageUrl,
+                ]);
+
+                $processedVariationIds[] = $newVariation->id;
+            }
+        }
+
+        $product->productVariations()
+            ->whereNotIn('id', $processedVariationIds)
+            ->delete();
+
+    }
 }
