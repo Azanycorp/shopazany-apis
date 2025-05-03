@@ -9,7 +9,6 @@ use App\Http\Controllers\Api\B2B\B2BAccountController;
 Route::middleware('validate.header')
     ->group(function (): void {
         Route::middleware(['throttle:apis'])->group(function (): void {
-
             Route::prefix('b2b/connect')
                 ->controller(B2BAccountController::class)
                 ->group(function (): void {
@@ -26,9 +25,11 @@ Route::middleware('validate.header')
                     Route::post('/buyer/signup', 'buyerOnboarding');
                 });
 
-            Route::prefix('b2b')->controller(B2BController::class)->group(function (): void {
-                Route::post('/business/information', 'businessInformation');
-            });
+            Route::prefix('b2b')->controller(B2BController::class)
+                ->group(function (): void {
+                    Route::post('/business/information', 'businessInformation');
+                });
+
             Route::prefix('b2b')->controller(B2BController::class)->group(function (): void {
                 Route::get('/banners', 'getBanners');
                 Route::get('/client-logos', 'getClientLogos');
@@ -46,7 +47,7 @@ Route::middleware('validate.header')
                 Route::get('/featured-products', 'featuredProduct');
                 Route::get('/search-products', 'searchProduct');
                 Route::get('/product/{slug}', 'getProductDetail');
-            })->middleware('cacheResponse:300');
+            });
         });
 
         Route::group(['middleware' => ['auth:api', 'auth.check'], 'prefix' => 'b2b'], function (): void {
