@@ -224,22 +224,22 @@ Route::middleware('validate.header')
 
             //Shipping Agency
             Route::prefix('shipping-management')->controller(B2BAdminController::class)->group(function (): void {
-                    Route::get('/', 'shippingAgents')->middleware('cacheResponse:300');
-                    Route::post('/add', 'addShippingAgent');
-                    Route::get('/details/{id}', 'viewShippingAgent')->middleware('cacheResponse:300');
-                    Route::post('/update/{id}', 'editShippingAgent');
-                    Route::delete('/delete/{id}', 'deleteShippingAgent');
-                });
+                Route::get('/', 'shippingAgents')->middleware('cacheResponse:300');
+                Route::post('/add', 'addShippingAgent');
+                Route::get('/details/{id}', 'viewShippingAgent')->middleware('cacheResponse:300');
+                Route::post('/update/{id}', 'editShippingAgent');
+                Route::delete('/delete/{id}', 'deleteShippingAgent');
+            });
 
-                Route::prefix('affiliate')->controller(AdminAffiliateController::class)->group(function () {
-                        Route::get('/overview', 'overview')
-                            ->middleware('cacheResponse:600');
-                        Route::get('/users', 'allUsers')
-                            ->middleware('cacheResponse:600');
-                        Route::get('/user/{id}', 'userDetail');
-                        Route::patch('/suspend/{id}', 'suspend');
-                        Route::post('/reset-password', 'resetPassword');
-                });
+            Route::prefix('affiliate')->controller(AdminAffiliateController::class)->group(function () {
+                Route::get('/overview', 'overview')
+                    ->middleware('cacheResponse:600');
+                Route::get('/users', 'allUsers')
+                    ->middleware('cacheResponse:600');
+                Route::get('/user/{id}', 'userDetail');
+                Route::patch('/suspend/{id}', 'suspend');
+                Route::post('/reset-password', 'resetPassword');
+            });
 
             Route::controller(AdminController::class)->group(function () {
                 //Admin users
@@ -253,24 +253,24 @@ Route::middleware('validate.header')
                     Route::delete('/delete-account/{id}', 'removeAdmin');
                 });
 
-                    //delivery (collation centers and hubs)
-                    Route::get('/delivery-overview', 'deliveryOverview');
-                    Route::prefix('collation-centre')->group(function () {
-                            Route::get('/', 'allCollationCentres');
-                            Route::post('/add', 'addCollationCentre');
-                            Route::get('/details/{id}', 'viewCollationCentre');
-                            Route::patch('/update/{id}', 'editCollationCentre');
-                            Route::delete('/delete/{id}', 'deleteCollationCentre');
+                //delivery (collation centers and hubs)
+                Route::get('/delivery-overview', 'deliveryOverview');
+                Route::prefix('collation-centre')->group(function () {
+                    Route::get('/', 'allCollationCentres');
+                    Route::post('/add', 'addCollationCentre');
+                    Route::get('/details/{id}', 'viewCollationCentre');
+                    Route::patch('/update/{id}', 'editCollationCentre');
+                    Route::delete('/delete/{id}', 'deleteCollationCentre');
 
-                            Route::prefix('hubs')->group(function () {
-                                    Route::get('/', 'allCollationCentreHubs');
-                                    Route::post('/add', 'addHub');
-                                    Route::get('/details/{id}', 'viewHub');
-                                    Route::patch('/update/{id}', 'editHub');
-                                    Route::delete('/delete/{id}', 'deleteHub');
-                            });
+                    Route::prefix('hubs')->group(function () {
+                        Route::get('/', 'allCollationCentreHubs');
+                        Route::post('/add', 'addHub');
+                        Route::get('/details/{id}', 'viewHub');
+                        Route::patch('/update/{id}', 'editHub');
+                        Route::delete('/delete/{id}', 'deleteHub');
                     });
                 });
+            });
 
 
             //b2b admin
@@ -284,6 +284,7 @@ Route::middleware('validate.header')
                     Route::post('/enable-2fa', 'enable2FA');
                     Route::get('/get-config', 'getConfigDetails');
                     Route::post('/update-config', 'updateConfigDetails');
+
                     Route::prefix('page-banners')->group(function () {
                         Route::get('/', 'getAllBanners');
                         Route::post('/add', 'addNewBanner');
@@ -291,12 +292,28 @@ Route::middleware('validate.header')
                         Route::get('/view/{id}', 'editPageBanner');
                         Route::delete('/delete/{id}', 'deletePageBanner');
                     });
+
                     Route::prefix('blog')->group(function () {
                         Route::get('/', 'getBlogs');
                         Route::post('/create', 'addBlog');
                         Route::get('/details/{id}', 'getBlog');
                         Route::post('/update/{id}', 'updateBlog');
                         Route::delete('/delete/{id}', 'deleteBlog');
+                    });
+
+                    Route::prefix('client-logo')->group(function () {
+                        Route::get('/', 'allClientLogos');
+                        Route::post('/create', 'addClientLogo');
+                        Route::get('/details/{id}', 'getClientLogo');
+                        Route::post('/update/{id}', 'updateClientLogo');
+                        Route::delete('/delete/{id}', 'deleteClientLogo');
+                    });
+                    Route::prefix('social-links')->group(function () {
+                        Route::get('/', 'socialLinks');
+                        Route::post('/add', 'addLink');
+                        Route::get('/details/{id}', 'viewLink');
+                        Route::post('/update/{id}', 'editLink');
+                        Route::delete('/delete/{id}', 'deleteLink');
                     });
                 });
 

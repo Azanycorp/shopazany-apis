@@ -106,7 +106,7 @@ class PaymentService
                 'amount' => $transfer['amount'] ?? null,
                 'recipient' => $transfer['recipient']['recipientCode'] ?? null,
             ]);
-    
+
             if (! $isValid) {
                 return response()->json(['message' => 'Invalid transfer request'], 400);
             }

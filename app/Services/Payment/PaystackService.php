@@ -18,7 +18,6 @@ use App\Models\UserWallet;
 use App\Mail\B2BOrderEmail;
 use Illuminate\Support\Str;
 use App\Mail\SellerOrderMail;
-use App\Models\Configuration;
 use App\Models\ShippingAgent;
 use App\Actions\UserLogAction;
 use App\Enum\SubscriptionType;
@@ -32,6 +31,7 @@ use Illuminate\Support\Facades\Log;
 use App\Models\BuyerShippingAddress;
 use App\Http\Resources\B2BBuyerShippingAddressResource;
 use App\Models\Action;
+use App\Models\ProductVariation;
 use App\Models\Wallet;
 use App\Models\WithdrawalRequest;
 use App\Notifications\WithdrawalNotification;
@@ -174,6 +174,7 @@ class PaystackService
 
                 $payment = (new PaymentLogAction($data, $paymentData, $method, $status))->execute();
                 $totalAmount = 0;
+                $product = null;
 
                 foreach ($items as $item) {
                     $product = Product::with(['user.wallet', 'shopCountry'])
@@ -184,7 +185,7 @@ class PaystackService
                         $item['total_amount'],
                         $product->shopCountry?->currency
                     );
-                    $totalAmount += $convertedPrice * $item['product_quantity'];
+                    $totalAmount += $convertedPrice;
                 }
 
                 $order = Order::create([
@@ -204,48 +205,9 @@ class PaystackService
                 logOrderActivity($order->id, $msg, OrderStatus::PENDING);
 
                 $orderedItems = [];
-                $product = null;
+
                 foreach ($items as $item) {
-                    $product = Product::with(['user.wallet', 'shopCountry'])
-                        ->findOrFail($item['product_id']);
-
-                    $convertedPrice = currencyConvert(
-                        $user->default_currency,
-                        $item['total_amount'],
-                        $product->shopCountry?->currency
-                    );
-
-                    $order->products()->attach($product->id, [
-                        'product_quantity' => $item['product_quantity'],
-                        'price' => $convertedPrice,
-                        'sub_total' => $convertedPrice * $item['product_quantity'],
-                        'status' => OrderStatus::PENDING,
-                    ]);
-
-                    $orderedItems[] = [
-                        'product_name' => $product->name,
-                        'image' => $product->image,
-                        'quantity' => $item['product_quantity'],
-                        'price' => $item['total_amount'],
-                        'currency' => $user->default_currency,
-                    ];
-
-                    $product->decrement('current_stock_quantity', $item['product_quantity']);
-
-                    if ($product->user) {
-                        $wallet = Wallet::firstOrCreate(
-                            ['user_id' => $product->user->id],
-                            ['balance' => 0]
-                        );
-
-                        $amount = currencyConvert(
-                            $user->default_currency,
-                            $item['total_amount'],
-                            $product->shopCountry->currency,
-                        );
-
-                        $wallet->increment('balance', $amount);
-                    }
+                    $orderedItems[] = self::attachProductToOrder($item, $user, $order);
                 }
 
                 if ($userShippingId === 0) {
@@ -530,7 +492,7 @@ class PaystackService
             } else {
                 $user->wallet->increment('balance', $withdrawal->amount);
             }
-            
+
             $user->notify(new WithdrawalNotification($withdrawal, 'failed'));
 
             Log::info("Transfer failed for withdrawal ID {$withdrawal->id} - Reference: {$reference}");
@@ -581,4 +543,76 @@ class PaystackService
             'data' => $data,
         ]);
     }
+
+    private static function attachProductToOrder($item, $user, $order): array
+    {
+        $variationId = $item['variation_id'] ?? null;
+
+        if ($variationId && $variationId > 0) {
+            $variation = ProductVariation::with('product.user.wallet', 'product.shopCountry')->findOrFail($variationId);
+            $product = $variation->product;
+            $unitPrice = currencyConvert(
+                $user->default_currency,
+                $variation->price,
+                $product->shopCountry?->currency
+            );
+
+            $order->products()->attach($product->id, [
+                'product_quantity' => $item['product_quantity'],
+                'price' => $unitPrice,
+                'sub_total' => $unitPrice * $item['product_quantity'],
+                'status' => OrderStatus::PENDING,
+                'variation_id' => $variation->id,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            $variation->decrement('stock', $item['product_quantity']);
+            $image = $variation->image;
+        } else {
+            $product = Product::with(['user.wallet', 'shopCountry'])->findOrFail($item['product_id']);
+            $unitPrice = currencyConvert(
+                $user->default_currency,
+                $product->price,
+                $product->shopCountry?->currency
+            );
+
+            $order->products()->attach($product->id, [
+                'product_quantity' => $item['product_quantity'],
+                'price' => $unitPrice,
+                'sub_total' => $unitPrice * $item['product_quantity'],
+                'status' => OrderStatus::PENDING,
+                'variation_id' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            $product->decrement('current_stock_quantity', $item['product_quantity']);
+            $image = $product->image;
+        }
+
+        if ($product->user) {
+            $wallet = Wallet::firstOrCreate(
+                ['user_id' => $product->user->id],
+                ['balance' => 0]
+            );
+
+            $amount = currencyConvert(
+                $user->default_currency,
+                $item['total_amount'],
+                $product->shopCountry?->currency
+            );
+
+            $wallet->increment('balance', $amount);
+        }
+
+        return [
+            'product_name' => $product->name,
+            'image' => $image,
+            'quantity' => $item['product_quantity'],
+            'price' => $item['total_amount'],
+            'currency' => $user->default_currency,
+        ];
+    }
+
 }

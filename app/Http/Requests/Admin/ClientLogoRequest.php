@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Admin;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class CartRequest extends FormRequest
+class ClientLogoRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,10 +22,8 @@ class CartRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'user_id' => ['required', 'integer'],
-            'product_id' => ['required', 'integer', 'exists:products,id'],
-            'quantity' => ['required', 'integer', 'min:1'],
-            'variation_id' => ['nullable', 'integer'],
+            'name' => ['required', 'string', 'max:255'],
+            'logo' => ['required', 'image', 'mimes:png,jpg,jpeg'],
         ];
     }
 }

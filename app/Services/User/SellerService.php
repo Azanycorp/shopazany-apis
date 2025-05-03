@@ -20,13 +20,14 @@ use App\Http\Resources\SellerProductResource;
 use App\Imports\ProductImport;
 use App\Mail\OrderStatusUpdated;
 use App\Trait\General;
+use App\Trait\Product as TraitProduct;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 
 class SellerService extends Controller
 {
-    use HttpResponse, General;
+    use HttpResponse, General, TraitProduct;
 
     public function businessInfo($request)
     {
@@ -82,75 +83,39 @@ class SellerService extends Controller
         }
 
         $user = User::with('products')->find($request->user_id);
-
         if (!$user) {
             return $this->error(null, "User not found", 404);
         }
+
         $slug = Str::slug($request->name);
         if (Product::where('slug', $slug)->exists()) {
-            $slug = $slug . '-' . uniqid();
+            $slug .= '-' . uniqid();
         }
-        $price = $request->product_price;
-        if($request->discount_price > 0){
-            $price = (int)$request->product_price - (int)$request->discount_price;
-        }
-        $folder = null;
-        $frontImage = null;
+
         $parts = explode('@', $user->email);
         $name = $parts[0];
-        if(App::environment('production')){
-            $folder = "/prod/product/{$name}";
-            $frontImage = "/prod/product/{$name}/front_image";
-        } elseif(App::environment(['staging', 'local'])) {
-            $folder = "/stag/product/{$name}";
-            $frontImage = "/stag/product/{$name}/front_image";
-        }
-        if ($request->hasFile('front_image')) {
-            $path = $request->file('front_image')->store($frontImage, 's3');
-            $url = Storage::disk('s3')->url($path);
-        }
-        $product = $user->products()->create([
-            'name' => $request->name,
-            'slug' => $slug,
-            'description' => $request->description,
-            'category_id' => $request->category_id,
-            'sub_category_id' => $request->sub_category_id,
-            'brand_id' => $request->brand_id,
-            'color_id' => $request->color_id,
-            'unit_id' => $request->unit_id,
-            'size_id' => $request->size_id,
-            'product_sku' => $request->product_sku,
-            'product_price' => $request->product_price,
-            'discount_price' => $request->discount_price,
-            'price' => $price,
-            'current_stock_quantity' => $request->current_stock_quantity,
-            'minimum_order_quantity' => $request->minimum_order_quantity,
-            'image' => $url,
-            'added_by' => $user->type,
-            'country_id' => $user->country ?? 160,
-            'default_currency' => $user->default_currency,
-        ]);
-        if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $image) {
-                $path = $image->store($folder, 's3');
-                $url = Storage::disk('s3')->url($path);
+        $folderPath = folderNames('product', $name, 'front_image');
 
-                $product->productimages()->create([
-                    'image' => $url,
-                ]);
-            }
+        DB::beginTransaction();
+        try {
+            $url = $this->uploadFrontImage($request, $folderPath);
+
+            $product = $this->createProductRecord($request, $user, $slug, $url);
+
+            $this->uploadAdditionalImages($request, $folderPath, $product);
+
+            $this->createProductVariations($request, $product);
+
+            DB::commit();
+            return $this->success(null, "Added successfully");
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return $this->error(null, "Failed to create product: " . $e->getMessage(), 500);
         }
-        return $this->success(null, "Added successfully");
     }
 
     public function updateProduct($request, $id, $userId)
     {
-        $currentUserId = Auth::id();
-
-        if ($currentUserId != $userId) {
-            return $this->error(null, "Unauthorized action.", 401);
-        }
-
         $user = User::find($userId);
 
         if (!$user) {
@@ -166,14 +131,18 @@ class SellerService extends Controller
         if (Product::where('slug', $slug)->exists()) {
             $slug = $slug . '-' . uniqid();
         }
-        $price = $request->product_price;
-        if($request->discount_price > 0){
-            $price = (int)$request->product_price - (int)$request->discount_price;
-        }
+
+        $price = $this->calculateFinalPrice(
+            $request->product_price,
+            $request->discount_type,
+            $request->discount_value
+        );
+
         $folder = null;
         $frontImage = null;
         $parts = explode('@', $user->email);
         $name = $parts[0];
+
         if(App::environment('production')){
             $folder = "/prod/product/{$name}";
             $frontImage = "/prod/product/{$name}/front_image";
@@ -181,6 +150,7 @@ class SellerService extends Controller
             $folder = "/stag/product/{$name}";
             $frontImage = "/stag/product/{$name}/front_image";
         }
+
         $image = uploadSingleProductImage($request, 'front_image', $frontImage, $product);
         $product->update([
             'name' => $request->name,
@@ -194,8 +164,9 @@ class SellerService extends Controller
             'size_id' => $request->size_id,
             'product_sku' => $request->product_sku,
             'product_price' => $request->product_price,
-            'discount_price' => $request->discount_price,
             'price' => $price,
+            'discount_type' => $request->discount_type,
+            'discount_value' => $request->discount_value,
             'current_stock_quantity' => $request->current_stock_quantity,
             'minimum_order_quantity' => $request->minimum_order_quantity,
             'image' => $image,
@@ -203,17 +174,13 @@ class SellerService extends Controller
         ]);
 
         uploadMultipleProductImage($request, 'images', $folder, $product);
+        $this->updateProductVariations($request, $product);
+
         return $this->success(null, "Updated successfully");
     }
 
     public function getProduct($userId)
     {
-        $currentUserId = Auth::id();
-
-        if ($currentUserId != $userId) {
-            return $this->error(null, "Unauthorized action.", 401);
-        }
-
         $user = User::with(['products'])->find($userId);
 
         if (!$user) {
@@ -249,6 +216,7 @@ class SellerService extends Controller
             'size',
             'orders',
             'productReviews',
+            'productVariations',
         ]);
 
         $products = $query->paginate(25);
@@ -271,12 +239,6 @@ class SellerService extends Controller
 
     public function getSingleProduct($productId, $userId)
     {
-        $currentUserId = Auth::id();
-
-        if ($currentUserId != $userId) {
-            return $this->error(null, "Unauthorized action.", 401);
-        }
-
         $user = User::find($userId);
 
         if (!$user) {
@@ -294,6 +256,7 @@ class SellerService extends Controller
                 'size',
                 'orders',
                 'productReviews',
+                'productVariations',
             ])
             ->find($productId);
 
@@ -308,12 +271,6 @@ class SellerService extends Controller
 
     public function deleteProduct($id, $userId)
     {
-        $currentUserId = Auth::id();
-
-        if ($currentUserId != $userId) {
-            return $this->error(null, "Unauthorized action.", 401);
-        }
-
         $product = Product::find($id);
 
         if(!$product){
@@ -329,12 +286,7 @@ class SellerService extends Controller
 
     public function getAllOrders($id)
     {
-        $currentUserId = Auth::id();
         $status = request()->query('status');
-
-        if ($currentUserId != $id) {
-            return $this->error(null, "Unauthorized action.", 401);
-        }
 
         $validStatuses = [
             OrderStatus::PENDING,
@@ -391,7 +343,8 @@ class SellerService extends Controller
             })
             ->with([
                 'user.userShippingAddress',
-                'products.shopCountry'
+                'products.shopCountry',
+                'products.productVariations.product',
             ])
             ->where('id', $id)
             ->first();
@@ -487,7 +440,7 @@ class SellerService extends Controller
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $seller = auth()->user();
+        $seller = userAuth();
 
         try {
             Excel::import(new ProductImport($seller), $request->file('file'));
@@ -596,12 +549,6 @@ class SellerService extends Controller
 
     public function topSelling($userId)
     {
-        $currentUserId = Auth::id();
-
-        if ($currentUserId != $userId) {
-            return $this->error(null, "Unauthorized action.", 401);
-        }
-
         $topSellingProducts = DB::table('order_items')
             ->join('products', 'order_items.product_id', '=', 'products.id')
             ->where('products.user_id', $userId)
@@ -626,6 +573,108 @@ class SellerService extends Controller
         });
 
         return $this->success($data, "Top Selling Products");
+    }
+
+    public function createAttribute($request)
+    {
+        $user = User::with('productAttributes')
+            ->findOrFail($request->user_id);
+
+        foreach ($request['attributes'] as $attribute) {
+            $user->productAttributes()->create([
+                'name' => $attribute['name'],
+                'value' => $attribute['values'],
+                'use_for_variation' => $attribute['use_for_variation'],
+            ]);
+        }
+
+        return $this->success(null, "Attribute created successfully", 201);
+    }
+
+    public function getAttribute($userId)
+    {
+        $user = User::with(['productAttributes' => function ($query) {
+                $query->select('id', 'user_id', 'name', 'value', 'use_for_variation');
+            }])
+            ->find($userId);
+
+        if (!$user) {
+            return $this->error(null, "User not found", 404);
+        }
+
+        $data = $user->productAttributes;
+
+        return $this->success($data, "All Attributes");
+    }
+
+    public function getSingleAttribute($attributeId, $userId)
+    {
+        $user = User::with(['productAttributes' => function ($query) {
+                $query->select('id', 'user_id', 'name', 'value', 'use_for_variation');
+            }])
+            ->find($userId);
+
+        if (!$user) {
+            return $this->error(null, "User not found", 404);
+        }
+
+        $attribute = $user->productAttributes()
+            ->select('id', 'user_id', 'name', 'value', 'use_for_variation')
+            ->find($attributeId);
+
+        if (!$attribute) {
+            return $this->error(null, "Attribute not found", 404);
+        }
+
+        return $this->success($attribute, "Attribute retrieved successfully");
+    }
+
+    public function updateAttribute($request, $attributeId, $userId)
+    {
+        $user = User::with(['productAttributes' => function ($query) {
+                $query->select('id', 'user_id', 'name', 'value', 'use_for_variation');
+            }])
+            ->find($userId);
+
+        if (!$user) {
+            return $this->error(null, "User not found", 404);
+        }
+
+        $attribute = $user->productAttributes()
+            ->select('id', 'user_id', 'name', 'value', 'use_for_variation')
+            ->find($attributeId);
+
+        if (!$attribute) {
+            return $this->error(null, "Attribute not found", 404);
+        }
+
+        $attribute->update([
+            'name' => $request->name,
+            'value' => $request->values,
+            'use_for_variation' => $request->use_for_variation,
+        ]);
+
+        return $this->success(null, "Attribute updated successfully");
+    }
+
+    public function deleteAttribute($attributeId, $userId)
+    {
+        $user = User::with('productAttributes')
+            ->find($userId);
+
+        if (!$user) {
+            return $this->error(null, "User not found", 404);
+        }
+
+        $attribute = $user->productAttributes()->find($attributeId);
+
+        if (!$attribute) {
+            return $this->error(null, "Attribute not found", 404);
+        }
+
+        $attribute->delete();
+
+        return $this->success(null, "Attribute deleted successfully");
     }
 
 }

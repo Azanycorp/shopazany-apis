@@ -76,6 +76,9 @@ class HomeService
                 'size',
                 'orders',
                 'productReviews',
+                'productVariations' => function ($query): void {
+                    $query->select('id', 'product_id', 'variation', 'sku', 'price', 'stock', 'image');
+                },
             ])
             ->where('status', ProductStatus::ACTIVE);
 
@@ -115,6 +118,9 @@ class HomeService
                 'size',
                 'orders',
                 'productReviews',
+                'productVariations' => function ($query): void {
+                    $query->select('id', 'product_id', 'variation', 'sku', 'price', 'stock', 'image');
+                }
             ])
             ->where('is_featured', true)
             ->where('status', ProductStatus::ACTIVE);
@@ -144,6 +150,9 @@ class HomeService
                 'size',
                 'orders',
                 'productReviews',
+                'productVariations' => function ($query): void {
+                    $query->select('id', 'product_id', 'variation', 'sku', 'price', 'stock', 'image');
+                }
             ])
             ->where('status', ProductStatus::ACTIVE);
 
@@ -172,6 +181,9 @@ class HomeService
                 'size',
                 'orders',
                 'productReviews',
+                'productVariations' => function ($query): void {
+                    $query->select('id', 'product_id', 'variation', 'sku', 'price', 'stock', 'image');
+                }
             ]);
 
         if ($countryId) {
@@ -202,6 +214,7 @@ class HomeService
             'productReviews.user',
             'productimages',
             'shopCountry',
+            'productVariations',
             'user.userCountry' => function($query): void {
                 $query->with('shopCountry:country_id,flag');
             }
@@ -291,7 +304,6 @@ class HomeService
             ->with(['shopCountry' => function ($query): void {
                 $query->select('country_id', 'currency');
             }])
-            ->take(50)
             ->get()
             ->shuffle()
             ->take(6);

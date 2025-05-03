@@ -176,7 +176,7 @@ Route::middleware('validate.header')
                 Route::post('/add', 'addToCart');
                 Route::delete('/{user_id}/clear', 'clearCart');
                 Route::delete('/{user_id}/remove/{cart_id}', 'removeCartItem');
-                Route::patch('/update-cart', [CartController::class, 'updateCart']);
+                Route::patch('/update-cart', 'updateCart');
             });
 
             Route::middleware('check.user.country')
@@ -219,22 +219,40 @@ Route::middleware('validate.header')
                 Route::get('/dashboard/analytic/{user_id}', 'dashboardAnalytics');
 
                 // Product Routes
-                Route::prefix('product')
-                    ->group(function (): void {
+                Route::prefix('product')->group(function (): void {
                     Route::post('/create', 'createProduct');
-                    Route::post('/edit/{product_id}/{user_id}', 'updateProduct');
-                    Route::delete('/delete/{product_id}/{user_id}', 'deleteProduct');
-                    Route::get('/top-selling/{user_id}', 'topSelling');
-                    Route::get('/{user_id}', 'getProduct');
-                    Route::get('/{product_id}/{user_id}', 'getSingleProduct');
+                    Route::post('/edit/{product_id}/{user_id}', 'updateProduct')
+                        ->middleware('ensure.user');
+                    Route::get('/{user_id}', 'getProduct')
+                        ->middleware('ensure.user');
+                    Route::get('/top-selling/{user_id}', 'topSelling')
+                        ->middleware('ensure.user');
+                    Route::delete('/delete/{product_id}/{user_id}', 'deleteProduct')
+                        ->middleware('ensure.user');
+                    Route::post('/import', 'productImport');
+                    Route::get('/export/{user_id}/{type}', 'export');
 
-                    Route::post('import', 'productImport');
-                    Route::get('export/{user_id}/{type}', 'export');
+                    // Product Attributes
+                    Route::prefix('attribute')->group(function (): void {
+                        Route::post('/create', 'createAttribute');
+                        Route::get('/{user_id}', 'getAttribute')
+                            ->middleware('ensure.user');
+                        Route::get('/{id}/{user_id}', 'getSingleAttribute')
+                            ->middleware('ensure.user');
+                        Route::patch('/edit/{id}/{user_id}', 'updateAttribute')
+                            ->middleware('ensure.user');
+                        Route::delete('/delete/{id}/{user_id}', 'deleteAttribute')
+                            ->middleware('ensure.user');
+                    });
+
+                    Route::get('/{product_id}/{user_id}', 'getSingleProduct')
+                        ->middleware('ensure.user');
                 });
 
                 // Orders Routes
                 Route::prefix('orders/{user_id}')->group(function (): void {
-                    Route::get('/', 'getAllOrders');
+                    Route::get('/', 'getAllOrders')
+                        ->middleware('ensure.user');
                     Route::get('/summary', 'getOrderSummary');
                     Route::get('/{id}', 'getOrderDetail');
                     Route::patch('/update-status/{id}', 'updateOrderStatus');

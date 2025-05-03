@@ -57,6 +57,10 @@ class B2BController extends Controller
     {
         return $this->buyerService->searchProduct();
     }
+    public function getSocialLinks()
+    {
+        return $this->buyerService->getSocialLinks();
+    }
 
     public function getCategoryProducts()
     {
@@ -101,6 +105,10 @@ class B2BController extends Controller
     public function getBanners()
     {
         return $this->buyerService->getBanners();
+    }
+    public function getClientLogos()
+    {
+        return $this->buyerService->getClientLogos();
     }
 
     public function promoBanners(SellerService $sellerService)
