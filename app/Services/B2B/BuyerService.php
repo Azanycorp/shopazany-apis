@@ -593,7 +593,7 @@ class BuyerService
 
         $quote = B2bQuote::where('product_id', $product->id)
             ->where('buyer_id', $userId)
-            ->exist();
+            ->exists();
 
         if ($quote) {
             return $this->error(null, 'Product already exist');
@@ -823,7 +823,7 @@ class BuyerService
 
         $check = B2bWishList::where('product_id', $product->id)
             ->where('user_id', $userId)
-            ->exist();
+            ->exists();
 
         if ($check) {
             return $this->error(null, 'Product already exist', 400);
