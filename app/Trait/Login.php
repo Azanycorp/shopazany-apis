@@ -5,6 +5,7 @@ namespace App\Trait;
 use App\Enum\MailingEnum;
 use App\Enum\UserLog;
 use App\Enum\UserStatus;
+use App\Mail\LoginVerifyMail;
 
 trait Login
 {
@@ -60,7 +61,7 @@ trait Login
 
         $type = MailingEnum::LOGIN_OTP;
         $subject = "Login OTP";
-        $mail_class = "App\Mail\LoginVerifyMail";
+        $mail_class = LoginVerifyMail::class;
 
         mailSend($type, $user, $subject, $mail_class);
 
