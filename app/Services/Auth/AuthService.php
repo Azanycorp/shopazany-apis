@@ -24,7 +24,6 @@ class AuthService extends Controller
 
     public function login($request)
     {
-
         return LoginService::AuthLogin($request);
     }
 
