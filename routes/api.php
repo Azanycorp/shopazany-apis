@@ -16,10 +16,6 @@ use App\Http\Controllers\Api\GoogleAuthController;
 use App\Http\Controllers\Api\MailingListController;
 use App\Http\Controllers\Api\SubscriptionController;
 
-// Route::get('/user', function (Request $request) {
-//     return $request->user();
-// })->middleware('auth:sanctum');
-
 Route::middleware('validate.header')
     ->group(function (): void {
         Route::middleware(['throttle:apis', 'doNotCacheResponse'])->group(function (): void {

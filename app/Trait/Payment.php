@@ -55,6 +55,7 @@ trait Payment
             if(! $bank) {
                 return $this->error(null, "Selected bank not found!", 404);
             }
+
             $fields = [
                 'type' => "nuban",
                 'name' => $request->account_name,
@@ -62,6 +63,7 @@ trait Payment
                 'bank_code' => $bank->code,
                 'currency' => $bank->currency
             ];
+
             PaystackService::createRecipient($fields, $method);
 
             DB::commit();
