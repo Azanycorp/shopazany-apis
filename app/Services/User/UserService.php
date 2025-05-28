@@ -330,6 +330,12 @@ class UserService extends Controller
             return $this->error(null, "You can only add up to 3 payment methods", 400);
         }
 
+        $methodExists = $user->paymentMethods->firstWhere('account_number', $request->account_number);
+
+        if ($methodExists) {
+            return $this->error(null, 'Withdrawal method with this account number already exists.', 409);
+        }
+
         switch ($request->type) {
             case 'bank_transfer':
                 $methodAdded = $this->addBankTransfer($request, $user);
