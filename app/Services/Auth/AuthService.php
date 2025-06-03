@@ -297,7 +297,8 @@ class AuthService extends Controller
             : response()->json(['message' => __($status)], 500);
     }
 
-    public function logout() {
+    public function logout()
+    {
 
         $user = request()->user();
         $user->tokens()->where('id', $user->currentAccessToken()->id)->delete();
