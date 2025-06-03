@@ -15,12 +15,18 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
 use App\Models\Wishlist;
+use App\Services\Auth\Auth;
 use App\Trait\HttpResponse;
 use Spatie\ResponseCache\Facades\ResponseCache;
 
 class CustomerService
 {
     use HttpResponse;
+
+    public function __construct(
+        protected Auth $auth,
+    )
+    {}
 
     public function dashboardAnalytics(int $userId)
     {
@@ -388,6 +394,22 @@ class CustomerService
         ]);
 
         return $this->success(null, "Points redeemed successfully");
+    }
+
+    public function getCategories()
+    {
+        $url = config('services.reward_service.url') . "/service/all-category";
+        $response = $this->auth->request('get', $url, []);
+
+        return $response->json();
+    }
+
+    public function getServicesByCategory($slug)
+    {
+        $url = config('services.reward_service.url') . "/service/category/{$slug}";
+        $response = $this->auth->request('get', $url, []);
+
+        return $response->json();
     }
 }
 
