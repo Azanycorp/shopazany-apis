@@ -82,4 +82,8 @@ return [
         ]
     ],
 
+    'reward_service' => [
+        'url' => env('REWARD_SERVICE_URL'),
+    ],
+
 ];

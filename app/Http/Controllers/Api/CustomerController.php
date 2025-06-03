@@ -89,4 +89,14 @@ class CustomerController extends Controller
     {
         return $this->service->redeemPoint($request);
     }
+
+    public function getCategories()
+    {
+        return $this->service->getCategories();
+    }
+
+    public function getServicesByCategory($slug)
+    {
+        return $this->service->getServicesByCategory($slug);
+    }
 }

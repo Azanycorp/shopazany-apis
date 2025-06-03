@@ -194,6 +194,13 @@ Route::middleware('validate.header')
                 Route::get('/reward/dashboard/{user_id}', 'rewardDashboard');
                 Route::post('/redeem/point', 'redeemPoint');
 
+                // Reward partners (service)
+                Route::prefix('service')
+                    ->group(function() {
+                        Route::get('/category', 'getCategories');
+                        Route::get('/by-category/{slug}', 'getServicesByCategory');
+                    });
+
                 // Support Route
                 Route::post('/support', 'support');
 
