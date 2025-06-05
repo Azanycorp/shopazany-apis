@@ -411,6 +411,16 @@ class CustomerService
 
         return $response->json();
     }
+
+    public function getServices()
+    {
+        return response()->json(['succes' => "Success"]);
+    }
+
+    public function getServiceDetail($id)
+    {
+        return response()->json(['succes' => "Success"]);
+    }
 }
 
 
