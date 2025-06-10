@@ -460,7 +460,7 @@ class CustomerService
         return $services;
     }
 
-    public function getCompanys()
+    public function getCompanies()
     {
         $url = config('services.reward_service.url') . "/service/company";
         $response = $this->auth->request('get', $url, []);

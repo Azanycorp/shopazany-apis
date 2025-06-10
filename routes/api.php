@@ -195,12 +195,12 @@ Route::middleware('validate.header')
 
                 // Reward partners (service)
                 Route::prefix('service')->group(function () {
+                    Route::get('/', 'getServices');
                     Route::get('/company/detail/{slug}', 'getCompanyDetail');
                     Route::get('/company', 'getCompanies');
                     Route::get('/by-category/{slug}', 'getServicesByCategory');
                     Route::get('/category', 'getCategories');
                     Route::get('/detail/{id}', 'getServiceDetail');
-                    Route::get('/', 'getServices');
                 });
 
                 // Support Route
