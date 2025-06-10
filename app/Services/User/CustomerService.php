@@ -409,17 +409,90 @@ class CustomerService
         $url = config('services.reward_service.url') . "/service/category/{$slug}";
         $response = $this->auth->request('get', $url, []);
 
-        return $response->json();
+        $services = $response->json();
+
+        if (!isset($services['data'])) {
+            return $services;
+        }
+
+        $services['data'] = collect($services['data'])->map(function ($item) {
+            $price = (float) $item['price'];
+            $currency = $item['currency'];
+
+            try {
+                $item['point'] = amountToPoint($price, $currency);
+            } catch (\Throwable $e) {
+                $item['point'] = null;
+            }
+
+            return $item;
+        })->toArray();
+
+        return $services;
     }
 
     public function getServices()
     {
-        return response()->json(['succes' => "Success"]);
+        $url = config('services.reward_service.url') . "/service";
+        $params = request()->only(['search']);
+
+        $response = $this->auth->request('get', $url, $params);
+
+        $services = $response->json();
+
+        if (!isset($services['data'])) {
+            return $services;
+        }
+
+        $services['data'] = collect($services['data'])->map(function ($item) {
+            $price = (float) $item['price'];
+            $currency = $item['currency'];
+
+            try {
+                $item['point'] = amountToPoint($price, $currency);
+            } catch (\Throwable $e) {
+                $item['point'] = null;
+            }
+
+            return $item;
+        })->toArray();
+
+        return $services;
     }
 
-    public function getServiceDetail($id)
+    public function getCompanys()
     {
-        return response()->json(['succes' => "Success"]);
+        $url = config('services.reward_service.url') . "/service/company";
+        $response = $this->auth->request('get', $url, []);
+
+        return $response->json();
+    }
+
+    public function getCompanyDetail($slug)
+    {
+        $url = config('services.reward_service.url') . "/service/company/detail/{$slug}";
+        $response = $this->auth->request('get', $url, []);
+
+        $services = $response->json();
+
+        if (!isset($services['data'])) {
+            return $services;
+        }
+
+        $services['data']['additional_products'] = collect($services['data']['additional_products'])->map(function ($item) {
+            $price = (float) $item['price'];
+            $currency = $item['currency'];
+
+            try {
+                $item['point'] = amountToPoint($price, $currency);
+            } catch (\Throwable $e) {
+                $item['point'] = null;
+            }
+
+            return $item;
+        })->toArray();
+
+        return $services;
     }
 }
 

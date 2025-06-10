@@ -105,8 +105,13 @@ class CustomerController extends Controller
         return $this->service->getServices();
     }
 
-    public function getServiceDetail($id)
+    public function getCompanys()
     {
-        return $this->service->getServiceDetail($id);
+        return $this->service->getCompanys();
+    }
+
+    public function getCompanyDetail($slug)
+    {
+        return $this->service->getCompanyDetail($slug);
     }
 }
