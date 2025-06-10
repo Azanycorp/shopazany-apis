@@ -24,13 +24,10 @@ use App\Trait\Transfer;
 class PaymentService
 {
     use HttpResponse, Transfer;
-
-    protected \App\Services\Payment\AuthorizeNet\ChargeCardService $chargeCardService;
-
-    public function __construct(ChargeCardService $chargeCardService)
-    {
-        $this->chargeCardService = $chargeCardService;
-    }
+    public function __construct(
+        protected ChargeCardService $chargeCardService
+    )
+    {}
 
     public function processPayment($request)
     {

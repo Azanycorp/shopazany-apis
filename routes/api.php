@@ -19,7 +19,6 @@ use App\Http\Controllers\Api\SubscriptionController;
 Route::middleware('validate.header')
     ->group(function (): void {
         Route::middleware(['throttle:apis', 'doNotCacheResponse'])->group(function (): void {
-
             Route::prefix('connect')
                 ->controller(AuthController::class)
                 ->group(function (): void {
@@ -195,11 +194,14 @@ Route::middleware('validate.header')
                 Route::post('/redeem/point', 'redeemPoint');
 
                 // Reward partners (service)
-                Route::prefix('service')
-                    ->group(function() {
-                        Route::get('/category', 'getCategories');
-                        Route::get('/by-category/{slug}', 'getServicesByCategory');
-                    });
+                Route::prefix('service')->group(function () {
+                    Route::get('/company/detail/{slug}', 'getCompanyDetail');
+                    Route::get('/company', 'getCompanies');
+                    Route::get('/by-category/{slug}', 'getServicesByCategory');
+                    Route::get('/category', 'getCategories');
+                    Route::get('/detail/{id}', 'getServiceDetail');
+                    Route::get('/', 'getServices');
+                });
 
                 // Support Route
                 Route::post('/support', 'support');

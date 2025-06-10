@@ -99,4 +99,19 @@ class CustomerController extends Controller
     {
         return $this->service->getServicesByCategory($slug);
     }
+
+    public function getServices()
+    {
+        return $this->service->getServices();
+    }
+
+    public function getCompanys()
+    {
+        return $this->service->getCompanys();
+    }
+
+    public function getCompanyDetail($slug)
+    {
+        return $this->service->getCompanyDetail($slug);
+    }
 }
