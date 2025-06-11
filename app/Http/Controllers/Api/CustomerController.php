@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Services\User\CustomerService;
 use App\Http\Requests\OrderRateRequest;
 use App\Http\Requests\CustomerSupportRequest;
+use App\Http\Requests\PurchaseServiceRequest;
 
 class CustomerController extends Controller
 {
@@ -113,5 +114,10 @@ class CustomerController extends Controller
     public function getCompanyDetail($slug)
     {
         return $this->service->getCompanyDetail($slug);
+    }
+
+    public function purchaseService(PurchaseServiceRequest $request)
+    {
+        return $this->service->purchaseService($request);
     }
 }
