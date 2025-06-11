@@ -498,10 +498,22 @@ class CustomerService
 
     public function purchaseService($request)
     {
-        $user = User::find($request->user_id);
+        $user = User::with('wallet')->find($request->user_id);
 
         if (!$user) {
             return $this->error(null, "User not found", 404);
+        }
+
+        if ((int) $request->point <= 0) {
+            return $this->error(null, "Reward point must be greater than zero", 422);
+        }
+
+        if (!$user->wallet) {
+            return $this->error(null, "User wallet not found", 404);
+        }
+
+        if ($user->wallet->reward_point < $request->point) {
+            return $this->error(null, "Insufficient reward point", 400);
         }
 
         $price = pointConvert($request->point, $user->default_currency);
