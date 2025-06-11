@@ -2,26 +2,27 @@
 
 namespace App\Services\User;
 
-use App\Enum\RedeemPointStatus;
-use App\Enum\UserType;
-use App\Http\Resources\AccountOverviewResource;
-use App\Http\Resources\CustomerOrderDetailResource;
-use App\Http\Resources\CustomerOrderResource;
-use App\Http\Resources\SellerProductResource;
-use App\Http\Resources\WishlistResource;
-use App\Models\Country;
-use App\Models\CustomerSupport;
-use App\Models\Order;
-use App\Models\Product;
 use App\Models\User;
+use App\Models\Order;
+use App\Enum\UserType;
+use App\Trait\General;
+use App\Models\Country;
+use App\Models\Product;
 use App\Models\Wishlist;
 use App\Services\Auth\Auth;
 use App\Trait\HttpResponse;
+use App\Enum\RedeemPointStatus;
+use App\Models\CustomerSupport;
+use App\Http\Resources\WishlistResource;
+use App\Http\Resources\CustomerOrderResource;
+use App\Http\Resources\SellerProductResource;
+use App\Http\Resources\AccountOverviewResource;
 use Spatie\ResponseCache\Facades\ResponseCache;
+use App\Http\Resources\CustomerOrderDetailResource;
 
 class CustomerService
 {
-    use HttpResponse;
+    use HttpResponse, General;
 
     public function __construct(
         protected Auth $auth,
@@ -493,6 +494,51 @@ class CustomerService
         })->toArray();
 
         return $services;
+    }
+
+    public function purchaseService($request)
+    {
+        $user = User::find($request->user_id);
+
+        if (!$user) {
+            return $this->error(null, "User not found", 404);
+        }
+
+        $price = pointConvert($request->point, $user->default_currency);
+
+        $url = config('services.reward_service.url') . "/service/purchase";
+
+        $params = [
+            'email' => $user->email,
+            'first_name' => $user->first_name,
+            'last_name' => $user->last_name,
+            'phone' => $user->phone ?? "00000000000",
+            'address' => $user->address ?? "No Address",
+            'city' => $user->city,
+            'state' => $user->state_id,
+            'product_id' => $request->product_id,
+            'point' => $request->point,
+            'price' => $price,
+            'country_id' => $user->country,
+        ];
+
+        try {
+            $response = $this->auth->request('post', $url, $params);
+            $status = $response->status();
+            $data = $response->json();
+
+            if ($result = $this->handleRewardValidation($status, $data)) {
+                return $result;
+            }
+
+            if (isset($data['status']) && $data['status'] === true) {
+                $user->wallet()->decrement('reward_point', $request->point);
+            }
+
+            return $this->success(null, $data['message'] ?? 'Service purchased successfully.');
+        } catch (\Exception $e) {
+            return $this->error(null, "Something went wrong. Please try again later. {$e->getMessage()}", 500);
+        }
     }
 }
 
