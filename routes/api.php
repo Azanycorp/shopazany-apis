@@ -207,6 +207,10 @@ Route::middleware('validate.header')
                     Route::get('/by-category/{slug}', 'getServicesByCategory');
                     Route::get('/category', 'getCategories');
                     Route::get('/detail/{id}', 'getServiceDetail');
+
+                    Route::prefix('customer')->group(function () {
+                        Route::get('/', 'getCustomers');
+                    });
                 });
 
                 // Support Route

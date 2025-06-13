@@ -120,4 +120,9 @@ class CustomerController extends Controller
     {
         return $this->service->purchaseService($request);
     }
+
+    public function getCustomers()
+    {
+        return $this->service->getCustomers();
+    }
 }

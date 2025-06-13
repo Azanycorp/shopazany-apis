@@ -12,7 +12,8 @@ class Wallet extends Model
     protected $fillable = [
         'user_id',
         'balance',
-        'reward_point'
+        'reward_point',
+        'points_cleared',
     ];
 
     public function user()
