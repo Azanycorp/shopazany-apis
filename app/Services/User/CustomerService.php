@@ -335,7 +335,7 @@ class CustomerService
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $user = User::with('userActions')->find($userId);
+        $user = User::with(['userActions', 'wallet'])->find($userId);
 
         if (!$user) {
             return $this->error(null, "User not found", 404);
@@ -345,7 +345,7 @@ class CustomerService
 
         $data = (object) [
             'points_earned' => (int)$points,
-            'points_cleared' => 0,
+            'points_cleared' => $user->wallet?->points_cleared ?? 0,
         ];
 
         return $this->success($data, "Points");
@@ -373,7 +373,17 @@ class CustomerService
                 'status' => $log->status,
                 'date' => $log->created_at,
             ];
-        });
+        })->toArray();
+
+        $rewardOrders = $this->getCustomers();
+        if (is_object($rewardOrders) && method_exists($rewardOrders, 'toArray')) {
+            $rewardOrders = $rewardOrders->toArray();
+        }
+
+        $data = [
+            'activities' => $data,
+            'orders' => $rewardOrders,
+        ];
 
         return $this->success($data, "User activity");
     }
@@ -545,12 +555,33 @@ class CustomerService
 
             if (isset($data['status']) && $data['status'] === true) {
                 $user->wallet()->decrement('reward_point', $request->point);
+                $user->wallet()->increment('points_cleared', $request->point);
             }
 
             return $this->success(null, $data['message'] ?? 'Service purchased successfully.');
         } catch (\Exception $e) {
             return $this->error(null, "Something went wrong. Please try again later. {$e->getMessage()}", 500);
         }
+    }
+
+    public function getCustomers()
+    {
+        $user = userAuth();
+
+        $params = [
+            'email' => $user->email,
+        ];
+
+        $url = config('services.reward_service.url') . "/service/customer/orders";
+        $response = $this->auth->request('get', $url, $params);
+
+        $services = $response->json();
+
+        if (!isset($services['data'])) {
+            return $services;
+        }
+
+        return $services['data']['orders'];
     }
 }
 

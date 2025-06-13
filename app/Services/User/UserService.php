@@ -27,7 +27,7 @@ class UserService extends Controller
     public function profile()
     {
         $auth = $this->userAuth();
-        $user = User::with(['wallet', 'bankAccount', 'userbusinessinfo', 'userSubscriptions', 'userShippingAddress'])
+        $user = User::with(relations: ['wallet', 'bankAccount', 'userbusinessinfo', 'userSubscriptions', 'userShippingAddress'])
             ->withCount('referrals')
             ->findOrFail($auth->id)
             ->append(['is_subscribed', 'subscription_plan']);
