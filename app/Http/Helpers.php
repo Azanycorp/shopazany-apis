@@ -595,3 +595,19 @@ if (! function_exists('pointConvert')) {
         return round($convertedValue, 2);
     }
 }
+
+if (! function_exists('amountToPoint')) {
+    function amountToPoint($amount, $currency)
+    {
+        $usdSetting = RewardPointSetting::where('currency', 'USD')->first();
+        if (!$usdSetting) {
+            throw new Exception("Reward point setting for USD not found.");
+        }
+
+        $usdValue = currencyConvert($currency, $amount, 'USD');
+        $points = ($usdValue * $usdSetting->point) / $usdSetting->value;
+
+        return round($points);
+    }
+}
+

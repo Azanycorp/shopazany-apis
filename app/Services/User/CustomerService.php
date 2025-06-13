@@ -2,25 +2,32 @@
 
 namespace App\Services\User;
 
-use App\Enum\RedeemPointStatus;
+use App\Models\User;
+use App\Models\Order;
 use App\Enum\UserType;
-use App\Http\Resources\AccountOverviewResource;
-use App\Http\Resources\CustomerOrderDetailResource;
+use App\Trait\General;
+use App\Models\Country;
+use App\Models\Product;
+use App\Models\Wishlist;
+use App\Services\Auth\Auth;
+use App\Trait\HttpResponse;
+use App\Enum\RedeemPointStatus;
+use App\Models\CustomerSupport;
+use App\Http\Resources\WishlistResource;
 use App\Http\Resources\CustomerOrderResource;
 use App\Http\Resources\SellerProductResource;
-use App\Http\Resources\WishlistResource;
-use App\Models\Country;
-use App\Models\CustomerSupport;
-use App\Models\Order;
-use App\Models\Product;
-use App\Models\User;
-use App\Models\Wishlist;
-use App\Trait\HttpResponse;
+use App\Http\Resources\AccountOverviewResource;
 use Spatie\ResponseCache\Facades\ResponseCache;
+use App\Http\Resources\CustomerOrderDetailResource;
 
 class CustomerService
 {
-    use HttpResponse;
+    use HttpResponse, General;
+
+    public function __construct(
+        protected Auth $auth,
+    )
+    {}
 
     public function dashboardAnalytics(int $userId)
     {
@@ -328,7 +335,7 @@ class CustomerService
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        $user = User::with('userActions')->find($userId);
+        $user = User::with(['userActions', 'wallet'])->find($userId);
 
         if (!$user) {
             return $this->error(null, "User not found", 404);
@@ -338,7 +345,7 @@ class CustomerService
 
         $data = (object) [
             'points_earned' => (int)$points,
-            'points_cleared' => 0,
+            'points_cleared' => $user->wallet?->points_cleared ?? 0,
         ];
 
         return $this->success($data, "Points");
@@ -366,7 +373,17 @@ class CustomerService
                 'status' => $log->status,
                 'date' => $log->created_at,
             ];
-        });
+        })->toArray();
+
+        $rewardOrders = $this->getCustomers();
+        if (is_object($rewardOrders) && method_exists($rewardOrders, 'toArray')) {
+            $rewardOrders = $rewardOrders->toArray();
+        }
+
+        $data = [
+            'activities' => $data,
+            'orders' => $rewardOrders,
+        ];
 
         return $this->success($data, "User activity");
     }
@@ -388,6 +405,183 @@ class CustomerService
         ]);
 
         return $this->success(null, "Points redeemed successfully");
+    }
+
+    public function getCategories()
+    {
+        $url = config('services.reward_service.url') . "/service/all-category";
+        $response = $this->auth->request('get', $url, []);
+
+        return $response->json();
+    }
+
+    public function getServicesByCategory($slug)
+    {
+        $url = config('services.reward_service.url') . "/service/category/{$slug}";
+        $response = $this->auth->request('get', $url, []);
+
+        $services = $response->json();
+
+        if (!isset($services['data'])) {
+            return $services;
+        }
+
+        $services['data'] = collect($services['data'])->map(function ($item) {
+            $price = (float) $item['price'];
+            $currency = $item['currency'];
+
+            try {
+                $item['point'] = amountToPoint($price, $currency);
+            } catch (\Throwable $e) {
+                $item['point'] = null;
+            }
+
+            return $item;
+        })->toArray();
+
+        return $services;
+    }
+
+    public function getServices()
+    {
+        $url = config('services.reward_service.url') . "/service";
+        $params = request()->only(['search']);
+
+        $response = $this->auth->request('get', $url, $params);
+
+        $services = $response->json();
+
+        if (!isset($services['data'])) {
+            return $services;
+        }
+
+        $services['data'] = collect($services['data'])->map(function ($item) {
+            $price = (float) $item['price'];
+            $currency = $item['currency'];
+
+            try {
+                $item['point'] = amountToPoint($price, $currency);
+            } catch (\Throwable $e) {
+                $item['point'] = null;
+            }
+
+            return $item;
+        })->toArray();
+
+        return $services;
+    }
+
+    public function getCompanies()
+    {
+        $url = config('services.reward_service.url') . "/service/company";
+        $response = $this->auth->request('get', $url, []);
+
+        return $response->json();
+    }
+
+    public function getCompanyDetail($slug)
+    {
+        $url = config('services.reward_service.url') . "/service/company/detail/{$slug}";
+        $response = $this->auth->request('get', $url, []);
+
+        $services = $response->json();
+
+        if (!isset($services['data'])) {
+            return $services;
+        }
+
+        $services['data']['additional_products'] = collect($services['data']['additional_products'])->map(function ($item) {
+            $price = (float) $item['price'];
+            $currency = $item['currency'];
+
+            try {
+                $item['point'] = amountToPoint($price, $currency);
+            } catch (\Throwable $e) {
+                $item['point'] = null;
+            }
+
+            return $item;
+        })->toArray();
+
+        return $services;
+    }
+
+    public function purchaseService($request)
+    {
+        $user = User::with('wallet')->find($request->user_id);
+
+        if (!$user) {
+            return $this->error(null, "User not found", 404);
+        }
+
+        if ((int) $request->point <= 0) {
+            return $this->error(null, "Reward point must be greater than zero", 422);
+        }
+
+        if (!$user->wallet) {
+            return $this->error(null, "User wallet not found", 404);
+        }
+
+        if ($user->wallet->reward_point < $request->point) {
+            return $this->error(null, "Insufficient reward point", 400);
+        }
+
+        $price = pointConvert($request->point, $user->default_currency);
+
+        $url = config('services.reward_service.url') . "/service/purchase";
+
+        $params = [
+            'email' => $user->email,
+            'first_name' => $user->first_name,
+            'last_name' => $user->last_name,
+            'phone' => $user->phone ?? "00000000000",
+            'address' => $user->address ?? "No Address",
+            'city' => $user->city,
+            'state' => $user->state_id,
+            'product_id' => $request->product_id,
+            'point' => $request->point,
+            'price' => $price,
+            'country_id' => $user->country,
+        ];
+
+        try {
+            $response = $this->auth->request('post', $url, $params);
+            $status = $response->status();
+            $data = $response->json();
+
+            if ($result = $this->handleRewardValidation($status, $data)) {
+                return $result;
+            }
+
+            if (isset($data['status']) && $data['status'] === true) {
+                $user->wallet()->decrement('reward_point', $request->point);
+                $user->wallet()->increment('points_cleared', $request->point);
+            }
+
+            return $this->success(null, $data['message'] ?? 'Service purchased successfully.');
+        } catch (\Exception $e) {
+            return $this->error(null, "Something went wrong. Please try again later. {$e->getMessage()}", 500);
+        }
+    }
+
+    public function getCustomers()
+    {
+        $user = userAuth();
+
+        $params = [
+            'email' => $user->email,
+        ];
+
+        $url = config('services.reward_service.url') . "/service/customer/orders";
+        $response = $this->auth->request('get', $url, $params);
+
+        $services = $response->json();
+
+        if (!isset($services['data'])) {
+            return $services;
+        }
+
+        return $services['data']['orders'];
     }
 }
 

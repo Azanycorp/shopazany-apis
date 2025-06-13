@@ -6,6 +6,8 @@ use App\Enum\OrderStatus;
 
 trait General
 {
+    use HttpResponse;
+
     protected function determineOrderStatus($statuses)
     {
         if ($statuses->contains(OrderStatus::PENDING)) {
@@ -23,6 +25,21 @@ trait General
         }
 
         return OrderStatus::PENDING;
+    }
+
+    protected function handleRewardValidation($status, $data)
+    {
+        if ($status === 422) {
+            return $this->error($data['errors'] ?? null, $data['message'] ?? 'Validation failed', 422);
+        }
+
+        if ($status >= 400 && $status < 600) {
+            return $this->error(
+                $data['errors'] ?? null,
+                $data['message'] ?? "Request failed with status code $status",
+                $status
+            );
+        }
     }
 }
 
