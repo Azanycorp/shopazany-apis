@@ -19,21 +19,25 @@ use App\Http\Controllers\Api\SubscriptionController;
 Route::middleware('validate.header')
     ->group(function (): void {
         Route::middleware(['throttle:apis', 'doNotCacheResponse'])->group(function (): void {
-
             Route::prefix('connect')
                 ->controller(AuthController::class)
                 ->group(function (): void {
                     Route::post('/login', 'login')
                         ->middleware('login.attempt');
                     Route::post('/login/verify', 'loginVerify');
-                    Route::post('/signup', 'signup');
-                    Route::post('/forgot/password', 'forgot');
+                    Route::post('/signup', 'signup')
+                        ->middleware('throttle:6,1');
+                    Route::post('/forgot/password', 'forgot')
+                        ->middleware('throttle:6,1');
                     Route::post('/reset/password', 'reset');
-                    Route::post('/signup/resend', 'resendCode');
+                    Route::post('/signup/resend', 'resendCode')
+                        ->middleware('throttle:6,1');
                     Route::post('/logout', 'logout');
                     Route::post('/verify/email', 'verify');
-                    Route::post('/seller/signup', 'sellerSignup');
-                    Route::post('/affiliate/signup', 'affiliateSignup');
+                    Route::post('/seller/signup', 'sellerSignup')
+                        ->middleware('throttle:6,1');;
+                    Route::post('/affiliate/signup', 'affiliateSignup')
+                        ->middleware('throttle:6,1');;
                 });
 
             Route::get('/country', [ApiController::class, 'country']);
@@ -193,6 +197,21 @@ Route::middleware('validate.header')
                 //Reward Point
                 Route::get('/reward/dashboard/{user_id}', 'rewardDashboard');
                 Route::post('/redeem/point', 'redeemPoint');
+
+                // Reward partners (service)
+                Route::prefix('service')->group(function () {
+                    Route::get('/', 'getServices');
+                    Route::post('/purchase', 'purchaseService');
+                    Route::get('/company/detail/{slug}', 'getCompanyDetail');
+                    Route::get('/company', 'getCompanies');
+                    Route::get('/by-category/{slug}', 'getServicesByCategory');
+                    Route::get('/category', 'getCategories');
+                    Route::get('/detail/{id}', 'getServiceDetail');
+
+                    Route::prefix('customer')->group(function () {
+                        Route::get('/', 'getCustomers');
+                    });
+                });
 
                 // Support Route
                 Route::post('/support', 'support');
