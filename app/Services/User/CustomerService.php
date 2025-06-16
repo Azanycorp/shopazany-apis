@@ -341,10 +341,8 @@ class CustomerService
             return $this->error(null, "User not found", 404);
         }
 
-        $points = $user->userActions()->sum('points');
-
         $data = (object) [
-            'points_earned' => (int)$points,
+            'points_earned' => $user->wallet?->reward_point ?? 0,
             'points_cleared' => $user->wallet?->points_cleared ?? 0,
         ];
 
