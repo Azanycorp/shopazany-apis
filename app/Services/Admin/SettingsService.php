@@ -2,6 +2,7 @@
 
 namespace App\Services\Admin;
 
+use App\Enum\AdminType;
 use App\Models\Admin;
 use App\Trait\SignUp;
 use App\Enum\PlanType;
@@ -303,7 +304,7 @@ class SettingsService
                 'last_name' => $request->last_name,
                 'email' => $request->email,
                 'phone_number' => $request->phone_number,
-                'type' => $request->type,
+                'type' => AdminType::B2C,
                 'password' => bcrypt($password),
                 'status' => UserStatus::ACTIVE
             ]);
