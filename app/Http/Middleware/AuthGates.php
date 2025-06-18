@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -16,10 +17,12 @@ class AuthGates
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $user = $request?->user()?->load('roles.permissions');
+        //$user = $request?->user()?->load('roles.permissions');
+
+        $user = Auth::guard('admin')->user() ?? $request?->user();
 
         if($user){
-
+            $user->load('roles.permissions');
             $permissions = [];
 
             foreach($user->roles as $role) {
