@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api\B2B;
 
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
+use Symfony\Component\HttpFoundation\Response;
 use App\Services\B2B\AdminService;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
@@ -21,7 +21,7 @@ class B2BAdminSellerController extends Controller
 
     public function allSellers()
     {
-        abort_if(Gate::denies('seller_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+        //abort_if(Gate::denies('seller_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
         return $this->service->allSellers();
     }
 
