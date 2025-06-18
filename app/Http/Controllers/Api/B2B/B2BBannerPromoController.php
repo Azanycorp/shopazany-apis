@@ -5,9 +5,6 @@ namespace App\Http\Controllers\Api\B2B;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Services\Admin\B2BAdminService;
-use App\Services\Admin\BannerPromoService;
-use App\Http\Requests\Admin\AddPromoRequest;
-use App\Http\Requests\Admin\AddBannerRequest;
 use App\Http\Requests\Admin\NewSliderRequest;
 use App\Services\Admin\B2BBannerPromoService;
 use App\Http\Requests\Admin\B2BAddPromoRequest;
@@ -42,7 +39,6 @@ class B2BBannerPromoController extends Controller
     {
         return $this->b2BAdminService->deleteSlider($id);
     }
-
 
     public function addBanner(AddB2BBannerRequest $request)
     {
