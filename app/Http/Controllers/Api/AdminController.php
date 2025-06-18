@@ -78,7 +78,7 @@ class AdminController extends Controller
     //Admin Users
     public function adminUsers()
     {
-        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+        //abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
         return $this->superAdminService->adminUsers();
     }
 
