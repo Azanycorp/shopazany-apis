@@ -3,29 +3,26 @@
 namespace App\Services;
 
 use App\Models\Admin;
-use App\Models\Order;
 use App\Trait\SignUp;
-use App\Models\Country;
 use App\Enum\PlanStatus;
 use App\Models\B2bOrder;
 use App\Enum\AdminStatus;
+use App\Enum\AdminType;
 use App\Enum\MailingEnum;
 use App\Enum\OrderStatus;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
 use App\Models\PickupStation;
 use App\Models\ShippingAgent;
-use App\Models\SocialSetting;
 use App\Mail\B2BNewAdminEmail;
 use App\Models\CollationCenter;
 use Illuminate\Support\Facades\DB;
 use App\Http\Resources\HubResource;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Contracts\Pipeline\Hub;
-use App\Http\Resources\SocialLinkResource;
 use App\Http\Resources\ShippingAgentResource;
 use App\Http\Resources\CollationCentreResource;
+use Illuminate\Support\Facades\Auth;
 
 class SuperAdminService
 {
@@ -247,16 +244,25 @@ class SuperAdminService
     //Admin User Management
     public function adminUsers()
     {
+        $user = Auth::guard('admin')->user();
+
         $searchQuery = request()->input('search');
+
         $admins = Admin::with('permissions:id,name')
             ->select('id', 'first_name', 'last_name', 'email', 'created_at')
-            ->orderByDESC('created_at')
+            ->when($user->type === 'b2c_admin', function ($query) {
+                $query->where('type', AdminType::B2C);
+            })
+            ->when($user->type === 'b2b_admin', function ($query) {
+                $query->where('type', AdminType::B2B);
+            })
             ->when($searchQuery, function ($queryBuilder) use ($searchQuery) {
                 $queryBuilder->where(function ($subQuery) use ($searchQuery) {
-                    $subQuery->where('first_name', 'LIKE', '%' . $searchQuery . '%')
-                        ->orWhere('email', 'LIKE', '%' . $searchQuery . '%');
+                    $subQuery->where('first_name', 'LIKE', "%{$searchQuery}%")
+                        ->orWhere('email', 'LIKE', "%{$searchQuery}%");
                 });
             })
+            ->orderByDesc('created_at')
             ->get();
 
         return $this->success($admins, 'All Admin Users');
