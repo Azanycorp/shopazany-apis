@@ -244,7 +244,7 @@ Route::middleware('validate.header')
             Route::controller(AdminController::class)->group(function () {
                 //Admin users
                 Route::prefix('admin-users')->group(function () {
-                    Route::get('/', 'adminUsers')->middleware('cacheResponse:300');
+                    Route::get('/', 'adminUsers');
                     Route::post('/add', 'addAdmin');
                     Route::get('/details/{id}', 'viewAdminUser');
                     Route::post('/update/{id}', 'editAdminUser');
@@ -317,6 +317,17 @@ Route::middleware('validate.header')
                     });
                 });
 
+                Route::prefix('admin-users')
+                    ->controller(AdminController::class)
+                    ->group(function () {
+                    Route::get('/', 'adminUsers');
+                    Route::post('/add', 'addAdmin');
+                    Route::get('/details/{id}', 'viewAdminUser');
+                    Route::post('/update/{id}', 'editAdminUser');
+                    Route::post('/revoke-access/{id}', 'revokeAccess');
+                    Route::post('/verify-password', 'verifyPassword');
+                    Route::delete('/delete-account/{id}', 'removeAdmin');
+                });
 
                 Route::prefix('category')->controller(ProductCategoryController::class)->group(function () {
                     Route::post('/create', 'createCategory');
