@@ -246,7 +246,7 @@ class SuperAdminService
     {
         $user = Auth::guard('admin')->user();
 
-        dd($user);
+        return $user;
 
         $searchQuery = request()->input('search');
 
