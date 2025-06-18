@@ -246,6 +246,8 @@ class SuperAdminService
     {
         $user = Auth::guard('admin')->user();
 
+        dd($user);
+
         $searchQuery = request()->input('search');
 
         $admins = Admin::with('permissions:id,name')
