@@ -244,9 +244,7 @@ class SuperAdminService
     //Admin User Management
     public function adminUsers()
     {
-        $user = Auth::guard('admin')->user();
-
-        return $user;
+        $user = Auth::user();
 
         $searchQuery = request()->input('search');
 
