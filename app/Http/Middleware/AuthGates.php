@@ -19,7 +19,6 @@ class AuthGates
         $user = $request?->user()?->load('roles.permissions');
 
         if($user){
-
             $permissions = [];
 
             foreach($user->roles as $role) {

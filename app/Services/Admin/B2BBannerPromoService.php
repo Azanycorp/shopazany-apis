@@ -7,7 +7,6 @@ use App\Models\Banner;
 use App\Enum\BannerType;
 use App\Enum\CouponType;
 use App\Models\B2bPromo;
-use App\Models\B2bBanner;
 use App\Enum\BannerStatus;
 use App\Models\B2BProduct;
 use App\Enum\ProductStatus;
