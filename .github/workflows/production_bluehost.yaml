@@ -2,14 +2,14 @@ name: Production Deployment
 
 on:
   push:
-    branches: [ deploy ]
- 
+    branches: [deploy]
+
 jobs:
   deploy:
-    runs-on: ubuntu-latest 
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout code 
-        uses: actions/checkout@v4 
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Setup PHP 8.2
         uses: shivammathur/setup-php@v2
@@ -18,19 +18,25 @@ jobs:
 
       - name: Install dependencies
         run: |
-          composer install
+          composer install --no-dev --prefer-dist --optimize-autoloader
 
       - name: 📂 Sync files
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          server:  ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD}}
+          server: ${{ secrets.FTP_SERVER }}  # Should be ftp.erq.peg.mybluehost.me
+          username: ${{ secrets.FTP_USERNAME }}  # Must include @host: user@erq.peg.mybluehost.me
+          password: ${{ secrets.FTP_PASSWORD }}
           protocol: ftp
           port: 21
+          server-dir: ./public_html/  # Critical Bluehost fix - relative path
+          local-dir: ./  # Deploys entire repo (adjust if needed)
+          ftp-passive-mode: true  # Required for Bluehost
+          ftp-ignore-passive-ip: true  # Fixes passive IP issues
+          dangerous-clean-slate: false  # Safety precaution
+          verbose: true  # Enable detailed logs
           exclude: |
-            **/.git*
-            **/.git*/**
-            **/node_modules/**
-            **/node_modules/**/*
+            */.git
+            */.git/**
+            */node_modules/*
+            */node_modules//
             fileToExclude.txt
