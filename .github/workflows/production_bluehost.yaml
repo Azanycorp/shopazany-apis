@@ -28,7 +28,7 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           protocol: ftp
           port: 21
-          server-dir: ./public_html/  # Critical Bluehost fix - relative path
+          server-dir: ./shopazany.erq.peg.mybluehost.me/   #./public_html/  # Critical Bluehost fix - relative path
           local-dir: ./  # Deploys entire repo (adjust if needed)
           ftp-passive-mode: true  # Required for Bluehost
           ftp-ignore-passive-ip: true  # Fixes passive IP issues
