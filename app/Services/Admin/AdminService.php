@@ -52,9 +52,11 @@ class AdminService
 
     public function slider()
     {
-        $sliders = Cache::rememberForever('home_sliders', function () {
-            return SliderImage::orderBy('created_at', 'desc')->take(5)->get();
-        });
+        $sliders = Cache::rememberForever('home_sliders', 
+            fn() => SliderImage::orderBy('created_at', 'desc')
+            ->take(5)
+            ->get()
+        );
 
         $data = SliderResource::collection($sliders);
 
@@ -74,9 +76,7 @@ class AdminService
 
     public function country()
     {
-        $country = Cache::rememberForever('country', function () {
-            return Country::get();
-        });
+        $country = Cache::rememberForever('country', fn () => Country::get());
 
         $data = CountryResource::collection($country);
 
