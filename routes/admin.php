@@ -272,13 +272,12 @@ Route::middleware('validate.header')
                 });
             });
 
-
             //b2b admin
             Route::prefix('b2b')->group(function () {
                 Route::controller(B2BAdminController::class)->group(function () {
-                    Route::get('/dashboard', 'dashboard')->middleware('cacheResponse:300');
+                    Route::get('/dashboard', 'dashboard');
 
-                    Route::get('/profile', 'adminProfile')->middleware('cacheResponse:300');
+                    Route::get('/profile', 'adminProfile');
                     Route::post('/update-profile', 'updateAdminProfile');
                     Route::post('/update-password', 'updateAdminPassword');
                     Route::post('/enable-2fa', 'enable2FA');
@@ -320,133 +319,156 @@ Route::middleware('validate.header')
                 Route::prefix('admin-users')
                     ->controller(AdminController::class)
                     ->group(function () {
-                    Route::get('/', 'adminUsers');
-                    Route::post('/add', 'addAdmin');
-                    Route::get('/details/{id}', 'viewAdminUser');
-                    Route::post('/update/{id}', 'editAdminUser');
-                    Route::post('/revoke-access/{id}', 'revokeAccess');
-                    Route::post('/verify-password', 'verifyPassword');
-                    Route::delete('/delete-account/{id}', 'removeAdmin');
-                });
-
-                Route::prefix('category')->controller(ProductCategoryController::class)->group(function () {
-                    Route::post('/create', 'createCategory');
-                    Route::get('/all', 'adminCategories')->middleware('cacheResponse:300');
-                    Route::get('/analytics', 'categoryAnalytic');
-                    Route::post('/update/{id}', 'updateCategory');
-                    Route::post('/change/{category_id}', 'featuredStatus');
-                    Route::delete('/delete/{id}', 'deleteCategory');
-
-                    Route::post('/create/subcategory', 'createSubCategory');
-                    Route::get('/subcategory', 'getAdminSubcategory');
-                    Route::get('/{category_id}/subcategory', 'getSubcategory')->middleware('cacheResponse:300');
-                    Route::post('/subcategory/status/{sub_category_id}', 'subStatus');
-                    Route::delete('/subcategory/delete/{id}', 'deleteSubCategory');
-                });
-
-
-                Route::controller(B2BBannerPromoController::class)->group(function (): void {
-                    Route::prefix('banner')->group(function (): void {
-                        Route::post('/add', 'addBanner');
-                        Route::get('/', 'banners')->middleware('cacheResponse:300');
-                        Route::get('/{id}', 'getOneBanner');
-                        Route::post('/edit/{id}', 'editBanner');
-                        Route::delete('/delete/{id}', 'deleteBanner');
+                        Route::get('/', 'adminUsers');
+                        Route::post('/add', 'addAdmin');
+                        Route::get('/details/{id}', 'viewAdminUser');
+                        Route::post('/update/{id}', 'editAdminUser');
+                        Route::post('/revoke-access/{id}', 'revokeAccess');
+                        Route::post('/verify-password', 'verifyPassword');
+                        Route::delete('/delete-account/{id}', 'removeAdmin');
                     });
-                    Route::prefix('slider')->group(function (): void {
-                        Route::get('/', 'sliders');
-                        Route::post('/add', 'addSlider');
-                        Route::get('/view/{id}', 'getSlider');
-                        Route::post('/update/{id}', 'updateSlider');
-                        Route::delete('/delete/{id}', 'deleteSlider');
-                    });
-                });
 
-                Route::prefix('promo')->controller(B2BBannerPromoController::class)->group(function (): void {
-                    Route::post('/add', 'addPromo');
-                    Route::get('/', 'promos');
-                    Route::get('/products', 'getProducts')->middleware('cacheResponse:300');
-                    Route::delete('/delete/{id}', 'deletePromo');
-                });
+                Route::prefix('category')
+                    ->controller(ProductCategoryController::class)
+                    ->group(function () {
+                        Route::post('/create', 'createCategory');
+                        Route::get('/all', 'adminCategories')->middleware('cacheResponse:300');
+                        Route::get('/analytics', 'categoryAnalytic');
+                        Route::post('/update/{id}', 'updateCategory');
+                        Route::post('/change/{category_id}', 'featuredStatus');
+                        Route::delete('/delete/{id}', 'deleteCategory');
+
+                        Route::post('/create/subcategory', 'createSubCategory');
+                        Route::get('/subcategory', 'getAdminSubcategory');
+                        Route::get('/{category_id}/subcategory', 'getSubcategory')->middleware('cacheResponse:300');
+                        Route::post('/subcategory/status/{sub_category_id}', 'subStatus');
+                        Route::delete('/subcategory/delete/{id}', 'deleteSubCategory');
+                    });
+
+                Route::controller(B2BBannerPromoController::class)
+                    ->group(function (): void {
+                        Route::prefix('banner')->group(function (): void {
+                            Route::post('/add', 'addBanner');
+                            Route::get('/', 'banners')->middleware('cacheResponse:300');
+                            Route::get('/{id}', 'getOneBanner');
+                            Route::post('/edit/{id}', 'editBanner');
+                            Route::delete('/delete/{id}', 'deleteBanner');
+                        });
+                        Route::prefix('slider')->group(function (): void {
+                            Route::get('/', 'sliders');
+                            Route::post('/add', 'addSlider');
+                            Route::get('/view/{id}', 'getSlider');
+                            Route::post('/update/{id}', 'updateSlider');
+                            Route::delete('/delete/{id}', 'deleteSlider');
+                        });
+                    });
+
+                Route::prefix('promo')
+                    ->controller(B2BBannerPromoController::class)
+                    ->group(function (): void {
+                        Route::post('/add', 'addPromo');
+                        Route::get('/', 'promos');
+                        Route::get('/products', 'getProducts')->middleware('cacheResponse:300');
+                        Route::delete('/delete/{id}', 'deletePromo');
+                    });
 
                 //buyers
-                Route::prefix('buyer')->controller(B2BAdminBuyerController::class)->group(function (): void {
-                    // GET routes
-                    Route::get('/', 'allBuyers')->middleware('cacheResponse:300');
-                    Route::get('/filter', 'filter');
-                    Route::get('/details/{user_id}', 'viewBuyer');
-                    Route::post('/update-details/{id}', 'editBuyer');
-                    Route::post('/update-company-details/{id}', 'editBuyerCompany');
-                    Route::patch('/approve/{user_id}', 'approveBuyer');
-                    Route::patch('/ban/{user_id}', 'banBuyer');
-                    Route::delete('/bulk-remove', 'bulkRemoveBuyer');
-                    Route::delete('/remove/{user_id}', 'removeBuyer');
-                });
+                Route::prefix('buyer')
+                    ->controller(B2BAdminBuyerController::class)
+                    ->group(function (): void {
+                        // GET routes
+                        Route::get('/', 'allBuyers')->middleware('cacheResponse:300');
+                        Route::get('/filter', 'filter');
+                        Route::get('/details/{user_id}', 'viewBuyer');
+                        Route::post('/update-details/{id}', 'editBuyer');
+                        Route::post('/update-company-details/{id}', 'editBuyerCompany');
+                        Route::patch('/approve/{user_id}', 'approveBuyer');
+                        Route::patch('/ban/{user_id}', 'banBuyer');
+                        Route::delete('/bulk-remove', 'bulkRemoveBuyer');
+                        Route::delete('/remove/{user_id}', 'removeBuyer');
+                    });
 
                 //Sellers
-                Route::prefix('seller')->controller(B2BAdminSellerController::class)->group(function (): void {
-                    Route::get('/', 'allSellers')->middleware('cacheResponse:300');
-                    Route::get('/details/{user_id}', 'viewSeller')->middleware('cacheResponse:300');
-                    Route::delete('/remove/{user_id}', 'removeSeller');
-                    Route::post('/approve/{id}', 'approveSeller');
-                    Route::post('/ban/{id}', 'banSeller');
-                    Route::delete('/bulk/remove', 'bulkRemove');
+                Route::prefix('seller')
+                    ->controller(B2BAdminSellerController::class)
+                    ->group(function (): void {
+                        Route::get('/', 'allSellers')->middleware('cacheResponse:300');
+                        Route::get('/details/{user_id}', 'viewSeller')->middleware('cacheResponse:300');
+                        Route::delete('/remove/{user_id}', 'removeSeller');
+                        Route::post('/approve/{id}', 'approveSeller');
+                        Route::post('/ban/{id}', 'banSeller');
+                        Route::delete('/bulk/remove', 'bulkRemove');
 
-                    Route::prefix('product')->controller(B2BAdminSellerController::class)->group(function (): void {
-                        Route::post('/add', 'addSellerProduct');
-                        Route::get('/details/{user_id}/{id}', 'viewSellerProduct');
-                        Route::post('/update/{user_id}/{id}', 'editSellerProduct');
-                        Route::delete('/delete/{user_id}/{id}', 'removeSellerProduct');
+                        Route::prefix('product')
+                            ->controller(B2BAdminSellerController::class)
+                            ->group(function (): void {
+                                Route::post('/add', 'addSellerProduct');
+                                Route::get('/details/{user_id}/{id}', 'viewSellerProduct');
+                                Route::post('/update/{user_id}/{id}', 'editSellerProduct');
+                                Route::delete('/delete/{user_id}/{id}', 'removeSellerProduct');
+                            });
                     });
-                });
 
                 //Withdrawal requests
-                Route::prefix('widthrawal-request')->controller(B2BAdminController::class)->group(function (): void {
-                    Route::get('/', 'widthrawalRequests')->middleware('cacheResponse:300');
-                    Route::get('/view/{id}', 'viewWidthrawalRequest')->middleware('cacheResponse:300');
-                    Route::post('/approve/{id}', 'approveWidthrawalRequest');
-                    Route::post('/cancel/{id}', 'cancelWidthrawalRequest');
-                });
+                Route::prefix('widthrawal-request')
+                    ->controller(B2BAdminController::class)
+                    ->group(function (): void {
+                        Route::get('/', 'widthrawalRequests')->middleware('cacheResponse:300');
+                        Route::get('/view/{id}', 'viewWidthrawalRequest')->middleware('cacheResponse:300');
+                        Route::post('/approve/{id}', 'approveWidthrawalRequest');
+                        Route::post('/cancel/{id}', 'cancelWidthrawalRequest');
+                    });
 
                 //Withdrawal method requests
-                Route::prefix('widthrawal-method-request')->controller(B2BAdminController::class)->group(function (): void {
-                    Route::get('/', 'widthrawalMethods')->middleware('cacheResponse:300');
-                    Route::get('/view/{id}', 'viewWidthrawalMethod')->middleware('cacheResponse:300');
-                    Route::post('/approve/{id}', 'approveWidthrawalMethod');
-                    Route::post('/reject/{id}', 'rejectWidthrawalMethod');
-                });
+                Route::prefix('widthrawal-method-request')
+                    ->controller(B2BAdminController::class)
+                    ->group(function (): void {
+                        Route::get('/', 'widthrawalMethods')->middleware('cacheResponse:300');
+                        Route::get('/view/{id}', 'viewWidthrawalMethod')->middleware('cacheResponse:300');
+                        Route::post('/approve/{id}', 'approveWidthrawalMethod');
+                        Route::post('/reject/{id}', 'rejectWidthrawalMethod');
+                    });
 
                 //Subscriprion plans
-                Route::prefix('subscription-plans')->controller(B2BAdminController::class)->group(function (): void {
-                    Route::get('/', 'b2bSubscriptionPlans');
-                    Route::post('add/', 'addSubscriptionPlan');
-                    Route::get('/details/{id}', 'viewSubscriptionPlan');
-                    Route::post('/update/{id}', 'editSubscriptionPlan');
-                    Route::delete('/remove/{id}', 'deleteSubscriptionPlan');
-                });
-
-
+                Route::prefix('subscription-plans')
+                    ->controller(B2BAdminController::class)
+                    ->group(function (): void {
+                        Route::get('/', 'b2bSubscriptionPlans');
+                        Route::post('add/', 'addSubscriptionPlan');
+                        Route::get('/details/{id}', 'viewSubscriptionPlan');
+                        Route::post('/update/{id}', 'editSubscriptionPlan');
+                        Route::delete('/remove/{id}', 'deleteSubscriptionPlan');
+                    });
 
                 //Seller Product Approval requests
-                Route::prefix('product-approval-request')->controller(B2BAdminController::class)->group(function (): void {
-                    Route::get('/', 'allProducts');
-                    Route::get('/view/{id}', 'viewProduct');
-                    Route::post('/approve/{id}', 'approveProduct');
-                    Route::post('/reject/{id}', 'rejectProduct');
-                });
+                Route::prefix('product-approval-request')
+                    ->controller(B2BAdminController::class)
+                    ->group(function (): void {
+                        Route::get('/', 'allProducts');
+                        Route::get('/view/{id}', 'viewProduct');
+                        Route::post('/approve/{id}', 'approveProduct');
+                        Route::post('/reject/{id}', 'rejectProduct');
+                    });
 
                 //Rfq
-                Route::middleware('cacheResponse:300')->prefix('rfqs')->controller(B2BAdminController::class)->group(function (): void {
-                    Route::get('/', 'allRfq');
-                    Route::get('/details/{id}', 'rfqDetails');
-                });
+                Route::middleware('cacheResponse:300')
+                    ->prefix('rfqs')
+                    ->controller(B2BAdminController::class)
+                    ->group(function (): void {
+                        Route::get('/', 'allRfq');
+                        Route::get('/details/{id}', 'rfqDetails');
+                    });
+
                 //Orders
-                Route::middleware('cacheResponse:300')->prefix('orders')->controller(B2BAdminController::class)->group(function (): void {
-                    Route::get('/', 'allOrders');
-                    Route::get('/details/{id}', 'orderDetails');
-                    Route::post('/mark-completed/{id}', 'markCompleted');
-                    Route::post('/cancel-order/{id}', 'cancelOrder');
-                });
+                Route::middleware('cacheResponse:300')
+                    ->prefix('orders')
+                    ->controller(B2BAdminController::class)
+                    ->group(function (): void {
+                        Route::get('/', 'allOrders');
+                        Route::get('/details/{id}', 'orderDetails');
+                        Route::post('/mark-completed/{id}', 'markCompleted');
+                        Route::post('/cancel-order/{id}', 'cancelOrder');
+                    });
             });
         });
     });
