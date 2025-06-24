@@ -223,25 +223,30 @@ Route::middleware('validate.header')
             Route::get('/generate/users/link', [ApiController::class, 'referralGenerate']);
 
             //Shipping Agency
-            Route::prefix('shipping-management')->controller(B2BAdminController::class)->group(function (): void {
-                Route::get('/', 'shippingAgents')->middleware('cacheResponse:300');
-                Route::post('/add', 'addShippingAgent');
-                Route::get('/details/{id}', 'viewShippingAgent')->middleware('cacheResponse:300');
-                Route::post('/update/{id}', 'editShippingAgent');
-                Route::delete('/delete/{id}', 'deleteShippingAgent');
-            });
+            Route::prefix('shipping-management')
+                ->controller(B2BAdminController::class)
+                ->group(function (): void {
+                    Route::get('/', 'shippingAgents');
+                    Route::post('/add', 'addShippingAgent');
+                    Route::get('/details/{id}', 'viewShippingAgent');
+                    Route::post('/update/{id}', 'editShippingAgent');
+                    Route::delete('/delete/{id}', 'deleteShippingAgent');
+                });
 
-            Route::prefix('affiliate')->controller(AdminAffiliateController::class)->group(function () {
-                Route::get('/overview', 'overview')
-                    ->middleware('cacheResponse:600');
-                Route::get('/users', 'allUsers')
-                    ->middleware('cacheResponse:600');
-                Route::get('/user/{id}', 'userDetail');
-                Route::patch('/suspend/{id}', 'suspend');
-                Route::post('/reset-password', 'resetPassword');
-            });
+            Route::prefix('affiliate')
+                ->controller(AdminAffiliateController::class)
+                ->group(function () {
+                    Route::get('/overview', 'overview')
+                        ->middleware('cacheResponse:600');
+                    Route::get('/users', 'allUsers')
+                        ->middleware('cacheResponse:600');
+                    Route::get('/user/{id}', 'userDetail');
+                    Route::patch('/suspend/{id}', 'suspend');
+                    Route::post('/reset-password', 'resetPassword');
+                });
 
-            Route::controller(AdminController::class)->group(function () {
+            Route::controller(AdminController::class)
+                ->group(function () {
                 //Admin users
                 Route::prefix('admin-users')->group(function () {
                     Route::get('/', 'adminUsers');
