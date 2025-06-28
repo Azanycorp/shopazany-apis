@@ -15,12 +15,11 @@ class AdminProductController extends Controller
 
     public function __construct(
         protected ProductService $service
-    )
-    {}
+    ) {}
 
     public function addProduct(ProductRequest $request)
     {
-        //abort_if(Gate::denies('add_new_product'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+        abort_if(Gate::denies('add_new_product'), Response::HTTP_FORBIDDEN, self::MESSAGE);
         return $this->service->addProduct($request);
     }
 
