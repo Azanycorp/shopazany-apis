@@ -143,61 +143,6 @@ if (!function_exists('getFolderPrefix')) {
     }
 }
 
-if (!function_exists('uploadToImageKit')) {
-    function uploadToImageKit($file, $folder = 'uploads')
-    {
-        $prefix = getFolderPrefix();
-        $fullFolder = "{$prefix}/{$folder}";
-
-        $imageKit = new ImageKit(
-            config('services.imagekit.public_key'),
-            config('services.imagekit.private_key'),
-            config('services.imagekit.endpoint_key')
-        );
-
-        $uploadFile = fopen($file->getRealPath(), 'r');
-
-        $uploadResponse = $imageKit->upload([
-            "file" => $uploadFile,
-            "fileName" => $file->getClientOriginalName(),
-            "folder" => $fullFolder
-        ]);
-
-        if (isset($uploadResponse->result->url)) {
-            return [
-                'url' => $uploadResponse->result->url,
-                'public_id' => $uploadResponse->result->fileId,
-            ];
-        }
-
-        return ['url' => null, 'public_id' => null];
-    }
-}
-
-if (!function_exists('deleteOldFile')) {
-    function deleteOldFile($publicId)
-    {
-        if (!$publicId) {
-            return;
-        }
-
-        try {
-            if (preg_match('/^[a-f0-9]{24}$/', $publicId)) {
-                $imageKit = new ImageKit(
-                    config('services.imagekit.public_key'),
-                    config('services.imagekit.private_key'),
-                    config('services.imagekit.endpoint_key')
-                );
-                $imageKit->deleteFile($publicId);
-            } else {
-                logger()->info("Invalid public ID: {$publicId}");
-            }
-        } catch (\Throwable $e) {
-            logger()->error("Failed to delete file: {$e->getMessage()}");
-        }
-    }
-}
-
 if (!function_exists('uploadImageFile')) {
     function uploadImageFile($file, $folder = 'uploads')
     {
