@@ -15,7 +15,6 @@ use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\App;
 use App\Http\Resources\OrderResource;
-use Illuminate\Support\Facades\Storage;
 use App\Http\Resources\SellerProductResource;
 use App\Imports\ProductImport;
 use App\Mail\OrderStatusUpdated;
@@ -53,7 +52,7 @@ class SellerService extends Controller
 
             $folder = $this->getStorageFolder($name);
 
-            $url = null;
+            $url = [];
             if ($request->hasFile('file')) {
                 $url = $this->storeFile($request->file('file'), $folder);
             }
@@ -64,7 +63,7 @@ class SellerService extends Controller
                 'business_location' => $request->business_location,
                 'business_type' => $request->business_type,
                 'identity_type' => $request->identity_type,
-                'file' => $url,
+                'file' => $url['url'],
                 'confirm' => $request->confirm
             ]);
 
@@ -101,7 +100,7 @@ class SellerService extends Controller
             $url = $this->uploadFrontImage($request, $folderPath);
             $product = $this->createProductRecord($request, $user, $slug, $url);
             $this->uploadAdditionalImages($request, $folderPath, $product);
-            $this->createProductVariations($request, $product);
+            $this->createProductVariations($request, $product, $name);
 
             DB::commit();
             return $this->success(null, "Added successfully");
@@ -149,6 +148,7 @@ class SellerService extends Controller
         }
 
         $image = uploadSingleProductImage($request, 'front_image', $frontImage, $product);
+
         $product->update([
             'name' => $request->name,
             'slug' => $slug,
@@ -166,12 +166,13 @@ class SellerService extends Controller
             'discount_value' => $request->discount_value,
             'current_stock_quantity' => $request->current_stock_quantity,
             'minimum_order_quantity' => $request->minimum_order_quantity,
-            'image' => $image,
+            'image' => $image['url'],
+            'public_id' => $image['public_id'],
             'country_id' => $user->country ?? 160,
         ]);
 
         uploadMultipleProductImage($request, 'images', $folder, $product);
-        $this->updateProductVariations($request, $product);
+        $this->updateProductVariations($request, $product, $name);
 
         return $this->success(null, "Updated successfully");
     }

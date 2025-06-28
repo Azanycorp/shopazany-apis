@@ -65,8 +65,7 @@ abstract class Controller
 
     protected function storeFile($file, string $folder): string
     {
-        $path = $file->store($folder, 's3');
-        return Storage::disk('s3')->url($path);
+        return uploadImage(request(), $file, $folder);
     }
 
     protected function exportB2bProduct(string $userId,$data)

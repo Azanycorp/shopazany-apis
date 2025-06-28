@@ -16,6 +16,7 @@ use App\Models\OrderActivity;
 use App\Models\RewardPointSetting;
 use App\Models\User;
 use App\Models\UserActivityLog;
+use App\Services\FileUploader;
 use App\Services\RewardPoint\RewardService;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
@@ -23,7 +24,7 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
-
+use ImageKit\ImageKit;
 
 if (!function_exists('total_amount')) {
     function total_amount($unit_price, $moq): int|float
@@ -129,8 +130,210 @@ if (!function_exists('getRelativePath')) {
     }
 }
 
+if (!function_exists('getFolderPrefix')) {
+    function getFolderPrefix()
+    {
+        $segments = request()->segments();
+
+        if (in_array('b2b', $segments)) {
+            return 'b2b';
+        }
+
+        return 'b2c';
+    }
+}
+
+if (!function_exists('uploadToImageKit')) {
+    function uploadToImageKit($file, $folder = 'uploads')
+    {
+        $prefix = getFolderPrefix();
+        $fullFolder = "{$prefix}/{$folder}";
+
+        $imageKit = new ImageKit(
+            config('services.imagekit.public_key'),
+            config('services.imagekit.private_key'),
+            config('services.imagekit.endpoint_key')
+        );
+
+        $uploadFile = fopen($file->getRealPath(), 'r');
+
+        $uploadResponse = $imageKit->upload([
+            "file" => $uploadFile,
+            "fileName" => $file->getClientOriginalName(),
+            "folder" => $fullFolder
+        ]);
+
+        if (isset($uploadResponse->result->url)) {
+            return [
+                'url' => $uploadResponse->result->url,
+                'public_id' => $uploadResponse->result->fileId,
+            ];
+        }
+
+        return ['url' => null, 'public_id' => null];
+    }
+}
+
+if (!function_exists('deleteOldFile')) {
+    function deleteOldFile($publicId)
+    {
+        if (!$publicId) {
+            return;
+        }
+
+        try {
+            if (preg_match('/^[a-f0-9]{24}$/', $publicId)) {
+                $imageKit = new ImageKit(
+                    config('services.imagekit.public_key'),
+                    config('services.imagekit.private_key'),
+                    config('services.imagekit.endpoint_key')
+                );
+                $imageKit->deleteFile($publicId);
+            } else {
+                logger()->info("Invalid public ID: {$publicId}");
+            }
+        } catch (\Throwable $e) {
+            logger()->error("Failed to delete file: {$e->getMessage()}");
+        }
+    }
+}
+
+if (!function_exists('uploadImageFile')) {
+    function uploadImageFile($file, $folder = 'uploads')
+    {
+        $prefix = getFolderPrefix();
+        $folderName = ltrim($folder, '/');
+        $fullFolder = "{$prefix}/{$folderName}";
+
+        $uploader = app(FileUploader::class);
+        return $uploader->upload($file, $fullFolder);
+    }
+}
 if (!function_exists('uploadSingleProductImage')) {
-    function uploadSingleProductImage($request, $file, $frontImage, $product)
+    function uploadSingleProductImage($request, $file, $folder, $product)
+    {
+        if ($request->hasFile($file)) {
+            if (!empty($product->public_id)) {
+                app(FileUploader::class)->deleteFile($product->public_id);
+            }
+
+            $fileSize = $request->file($file)->getSize();
+            if ($fileSize > 3000000) {
+                return json_encode(["status" => false, "message" => "file size is larger than 3MB.", "status_code" => 422]);
+            }
+
+            $upload = uploadImageFile($request->file($file), $folder);
+
+            return [
+                'url' => $upload['url'],
+                'public_id' => $upload['public_id']
+            ];
+        }
+
+        return [
+            'url' => $product->image,
+            'public_id' => $product->public_id
+        ];
+    }
+}
+
+if (!function_exists('uploadImage')) {
+    function uploadImage($request, $file, $folder, $country = null, $banner = null)
+    {
+        $response = [
+            'url' => null,
+            'public_id' => null
+        ];
+
+        if (!is_null($country)) {
+            $response['url'] = $country->image;
+            $response['public_id'] = $country->public_id;
+        }
+
+        if (!is_null($banner)) {
+            $response['url'] = $banner->image;
+            $response['public_id'] = $banner->public_id;
+        }
+
+        if ($request->hasFile($file)) {
+            $fileSize = $request->file($file)->getSize();
+
+            if ($fileSize > 3000000) {
+                return json_encode([
+                    "status" => false,
+                    "message" => "File size is larger than 3MB.",
+                    "status_code" => 422
+                ]);
+            }
+
+            if (!is_null($country) && !empty($country->public_id)) {
+                app(FileUploader::class)->deleteFile($country->public_id);
+            }
+
+            if (!is_null($banner) && !empty($banner->public_id)) {
+                app(FileUploader::class)->deleteFile($banner->public_id);
+            }
+
+            $upload = uploadImageFile($request->file($file), $folder);
+            $response = $upload;
+        }
+
+        return $response;
+    }
+}
+
+if (!function_exists('uploadMultipleProductImage')) {
+    function uploadMultipleProductImage($request, $file, $folder, $product): void
+    {
+        if ($request->hasFile($file)) {
+            $product->productimages()->delete();
+
+            foreach ($request->file($file) as $image) {
+                $upload = uploadImageFile($image, $folder);
+
+                $product->productimages()->create([
+                    'image' => $upload['url'],
+                    'public_id' => $upload['public_id'],
+                ]);
+            }
+        }
+    }
+}
+
+if (!function_exists('uploadUserImage')) {
+    function uploadUserImage($request, $file, $user)
+    {
+        $folder = null;
+
+        $parts = explode('@', $user->email);
+        $name = $parts[0];
+
+        if (App::environment('production')) {
+            $folder = "/prod/profile/{$name}";
+        } elseif (App::environment(['staging', 'local'])) {
+            $folder = "/stag/profile/{$name}";
+        }
+
+        if ($request->hasFile($file)) {
+            if (!empty($user->public_id)) {
+                app(FileUploader::class)->deleteFile($user->public_id);
+            }
+            $fileSize = $request->file($file)->getSize();
+            if ($fileSize > 3000000) {
+                return json_encode(["status" => false, "message" => "file size is larger than 3MB.", "status_code" => 422]);
+            }
+
+            $upload = uploadImageFile($request->file($file), $folder);
+            return $upload['url'];
+        }
+
+        return $user->image;
+    }
+}
+
+//////// Deprecated upload functions ////////////
+if (!function_exists('uploadSingleProductImageOld')) {
+    function uploadSingleProductImageOld($request, $file, $frontImage, $product)
     {
         if ($request->hasFile($file)) {
             if (!empty($product->image)) {
@@ -152,8 +355,8 @@ if (!function_exists('uploadSingleProductImage')) {
     }
 }
 
-if (!function_exists('uploadImage')) {
-    function uploadImage($request, $file, $folder, $country = null, $banner = null)
+if (!function_exists('uploadImageOld')) {
+    function uploadImageOld($request, $file, $folder, $country = null, $banner = null)
     {
         $url = null;
 
@@ -195,8 +398,8 @@ if (!function_exists('uploadImage')) {
     }
 }
 
-if (!function_exists('uploadMultipleProductImage')) {
-    function uploadMultipleProductImage($request, $file, $folder, $product): void
+if (!function_exists('uploadMultipleProductImageOld')) {
+    function uploadMultipleProductImageOld($request, $file, $folder, $product): void
     {
         if ($request->hasFile($file)) {
             $product->productimages()->delete();
@@ -213,8 +416,8 @@ if (!function_exists('uploadMultipleProductImage')) {
     }
 }
 
-if (!function_exists('uploadUserImage')) {
-    function uploadUserImage($request, $file, $user)
+if (!function_exists('uploadUserImageOld')) {
+    function uploadUserImageOld($request, $file, $user)
     {
         $folder = null;
 
@@ -246,6 +449,8 @@ if (!function_exists('uploadUserImage')) {
         return $user->image;
     }
 }
+
+//////// Ends here /////////
 
 if (!function_exists('generateTransactionReference')) {
     function generateTransactionReference(): string
@@ -377,7 +582,7 @@ if (!function_exists('folderName')) {
 }
 
 if (!function_exists('folderNames')) {
-    function folderNames(string $folderName, string $user, string $subFolder): object
+    function folderNames(string $folderName, string $user, ?string $subFolder = null, ?string $anotherFolder = null): object
     {
         $envPrefix = match (App::environment()) {
             'production' => 'prod',
@@ -387,8 +592,13 @@ if (!function_exists('folderNames')) {
 
         $basePath = "/{$envPrefix}/{$folderName}/{$user}";
 
+        $fullFolder = $basePath;
+        if (!empty($anotherFolder)) {
+            $fullFolder .= "/{$anotherFolder}";
+        }
+
         return (object)[
-            'folder' => $basePath,
+            'folder' => $fullFolder,
             'frontImage' => "{$basePath}/{$subFolder}",
         ];
     }

@@ -39,6 +39,7 @@ class Product extends Model
         'current_stock_quantity',
         'minimum_order_quantity',
         'image',
+        'public_id',
         'added_by',
         'country_id',
         'is_featured',

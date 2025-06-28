@@ -86,4 +86,9 @@ return [
         'url' => env('REWARD_SERVICE_URL'),
     ],
 
+    'imagekit' => [
+        'public_key' => env('IMAGEKIT_PUBLIC_KEY'),
+        'private_key' => env('IMAGEKIT_PRIVATE_KEY'),
+        'endpoint_key' => env('IMAGEKIT_URL_ENDPOINT'),
+    ],
 ];
