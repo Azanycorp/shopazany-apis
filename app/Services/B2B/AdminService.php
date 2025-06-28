@@ -514,7 +514,7 @@ class AdminService
             return $this->error(null, "Email already exists.");
         }
 
-        $image = $request->hasFile('image') ? uploadUserImage($request, 'image', $user) : $user->image;
+        $image = $request->hasFile('image') ? uploadImage($request->file('image'), 'b2b/user') : $user->image; //uploadUserImage($request, 'image', $user)
         $user->update([
             'first_name' => $request->first_name ?? $user->first_name,
             'last_name' => $request->last_name ?? $user->last_name,
@@ -699,7 +699,7 @@ class AdminService
     {
         $banner = PageBanner::where('type', BannerType::B2B)->findOrFail($id);
         $banner_url = $banner && $request->hasFile('banner_url')
-            ? uploadImage($request, 'banner_url', 'home-banner')
+            ? uploadImage($request->file('banner_url'), 'b2b/home-banner')
             : ($banner ? $banner->banner_url : null);
 
         $banner->update([
@@ -712,7 +712,7 @@ class AdminService
     }
     public function addPageBanner($request)
     {
-        $banner_url = $request->hasFile('banner_url') ? uploadImage($request, 'banner_url', 'home-banner') : null;
+        $banner_url = $request->hasFile('banner_url') ? uploadImage($request->file('banner_url'), 'b2b/home-banner') : null;
 
         PageBanner::create([
             'page' => $request->page,
@@ -883,7 +883,7 @@ class AdminService
     public function addBlog($request)
     {
         $currentUserId = userAuthId();
-        $url =  uploadImage($request, 'image', 'blog');
+        $url =  uploadImage($request->file('image'), 'b2b/blog');
         $plan = Blog::create([
             'admin_id' => $currentUserId,
             'title' => $request->title,
@@ -905,7 +905,7 @@ class AdminService
     public function updateBlog($request, $id)
     {
         $blog = Blog::where('id', $id)->where('type', BannerType::B2B)->firstOrFail();
-        $url = $request->file('image') ? uploadImage($request, 'image', 'blog') : $blog->image;
+        $url = $request->file('image') ? uploadImage($request->file('image'), 'b2b/blog') : $blog->image;
 
         $blog->update([
             'title' => $request->title ?? $blog->title,
@@ -974,9 +974,9 @@ class AdminService
         $client->delete();
 
         return $this->success('Blog deleted successfully.');
-    //Social Links
+        //Social Links
     }
-    
+
     public function getSocialLinks()
     {
         $links = SocialSetting::latest()->get();

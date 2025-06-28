@@ -247,35 +247,35 @@ Route::middleware('validate.header')
 
             Route::controller(AdminController::class)
                 ->group(function () {
-                //Admin users
-                Route::prefix('admin-users')->group(function () {
-                    Route::get('/', 'adminUsers');
-                    Route::post('/add', 'addAdmin');
-                    Route::get('/details/{id}', 'viewAdminUser');
-                    Route::post('/update/{id}', 'editAdminUser');
-                    Route::post('/revoke-access/{id}', 'revokeAccess');
-                    Route::post('/verify-password', 'verifyPassword');
-                    Route::delete('/delete-account/{id}', 'removeAdmin');
-                });
+                    //Admin users
+                    Route::prefix('admin-users')->group(function () {
+                        Route::get('/', 'adminUsers');
+                        Route::post('/add', 'addAdmin');
+                        Route::get('/details/{id}', 'viewAdminUser');
+                        Route::post('/update/{id}', 'editAdminUser');
+                        Route::post('/revoke-access/{id}', 'revokeAccess');
+                        Route::post('/verify-password', 'verifyPassword');
+                        Route::delete('/delete-account/{id}', 'removeAdmin');
+                    });
 
-                //delivery (collation centers and hubs)
-                Route::get('/delivery-overview', 'deliveryOverview');
-                Route::prefix('collation-centre')->group(function () {
-                    Route::get('/', 'allCollationCentres');
-                    Route::post('/add', 'addCollationCentre');
-                    Route::get('/details/{id}', 'viewCollationCentre');
-                    Route::patch('/update/{id}', 'editCollationCentre');
-                    Route::delete('/delete/{id}', 'deleteCollationCentre');
+                    //delivery (collation centers and hubs)
+                    Route::get('/delivery-overview', 'deliveryOverview');
+                    Route::prefix('collation-centre')->group(function () {
+                        Route::get('/', 'allCollationCentres');
+                        Route::post('/add', 'addCollationCentre');
+                        Route::get('/details/{id}', 'viewCollationCentre');
+                        Route::patch('/update/{id}', 'editCollationCentre');
+                        Route::delete('/delete/{id}', 'deleteCollationCentre');
 
-                    Route::prefix('hubs')->group(function () {
-                        Route::get('/', 'allCollationCentreHubs');
-                        Route::post('/add', 'addHub');
-                        Route::get('/details/{id}', 'viewHub');
-                        Route::patch('/update/{id}', 'editHub');
-                        Route::delete('/delete/{id}', 'deleteHub');
+                        Route::prefix('hubs')->group(function () {
+                            Route::get('/', 'allCollationCentreHubs');
+                            Route::post('/add', 'addHub');
+                            Route::get('/details/{id}', 'viewHub');
+                            Route::patch('/update/{id}', 'editHub');
+                            Route::delete('/delete/{id}', 'deleteHub');
+                        });
                     });
                 });
-            });
 
             //b2b admin
             Route::prefix('b2b')->group(function () {
@@ -339,6 +339,7 @@ Route::middleware('validate.header')
                         Route::post('/create', 'createCategory');
                         Route::get('/all', 'adminCategories')->middleware('cacheResponse:300');
                         Route::get('/analytics', 'categoryAnalytic');
+                        Route::get('/details/{id}', 'getCategory');
                         Route::post('/update/{id}', 'updateCategory');
                         Route::post('/change/{category_id}', 'featuredStatus');
                         Route::delete('/delete/{id}', 'deleteCategory');
@@ -348,6 +349,8 @@ Route::middleware('validate.header')
                         Route::get('/{category_id}/subcategory', 'getSubcategory')->middleware('cacheResponse:300');
                         Route::post('/subcategory/status/{sub_category_id}', 'subStatus');
                         Route::delete('/subcategory/delete/{id}', 'deleteSubCategory');
+                        Route::get('/subcategory/details/{id}', 'getSubcategory');
+                        Route::post('/subcategory/update/{id}', 'updateSubCategory');
                     });
 
                 Route::controller(B2BBannerPromoController::class)

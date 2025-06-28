@@ -27,11 +27,19 @@ class ProductCategoryController extends Controller
 
         return $this->service->createCategory($request);
     }
+
     public function updateCategory(CategoryRequest $request, $id)
     {
         abort_if(Gate::denies('category_create'), Response::HTTP_FORBIDDEN, self::MESSAGE);
 
         return $this->service->updateCategory($request, $id);
+    }
+
+    public function updateSubCategory(CategoryRequest $request, $id)
+    {
+        abort_if(Gate::denies('category_create'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+
+        return $this->service->updateSubCategory($request, $id);
     }
 
     public function categories()
@@ -48,6 +56,7 @@ class ProductCategoryController extends Controller
 
     public function createSubCategory(SubCategoryRequest $request)
     {
+
         abort_if(Gate::denies('sub_category_create'), Response::HTTP_FORBIDDEN, self::MESSAGE);
 
         return $this->service->createSubCategory($request);
@@ -56,6 +65,11 @@ class ProductCategoryController extends Controller
     public function getSubcategory($id)
     {
         return $this->service->getSubcategory($id);
+    }
+
+    public function getCategory($id)
+    {
+        return $this->service->getCategory($id);
     }
 
     public function featuredStatus(Request $request, $id)

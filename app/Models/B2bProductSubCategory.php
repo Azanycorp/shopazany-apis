@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class B2bProductSubCategory extends Model
 {
-use ClearsResponseCache;
+    use ClearsResponseCache;
 
     protected $fillable = [
         'category_id',
@@ -22,10 +22,14 @@ use ClearsResponseCache;
     {
         return $this->belongsTo(B2BProductCategory::class, 'category_id');
     }
+    
+    public function subcategory()
+    {
+        return $this->hasMany(B2bProductSubCategory::class, 'category_id');
+    }
 
-    public function products():HasMany
+    public function products(): HasMany
     {
         return $this->hasMany(B2BProduct::class, 'sub_category_id');
     }
-
 }

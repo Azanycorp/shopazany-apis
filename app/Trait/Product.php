@@ -21,7 +21,7 @@ trait Product
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $image) {
                 $path = $image->store($folderPath->folder, 's3');
-                $url = Storage::disk('s3')->url($path);
+                $url = uploadImage($request->file('images'), 'product/images'); //Storage::disk('s3')->url($path);
                 $product->productimages()->create(['image' => $url]);
             }
         }
@@ -61,7 +61,7 @@ trait Product
 
     public function createProductVariations($request, $product)
     {
-        $variations = collect($request->variation)->map(fn ($item) => json_decode($item, true));
+        $variations = collect($request->variation)->map(fn($item) => json_decode($item, true));
         $variationImages = $request->file('variation_image', []);
 
         foreach ($variations as $index => $variation) {
@@ -103,7 +103,7 @@ trait Product
     {
         $processedVariationIds = [];
 
-        $variations = collect($request->variation)->map(fn ($item) => json_decode($item, true));
+        $variations = collect($request->variation)->map(fn($item) => json_decode($item, true));
         $variationImages = $request->file('variation_image', []);
 
         foreach ($variations as $index => $variation) {
@@ -144,6 +144,5 @@ trait Product
         $product->productVariations()
             ->whereNotIn('id', $processedVariationIds)
             ->delete();
-
     }
 }

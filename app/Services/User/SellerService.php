@@ -43,7 +43,7 @@ class SellerService extends Controller
             return $this->error(null, "User not found", 404);
         }
 
-        if($user->userbusinessinfo->isNotEmpty()){
+        if ($user->userbusinessinfo->isNotEmpty()) {
             return $this->error(null, "Business information has been submitted", 400);
         }
 
@@ -98,7 +98,7 @@ class SellerService extends Controller
 
         DB::beginTransaction();
         try {
-            $url = $this->uploadFrontImage($request, $folderPath);
+            $url = uploadImage($request->file('front_image'), 'product/front_image'); //$this->uploadFrontImage($request, $folderPath);
             $product = $this->createProductRecord($request, $user, $slug, $url);
             $this->uploadAdditionalImages($request, $folderPath, $product);
             $this->createProductVariations($request, $product);
@@ -121,7 +121,7 @@ class SellerService extends Controller
 
         $product = Product::find($id);
 
-        if(!$product){
+        if (!$product) {
             return $this->error(null, "Product not found", 404);
         }
         $slug = Str::slug($request->name);
@@ -140,10 +140,10 @@ class SellerService extends Controller
         $parts = explode('@', $user->email);
         $name = $parts[0];
 
-        if(App::environment('production')){
+        if (App::environment('production')) {
             $folder = "/prod/product/{$name}";
             $frontImage = "/prod/product/{$name}/front_image";
-        } elseif(App::environment(['staging', 'local'])) {
+        } elseif (App::environment(['staging', 'local'])) {
             $folder = "/stag/product/{$name}";
             $frontImage = "/stag/product/{$name}/front_image";
         }
@@ -243,21 +243,21 @@ class SellerService extends Controller
         }
 
         $product = Product::with([
-                'category',
-                'subCategory',
-                'shopCountry',
-                'productimages',
-                'brand',
-                'color',
-                'unit',
-                'size',
-                'orders',
-                'productReviews',
-                'productVariations',
-            ])
+            'category',
+            'subCategory',
+            'shopCountry',
+            'productimages',
+            'brand',
+            'color',
+            'unit',
+            'size',
+            'orders',
+            'productReviews',
+            'productVariations',
+        ])
             ->find($productId);
 
-        if(!$product){
+        if (!$product) {
             return $this->error(null, "Product not found", 404);
         }
 
@@ -270,7 +270,7 @@ class SellerService extends Controller
     {
         $product = Product::find($id);
 
-        if(!$product){
+        if (!$product) {
             return $this->error(null, "Product not found", 404);
         }
 
@@ -295,8 +295,8 @@ class SellerService extends Controller
         ];
 
         $orders = Order::whereHas('products', function ($query) use ($id) {
-                $query->where('user_id', $id);
-            })
+            $query->where('user_id', $id);
+        })
             ->with(['user', 'products.shopCountry'])
             ->when($status, function ($query) use ($status, $validStatuses) {
                 if (!in_array($status, $validStatuses)) {
@@ -336,8 +336,8 @@ class SellerService extends Controller
         }
 
         $order = Order::whereHas('products', function ($query) use ($userId) {
-                $query->where('user_id', $userId);
-            })
+            $query->where('user_id', $userId);
+        })
             ->with([
                 'user.userShippingAddress',
                 'products.shopCountry',
@@ -478,12 +478,12 @@ class SellerService extends Controller
 
         $totalProducts = Product::where('user_id', $userId)->count();
         $totalOrders = Order::whereHas('products', function ($query) use ($userId) {
-                $query->where('user_id', $userId);
-            })->count();
+            $query->where('user_id', $userId);
+        })->count();
 
         $orderCounts = Order::whereHas('products', function ($query) use ($userId) {
-                $query->where('user_id', $userId);
-            })
+            $query->where('user_id', $userId);
+        })
             ->selectRaw('
                 SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as pending_count,
                 SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as confirmed_count,
@@ -532,8 +532,8 @@ class SellerService extends Controller
         }
 
         $orders = Order::whereHas('products', function ($query) use ($userId) {
-                $query->where('user_id', $userId);
-            })
+            $query->where('user_id', $userId);
+        })
             ->with(['user', 'products.shopCountry'])
             ->orderBy('created_at', 'desc')
             ->take(8)
@@ -591,8 +591,8 @@ class SellerService extends Controller
     public function getAttribute($userId)
     {
         $user = User::with(['productAttributes' => function ($query) {
-                $query->select('id', 'user_id', 'name', 'value', 'use_for_variation');
-            }])
+            $query->select('id', 'user_id', 'name', 'value', 'use_for_variation');
+        }])
             ->find($userId);
 
         if (!$user) {
@@ -607,8 +607,8 @@ class SellerService extends Controller
     public function getSingleAttribute($attributeId, $userId)
     {
         $user = User::with(['productAttributes' => function ($query) {
-                $query->select('id', 'user_id', 'name', 'value', 'use_for_variation');
-            }])
+            $query->select('id', 'user_id', 'name', 'value', 'use_for_variation');
+        }])
             ->find($userId);
 
         if (!$user) {
@@ -629,8 +629,8 @@ class SellerService extends Controller
     public function updateAttribute($request, $attributeId, $userId)
     {
         $user = User::with(['productAttributes' => function ($query) {
-                $query->select('id', 'user_id', 'name', 'value', 'use_for_variation');
-            }])
+            $query->select('id', 'user_id', 'name', 'value', 'use_for_variation');
+        }])
             ->find($userId);
 
         if (!$user) {
@@ -673,6 +673,4 @@ class SellerService extends Controller
 
         return $this->success(null, "Attribute deleted successfully");
     }
-
 }
-

@@ -1,28 +1,31 @@
 <?php
 
-use App\Actions\UserLogAction;
+use App\Models\User;
+use App\Models\Order;
 use App\Models\Action;
-use App\Models\B2BRequestRefund;
 use App\Models\Upload;
+use ImageKit\ImageKit;
+use App\Models\Country;
+use App\Models\Mailing;
+use App\Models\Currency;
 use App\Models\Language;
 use App\Models\Transaction;
 use Illuminate\Support\Str;
-use App\Models\BusinessSetting;
-use App\Models\Country;
-use App\Models\Currency;
-use App\Models\Mailing;
-use App\Models\Order;
 use App\Models\OrderActivity;
-use App\Models\RewardPointSetting;
-use App\Models\User;
+use App\Actions\UserLogAction;
+use App\Models\BusinessSetting;
 use App\Models\UserActivityLog;
-use App\Services\RewardPoint\RewardService;
+use App\Models\B2BRequestRefund;
+use App\Models\RewardPointSetting;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
+use App\Services\RewardPoint\RewardService;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 
 if (!function_exists('total_amount')) {
@@ -152,64 +155,166 @@ if (!function_exists('uploadSingleProductImage')) {
     }
 }
 
-if (!function_exists('uploadImage')) {
-    function uploadImage($request, $file, $folder, $country = null, $banner = null)
-    {
-        $url = null;
+// if (!function_exists('uploadImage')) {
+//     function uploadImage($request, $file, $folder, $country = null, $banner = null)
+//     {
+//         $url = null;
 
-        if (!is_null($country)) {
-            $url = $country->image;
+//         if (!is_null($country)) {
+//             $url = $country->image;
+//         }
+
+//         if (!is_null($banner)) {
+//             $url = $banner->image;
+//         }
+
+//         if ($request->hasFile($file)) {
+//             $fileSize = $request->file($file)->getSize();
+
+//             if ($fileSize > 3000000) {
+//                 return json_encode([
+//                     "status" => false,
+//                     "message" => "File size is larger than 3MB.",
+//                     "status_code" => 422
+//                 ]);
+//             }
+
+//             $existingImage = $country?->image ? getRelativePath($country->image) : null;
+//             $existingBanner = $banner?->image ? getRelativePath($banner->image) : null;
+
+//             if ($existingImage && Storage::disk('s3')->exists($existingImage)) {
+//                 Storage::disk('s3')->delete($existingImage);
+//             }
+
+//             if ($existingBanner && Storage::disk('s3')->exists($existingBanner)) {
+//                 Storage::disk('s3')->delete($existingBanner);
+//             }
+
+//             $path = $request->file($file)->store($folder, 's3');
+//             $url = Storage::disk('s3')->url($path);
+//         }
+
+//         return $url;
+//     }
+// }
+
+// if (!function_exists('uploadMultipleProductImage')) {
+//     function uploadMultipleProductImage($request, $file, $folder, $product): void
+//     {
+//         if ($request->hasFile($file)) {
+//             $product->productimages()->delete();
+
+//             foreach ($request->file($file) as $image) {
+//                 $path = $image->store($folder, 's3');
+//                 $url = Storage::disk('s3')->url($path);
+
+//                 $product->productimages()->create([
+//                     'image' => $url,
+//                 ]);
+//             }
+//         }
+//     }
+// } old AWS upload
+
+function uploadMultipleProductImage($file, $product, $folder = 'products')
+{
+    try {
+        if (!$file) {
+            return $product->image;
         }
 
-        if (!is_null($banner)) {
-            $url = $banner->image;
+        // Check size (max 3MB)
+        $fileSize = $file->getSize();
+        if ($fileSize > 3000000) {
+            return json_encode([
+                "status" => false,
+                "message" => "File size is larger than 3MB.",
+                "status_code" => 422
+            ]);
         }
 
-        if ($request->hasFile($file)) {
-            $fileSize = $request->file($file)->getSize();
-
-            if ($fileSize > 3000000) {
-                return json_encode([
-                    "status" => false,
-                    "message" => "File size is larger than 3MB.",
-                    "status_code" => 422
-                ]);
-            }
-
-            $existingImage = $country?->image ? getRelativePath($country->image) : null;
-            $existingBanner = $banner?->image ? getRelativePath($banner->image) : null;
-
-            if ($existingImage && Storage::disk('s3')->exists($existingImage)) {
-                Storage::disk('s3')->delete($existingImage);
-            }
-
-            if ($existingBanner && Storage::disk('s3')->exists($existingBanner)) {
-                Storage::disk('s3')->delete($existingBanner);
-            }
-
-            $path = $request->file($file)->store($folder, 's3');
-            $url = Storage::disk('s3')->url($path);
+        // Delete existing image from ImageKit (if needed)
+        if (!empty($product->image)) {
+            // OPTIONAL: Delete logic if you have image fileId stored
+            // You would need to save the fileId during upload for this to work
+            // imageKitClient()->deleteFile($fileId);
         }
 
-        return $url;
+        // Upload new image to ImageKit
+        $imageKit = imageKitClient();
+        $fileName = time() . '_' . $file->getClientOriginalName();
+        $base64 = base64_encode(file_get_contents($file->getRealPath()));
+
+        $upload = $imageKit->uploadFile([
+            'file' => "data:image/*;base64,{$base64}",
+            'fileName' => $fileName,
+            'folder' => 'b2c-' . $folder,
+            'useUniqueFileName' => true,
+            'isPublished' => true,
+            'isPrivateFile' => false,
+        ]);
+
+        if (!empty($upload->result->url)) {
+            return $upload->result->url;
+        }
+    } catch (\Exception $e) {
+        Log::error('ImageKit Upload Failed: ' . $e->getMessage());
+        return $product->image;
     }
 }
 
-if (!function_exists('uploadMultipleProductImage')) {
-    function uploadMultipleProductImage($request, $file, $folder, $product): void
+if (!function_exists('imageKitClient')) {
+    function imageKitClient()
     {
-        if ($request->hasFile($file)) {
-            $product->productimages()->delete();
+        return new ImageKit(
+            config('services.imagekit.public_key'),
+            config('services.imagekit.private_key'),
+            config('services.imagekit.url_endpoint')
+        );
+    }
+}
+if (!function_exists('uploadImage')) {
+    function uploadImage($file, $folder = 'uploads')
+    {
+        try {
+            // 1. Try ImageKit
+            $imageKit = imageKitClient();
+            $fileName = time() . '_' . $file->getClientOriginalName();
 
-            foreach ($request->file($file) as $image) {
-                $path = $image->store($folder, 's3');
-                $url = Storage::disk('s3')->url($path);
+            $base64 = base64_encode(file_get_contents($file->getRealPath()));
 
-                $product->productimages()->create([
-                    'image' => $url,
-                ]);
+            $uploadFile = $imageKit->uploadFile([
+                'file' => "data:image/*;base64,{$base64}",
+                'fileName' => $fileName,
+                'folder' => $folder,
+                'useUniqueFileName' => true,
+                'isPublished' => true,
+                'isPrivateFile' => false,
+            ]);
+
+            if (!empty($uploadFile->result->url)) {
+                return $uploadFile->result->url;
             }
+        } catch (\Exception $e) {
+            Log::error('ImageKit Upload Failed: ' . $e->getMessage());
         }
+
+        try {
+            // 2. Fallback to Cloudinary
+            $uploadedImage = Cloudinary::upload($file->getRealPath(), [
+                'folder' => $folder
+            ]);
+
+            return $uploadedImage->getSecurePath();
+        } catch (\Exception $e) {
+            Log::error('Cloudinary Upload Failed: ' . $e->getMessage());
+        }
+
+        return [
+            'provider' => null,
+            'url' => null,
+            'error' => 'Image upload failed on all providers.',
+        ];
     }
 }
 
@@ -610,4 +715,3 @@ if (! function_exists('amountToPoint')) {
         return round($points);
     }
 }
-

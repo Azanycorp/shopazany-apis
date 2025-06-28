@@ -173,7 +173,7 @@ class BuyerService
             'is_admin_approve' => 1,
             'status' => $request->status,
         ]);
-        $image = $request->hasFile('image') ? uploadUserImage($request, 'image', $user) : null;
+        $image = $request->hasFile('image') ? uploadImage($request->file('image'), 'b2b/user') : null; //uploadUserImage($request, 'image', $user)
         $user->update(['image' => $image]);
         return $this->success(null, "User has been created successfully", 201);
     }
@@ -187,7 +187,7 @@ class BuyerService
             return $this->error(null, "User not found", 404);
         }
 
-        $image = $request->hasFile('image') ? uploadUserImage($request, 'image', $user) : $user->image;
+        $image = $request->hasFile('image') ? uploadImage($request->file('image'), 'b2b/user') : $user->image; //uploadUserImage($request, 'image', $user)
 
         $user->update([
             'first_name' => $request->first_name,
@@ -924,14 +924,15 @@ class BuyerService
             return $this->error(null, 'User does not exist', 404);
         }
 
-        if (!empty($request->email) && User::where('email', $request->email)
+        if (
+            !empty($request->email) && User::where('email', $request->email)
             ->where('id', '!=', $user->id)
             ->exists()
         ) {
             return $this->error(null, "Email already exists.");
         }
 
-        $image = $request->hasFile('image') ? uploadUserImage($request, 'image', $user) : $user->image;
+        $image = $request->hasFile('image') ? uploadImage($request->file('image'), 'b2b/user') : $user->image; //uploadUserImage($request, 'image', $user)
 
         $user->update([
             'first_name' => $request->first_name ?? $user->first_name,
@@ -985,7 +986,7 @@ class BuyerService
         $logo_url = null;
 
         if ($request->hasFile('logo')) {
-            $logo_url = uploadImage($request, 'logo', 'company-logo');
+            $logo_url = uploadImage($request->file('logo'), 'b2b/company-logo'); //uploadImage($request, 'logo', 'company-logo');
         }
 
         $company->update([

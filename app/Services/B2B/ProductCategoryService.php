@@ -25,7 +25,7 @@ class ProductCategoryService
         try {
 
             if ($request->file('image')) {
-                $url = uploadImage($request, 'image', 'category');
+                $url = uploadImage($request->file('image'), 'b2b/category'); //uploadImage($request, 'image', 'category');
             }
 
             B2BProductCategory::create([
@@ -46,7 +46,7 @@ class ProductCategoryService
         $category = B2BProductCategory::findOrFail($id);
         try {
             if ($request->file('image')) {
-                $url = uploadImage($request, 'image', 'category');
+                $url = uploadImage($request->file('image'), 'b2b/category'); //uploadImage($request, 'image', 'category');
             }
             $category->update([
                 'name' => $request->name,
@@ -58,9 +58,19 @@ class ProductCategoryService
             return $this->error(null, $e->getMessage(), 500);
         }
     }
+
+
+
+    public function getCategory($id)
+    {
+        $category = B2BProductCategory::findOrFail($id);
+        return $this->success($category, "Category details");
+    }
+
     public function categories()
     {
         $categories = B2BProductCategory::where('featured', 1)
+            ->latest()
             ->take(10)
             ->get();
 
@@ -78,7 +88,7 @@ class ProductCategoryService
             ->when($search, function ($query, string $search): void {
                 $query->where('name', 'like', '%' . $search . '%');
             })
-            ->latest('id')
+            ->latest()
             ->get();
 
         $data = AdminCategoryResource::collection($categories);
@@ -88,16 +98,12 @@ class ProductCategoryService
 
     public function createSubCategory($request)
     {
-        $category = B2BProductSubCategory::with('subcategory')->find($request->category_id);
-
-        if (!$category) {
-            return $this->error(null, "Not found", 404);
-        }
+        $category = B2BProductSubCategory::findOrFail($request->category_id);
 
         try {
 
             if ($request->file('image')) {
-                $url = uploadImage($request, 'image', 'subcategory');
+                $url = uploadImage($request->file('image'), 'b2b/subcategory'); //uploadImage($request, 'image', 'subcategory');
             }
             $category->subcategory()->create([
                 'name' => $request->name,
@@ -111,15 +117,29 @@ class ProductCategoryService
         }
     }
 
+    public function updateSubCategory($request, $id)
+    {
+        $category = B2BProductSubCategory::findOrFail($id);
+        try {
+            if ($request->file('image')) {
+                $url = uploadImage($request->file('image'), 'b2b/subcategory'); //uploadImage($request, 'image', 'category');
+            }
+            $category->update([
+                'name' => $request->name,
+                'slug' => Str::slug($request->name),
+                'image' =>  $url ?? $category->image,
+            ]);
+            return $this->success(null, "detail updated successfully");
+        } catch (\Exception $e) {
+            return $this->error(null, $e->getMessage(), 500);
+        }
+    }
+    
     public function getSubcategory($id)
     {
-        $subcats = B2bProductSubCategory::with(['products', 'category'])
-            ->where('category_id', $id)
-            ->get();
+        $subcat = B2bProductSubCategory::findOrFail($id);
 
-        $data = B2BSubCategoryResource::collection($subcats);
-
-        return $this->success($data, "Sub categories");
+        return $this->success($subcat, "Subcategory details");
     }
 
 
@@ -170,6 +190,7 @@ class ProductCategoryService
             ->when($search, function ($query, string $search): void {
                 $query->where('name', 'like', '%' . $search . '%');
             })
+            ->latest()
             ->get();
 
         $data = AdminB2BSubCategoryResource::collection($subcats);
