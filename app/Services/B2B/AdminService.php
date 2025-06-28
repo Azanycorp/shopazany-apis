@@ -340,7 +340,7 @@ class AdminService
         }
         if ($request->hasFile('front_image')) {
             $path = $request->file('front_image')->store($res->frontImage, 's3');
-            $url = Storage::disk('s3')->url($path);
+            $url = uploadImage($request->file('front_image'), 'b2b/product'); //Storage::disk('s3')->url($path);
         }
         $data = [
             'user_id' => $user->id,
@@ -362,7 +362,7 @@ class AdminService
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $image) {
                 $path = $image->store($res->folder, 's3');
-                $url = Storage::disk('s3')->url($path);
+                $url = uploadImage($image, 'b2b/product'); //Storage::disk('s3')->url($path);
 
                 $product->b2bProductImages()->create([
                     'image' => $url,
@@ -417,7 +417,7 @@ class AdminService
 
         if ($request->hasFile('front_image')) {
             $path = $request->file('front_image')->store($res->frontImage, 's3');
-            $url = Storage::disk('s3')->url($path);
+            $url = uploadImage($request->file('front_image'), 'b2b/product'); //Storage::disk('s3')->url($path);
         } else {
             $url = $prod->front_image;
         }
@@ -443,7 +443,7 @@ class AdminService
             $product->b2bProductImages()->delete();
             foreach ($request->file('images') as $image) {
                 $path = $image->store($res->folder, 's3');
-                $url = Storage::disk('s3')->url($path);
+                $url = uploadImage($image, 'b2b/product'); //Storage::disk('s3')->url($path);
 
                 $product->b2bProductImages()->create([
                     'image' => $url,
@@ -936,7 +936,7 @@ class AdminService
 
     public function addClientLogo($request)
     {
-        $url =  uploadImage($request, 'logo', 'clients');
+        $url =  uploadImage($request->file('logo'), 'b2b/clients');
 
         $plan = ClientLogo::create([
             'name' => $request->name,
@@ -957,7 +957,7 @@ class AdminService
     {
         $client = ClientLogo::where('id', $id)->firstOrFail();
 
-        $url = $request->file('logo') ? uploadImage($request, 'logo', 'clients') : $client->logo;
+        $url = $request->file('logo') ? uploadImage($request->file('logo'), 'b2b/clients') : $client->logo;
 
         $client->update([
             'name' => $request->name ?? $client->name,

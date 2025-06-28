@@ -24,15 +24,15 @@ class CategoryService
         try {
             $folder = null;
 
-            if(App::environment('production')){
+            if (App::environment('production')) {
                 $folder = '/prod/category';
-            } elseif(App::environment(['staging', 'local'])) {
+            } elseif (App::environment(['staging', 'local'])) {
                 $folder = '/stag/category';
             }
 
             if ($request->file('image')) {
                 $path = $request->file('image')->store($folder, 's3');
-                $url = Storage::disk('s3')->url($path);
+                $url = uploadImage($request->file('image'), $folder); //Storage::disk('s3')->url($path);
             }
 
             $slug = Str::slug($request->name);
@@ -56,7 +56,7 @@ class CategoryService
     public function categories()
     {
         $categories = Category::where('featured', 1)
-        ->get();
+            ->get();
 
         $data = CategoryResource::collection($categories);
 
@@ -83,7 +83,7 @@ class CategoryService
     {
         $category = Category::with('subcategory')->find($request->category_id);
 
-        if(!$category){
+        if (!$category) {
             return $this->error(null, "Not found", 404);
         }
 
@@ -91,9 +91,9 @@ class CategoryService
             $folder = null;
             $url = null;
 
-            if(App::environment('production')){
+            if (App::environment('production')) {
                 $folder = '/prod/category/subcategory';
-            } elseif(App::environment(['staging', 'local'])) {
+            } elseif (App::environment(['staging', 'local'])) {
                 $folder = '/stag/category/subcategory';
             }
 
@@ -117,8 +117,8 @@ class CategoryService
     public function getSubcategory($id)
     {
         $subcats = SubCategory::with(['products', 'category'])
-        ->where('category_id', $id)
-        ->get();
+            ->where('category_id', $id)
+            ->get();
 
         $data = SubCategoryResource::collection($subcats);
 
@@ -237,5 +237,3 @@ class CategoryService
         return $this->success(null, 'Deleted successfully');
     }
 }
-
-

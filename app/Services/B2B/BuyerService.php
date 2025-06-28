@@ -975,9 +975,9 @@ class BuyerService
 
     public function editCompany($request)
     {
-        $auth = Auth::user();
+         $auth = Auth::user();
 
-        $company = B2bCompany::where('user_id', $auth->id)->first();
+         $company = B2bCompany::where('user_id', $auth->id)->first();
 
         if (!$company) {
             return $this->error(null, 'No company found to update', 404);
@@ -997,7 +997,7 @@ class BuyerService
             'average_spend' => $request->average_spend ?? $company->average_spend,
             'service_type' => $request->service_type ?? $company->service_type,
             'country_id' => $request->country_id ?? $company->country,
-            'logo' => $request->hasFile('image') ? $logo_url : $company->logo,
+            'logo' => $request->hasFile('logo') ? $logo_url : $company->logo,
         ]);
 
         return $this->success(null, "Details Updated successfully");

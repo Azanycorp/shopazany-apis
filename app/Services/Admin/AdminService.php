@@ -36,7 +36,7 @@ class AdminService
 
             if ($request->file('image')) {
                 $path = $request->file('image')->store($folder, 's3');
-                $url = Storage::disk('s3')->url($path);
+                $url = uploadImage($request->file('image'), 'slider_image'); //Storage::disk('s3')->url($path);
             }
 
             SliderImage::create([
@@ -52,10 +52,11 @@ class AdminService
 
     public function slider()
     {
-        $sliders = Cache::rememberForever('home_sliders', 
+        $sliders = Cache::rememberForever(
+            'home_sliders',
             fn() => SliderImage::orderBy('created_at', 'desc')
-            ->take(5)
-            ->get()
+                ->take(5)
+                ->get()
         );
 
         $data = SliderResource::collection($sliders);
@@ -76,7 +77,7 @@ class AdminService
 
     public function country()
     {
-        $country = Cache::rememberForever('country', fn () => Country::get());
+        $country = Cache::rememberForever('country', fn() => Country::get());
 
         $data = CountryResource::collection($country);
 
@@ -132,13 +133,13 @@ class AdminService
     {
         $country = Country::find($request->country_id);
 
-        if(!$country) {
+        if (!$country) {
             return $this->error(null, "Not found", 404);
         }
 
         $folder = App::environment('production') ? '/prod/shopcountryflag' : '/stag/shopcountryflag';
 
-        $url = uploadImage($request, 'flag', $folder);
+        $url = uploadImage($request->file('flag'), $folder); //uploadImage($request, 'flag', $folder);
 
         ShopCountry::create([
             'country_id' => $country->id,
@@ -154,7 +155,7 @@ class AdminService
     {
         $priorityCountries = ['Jamaica', 'Switzerland', 'Brazil', 'France', 'Nigeria', 'United Kingdom', 'Canada', 'United States'];
 
-        $shopByCountries = ShopCountry::orderByRaw("FIELD(name, '".implode("','", $priorityCountries)."') DESC")
+        $shopByCountries = ShopCountry::orderByRaw("FIELD(name, '" . implode("','", $priorityCountries) . "') DESC")
             ->orderBy('name', 'asc')
             ->get();
 
@@ -177,7 +178,7 @@ class AdminService
             ->orWhere('referrer_link', '')
             ->get();
 
-        foreach($users as $user) {
+        foreach ($users as $user) {
             if (!$user->referrer_code) {
                 $user->referrer_code = generate_referral_code();
             }
@@ -201,4 +202,3 @@ class AdminService
         return $this->success($data, 'Profile detail');
     }
 }
-

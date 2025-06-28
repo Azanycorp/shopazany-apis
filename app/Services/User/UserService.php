@@ -51,7 +51,7 @@ class UserService extends Controller
             return $this->error(null, "User not found", 404);
         }
 
-        $image = $request->hasFile('image') ? uploadUserImage($request, 'image', $user) : $user->image;
+        $image = $request->hasFile('image') ?  uploadImage($request->file('image'), 'b2c/user') : $user->image; //uploadUserImage($request, 'image', $user)
 
         $user->update([
             'first_name' => $request->first_name ?? $user->first_name,
@@ -72,9 +72,9 @@ class UserService extends Controller
     public function bankAccount($request)
     {
         $user = User::with(['bankAccount'])
-        ->find($request->user_id);
+            ->find($request->user_id);
 
-        if(!$user){
+        if (!$user) {
             return $this->error(null, "User not found", 404);
         }
 
@@ -91,7 +91,7 @@ class UserService extends Controller
     {
         $account = BankAccount::where('user_id', $request->user_id)->first();
 
-        if(!$account){
+        if (!$account) {
             return $this->error(null, "Data not found", 404);
         }
 
@@ -113,8 +113,8 @@ class UserService extends Controller
         }
 
         $user = User::with(['wallet', 'paymentMethods'])
-                    ->where('id', $request->user_id)
-                    ->first();
+            ->where('id', $request->user_id)
+            ->first();
 
         if (!$user) {
             return $this->error(null, "User not found", 404);
@@ -160,7 +160,7 @@ class UserService extends Controller
     {
         $user = User::with('kyc')->find($request->user_id);
 
-        if(!$user){
+        if (!$user) {
             return $this->error(null, "User not found", 404);
         }
 
@@ -168,12 +168,12 @@ class UserService extends Controller
             $parts = explode('@', $user->email);
             $name = $parts[0];
 
-            if($request->file('image')){
+            if ($request->file('image')) {
                 $file = $request->file('image');
                 $path = 'kyc/' . $name;
                 $filename = time() . rand(10, 1000) . '.' . $file->extension();
                 $file->move(public_path($path), $filename, 'public');
-                $kycpath = config('services.baseurl') . '/' . $path . '/' . $filename;
+                $kycpath = uploadImage($request->file('image'), 'b2c/kyc'); //config('services.baseurl') . '/' . $path . '/' . $filename;
             }
 
             $user->kyc()->create([
@@ -189,7 +189,6 @@ class UserService extends Controller
             ]);
 
             return $this->success(null, "Added successfully");
-
         } catch (\Exception $e) {
             return $this->error(null, $e->getMessage(), 500);
         }
@@ -199,7 +198,7 @@ class UserService extends Controller
     {
         $user = User::find($request->user_id);
 
-        if(!$user){
+        if (!$user) {
             return $this->error(null, "User not found", 404);
         }
 
@@ -221,7 +220,7 @@ class UserService extends Controller
         $user = User::with(['wallet', 'withdrawalRequests', 'paymentMethods'])
             ->find($id);
 
-        if(! $user) {
+        if (! $user) {
             return $this->error(null, "User not found", 404);
         }
 
@@ -312,7 +311,7 @@ class UserService extends Controller
             return $this->error(null, "Unauthorized action.", 401);
         }
 
-        if($auth->type === UserType::CUSTOMER) {
+        if ($auth->type === UserType::CUSTOMER) {
             return $this->error(null, "Unauthorized action.", 401);
         }
 
@@ -322,7 +321,7 @@ class UserService extends Controller
 
         $user = User::with('paymentMethods')->find($request->user_id);
 
-        if(! $user){
+        if (! $user) {
             return $this->error(null, "User not found", 404);
         }
 
@@ -378,13 +377,13 @@ class UserService extends Controller
 
         $user = User::find($userId);
 
-        if(! $user){
+        if (! $user) {
             return $this->error(null, "User not found", 404);
         }
 
         $password = $user->password;
 
-        if($request->password) {
+        if ($request->password) {
             $password = bcrypt($request->password);
         }
 
@@ -408,21 +407,21 @@ class UserService extends Controller
         $statusFilter = request()->query('status');
 
         $user = User::with(['referrals' => function ($query) use ($searchQuery, $statusFilter) {
-                $query->select(
-                    'users.id',
-                    'users.first_name',
-                    'users.last_name',
-                    'users.email',
-                    'users.phone',
-                    'users.status',
-                    'users.created_at'
-                )
+            $query->select(
+                'users.id',
+                'users.first_name',
+                'users.last_name',
+                'users.email',
+                'users.phone',
+                'users.status',
+                'users.created_at'
+            )
                 ->filterReferrals($searchQuery, $statusFilter);
-            }])
+        }])
             ->withCount('referrals')
             ->find($userId);
 
-        if(! $user){
+        if (! $user) {
             return $this->error(null, "User not found", 404);
         }
 
@@ -506,6 +505,3 @@ class UserService extends Controller
         ]);
     }
 }
-
-
-

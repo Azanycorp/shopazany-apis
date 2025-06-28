@@ -71,11 +71,11 @@ class SellerService extends Controller
             'country' => $request->country_id,
         ]);
         $folder = folderName('document/businessreg');
-        $businessDoc = $request->hasFile('business_reg_document') ? uploadImage($request, 'business_reg_document', $folder) : null;
+        $businessDoc = $request->hasFile('business_reg_document') ? uploadImage($request->file('business_reg_document'), 'b2b/document/businessreg') : null; //uploadImage($request, 'business_reg_document', $folder)
         $identifyTypeDoc = null;
         if ($request->identification_type && $request->hasFile('identification_type_document')) {
             $fld = folderName('document/identifytype');
-            $identifyTypeDoc = uploadImage($request, 'identification_type_document', $fld);
+            $identifyTypeDoc = uploadImage($request->file('identification_type_document'), 'b2b/document/identifytype'); //uploadImage($request, 'identification_type_document', $fld);
         }
         $user->businessInformation()->create([
             'business_location' => $request->business_location,
@@ -111,7 +111,7 @@ class SellerService extends Controller
     {
         $currentUserId = userAuthId();
         $user = User::find($currentUserId);
-        $image = $request->hasFile('logo') ? uploadUserImage($request, 'logo', $user) : $user->image;
+        $image = $request->hasFile('logo') ? uploadImage($request->file('logo'), 'b2b/user') : $user->image; //uploadUserImage($request, 'logo', $user)
 
         $user->update([
             'first_name' => $request->first_name ?? $user->first_name,
@@ -144,7 +144,7 @@ class SellerService extends Controller
         $image = '';
         if ($request->hasFile('logo')) {
             $path = $request->file('logo')->store($request->logo, 's3');
-            $url = Storage::disk('s3')->url($path);
+            $url = uploadImage($request->file('logo'), 'b2b/company-logo'); //Storage::disk('s3')->url($path);
             $image = $request->hasFile('logo') ? $url : $user->businessInformation->logo;
         }
 
@@ -284,7 +284,7 @@ class SellerService extends Controller
         return $this->success($data, 'All products');
     }
 
-  
+
     public function getProductById(int $product_id, $user_id)
     {
         $currentUserId = userAuthId();
@@ -327,8 +327,8 @@ class SellerService extends Controller
         }
 
         if ($request->hasFile('front_image')) {
-            $path = $request->file('front_image')->store($res->frontImage, 's3');
-            $url = Storage::disk('s3')->url($path);
+            //$path = $request->file('front_image')->store($res->frontImage, 's3');
+            $url = uploadImage($request->file('front_image'), 'b2b/products'); //Storage::disk('s3')->url($path);
         } else {
             $url = $prod->front_image;
         }
@@ -357,7 +357,7 @@ class SellerService extends Controller
             $product->b2bProductImages()->delete();
             foreach ($request->file('images') as $image) {
                 $path = $image->store($res->folder, 's3');
-                $url = Storage::disk('s3')->url($path);
+                $url = uploadImage($image, 'b2b/products'); //Storage::disk('s3')->url($path);
 
                 $product->b2bProductImages()->create([
                     'image' => $url,
@@ -1066,6 +1066,7 @@ class SellerService extends Controller
 
         return $this->success($method, 'Withdrawal details', 200);
     }
+
     public function updateMethod($request, $id)
     {
         $userId = userAuthId();
@@ -1083,6 +1084,7 @@ class SellerService extends Controller
 
         return $this->success($method, 'Withdrawal details Updated', 200);
     }
+
     public function makeAccounDefaultt($request)
     {
         $method = PaymentMethod::findOrFail($request->id);

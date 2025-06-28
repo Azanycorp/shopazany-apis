@@ -26,7 +26,7 @@ class AddB2BBannerRequest extends FormRequest
             'image' => ['required', 'image', 'mimes:jpeg,png,jpg', 'max:2048'],
             'start_date' => ['required', 'date', 'date_format:Y-m-d H:i:s', 'after_or_equal:today'],
             'end_date' => ['required', 'date', 'date_format:Y-m-d H:i:s', 'after:start_date'],
-            'products' => ['required', 'array', 'min:1'],
+            'products' => ['required', 'array'],
             'products.*' => ['exists:b2b_products,id'],
         ];
     }

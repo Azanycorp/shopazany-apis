@@ -21,7 +21,7 @@ class B2BBannerPromoService
 
     public function addBanner($request)
     {
-        $image = uploadImage($request, 'image', 'banner');
+        $image = uploadImage($request->file('image'), 'banner');
         Banner::create([
             'title' => $request->title,
             'image' => $image,
@@ -47,17 +47,17 @@ class B2BBannerPromoService
 
     public function getOneBanner($id)
     {
-        $banner = Banner::where('type', BannerType::B2B)->findOrFail($id);
+        $banner = Banner::where('id', $id)->where('type', BannerType::B2B)->firstOrFail();
         $data = new B2BBannerResource($banner);
         return $this->success($data, "Banner detail");
     }
 
     public function editBanner($request, $id)
     {
-        $banner = Banner::where('type', BannerType::B2B)->findOrFail($id);
+        $banner = Banner::where('id', $id)->where('type', BannerType::B2B)->firstOrFail();
 
         if ($request->hasFile('image')) {
-            $image = uploadImage($request, 'image', 'banner', null, $banner);
+            $image = uploadImage($request->file('image'), 'banner');
         }
         $banner->update([
             'title' => $request->title,

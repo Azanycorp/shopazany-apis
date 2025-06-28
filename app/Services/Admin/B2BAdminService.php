@@ -38,7 +38,7 @@ class B2BAdminService
 
             if ($request->file('image')) {
                 $path = $request->file('image')->store($folder, 's3');
-                $url = Storage::disk('s3')->url($path);
+                $url = uploadImage($request->file('image'), $folder); //Storage::disk('s3')->url($path);
             }
 
             SliderImage::create([
@@ -62,7 +62,7 @@ class B2BAdminService
 
             if ($request->file('image')) {
                 $path = $request->file('image')->store($folder, 's3');
-                $url = Storage::disk('s3')->url($path);
+                $url = uploadImage($request->file('image'), $folder); //Storage::disk('s3')->url($path);
             }
 
             $slider->update([
@@ -82,6 +82,7 @@ class B2BAdminService
         $data = new SliderResource($slider);
         return $this->success($data, "Slider details");
     }
+    
     public function deleteSlider($id)
     {
         $slider = SliderImage::where('type', BannerType::B2B)->findOrFail($id);
@@ -177,7 +178,7 @@ class B2BAdminService
         $folder = App::environment('production') ? '/prod/shopcountryflag' : '/stag/shopcountryflag';
 
         if ($request->file('flag')) {
-            $url = uploadImage($request, 'flag', $folder);
+            $url = uploadImage($request->file('flag'), $folder);
         }
 
         ShopCountry::create([

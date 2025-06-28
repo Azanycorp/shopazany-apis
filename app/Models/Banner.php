@@ -33,7 +33,7 @@ class Banner extends Model
     {
         return Attribute::make(
             get: fn($value) => Product::whereIn('id', is_array($value) ? $value : json_decode($value, true))
-                ->select(['id', 'name', 'product_price', 'description', 'discount_price','slug'])
+                ->select(['id', 'name', 'product_price', 'description', 'discount_price', 'slug'])
                 ->get()
         );
     }
@@ -41,7 +41,9 @@ class Banner extends Model
     protected function b2bProducts(): Attribute
     {
         return Attribute::make(
-            get: fn($value) => B2BProduct::whereIn('id', is_array($value) ? $value : json_decode($value, true))->get()
+            get: fn($value) => !empty($value)
+                ? B2BProduct::whereIn('id', is_array($value) ? $value : json_decode($value, true))->get()
+                : collect()
         );
     }
 }

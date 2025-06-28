@@ -23,10 +23,10 @@ class ProductService
             $slug = $slug . '-' . uniqid();
         }
         $price = $request->product_price;
-        if($request->discount_price > 0){
+        if ($request->discount_price > 0) {
             $price = (int)$request->product_price - (int)$request->discount_price;
         }
-        if($request->filled('seller_id')) {
+        if ($request->filled('seller_id')) {
             $id = $request->seller_id;
         } else {
             $ids = $admin->id;
@@ -34,16 +34,16 @@ class ProductService
         $folder = null;
         $frontImage = null;
         $name = 'azany';
-        if(App::environment('production')){
+        if (App::environment('production')) {
             $folder = "/prod/product/{$name}";
             $frontImage = "/prod/product/{$name}/front_image";
-        } elseif(App::environment(['staging', 'local'])) {
+        } elseif (App::environment(['staging', 'local'])) {
             $folder = "/stag/product/{$name}";
             $frontImage = "/stag/product/{$name}/front_image";
         }
         if ($request->hasFile('front_image')) {
             $path = $request->file('front_image')->store($frontImage, 's3');
-            $url = Storage::disk('s3')->url($path);
+            $url = uploadImage($request->file('front_image'), $folder); // Storage::disk('s3')->url($path);
         }
         $product = Product::create([
             'admin_id' => $ids ?? null,
@@ -71,7 +71,7 @@ class ProductService
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $image) {
                 $path = $image->store($folder, 's3');
-                $url = Storage::disk('s3')->url($path);
+                $url = uploadImage($image, $folder); //Storage::disk('s3')->url($path);
 
                 $product->productimages()->create([
                     'image' => $url,
@@ -128,7 +128,7 @@ class ProductService
     {
         $product = Product::where('slug', $slug)->first();
 
-        if(!$product){
+        if (!$product) {
             return $this->error(null, "Product not found", 404);
         }
 
@@ -148,8 +148,3 @@ class ProductService
         return $this->success(null, $status);
     }
 }
-
-
-
-
-
