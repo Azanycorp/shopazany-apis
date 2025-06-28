@@ -21,7 +21,7 @@ trait Product
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $image) {
                 $path = $image->store($folderPath->folder, 's3');
-                $url = uploadImage($request->file('images'), 'product/images'); //Storage::disk('s3')->url($path);
+                $url = uploadImage($image, 'b2c/product'); //Storage::disk('s3')->url($path);
                 $product->productimages()->create(['image' => $url]);
             }
         }

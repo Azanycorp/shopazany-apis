@@ -43,7 +43,7 @@ class SellerService extends Controller
             return $this->error(null, "User not found", 404);
         }
 
-        if ($user->userbusinessinfo->isNotEmpty()) {
+        if ($user->userbusinessinfo) {
             return $this->error(null, "Business information has been submitted", 400);
         }
 
@@ -55,7 +55,7 @@ class SellerService extends Controller
 
             $url = null;
             if ($request->hasFile('file')) {
-                $url = $this->storeFile($request->file('file'), $folder);
+                $url = uploadImage($request->file('file'), $folder); //$this->storeFile($request->file('file'), $folder);
             }
 
             $user->update($request->only(['first_name', 'last_name']));
@@ -98,7 +98,7 @@ class SellerService extends Controller
 
         DB::beginTransaction();
         try {
-            $url = uploadImage($request->file('front_image'), 'product/front_image'); //$this->uploadFrontImage($request, $folderPath);
+            $url = uploadImage($request->file('front_image'), 'b2c/product'); //$this->uploadFrontImage($request, $folderPath);
             $product = $this->createProductRecord($request, $user, $slug, $url);
             $this->uploadAdditionalImages($request, $folderPath, $product);
             $this->createProductVariations($request, $product);
@@ -148,7 +148,7 @@ class SellerService extends Controller
             $frontImage = "/stag/product/{$name}/front_image";
         }
 
-        $image = uploadSingleProductImage($request, 'front_image', $frontImage, $product);
+        $image = uploadImage($request->file('front_image'), $folder);//uploadSingleProductImage($request, 'front_image', $frontImage, $product);
         $product->update([
             'name' => $request->name,
             'slug' => $slug,

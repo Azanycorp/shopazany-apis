@@ -28,13 +28,12 @@ class BrandController extends Controller
         $request->validate([
             'name' => ['required', 'string']
         ]);
+
         $path = null;
-        if($request->hasFile('image')) {
-            $file = $request->file('image');
-            $filename = time() . rand(10, 1000) . '.' . $file->extension();
-            $file->move(public_path('brands'), $filename, 'public');
-            $path = config('services.baseurl') . 'brands/' . $filename;
+        if ($request->hasFile('image')) {
+            $path = uploadImage($request->file('image'), 'brands'); //config('services.baseurl') . 'brands/' . $filename;
         }
+
         Brand::create([
             'name' => $request->name,
             'slug' => Str::slug($request->name),

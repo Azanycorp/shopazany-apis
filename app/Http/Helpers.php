@@ -196,8 +196,23 @@ if (!function_exists('uploadSingleProductImage')) {
 
 //         return $url;
 //     }
-// }
+// }Old AWS Upload
 
+if (!function_exists('uploadMultipleProductImage')) {
+    function uploadMultipleProductImage($request, $file, $folder, $product): void
+    {
+        if ($request->hasFile($file)) {
+            $product->productimages()->delete();
+
+            if ($request->hasFile('images')) {
+                foreach ($request->file('images') as $image) {
+                    $url = uploadImage($image, 'b2c/product'); //Storage::disk('s3')->url($path);
+                    $product->productimages()->create(['image' => $url]);
+                }
+            }
+        }
+    }
+}
 // if (!function_exists('uploadMultipleProductImage')) {
 //     function uploadMultipleProductImage($request, $file, $folder, $product): void
 //     {
@@ -214,54 +229,8 @@ if (!function_exists('uploadSingleProductImage')) {
 //             }
 //         }
 //     }
-// } old AWS upload
+// } Old AWS Upload
 
-function uploadMultipleProductImage($file, $product, $folder = 'products')
-{
-    try {
-        if (!$file) {
-            return $product->image;
-        }
-
-        // Check size (max 3MB)
-        $fileSize = $file->getSize();
-        if ($fileSize > 3000000) {
-            return json_encode([
-                "status" => false,
-                "message" => "File size is larger than 3MB.",
-                "status_code" => 422
-            ]);
-        }
-
-        // Delete existing image from ImageKit (if needed)
-        if (!empty($product->image)) {
-            // OPTIONAL: Delete logic if you have image fileId stored
-            // You would need to save the fileId during upload for this to work
-            // imageKitClient()->deleteFile($fileId);
-        }
-
-        // Upload new image to ImageKit
-        $imageKit = imageKitClient();
-        $fileName = time() . '_' . $file->getClientOriginalName();
-        $base64 = base64_encode(file_get_contents($file->getRealPath()));
-
-        $upload = $imageKit->uploadFile([
-            'file' => "data:image/*;base64,{$base64}",
-            'fileName' => $fileName,
-            'folder' => 'b2c-' . $folder,
-            'useUniqueFileName' => true,
-            'isPublished' => true,
-            'isPrivateFile' => false,
-        ]);
-
-        if (!empty($upload->result->url)) {
-            return $upload->result->url;
-        }
-    } catch (\Exception $e) {
-        Log::error('ImageKit Upload Failed: ' . $e->getMessage());
-        return $product->image;
-    }
-}
 
 if (!function_exists('imageKitClient')) {
     function imageKitClient()
@@ -273,6 +242,7 @@ if (!function_exists('imageKitClient')) {
         );
     }
 }
+
 if (!function_exists('uploadImage')) {
     function uploadImage($file, $folder = 'uploads')
     {
