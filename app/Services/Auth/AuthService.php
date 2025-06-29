@@ -30,9 +30,9 @@ class AuthService extends Controller
     public function loginVerify($request)
     {
         $user = User::where('email', $request->email)
-        ->where('login_code', $request->code)
-        ->where('login_code_expires_at', '>', now())
-        ->first();
+            ->where('login_code', $request->code)
+            ->where('login_code_expires_at', '>', now())
+            ->first();
 
         if(! $user){
             return $this->error(null, "User doesn't exist or Code has expired.", 404);

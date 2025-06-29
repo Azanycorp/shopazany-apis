@@ -13,7 +13,6 @@ use App\Services\Payment\PaystackPaymentProcessor;
 use App\Models\User;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 
 class SubscriptionService
 {

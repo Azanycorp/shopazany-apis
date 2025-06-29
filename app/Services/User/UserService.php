@@ -51,7 +51,9 @@ class UserService extends Controller
             return $this->error(null, "User not found", 404);
         }
 
-        $image = $request->hasFile('image') ? uploadUserImage($request, 'image', $user) : $user->image;
+        if ($request->hasFile('image')) {
+            $image = uploadUserImage($request, 'image', $user);
+        }
 
         $user->update([
             'first_name' => $request->first_name ?? $user->first_name,
@@ -61,7 +63,8 @@ class UserService extends Controller
             'address' => $request->address ?? $user->address,
             'phone' => $request->phone_number ?? $user->phone,
             'date_of_birth' => $request->date_of_birth ?? $user->date_of_birth,
-            'image' => $image,
+            'image' => $image['url'] ?? $user->image,
+            'public_id' => $image['public_id'] ?? $user->public_id,
         ]);
 
         return $this->success([

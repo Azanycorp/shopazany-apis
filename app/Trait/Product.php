@@ -16,9 +16,10 @@ trait Product
         ];
     }
 
-    public function uploadAdditionalImages($request, $folderPath, $product)
+    public function uploadAdditionalImages($request, $name, $product)
     {
-        uploadMultipleProductImage($request, 'images', $folderPath->folder, $product);
+        $folder = folderNames('product', $name, null, 'images');
+        uploadMultipleProductImage($request, 'images', $folder->folder, $product);
     }
 
     public function createProductRecord($request, $user, $slug, $url)

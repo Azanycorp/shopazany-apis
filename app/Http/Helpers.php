@@ -24,7 +24,6 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
-use ImageKit\ImageKit;
 
 if (!function_exists('total_amount')) {
     function total_amount($unit_price, $moq): int|float
@@ -245,34 +244,57 @@ if (!function_exists('uploadMultipleProductImage')) {
     }
 }
 
+if (!function_exists('uploadFunction')) {
+    function uploadFunction($file, $folder, $model = null) {
+        if ($file->getSize() > 3000000) {
+            abort(422, 'File size is larger than 3MB.');
+        }
+
+        if (!is_null($model) && !empty($model->public_id)) {
+            app(FileUploader::class)->deleteFile($model->public_id);
+        }
+
+        $upload = uploadImageFile($file, $folder);
+
+        return [
+            'url' => $upload['url'],
+            'public_id' => $upload['public_id']
+        ];
+    }
+}
+
+if (!function_exists('deleteFile')) {
+    function deleteFile($model)
+    {
+        if (!is_null($model) && !empty($model->public_id)) {
+            app(FileUploader::class)->deleteFile($model->public_id);
+        }
+    }
+}
+
 if (!function_exists('uploadUserImage')) {
     function uploadUserImage($request, $file, $user)
     {
-        $folder = null;
-
         $parts = explode('@', $user->email);
         $name = $parts[0];
 
-        if (App::environment('production')) {
-            $folder = "/prod/profile/{$name}";
-        } elseif (App::environment(['staging', 'local'])) {
-            $folder = "/stag/profile/{$name}";
+        $folder = folderName('profile') . "/{$name}";
+
+        if (!is_null($user) && !empty($user->public_id)) {
+            app(FileUploader::class)->deleteFile($user->public_id);
         }
 
-        if ($request->hasFile($file)) {
-            if (!empty($user->public_id)) {
-                app(FileUploader::class)->deleteFile($user->public_id);
-            }
-            $fileSize = $request->file($file)->getSize();
-            if ($fileSize > 3000000) {
-                return json_encode(["status" => false, "message" => "file size is larger than 3MB.", "status_code" => 422]);
-            }
-
-            $upload = uploadImageFile($request->file($file), $folder);
-            return $upload['url'];
+        $fileSize = $request->file($file)->getSize();
+        if ($fileSize > 3000000) {
+            return json_encode(["status" => false, "message" => "file size is larger than 3MB.", "status_code" => 422]);
         }
 
-        return $user->image;
+        $upload = uploadImageFile($request->file($file), $folder);
+
+        return [
+            'url' => $upload['url'],
+            'public_id' => $upload['public_id']
+        ];
     }
 }
 

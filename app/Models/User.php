@@ -49,6 +49,7 @@ class User extends Authenticatable
         'is_verified',
         'income_type',
         'image',
+        'public_id',
         'is_affiliate_member',
         'status',
         'type',

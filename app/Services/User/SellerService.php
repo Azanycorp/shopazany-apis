@@ -99,11 +99,11 @@ class SellerService extends Controller
         try {
             $url = $this->uploadFrontImage($request, $folderPath);
             $product = $this->createProductRecord($request, $user, $slug, $url);
-            $this->uploadAdditionalImages($request, $folderPath, $product);
+            $this->uploadAdditionalImages($request, $name, $product);
             $this->createProductVariations($request, $product, $name);
 
             DB::commit();
-            return $this->success(null, "Added successfully");
+            return $this->success(null, "Added successfully", 201);
         } catch (\Exception $e) {
             DB::rollBack();
             return $this->error(null, "Failed to create product: " . $e->getMessage(), 500);
@@ -134,16 +134,13 @@ class SellerService extends Controller
             $request->discount_value
         );
 
-        $folder = null;
         $frontImage = null;
         $parts = explode('@', $user->email);
         $name = $parts[0];
 
         if(App::environment('production')){
-            $folder = "/prod/product/{$name}";
             $frontImage = "/prod/product/{$name}/front_image";
         } elseif(App::environment(['staging', 'local'])) {
-            $folder = "/stag/product/{$name}";
             $frontImage = "/stag/product/{$name}/front_image";
         }
 
@@ -171,7 +168,7 @@ class SellerService extends Controller
             'country_id' => $user->country ?? 160,
         ]);
 
-        uploadMultipleProductImage($request, 'images', $folder, $product);
+        $this->uploadAdditionalImages($request, $name, $product);
         $this->updateProductVariations($request, $product, $name);
 
         return $this->success(null, "Updated successfully");
@@ -185,37 +182,29 @@ class SellerService extends Controller
             return $this->error(null, "User not found", 404);
         }
 
-        $query = $user->products();
+        $category = request('category');
+        $brand = request('brand');
+        $color = request('color');
+        $search = request('search');
 
-        if (request()->filled('category')) {
-            $query->where('category_id', request('category'));
-        }
-
-        if (request()->filled('brand')) {
-            $query->where('brand_id', request('brand'));
-        }
-
-        if (request()->filled('color')) {
-            $query->where('color_id', request('color'));
-        }
-
-        if (request()->filled('search')) {
-            $query->where('name', 'like', '%' . request('search') . '%');
-        }
-
-        $query->with([
-            'category',
-            'subCategory',
-            'shopCountry',
-            'productimages',
-            'brand',
-            'color',
-            'unit',
-            'size',
-            'orders',
-            'productReviews',
-            'productVariations',
-        ]);
+        $query = $user->products()
+            ->with([
+                'category',
+                'subCategory',
+                'shopCountry',
+                'productimages',
+                'brand',
+                'color',
+                'unit',
+                'size',
+                'orders',
+                'productReviews',
+                'productVariations',
+            ])
+            ->when($category, fn($q) => $q->where('category_id', $category))
+            ->when($brand, fn($q) => $q->where('brand_id', $brand))
+            ->when($color, fn($q) => $q->where('color_id', $color))
+            ->when($search, fn($q) => $q->where('name', 'like', "%$search%"));
 
         $products = $query->paginate(25);
 
@@ -274,6 +263,8 @@ class SellerService extends Controller
         if(!$product){
             return $this->error(null, "Product not found", 404);
         }
+
+        deleteFile($product);
 
         $product->update([
             'status' => ProductStatus::DELETED

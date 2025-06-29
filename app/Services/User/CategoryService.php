@@ -12,7 +12,6 @@ use App\Models\Product;
 use App\Models\SubCategory;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class CategoryService
@@ -22,17 +21,9 @@ class CategoryService
     public function createCategory($request)
     {
         try {
-            $folder = null;
-
-            if(App::environment('production')){
-                $folder = '/prod/category';
-            } elseif(App::environment(['staging', 'local'])) {
-                $folder = '/stag/category';
-            }
-
             if ($request->file('image')) {
-                $path = $request->file('image')->store($folder, 's3');
-                $url = Storage::disk('s3')->url($path);
+                $folder = folderName('category');
+                $url = uploadFunction($request->file('image'), $folder);
             }
 
             $slug = Str::slug($request->name);
@@ -43,7 +34,8 @@ class CategoryService
             Category::create([
                 'name' => $request->name,
                 'slug' => $slug,
-                'image' => $url,
+                'image' => $url['url'],
+                'public_id' => $url['public_id'],
                 'featured' => 1,
             ]);
 
@@ -88,24 +80,16 @@ class CategoryService
         }
 
         try {
-            $folder = null;
-            $url = null;
-
-            if(App::environment('production')){
-                $folder = '/prod/category/subcategory';
-            } elseif(App::environment(['staging', 'local'])) {
-                $folder = '/stag/category/subcategory';
-            }
-
             if ($request->hasFile('image')) {
-                $path = $request->file('image')->store($folder, 's3');
-                $url = Storage::disk('s3')->url($path);
+                $folder = folderName('category/subcategory');
+                $url = uploadFunction($request->file('image'), $folder);
             }
 
             $category->subcategory()->create([
                 'name' => $request->name,
                 'slug' => Str::slug($request->name),
-                'image' => $url
+                'image' => $url['url'],
+                'public_id' => $url['public_id']
             ]);
 
             return $this->success(null, "Created successfully");
@@ -196,12 +180,10 @@ class CategoryService
     public function editCategory($request)
     {
         $category = Category::findOrFail($request->id);
-        $folder = App::environment('production') ? '/prod/category' : '/stag/category';
 
-        $url = $category->image;
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store($folder, 's3');
-            $url = Storage::disk('s3')->url($path);
+            $folder = folderName('category');
+            $url = uploadFunction($request->file('image'), $folder, $category);
         }
 
         $slug = $category->slug;
@@ -215,7 +197,8 @@ class CategoryService
         $category->update([
             'name' => $request->name ?? $category->name,
             'slug' => $slug,
-            'image' => $url
+            'image' => $url['url'] ?? $category->image,
+            'public_id' => $url['public_id'] ? $category->public_id : null,
         ]);
 
         return $this->success(null, "Updated successfully");
@@ -224,6 +207,7 @@ class CategoryService
     public function deleteCategory($id)
     {
         $category = Category::findOrFail($id);
+        deleteFile($category);
         $category->delete();
 
         return $this->success(null, 'Deleted successfully');
@@ -232,6 +216,7 @@ class CategoryService
     public function deleteSubCategory($id)
     {
         $subcat = SubCategory::findOrFail($id);
+        deleteFile($subcat);
         $subcat->delete();
 
         return $this->success(null, 'Deleted successfully');

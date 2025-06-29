@@ -14,6 +14,7 @@ trait SignUp
     {
         $code = generateVerificationCode();
         $currencyCode = $this->currencyCode($request);
+
         return User::create([
             'first_name' => $request->first_name,
             'last_name' => $request->last_name,

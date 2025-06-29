@@ -52,7 +52,7 @@ class AdminService
 
     public function slider()
     {
-        $sliders = Cache::rememberForever('home_sliders', 
+        $sliders = Cache::rememberForever('home_sliders',
             fn() => SliderImage::orderBy('created_at', 'desc')
             ->take(5)
             ->get()
