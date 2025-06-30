@@ -12,8 +12,9 @@ class SliderImage extends Model
 
     protected $fillable = [
         'image',
+        'public_id',
         'type',
-        'link'
+        'link',
     ];
 
     protected static function booted()

@@ -16,7 +16,7 @@ class Category extends Model
         'public_id',
         'featured',
         'meta_title',
-        'meta_description'
+        'meta_description',
     ];
 
     public function subcategory()

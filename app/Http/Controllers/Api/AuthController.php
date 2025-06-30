@@ -2,22 +2,21 @@
 
 namespace App\Http\Controllers\Api;
 
-use Illuminate\Http\Request;
-use App\Services\Auth\AuthService;
-use App\Http\Requests\LoginRequest;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\SignUpRequest;
-use App\Http\Requests\SellerSignUpRequest;
 use App\Http\Requests\AffiliateSignupRequest;
+use App\Http\Requests\LoginRequest;
 use App\Http\Requests\ResetPasswordRequest;
+use App\Http\Requests\SellerSignUpRequest;
+use App\Http\Requests\SignUpRequest;
 use App\Http\Requests\VerifyRequest;
+use App\Services\Auth\AuthService;
+use Illuminate\Http\Request;
 
 class AuthController extends Controller
 {
     public function __construct(
         protected AuthService $authService
-    )
-    {}
+    ) {}
 
     public function login(LoginRequest $request)
     {
@@ -51,7 +50,7 @@ class AuthController extends Controller
     public function forgot(Request $request)
     {
         $request->validate([
-            'email' => ['required', 'email', 'email:rfc:dns']
+            'email' => ['required', 'email', 'email:rfc:dns'],
         ]);
 
         return $this->authService->forgot($request);

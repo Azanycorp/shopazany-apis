@@ -10,8 +10,8 @@ class LocalUploader
     {
         $path = Storage::disk('public')->putFile($folder, $file);
 
-        if (!$path) {
-            throw new \Exception("Failed to upload to local disk.");
+        if (! $path) {
+            throw new \Exception('Failed to upload to local disk.');
         }
 
         return [
@@ -22,8 +22,8 @@ class LocalUploader
 
     public function delete($publicId)
     {
-        if (!Storage::disk('public')->delete($publicId)) {
-            throw new \Exception("Failed to delete from local disk.");
+        if (! Storage::disk('public')->delete($publicId)) {
+            throw new \Exception('Failed to delete from local disk.');
         }
     }
 }

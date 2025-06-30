@@ -14,21 +14,21 @@ class PayoutService
 {
     public static function paystackTransfer($user, $fields)
     {
-        $url = "https://api.paystack.co/transfer";
+        $url = 'https://api.paystack.co/transfer';
         $token = config('paystack.secretKey');
 
         $headers = [
             'Accept' => 'application/json',
-            'Authorization' => 'Bearer ' . $token,
+            'Authorization' => 'Bearer '.$token,
         ];
 
         $data = (new PostCurl($url, $headers, $fields))->execute();
 
-        if($data['status'] === false) {
+        if ($data['status'] === false) {
             return [
                 'status' => false,
                 'message' => null,
-                'data' => null
+                'data' => null,
             ];
         }
 
@@ -45,17 +45,17 @@ class PayoutService
         return [
             'status' => true,
             'message' => null,
-            'data' => $data
+            'data' => $data,
         ];
     }
 
     public static function paystackBulkTransfer(array $transfers)
     {
-        $url = "https://api.paystack.co/transfer/bulk";
+        $url = 'https://api.paystack.co/transfer/bulk';
         $token = config('paystack.secretKey');
 
         $headers = [
-            'Authorization' => 'Bearer ' . $token,
+            'Authorization' => 'Bearer '.$token,
             'Accept' => 'application/json',
             'Cache-Control' => 'no-cache',
         ];
@@ -75,11 +75,11 @@ class PayoutService
 
         $response = (new CurlService($url, $headers, $body))->execute();
 
-        if (!isset($response['status']) || $response['status'] === false) {
+        if (! isset($response['status']) || $response['status'] === false) {
             return [
                 'status' => false,
                 'message' => $response['message'],
-                'data' => null
+                'data' => null,
             ];
         }
 
@@ -101,41 +101,41 @@ class PayoutService
         return [
             'status' => true,
             'message' => $response['message'] ?? 'Bulk transfer queued',
-            'data' => $response['data']
+            'data' => $response['data'],
         ];
     }
 
     public static function authorizeTransfer($request, $user, $fields)
     {
         try {
-            $merchantAuthentication = new AnetAPI\MerchantAuthenticationType();
+            $merchantAuthentication = new AnetAPI\MerchantAuthenticationType;
             $merchantAuthentication->setName(config('services.authorizenet.api_login_id'));
             $merchantAuthentication->setTransactionKey(config('services.authorizenet.transaction_key'));
 
-            $refId = 'ref' . time();
+            $refId = 'ref'.time();
             $randomAccountNumber = $fields['account_number'];
 
             // Ensure routing number is correctly formatted
             $routingNumber = substr($fields['routing_number'], 0, 9);
 
             // Create the payment data for a Bank Account
-            $bankAccount = new AnetAPI\BankAccountType();
+            $bankAccount = new AnetAPI\BankAccountType;
             $bankAccount->setAccountType('checking');
             $bankAccount->setRoutingNumber($routingNumber);
             $bankAccount->setAccountNumber($randomAccountNumber);
             $bankAccount->setNameOnAccount($fields['account_name']);
             $bankAccount->setBankName($fields['bank_name']);
 
-            $paymentBank = new AnetAPI\PaymentType();
+            $paymentBank = new AnetAPI\PaymentType;
             $paymentBank->setBankAccount($bankAccount);
 
             // Create transaction request
-            $transactionRequestType = new AnetAPI\TransactionRequestType();
-            $transactionRequestType->setTransactionType("refundTransaction");
+            $transactionRequestType = new AnetAPI\TransactionRequestType;
+            $transactionRequestType->setTransactionType('refundTransaction');
             $transactionRequestType->setAmount($request->amount);
             $transactionRequestType->setPayment($paymentBank);
 
-            $anetRequest = new AnetAPI\CreateTransactionRequest();
+            $anetRequest = new AnetAPI\CreateTransactionRequest;
             $anetRequest->setMerchantAuthentication($merchantAuthentication);
             $anetRequest->setRefId($refId);
             $anetRequest->setTransactionRequest($transactionRequestType);
@@ -145,16 +145,17 @@ class PayoutService
 
             // If no response, return failure
             if ($response == null) {
-                Log::error("Authorize.net transaction failed: No response received");
+                Log::error('Authorize.net transaction failed: No response received');
+
                 return [
                     'status' => false,
-                    'message' => "Authorize.net transaction failed: No response received",
-                    'data' => null
+                    'message' => 'Authorize.net transaction failed: No response received',
+                    'data' => null,
                 ];
             }
 
             // Check response result code
-            if ($response->getMessages()->getResultCode() === "Ok") {
+            if ($response->getMessages()->getResultCode() === 'Ok') {
                 $tresponse = $response->getTransactionResponse();
 
                 if ($tresponse != null && $tresponse->getMessages() != null) {
@@ -163,13 +164,13 @@ class PayoutService
                         $user,
                         TransactionStatus::TRANSFER,
                         $fields['amount'],
-                        "success"
+                        'success'
                     ))->logTransaction();
 
                     return [
                         'status' => true,
                         'message' => $tresponse->getMessages()[0]->getDescription(),
-                        'data' => $tresponse
+                        'data' => $tresponse,
                     ];
                 }
             }
@@ -180,20 +181,21 @@ class PayoutService
                 $tresponse->getErrors()[0]->getErrorText() :
                 $response->getMessages()->getMessage()[0]->getText();
 
-            Log::error("Authorize.net transaction failed: " . $errorMessage);
+            Log::error('Authorize.net transaction failed: '.$errorMessage);
 
             return [
                 'status' => false,
                 'message' => $errorMessage,
-                'data' => null
+                'data' => null,
             ];
 
         } catch (\Exception $e) {
-            Log::error("Authorize.net Exception: " . $e->getMessage());
+            Log::error('Authorize.net Exception: '.$e->getMessage());
+
             return [
                 'status' => false,
-                'message' => "Authorize.net Exception: " . $e->getMessage(),
-                'data' => null
+                'message' => 'Authorize.net Exception: '.$e->getMessage(),
+                'data' => null,
             ];
         }
     }
@@ -203,7 +205,7 @@ class PayoutService
         if (app()->environment('production')) {
             return $controller->executeWithApiResponse(\net\authorize\api\constants\ANetEnvironment::PRODUCTION);
         }
+
         return $controller->executeWithApiResponse(\net\authorize\api\constants\ANetEnvironment::SANDBOX);
     }
 }
-

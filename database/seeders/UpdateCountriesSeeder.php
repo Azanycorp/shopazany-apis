@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -17,7 +16,7 @@ class UpdateCountriesSeeder extends Seeder
             'Cuba', 'Iran', 'Libya', 'North Korea', 'Syria', 'Belarus',
             'Central African Republic', 'Democratic Republic of Congo', 'Iraq',
             'Lebanon', 'Burma', 'China', 'Nicaragua', 'Russia',
-            'Russian sanctions', 'Sudan', 'Venezuela'
+            'Russian sanctions', 'Sudan', 'Venezuela',
         ];
 
         DB::table('countries')

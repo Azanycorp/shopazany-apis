@@ -14,6 +14,7 @@ class PaystackPaymentProcessor implements PaymentStrategy
     {
         try {
             $paystackInstance = Paystack::getAuthorizationUrl($paymentDetails);
+
             return [
                 'status' => 'success',
                 'data' => $paystackInstance,
@@ -27,6 +28,3 @@ class PaystackPaymentProcessor implements PaymentStrategy
         }
     }
 }
-
-
-

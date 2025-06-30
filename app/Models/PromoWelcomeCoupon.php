@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class PromoWelcomeCoupon extends Model
 {
-    protected $table = "promo_welcome_coupons";
+    protected $table = 'promo_welcome_coupons';
 
     use HasFactory;
 

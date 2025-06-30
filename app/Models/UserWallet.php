@@ -11,10 +11,11 @@ class UserWallet extends Model
         'master_wallet',
         'transaction_wallet',
     ];
+
     public function user()
     {
         return $this->belongsTo(User::class, 'seller_id', 'id')->where([
-            'type' => 'b2b_seller'
+            'type' => 'b2b_seller',
         ]);
     }
 }

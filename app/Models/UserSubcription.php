@@ -24,7 +24,7 @@ class UserSubcription extends Model
     protected function casts(): array
     {
         return [
-            'authorization_data' => 'json'
+            'authorization_data' => 'json',
         ];
     }
 

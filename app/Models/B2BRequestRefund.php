@@ -20,7 +20,7 @@ class B2BRequestRefund extends Model
     protected function casts(): array
     {
         return [
-            'send_reply' => 'boolean'
+            'send_reply' => 'boolean',
         ];
     }
 

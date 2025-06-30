@@ -22,6 +22,7 @@ class AuthServiceProvider extends ServiceProvider
     {
         Gate::before(function ($user, $ability) {
             $permissions = $user->roles->flatMap->permissions->pluck('name')->unique();
+
             return $permissions->contains($ability) ? true : null;
         });
     }

@@ -11,6 +11,6 @@ class Unit extends Model
 
     protected $fillable = [
         'name',
-        'status'
+        'status',
     ];
 }

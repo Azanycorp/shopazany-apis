@@ -21,7 +21,6 @@ use App\Http\Resources\StateResource;
 use Illuminate\Support\Facades\Cache;
 use App\Http\Resources\SliderResource;
 use App\Http\Resources\CountryResource;
-use Illuminate\Support\Facades\Storage;
 use App\Http\Resources\AdminUserResource;
 use App\Http\Resources\B2BCategoryResource;
 use App\Http\Resources\ShopCountryResource;
@@ -33,16 +32,13 @@ class B2BAdminService
     public function addSlider($request)
     {
         try {
-
-            $folder = App::environment('production') ? '/prod/slider_image' : '/stag/slider_image';
-
             if ($request->file('image')) {
-                $path = $request->file('image')->store($folder, 's3');
-                $url = Storage::disk('s3')->url($path);
+                $url = uploadFunction($request->file('image'), 'slider_image');
             }
 
             SliderImage::create([
-                'image' => $url,
+                'image' => $url['url'] ?? null,
+                'public_id' => $url['public_id'] ?? null,
                 'type' => BannerType::B2B,
                 'link' => $request->link
             ]);
@@ -58,15 +54,13 @@ class B2BAdminService
         $slider = SliderImage::where('type', BannerType::B2B)->findOrFail($id);
         try {
 
-            $folder = App::environment('production') ? '/prod/slider_image' : '/stag/slider_image';
-
             if ($request->file('image')) {
-                $path = $request->file('image')->store($folder, 's3');
-                $url = Storage::disk('s3')->url($path);
+                $url = uploadFunction($request->file('image'), 'slider_image', $slider);
             }
 
             $slider->update([
-                'image' => $url ?? $slider->image,
+                'image' => $url['url'] ?? $slider->image,
+                'public_id' => $url['public_id'] ?? $slider->public_id,
                 'link' => $request->link
             ]);
 
@@ -80,20 +74,20 @@ class B2BAdminService
     {
         $slider = SliderImage::where('type', BannerType::B2B)->findOrFail($id);
         $data = new SliderResource($slider);
+
         return $this->success($data, "Slider details");
     }
     public function deleteSlider($id)
     {
         $slider = SliderImage::where('type', BannerType::B2B)->findOrFail($id);
         $slider->delete();
+
         return $this->success(null, "details deleted");
     }
 
     public function sliders()
     {
-
         $sliders = SliderImage::where('type', BannerType::B2B)->latest()->take(5)->get();
-
         $data = SliderResource::collection($sliders);
 
         return $this->success($data, "Sliders");
@@ -174,18 +168,17 @@ class B2BAdminService
             return $this->error(null, "Not found", 404);
         }
 
-        $folder = App::environment('production') ? '/prod/shopcountryflag' : '/stag/shopcountryflag';
-
         if ($request->file('flag')) {
-            $url = uploadImage($request, 'flag', $folder);
+            $url = uploadImage($request, 'flag', 'shopcountryflag');
         }
 
         ShopCountry::create([
             'country_id' => $country->id,
             'name' => $country->name,
-            'flag' => $url,
+            'flag' => $url['url'],
             'currency' => $request->currency,
         ]);
+
         return $this->success(null, "Added successfully");
     }
 

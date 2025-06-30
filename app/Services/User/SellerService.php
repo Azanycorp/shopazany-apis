@@ -8,42 +8,42 @@ use App\Enum\ProductStatus;
 use App\Enum\UserType;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\OrderDetailResource;
-use App\Models\User;
-use App\Models\Order;
-use App\Models\Product;
-use App\Trait\HttpResponse;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\App;
 use App\Http\Resources\OrderResource;
 use App\Http\Resources\SellerProductResource;
 use App\Imports\ProductImport;
 use App\Mail\OrderStatusUpdated;
+use App\Models\Order;
+use App\Models\Product;
+use App\Models\User;
 use App\Trait\General;
+use App\Trait\HttpResponse;
 use App\Trait\Product as TraitProduct;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 
 class SellerService extends Controller
 {
-    use HttpResponse, General, TraitProduct;
+    use General, HttpResponse, TraitProduct;
 
     public function businessInfo($request)
     {
         $currentUserId = Auth::id();
 
         if ($currentUserId != $request->user_id) {
-            return $this->error(null, "Unauthorized action.", 401);
+            return $this->error(null, 'Unauthorized action.', 401);
         }
 
         $user = User::with('userbusinessinfo')->find($request->user_id);
 
-        if (!$user) {
-            return $this->error(null, "User not found", 404);
+        if (! $user) {
+            return $this->error(null, 'User not found', 404);
         }
 
-        if($user->userbusinessinfo->isNotEmpty()){
-            return $this->error(null, "Business information has been submitted", 400);
+        if ($user->userbusinessinfo->isNotEmpty()) {
+            return $this->error(null, 'Business information has been submitted', 400);
         }
 
         try {
@@ -52,7 +52,7 @@ class SellerService extends Controller
 
             $folder = $this->getStorageFolder($name);
 
-            $url = [];
+            $url = ['url' => null];
             if ($request->hasFile('file')) {
                 $url = $this->storeFile($request->file('file'), $folder);
             }
@@ -64,10 +64,10 @@ class SellerService extends Controller
                 'business_type' => $request->business_type,
                 'identity_type' => $request->identity_type,
                 'file' => $url['url'],
-                'confirm' => $request->confirm
+                'confirm' => $request->confirm,
             ]);
 
-            return $this->success(null, "Information added successfully");
+            return $this->success(null, 'Information added successfully');
         } catch (\Exception $e) {
             return $this->error(null, $e->getMessage(), 500);
         }
@@ -78,17 +78,17 @@ class SellerService extends Controller
         $currentUser = userAuth();
 
         if ($currentUser->id != $request->user_id || $currentUser->type != UserType::SELLER) {
-            return $this->error(null, "Unauthorized action.", 401);
+            return $this->error(null, 'Unauthorized action.', 401);
         }
 
         $user = User::with('products')->find($request->user_id);
-        if (!$user) {
-            return $this->error(null, "User not found", 404);
+        if (! $user) {
+            return $this->error(null, 'User not found', 404);
         }
 
         $slug = Str::slug($request->name);
         if (Product::where('slug', $slug)->exists()) {
-            $slug .= '-' . uniqid();
+            $slug .= '-'.uniqid();
         }
 
         $parts = explode('@', $user->email);
@@ -103,10 +103,12 @@ class SellerService extends Controller
             $this->createProductVariations($request, $product, $name);
 
             DB::commit();
-            return $this->success(null, "Added successfully", 201);
+
+            return $this->success(null, 'Added successfully', 201);
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->error(null, "Failed to create product: " . $e->getMessage(), 500);
+
+            return $this->error(null, 'Failed to create product: '.$e->getMessage(), 500);
         }
     }
 
@@ -114,18 +116,18 @@ class SellerService extends Controller
     {
         $user = User::find($userId);
 
-        if (!$user) {
-            return $this->error(null, "User not found", 404);
+        if (! $user) {
+            return $this->error(null, 'User not found', 404);
         }
 
         $product = Product::find($id);
 
-        if(!$product){
-            return $this->error(null, "Product not found", 404);
+        if (! $product) {
+            return $this->error(null, 'Product not found', 404);
         }
         $slug = Str::slug($request->name);
         if (Product::where('slug', $slug)->exists()) {
-            $slug = $slug . '-' . uniqid();
+            $slug = $slug.'-'.uniqid();
         }
 
         $price = $this->calculateFinalPrice(
@@ -138,9 +140,9 @@ class SellerService extends Controller
         $parts = explode('@', $user->email);
         $name = $parts[0];
 
-        if(App::environment('production')){
+        if (App::environment('production')) {
             $frontImage = "/prod/product/{$name}/front_image";
-        } elseif(App::environment(['staging', 'local'])) {
+        } elseif (App::environment(['staging', 'local'])) {
             $frontImage = "/stag/product/{$name}/front_image";
         }
 
@@ -171,15 +173,15 @@ class SellerService extends Controller
         $this->uploadAdditionalImages($request, $name, $product);
         $this->updateProductVariations($request, $product, $name);
 
-        return $this->success(null, "Updated successfully");
+        return $this->success(null, 'Updated successfully');
     }
 
     public function getProduct($userId)
     {
         $user = User::with(['products'])->find($userId);
 
-        if (!$user) {
-            return $this->error(null, "User not found", 404);
+        if (! $user) {
+            return $this->error(null, 'User not found', 404);
         }
 
         $category = request('category');
@@ -201,10 +203,10 @@ class SellerService extends Controller
                 'productReviews',
                 'productVariations',
             ])
-            ->when($category, fn($q) => $q->where('category_id', $category))
-            ->when($brand, fn($q) => $q->where('brand_id', $brand))
-            ->when($color, fn($q) => $q->where('color_id', $color))
-            ->when($search, fn($q) => $q->where('name', 'like', "%$search%"));
+            ->when($category, fn ($q) => $q->where('category_id', $category))
+            ->when($brand, fn ($q) => $q->where('brand_id', $brand))
+            ->when($color, fn ($q) => $q->where('color_id', $color))
+            ->when($search, fn ($q) => $q->where('name', 'like', "%$search%"));
 
         $products = $query->paginate(25);
 
@@ -228,49 +230,49 @@ class SellerService extends Controller
     {
         $user = User::find($userId);
 
-        if (!$user) {
-            return $this->error(null, "User not found", 404);
+        if (! $user) {
+            return $this->error(null, 'User not found', 404);
         }
 
         $product = Product::with([
-                'category',
-                'subCategory',
-                'shopCountry',
-                'productimages',
-                'brand',
-                'color',
-                'unit',
-                'size',
-                'orders',
-                'productReviews',
-                'productVariations',
-            ])
+            'category',
+            'subCategory',
+            'shopCountry',
+            'productimages',
+            'brand',
+            'color',
+            'unit',
+            'size',
+            'orders',
+            'productReviews',
+            'productVariations',
+        ])
             ->find($productId);
 
-        if(!$product){
-            return $this->error(null, "Product not found", 404);
+        if (! $product) {
+            return $this->error(null, 'Product not found', 404);
         }
 
         $data = new SellerProductResource($product);
 
-        return $this->success($data, "Product retrieved successfully");
+        return $this->success($data, 'Product retrieved successfully');
     }
 
     public function deleteProduct($id, $userId)
     {
         $product = Product::find($id);
 
-        if(!$product){
-            return $this->error(null, "Product not found", 404);
+        if (! $product) {
+            return $this->error(null, 'Product not found', 404);
         }
 
         deleteFile($product);
 
         $product->update([
-            'status' => ProductStatus::DELETED
+            'status' => ProductStatus::DELETED,
         ]);
 
-        return $this->success(null, "Deleted successfully");
+        return $this->success(null, 'Deleted successfully');
     }
 
     public function getAllOrders($id)
@@ -287,17 +289,18 @@ class SellerService extends Controller
         ];
 
         $orders = Order::whereHas('products', function ($query) use ($id) {
-                $query->where('user_id', $id);
-            })
+            $query->where('user_id', $id);
+        })
             ->with(['user', 'products.shopCountry'])
             ->when($status, function ($query) use ($status, $validStatuses) {
-                if (!in_array($status, $validStatuses)) {
+                if (! in_array($status, $validStatuses)) {
                     return response()->json([
                         'status' => false,
                         'message' => 'Invalid status',
                         'data' => null,
                     ], 400)->throwResponse();
                 }
+
                 return $query->where('status', $status);
             })
             ->latest()
@@ -324,27 +327,27 @@ class SellerService extends Controller
         $currentUserId = Auth::id();
 
         if ($currentUserId != $userId) {
-            return $this->error(null, "Unauthorized action.", 401);
+            return $this->error(null, 'Unauthorized action.', 401);
         }
 
         $order = Order::whereHas('products', function ($query) use ($userId) {
-                $query->where('user_id', $userId);
-            })
+            $query->where('user_id', $userId);
+        })
             ->with([
-                'user.userShippingAddress',
-                'products.shopCountry',
-                'products.productVariations.product',
-            ])
+            'user.userShippingAddress',
+            'products.shopCountry',
+            'products.productVariations.product',
+        ])
             ->where('id', $id)
             ->first();
 
-        if (!$order) {
-            return $this->error(null, "Order not found", 404);
+        if (! $order) {
+            return $this->error(null, 'Order not found', 404);
         }
 
         $data = new OrderDetailResource($order);
 
-        return $this->success($data, "Order retrieved successfully");
+        return $this->success($data, 'Order retrieved successfully');
     }
 
     public function updateOrderStatus($userId, $orderId, $request)
@@ -352,13 +355,13 @@ class SellerService extends Controller
         $currentUserId = Auth::id();
 
         if ($currentUserId != $userId) {
-            return $this->error(null, "Unauthorized action.", 401);
+            return $this->error(null, 'Unauthorized action.', 401);
         }
 
         $order = Order::with(['user', 'products'])->find($orderId);
 
-        if (!$order) {
-            return $this->error(null, "Order not found", 404);
+        if (! $order) {
+            return $this->error(null, 'Order not found', 404);
         }
 
         $validStatuses = [
@@ -370,8 +373,8 @@ class SellerService extends Controller
             OrderStatus::CANCELLED,
         ];
 
-        if (!in_array($request->status, $validStatuses)) {
-            return $this->error(null, "Invalid status", 400);
+        if (! in_array($request->status, $validStatuses)) {
+            return $this->error(null, 'Invalid status', 400);
         }
 
         $sellerProducts = $order->products()
@@ -380,7 +383,7 @@ class SellerService extends Controller
             })->get();
 
         if ($sellerProducts->isEmpty()) {
-            return $this->error(null, "No products found for this seller in the order.", 404);
+            return $this->error(null, 'No products found for this seller in the order.', 404);
         }
 
         foreach ($sellerProducts as $product) {
@@ -402,23 +405,23 @@ class SellerService extends Controller
         logOrderActivity($orderId, $msg, $request->status);
 
         $type = MailingEnum::ORDER_STATUS_UPDATED;
-        $subject = "Order status update";
+        $subject = 'Order status update';
         $mail_class = OrderStatusUpdated::class;
         $data = [
             'order' => $order,
             'status' => $request->status,
-            'user' => $order->user
+            'user' => $order->user,
         ];
         mailSend($type, $order->user, $subject, $mail_class, $data);
 
-        return $this->success(null, "Order updated successfully");
+        return $this->success(null, 'Order updated successfully');
     }
 
     public function getTemplate()
     {
         $data = getImportTemplate();
 
-        return $this->success($data, "Product template");
+        return $this->success($data, 'Product template');
     }
 
     public function productImport($request)
@@ -426,7 +429,7 @@ class SellerService extends Controller
         $currentUserId = Auth::id();
 
         if ($currentUserId != $request->user_id) {
-            return $this->error(null, "Unauthorized action.", 401);
+            return $this->error(null, 'Unauthorized action.', 401);
         }
 
         $seller = userAuth();
@@ -434,7 +437,7 @@ class SellerService extends Controller
         try {
             Excel::import(new ProductImport($seller), $request->file('file'));
 
-            return $this->success(null, "Imported successfully");
+            return $this->success(null, 'Imported successfully');
         } catch (\Exception $e) {
             return $this->error(null, $e->getMessage(), 500);
         }
@@ -445,7 +448,7 @@ class SellerService extends Controller
         $currentUserId = Auth::id();
 
         if ($currentUserId != $userId) {
-            return $this->error(null, "Unauthorized action.", 401);
+            return $this->error(null, 'Unauthorized action.', 401);
         }
 
         switch ($type) {
@@ -453,10 +456,10 @@ class SellerService extends Controller
                 return $this->exportProduct($userId);
 
             case 'order':
-                return "None yet";
+                return 'None yet';
 
             default:
-                return "Type not found";
+                return 'Type not found';
         }
     }
 
@@ -465,17 +468,17 @@ class SellerService extends Controller
         $currentUserId = Auth::id();
 
         if ($currentUserId != $userId) {
-            return $this->error(null, "Unauthorized action.", 401);
+            return $this->error(null, 'Unauthorized action.', 401);
         }
 
         $totalProducts = Product::where('user_id', $userId)->count();
         $totalOrders = Order::whereHas('products', function ($query) use ($userId) {
-                $query->where('user_id', $userId);
-            })->count();
+            $query->where('user_id', $userId);
+        })->count();
 
         $orderCounts = Order::whereHas('products', function ($query) use ($userId) {
-                $query->where('user_id', $userId);
-            })
+            $query->where('user_id', $userId);
+        })
             ->selectRaw('
                 SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as pending_count,
                 SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as confirmed_count,
@@ -485,14 +488,14 @@ class SellerService extends Controller
                 SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as cancelled_count,
                 SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as completed_sales
             ', [
-                OrderStatus::PENDING,
-                OrderStatus::CONFIRMED,
-                OrderStatus::PROCESSING,
-                OrderStatus::SHIPPED,
-                OrderStatus::DELIVERED,
-                OrderStatus::CANCELLED,
-                OrderStatus::DELIVERED
-            ])
+            OrderStatus::PENDING,
+            OrderStatus::CONFIRMED,
+            OrderStatus::PROCESSING,
+            OrderStatus::SHIPPED,
+            OrderStatus::DELIVERED,
+            OrderStatus::CANCELLED,
+            OrderStatus::DELIVERED,
+        ])
             ->first();
 
         $topRateds = Product::topRated($userId)->limit(5)->get();
@@ -512,7 +515,7 @@ class SellerService extends Controller
             'most_favorite' => $mostFavorites,
         ];
 
-        return $this->success($data, "Analytics");
+        return $this->success($data, 'Analytics');
     }
 
     public function getOrderSummary($userId)
@@ -520,12 +523,12 @@ class SellerService extends Controller
         $currentUserId = Auth::id();
 
         if ($currentUserId != $userId) {
-            return $this->error(null, "Unauthorized action.", 401);
+            return $this->error(null, 'Unauthorized action.', 401);
         }
 
         $orders = Order::whereHas('products', function ($query) use ($userId) {
-                $query->where('user_id', $userId);
-            })
+            $query->where('user_id', $userId);
+        })
             ->with(['user', 'products.shopCountry'])
             ->orderBy('created_at', 'desc')
             ->take(8)
@@ -533,7 +536,7 @@ class SellerService extends Controller
 
         $data = OrderResource::collection($orders);
 
-        return $this->success($data, "Order Summary");
+        return $this->success($data, 'Order Summary');
     }
 
     public function topSelling($userId)
@@ -552,16 +555,17 @@ class SellerService extends Controller
 
         $data = $topSellingProducts->map(function ($item) use ($products): array {
             $product = $products->firstWhere('id', $item->product_id);
+
             return [
                 'id' => $product->id,
                 'name' => $product->name,
                 'slug' => $product->slug,
                 'front_image' => $product->image,
-                'sold' => $item->total_quantity
+                'sold' => $item->total_quantity,
             ];
         });
 
-        return $this->success($data, "Top Selling Products");
+        return $this->success($data, 'Top Selling Products');
     }
 
     public function createAttribute($request)
@@ -577,64 +581,64 @@ class SellerService extends Controller
             ]);
         }
 
-        return $this->success(null, "Attribute created successfully", 201);
+        return $this->success(null, 'Attribute created successfully', 201);
     }
 
     public function getAttribute($userId)
     {
         $user = User::with(['productAttributes' => function ($query) {
-                $query->select('id', 'user_id', 'name', 'value', 'use_for_variation');
-            }])
+            $query->select('id', 'user_id', 'name', 'value', 'use_for_variation');
+        }])
             ->find($userId);
 
-        if (!$user) {
-            return $this->error(null, "User not found", 404);
+        if (! $user) {
+            return $this->error(null, 'User not found', 404);
         }
 
         $data = $user->productAttributes;
 
-        return $this->success($data, "All Attributes");
+        return $this->success($data, 'All Attributes');
     }
 
     public function getSingleAttribute($attributeId, $userId)
     {
         $user = User::with(['productAttributes' => function ($query) {
-                $query->select('id', 'user_id', 'name', 'value', 'use_for_variation');
-            }])
+            $query->select('id', 'user_id', 'name', 'value', 'use_for_variation');
+        }])
             ->find($userId);
 
-        if (!$user) {
-            return $this->error(null, "User not found", 404);
+        if (! $user) {
+            return $this->error(null, 'User not found', 404);
         }
 
         $attribute = $user->productAttributes()
             ->select('id', 'user_id', 'name', 'value', 'use_for_variation')
             ->find($attributeId);
 
-        if (!$attribute) {
-            return $this->error(null, "Attribute not found", 404);
+        if (! $attribute) {
+            return $this->error(null, 'Attribute not found', 404);
         }
 
-        return $this->success($attribute, "Attribute retrieved successfully");
+        return $this->success($attribute, 'Attribute retrieved successfully');
     }
 
     public function updateAttribute($request, $attributeId, $userId)
     {
         $user = User::with(['productAttributes' => function ($query) {
-                $query->select('id', 'user_id', 'name', 'value', 'use_for_variation');
-            }])
+            $query->select('id', 'user_id', 'name', 'value', 'use_for_variation');
+        }])
             ->find($userId);
 
-        if (!$user) {
-            return $this->error(null, "User not found", 404);
+        if (! $user) {
+            return $this->error(null, 'User not found', 404);
         }
 
         $attribute = $user->productAttributes()
             ->select('id', 'user_id', 'name', 'value', 'use_for_variation')
             ->find($attributeId);
 
-        if (!$attribute) {
-            return $this->error(null, "Attribute not found", 404);
+        if (! $attribute) {
+            return $this->error(null, 'Attribute not found', 404);
         }
 
         $attribute->update([
@@ -643,7 +647,7 @@ class SellerService extends Controller
             'use_for_variation' => $request->use_for_variation,
         ]);
 
-        return $this->success(null, "Attribute updated successfully");
+        return $this->success(null, 'Attribute updated successfully');
     }
 
     public function deleteAttribute($attributeId, $userId)
@@ -651,20 +655,18 @@ class SellerService extends Controller
         $user = User::with('productAttributes')
             ->find($userId);
 
-        if (!$user) {
-            return $this->error(null, "User not found", 404);
+        if (! $user) {
+            return $this->error(null, 'User not found', 404);
         }
 
         $attribute = $user->productAttributes()->find($attributeId);
 
-        if (!$attribute) {
-            return $this->error(null, "Attribute not found", 404);
+        if (! $attribute) {
+            return $this->error(null, 'Attribute not found', 404);
         }
 
         $attribute->delete();
 
-        return $this->success(null, "Attribute deleted successfully");
+        return $this->success(null, 'Attribute deleted successfully');
     }
-
 }
-

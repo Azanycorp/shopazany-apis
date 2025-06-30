@@ -17,13 +17,13 @@ class PaymentResource extends JsonResource
         return [
             'id' => $this->id,
             'order_no' => $this?->order?->order_no,
-            'user' => (object)[
+            'user' => (object) [
                 'first_name' => $this->user?->first_name,
                 'last_name' => $this->user?->last_name,
                 'middlename' => $this->user?->middlename,
                 'email' => $this->user?->email,
                 'phone' => $this->user?->phone,
-                'store_name' => $this->user?->first_name . ' ' . $this->user?->last_name,
+                'store_name' => $this->user?->first_name.' '.$this->user?->last_name,
             ],
             'amount' => $this->amount,
             'payment_method' => $this?->order?->payment_method,

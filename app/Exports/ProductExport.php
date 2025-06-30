@@ -16,13 +16,13 @@ class ProductExport implements FromCollection, WithHeadings
     }
 
     /**
-    * @return \Illuminate\Support\Collection
-    */
+     * @return \Illuminate\Support\Collection
+     */
     public function collection()
     {
         return Product::where('user_id', $this->userId)
-                ->select('id', 'name', 'description', 'price')
-                ->get();
+            ->select('id', 'name', 'description', 'price')
+            ->get();
     }
 
     public function headings(): array
@@ -31,7 +31,7 @@ class ProductExport implements FromCollection, WithHeadings
             'ID',
             'Name',
             'Description',
-            'Price'
+            'Price',
         ];
     }
 }

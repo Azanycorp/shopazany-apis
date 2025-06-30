@@ -3,8 +3,8 @@
 namespace App\Services;
 
 use App\Services\Uploads\ImageKitUploader;
-use App\Services\Uploads\S3Uploader;
 use App\Services\Uploads\LocalUploader;
+use App\Services\Uploads\S3Uploader;
 
 class FileUploader
 {
@@ -19,21 +19,21 @@ class FileUploader
             switch ($providerName) {
                 case 'imagekit':
                     $this->providers[] = [
-                        'instance' => new ImageKitUploader(),
+                        'instance' => new ImageKitUploader,
                         'name' => 'ImageKit',
                         'retries' => $retries,
                     ];
                     break;
                 case 's3':
                     $this->providers[] = [
-                        'instance' => new S3Uploader(),
+                        'instance' => new S3Uploader,
                         'name' => 'S3',
                         'retries' => $retries,
                     ];
                     break;
                 case 'local':
                     $this->providers[] = [
-                        'instance' => new LocalUploader(),
+                        'instance' => new LocalUploader,
                         'name' => 'Local',
                         'retries' => $retries,
                     ];
@@ -53,18 +53,18 @@ class FileUploader
                     return $provider['instance']->upload($file, $folder);
                 } catch (\Throwable $e) {
                     $attempts++;
-                    logger()->warning("Upload failed on {$provider['name']} attempt {$attempts}/{$provider['retries']}: " . $e->getMessage());
+                    logger()->warning("Upload failed on {$provider['name']} attempt {$attempts}/{$provider['retries']}: ".$e->getMessage());
                 }
             }
             logger()->info("All retries exhausted for {$provider['name']}, moving to next provider.");
         }
 
-        throw new \Exception("All providers failed after retries.");
+        throw new \Exception('All providers failed after retries.');
     }
 
     public function deleteFile($publicId)
     {
-        if (!$publicId) {
+        if (! $publicId) {
             return;
         }
 
@@ -72,9 +72,10 @@ class FileUploader
             try {
                 $provider['instance']->delete($publicId);
                 logger()->info("Deleted file from {$provider['name']} using ID: {$publicId}");
+
                 return;
             } catch (\Throwable $e) {
-                logger()->warning("Delete failed on {$provider['name']}: " . $e->getMessage());
+                logger()->warning("Delete failed on {$provider['name']}: ".$e->getMessage());
             }
         }
 

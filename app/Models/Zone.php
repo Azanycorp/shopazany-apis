@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Zone extends Model
 {
-    protected $table = "zones";
+    protected $table = 'zones';
 
     use HasFactory;
 
@@ -15,6 +15,6 @@ class Zone extends Model
 
     public function carrierRangePrices()
     {
-    	return $this->hasMany(CarrierRangePrice::class);
+        return $this->hasMany(CarrierRangePrice::class);
     }
 }

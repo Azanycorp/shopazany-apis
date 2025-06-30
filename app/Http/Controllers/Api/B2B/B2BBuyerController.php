@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Api\B2B;
 
-use Illuminate\Http\Request;
-use App\Services\B2B\BuyerService;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\ChangePasswordRequest;
 use App\Http\Requests\B2BBuyerShippingAddressRequest;
+use App\Http\Requests\ChangePasswordRequest;
+use App\Services\B2B\BuyerService;
+use Illuminate\Http\Request;
 
 class B2BBuyerController extends Controller
 {
@@ -27,7 +27,7 @@ class B2BBuyerController extends Controller
         return $this->buyerService->sendQuote($request);
     }
 
-    //Quotes
+    // Quotes
     public function allQuotes()
     {
         return $this->buyerService->allQuotes();
@@ -48,13 +48,13 @@ class B2BBuyerController extends Controller
         return $this->buyerService->removeQuote($id);
     }
 
-    //Dasbaord
+    // Dasbaord
     public function dashboard()
     {
         return $this->buyerService->getDashboardDetails();
     }
 
-    //Orders
+    // Orders
     public function allOrders()
     {
         return $this->buyerService->allOrders();
@@ -65,7 +65,7 @@ class B2BBuyerController extends Controller
         return $this->buyerService->orderDetails($id);
     }
 
-    //Rfq
+    // Rfq
     public function getAllRfqs()
     {
         return $this->buyerService->allRfqs();
@@ -86,7 +86,7 @@ class B2BBuyerController extends Controller
         return $this->buyerService->acceptQuote($request);
     }
 
-    //Wish list
+    // Wish list
     public function addTowishList(Request $request)
     {
         return $this->buyerService->addToWishList($request);
@@ -107,19 +107,19 @@ class B2BBuyerController extends Controller
         return $this->buyerService->sendFromWishList($request);
     }
 
-    //Product Review
+    // Product Review
     public function addReview(Request $request)
     {
         return $this->buyerService->addReview($request);
     }
 
-    //Product Review
+    // Product Review
     public function likeProduct(Request $request)
     {
         return $this->buyerService->likeProduct($request);
     }
 
-    //Account section
+    // Account section
     public function profile()
     {
         return $this->buyerService->profile();
@@ -145,7 +145,7 @@ class B2BBuyerController extends Controller
         return $this->buyerService->editCompany($request);
     }
 
-    //Shipping Address
+    // Shipping Address
 
     public function addShippingAddress(B2BBuyerShippingAddressRequest $request)
     {

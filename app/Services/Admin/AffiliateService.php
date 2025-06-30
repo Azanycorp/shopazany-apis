@@ -2,12 +2,11 @@
 
 namespace App\Services\Admin;
 
-use Carbon\Carbon;
-use App\Models\User;
 use App\Enum\UserStatus;
 use App\Enum\WithdrawalStatus;
+use App\Models\User;
 use App\Trait\HttpResponse;
-use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Password;
 
 class AffiliateService
@@ -31,9 +30,9 @@ class AffiliateService
 
         $totalPaidOutInUSD = User::where('is_affiliate_member', 1)
             ->whereHas('transactions', function ($query) use ($startDate, $endDate) {
-                $query->where('type', )
-                      ->where('status', WithdrawalStatus::COMPLETED)
-                      ->whereBetween('created_at', [$startDate, $endDate]);
+                $query->where('type')
+                    ->where('status', WithdrawalStatus::COMPLETED)
+                    ->whereBetween('created_at', [$startDate, $endDate]);
             })
             ->get()
             ->sum(function ($user) use ($startDate, $endDate) {
@@ -94,7 +93,7 @@ class AffiliateService
         return $this->success($data, 'Affiliate Overview');
     }
 
-    public function allUsers(): array
+    public function allUsers()
     {
         $topAffiliates = User::where('is_affiliate_member', 1)
             ->withCount('referrals')
@@ -120,18 +119,7 @@ class AffiliateService
             ];
         });
 
-        return [
-            'status' => true,
-            'message' => 'Affiliate Users',
-            'data' => $data,
-            'pagination' => [
-                'current_page' => $topAffiliates->currentPage(),
-                'last_page' => $topAffiliates->lastPage(),
-                'per_page' => $topAffiliates->perPage(),
-                'prev_page_url' => $topAffiliates->previousPageUrl(),
-                'next_page_url' => $topAffiliates->nextPageUrl(),
-            ],
-        ];
+        return $this->withPagination($data, 'Affiliate Users');
     }
 
     public function userDetail($id)
@@ -149,18 +137,16 @@ class AffiliateService
             'earnings' => $user->transactions_sum_amount ?? 0,
             'referred' => $user->referrals_count ?? 0,
             'status' => $user->status,
-            'referrals' => $user->referrals->map(function ($referral): array {
-                return [
-                    'id' => $referral->id,
-                    'first_name' => $referral->first_name,
-                    'last_name' => $referral->last_name,
-                    'email' => $referral->email,
-                    'status' => $referral->status,
-                    'subscription_status' => $referral->subscription_status,
-                    'joined' => $referral->created_at,
-                    'platform' => 'B2C'
-                ];
-            }),
+            'referrals' => $user->referrals->map(fn ($referral) => [
+                'id' => $referral->id,
+                'first_name' => $referral->first_name,
+                'last_name' => $referral->last_name,
+                'email' => $referral->email,
+                'status' => $referral->status,
+                'subscription_status' => $referral->subscription_status,
+                'joined' => $referral->created_at,
+                'platform' => 'B2C',
+            ]),
         ];
 
         return $this->success($data, 'Affiliate User Detail');
@@ -179,9 +165,9 @@ class AffiliateService
 
     public function resetPassword($request)
     {
-       $user = User::find($request->user_id);
-        if(!$user) {
-            return $this->error(null,"User not found", 404);
+        $user = User::find($request->user_id);
+        if (! $user) {
+            return $this->error(null, 'User not found', 404);
         }
 
         $status = Password::broker('users')->sendResetLink(
@@ -192,5 +178,4 @@ class AffiliateService
             ? response()->json(['message' => __($status)])
             : response()->json(['message' => __($status)], 500);
     }
-
 }

@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\SubscriptionPaymentRequest;
 use App\Services\SubscriptionService;
 use App\Trait\HttpResponse;
-use Illuminate\Http\Request;
 
 class SubscriptionController extends Controller
 {
@@ -14,8 +13,7 @@ class SubscriptionController extends Controller
 
     public function __construct(
         protected SubscriptionService $service
-    )
-    {}
+    ) {}
 
     public function getPlanByCountry($countryId)
     {
@@ -31,5 +29,4 @@ class SubscriptionController extends Controller
     {
         return $this->service->subscriptionHistory($userId);
     }
-
 }

@@ -33,7 +33,7 @@ trait Login
 
     protected function handleAccountIssues($user, $request, $message, $action, $status = null)
     {
-        $status = $status ?? "pending";
+        $status = $status ?? 'pending';
         $description = "Account issue for user {$request->email}";
         $response = $this->error([
             'id' => $user->id,
@@ -48,7 +48,7 @@ trait Login
     protected function handleTwoFactorAuthentication($user, $request)
     {
         if ($user->login_code_expires_at > now()) {
-            return $this->error(null, "Please wait a few minutes before requesting a new code.", 400);
+            return $this->error(null, 'Please wait a few minutes before requesting a new code.', 400);
         }
 
         $code = generateVerificationCode();
@@ -60,13 +60,13 @@ trait Login
         ]);
 
         $type = MailingEnum::LOGIN_OTP;
-        $subject = "Login OTP";
+        $subject = 'Login OTP';
         $mail_class = LoginVerifyMail::class;
 
         mailSend($type, $user, $subject, $mail_class);
 
         $description = "Attempt to login by {$request->email}";
-        $response = $this->success(null, "Code has been sent to your email address.");
+        $response = $this->success(null, 'Code has been sent to your email address.');
         $action = UserLog::LOGIN_ATTEMPT;
 
         logUserAction($request, $action, $description, $response, $user);
@@ -77,7 +77,7 @@ trait Login
     protected function logUserIn($user, $request)
     {
         $user->tokens()->delete();
-        $token = $user->createToken('API Token of ' . $user->email);
+        $token = $user->createToken('API Token of '.$user->email);
 
         $description = "User with email {$request->email} logged in";
         $action = UserLog::LOGGED_IN;
@@ -103,8 +103,7 @@ trait Login
         $response = $this->error(null, 'Credentials do not match', 401);
 
         logUserAction($request, $action, $description, $response);
+
         return $response;
     }
 }
-
-

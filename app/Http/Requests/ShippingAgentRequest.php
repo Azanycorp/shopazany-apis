@@ -33,6 +33,5 @@ class ShippingAgentRequest extends FormRequest
             'status' => 'required|in:live,test',
         ];
 
-
     }
 }

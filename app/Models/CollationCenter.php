@@ -16,10 +16,12 @@ class CollationCenter extends Model
         'city',
         'country_id',
     ];
+
     public function country(): BelongsTo
     {
         return $this->belongsTo(Country::class, 'country_id');
     }
+
     public function hubs(): HasMany
     {
         return $this->HasMany(PickupStation::class, 'collation_center_id');

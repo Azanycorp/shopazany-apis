@@ -25,14 +25,14 @@ class SizeController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => ['required', 'string']
+            'name' => ['required', 'string'],
         ]);
 
         Size::create([
-            'name' => $request->name
+            'name' => $request->name,
         ]);
 
-        return $this->success(null, "Created successfully");
+        return $this->success(null, 'Created successfully');
     }
 
     /**

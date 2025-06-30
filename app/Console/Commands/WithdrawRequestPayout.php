@@ -39,14 +39,14 @@ class WithdrawRequestPayout extends Command
         User::with(['withdrawalRequests' => function ($query) {
             $query->where('status', WithdrawalStatus::PENDING)->limit(1);
         }, 'paymentMethods'])
-        ->whereHas('withdrawalRequests', function ($query) {
-            $query->where('status', WithdrawalStatus::PENDING);
-        })
-        ->chunk(100, function ($users) {
-            foreach ($users as $user) {
-                $this->withdraw($user);
-            }
-        });
+            ->whereHas('withdrawalRequests', function ($query) {
+                $query->where('status', WithdrawalStatus::PENDING);
+            })
+            ->chunk(100, function ($users) {
+                foreach ($users as $user) {
+                    $this->withdraw($user);
+                }
+            });
 
         $this->processPaystackBulkTransfers();
 
@@ -57,12 +57,14 @@ class WithdrawRequestPayout extends Command
     {
         if ($user->paymentMethods->isEmpty()) {
             $this->warn("Skipping user {$user->id}: No payment method found.");
+
             return;
         }
 
         $defaultPaymentMethod = $user->paymentMethods->where('is_default', true)->first();
-        if (!$defaultPaymentMethod) {
+        if (! $defaultPaymentMethod) {
             $this->warn("Skipping user {$user->id}: No default payment method found.");
+
             return;
         }
 
@@ -80,6 +82,7 @@ class WithdrawRequestPayout extends Command
             $withdrawalAmount = $request->amount;
             if ($withdrawalAmount <= 0) {
                 $this->warn("Skipping user {$user->id}, withdrawal ID {$request->id}: Invalid withdrawal amount.");
+
                 continue;
             }
 
@@ -106,8 +109,8 @@ class WithdrawRequestPayout extends Command
             try {
                 $res = $this->executePayout($data, $request, $user);
 
-                if (!$res['status']) {
-                    throw new \Exception("{$data['platform']} transfer failed: " . $res['message']);
+                if (! $res['status']) {
+                    throw new \Exception("{$data['platform']} transfer failed: ".$res['message']);
                 }
 
                 if ($data['platform'] === 'authorize') {
@@ -121,6 +124,7 @@ class WithdrawRequestPayout extends Command
                 $this->info("Payout processed for user {$user->id}, withdrawal ID {$request->id} - Amount: {$withdrawalAmount}");
 
                 DB::commit();
+
                 return;
             } catch (\Exception $e) {
                 DB::rollBack();
@@ -160,6 +164,7 @@ class WithdrawRequestPayout extends Command
 
         if (empty($paystackRequests)) {
             $this->info('No Paystack withdrawals to process.');
+
             return;
         }
 
@@ -169,5 +174,4 @@ class WithdrawRequestPayout extends Command
 
         $this->info('Paystack bulk withdrawal processing done.');
     }
-
 }

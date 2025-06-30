@@ -26,14 +26,14 @@ class SubscriptionPlanRequest extends FormRequest
             'cost' => ['required'],
             'country_id' => ['required'],
             'period' => ['required', 'string', 'in:monthly,yearly'],
-            'tier' => ['required', 'integer']
+            'tier' => ['required', 'integer'],
         ];
     }
 
     public function messages()
     {
         return [
-            'period' => 'Field should be either monthly or yearly'
+            'period' => 'Field should be either monthly or yearly',
         ];
     }
 }

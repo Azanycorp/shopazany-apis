@@ -11,7 +11,6 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\SubCategory;
 use App\Trait\HttpResponse;
-use Illuminate\Support\Facades\App;
 use Illuminate\Support\Str;
 
 class CategoryService
@@ -28,7 +27,7 @@ class CategoryService
 
             $slug = Str::slug($request->name);
             if (Category::where('slug', $slug)->exists()) {
-                $slug = $slug . '-' . uniqid();
+                $slug = $slug.'-'.uniqid();
             }
 
             Category::create([
@@ -39,7 +38,7 @@ class CategoryService
                 'featured' => 1,
             ]);
 
-            return $this->success(null, "Created successfully");
+            return $this->success(null, 'Created successfully');
         } catch (\Exception $e) {
             return $this->error(null, $e->getMessage(), 500);
         }
@@ -48,11 +47,11 @@ class CategoryService
     public function categories()
     {
         $categories = Category::where('featured', 1)
-        ->get();
+            ->get();
 
         $data = CategoryResource::collection($categories);
 
-        return $this->success($data, "Categories");
+        return $this->success($data, 'Categories');
     }
 
     public function adminCategories()
@@ -62,21 +61,21 @@ class CategoryService
         $categories = Category::with(['products', 'subcategory'])
             ->withCount(['products', 'subcategory'])
             ->when($search, function ($query, string $search): void {
-                $query->where('name', 'like', '%' . $search . '%');
+                $query->where('name', 'like', '%'.$search.'%');
             })
             ->get();
 
         $data = AdminCategoryResource::collection($categories);
 
-        return $this->success($data, "Categories retrieved successfully");
+        return $this->success($data, 'Categories retrieved successfully');
     }
 
     public function createSubCategory($request)
     {
         $category = Category::with('subcategory')->find($request->category_id);
 
-        if(!$category){
-            return $this->error(null, "Not found", 404);
+        if (! $category) {
+            return $this->error(null, 'Not found', 404);
         }
 
         try {
@@ -89,10 +88,10 @@ class CategoryService
                 'name' => $request->name,
                 'slug' => Str::slug($request->name),
                 'image' => $url['url'],
-                'public_id' => $url['public_id']
+                'public_id' => $url['public_id'],
             ]);
 
-            return $this->success(null, "Created successfully");
+            return $this->success(null, 'Created successfully');
         } catch (\Exception $e) {
             return $this->error(null, $e->getMessage(), 500);
         }
@@ -101,12 +100,12 @@ class CategoryService
     public function getSubcategory($id)
     {
         $subcats = SubCategory::with(['products', 'category'])
-        ->where('category_id', $id)
-        ->get();
+            ->where('category_id', $id)
+            ->get();
 
         $data = SubCategoryResource::collection($subcats);
 
-        return $this->success($data, "Sub categories");
+        return $this->success($data, 'Sub categories');
     }
 
     public function featuredStatus($request, $id)
@@ -123,7 +122,7 @@ class CategoryService
 
         $category->save();
 
-        return $this->success(null, "Category updated successfully");
+        return $this->success(null, 'Category updated successfully');
     }
 
     public function categoryAnalytic()
@@ -145,7 +144,7 @@ class CategoryService
             'product_inactive_count' => $productInactiveCount,
         ];
 
-        return $this->success($data, "Category analytics");
+        return $this->success($data, 'Category analytics');
     }
 
     public function getAdminSubcategory()
@@ -155,13 +154,13 @@ class CategoryService
         $subcats = SubCategory::with(['product', 'category'])
             ->withCount(['product', 'category'])
             ->when($search, function ($query, string $search): void {
-                $query->where('name', 'like', '%' . $search . '%');
+                $query->where('name', 'like', '%'.$search.'%');
             })
             ->get();
 
         $data = AdminSubCategoryResource::collection($subcats);
 
-        return $this->success($data, "Sub categories");
+        return $this->success($data, 'Sub categories');
     }
 
     public function subStatus($request, $id)
@@ -174,7 +173,7 @@ class CategoryService
 
         $sub->save();
 
-        return $this->success(null, "Category updated successfully");
+        return $this->success(null, 'Category updated successfully');
     }
 
     public function editCategory($request)
@@ -190,7 +189,7 @@ class CategoryService
         if ($request->has('name')) {
             $slug = Str::slug($request->name);
             if (Category::where('slug', $slug)->where('id', '!=', $request->id)->exists()) {
-                $slug = $slug . '-' . uniqid();
+                $slug = $slug.'-'.uniqid();
             }
         }
 
@@ -201,7 +200,7 @@ class CategoryService
             'public_id' => $url['public_id'] ? $category->public_id : null,
         ]);
 
-        return $this->success(null, "Updated successfully");
+        return $this->success(null, 'Updated successfully');
     }
 
     public function deleteCategory($id)
@@ -222,5 +221,3 @@ class CategoryService
         return $this->success(null, 'Deleted successfully');
     }
 }
-
-

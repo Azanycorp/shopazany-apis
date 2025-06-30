@@ -2,18 +2,18 @@
 
 namespace App\Services\Admin;
 
-use App\Models\Promo;
-use App\Models\Banner;
+use App\Enum\BannerStatus;
 use App\Enum\BannerType;
 use App\Enum\CouponType;
-use App\Models\B2bPromo;
-use App\Enum\BannerStatus;
-use App\Models\B2BProduct;
 use App\Enum\ProductStatus;
-use App\Trait\HttpResponse;
-use App\Http\Resources\PromoResource;
 use App\Http\Resources\B2BBannerResource;
 use App\Http\Resources\B2BProductResource;
+use App\Http\Resources\PromoResource;
+use App\Models\B2BProduct;
+use App\Models\B2bPromo;
+use App\Models\Banner;
+use App\Models\Promo;
+use App\Trait\HttpResponse;
 
 class B2BBannerPromoService
 {
@@ -22,34 +22,38 @@ class B2BBannerPromoService
     public function addBanner($request)
     {
         $image = uploadImage($request, 'image', 'banner');
+
         Banner::create([
             'title' => $request->title,
-            'image' => $image,
+            'image' => $image['url'],
+            'public_id' => $image['public_id'],
             'type' => BannerType::B2B,
             'start_date' => $request->start_date,
             'end_date' => $request->end_date,
             'products' => $request->products,
             'status' => BannerStatus::ACTIVE,
         ]);
-        return $this->success(null, "Added successfully");
+
+        return $this->success(null, 'Added successfully');
     }
 
     public function banners()
     {
         $banners = Banner::where('type', BannerType::B2B)->latest()->get();
         if ($banners->isEmpty()) {
-            return $this->error(null, "No record found", 404);
+            return $this->error(null, 'No record found', 404);
         }
         $data = B2BBannerResource::collection($banners);
 
-        return $this->success($data, "Banners");
+        return $this->success($data, 'Banners');
     }
 
     public function getOneBanner($id)
     {
         $banner = Banner::where('type', BannerType::B2B)->findOrFail($id);
         $data = new B2BBannerResource($banner);
-        return $this->success($data, "Banner detail");
+
+        return $this->success($data, 'Banner detail');
     }
 
     public function editBanner($request, $id)
@@ -59,14 +63,17 @@ class B2BBannerPromoService
         if ($request->hasFile('image')) {
             $image = uploadImage($request, 'image', 'banner', null, $banner);
         }
+
         $banner->update([
             'title' => $request->title,
-            'image' => $request->image ? $image : $banner->image,
+            'image' => $request->image ? $image['url'] : $banner->image,
+            'public_id' => $request->image ? $image['public_id'] : $banner->public_id,
             'start_date' => $request->start_date,
             'end_date' => $request->end_date,
             'products' => $request->products,
         ]);
-        return $this->success(null, "Updated successfully");
+
+        return $this->success(null, 'Updated successfully');
     }
 
     public function deleteBanner($id)
@@ -74,10 +81,10 @@ class B2BBannerPromoService
         $banner = Banner::where('type', BannerType::B2B)->findOrFail($id);
         $banner->delete();
 
-        return $this->success(null, "Deleted successfully");
+        return $this->success(null, 'Deleted successfully');
     }
 
-    //Promo section
+    // Promo section
     public function addPromo($request)
     {
         $type = $request->coupon_type;
@@ -93,9 +100,10 @@ class B2BBannerPromoService
                 return $this->welcomeCoupon($type, $request);
 
             default:
-                # code...
+                // code...
                 break;
         }
+
         return null;
     }
 
@@ -108,13 +116,13 @@ class B2BBannerPromoService
             'country',
             'b2bProductReview',
             'b2bLikes',
-            'b2bProductImages'
+            'b2bProductImages',
         ])
             ->where('status', ProductStatus::ACTIVE)
             ->get();
         $data = B2BProductResource::collection($products);
 
-        return $this->success($data, "All Products");
+        return $this->success($data, 'All Products');
     }
 
     public function promos()
@@ -122,7 +130,7 @@ class B2BBannerPromoService
         $promos = B2bPromo::get();
         $data = PromoResource::collection($promos);
 
-        return $this->success($data, "All Promos");
+        return $this->success($data, 'All Promos');
     }
 
     public function deletePromo($id)
@@ -130,7 +138,7 @@ class B2BBannerPromoService
         $promo = B2bPromo::findOrFail($id);
         $promo->delete();
 
-        return $this->success("Deleted successfully");
+        return $this->success('Deleted successfully');
     }
 
     protected function product($type, $request)
@@ -146,7 +154,7 @@ class B2BBannerPromoService
 
         foreach ($request->products as $product_id) {
             $promo->b2bPromoProduct()->create([
-                'product_id' => $product_id
+                'product_id' => $product_id,
             ]);
         }
 

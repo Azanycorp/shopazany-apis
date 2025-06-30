@@ -2,15 +2,14 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Models\B2BProduct;
-use Illuminate\Http\Request;
-use App\Services\B2B\SellerService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\B2B\AddProductRequest;
-use App\Http\Requests\ChangePasswordRequest;
-use App\Http\Requests\B2B\UpdateProductRequest;
 use App\Http\Requests\B2B\SellerShippingRequest;
+use App\Http\Requests\B2B\UpdateProductRequest;
 use App\Http\Requests\B2B\WithdrawalMethodRequest;
+use App\Http\Requests\ChangePasswordRequest;
+use App\Services\B2B\SellerService;
+use Illuminate\Http\Request;
 
 class B2BSellerController extends Controller
 {
@@ -121,7 +120,6 @@ class B2BSellerController extends Controller
         return $this->service->getTemplate();
     }
 
-
     public function dashboard()
     {
         return $this->service->getDashboardDetails();
@@ -142,50 +140,59 @@ class B2BSellerController extends Controller
         return $this->service->withdrawalRequest($request);
     }
 
-    //Orders
+    // Orders
     public function orderDetails($id)
     {
         return $this->service->getOrderDetails($id);
     }
-    //RFQS
+
+    // RFQS
     public function allRfq()
     {
         return $this->service->getAllRfq();
     }
+
     public function rfqDetails($id)
     {
         return $this->service->getRfqDetails($id);
     }
+
     public function replyReview(Request $request)
     {
         return $this->service->replyRequest($request);
     }
+
     public function shippOrder(Request $request)
     {
         return $this->service->markShipped($request);
     }
+
     public function markDelivered(Request $request)
     {
         return $this->service->markDelivered($request);
     }
+
     public function confirmPayment(Request $request)
     {
         return $this->service->confirmPayment($request);
     }
+
     public function cancelOrder(Request $request)
     {
         return $this->service->cancelOrder($request);
     }
+
     public function rateOrder(Request $request)
     {
         return $this->service->rateOrder($request);
     }
+
     public function orderFeeback(Request $request)
     {
         return $this->service->orderFeeback($request);
     }
 
-    //Seller Wihdrawal method
+    // Seller Wihdrawal method
     public function allWithdrawalMethods()
     {
         return $this->service->getAllMethod();

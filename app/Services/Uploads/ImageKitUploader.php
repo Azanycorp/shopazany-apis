@@ -17,13 +17,13 @@ class ImageKitUploader
         $uploadFile = fopen($file->getRealPath(), 'r');
 
         $uploadResponse = $imageKit->upload([
-            "file" => $uploadFile,
-            "fileName" => $file->getClientOriginalName(),
-            "folder" => $folder
+            'file' => $uploadFile,
+            'fileName' => $file->getClientOriginalName(),
+            'folder' => $folder,
         ]);
 
-        if (!isset($uploadResponse->result->url)) {
-            throw new \Exception("No URL returned from ImageKit.");
+        if (! isset($uploadResponse->result->url)) {
+            throw new \Exception('No URL returned from ImageKit.');
         }
 
         return [
@@ -42,8 +42,8 @@ class ImageKitUploader
 
         $result = $imageKit->deleteFile($publicId);
 
-        if (!isset($result->result) || $result->result !== "success") {
-            throw new \Exception("Failed to delete file from ImageKit.");
+        if (! isset($result->result) || $result->result !== 'success') {
+            throw new \Exception('Failed to delete file from ImageKit.');
         }
     }
 }

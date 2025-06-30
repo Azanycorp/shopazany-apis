@@ -21,7 +21,7 @@ class B2BBestSellingProductResource extends JsonResource
             'product' => $this->product,
             'total_sold' => $this->total_sold,
             'rating' => floatval($average_rating),
-            'review_count' => (int)$this->b2bProductReview?->count(),
+            'review_count' => (int) $this->b2bProductReview?->count(),
         ];
     }
 }

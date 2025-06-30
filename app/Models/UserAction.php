@@ -15,12 +15,12 @@ class UserAction extends Model
         'action_id',
         'points',
         'is_rewarded',
-        'status'
+        'status',
     ];
 
     public function user(): BelongsTo
     {
-    	return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function action(): BelongsTo

@@ -21,9 +21,7 @@ use App\Models\State;
 use App\Models\Unit;
 use App\Models\User;
 use App\Trait\HttpResponse;
-use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Storage;
 
 class AdminService
 {
@@ -32,35 +30,33 @@ class AdminService
     public function addSlider($request)
     {
         try {
-            $folder = App::environment('production') ? '/prod/slider_image' : '/stag/slider_image';
-
             if ($request->file('image')) {
-                $path = $request->file('image')->store($folder, 's3');
-                $url = Storage::disk('s3')->url($path);
+                $url = uploadFunction($request->file('image'), 'slider_image');
             }
 
             SliderImage::create([
-                'image' => $url,
-                'link' => $request->link
+                'image' => $url['url'] ?? null,
+                'public_id' => $url['public_id'] ?? null,
+                'link' => $request->link,
             ]);
 
-            return $this->success(null, "Created successfully", 201);
+            return $this->success(null, 'Created successfully', 201);
         } catch (\Exception $e) {
-            return $this->error(null, $e->getMessage(), 500);
+            return $this->error(null, $e->getMessage(), 400);
         }
     }
 
     public function slider()
     {
         $sliders = Cache::rememberForever('home_sliders',
-            fn() => SliderImage::orderBy('created_at', 'desc')
-            ->take(5)
-            ->get()
+            fn () => SliderImage::orderBy('created_at', 'desc')
+                ->take(5)
+                ->get()
         );
 
         $data = SliderResource::collection($sliders);
 
-        return $this->success($data, "Sliders");
+        return $this->success($data, 'Sliders');
     }
 
     public function categories()
@@ -71,7 +67,7 @@ class AdminService
 
         $data = CategoryResource::collection($categories);
 
-        return $this->success($data, "Categories");
+        return $this->success($data, 'Categories');
     }
 
     public function country()
@@ -80,7 +76,7 @@ class AdminService
 
         $data = CountryResource::collection($country);
 
-        return $this->success($data, "All Country");
+        return $this->success($data, 'All Country');
     }
 
     public function states($id)
@@ -89,7 +85,7 @@ class AdminService
 
         $data = StateResource::collection($states);
 
-        return $this->success($data, "States");
+        return $this->success($data, 'States');
     }
 
     public function brands()
@@ -98,7 +94,7 @@ class AdminService
             ->whereStatus('active')
             ->get();
 
-        return $this->success($brands, "All brands");
+        return $this->success($brands, 'All brands');
     }
 
     public function colors()
@@ -107,7 +103,7 @@ class AdminService
             ->whereStatus('active')
             ->get();
 
-        return $this->success($colors, "All colors");
+        return $this->success($colors, 'All colors');
     }
 
     public function units()
@@ -116,7 +112,7 @@ class AdminService
             ->whereStatus('active')
             ->get();
 
-        return $this->success($units, "All units");
+        return $this->success($units, 'All units');
     }
 
     public function sizes()
@@ -125,29 +121,27 @@ class AdminService
             ->whereStatus('active')
             ->get();
 
-        return $this->success($sizes, "All sizes");
+        return $this->success($sizes, 'All sizes');
     }
 
     public function shopByCountry($request)
     {
         $country = Country::find($request->country_id);
 
-        if(!$country) {
-            return $this->error(null, "Not found", 404);
+        if (! $country) {
+            return $this->error(null, 'Not found', 404);
         }
 
-        $folder = App::environment('production') ? '/prod/shopcountryflag' : '/stag/shopcountryflag';
-
-        $url = uploadImage($request, 'flag', $folder);
+        $url = uploadImage($request, 'flag', 'shopcountryflag');
 
         ShopCountry::create([
             'country_id' => $country->id,
             'name' => $country->name,
-            'flag' => $url,
+            'flag' => $url['url'],
             'currency' => $request->currency,
         ]);
 
-        return $this->success(null, "Added successfully", 201);
+        return $this->success(null, 'Added successfully', 201);
     }
 
     public function getShopByCountry(): array
@@ -177,19 +171,19 @@ class AdminService
             ->orWhere('referrer_link', '')
             ->get();
 
-        foreach($users as $user) {
-            if (!$user->referrer_code) {
+        foreach ($users as $user) {
+            if (! $user->referrer_code) {
                 $user->referrer_code = generate_referral_code();
             }
 
-            if (!$user->referral_link) {
+            if (! $user->referral_link) {
                 $user->referrer_link = generate_referrer_link($user->referrer_code);
             }
 
             $user->save();
         }
 
-        return $this->success(null, "Generated successfully");
+        return $this->success(null, 'Generated successfully');
     }
 
     public function adminProfile()
@@ -201,4 +195,3 @@ class AdminService
         return $this->success($data, 'Profile detail');
     }
 }
-

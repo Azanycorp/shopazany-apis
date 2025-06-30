@@ -3,7 +3,6 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
@@ -14,8 +13,11 @@ class CustomerOrderMail extends Mailable
     use Queueable, SerializesModels;
 
     protected $user;
+
     protected $items;
+
     protected $orderNo;
+
     protected $totalAmount;
 
     /**

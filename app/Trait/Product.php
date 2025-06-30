@@ -73,14 +73,14 @@ trait Product
                 'sku' => $variation['sku'],
                 'price' => $variation['price'],
                 'stock' => $variation['stock'],
-                'image' => $imageUrl['url']
+                'image' => $imageUrl['url'],
             ]);
         }
     }
 
     public function calculateFinalPrice($basePrice, $discountType = null, $discountValue = 0)
     {
-        if (!$discountType || $discountValue <= 0) {
+        if (! $discountType || $discountValue <= 0) {
             return $basePrice;
         }
 

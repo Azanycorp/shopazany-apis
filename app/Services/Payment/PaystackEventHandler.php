@@ -2,10 +2,9 @@
 
 namespace App\Services\Payment;
 
-use Illuminate\Support\Facades\Log;
-use App\Enum\PaystackEvent;
 use App\Enum\PaymentType;
-use App\Services\Payment\PaystackService;
+use App\Enum\PaystackEvent;
+use Illuminate\Support\Facades\Log;
 
 class PaystackEventHandler
 {
@@ -57,12 +56,9 @@ class PaystackEventHandler
 
             default:
                 Log::warning('Unknown payment type in charge success', [
-                    'payment_type' => $paymentType
+                    'payment_type' => $paymentType,
                 ]);
                 break;
         }
     }
 }
-
-
-

@@ -8,13 +8,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class ShopCountry extends Model
 {
-    use HasFactory, ClearsResponseCache;
+    use ClearsResponseCache, HasFactory;
 
     protected $fillable = [
         'country_id',
         'name',
         'flag',
-        'currency'
+        'currency',
     ];
 
     public function country()

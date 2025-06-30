@@ -30,12 +30,11 @@ trait SignUp
         ]);
     }
 
-
     /**
      * Normalize coupon input.
      * Convert invalid or placeholder values to null.
      *
-     * @param mixed $coupon
+     * @param  mixed  $coupon
      * @return string|null
      */
     protected function normalizeCoupon($coupon)
@@ -43,12 +42,13 @@ trait SignUp
         if (is_null($coupon) || trim(strtolower($coupon)) === 'null' || trim($coupon) === '') {
             return null;
         }
+
         return $coupon;
     }
 
     protected function handleReferrers($referrerCode, $user)
     {
-        if (!$referrerCode) {
+        if (! $referrerCode) {
             throw new \InvalidArgumentException('Referrer code is required');
         }
 
@@ -56,7 +56,7 @@ trait SignUp
             ->where('referrer_code', $referrerCode)
             ->first();
 
-        if (!$referrer || !$referrer->is_affiliate_member) {
+        if (! $referrer || ! $referrer->is_affiliate_member) {
             throw new \Exception('You are not a valid referrer');
         }
 
@@ -69,7 +69,7 @@ trait SignUp
             ->whereStatus(EnumCoupon::ACTIVE)
             ->first();
 
-        if (!$coupon) {
+        if (! $coupon) {
             throw new \Exception('Invalid coupon code or inactive');
         }
 
@@ -89,8 +89,8 @@ trait SignUp
             ->lockForUpdate()
             ->first();
 
-        if (!$coupon) {
-            return $this->error("Invalid or expired coupon", 400);
+        if (! $coupon) {
+            return $this->error('Invalid or expired coupon', 400);
         }
 
         $coupon->total_used = $coupon->total_used ?? 0;
@@ -98,7 +98,7 @@ trait SignUp
 
         $newUserEntry = [
             'user_id' => $user->id,
-            'name' => $user->first_name . ' ' . $user->last_name,
+            'name' => $user->first_name.' '.$user->last_name,
             'email' => $user->email,
         ];
 
@@ -125,13 +125,13 @@ trait SignUp
     {
         $currencyCode = 'USD';
 
-        if($request->country_id) {
+        if ($request->country_id) {
             $country = Country::findOrFail($request->country_id);
             $currencyCode = getCurrencyCode($country->sortname);
 
             $supportedCurrencies = [
                 'NGN', 'GHS', 'KES', 'ZAR', 'XOF',
-                'USD', 'CAD', 'GBP', 'EUR'
+                'USD', 'CAD', 'GBP', 'EUR',
             ];
 
             if (in_array($currencyCode, $supportedCurrencies)) {
@@ -142,7 +142,3 @@ trait SignUp
         return $currencyCode;
     }
 }
-
-
-
-

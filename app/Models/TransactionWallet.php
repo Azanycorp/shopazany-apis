@@ -16,10 +16,11 @@ class TransactionWallet extends Model
         'funding_pop',
         'status',
     ];
+
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id', 'id')->where([
-            'type' => 'b2b_seller'
+            'type' => 'b2b_seller',
         ]);
     }
 }

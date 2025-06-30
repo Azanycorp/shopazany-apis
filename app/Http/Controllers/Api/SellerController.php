@@ -2,20 +2,19 @@
 
 namespace App\Http\Controllers\Api;
 
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use App\Services\User\SellerService;
-use App\Http\Requests\ProductRequest;
 use App\Http\Requests\AddAttributeRequest;
 use App\Http\Requests\BusinessInfoRequest;
 use App\Http\Requests\ProductImportRequest;
+use App\Http\Requests\ProductRequest;
+use App\Services\User\SellerService;
+use Illuminate\Http\Request;
 
 class SellerController extends Controller
 {
     public function __construct(
         protected SellerService $service
-    )
-    {}
+    ) {}
 
     public function businessInfo(BusinessInfoRequest $request)
     {
@@ -60,7 +59,7 @@ class SellerController extends Controller
     public function updateOrderStatus($userId, $id, Request $request)
     {
         $request->validate([
-            'status' => ['required', 'string']
+            'status' => ['required', 'string'],
         ]);
 
         return $this->service->updateOrderStatus($userId, $id, $request);
@@ -116,7 +115,7 @@ class SellerController extends Controller
         $request->validate([
             'name' => ['required', 'string'],
             'values' => ['required', 'array'],
-            'use_for_variation' => ['required', 'boolean']
+            'use_for_variation' => ['required', 'boolean'],
         ]);
 
         return $this->service->updateAttribute($request, $id, $userId);
@@ -127,5 +126,3 @@ class SellerController extends Controller
         return $this->service->deleteAttribute($id, $userId);
     }
 }
-
-

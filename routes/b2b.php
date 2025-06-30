@@ -1,10 +1,10 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\B2B\B2BAccountController;
+use App\Http\Controllers\Api\B2B\B2BBuyerController;
 use App\Http\Controllers\Api\B2BController;
 use App\Http\Controllers\Api\B2BSellerController;
-use App\Http\Controllers\Api\B2B\B2BBuyerController;
-use App\Http\Controllers\Api\B2B\B2BAccountController;
+use Illuminate\Support\Facades\Route;
 
 Route::middleware('validate.header')
     ->group(function (): void {
@@ -55,7 +55,7 @@ Route::middleware('validate.header')
             Route::group(['middleware' => 'b2b_seller.auth', 'check.user.country', 'prefix' => 'seller'], function (): void {
 
                 Route::controller(B2BSellerController::class)->group(function (): void {
-                    //dashboard
+                    // dashboard
                     Route::get('/dashboard', 'dashboard');
                     Route::get('/withdrawals', 'withdrawalHistory');
                     Route::post('/withdrawal-request', 'makeWithdrawalRequest');
@@ -69,8 +69,7 @@ Route::middleware('validate.header')
                         Route::post('/confirm-payment', 'confirmPayment');
                     });
 
-
-                    //orders
+                    // orders
                     Route::prefix('order')->group(function (): void {
                         Route::get('/details/{id}', 'orderDetails');
                         Route::post('/mark-as-shipped', 'shippOrder');
@@ -80,7 +79,7 @@ Route::middleware('validate.header')
                         Route::post('/order-feeback', 'orderFeeback');
                     });
 
-                    //payment method
+                    // payment method
                     Route::prefix('withdrawal-method')->group(function (): void {
                         Route::get('/', 'allWithdrawalMethods');
                         Route::post('/add', 'addWithdrawalMethod');
@@ -90,8 +89,7 @@ Route::middleware('validate.header')
                         Route::delete('/delete/{id}', 'deleteWithdrawalMethod');
                     });
 
-
-                    //profile
+                    // profile
                     Route::get('/profile', 'profile');
                     Route::post('/edit-account', 'editAccount');
                     Route::patch('/change-password', 'changePassword');
@@ -127,7 +125,7 @@ Route::middleware('validate.header')
                     'middleware' => 'b2b_buyer.auth',
                     'check.user.country',
                     'prefix' => 'buyer',
-                    'controller' => B2BBuyerController::class
+                    'controller' => B2BBuyerController::class,
                 ],
                 function (): void {
 
@@ -152,14 +150,13 @@ Route::middleware('validate.header')
                     Route::get('orders', 'allOrders');
                     Route::get('order-details/{id}', 'getOrderDetails');
 
-                    //profile
+                    // profile
                     Route::get('/profile', 'profile')->middleware('cacheResponse:300');
                     Route::post('/edit-account', 'editAccount');
                     Route::patch('/change-password', 'changePassword');
                     Route::post('/change-2fa', 'change2Fa');
                     Route::get('/company-info', 'companyInfo')->middleware('cacheResponse:300');
                     Route::post('/edit-company', 'editCompany');
-
 
                     // Shipping address
                     Route::prefix('shipping-address')->group(function (): void {

@@ -12,13 +12,12 @@ class ApiController extends Controller
     public function __construct(
         protected AdminService $adminService,
         protected CustomerService $customerService
-    )
-    {}
+    ) {}
 
     public function addSlider(Request $request)
     {
         $request->validate([
-            'image' => ['required', 'image', 'mimes:png,jpg,jpeg']
+            'image' => ['required', 'image', 'mimes:png,jpg,jpeg'],
         ]);
 
         return $this->adminService->addSlider($request);
@@ -68,7 +67,7 @@ class ApiController extends Controller
     {
         $request->validate([
             'country_id' => ['required', 'integer', 'exists:countries,id'],
-            'flag' => ['required', 'mimes:png,jpg,jpeg,svg']
+            'flag' => ['required', 'mimes:png,jpg,jpeg,svg'],
         ]);
 
         return $this->adminService->shopByCountry($request);

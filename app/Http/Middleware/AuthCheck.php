@@ -16,7 +16,7 @@ class AuthCheck
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return response()->json(['message' => 'Unauthenticated.'], 401);
         }
 

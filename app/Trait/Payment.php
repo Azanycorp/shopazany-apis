@@ -22,8 +22,9 @@ trait Payment
         try {
             $user->paymentMethods()->create([
                 'type' => $request->type,
-                'paypal_email' => $request->paypal_email
+                'paypal_email' => $request->paypal_email,
             ]);
+
             return true;
         } catch (\Exception $e) {
             return false;
@@ -49,25 +50,26 @@ trait Payment
             ]);
 
             $bank = Bank::where([
-                'name' => $request->bank_name
+                'name' => $request->bank_name,
             ])->first();
 
-            if(! $bank) {
-                return $this->error(null, "Selected bank not found!", 404);
+            if (! $bank) {
+                return $this->error(null, 'Selected bank not found!', 404);
             }
 
             $fields = [
-                'type' => "nuban",
+                'type' => 'nuban',
                 'name' => $request->account_name,
                 'account_number' => $request->account_number,
                 'bank_code' => $bank->code,
-                'currency' => $bank->currency
+                'currency' => $bank->currency,
             ];
 
             PaystackService::createRecipient($fields, $method);
 
             DB::commit();
-            return $this->success(null, "Added successfully");
+
+            return $this->success(null, 'Added successfully');
         } catch (\Throwable $th) {
             DB::rollBack();
             throw $th;
@@ -88,6 +90,7 @@ trait Payment
             'routing_number' => $request->routing_number,
             'is_default' => $request->is_default,
         ]);
-        return $this->success(null, "Added successfully");
+
+        return $this->success(null, 'Added successfully');
     }
 }

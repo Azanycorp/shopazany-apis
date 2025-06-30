@@ -4,21 +4,21 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
-use Illuminate\Support\Str;
 use App\Enum\SubscriptionType;
-use App\Trait\UserRelationship;
-use Laravel\Sanctum\HasApiTokens;
-use App\Trait\ClearsResponseCache;
-use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Notifications\ResetPasswordNotification;
+use App\Trait\ClearsResponseCache;
+use App\Trait\UserRelationship;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, HasApiTokens, SoftDeletes, ClearsResponseCache, UserRelationship;
+    use ClearsResponseCache, HasApiTokens, HasFactory, Notifiable, SoftDeletes, UserRelationship;
 
     /**
      * The attributes that are mass assignable.
@@ -104,7 +104,7 @@ class User extends Authenticatable
     {
         $email = $this->email;
 
-        $url = config('services.reset_password_url') . '?token=' . $token . '&email=' . $email;
+        $url = config('services.reset_password_url').'?token='.$token.'&email='.$email;
 
         $this->notify(new ResetPasswordNotification($url));
     }
@@ -142,11 +142,12 @@ class User extends Authenticatable
     protected function subscriptionPlan(): Attribute
     {
         return Attribute::make(get: function () {
-            if (!array_key_exists('subscription_plan', $this->attributes)) {
+            if (! array_key_exists('subscription_plan', $this->attributes)) {
                 $this->attributes['subscription_plan'] = $this->userSubscriptions()
                     ->where('status', SubscriptionType::ACTIVE)
                     ->first();
             }
+
             return $this->attributes['subscription_plan'];
         });
     }
@@ -154,7 +155,7 @@ class User extends Authenticatable
     protected function subscriptionStatus(): Attribute
     {
         return Attribute::make(
-            get: fn() => $this->userSubscriptions()->latest()->value('status') ?? 'No Subscription'
+            get: fn () => $this->userSubscriptions()->latest()->value('status') ?? 'No Subscription'
         );
     }
 
@@ -164,15 +165,17 @@ class User extends Authenticatable
             return "{$this->first_name} {$this->last_name}";
         });
     }
+
     protected function buyerName(): Attribute
     {
         return Attribute::make(
             get: fn () => "{$this->first_name} {$this->last_name}"
         );
     }
+
     public function scopeFilterReferrals($query, $searchQuery, $statusFilter)
     {
-        if (!empty($searchQuery)) {
+        if (! empty($searchQuery)) {
             $query->where(function ($q) use ($searchQuery) {
                 $q->where('first_name', 'LIKE', "%$searchQuery%")
                     ->orWhere('last_name', 'LIKE', "%$searchQuery%")
@@ -180,7 +183,7 @@ class User extends Authenticatable
             });
         }
 
-        if (!empty($statusFilter)) {
+        if (! empty($statusFilter)) {
             $query->where('status', $statusFilter);
         }
 

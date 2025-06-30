@@ -3,22 +3,22 @@
 namespace App\Providers;
 
 use App\Contracts\B2BRepositoryInterface;
-use App\Models\User;
 use App\Models\Order;
-use Illuminate\Http\Request;
-use Laravel\Sanctum\Sanctum;
-use App\Observers\UserObserver;
+use App\Models\User;
 use App\Observers\OrderObserver;
+use App\Observers\UserObserver;
 use App\Repositories\B2BProductRepository;
 use App\Repositories\B2BSellerShippingRepository;
-use Illuminate\Support\ServiceProvider;
 use Illuminate\Cache\RateLimiting\Limit;
-use Laravel\Sanctum\PersonalAccessToken;
-use Illuminate\Validation\Rules\Password;
-use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\Rules\Password;
+use Laravel\Sanctum\PersonalAccessToken;
+use Laravel\Sanctum\Sanctum;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -40,11 +40,11 @@ class AppServiceProvider extends ServiceProvider
 
         Password::defaults(function () {
             return Password::min(8)
-            ->letters()
-            ->mixedCase()
-            ->numbers()
-            ->symbols()
-            ->uncompromised();
+                ->letters()
+                ->mixedCase()
+                ->numbers()
+                ->symbols()
+                ->uncompromised();
         });
 
         RateLimiter::for('apis', function (Request $request) {
@@ -88,6 +88,4 @@ class AppServiceProvider extends ServiceProvider
     {
         URL::formatScheme('https');
     }
-
-
 }

@@ -15,7 +15,7 @@ class SubCategory extends Model
         'image',
         'public_id',
         'slug',
-        'status'
+        'status',
     ];
 
     public function category()

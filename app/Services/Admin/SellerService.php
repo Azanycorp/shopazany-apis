@@ -22,11 +22,11 @@ class SellerService
         $users = User::with(['products', 'b2bProducts', 'bankAccount', 'wallet'])
             ->where('type', UserType::SELLER)
             ->when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
-                $queryBuilder->where(function($subQuery) use ($searchQuery): void {
-                    $subQuery->where('first_name', 'LIKE', '%' . $searchQuery . '%')
-                            ->orWhere('last_name', 'LIKE', '%' . $searchQuery . '%')
-                            ->orWhere('middlename', 'LIKE', '%' . $searchQuery . '%')
-                            ->orWhere('email', 'LIKE', '%' . $searchQuery . '%');
+                $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
+                    $subQuery->where('first_name', 'LIKE', '%'.$searchQuery.'%')
+                        ->orWhere('last_name', 'LIKE', '%'.$searchQuery.'%')
+                        ->orWhere('middlename', 'LIKE', '%'.$searchQuery.'%')
+                        ->orWhere('email', 'LIKE', '%'.$searchQuery.'%');
                 });
             })
             ->when($approvedQuery !== null, function ($queryBuilder) use ($approvedQuery): void {
@@ -54,16 +54,16 @@ class SellerService
     {
         $user = User::find($request->user_id);
 
-        if (!$user) {
-            return $this->error(null, "User not found", 404);
+        if (! $user) {
+            return $this->error(null, 'User not found', 404);
         }
 
-        $user->is_admin_approve = !$user->is_admin_approve;
+        $user->is_admin_approve = ! $user->is_admin_approve;
         $user->status = $user->is_admin_approve ? 'active' : 'blocked';
 
         $user->save();
 
-        $status = $user->is_admin_approve ? "Approved successfully" : "Disapproved successfully";
+        $status = $user->is_admin_approve ? 'Approved successfully' : 'Disapproved successfully';
 
         return $this->success(null, $status);
     }
@@ -71,11 +71,11 @@ class SellerService
     public function viewSeller($id)
     {
         $user = User::with(['products'])->where('id', $id)
-        ->where('type', UserType::SELLER)
-        ->first();
+            ->where('type', UserType::SELLER)
+            ->first();
 
-        if (!$user) {
-            return $this->error(null, "User not found", 404);
+        if (! $user) {
+            return $this->error(null, 'User not found', 404);
         }
 
         $data = new SellerResource($user);
@@ -91,8 +91,8 @@ class SellerService
     {
         $user = User::find($id);
 
-        if (!$user) {
-            return $this->error(null, "User not found", 404);
+        if (! $user) {
+            return $this->error(null, 'User not found', 404);
         }
 
         $user->update([
@@ -104,18 +104,18 @@ class SellerService
         ]);
 
         $data = [
-            'user_id' => $user->id
+            'user_id' => $user->id,
         ];
 
-        return $this->success($data, "Updated successfully");
+        return $this->success($data, 'Updated successfully');
     }
 
     public function banSeller($request)
     {
         $user = User::find($request->user_id);
 
-        if (!$user) {
-            return $this->error(null, "User not found", 404);
+        if (! $user) {
+            return $this->error(null, 'User not found', 404);
         }
 
         $user->status = 'blocked';
@@ -123,27 +123,27 @@ class SellerService
 
         $user->save();
 
-        return $this->success(null, "User has been blocked successfully");
+        return $this->success(null, 'User has been blocked successfully');
     }
 
     public function removeSeller($id)
     {
         $user = User::find($id);
 
-        if (!$user) {
-            return $this->error(null, "User not found", 404);
+        if (! $user) {
+            return $this->error(null, 'User not found', 404);
         }
 
         $user->delete();
 
-        return $this->success(null, "User has been removed successfully");
+        return $this->success(null, 'User has been removed successfully');
     }
 
     public function paymentHistory($id)
     {
         $orders = Order::whereHas('products', function ($query) use ($id) {
-                $query->where('user_id', $id);
-            })
+            $query->where('user_id', $id);
+        })
             ->with('payments')
             ->get();
 
@@ -151,7 +151,7 @@ class SellerService
 
         $data = PaymentResource::collection($payments);
 
-        return $this->success($data, "Payment history");
+        return $this->success($data, 'Payment history');
     }
 
     public function bulkRemove($request)
@@ -160,16 +160,11 @@ class SellerService
             ->update([
                 'status' => UserStatus::DELETED,
                 'is_verified' => 0,
-                'is_admin_approve' => 0
+                'is_admin_approve' => 0,
             ]);
 
         User::whereIn('id', $request->user_ids)->delete();
 
-        return $this->success(null, "User(s) have been removed successfully");
+        return $this->success(null, 'User(s) have been removed successfully');
     }
-
 }
-
-
-
-

@@ -8,8 +8,11 @@ use App\Models\Transaction;
 class TransactionService
 {
     protected $user;
+
     protected $type;
+
     protected $amount;
+
     protected $status;
 
     public function __construct($user, $type, $amount, $status = TransactionStatus::PENDING)
@@ -32,4 +35,3 @@ class TransactionService
         ]);
     }
 }
-

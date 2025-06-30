@@ -70,7 +70,7 @@ return [
 
         'test_pk' => env('PAYSTACK_TEST_PK'),
         'live_pk' => env('PAYSTACK_PK'),
-        'bank_base_url' => "https://api.paystack.co/bank",
+        'bank_base_url' => 'https://api.paystack.co/bank',
     ],
 
     'authorizenet' => [
@@ -79,7 +79,7 @@ return [
         'sandbox' => [
             'api_login_id' => env('AUTHORIZENET_SANDBOX_API_LOGIN_ID'),
             'transaction_key' => env('AUTHORIZENET_SANDBOX_TRANSACTION_KEY'),
-        ]
+        ],
     ],
 
     'reward_service' => [

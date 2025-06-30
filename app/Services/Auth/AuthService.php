@@ -13,7 +13,6 @@ use App\Models\Action;
 use App\Models\User;
 use App\Trait\HttpResponse;
 use App\Trait\SignUp;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
@@ -34,17 +33,17 @@ class AuthService extends Controller
             ->where('login_code_expires_at', '>', now())
             ->first();
 
-        if(! $user){
+        if (! $user) {
             return $this->error(null, "User doesn't exist or Code has expired.", 404);
         }
 
         $user->update([
             'login_code' => null,
-            'login_code_expires_at' => null
+            'login_code_expires_at' => null,
         ]);
 
         $user->tokens()->delete();
-        $token = $user->createToken('API Token of '. $user->email);
+        $token = $user->createToken('API Token of '.$user->email);
 
         $description = "User with email {$request->email} logged in";
         $action = UserLog::LOGGED_IN;
@@ -69,7 +68,7 @@ class AuthService extends Controller
             $user = $this->createUser($request);
 
             $description = "User with email: {$request->email} signed up";
-            $response = $this->success(null, "Created successfully");
+            $response = $this->success(null, 'Created successfully');
             $action = UserLog::CREATED;
 
             logUserAction($request, $action, $description, $response, $user);
@@ -90,12 +89,12 @@ class AuthService extends Controller
     {
         $user = User::getUserEmail($request->email);
 
-        if(!$user){
-            return $this->error(null, "User not found", 404);
+        if (! $user) {
+            return $this->error(null, 'User not found', 404);
         }
 
-        if($user->email_verified_at !== null && $user->status === UserStatus::ACTIVE) {
-            return $this->error(null, "Account has been verified", 400);
+        if ($user->email_verified_at !== null && $user->status === UserStatus::ACTIVE) {
+            return $this->error(null, 'Account has been verified', 400);
         }
 
         try {
@@ -108,16 +107,16 @@ class AuthService extends Controller
             ]);
 
             $type = MailingEnum::RESEND_CODE;
-            $subject = "Resend code";
+            $subject = 'Resend code';
             $mail_class = SignUpVerifyMail::class;
             $data = [
-                'user' => $user
+                'user' => $user,
             ];
             mailSend($type, $user, $subject, $mail_class, $data);
 
             $description = "User with email address {$request->email} has requested a code to be resent.";
             $action = UserLog::CODE_RESENT;
-            $response = $this->success(null, "Code resent successfully");
+            $response = $this->success(null, 'Code resent successfully');
 
             logUserAction($request, $action, $description, $response, $user);
 
@@ -128,6 +127,7 @@ class AuthService extends Controller
             $response = $this->error(null, $e->getMessage(), 500);
 
             logUserAction($request, $action, $description, $response, $user);
+
             return $response;
         }
     }
@@ -167,7 +167,7 @@ class AuthService extends Controller
                 'email_verified_at' => null,
                 'verification_code' => $code,
                 'is_verified' => 0,
-                'password' => bcrypt($request->password)
+                'password' => bcrypt($request->password),
             ]);
 
             if ($coupon) {
@@ -180,11 +180,11 @@ class AuthService extends Controller
 
             $description = "Seller with email address {$request->email} just signed up";
             $action = UserLog::CREATED;
-            $response = $this->success(null, "Created successfully");
+            $response = $this->success(null, 'Created successfully');
 
             logUserAction($request, $action, $description, $response, $user);
 
-            return $this->success(null, "Created successfully");
+            return $this->success(null, 'Created successfully');
         } catch (\Exception $e) {
             $description = "Sign up error for user with email {$request->email}";
             $action = UserLog::FAILED;
@@ -199,11 +199,11 @@ class AuthService extends Controller
     public function verify($request)
     {
         $user = User::where('email', $request->email)
-        ->where('verification_code', $request->code)
-        ->first();
+            ->where('verification_code', $request->code)
+            ->first();
 
-        if(!$user){
-            return $this->error(null, "Invalid code", 404);
+        if (! $user) {
+            return $this->error(null, 'Invalid code', 404);
         }
 
         $user->update([
@@ -211,7 +211,7 @@ class AuthService extends Controller
             'is_admin_approve' => 1,
             'verification_code' => null,
             'email_verified_at' => now(),
-            'status' => UserStatus::ACTIVE
+            'status' => UserStatus::ACTIVE,
         ]);
 
         if ($user->pending_referrer_code) {
@@ -220,15 +220,15 @@ class AuthService extends Controller
         }
 
         $type = MailingEnum::EMAIL_VERIFICATION;
-        $subject = "Email verification";
+        $subject = 'Email verification';
         $mail_class = UserWelcomeMail::class;
         $data = [
-            'user' => $user
+            'user' => $user,
         ];
         mailSend($type, $user, $subject, $mail_class, $data);
 
         $user->tokens()->delete();
-        $token = $user->createToken('API Token of '. $user->email);
+        $token = $user->createToken('API Token of '.$user->email);
 
         $description = "User with email address {$request->email} verified OTP";
         $action = UserLog::CREATED;
@@ -239,7 +239,7 @@ class AuthService extends Controller
             'is_affiliate_member' => $user->is_affiliate_member === 1,
             'token' => $token->plainTextToken,
             'expires_at' => $token->accessToken->expires_at,
-        ], "Verified successfully");
+        ], 'Verified successfully');
 
         logUserAction($request, $action, $description, $response, $user);
 
@@ -250,7 +250,7 @@ class AuthService extends Controller
     {
         $user = User::where('email', $request->email)->first();
 
-        if (!$user) {
+        if (! $user) {
             return $this->error('error', 'We can\'t find a user with that email address', 404);
         }
 
@@ -260,7 +260,7 @@ class AuthService extends Controller
 
         $description = "User with email address {$request->email} requested for password change";
         $action = UserLog::PASSWORD_FORGOT;
-        $response = $this->success(null, "Request successfully");
+        $response = $this->success(null, 'Request successfully');
 
         logUserAction($request, $action, $description, $response, $user);
 
@@ -273,7 +273,7 @@ class AuthService extends Controller
     {
         $user = User::where('email', $request->email)->first();
 
-        if (!$user) {
+        if (! $user) {
             return $this->error('error', 'We can\'t find a user with that email address', 404);
         }
 
@@ -288,7 +288,7 @@ class AuthService extends Controller
 
         $description = "User with email address {$request->email} changed password successfully";
         $action = UserLog::PASSWORD_RESET;
-        $response = $this->success(null, "Reset successfully");
+        $response = $this->success(null, 'Reset successfully');
 
         logUserAction($request, $action, $description, $response, $user);
 
@@ -306,7 +306,7 @@ class AuthService extends Controller
         $description = "User with email address {$user->email} logged out";
         $action = UserLog::LOGOUT;
         $response = $this->success([
-            'message' => 'You have successfully logged out and your token has been deleted'
+            'message' => 'You have successfully logged out and your token has been deleted',
         ]);
 
         logUserAction(request(), $action, $description, $response, $user);
@@ -329,12 +329,13 @@ class AuthService extends Controller
             if ($request->referrer_code) {
                 $referrer = User::where('referrer_code', $request->referrer_code)->first();
 
-                if ($referrer && (!$referrer->email_verified_at || $referrer->is_verified != 1)) {
+                if ($referrer && (! $referrer->email_verified_at || $referrer->is_verified != 1)) {
                     $description = "User with referral code and email {$referrer->email} has not been verified";
                     $action = UserLog::CREATED;
                     $response = $this->error(null, 'User with referral code has not been verified', 400);
 
                     logUserAction($request, $action, $description, $response, $user);
+
                     return $response;
                 }
             }
@@ -352,13 +353,14 @@ class AuthService extends Controller
                 }
             });
 
-            return $this->success(null, "Created successfully");
+            return $this->success(null, 'Created successfully');
         } catch (\Exception $e) {
-            $description = "User creation failed";
+            $description = 'User creation failed';
             $action = UserLog::FAILED;
             $response = $this->error(null, $e->getMessage(), 500);
 
             logUserAction($request, $action, $description, $response, $user);
+
             return $response;
         }
     }
@@ -366,12 +368,13 @@ class AuthService extends Controller
     private function determineReferrerCode($request)
     {
         $initial_referrer_code = Str::random(10);
-        if (!$request->referrer_code) {
+        if (! $request->referrer_code) {
             return $initial_referrer_code;
         }
         if (User::where('referrer_code', $request->referrer_code)->exists()) {
             return $this->generateUniqueReferrerCode();
         }
+
         return $request->referrer_code;
     }
 
@@ -380,6 +383,7 @@ class AuthService extends Controller
         if ($user) {
             return $this->getUserReferrer($user);
         }
+
         return null;
     }
 
@@ -389,7 +393,7 @@ class AuthService extends Controller
             ->where('referrer_code', $referrer_code)
             ->first();
 
-        if (!$referrer || !$referrer->is_affiliate_member) {
+        if (! $referrer || ! $referrer->is_affiliate_member) {
             throw new \Exception('You are not a valid referrer');
         }
 
@@ -416,24 +420,24 @@ class AuthService extends Controller
                 'referrer_link' => $referrer_link,
                 'is_verified' => 1,
                 'is_affiliate_member' => 1,
-                'password' => bcrypt($request->password)
+                'password' => bcrypt($request->password),
             ]);
 
             $description = "User with email {$request->email} signed up as an affiliate";
             $action = UserLog::CREATED;
-            $response = $this->success(null, "Created successfully");
+            $response = $this->success(null, 'Created successfully');
 
             logUserAction($request, $action, $description, $response, $user);
 
             if (is_null($emailVerified)) {
-                $user->update(['email_verified_at' => null, 'verification_code' => $code,]);
+                $user->update(['email_verified_at' => null, 'verification_code' => $code]);
 
                 // Send email to user to verify account
                 $type = MailingEnum::SIGN_UP_OTP;
-                $subject = "Verify Account";
+                $subject = 'Verify Account';
                 $mail_class = SignUpVerifyMail::class;
                 $data = [
-                    'user' => $user
+                    'user' => $user,
                 ];
                 mailSend($type, $user, $subject, $mail_class, $data);
             }
@@ -451,17 +455,17 @@ class AuthService extends Controller
                 'state_id' => $request->state_id,
                 'is_verified' => 0,
                 'is_affiliate_member' => 1,
-                'password' => bcrypt($request->password)
+                'password' => bcrypt($request->password),
             ]);
 
             $description = "User with email {$request->email} signed up as an affiliate";
             $action = UserLog::CREATED;
-            $response = $this->success(null, "Created successfully");
+            $response = $this->success(null, 'Created successfully');
             logUserAction($request, $action, $description, $response, $user);
 
             return $user;
         }
+
         return null;
     }
 }
-

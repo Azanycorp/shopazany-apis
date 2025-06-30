@@ -6,7 +6,6 @@ use App\Enum\UserStatus;
 use App\Enum\UserType;
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use Illuminate\Http\Request;
 use Laravel\Socialite\Facades\Socialite;
 
 class GoogleAuthController extends Controller
@@ -33,7 +32,7 @@ class GoogleAuthController extends Controller
 
         try {
             $fullName = $googleUser->name;
-            list($firstName, $lastName) = explode(' ', $fullName, 2);
+            [$firstName, $lastName] = explode(' ', $fullName, 2);
 
             $user = User::where('email', $googleUser->getEmail())->first();
 
@@ -60,14 +59,14 @@ class GoogleAuthController extends Controller
             $user->tokens()->delete();
             $token = $user->createToken('token-name')->plainTextToken;
 
-            return redirect($this->frontendBaseUrl . '/auth/callback?' . http_build_query([
+            return redirect($this->frontendBaseUrl.'/auth/callback?'.http_build_query([
                 'token' => $token,
                 'user' => $user,
             ]));
 
         } catch (\Exception $e) {
-            return redirect($this->frontendBaseUrl . '/auth/callback?' . http_build_query([
-                'error' => 'Authentication failed! ' . $e->getMessage(),
+            return redirect($this->frontendBaseUrl.'/auth/callback?'.http_build_query([
+                'error' => 'Authentication failed! '.$e->getMessage(),
             ]));
         }
     }

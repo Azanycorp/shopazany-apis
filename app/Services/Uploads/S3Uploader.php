@@ -10,8 +10,8 @@ class S3Uploader
     {
         $path = Storage::disk('s3')->putFile($folder, $file);
 
-        if (!$path) {
-            throw new \Exception("Failed to upload to S3.");
+        if (! $path) {
+            throw new \Exception('Failed to upload to S3.');
         }
 
         return [
@@ -22,8 +22,8 @@ class S3Uploader
 
     public function delete($publicId)
     {
-        if (!Storage::disk('s3')->delete($publicId)) {
-            throw new \Exception("Failed to delete from S3.");
+        if (! Storage::disk('s3')->delete($publicId)) {
+            throw new \Exception('Failed to delete from S3.');
         }
     }
 }

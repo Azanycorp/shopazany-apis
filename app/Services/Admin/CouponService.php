@@ -2,10 +2,10 @@
 
 namespace App\Services\Admin;
 
-use App\Models\Coupon;
-use Illuminate\Support\Str;
 use App\Enum\Coupon as EnumCoupon;
+use App\Models\Coupon;
 use App\Trait\HttpResponse;
+use Illuminate\Support\Str;
 
 class CouponService
 {
@@ -19,7 +19,7 @@ class CouponService
             $this->createOneTimeCoupon($request);
         }
 
-        return $this->success(null, "Coupons created successfully", 201);
+        return $this->success(null, 'Coupons created successfully', 201);
     }
 
     private function createMultiUseCoupon($request)
@@ -29,17 +29,17 @@ class CouponService
         } while (Coupon::where('code', $code)->exists());
 
         $link = app()->environment('production')
-            ? config('services.seller_baseurl') . '?coupon=' . $code
-            : config('services.staging_seller_baseurl') . '?coupon=' . $code;
+            ? config('services.seller_baseurl').'?coupon='.$code
+            : config('services.staging_seller_baseurl').'?coupon='.$code;
 
         Coupon::create([
-            'name' => "Signup coupon",
+            'name' => 'Signup coupon',
             'code' => $code,
             'link' => $link,
             'type' => EnumCoupon::MULTI_USE,
             'max_use' => $request->numbers,
             'expire_at' => now()->addDays(30),
-            'status' => EnumCoupon::ACTIVE
+            'status' => EnumCoupon::ACTIVE,
         ]);
     }
 
@@ -51,18 +51,18 @@ class CouponService
             } while (Coupon::where('code', $code)->exists());
 
             if (app()->environment('production')) {
-                $link = config('services.seller_baseurl') . '?coupon=' . $code;
+                $link = config('services.seller_baseurl').'?coupon='.$code;
             } else {
-                $link = config('services.staging_seller_baseurl') . '?coupon=' . $code;
+                $link = config('services.staging_seller_baseurl').'?coupon='.$code;
             }
 
             $coupon = Coupon::create([
-                'name' => "Signup coupon",
+                'name' => 'Signup coupon',
                 'code' => $code,
                 'link' => $link,
                 'type' => EnumCoupon::ONE_TIME,
                 'expire_at' => now()->addDays(30),
-                'status' => EnumCoupon::ACTIVE
+                'status' => EnumCoupon::ACTIVE,
             ]);
 
             $coupons[] = $coupon;
@@ -89,4 +89,3 @@ class CouponService
         ];
     }
 }
-

@@ -59,11 +59,11 @@ class ChargeUserSubscriptions extends Command
             if ($response['status'] === true) {
 
                 $user = User::with([
-                        'referrer' => function ($query) {
-                            $query->with('wallet');
-                        },
-                        'userSubscription'
-                    ])
+                    'referrer' => function ($query) {
+                        $query->with('wallet');
+                    },
+                    'userSubscription',
+                ])
                     ->findOrFail($subscription->user_id);
 
                 $method = $response['metadata']['payment_method'];
@@ -111,15 +111,15 @@ class ChargeUserSubscriptions extends Command
 
                 SubscriptionService::creditAffiliate($referrer, $amount, $user);
 
-                Log::info('Subscription charged successfully: ' . $subscription->id);
+                Log::info('Subscription charged successfully: '.$subscription->id);
                 DB::commit();
             } else {
-                Log::error('Failed to charge subscription: ' . $response['message']);
+                Log::error('Failed to charge subscription: '.$response['message']);
             }
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error charging subscription: ' . $e->getMessage());
+            Log::error('Error charging subscription: '.$e->getMessage());
         }
     }
 }

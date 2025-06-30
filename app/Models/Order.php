@@ -3,9 +3,9 @@
 namespace App\Models;
 
 use App\Enum\OrderStatus;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Order extends Model
@@ -29,7 +29,7 @@ class Order extends Model
     protected function casts(): array
     {
         return [
-            'shipping_address' => 'array'
+            'shipping_address' => 'array',
         ];
     }
 
@@ -52,7 +52,7 @@ class Order extends Model
     public function products()
     {
         return $this->belongsToMany(Product::class, 'order_items')
-                    ->withPivot('variation_id', 'product_quantity', 'price', 'sub_total', 'status');
+            ->withPivot('variation_id', 'product_quantity', 'price', 'sub_total', 'status');
     }
 
     public function shopCountry(): BelongsTo
@@ -73,7 +73,7 @@ class Order extends Model
     // Deprecated method - Do not use
     public static function saveOrder($user, $payment, $seller, $item, $orderNo, $address, $method, $status): self
     {
-        $data = new self();
+        $data = new self;
 
         $proId = $item['product_id'] ?? $item['itemId'];
         $product = Product::with('shopCountry')->find($proId);

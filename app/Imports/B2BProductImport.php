@@ -2,19 +2,19 @@
 
 namespace App\Imports;
 
-use App\Models\B2BProduct;
 use App\Enum\ProductStatus;
-use Illuminate\Support\Str;
+use App\Models\B2BProduct;
 use App\Models\B2bProductCategory;
-use Illuminate\Support\Collection;
 use App\Models\B2bProductSubCategory;
-use Maatwebsite\Excel\Concerns\ToCollection;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
-use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithBatchInserts;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
+use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
-class B2BProductImport implements ToCollection, WithHeadingRow, WithChunkReading, WithBatchInserts, SkipsEmptyRows
+class B2BProductImport implements SkipsEmptyRows, ToCollection, WithBatchInserts, WithChunkReading, WithHeadingRow
 {
     protected $seller;
 
@@ -24,7 +24,7 @@ class B2BProductImport implements ToCollection, WithHeadingRow, WithChunkReading
     }
 
     /**
-     * @param Collection $collection
+     * @param  Collection  $collection
      */
     public function collection(Collection $rows): void
     {
@@ -35,7 +35,7 @@ class B2BProductImport implements ToCollection, WithHeadingRow, WithChunkReading
             $slug = Str::slug($row['product_name']);
 
             if (B2BProduct::where('slug', $slug)->exists()) {
-                $slug = $slug . '-' . uniqid();
+                $slug = $slug.'-'.uniqid();
             }
 
             B2BProduct::create([
