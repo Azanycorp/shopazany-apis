@@ -13,7 +13,7 @@ jobs:
     # STEP 1: Prepare the environment
     # -----------------------------------
     - name: Checkout code
-      uses: actions/checkout@v3 
+      uses: actions/checkout@v3
 
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
@@ -23,64 +23,14 @@ jobs:
         tools: composer:v2
 
     # -----------------------------------
-    # STEP 2: SSH Setup & Validation
+    # STEP 2: SSH Setup
     # -----------------------------------
     - name: Configure SSH Environment
       run: |
         mkdir -p ~/.ssh
         echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
-        
-        # Add server fingerprint
         ssh-keyscan -t ecdsa ${{ secrets.VPS_HOST }} > ~/.ssh/known_hosts
-        chmod 644 ~/.ssh/known_hosts
-
-    - name: Validate SSH Key
-      run: |
-        echo "=== SSH Key Validation ==="
-        
-        # 1. Verify key file exists
-        if [ ! -f ~/.ssh/id_rsa ]; then
-          echo "::error::Private key file not found"
-          exit 1
-        fi
-        
-        # 2. Check key format headers
-        if ! grep -q "BEGIN OPENSSH PRIVATE KEY" ~/.ssh/id_rsa; then
-          echo "::error::Missing BEGIN OPENSSH PRIVATE KEY header"
-          head -n 1 ~/.ssh/id_rsa
-          exit 1
-        fi
-        
-        if ! grep -q "END OPENSSH PRIVATE KEY" ~/.ssh/id_rsa; then
-          echo "::error::Missing END OPENSSH PRIVATE KEY footer"
-          exit 1
-        fi
-        
-        # 3. Validate key structure
-        if ! ssh-keygen -l -f ~/.ssh/id_rsa >/dev/null 2>&1; then
-          echo "::error::Invalid key format"
-          exit 1
-        fi
-        
-        # 4. Test public key derivation
-        if ! ssh-keygen -y -f ~/.ssh/id_rsa >/dev/null 2>&1; then
-          echo "::error::Failed to derive public key"
-          exit 1
-        fi
-        
-        echo "✓ SSH key is valid"
-        echo "Fingerprint: $(ssh-keygen -lf ~/.ssh/id_rsa | awk '{print $2}')"
-
-    - name: Test SSH Connection
-      run: |
-        echo "=== Testing Connection ==="
-        ssh -vvv -i ~/.ssh/id_rsa \
-          -o StrictHostKeyChecking=yes \
-          -o IdentitiesOnly=yes \
-          ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} \
-          "echo '✓ Successfully connected to server'"
-      timeout-minutes: 2
 
     # -----------------------------------
     # STEP 3: Deployment
@@ -95,7 +45,7 @@ jobs:
           --exclude='storage/*' \
           --exclude='vendor/' \
           --exclude='node_modules/' \
-          -e "ssh -i ~/.ssh/id_rsa -o IdentitiesOnly=yes" \
+          -e "ssh -i ~/.ssh/id_rsa -o LogLevel=ERROR" \
           ./ ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:${{ secrets.VPS_BACKEND_PATH }}
 
     # -----------------------------------
@@ -104,10 +54,11 @@ jobs:
     - name: Run Post-Deployment Commands
       run: |
         ssh -i ~/.ssh/id_rsa \
+          -o LogLevel=ERROR \
           ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} \
           "cd ${{ secrets.VPS_BACKEND_PATH }} && \
-          php artisan optimize:clear && \
-          php artisan optimize && \
+          /usr/local/bin/php artisan optimize:clear && \
+          /usr/local/bin/php artisan optimize && \
           chmod -R 755 storage bootstrap/cache && \
           echo '✓ Deployment completed successfully'"
 
@@ -116,9 +67,8 @@ jobs:
     # -----------------------------------
     - name: Verify Deployment
       run: |
-        echo "=== Deployment Verification ==="
         ssh -i ~/.ssh/id_rsa \
           ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} \
           "cd ${{ secrets.VPS_BACKEND_PATH }} && \
-          php artisan --version && \
+          /usr/local/bin/php artisan --version && \
           ls -la storage/framework/"
