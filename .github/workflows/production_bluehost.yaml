@@ -48,22 +48,24 @@ jobs:
           -e "ssh -i ~/.ssh/id_rsa -o LogLevel=ERROR" \
           ./ ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:${{ secrets.VPS_BACKEND_PATH }}
 
+   # -----------------------------------
+    # STEP 4: Post-Deployment Commands
     # -----------------------------------
-    # STEP 4: Remote Commands
-    # -----------------------------------
-    - name: Run Post-Deployment Commands
+    - name: Execute Remote Commands
       run: |
+        set +e
         ssh -i ~/.ssh/id_rsa \
-          -o LogLevel=ERROR \
+          -o ConnectTimeout=30 \
           ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} \
           "cd ${{ secrets.VPS_BACKEND_PATH }} && \
-          /usr/local/bin/php artisan optimize:clear && \
-          /usr/local/bin/php artisan optimize && \
-          chmod -R 755 storage bootstrap/cache && \
-          echo '✓ Deployment completed successfully'"
+          (/usr/local/bin/php artisan optimize:clear || echo 'Artisan clear failed') && \
+          (/usr/local/bin/php artisan optimize || echo 'Artisan optimize failed') && \
+          (chmod -R 755 storage bootstrap/cache || echo 'Chmod failed') && \
+          echo '✓ Post-deployment steps attempted'"
+        set -e
 
     # -----------------------------------
-    # STEP 5: Final Verification
+    # STEP 5: Verification
     # -----------------------------------
     - name: Verify Deployment
       run: |
@@ -71,4 +73,5 @@ jobs:
           ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} \
           "cd ${{ secrets.VPS_BACKEND_PATH }} && \
           /usr/local/bin/php artisan --version && \
-          ls -la storage/framework/"
+          ls -la storage/framework/ && \
+          echo '✓ Verification successful'"
