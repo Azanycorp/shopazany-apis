@@ -23,15 +23,23 @@ jobs:
       uses: shimataro/ssh-key-action@v2
       with:
         key: ${{ secrets.VPS_SSH_KEY }}
-        known_hosts: 'temp'  # Required by action but we override below
+        known_hosts: 'temp'
+        config: |
+          Host bluehost
+            HostName ${{ secrets.VPS_HOST }}
+            User ${{ secrets.VPS_USERNAME }}
+            IdentityFile ~/.ssh/id_rsa
+            StrictHostKeyChecking yes
 
     - name: Configure SSH
       run: |
         mkdir -p ~/.ssh
-        # Add server fingerprint (from GitHub Secrets)
+        chmod 700 ~/.ssh
+        chmod 600 ~/.ssh/id_rsa
         echo "${{ secrets.VPS_HOST }} ${{ secrets.SSH_FINGERPRINT }}" >> ~/.ssh/known_hosts
-        # Verify fingerprint
+        chmod 644 ~/.ssh/known_hosts
         ssh-keygen -l -f ~/.ssh/known_hosts | grep "${{ secrets.VPS_HOST }}"
+        ssh -v -T git@bluehost || true  # Test connection, ignore errors
 
     - name: Sync Files
       run: |
@@ -39,12 +47,12 @@ jobs:
           --exclude='.env' \
           --exclude='storage/*' \
           --exclude='vendor/' \
-          -e "ssh -o StrictHostKeyChecking=yes" \
+          -e "ssh -v -i ~/.ssh/id_rsa" \
           ./ ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:${{ secrets.VPS_BACKEND_PATH }}
 
     - name: Remote Commands
       run: |
-        ssh -o StrictHostKeyChecking=yes \
+        ssh -v -i ~/.ssh/id_rsa \
           ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} \
           "cd ${{ secrets.VPS_BACKEND_PATH }} && \
           composer install --no-dev --optimize-autoloader && \
