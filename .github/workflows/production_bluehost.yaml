@@ -35,7 +35,7 @@ jobs:
         echo "Known hosts:"
         cat ~/.ssh/known_hosts
         echo "Private key head:"
-        head -n 3 ~/.ssh/id_rsa
+        head -n 3 ~/.ssh/id_rsa 
 
     - name: Test SSH Connection (With Debug)
       run: |
