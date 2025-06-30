@@ -12,7 +12,7 @@ class MailingListController extends Controller
     public function signup(Request $request)
     {
         $request->validate([
-            'user_id' => ['required', 'integer', 'exists:users,id']
+            'user_id' => ['required', 'integer', 'exists:users,id'],
         ]);
 
         $user = User::findOrFail($request->user_id);
@@ -24,6 +24,6 @@ class MailingListController extends Controller
 
         reward_user($user, 'mailing_subscribe', 'completed');
 
-        return $this->success(null, "Successfully subscribed to the mailing list.");
+        return $this->success(null, 'Successfully subscribed to the mailing list.');
     }
 }

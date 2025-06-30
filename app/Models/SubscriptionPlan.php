@@ -26,7 +26,7 @@ class SubscriptionPlan extends Model
     protected function casts(): array
     {
         return [
-            'tagline' => 'array'
+            'tagline' => 'array',
         ];
     }
 }

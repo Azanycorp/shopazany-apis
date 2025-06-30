@@ -4,7 +4,7 @@ namespace App\Http\Requests\Admin;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class CollationCentreRequest  extends FormRequest
+class CollationCentreRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -29,6 +29,4 @@ class CollationCentreRequest  extends FormRequest
             'country_id' => ['required', 'numeric', 'exists:countries,id'],
         ];
     }
-
-
 }

@@ -19,7 +19,7 @@ class Kyc extends Model
         'phone_number',
         'document_number',
         'document_type',
-        'image'
+        'image',
     ];
 
     public function user()

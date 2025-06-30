@@ -2,14 +2,14 @@
 
 namespace App\Services\Admin;
 
-use App\Models\Promo;
-use App\Models\Banner;
-use App\Enum\CouponType;
 use App\Enum\BannerStatus;
+use App\Enum\CouponType;
+use App\Http\Resources\BannerResource;
+use App\Http\Resources\PromoResource;
+use App\Models\Banner;
+use App\Models\Promo;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
-use App\Http\Resources\PromoResource;
-use App\Http\Resources\BannerResource;
 
 class BannerPromoService
 {
@@ -27,19 +27,21 @@ class BannerPromoService
 
         $slug = Str::slug($request->title);
         if (Banner::where('slug', $slug)->exists()) {
-            $slug = $slug . '-' . uniqid();
+            $slug = $slug.'-'.uniqid();
         }
 
         Banner::create([
             'title' => $request->title,
             'slug' => $slug,
-            'image' => $image,
+            'image' => $image['url'],
+            'public_id' => $image['public_id'],
             'start_date' => $request->start_date,
             'end_date' => $request->end_date,
             'products' => $prods,
             'status' => BannerStatus::ACTIVE,
         ]);
-        return $this->success(null, "Added successfully");
+
+        return $this->success(null, 'Added successfully', 201);
     }
 
     public function banners()
@@ -47,7 +49,7 @@ class BannerPromoService
         $banners = Banner::get();
         $data = BannerResource::collection($banners);
 
-        return $this->success($data, "Banners");
+        return $this->success($data, 'Banners');
     }
 
     public function getOneBanner($id)
@@ -55,7 +57,7 @@ class BannerPromoService
         $banners = Banner::findOrFail($id);
         $data = new BannerResource($banners);
 
-        return $this->success($data, "Banner detail");
+        return $this->success($data, 'Banner detail');
     }
 
     public function editBanner($request, $id)
@@ -64,12 +66,14 @@ class BannerPromoService
         $image = uploadImage($request, 'image', 'banner', null, $banner);
         $banner->update([
             'title' => $request->title,
-            'image' => $image,
+            'image' => $request->image ? $image['url'] : $banner->image,
+            'public_id' => $request->image ? $image['public_id'] : $banner->public_id,
             'start_date' => $request->start_date,
             'end_date' => $request->end_date,
             'products' => $request->products,
         ]);
-        return $this->success(null, "Updated successfully");
+
+        return $this->success(null, 'Updated successfully');
     }
 
     public function deleteBanner($id)
@@ -77,7 +81,7 @@ class BannerPromoService
         $banner = Banner::findOrFail($id);
         $banner->delete();
 
-        return $this->success(null, "Deleted successfully");
+        return $this->success(null, 'Deleted successfully');
     }
 
     public function addPromo($request)
@@ -95,9 +99,10 @@ class BannerPromoService
                 return $this->welcomeCoupon($type, $request);
 
             default:
-                # code...
+                // code...
                 break;
         }
+
         return null;
     }
 
@@ -106,7 +111,7 @@ class BannerPromoService
         $promos = Promo::get();
         $data = PromoResource::collection($promos);
 
-        return $this->success($data, "All Promos");
+        return $this->success($data, 'All Promos');
     }
 
     public function deletePromo($id)
@@ -114,7 +119,7 @@ class BannerPromoService
         $promo = Promo::findOrFail($id);
         $promo->delete();
 
-        return $this->success(null, "Deleted successfully");
+        return $this->success(null, 'Deleted successfully');
     }
 
     protected function product($type, $request)
@@ -130,7 +135,7 @@ class BannerPromoService
 
         foreach ($request->product as $product_id) {
             $promo->promoProduct()->create([
-                'product_id' => $product_id
+                'product_id' => $product_id,
             ]);
         }
 
@@ -173,8 +178,3 @@ class BannerPromoService
         return $this->success(null, 'Created successfully');
     }
 }
-
-
-
-
-

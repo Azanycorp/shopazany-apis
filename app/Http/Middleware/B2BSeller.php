@@ -2,15 +2,16 @@
 
 namespace App\Http\Middleware;
 
-use Closure;
 use App\Enum\UserType;
 use App\Trait\HttpResponse;
+use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class B2BSeller
 {
     use HttpResponse;
+
     /**
      * Handle an incoming request.
      *
@@ -20,12 +21,12 @@ class B2BSeller
     {
         $user = $request->user();
 
-        if (!$user) {
-            return $this->error(null, "Unauthorized action.", 401);
+        if (! $user) {
+            return $this->error(null, 'Unauthorized action.', 401);
         }
 
         if ($user && $user->type !== UserType::B2B_SELLER) {
-            return $this->error(null, "Unauthorized action.", 401);
+            return $this->error(null, 'Unauthorized action.', 401);
         }
 
         return $next($request);

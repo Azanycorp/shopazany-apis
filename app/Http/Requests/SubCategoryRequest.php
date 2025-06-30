@@ -23,7 +23,7 @@ class SubCategoryRequest extends FormRequest
     {
         return [
             'category_id' => ['required', 'integer', 'exists:categories,id'],
-            'name' => ['required', 'string', 'max:100']
+            'name' => ['required', 'string', 'max:100'],
         ];
     }
 }

@@ -14,7 +14,7 @@ class SeoConfiguration extends Model
         'description',
         'social_title',
         'social_description',
-        'image'
+        'image',
     ];
 
     protected function casts(): array

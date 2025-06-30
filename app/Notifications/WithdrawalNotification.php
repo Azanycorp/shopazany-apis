@@ -12,6 +12,7 @@ class WithdrawalNotification extends Notification implements ShouldQueue
     use Queueable;
 
     private $request;
+
     private $status;
 
     /**
@@ -46,7 +47,7 @@ class WithdrawalNotification extends Notification implements ShouldQueue
             ->subject('Withdrawal Request Update')
             ->line("Your withdrawal request (ID: {$this->request->id}) has been {$this->status}.")
             ->line("Amount: {$this->request->amount}")
-            ->line("Sent to Account: {$accountName} (****" . substr($accountNumber, -4) . ")")
+            ->line("Sent to Account: {$accountName} (****".substr($accountNumber, -4).')')
             ->line('Thank you for using our service.');
     }
 

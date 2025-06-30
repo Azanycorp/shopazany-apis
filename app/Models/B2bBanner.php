@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class B2bBanner extends Model
 {
     use ClearsResponseCache;
-    
+
     protected $fillable = [
         'title',
         'image',
@@ -21,7 +21,7 @@ class B2bBanner extends Model
     protected function casts(): array
     {
         return [
-            'products' => 'array'
+            'products' => 'array',
         ];
     }
 }

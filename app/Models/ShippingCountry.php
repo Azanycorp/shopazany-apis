@@ -10,6 +10,6 @@ class ShippingCountry extends Model
         'name',
         'code',
         'zone',
-        'status'
+        'status',
     ];
 }

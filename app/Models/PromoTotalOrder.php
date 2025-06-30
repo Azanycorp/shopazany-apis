@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class PromoTotalOrder extends Model
 {
-    protected $table = "promo_total_orders";
+    protected $table = 'promo_total_orders';
 
     use HasFactory;
 

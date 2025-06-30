@@ -27,7 +27,7 @@ class SignUpRequest extends FormRequest
             'last_name' => ['required', 'string'],
             'email' => ['required', 'email', 'email:rfc,dns', 'unique:users,email'],
             'password' => ['required', 'string', 'confirmed', Password::defaults()],
-            'terms' => ['required', 'boolean']
+            'terms' => ['required', 'boolean'],
         ];
     }
 }

@@ -23,7 +23,7 @@ class MoveToCartRequest extends FormRequest
     {
         return [
             'user_id' => ['required', 'integer', 'exists:users,id'],
-            'product_id' => ['required', 'integer', 'exists:wishlists,product_id']
+            'product_id' => ['required', 'integer', 'exists:wishlists,product_id'],
         ];
     }
 }

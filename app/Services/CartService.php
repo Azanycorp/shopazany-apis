@@ -26,13 +26,13 @@ class CartService
         $sessionId = session('cart_id');
         $quantity = $request->quantity;
 
-        if($quantity <= 0){
+        if ($quantity <= 0) {
             return $this->error(null, 'Quantity should be 1 or more.', 403);
         }
 
         $product = Product::findOrFail($request->product_id);
 
-        if($quantity > $product->minimum_order_quantity) {
+        if ($quantity > $product->minimum_order_quantity) {
             return $this->error(null, "You can only order a maximum of {$product->minimum_order_quantity} of this product.", 400);
         }
 
@@ -41,7 +41,7 @@ class CartService
         if ($variationId > 0) {
             $variation = ProductVariation::find($variationId);
 
-            if (!$variation) {
+            if (! $variation) {
                 return $this->error(null, 'Selected variation not found.', 404);
             }
 
@@ -106,19 +106,21 @@ class CartService
 
         $cartItems = $cartItemsQuery->get();
 
-        $localItems = $cartItems->filter(fn($cartItem) => $cartItem->product->country_id == 160);
-        $internationalItems = $cartItems->filter(fn($cartItem) => $cartItem->product->country_id != 160);
+        $localItems = $cartItems->filter(fn ($cartItem) => $cartItem->product->country_id == 160);
+        $internationalItems = $cartItems->filter(fn ($cartItem) => $cartItem->product->country_id != 160);
         $defaultCurrency = userAuth()->default_currency;
 
         $totalLocalPrice = $localItems->sum(function ($item) use ($defaultCurrency): float {
             $price = ($item->variation?->price ?? $item->product?->price) * $item->quantity;
             $currency = $item->variation ? $item->variation?->product?->shopCountry?->currency : $item->product?->shopCountry?->currency;
+
             return currencyConvert($currency, $price, $defaultCurrency);
         });
 
         $totalInternationalPrice = $internationalItems->sum(function ($item) use ($defaultCurrency): float {
             $price = ($item->variation?->price ?? $item->product?->price) * $item->quantity;
             $currency = $item->variation ? $item->variation?->product?->shopCountry?->currency : $item->product?->shopCountry?->currency;
+
             return currencyConvert($currency, $price, $defaultCurrency);
         });
 
@@ -127,7 +129,7 @@ class CartService
             'international_items' => CartResource::collection($internationalItems),
             'total_local_price' => $totalLocalPrice,
             'total_international_price' => $totalInternationalPrice,
-        ], "Cart items");
+        ], 'Cart items');
     }
 
     public function removeCartItem($userId, $cartId)
@@ -139,10 +141,10 @@ class CartService
         }
 
         Cart::where('user_id', $userId)
-        ->where('id', $cartId)
-        ->delete();
+            ->where('id', $cartId)
+            ->delete();
 
-        return $this->success(null, "Item removed from cart");
+        return $this->success(null, 'Item removed from cart');
     }
 
     public function clearCart($userId)
@@ -163,7 +165,7 @@ class CartService
 
         session()->forget('cart_id');
 
-        return $this->success(null, "Items cleared from cart");
+        return $this->success(null, 'Items cleared from cart');
     }
 
     public function updateCart(Request $request)
@@ -177,19 +179,19 @@ class CartService
         $productId = $request->product_id;
         $quantity = $request->quantity;
 
-        if($quantity <= 0) {
+        if ($quantity <= 0) {
             return $this->error(null, 'Quantity should be 1 or more.', 403);
         }
 
         $product = Product::findOrFail($request->product_id);
 
-        if($quantity > $product->minimum_order_quantity) {
+        if ($quantity > $product->minimum_order_quantity) {
             return $this->error(null, 'You have exceeded the minimum order quantity', 400);
         }
 
         $cartItem = Cart::where('user_id', $currentUserId)
-        ->where('product_id', $productId)
-        ->firstOrFail();
+            ->where('product_id', $productId)
+            ->firstOrFail();
         $cartItem->update(['quantity' => $quantity]);
 
         return $this->success(null, 'Cart quantity updated successfully');
@@ -210,9 +212,4 @@ class CartService
 
         return $this->success(null, $msg);
     }
-
 }
-
-
-
-

@@ -23,7 +23,7 @@ class AdminLoginRequest extends FormRequest
     {
         return [
             'email' => ['required', 'email', 'email:rfc,dns'],
-            'password' => ['required']
+            'password' => ['required'],
         ];
     }
 }

@@ -29,7 +29,7 @@ class AffiliateSignupRequest extends FormRequest
             'state_id' => ['required', 'integer', 'exists:states,id'],
             'email' => ['required', 'email', 'email:rfc,dns'],
             'password' => ['required', 'string', 'confirmed', Password::defaults()],
-            'referral_code' => ['somtimes', 'string']
+            'referral_code' => ['somtimes', 'string'],
         ];
     }
 }

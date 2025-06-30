@@ -16,6 +16,7 @@ return new class extends Migration
             $table->integer('is_default')->after('bic_swift_code')->default(0);
         });
     }
+
     /**
      * Reverse the migrations.
      */

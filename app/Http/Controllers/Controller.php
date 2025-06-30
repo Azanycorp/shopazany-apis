@@ -2,21 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
-use App\Enum\UserLog;
-use App\Enum\UserStatus;
-use App\Trait\HttpResponse;
-use Illuminate\Support\Str;
-use App\Mail\LoginVerifyMail;
 use App\Actions\UserLogAction;
 use App\Enum\MailingEnum;
-use App\Exports\ProductExport;
+use App\Enum\UserLog;
+use App\Enum\UserStatus;
 use App\Exports\B2BProductExport;
+use App\Exports\ProductExport;
+use App\Models\User;
+use App\Trait\HttpResponse;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Mail;
-use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Maatwebsite\Excel\Facades\Excel;
 
 abstract class Controller
 {
@@ -33,14 +31,15 @@ abstract class Controller
 
     public function generateAlternateReferrerCode()
     {
-        return strrev(Str::random(6) . rand(4, 9876));
+        return strrev(Str::random(6).rand(4, 9876));
     }
 
     public function getUserReferrer($user)
     {
-        if($user->referrer_code !== null){
+        if ($user->referrer_code !== null) {
             return $this->error(null, 'Account has been created', 403);
         }
+
         return null;
     }
 
@@ -65,54 +64,53 @@ abstract class Controller
 
     protected function storeFile($file, string $folder): string
     {
-        $path = $file->store($folder, 's3');
-        return Storage::disk('s3')->url($path);
+        return uploadImage(request(), $file, $folder);
     }
 
-    protected function exportB2bProduct(string $userId,$data)
+    protected function exportB2bProduct(string $userId, $data)
     {
-        $fileName = 'products_' . time() . '.xlsx';
+        $fileName = 'products_'.time().'.xlsx';
         $path = 'public';
 
-        if(App::environment('production')) {
-            $folderPath = 'prod/exports/user_'. $userId . '/';
-            $fileName = $folderPath . 'products_' . time() . '.xlsx';
+        if (App::environment('production')) {
+            $folderPath = 'prod/exports/user_'.$userId.'/';
+            $fileName = $folderPath.'products_'.time().'.xlsx';
             $path = 's3';
 
-        } elseif(App::environment('staging')) {
-            $folderPath = 'stag/exports/user_'. $userId . '/';
-            $fileName = $folderPath . 'products_' . time() . '.xlsx';
+        } elseif (App::environment('staging')) {
+            $folderPath = 'stag/exports/user_'.$userId.'/';
+            $fileName = $folderPath.'products_'.time().'.xlsx';
             $path = 's3';
         }
 
-        Excel::store(new B2BProductExport($userId,$data), $fileName, $path);
+        Excel::store(new B2BProductExport($userId, $data), $fileName, $path);
 
-        $fileUrl = ($path === 's3') ? Storage::disk('s3')->url($fileName) : asset('storage/' . $fileName);
+        $fileUrl = ($path === 's3') ? Storage::disk('s3')->url($fileName) : asset('storage/'.$fileName);
 
-        return $this->success(['file_url' => $fileUrl], "Product export successful.");
+        return $this->success(['file_url' => $fileUrl], 'Product export successful.');
     }
 
     protected function exportProduct(string $userId)
     {
-        $fileName = 'products_' . time() . '.xlsx';
+        $fileName = 'products_'.time().'.xlsx';
         $path = 'public';
 
-        if(App::environment('production')) {
-            $folderPath = 'prod/exports/user_'. $userId . '/';
-            $fileName = $folderPath . 'products_' . time() . '.xlsx';
+        if (App::environment('production')) {
+            $folderPath = 'prod/exports/user_'.$userId.'/';
+            $fileName = $folderPath.'products_'.time().'.xlsx';
             $path = 's3';
 
-        } elseif(App::environment('staging')) {
-            $folderPath = 'stag/exports/user_'. $userId . '/';
-            $fileName = $folderPath . 'products_' . time() . '.xlsx';
+        } elseif (App::environment('staging')) {
+            $folderPath = 'stag/exports/user_'.$userId.'/';
+            $fileName = $folderPath.'products_'.time().'.xlsx';
             $path = 's3';
         }
 
         Excel::store(new ProductExport($userId), $fileName, $path);
 
-        $fileUrl = ($path === 's3') ? Storage::disk('s3')->url($fileName) : asset('storage/' . $fileName);
+        $fileUrl = ($path === 's3') ? Storage::disk('s3')->url($fileName) : asset('storage/'.$fileName);
 
-        return $this->success(['file_url' => $fileUrl], "Product export successful.");
+        return $this->success(['file_url' => $fileUrl], 'Product export successful.');
     }
 
     protected function isAccountUnverifiedOrInactive($user, $request)
@@ -137,7 +135,7 @@ abstract class Controller
 
     protected function handleAccountIssues($user, $request, $message, $action, $status = null)
     {
-        $status = $status ?? "pending";
+        $status = $status ?? 'pending';
         $description = "Account issue for user {$request->email}";
         $response = $this->error([
             'id' => $user->id,
@@ -152,7 +150,7 @@ abstract class Controller
     protected function handleTwoFactorAuthentication($user, $request)
     {
         if ($user->login_code_expires_at > now()) {
-            return $this->error(null, "Please wait a few minutes before requesting a new code.", 400);
+            return $this->error(null, 'Please wait a few minutes before requesting a new code.', 400);
         }
 
         $code = generateVerificationCode();
@@ -164,13 +162,13 @@ abstract class Controller
         ]);
 
         $type = MailingEnum::LOGIN_OTP;
-        $subject = "Login OTP";
+        $subject = 'Login OTP';
         $mail_class = "App\Mail\LoginVerifyMail";
 
         mailSend($type, $user, $subject, $mail_class);
 
         $description = "Attempt to login by {$request->email}";
-        $response = $this->success(null, "Code has been sent to your email address.");
+        $response = $this->success(null, 'Code has been sent to your email address.');
         $action = UserLog::LOGIN_ATTEMPT;
 
         logUserAction($request, $action, $description, $response, $user);
@@ -181,7 +179,7 @@ abstract class Controller
     protected function logUserIn($user, $request)
     {
         $user->tokens()->delete();
-        $token = $user->createToken('API Token of ' . $user->email);
+        $token = $user->createToken('API Token of '.$user->email);
 
         $description = "User with email {$request->email} logged in";
         $action = UserLog::LOGGED_IN;
@@ -207,30 +205,30 @@ abstract class Controller
         $response = $this->error(null, 'Credentials do not match', 401);
 
         logUserAction($request, $action, $description, $response);
+
         return $response;
     }
 
     protected function b2bExportProduct(string $userId)
     {
-        $fileName = 'products_' . time() . '.xlsx';
+        $fileName = 'products_'.time().'.xlsx';
         $path = 'public';
 
-        if(App::environment('production')) {
-            $folderPath = 'prod/exports/user_'. $userId . '/';
-            $fileName = $folderPath . 'products_' . time() . '.xlsx';
+        if (App::environment('production')) {
+            $folderPath = 'prod/exports/user_'.$userId.'/';
+            $fileName = $folderPath.'products_'.time().'.xlsx';
             $path = 's3';
 
-        } elseif(App::environment('staging')) {
-            $folderPath = 'stag/exports/user_'. $userId . '/';
-            $fileName = $folderPath . 'products_' . time() . '.xlsx';
+        } elseif (App::environment('staging')) {
+            $folderPath = 'stag/exports/user_'.$userId.'/';
+            $fileName = $folderPath.'products_'.time().'.xlsx';
             $path = 's3';
         }
 
         $data = null;
         Excel::store(new B2BProductExport($userId, $data), $fileName, $path);
-        $fileUrl = ($path === 's3') ? Storage::disk('s3')->url($fileName) : asset('storage/' . $fileName);
+        $fileUrl = ($path === 's3') ? Storage::disk('s3')->url($fileName) : asset('storage/'.$fileName);
 
-        return $this->success(['file_url' => $fileUrl], "Product export successful.");
+        return $this->success(['file_url' => $fileUrl], 'Product export successful.');
     }
-
 }

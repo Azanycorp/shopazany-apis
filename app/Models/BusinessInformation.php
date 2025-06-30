@@ -32,7 +32,7 @@ class BusinessInformation extends Model
     protected function casts(): array
     {
         return [
-            'agree' => 'boolean'
+            'agree' => 'boolean',
         ];
     }
 

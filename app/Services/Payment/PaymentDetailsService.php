@@ -12,11 +12,11 @@ class PaymentDetailsService
 {
     public static function paystackPayDetails($request): array
     {
-        if($request->input('currency') === 'USD') {
+        if ($request->input('currency') === 'USD') {
             return [
                 'status' => false,
-                'message' => "Currrency not available at the moment",
-                'data' => null
+                'message' => 'Currrency not available at the moment',
+                'data' => null,
             ];
         }
 
@@ -28,7 +28,7 @@ class PaymentDetailsService
 
         if ($userShippingId === 0 && $request->input('shipping_address')) {
             $shippingAddress = $request->input('shipping_address');
-            $address = (object)[
+            $address = (object) [
                 'first_name' => $shippingAddress['first_name'] ?? '',
                 'last_name' => $shippingAddress['last_name'] ?? '',
                 'email' => $shippingAddress['email'] ?? '',
@@ -43,7 +43,7 @@ class PaymentDetailsService
         }
 
         $callbackUrl = $request->input('payment_redirect_url');
-        if (!filter_var($callbackUrl, FILTER_VALIDATE_URL)) {
+        if (! filter_var($callbackUrl, FILTER_VALIDATE_URL)) {
             return ['error' => 'Invalid callback URL'];
         }
 
@@ -59,17 +59,17 @@ class PaymentDetailsService
                 'payment_method' => $request->input('payment_method'),
                 'payment_type' => PaymentType::USERORDER,
             ]),
-            'callback_url' => $request->input('payment_redirect_url')
+            'callback_url' => $request->input('payment_redirect_url'),
         ];
     }
 
     public static function b2bPaystackPayDetails($request): array
     {
-        if($request->input('currency') === 'USD') {
+        if ($request->input('currency') === 'USD') {
             return [
                 'status' => false,
-                'message' => "Currrency not available at the moment",
-                'data' => null
+                'message' => 'Currrency not available at the moment',
+                'data' => null,
             ];
         }
 
@@ -77,7 +77,7 @@ class PaymentDetailsService
 
         $amount = $request->input('amount') * 100;
         $callbackUrl = $request->input('payment_redirect_url');
-        if (!filter_var($callbackUrl, FILTER_VALIDATE_URL)) {
+        if (! filter_var($callbackUrl, FILTER_VALIDATE_URL)) {
             return ['error' => 'Invalid callback URL'];
         }
 
@@ -91,7 +91,7 @@ class PaymentDetailsService
                 'payment_method' => $request->input('payment_method'),
                 'payment_type' => PaymentType::B2BUSERORDER,
             ]),
-            'callback_url' => $request->input('payment_redirect_url')
+            'callback_url' => $request->input('payment_redirect_url'),
         ];
     }
 
@@ -100,7 +100,7 @@ class PaymentDetailsService
         $amount = $request->input('amount') * 100;
 
         $callbackUrl = $request->input('redirect_url');
-        if (!filter_var($callbackUrl, FILTER_VALIDATE_URL)) {
+        if (! filter_var($callbackUrl, FILTER_VALIDATE_URL)) {
             return ['error' => 'Invalid callback URL'];
         }
 
@@ -110,14 +110,14 @@ class PaymentDetailsService
             },
             'userSubscriptions' => function ($query) {
                 $query->where('status', UserStatus::ACTIVE);
-            }
+            },
         ])->findOrFail($request->user_id);
 
-        if(!in_array($user->type, [UserType::SELLER, UserType::B2B_SELLER])) {
+        if (! in_array($user->type, [UserType::SELLER, UserType::B2B_SELLER])) {
             return ['error' => 'You are not allowed to subscribe to a plan'];
         }
 
-        if($user->is_subscribed) {
+        if ($user->is_subscribed) {
             $currentPlan = $user?->subscription_plan?->subscriptionPlan;
             $newPlan = SubscriptionPlan::findOrFail($request->input('subscription_plan_id'));
 
@@ -140,7 +140,7 @@ class PaymentDetailsService
                 'payment_method' => PaymentType::PAYSTACK,
                 'payment_type' => PaymentType::RECURRINGCHARGE,
             ]),
-            'callback_url' => $callbackUrl
+            'callback_url' => $callbackUrl,
         ];
 
     }
@@ -155,14 +155,14 @@ class PaymentDetailsService
             },
             'userSubscriptions' => function ($query) {
                 $query->where('status', UserStatus::ACTIVE);
-            }
+            },
         ])->findOrFail($request->user_id);
 
-        if(!in_array($user->type, [UserType::SELLER, UserType::B2B_SELLER])) {
+        if (! in_array($user->type, [UserType::SELLER, UserType::B2B_SELLER])) {
             return ['error' => 'You are not allowed to subscribe to a plan'];
         }
 
-        if($user->is_subscribed) {
+        if ($user->is_subscribed) {
             $currentPlan = $user?->subscription_plan?->subscriptionPlan;
             $newPlan = SubscriptionPlan::findOrFail($request->input('subscription_plan_id'));
 
@@ -187,5 +187,3 @@ class PaymentDetailsService
         ];
     }
 }
-
-

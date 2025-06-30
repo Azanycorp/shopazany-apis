@@ -16,7 +16,7 @@ class RewardPointService
         $existingAction = Action::where('name', $name)->first();
 
         if ($existingAction) {
-            return $this->error(null, "The action with this name already exists.", 409);
+            return $this->error(null, 'The action with this name already exists.', 409);
         }
 
         $folder = app()->environment('production') ? '/prod/rewardpoint' : '/stag/rewardpoint';
@@ -26,7 +26,7 @@ class RewardPointService
         if (is_string($countryIds)) {
             $countryIds = explode(',', $countryIds);
         }
-        $countryIds = array_map(fn($id) => (int) trim($id, '"'), $countryIds);
+        $countryIds = array_map(fn ($id) => (int) trim($id, '"'), $countryIds);
 
         Action::create([
             'name' => $request->name,
@@ -35,10 +35,10 @@ class RewardPointService
             'icon' => $url,
             'verification_type' => $request->verification_type,
             'country_ids' => $countryIds,
-            'points' => $request->points
+            'points' => $request->points,
         ]);
 
-        return $this->success(null, "Added successfully");
+        return $this->success(null, 'Added successfully');
     }
 
     public function getPoints()
@@ -54,7 +54,7 @@ class RewardPointService
             'points'
         )->get();
 
-        $data = $actions->map(function($action): array {
+        $data = $actions->map(function ($action): array {
             return [
                 'id' => $action->id,
                 'name' => $action->name,
@@ -67,15 +67,15 @@ class RewardPointService
             ];
         });
 
-        return $this->success($data, "Actions");
+        return $this->success($data, 'Actions');
     }
 
     public function getOnePoints($id)
     {
         $action = Action::find($id);
 
-        if(!$action){
-            return $this->error(null, "Not found", 404);
+        if (! $action) {
+            return $this->error(null, 'Not found', 404);
         }
 
         $data = [
@@ -89,15 +89,15 @@ class RewardPointService
             'points' => $action->points,
         ];
 
-        return $this->success($data, "Action detail");
+        return $this->success($data, 'Action detail');
     }
 
     public function editPoints($request, $id)
     {
         $action = Action::find($id);
 
-        if(!$action){
-            return $this->error(null, "Not found", 404);
+        if (! $action) {
+            return $this->error(null, 'Not found', 404);
         }
 
         $folder = app()->environment('production') ? '/prod/rewardpoint' : '/stag/rewardpoint';
@@ -108,7 +108,7 @@ class RewardPointService
             if (is_string($countryIds)) {
                 $countryIds = explode(',', $countryIds);
             }
-            $countryIds = array_map(fn($id) => (int) trim($id, '"'), $countryIds);
+            $countryIds = array_map(fn ($id) => (int) trim($id, '"'), $countryIds);
         }
 
         $action->update([
@@ -119,20 +119,20 @@ class RewardPointService
             'points' => $request->points ?? $action->points,
         ]);
 
-        return $this->success(null, "Updated successfully");
+        return $this->success(null, 'Updated successfully');
     }
 
     public function deletePoints($id)
     {
         $action = Action::findOrFail($id);
 
-        if($action->default) {
+        if ($action->default) {
             return $this->error(null, "You can't delete this action", 400);
         }
 
         $action->delete();
 
-        return $this->success(null, "Deleted successfully");
+        return $this->success(null, 'Deleted successfully');
     }
 
     public function addPointSetting($request)
@@ -147,13 +147,13 @@ class RewardPointService
             ]
         );
 
-        return $this->success(null, "Added successfully");
+        return $this->success(null, 'Added successfully');
     }
 
     public function getPointSetting()
     {
         $pointSetting = RewardPointSetting::select('id', 'point', 'value')->first();
-        return $this->success($pointSetting, "Point setting");
+
+        return $this->success($pointSetting, 'Point setting');
     }
 }
-

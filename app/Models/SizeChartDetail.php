@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class SizeChartDetail extends Model
 {
-    protected $table = "size_chart_details";
+    protected $table = 'size_chart_details';
 
     use HasFactory;
 

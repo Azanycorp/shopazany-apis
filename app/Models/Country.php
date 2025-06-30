@@ -3,14 +3,14 @@
 namespace App\Models;
 
 use App\Trait\ClearsResponseCache;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Country extends Model
 {
-    use HasFactory, ClearsResponseCache;
+    use ClearsResponseCache, HasFactory;
 
     protected $fillable = [
         'sortname',

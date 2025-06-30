@@ -8,10 +8,6 @@ use App\Enum\ProductReviewStatus;
 use App\Enum\ProductStatus;
 use App\Http\Resources\ReviewResource;
 use App\Http\Resources\SellerDetailResource;
-use App\Models\User;
-use App\Models\Product;
-use App\Trait\HttpResponse;
-use Illuminate\Support\Facades\DB;
 use App\Http\Resources\SellerProductResource;
 use App\Http\Resources\SingleProductResource;
 use App\Models\Action;
@@ -19,8 +15,12 @@ use App\Models\Banner;
 use App\Models\Brand;
 use App\Models\Cart;
 use App\Models\Category;
+use App\Models\Product;
+use App\Models\User;
 use App\Models\Wishlist;
+use App\Trait\HttpResponse;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
 
 class HomeService
 {
@@ -43,7 +43,7 @@ class HomeService
             ->leftJoin('orders', 'orders.product_id', '=', 'products.id')
             ->where('orders.status', OrderStatus::DELIVERED)
             ->groupBy('products.id', 'products.name', 'products.price', 'products.slug', 'products.image', 'products.description',
-            'products.category_id', 'products.country_id')
+                'products.category_id', 'products.country_id')
             ->orderBy('total_orders', 'DESC')
             ->take(10);
 
@@ -58,7 +58,7 @@ class HomeService
             unset($product->shopCountry);
         });
 
-        return $this->success($products, "Best selling products");
+        return $this->success($products, 'Best selling products');
     }
 
     public function allProducts(): array
@@ -66,20 +66,20 @@ class HomeService
         $countryId = request()->query('country_id');
 
         $query = Product::with([
-                'shopCountry',
-                'productimages',
-                'category',
-                'subCategory',
-                'brand',
-                'color',
-                'unit',
-                'size',
-                'orders',
-                'productReviews',
-                'productVariations' => function ($query): void {
-                    $query->select('id', 'product_id', 'variation', 'sku', 'price', 'stock', 'image');
-                },
-            ])
+            'shopCountry',
+            'productimages',
+            'category',
+            'subCategory',
+            'brand',
+            'color',
+            'unit',
+            'size',
+            'orders',
+            'productReviews',
+            'productVariations' => function ($query): void {
+                $query->select('id', 'product_id', 'variation', 'sku', 'price', 'stock', 'image');
+            },
+        ])
             ->where('status', ProductStatus::ACTIVE);
 
         if ($countryId) {
@@ -109,19 +109,19 @@ class HomeService
         $countryId = request()->query('country_id');
 
         $query = Product::with([
-                'category',
-                'subCategory',
-                'shopCountry',
-                'brand',
-                'color',
-                'unit',
-                'size',
-                'orders',
-                'productReviews',
-                'productVariations' => function ($query): void {
-                    $query->select('id', 'product_id', 'variation', 'sku', 'price', 'stock', 'image');
-                }
-            ])
+            'category',
+            'subCategory',
+            'shopCountry',
+            'brand',
+            'color',
+            'unit',
+            'size',
+            'orders',
+            'productReviews',
+            'productVariations' => function ($query): void {
+                $query->select('id', 'product_id', 'variation', 'sku', 'price', 'stock', 'image');
+            },
+        ])
             ->where('is_featured', true)
             ->where('status', ProductStatus::ACTIVE);
 
@@ -133,7 +133,7 @@ class HomeService
 
         $data = SellerProductResource::collection($featuredProducts);
 
-        return $this->success($data, "Featured products");
+        return $this->success($data, 'Featured products');
     }
 
     public function topProducts()
@@ -141,19 +141,19 @@ class HomeService
         $countryId = request()->query('country_id');
 
         $query = Product::with([
-                'category',
-                'subCategory',
-                'shopCountry',
-                'brand',
-                'color',
-                'unit',
-                'size',
-                'orders',
-                'productReviews',
-                'productVariations' => function ($query): void {
-                    $query->select('id', 'product_id', 'variation', 'sku', 'price', 'stock', 'image');
-                }
-            ])
+            'category',
+            'subCategory',
+            'shopCountry',
+            'brand',
+            'color',
+            'unit',
+            'size',
+            'orders',
+            'productReviews',
+            'productVariations' => function ($query): void {
+                $query->select('id', 'product_id', 'variation', 'sku', 'price', 'stock', 'image');
+            },
+        ])
             ->where('status', ProductStatus::ACTIVE);
 
         if ($countryId) {
@@ -164,7 +164,7 @@ class HomeService
 
         $data = SellerProductResource::collection($featuredProducts);
 
-        return $this->success($data, "Top products");
+        return $this->success($data, 'Top products');
     }
 
     public function pocketFriendly()
@@ -172,19 +172,19 @@ class HomeService
         $countryId = request()->query('country_id');
 
         $query = Product::with([
-                'category',
-                'subCategory',
-                'shopCountry',
-                'brand',
-                'color',
-                'unit',
-                'size',
-                'orders',
-                'productReviews',
-                'productVariations' => function ($query): void {
-                    $query->select('id', 'product_id', 'variation', 'sku', 'price', 'stock', 'image');
-                }
-            ]);
+            'category',
+            'subCategory',
+            'shopCountry',
+            'brand',
+            'color',
+            'unit',
+            'size',
+            'orders',
+            'productReviews',
+            'productVariations' => function ($query): void {
+                $query->select('id', 'product_id', 'variation', 'sku', 'price', 'stock', 'image');
+            },
+        ]);
 
         if ($countryId) {
             $query->where('country_id', $countryId);
@@ -199,7 +199,7 @@ class HomeService
 
         $data = SellerProductResource::collection($products);
 
-        return $this->success($data, "Pocket friendly products");
+        return $this->success($data, 'Pocket friendly products');
     }
 
     public function productSlug($slug)
@@ -215,32 +215,32 @@ class HomeService
             'productimages',
             'shopCountry',
             'productVariations',
-            'user.userCountry' => function($query): void {
+            'user.userCountry' => function ($query): void {
                 $query->with('shopCountry:country_id,flag');
-            }
+            },
         ])
-        ->withCount('productReviews')
-        ->where('slug', $slug)
-        ->first();
+            ->withCount('productReviews')
+            ->where('slug', $slug)
+            ->first();
 
-        if(! $product) {
+        if (! $product) {
             return $this->error(null, 'Product not found', 404);
         }
 
         $data = new SingleProductResource($product);
 
-        return $this->success($data, "Product detail");
+        return $this->success($data, 'Product detail');
     }
 
     public function topBrands()
     {
         $brands = Brand::select(['id', 'name', 'slug', 'image'])
-        ->where('status', 'active')
-        ->latest()
-        ->take(8)
-        ->get();
+            ->where('status', 'active')
+            ->latest()
+            ->take(8)
+            ->get();
 
-        return $this->success($brands, "Top brands");
+        return $this->success($brands, 'Top brands');
     }
 
     public function topSellers()
@@ -248,8 +248,8 @@ class HomeService
         $countryId = request()->input('country_id');
 
         $topSellersQuery = User::select(
-                DB::raw('users.id as user_id, users.uuid, CONCAT(users.first_name, " ", users.last_name) as name, users.image as image, COUNT(order_items.id) as total_sales')
-            )
+            DB::raw('users.id as user_id, users.uuid, CONCAT(users.first_name, " ", users.last_name) as name, users.image as image, COUNT(order_items.id) as total_sales')
+        )
             ->join('products', 'users.id', '=', 'products.user_id')
             ->join('order_items', 'products.id', '=', 'order_items.product_id')
             ->join('orders', 'order_items.order_id', '=', 'orders.id')
@@ -265,14 +265,14 @@ class HomeService
 
         $topSellers = $topSellersQuery->get();
 
-        return $this->success($topSellers, "Top sellers");
+        return $this->success($topSellers, 'Top sellers');
     }
 
     public function categorySlug($slug)
     {
         $countryId = request()->query('country_id', 231);
 
-        $category = Category::with(['products' => function ($query) use($countryId) {
+        $category = Category::with(['products' => function ($query) use ($countryId) {
             $query->where('status', ProductStatus::ACTIVE)
                 ->when($countryId, function ($query) use ($countryId) {
                     $query->where('country_id', $countryId);
@@ -281,11 +281,12 @@ class HomeService
                 ->withCount('productReviews as total_reviews')
                 ->withAvg('productReviews as average_rating', 'rating');
         }])->where('slug', $slug)
-          ->select('id', 'name', 'slug', 'image')
-          ->firstOrFail();
+            ->select('id', 'name', 'slug', 'image')
+            ->firstOrFail();
 
         $products = $category->products->map(function ($product) {
             $product->average_rating = $product->average_rating ? round($product->average_rating, 1) : 0;
+
             return $product;
         });
 
@@ -313,7 +314,7 @@ class HomeService
             unset($product->shopCountry);
         });
 
-        return $this->success($products, "Recommended products");
+        return $this->success($products, 'Recommended products');
     }
 
     public function productReview($request)
@@ -321,7 +322,7 @@ class HomeService
         $user = User::findOrFail($request->user_id);
 
         $product = Product::with('productReviews')
-        ->findOrFail($request->product_id);
+            ->findOrFail($request->product_id);
 
         $product->productReviews()->create([
             'user_id' => $request->user_id,
@@ -336,7 +337,7 @@ class HomeService
 
         reward_user($user, $actionSlug, 'completed');
 
-        return $this->success(null, "Review added successfully");
+        return $this->success(null, 'Review added successfully');
     }
 
     public function saveForLater($request)
@@ -344,21 +345,21 @@ class HomeService
         $currentUser = userAuth();
 
         if ($currentUser->id != $request->user_id) {
-            return $this->error(null, "Unauthorized action.", 401);
+            return $this->error(null, 'Unauthorized action.', 401);
         }
 
         $user = User::with('wishlist')->findOrFail($request->user_id);
         $product = Product::findOrFail($request->product_id);
 
         if ($user->wishlist()->where('product_id', $product->id)->exists()) {
-            return $this->error(null, "Product already in wishlist", 409);
+            return $this->error(null, 'Product already in wishlist', 409);
         }
 
         $user->wishlist()->create([
             'product_id' => $product->id,
         ]);
 
-        return $this->success(null, "Product saved for later");
+        return $this->success(null, 'Product saved for later');
     }
 
     public function sellerInfo($uuid)
@@ -369,8 +370,8 @@ class HomeService
             'products' => function ($query) use ($search): void {
                 if ($search) {
                     $query->where(function ($q) use ($search): void {
-                        $q->where('name', 'like', '%' . $search . '%')
-                          ->orWhere('description', 'like', '%' . $search . '%');
+                        $q->where('name', 'like', '%'.$search.'%')
+                            ->orWhere('description', 'like', '%'.$search.'%');
                     });
                 }
                 $query->with(['category', 'subCategory']);
@@ -378,12 +379,12 @@ class HomeService
                 $query->withCount(['orders as item_sold' => function ($query): void {
                     $query->where('orders.status', OrderStatus::DELIVERED);
                 }]);
-            }
+            },
         ])->where('uuid', $uuid)
-        ->withCount('products')
-        ->first();
+            ->withCount('products')
+            ->first();
 
-        if(! $user) {
+        if (! $user) {
             return $this->error(null, 'Not found', 400);
         }
 
@@ -399,26 +400,26 @@ class HomeService
         $user = User::where('uuid', $uuid)
             ->with([
                 'products' => function ($query) use ($search): void {
-                    $query->with(['category' => function ($q) use($search): void {
+                    $query->with(['category' => function ($q) use ($search): void {
                         $q->select(['id', 'name', 'slug', 'image']);
 
                         if ($search) {
-                            $q->where('name', 'like', '%' . $search . '%');
+                            $q->where('name', 'like', '%'.$search.'%');
                         }
                     }]);
-                }
+                },
             ])
             ->first();
 
-        if (!$user) {
+        if (! $user) {
             return $this->error(null, 'Category not found', 404);
         }
 
         $categories = $user->products
-        ->pluck('category')
-        ->filter()
-        ->unique('id')
-        ->values();
+            ->pluck('category')
+            ->filter()
+            ->unique('id')
+            ->values();
 
         if ($categories->isEmpty()) {
             return $this->error(null, 'No categories found for this seller', 404);
@@ -437,7 +438,7 @@ class HomeService
             ->with(['products' => function ($query) use ($search): void {
                 $query->with(['productReviews' => function ($q) use ($search): void {
                     if ($search) {
-                        $q->where('review', 'like', '%' . $search . '%');
+                        $q->where('review', 'like', '%'.$search.'%');
                     }
 
                     $q->with(['user' => function ($userQuery): void {
@@ -449,7 +450,7 @@ class HomeService
             }])
             ->first();
 
-        if (!$user) {
+        if (! $user) {
             return $this->error(null, 'Seller not found', 404);
         }
 
@@ -495,8 +496,8 @@ class HomeService
         $userId = $request->user_id;
 
         $wishlistItem = Wishlist::where('user_id', $userId)
-                                ->where('product_id', $itemId)
-                                ->first();
+            ->where('product_id', $itemId)
+            ->first();
 
         if ($wishlistItem) {
             Cart::updateOrCreate(
@@ -531,7 +532,7 @@ class HomeService
             ->whereStatus(BannerStatus::ACTIVE)
             ->first();
 
-        if (!$deal) {
+        if (! $deal) {
             return $this->error(null, 'Flash deal not found', 404);
         }
 
@@ -570,4 +571,3 @@ class HomeService
         return $this->success($data, 'Flash deal');
     }
 }
-

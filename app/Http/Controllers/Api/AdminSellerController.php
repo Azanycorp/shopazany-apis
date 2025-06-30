@@ -5,13 +5,14 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Services\Admin\SellerService;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rules\Password;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rules\Password;
 
 class AdminSellerController extends Controller
 {
     protected \App\Services\Admin\SellerService $service;
+
     const MESSAGE = '403 Forbidden';
 
     public function __construct(SellerService $service)
@@ -22,6 +23,7 @@ class AdminSellerController extends Controller
     public function allSellers(): array
     {
         abort_if(Gate::denies('seller_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+
         return $this->service->allSellers();
     }
 
@@ -29,14 +31,16 @@ class AdminSellerController extends Controller
     {
         abort_if(Gate::denies('seller_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
         $request->validate([
-            'user_id' => ['required', 'integer', 'exists:users,id']
+            'user_id' => ['required', 'integer', 'exists:users,id'],
         ]);
+
         return $this->service->approveSeller($request);
     }
 
     public function viewSeller($id)
     {
         abort_if(Gate::denies('seller_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+
         return $this->service->viewSeller($id);
     }
 
@@ -58,7 +62,7 @@ class AdminSellerController extends Controller
     {
         abort_if(Gate::denies('seller_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
         $request->validate([
-            'user_id' => ['required', 'integer', 'exists:users,id']
+            'user_id' => ['required', 'integer', 'exists:users,id'],
         ]);
 
         return $this->service->banSeller($request);
@@ -67,12 +71,14 @@ class AdminSellerController extends Controller
     public function removeSeller($id)
     {
         abort_if(Gate::denies('seller_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+
         return $this->service->removeSeller($id);
     }
 
     public function paymentHistory($id)
     {
         abort_if(Gate::denies('seller_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+
         return $this->service->paymentHistory($id);
     }
 
@@ -86,5 +92,4 @@ class AdminSellerController extends Controller
 
         return $this->service->bulkRemove($request);
     }
-
 }

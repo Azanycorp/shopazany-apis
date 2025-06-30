@@ -7,6 +7,7 @@ use Exception;
 class GetCurl
 {
     protected $url;
+
     protected $headers = [];
 
     public function __construct(string $url, array $headers = [])
@@ -28,17 +29,17 @@ class GetCurl
         $response = curl_exec($ch);
 
         if (curl_errno($ch)) {
-            throw new Exception('Curl error: ' . curl_error($ch));
+            throw new Exception('Curl error: '.curl_error($ch));
         }
 
         curl_close($ch);
 
         $result = json_decode($response, true);
 
-        if (!$result || !isset($result['data'])) {
+        if (! $result || ! isset($result['data'])) {
             return [
                 'status' => false,
-                'message' => $result['message']
+                'message' => $result['message'],
             ];
         }
 

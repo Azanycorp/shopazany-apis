@@ -23,10 +23,9 @@ class BuyerShippingAddress extends Model
         'is_default',
     ];
 
-
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class,'user_id')->where('type',UserType::B2B_BUYER);
+        return $this->belongsTo(User::class, 'user_id')->where('type', UserType::B2B_BUYER);
     }
 
     public function country(): BelongsTo

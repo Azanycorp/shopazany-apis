@@ -12,7 +12,6 @@ use App\Http\Resources\ProfileResource;
 use App\Models\BankAccount;
 use App\Models\Transaction;
 use App\Models\User;
-use App\Models\Wallet;
 use App\Models\WithdrawalRequest;
 use App\Services\TransactionService;
 use App\Trait\HttpResponse;
@@ -34,7 +33,7 @@ class UserService extends Controller
 
         $data = new ProfileResource($user);
 
-        return $this->success($data, "Profile");
+        return $this->success($data, 'Profile');
     }
 
     public function updateProfile($request, $userId)
@@ -42,16 +41,18 @@ class UserService extends Controller
         $currentUserId = Auth::id();
 
         if ($currentUserId != $userId) {
-            return $this->error(null, "Unauthorized action.", 401);
+            return $this->error(null, 'Unauthorized action.', 401);
         }
 
         $user = User::find($userId);
 
         if (! $user) {
-            return $this->error(null, "User not found", 404);
+            return $this->error(null, 'User not found', 404);
         }
 
-        $image = $request->hasFile('image') ? uploadUserImage($request, 'image', $user) : $user->image;
+        if ($request->hasFile('image')) {
+            $image = uploadUserImage($request, 'image', $user);
+        }
 
         $user->update([
             'first_name' => $request->first_name ?? $user->first_name,
@@ -61,43 +62,44 @@ class UserService extends Controller
             'address' => $request->address ?? $user->address,
             'phone' => $request->phone_number ?? $user->phone,
             'date_of_birth' => $request->date_of_birth ?? $user->date_of_birth,
-            'image' => $image,
+            'image' => $image['url'] ?? $user->image,
+            'public_id' => $image['public_id'] ?? $user->public_id,
         ]);
 
         return $this->success([
-            'user_id' => $user->id
-        ], "Updated successfully");
+            'user_id' => $user->id,
+        ], 'Updated successfully');
     }
 
     public function bankAccount($request)
     {
         $user = User::with(['bankAccount'])
-        ->find($request->user_id);
+            ->find($request->user_id);
 
-        if(!$user){
-            return $this->error(null, "User not found", 404);
+        if (! $user) {
+            return $this->error(null, 'User not found', 404);
         }
 
         $user->bankAccount()->create([
             'account_name' => $request->account_name,
             'bank_name' => $request->bank_name,
-            'account_number' => $request->account_number
+            'account_number' => $request->account_number,
         ]);
 
-        return $this->success(null, "Added successfully");
+        return $this->success(null, 'Added successfully');
     }
 
     public function removeBankAccount($request)
     {
         $account = BankAccount::where('user_id', $request->user_id)->first();
 
-        if(!$account){
-            return $this->error(null, "Data not found", 404);
+        if (! $account) {
+            return $this->error(null, 'Data not found', 404);
         }
 
         $account->delete();
 
-        return $this->success(null, "Deleted successfully");
+        return $this->success(null, 'Deleted successfully');
     }
 
     public function withdraw($request)
@@ -105,33 +107,33 @@ class UserService extends Controller
         $auth = Auth::user();
 
         if (
-            !$auth || $auth->type === UserType::CUSTOMER ||
-            (!$auth->is_affiliate_member && $auth->type !== UserType::SELLER) ||
+            ! $auth || $auth->type === UserType::CUSTOMER ||
+            (! $auth->is_affiliate_member && $auth->type !== UserType::SELLER) ||
             $auth->id !== $request->user_id
         ) {
-            return $this->error(null, "Unauthorized action.", 401);
+            return $this->error(null, 'Unauthorized action.', 401);
         }
 
         $user = User::with(['wallet', 'paymentMethods'])
-                    ->where('id', $request->user_id)
-                    ->first();
+            ->where('id', $request->user_id)
+            ->first();
 
-        if (!$user) {
-            return $this->error(null, "User not found", 404);
+        if (! $user) {
+            return $this->error(null, 'User not found', 404);
         }
 
         if ($user->paymentMethods->isEmpty()) {
-            return $this->error(null, "No payment method found", 404);
+            return $this->error(null, 'No payment method found', 404);
         }
 
         $wallet = $user->wallet;
 
-        if (!$wallet) {
-            return $this->error(null, "Wallet not found", 404);
+        if (! $wallet) {
+            return $this->error(null, 'Wallet not found', 404);
         }
 
         if ($wallet->balance < $request->amount) {
-            return $this->error(null, "Insufficient balance for withdrawal", 400);
+            return $this->error(null, 'Insufficient balance for withdrawal', 400);
         }
 
         DB::transaction(function () use ($wallet, $user, $request, $auth) {
@@ -153,27 +155,27 @@ class UserService extends Controller
             (new TransactionService($user, TransactionStatus::WITHDRAWAL, $request->amount))->logTransaction();
         });
 
-        return $this->success(null, "Request sent successfully");
+        return $this->success(null, 'Request sent successfully');
     }
 
     public function userKyc($request)
     {
         $user = User::with('kyc')->find($request->user_id);
 
-        if(!$user){
-            return $this->error(null, "User not found", 404);
+        if (! $user) {
+            return $this->error(null, 'User not found', 404);
         }
 
         try {
             $parts = explode('@', $user->email);
             $name = $parts[0];
 
-            if($request->file('image')){
+            if ($request->file('image')) {
                 $file = $request->file('image');
-                $path = 'kyc/' . $name;
-                $filename = time() . rand(10, 1000) . '.' . $file->extension();
+                $path = 'kyc/'.$name;
+                $filename = time().rand(10, 1000).'.'.$file->extension();
                 $file->move(public_path($path), $filename, 'public');
-                $kycpath = config('services.baseurl') . '/' . $path . '/' . $filename;
+                $kycpath = config('services.baseurl').'/'.$path.'/'.$filename;
             }
 
             $user->kyc()->create([
@@ -185,10 +187,10 @@ class UserService extends Controller
                 'phone_number' => $request->phone_number,
                 'document_number' => $request->document_number,
                 'document_type' => $request->document_type,
-                'image' => $kycpath
+                'image' => $kycpath,
             ]);
 
-            return $this->success(null, "Added successfully");
+            return $this->success(null, 'Added successfully');
 
         } catch (\Exception $e) {
             return $this->error(null, $e->getMessage(), 500);
@@ -199,15 +201,15 @@ class UserService extends Controller
     {
         $user = User::find($request->user_id);
 
-        if(!$user){
-            return $this->error(null, "User not found", 404);
+        if (! $user) {
+            return $this->error(null, 'User not found', 404);
         }
 
         $user->update([
-            'income_type' => $request->type
+            'income_type' => $request->type,
         ]);
 
-        return $this->success(null, "Added successfully");
+        return $this->success(null, 'Added successfully');
     }
 
     public function dashboardAnalytic($id)
@@ -215,14 +217,14 @@ class UserService extends Controller
         $currentUserId = Auth::id();
 
         if ($currentUserId != $id) {
-            return $this->error(null, "Unauthorized action.", 401);
+            return $this->error(null, 'Unauthorized action.', 401);
         }
 
         $user = User::with(['wallet', 'withdrawalRequests', 'paymentMethods'])
             ->find($id);
 
-        if(! $user) {
-            return $this->error(null, "User not found", 404);
+        if (! $user) {
+            return $this->error(null, 'User not found', 404);
         }
 
         $pending = $user->withdrawalRequests->where('status', WithdrawalStatus::PENDING)
@@ -234,7 +236,7 @@ class UserService extends Controller
             'payment_method' => optional($user?->paymentMethods->where('is_default', 1)->first())->account_number,
         ];
 
-        return $this->success($data, "Dashboard analytics");
+        return $this->success($data, 'Dashboard analytics');
     }
 
     public function transactionHistory($userId)
@@ -242,7 +244,7 @@ class UserService extends Controller
         $currentUserId = Auth::id();
 
         if ($currentUserId != $userId) {
-            return $this->error(null, "Unauthorized action.", 401);
+            return $this->error(null, 'Unauthorized action.', 401);
         }
 
         $status = request()->query('status');
@@ -251,8 +253,8 @@ class UserService extends Controller
 
         $transactionQuery = Transaction::where('user_id', $userId);
         if ($status) {
-            if (!in_array($status, [TransactionStatus::SUCCESSFUL, TransactionStatus::PENDING, TransactionStatus::REJECTED])) {
-                return $this->error(null, "Invalid status", 400);
+            if (! in_array($status, [TransactionStatus::SUCCESSFUL, TransactionStatus::PENDING, TransactionStatus::REJECTED])) {
+                return $this->error(null, 'Invalid status', 400);
             }
             $transactionQuery->where('status', $status);
         }
@@ -298,8 +300,8 @@ class UserService extends Controller
                 'last_page' => ceil($total / $perPage),
                 'per_page' => (int) $perPage,
                 'total' => $total,
-                'prev_page_url' => $page > 1 ? request()->url() . '?page=' . ($page - 1) . '&per_page=' . $perPage : null,
-                'next_page_url' => $page < ceil($total / $perPage) ? request()->url() . '?page=' . ($page + 1) . '&per_page=' . $perPage : null,
+                'prev_page_url' => $page > 1 ? request()->url().'?page='.($page - 1).'&per_page='.$perPage : null,
+                'next_page_url' => $page < ceil($total / $perPage) ? request()->url().'?page='.($page + 1).'&per_page='.$perPage : null,
             ],
         ]);
     }
@@ -308,26 +310,26 @@ class UserService extends Controller
     {
         $auth = Auth::user();
 
-        if (!$auth) {
-            return $this->error(null, "Unauthorized action.", 401);
+        if (! $auth) {
+            return $this->error(null, 'Unauthorized action.', 401);
         }
 
-        if($auth->type === UserType::CUSTOMER) {
-            return $this->error(null, "Unauthorized action.", 401);
+        if ($auth->type === UserType::CUSTOMER) {
+            return $this->error(null, 'Unauthorized action.', 401);
         }
 
-        if ($auth->id !== $request->user_id || (!$auth->is_affiliate_member && $auth->type !== UserType::SELLER)) {
-            return $this->error(null, "Unauthorized action.", 401);
+        if ($auth->id !== $request->user_id || (! $auth->is_affiliate_member && $auth->type !== UserType::SELLER)) {
+            return $this->error(null, 'Unauthorized action.', 401);
         }
 
         $user = User::with('paymentMethods')->find($request->user_id);
 
-        if(! $user){
-            return $this->error(null, "User not found", 404);
+        if (! $user) {
+            return $this->error(null, 'User not found', 404);
         }
 
         if ($user->paymentMethods->count() >= 3) {
-            return $this->error(null, "You can only add up to 3 payment methods", 400);
+            return $this->error(null, 'You can only add up to 3 payment methods', 400);
         }
 
         $methodExists = $user->paymentMethods->firstWhere('account_number', $request->account_number);
@@ -346,7 +348,7 @@ class UserService extends Controller
                 break;
 
             default:
-                return $this->error(null, "Invalid type", 400);
+                return $this->error(null, 'Invalid type', 400);
         }
 
         return $methodAdded;
@@ -357,7 +359,7 @@ class UserService extends Controller
         $currentUserId = Auth::id();
 
         if ($currentUserId != $userId) {
-            return $this->error(null, "Unauthorized action.", 401);
+            return $this->error(null, 'Unauthorized action.', 401);
         }
 
         $user = User::with('paymentMethods')
@@ -365,7 +367,7 @@ class UserService extends Controller
 
         $data = PaymentMethodResource::collection($user->paymentMethods);
 
-        return $this->success($data, "Payment methods");
+        return $this->success($data, 'Payment methods');
     }
 
     public function changeSettings($request, $userId)
@@ -373,18 +375,18 @@ class UserService extends Controller
         $currentUserId = Auth::id();
 
         if ($currentUserId != $userId) {
-            return $this->error(null, "Unauthorized action.", 401);
+            return $this->error(null, 'Unauthorized action.', 401);
         }
 
         $user = User::find($userId);
 
-        if(! $user){
-            return $this->error(null, "User not found", 404);
+        if (! $user) {
+            return $this->error(null, 'User not found', 404);
         }
 
         $password = $user->password;
 
-        if($request->password) {
+        if ($request->password) {
             $password = bcrypt($request->password);
         }
 
@@ -393,7 +395,7 @@ class UserService extends Controller
             'password' => $password,
         ]);
 
-        return $this->success(null, "Settings changed successfully");
+        return $this->success(null, 'Settings changed successfully');
     }
 
     public function referralManagement($userId)
@@ -401,29 +403,29 @@ class UserService extends Controller
         $currentUserId = Auth::id();
 
         if ($currentUserId !== (int) $userId) {
-            return $this->error(null, "Unauthorized action.", 403);
+            return $this->error(null, 'Unauthorized action.', 403);
         }
 
         $searchQuery = request()->query('search');
         $statusFilter = request()->query('status');
 
         $user = User::with(['referrals' => function ($query) use ($searchQuery, $statusFilter) {
-                $query->select(
-                    'users.id',
-                    'users.first_name',
-                    'users.last_name',
-                    'users.email',
-                    'users.phone',
-                    'users.status',
-                    'users.created_at'
-                )
+            $query->select(
+                'users.id',
+                'users.first_name',
+                'users.last_name',
+                'users.email',
+                'users.phone',
+                'users.status',
+                'users.created_at'
+            )
                 ->filterReferrals($searchQuery, $statusFilter);
-            }])
+        }])
             ->withCount('referrals')
             ->find($userId);
 
-        if(! $user){
-            return $this->error(null, "User not found", 404);
+        if (! $user) {
+            return $this->error(null, 'User not found', 404);
         }
 
         $totalSignedUp = $user->referrals()
@@ -436,7 +438,7 @@ class UserService extends Controller
             'referrals' => $user->referrals ? $user->referrals->map(function ($referral) {
                 return [
                     'id' => $referral->id,
-                    'name' => $referral->first_name . ' ' . $referral->last_name,
+                    'name' => $referral->first_name.' '.$referral->last_name,
                     'phone' => $referral->phone,
                     'email' => $referral->email,
                     'status' => $referral->status,
@@ -445,7 +447,7 @@ class UserService extends Controller
             })->toArray() : [],
         ];
 
-        return $this->success($data, "Referral management");
+        return $this->success($data, 'Referral management');
     }
 
     public function withdrawalHistory($userId)
@@ -453,7 +455,7 @@ class UserService extends Controller
         $currentUserId = Auth::id();
 
         if ($currentUserId != $userId) {
-            return $this->error(null, "Unauthorized action.", 401);
+            return $this->error(null, 'Unauthorized action.', 401);
         }
 
         $user = User::with(['wallet', 'withdrawalRequests'])
@@ -484,10 +486,10 @@ class UserService extends Controller
         $paginatedData = $withdrawals->sortByDesc('date')->values()->slice(($page - 1) * $perPage, $perPage)->values();
 
         $data = [
-            'balance' => (float)$user->wallet?->balance,
-            'pending_withdrawals' => (float)$user->withdrawalRequests()->where('status', WithdrawalStatus::PENDING)->sum('amount'),
-            'rejected_withdrawals' => (float)$user->withdrawalRequests()->where('status', WithdrawalStatus::FAILED)->sum('amount'),
-            'total_withdrawals' => (float)$user->withdrawalRequests()->sum('amount'),
+            'balance' => (float) $user->wallet?->balance,
+            'pending_withdrawals' => (float) $user->withdrawalRequests()->where('status', WithdrawalStatus::PENDING)->sum('amount'),
+            'rejected_withdrawals' => (float) $user->withdrawalRequests()->where('status', WithdrawalStatus::FAILED)->sum('amount'),
+            'total_withdrawals' => (float) $user->withdrawalRequests()->sum('amount'),
             'transactions' => $paginatedData,
         ];
 
@@ -500,12 +502,9 @@ class UserService extends Controller
                 'last_page' => ceil($total / $perPage),
                 'per_page' => (int) $perPage,
                 'total' => $total,
-                'prev_page_url' => $page > 1 ? request()->url() . '?page=' . ($page - 1) . '&per_page=' . $perPage : null,
-                'next_page_url' => $page < ceil($total / $perPage) ? request()->url() . '?page=' . ($page + 1) . '&per_page=' . $perPage : null,
+                'prev_page_url' => $page > 1 ? request()->url().'?page='.($page - 1).'&per_page='.$perPage : null,
+                'next_page_url' => $page < ceil($total / $perPage) ? request()->url().'?page='.($page + 1).'&per_page='.$perPage : null,
             ],
         ]);
     }
 }
-
-
-

@@ -11,8 +11,6 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\SubCategory;
 use App\Trait\HttpResponse;
-use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class CategoryService
@@ -22,32 +20,25 @@ class CategoryService
     public function createCategory($request)
     {
         try {
-            $folder = null;
-
-            if(App::environment('production')){
-                $folder = '/prod/category';
-            } elseif(App::environment(['staging', 'local'])) {
-                $folder = '/stag/category';
-            }
-
             if ($request->file('image')) {
-                $path = $request->file('image')->store($folder, 's3');
-                $url = Storage::disk('s3')->url($path);
+                $folder = folderName('category');
+                $url = uploadFunction($request->file('image'), $folder);
             }
 
             $slug = Str::slug($request->name);
             if (Category::where('slug', $slug)->exists()) {
-                $slug = $slug . '-' . uniqid();
+                $slug = $slug.'-'.uniqid();
             }
 
             Category::create([
                 'name' => $request->name,
                 'slug' => $slug,
-                'image' => $url,
+                'image' => $url['url'],
+                'public_id' => $url['public_id'],
                 'featured' => 1,
             ]);
 
-            return $this->success(null, "Created successfully");
+            return $this->success(null, 'Created successfully');
         } catch (\Exception $e) {
             return $this->error(null, $e->getMessage(), 500);
         }
@@ -56,11 +47,11 @@ class CategoryService
     public function categories()
     {
         $categories = Category::where('featured', 1)
-        ->get();
+            ->get();
 
         $data = CategoryResource::collection($categories);
 
-        return $this->success($data, "Categories");
+        return $this->success($data, 'Categories');
     }
 
     public function adminCategories()
@@ -70,45 +61,37 @@ class CategoryService
         $categories = Category::with(['products', 'subcategory'])
             ->withCount(['products', 'subcategory'])
             ->when($search, function ($query, string $search): void {
-                $query->where('name', 'like', '%' . $search . '%');
+                $query->where('name', 'like', '%'.$search.'%');
             })
             ->get();
 
         $data = AdminCategoryResource::collection($categories);
 
-        return $this->success($data, "Categories retrieved successfully");
+        return $this->success($data, 'Categories retrieved successfully');
     }
 
     public function createSubCategory($request)
     {
         $category = Category::with('subcategory')->find($request->category_id);
 
-        if(!$category){
-            return $this->error(null, "Not found", 404);
+        if (! $category) {
+            return $this->error(null, 'Not found', 404);
         }
 
         try {
-            $folder = null;
-            $url = null;
-
-            if(App::environment('production')){
-                $folder = '/prod/category/subcategory';
-            } elseif(App::environment(['staging', 'local'])) {
-                $folder = '/stag/category/subcategory';
-            }
-
             if ($request->hasFile('image')) {
-                $path = $request->file('image')->store($folder, 's3');
-                $url = Storage::disk('s3')->url($path);
+                $folder = folderName('category/subcategory');
+                $url = uploadFunction($request->file('image'), $folder);
             }
 
             $category->subcategory()->create([
                 'name' => $request->name,
                 'slug' => Str::slug($request->name),
-                'image' => $url
+                'image' => $url['url'],
+                'public_id' => $url['public_id'],
             ]);
 
-            return $this->success(null, "Created successfully");
+            return $this->success(null, 'Created successfully');
         } catch (\Exception $e) {
             return $this->error(null, $e->getMessage(), 500);
         }
@@ -117,12 +100,12 @@ class CategoryService
     public function getSubcategory($id)
     {
         $subcats = SubCategory::with(['products', 'category'])
-        ->where('category_id', $id)
-        ->get();
+            ->where('category_id', $id)
+            ->get();
 
         $data = SubCategoryResource::collection($subcats);
 
-        return $this->success($data, "Sub categories");
+        return $this->success($data, 'Sub categories');
     }
 
     public function featuredStatus($request, $id)
@@ -139,7 +122,7 @@ class CategoryService
 
         $category->save();
 
-        return $this->success(null, "Category updated successfully");
+        return $this->success(null, 'Category updated successfully');
     }
 
     public function categoryAnalytic()
@@ -161,7 +144,7 @@ class CategoryService
             'product_inactive_count' => $productInactiveCount,
         ];
 
-        return $this->success($data, "Category analytics");
+        return $this->success($data, 'Category analytics');
     }
 
     public function getAdminSubcategory()
@@ -171,13 +154,13 @@ class CategoryService
         $subcats = SubCategory::with(['product', 'category'])
             ->withCount(['product', 'category'])
             ->when($search, function ($query, string $search): void {
-                $query->where('name', 'like', '%' . $search . '%');
+                $query->where('name', 'like', '%'.$search.'%');
             })
             ->get();
 
         $data = AdminSubCategoryResource::collection($subcats);
 
-        return $this->success($data, "Sub categories");
+        return $this->success($data, 'Sub categories');
     }
 
     public function subStatus($request, $id)
@@ -190,40 +173,40 @@ class CategoryService
 
         $sub->save();
 
-        return $this->success(null, "Category updated successfully");
+        return $this->success(null, 'Category updated successfully');
     }
 
     public function editCategory($request)
     {
         $category = Category::findOrFail($request->id);
-        $folder = App::environment('production') ? '/prod/category' : '/stag/category';
 
-        $url = $category->image;
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store($folder, 's3');
-            $url = Storage::disk('s3')->url($path);
+            $folder = folderName('category');
+            $url = uploadFunction($request->file('image'), $folder, $category);
         }
 
         $slug = $category->slug;
         if ($request->has('name')) {
             $slug = Str::slug($request->name);
             if (Category::where('slug', $slug)->where('id', '!=', $request->id)->exists()) {
-                $slug = $slug . '-' . uniqid();
+                $slug = $slug.'-'.uniqid();
             }
         }
 
         $category->update([
             'name' => $request->name ?? $category->name,
             'slug' => $slug,
-            'image' => $url
+            'image' => $url['url'] ?? $category->image,
+            'public_id' => $url['public_id'] ? $category->public_id : null,
         ]);
 
-        return $this->success(null, "Updated successfully");
+        return $this->success(null, 'Updated successfully');
     }
 
     public function deleteCategory($id)
     {
         $category = Category::findOrFail($id);
+        deleteFile($category);
         $category->delete();
 
         return $this->success(null, 'Deleted successfully');
@@ -232,10 +215,9 @@ class CategoryService
     public function deleteSubCategory($id)
     {
         $subcat = SubCategory::findOrFail($id);
+        deleteFile($subcat);
         $subcat->delete();
 
         return $this->success(null, 'Deleted successfully');
     }
 }
-
-

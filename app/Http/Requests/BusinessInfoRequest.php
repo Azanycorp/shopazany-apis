@@ -28,7 +28,7 @@ class BusinessInfoRequest extends FormRequest
             'business_location' => ['required', 'string'],
             'business_type' => ['required', 'string'],
             'identity_type' => ['required', 'string'],
-            'file' => ['required', 'mimes:png,jpg,jpeg,pdf,docx,xlsx,xls']
+            'file' => ['required', 'mimes:png,jpg,jpeg,pdf,docx,xlsx,xls'],
         ];
     }
 }

@@ -28,9 +28,9 @@ class CheckProductStock extends Command
     public function handle(): void
     {
         Product::where('current_stock_quantity', 0)
-        ->where('status', ProductStatus::ACTIVE)
-        ->get()
-        ->each(fn($product) => $product->update(['status' => ProductStatus::OUT_OF_STOCK]));
+            ->where('status', ProductStatus::ACTIVE)
+            ->get()
+            ->each(fn ($product) => $product->update(['status' => ProductStatus::OUT_OF_STOCK]));
 
         $this->info('Product status changed successfully.');
     }

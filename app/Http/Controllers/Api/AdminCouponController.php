@@ -10,16 +10,15 @@ use Illuminate\Validation\Rule;
 
 class AdminCouponController extends Controller
 {
-    public function __construct(private CouponService $couponService)
-    {}
+    public function __construct(private CouponService $couponService) {}
 
     public function createCoupon(Request $request)
     {
         $request->validate([
             'type' => ['required', Rule::in([
-                    Coupon::MULTI_USE,
-                    Coupon::ONE_TIME
-                ])
+                Coupon::MULTI_USE,
+                Coupon::ONE_TIME,
+            ]),
             ],
             'numbers' => 'required|integer|min:1|max:10000',
         ]);

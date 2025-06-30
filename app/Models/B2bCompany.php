@@ -20,13 +20,13 @@ class B2bCompany extends Model
         'city',
         'address',
         'state',
-        'logo'
+        'logo',
     ];
 
     protected function casts(): array
     {
         return [
-            'service_type' => 'array'
+            'service_type' => 'array',
         ];
     }
 }

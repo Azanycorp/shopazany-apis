@@ -2,13 +2,12 @@
 
 namespace App\Http\Controllers\Api\B2B;
 
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use App\Services\Admin\B2BAdminService;
-use App\Http\Requests\Admin\NewSliderRequest;
-use App\Services\Admin\B2BBannerPromoService;
-use App\Http\Requests\Admin\B2BAddPromoRequest;
 use App\Http\Requests\Admin\AddB2BBannerRequest;
+use App\Http\Requests\Admin\B2BAddPromoRequest;
+use App\Http\Requests\Admin\NewSliderRequest;
+use App\Services\Admin\B2BAdminService;
+use App\Services\Admin\B2BBannerPromoService;
 
 class B2BBannerPromoController extends Controller
 {
@@ -17,7 +16,7 @@ class B2BBannerPromoController extends Controller
         private B2BAdminService $b2BAdminService
     ) {}
 
-    //sliders
+    // sliders
     public function sliders()
     {
         return $this->b2BAdminService->sliders();
@@ -27,14 +26,17 @@ class B2BBannerPromoController extends Controller
     {
         return $this->b2BAdminService->addSlider($request);
     }
+
     public function getSlider($id)
     {
         return $this->b2BAdminService->getSlider($id);
     }
+
     public function updateSlider(NewSliderRequest $request, $id)
     {
         return $this->b2BAdminService->updateSlider($request, $id);
     }
+
     public function deleteSlider($id)
     {
         return $this->b2BAdminService->deleteSlider($id);
@@ -74,6 +76,7 @@ class B2BBannerPromoController extends Controller
     {
         return $this->service->promos();
     }
+
     public function getProducts()
     {
         return $this->service->getProducts();

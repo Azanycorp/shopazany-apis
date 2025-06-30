@@ -8,8 +8,7 @@ use Illuminate\Http\Request;
 
 class AdminAffiliateController extends Controller
 {
-    public function __construct(protected AffiliateService $affiliateService)
-    {}
+    public function __construct(protected AffiliateService $affiliateService) {}
 
     public function overview()
     {

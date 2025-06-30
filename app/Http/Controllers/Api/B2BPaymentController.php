@@ -3,26 +3,25 @@
 namespace App\Http\Controllers\Api;
 
 use App\Enum\PaymentType;
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\B2BPaymentRequest;
-use App\Services\Payment\PaymentService;
 use App\Http\Requests\AuthorizeNetCardRequest;
+use App\Http\Requests\B2BPaymentRequest;
 use App\Services\Payment\HandlePaymentService;
 use App\Services\Payment\PaymentDetailsService;
+use App\Services\Payment\PaymentService;
 use App\Services\Payment\PaystackPaymentProcessor;
+use Illuminate\Http\Request;
 
 class B2BPaymentController extends Controller
 {
     public function __construct(
         protected PaymentService $service
-    )
-    {}
+    ) {}
 
     public function processPayment(B2BPaymentRequest $request)
     {
-        match($request->payment_method) {
-            PaymentType::PAYSTACK => $paymentProcessor = new PaystackPaymentProcessor()
+        match ($request->payment_method) {
+            PaymentType::PAYSTACK => $paymentProcessor = new PaystackPaymentProcessor
         };
 
         $paymentService = new HandlePaymentService($paymentProcessor);
@@ -51,5 +50,4 @@ class B2BPaymentController extends Controller
     {
         return $this->service->getPaymentMethod($countryId);
     }
-
 }

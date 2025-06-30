@@ -2,19 +2,19 @@
 
 namespace App\Imports;
 
-use Carbon\Carbon;
-use App\Models\Product;
 use App\Models\Category;
+use App\Models\Product;
 use App\Models\SubCategory;
-use Illuminate\Support\Str;
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
-use Maatwebsite\Excel\Concerns\ToCollection;
+use Illuminate\Support\Str;
 use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
-use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithBatchInserts;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
+use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
-class ProductImport implements ToCollection, WithHeadingRow, WithChunkReading, WithBatchInserts, SkipsEmptyRows
+class ProductImport implements SkipsEmptyRows, ToCollection, WithBatchInserts, WithChunkReading, WithHeadingRow
 {
     protected $seller;
 
@@ -24,19 +24,18 @@ class ProductImport implements ToCollection, WithHeadingRow, WithChunkReading, W
     }
 
     /**
-    * @param Collection $collection
-    */
+     * @param  Collection  $collection
+     */
     public function collection(Collection $rows): void
     {
-        foreach ($rows as $row)
-        {
+        foreach ($rows as $row) {
             $category = $this->getCategory($row['category']);
             $subCategory = $this->getSubCategory($row['sub_category']);
 
             $slug = Str::slug($row['product_name']);
 
             if (Product::where('slug', $slug)->exists()) {
-                $slug = $slug . '-' . uniqid();
+                $slug = $slug.'-'.uniqid();
             }
 
             Product::create([

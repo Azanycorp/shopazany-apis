@@ -20,7 +20,7 @@ class ValidateHeader
 
         $receivedValue = $request->header($headerName);
 
-        if (!$receivedValue) {
+        if (! $receivedValue) {
             return response()->json(['error' => 'Unauthorized access. Missing required header.'], 401);
         }
 

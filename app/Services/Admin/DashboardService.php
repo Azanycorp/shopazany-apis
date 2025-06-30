@@ -43,21 +43,21 @@ class DashboardService
             ->where('orders.status', OrderStatus::DELIVERED)
             ->whereBetween('orders.created_at', [$startDate, $endDate])
             ->get()
-            ->sum(fn($order) => currencyConvert($order->currency, $order->total_amount, "USD"));
+            ->sum(fn ($order) => currencyConvert($order->currency, $order->total_amount, 'USD'));
 
-        $userStats = User::selectRaw("
+        $userStats = User::selectRaw('
                 SUM(CASE WHEN status = ? AND created_at >= ? THEN 1 ELSE 0 END) as active_users,
                 SUM(CASE WHEN type = ? AND status != ? AND created_at >= ? THEN 1 ELSE 0 END) as inactive_sellers,
                 SUM(CASE WHEN type = ? AND created_at >= ? THEN 1 ELSE 0 END) as total_sellers,
                 SUM(CASE WHEN is_affiliate_member = true AND status = ? AND created_at >= ? THEN 1 ELSE 0 END) as active_affiliate_users,
                 SUM(CASE WHEN is_affiliate_member = true AND status != ? AND created_at >= ? THEN 1 ELSE 0 END) as inactive_affiliate_users
-            ", [
-                UserStatus::ACTIVE, $startDate,
-                UserType::SELLER, UserStatus::ACTIVE, $startDate,
-                UserType::SELLER, $startDate,
-                UserStatus::ACTIVE, $startDate,
-                UserStatus::ACTIVE, $startDate
-            ])
+            ', [
+            UserStatus::ACTIVE, $startDate,
+            UserType::SELLER, UserStatus::ACTIVE, $startDate,
+            UserType::SELLER, $startDate,
+            UserStatus::ACTIVE, $startDate,
+            UserStatus::ACTIVE, $startDate,
+        ])
             ->first();
 
         $data = [
@@ -79,9 +79,9 @@ class DashboardService
     public function bestSellers()
     {
         $bestSellers = User::select([
-                DB::raw('CONCAT(users.first_name, " ", users.last_name) as seller_name'),
-                'users.default_currency'
-            ])
+            DB::raw('CONCAT(users.first_name, " ", users.last_name) as seller_name'),
+            'users.default_currency',
+        ])
             ->leftJoin('products', 'users.id', '=', 'products.user_id')
             ->leftJoin('order_items', 'products.id', '=', 'order_items.product_id')
             ->leftJoin('orders', 'order_items.order_id', '=', 'orders.id')
@@ -95,7 +95,7 @@ class DashboardService
             ->orderByDesc('total_revenue')
             ->get();
 
-        return $this->success($bestSellers, "Best sellers based on delivered orders");
+        return $this->success($bestSellers, 'Best sellers based on delivered orders');
     }
 
     public function bestSellingCat()
@@ -114,14 +114,10 @@ class DashboardService
             ->get()
             ->map(function ($category) use ($totalSales) {
                 $category->percentage = $totalSales > 0 ? ($category->total_revenue / $totalSales) * 100 : 0;
+
                 return $category;
             });
 
-        return $this->success($bestSellingCategories, "Best selling categories");
+        return $this->success($bestSellingCategories, 'Best selling categories');
     }
-
 }
-
-
-
-

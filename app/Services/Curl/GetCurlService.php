@@ -7,7 +7,9 @@ use Exception;
 class GetCurlService
 {
     protected $baseUrl;
+
     protected $refrence;
+
     private static $secret_key;
 
     public function __construct($refrence)
@@ -26,19 +28,19 @@ class GetCurlService
     {
         $curl = curl_init();
 
-        curl_setopt_array($curl, array(
-            CURLOPT_URL => $this->baseUrl . "/transaction/verify/" . $this->refrence,
+        curl_setopt_array($curl, [
+            CURLOPT_URL => $this->baseUrl.'/transaction/verify/'.$this->refrence,
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING => "",
+            CURLOPT_ENCODING => '',
             CURLOPT_MAXREDIRS => 10,
             CURLOPT_TIMEOUT => 30,
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => "GET",
-            CURLOPT_HTTPHEADER => array(
-            "Authorization: Bearer ". self::$secret_key,
-            "Cache-Control: no-cache",
-            ),
-        ));
+            CURLOPT_CUSTOMREQUEST => 'GET',
+            CURLOPT_HTTPHEADER => [
+                'Authorization: Bearer '.self::$secret_key,
+                'Cache-Control: no-cache',
+            ],
+        ]);
 
         $response = curl_exec($curl);
         $err = curl_error($curl);
@@ -56,6 +58,3 @@ class GetCurlService
         return $response;
     }
 }
-
-
-

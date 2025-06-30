@@ -14,4 +14,3 @@ interface B2BRepositoryInterface
 
     public function delete(int $id);
 }
-

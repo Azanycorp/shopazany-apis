@@ -2,38 +2,38 @@
 
 namespace App\Trait;
 
-use App\Models\Kyc;
-use App\Models\User;
-use App\Models\Order;
-use App\Models\State;
-use App\Models\Wallet;
-use App\Models\Country;
-use App\Models\Payment;
-use App\Models\Product;
-use App\Models\Wishlist;
-use App\Models\OrderRate;
 use App\Models\B2bCompany;
-use App\Models\B2BProduct;
-use App\Models\UserAction;
-use App\Models\BankAccount;
-use App\Models\RedeemPoint;
-use App\Models\Transaction;
-use App\Models\PaymentMethod;
 use App\Models\B2bOrderRating;
-use App\Models\UserActivityLog;
-use App\Models\UserSubcription;
-use App\Models\WithdrawalRequest;
-use App\Models\B2bWithdrawalMethod;
-use App\Models\BusinessInformation;
-use App\Models\UserShippingAddress;
-use App\Models\UserBusinessInformation;
+use App\Models\B2BProduct;
 use App\Models\B2BSellerShippingAddress;
+use App\Models\B2bWithdrawalMethod;
+use App\Models\BankAccount;
+use App\Models\BusinessInformation;
+use App\Models\Country;
+use App\Models\Kyc;
+use App\Models\Order;
+use App\Models\OrderRate;
+use App\Models\Payment;
+use App\Models\PaymentMethod;
+use App\Models\Product;
 use App\Models\ProductAttribute;
+use App\Models\RedeemPoint;
+use App\Models\State;
+use App\Models\Transaction;
+use App\Models\User;
+use App\Models\UserAction;
+use App\Models\UserActivityLog;
+use App\Models\UserBusinessInformation;
+use App\Models\UserShippingAddress;
+use App\Models\UserSubcription;
 use App\Models\UserWallet;
-use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\Wallet;
+use App\Models\Wishlist;
+use App\Models\WithdrawalRequest;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 trait UserRelationship
 {
@@ -41,6 +41,7 @@ trait UserRelationship
     {
         return $this->hasOne(Wallet::class, 'user_id');
     }
+
     public function userWallet(): HasOne
     {
         return $this->hasOne(UserWallet::class, 'seller_id');
@@ -117,7 +118,6 @@ trait UserRelationship
     {
         return $this->hasMany(PaymentMethod::class, 'user_id');
     }
-
 
     public function orderRate(): HasMany
     {

@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Models\B2bProdctReview;
 use App\Trait\ClearsResponseCache;
 use Illuminate\Database\Eloquent\Model;
 
@@ -16,7 +15,7 @@ class B2bProductCategory extends Model
         'image',
         'featured',
         'meta_title',
-        'meta_description'
+        'meta_description',
     ];
 
     public function subcategory()
@@ -28,5 +27,4 @@ class B2bProductCategory extends Model
     {
         return $this->hasMany(B2BProduct::class, 'category_id');
     }
- 
 }

@@ -7,8 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class CarrierRange extends Model
 {
-    protected $table = "carrier_ranges";
-    
+    protected $table = 'carrier_ranges';
+
     use HasFactory;
 
     public function carrier()
@@ -16,7 +16,8 @@ class CarrierRange extends Model
         return $this->belongsTo(Carrier::class);
     }
 
-    public function carrier_range_prices(){
-    	return $this->hasMany(CarrierRangePrice::class);
+    public function carrier_range_prices()
+    {
+        return $this->hasMany(CarrierRangePrice::class);
     }
 }

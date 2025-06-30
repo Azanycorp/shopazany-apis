@@ -21,8 +21,3 @@ trait ClearsResponseCache
         });
     }
 }
-
-
-
-
-

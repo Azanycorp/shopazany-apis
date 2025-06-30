@@ -2,12 +2,12 @@
 
 namespace App\Services\Admin;
 
+use App\Enum\ProductStatus;
 use App\Http\Resources\SellerProductResource;
 use App\Models\Admin;
 use App\Models\Product;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class ProductService
@@ -16,35 +16,32 @@ class ProductService
 
     public function addProduct($request)
     {
-        $auth = auth()->user();
+        $auth = userAuth();
         $admin = Admin::with('products')->findOrFail($auth->id);
+
         $slug = Str::slug($request->name);
         if (Product::where('slug', $slug)->exists()) {
-            $slug = $slug . '-' . uniqid();
+            $slug = $slug.'-'.uniqid();
         }
+
         $price = $request->product_price;
-        if($request->discount_price > 0){
-            $price = (int)$request->product_price - (int)$request->discount_price;
+        if ($request->discount_price > 0) {
+            $price = (int) $request->product_price - (int) $request->discount_price;
         }
-        if($request->filled('seller_id')) {
+
+        if ($request->filled('seller_id')) {
             $id = $request->seller_id;
         } else {
             $ids = $admin->id;
         }
-        $folder = null;
-        $frontImage = null;
+
         $name = 'azany';
-        if(App::environment('production')){
-            $folder = "/prod/product/{$name}";
-            $frontImage = "/prod/product/{$name}/front_image";
-        } elseif(App::environment(['staging', 'local'])) {
-            $folder = "/stag/product/{$name}";
-            $frontImage = "/stag/product/{$name}/front_image";
-        }
+
+        $folderPath = folderNames('product', $name, 'front_image');
         if ($request->hasFile('front_image')) {
-            $path = $request->file('front_image')->store($frontImage, 's3');
-            $url = Storage::disk('s3')->url($path);
+            $url = uploadImage($request, 'front_image', $folderPath->frontImage);
         }
+
         $product = Product::create([
             'admin_id' => $ids ?? null,
             'user_id' => $id ?? null,
@@ -63,22 +60,19 @@ class ProductService
             'price' => $price,
             'current_stock_quantity' => $request->current_stock_quantity,
             'minimum_order_quantity' => $request->minimum_order_quantity,
-            'image' => $url,
-            'added_by' => $admin->first_name . ' ' . $admin->last_name,
+            'image' => $url['url'],
+            'public_id' => $url['public_id'],
+            'added_by' => $admin->first_name.' '.$admin->last_name,
             'country_id' => 160,
-            'status' => 'active',
+            'status' => ProductStatus::ACTIVE,
         ]);
-        if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $image) {
-                $path = $image->store($folder, 's3');
-                $url = Storage::disk('s3')->url($path);
 
-                $product->productimages()->create([
-                    'image' => $url,
-                ]);
-            }
+        if ($request->hasFile('images')) {
+            $folder = folderNames('product', $name, null, 'images');
+            uploadMultipleProductImage($request, 'images', $folder->folder, $product);
         }
-        return $this->success(null, "Added successfully");
+
+        return $this->success(null, 'Added successfully');
     }
 
     public function getProducts(): array
@@ -90,7 +84,7 @@ class ProductService
         }
 
         if (request()->filled('search')) {
-            $query->where('name', 'like', '%' . request('search') . '%');
+            $query->where('name', 'like', '%'.request('search').'%');
         }
 
         $query->with([
@@ -128,28 +122,23 @@ class ProductService
     {
         $product = Product::where('slug', $slug)->first();
 
-        if(!$product){
-            return $this->error(null, "Product not found", 404);
+        if (! $product) {
+            return $this->error(null, 'Product not found', 404);
         }
 
         $data = new SellerProductResource($product);
 
-        return $this->success($data, "Product retrieved successfully");
+        return $this->success($data, 'Product retrieved successfully');
     }
 
     public function changeFeatured($request)
     {
         $product = Product::findOrFail($request->product_id);
-        $product->is_featured = !$product->is_featured;
+        $product->is_featured = ! $product->is_featured;
 
         $product->save();
-        $status = $product->is_featured ? "Approved successfully" : "Disapproved successfully";
+        $status = $product->is_featured ? 'Approved successfully' : 'Disapproved successfully';
 
         return $this->success(null, $status);
     }
 }
-
-
-
-
-

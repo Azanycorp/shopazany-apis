@@ -2,42 +2,42 @@
 
 namespace App\Services\Payment;
 
-use App\Models\Rfq;
-use App\Models\Cart;
-use App\Models\User;
-use App\Enum\UserLog;
-use App\Models\Order;
-use App\Models\Payment;
-use App\Models\Product;
-use App\Models\B2bOrder;
+use App\Actions\PaymentLogAction;
+use App\Actions\UserLogAction;
 use App\Enum\MailingEnum;
 use App\Enum\OrderStatus;
 use App\Enum\PaymentType;
-use App\Models\B2BProduct;
-use App\Models\UserWallet;
-use App\Mail\B2BOrderEmail;
-use Illuminate\Support\Str;
-use App\Mail\SellerOrderMail;
-use App\Models\ShippingAgent;
-use App\Actions\UserLogAction;
 use App\Enum\SubscriptionType;
-use App\Mail\CustomerOrderMail;
-use App\Actions\PaymentLogAction;
+use App\Enum\UserLog;
 use App\Enum\UserType;
 use App\Enum\WithdrawalStatus;
-use Illuminate\Support\Facades\DB;
-use App\Models\UserShippingAddress;
-use Illuminate\Support\Facades\Log;
-use App\Models\BuyerShippingAddress;
 use App\Http\Resources\B2BBuyerShippingAddressResource;
+use App\Mail\B2BOrderEmail;
+use App\Mail\CustomerOrderMail;
+use App\Mail\SellerOrderMail;
 use App\Models\Action;
+use App\Models\B2bOrder;
+use App\Models\B2BProduct;
+use App\Models\BuyerShippingAddress;
+use App\Models\Cart;
+use App\Models\Order;
+use App\Models\Payment;
+use App\Models\Product;
 use App\Models\ProductVariation;
+use App\Models\Rfq;
+use App\Models\ShippingAgent;
+use App\Models\User;
+use App\Models\UserShippingAddress;
+use App\Models\UserWallet;
 use App\Models\Wallet;
 use App\Models\WithdrawalRequest;
 use App\Notifications\WithdrawalNotification;
 use App\Services\Curl\PostCurl;
 use App\Services\SubscriptionService;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class PaystackService
 {
@@ -56,6 +56,7 @@ class PaystackService
 
                 if (Payment::where('reference', $ref)->exists()) {
                     Log::info("Duplicate payment detected: {$ref}, skipping processing.");
+
                     return;
                 }
 
@@ -67,6 +68,7 @@ class PaystackService
 
                 if ($duplicatePayment) {
                     Log::info("Duplicate payment detected for user {$userId}, skipping processing.");
+
                     return;
                 }
 
@@ -91,7 +93,7 @@ class PaystackService
                     ]);
                 }
 
-                $data = (object)[
+                $data = (object) [
                     'user_id' => $userId,
                     'first_name' => $user->first_name,
                     'last_name' => $user->last_name,
@@ -125,7 +127,7 @@ class PaystackService
                 SubscriptionService::creditAffiliate($referrer, $formattedAmount, $currency);
             });
         } catch (\Exception $e) {
-            Log::error('Error in handleRecurringCharge: ' . $e->getMessage());
+            Log::error('Error in handleRecurringCharge: '.$e->getMessage());
         }
     }
 
@@ -154,7 +156,7 @@ class PaystackService
                 $userShippingId = $paymentData['metadata']['user_shipping_address_id'];
                 $orderNo = self::orderNo();
 
-                $data = (object)[
+                $data = (object) [
                     'user_id' => $userId,
                     'first_name' => $user->first_name,
                     'last_name' => $user->last_name,
@@ -201,7 +203,7 @@ class PaystackService
                     'status' => OrderStatus::PENDING,
                 ]);
 
-                $msg = "Your order has been placed successfully.";
+                $msg = 'Your order has been placed successfully.';
                 logOrderActivity($order->id, $msg, OrderStatus::PENDING);
 
                 $orderedItems = [];
@@ -244,13 +246,13 @@ class PaystackService
                 (new UserLogAction(
                     request(),
                     UserLog::PAYMENT,
-                    "Payment successful",
+                    'Payment successful',
                     json_encode($paymentData),
                     $user
                 ))->run();
             });
         } catch (\Exception $e) {
-            Log::error('Error in handlePaymentSuccess: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine());
+            Log::error('Error in handlePaymentSuccess: '.$e->getMessage().' in '.$e->getFile().' on line '.$e->getLine());
             throw $e;
         }
     }
@@ -285,7 +287,7 @@ class PaystackService
 
                 $orderNo = self::orderNo();
 
-                $data = (object)[
+                $data = (object) [
                     'user_id' => $userId,
                     'first_name' => $user->first_name,
                     'last_name' => $user->last_name,
@@ -318,7 +320,6 @@ class PaystackService
                     $shipping_address = BuyerShippingAddress::with(['state', 'country'])->find($shipping_address_id);
                 }
                 $address = $shipping_address ? new B2BBuyerShippingAddressResource($shipping_address) : null;
-
 
                 $product->availability_quantity -= $rfq->product_quantity;
                 $product->sold += $rfq->product_quantity;
@@ -353,7 +354,7 @@ class PaystackService
 
                 $rfq->update([
                     'payment_status' => OrderStatus::PAID,
-                    'status' => OrderStatus::COMPLETED
+                    'status' => OrderStatus::COMPLETED,
                 ]);
 
                 $orderedItems = [
@@ -361,30 +362,30 @@ class PaystackService
                     'image' => $product->front_image,
                     'quantity' => $rfq->product_quantity,
                     'price' => $seller_amount,
-                    'buyer_name' => $user->first_name . ' ' . $user->last_name,
+                    'buyer_name' => $user->first_name.' '.$user->last_name,
                     'order_number' => $orderNo,
                     'currency' => $user->default_currency,
                 ];
 
                 $orderItemData = [
-                    'orderedItems' => $orderedItems
+                    'orderedItems' => $orderedItems,
                 ];
 
                 $type = MailingEnum::ORDER_EMAIL;
-                $subject = "B2B Order Confirmation";
+                $subject = 'B2B Order Confirmation';
                 $mail_class = B2BOrderEmail::class;
                 mailSend($type, $user, $subject, $mail_class, $orderItemData);
 
                 (new UserLogAction(
                     request(),
                     UserLog::PAYMENT,
-                    "Payment successful",
+                    'Payment successful',
                     json_encode($paymentData),
                     $user
                 ))->run();
             });
         } catch (\Exception $e) {
-            Log::error('Error in handlePaymentSuccess: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine());
+            Log::error('Error in handlePaymentSuccess: '.$e->getMessage().' in '.$e->getFile().' on line '.$e->getLine());
             throw $e;
         }
     }
@@ -398,8 +399,9 @@ class PaystackService
             ->where('transfer_code', $transferCode)
             ->first();
 
-        if (!$withdrawal) {
+        if (! $withdrawal) {
             Log::error("Transfer success: No matching withdrawal found for transfer_code: {$transferCode}");
+
             return;
         }
 
@@ -418,7 +420,7 @@ class PaystackService
             DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error("Error processing transfer success: " . $e->getMessage());
+            Log::error('Error processing transfer success: '.$e->getMessage());
             throw $e;
         }
     }
@@ -432,8 +434,9 @@ class PaystackService
             ->where('transfer_code', $transferCode)
             ->first();
 
-        if (!$withdrawal) {
+        if (! $withdrawal) {
             Log::error("Transfer success: No matching withdrawal found for transfer_code: {$transferCode}");
+
             return;
         }
 
@@ -459,7 +462,7 @@ class PaystackService
             DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error("Error processing transfer success: " . $e->getMessage());
+            Log::error('Error processing transfer success: '.$e->getMessage());
             throw $e;
         }
     }
@@ -473,8 +476,9 @@ class PaystackService
             ->where('transfer_code', $transferCode)
             ->first();
 
-        if (!$withdrawal) {
+        if (! $withdrawal) {
             Log::error("Transfer success: No matching withdrawal found for transfer_code: {$transferCode}");
+
             return;
         }
 
@@ -500,18 +504,18 @@ class PaystackService
             DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error("Error processing transfer success: " . $e->getMessage());
+            Log::error('Error processing transfer success: '.$e->getMessage());
             throw $e;
         }
     }
 
     public static function createRecipient($fields, $method)
     {
-        $url = "https://api.paystack.co/transferrecipient";
+        $url = 'https://api.paystack.co/transferrecipient';
         $token = config('paystack.secretKey');
         $headers = [
             'Accept' => 'application/json',
-            'Authorization' => 'Bearer ' . $token,
+            'Authorization' => 'Bearer '.$token,
         ];
         $data = (new PostCurl($url, $headers, $fields))->execute();
         self::logTransfer($data, $method);
@@ -520,7 +524,7 @@ class PaystackService
     private static function orderNo(): string
     {
         do {
-            $uniqueOrderNumber = 'ORD-' . now()->timestamp . '-' . Str::random(8);
+            $uniqueOrderNumber = 'ORD-'.now()->timestamp.'-'.Str::random(8);
         } while (Order::where('order_no', $uniqueOrderNumber)->exists());
 
         return $uniqueOrderNumber;
@@ -528,12 +532,12 @@ class PaystackService
 
     private static function sendSellerOrderEmail($seller, $order, $orderNo, string $totalAmount): void
     {
-        defer(fn() => send_email($seller->email, new SellerOrderMail($seller, $order, $orderNo, $totalAmount)));
+        defer(fn () => send_email($seller->email, new SellerOrderMail($seller, $order, $orderNo, $totalAmount)));
     }
 
     private static function sendOrderConfirmationEmail($user, $orderedItems, $orderNo, string $totalAmount): void
     {
-        defer(fn() => send_email($user->email, new CustomerOrderMail($user, $orderedItems, $orderNo, $totalAmount)));
+        defer(fn () => send_email($user->email, new CustomerOrderMail($user, $orderedItems, $orderNo, $totalAmount)));
     }
 
     private static function logTransfer($data, $method)
@@ -614,5 +618,4 @@ class PaystackService
             'currency' => $user->default_currency,
         ];
     }
-
 }

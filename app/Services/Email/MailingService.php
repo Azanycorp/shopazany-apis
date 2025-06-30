@@ -14,16 +14,17 @@ class MailingService
     {
         DB::transaction(function () use ($batchSize): void {
             $emails = Mailing::where('status', MailingEnum::PENDING)
-                            ->where('attempts', '<', 3)
-                            ->limit($batchSize)
-                            ->lockForUpdate()
-                            ->get();
+                ->where('attempts', '<', 3)
+                ->limit($batchSize)
+                ->lockForUpdate()
+                ->get();
 
             foreach ($emails as $email) {
                 try {
-                    if (!class_exists($email->mailable)) {
+                    if (! class_exists($email->mailable)) {
                         Log::error("Mailable class {$email->mailable} not found.");
                         $email->update(['status' => MailingEnum::FAILED]);
+
                         continue;
                     }
 
@@ -34,13 +35,13 @@ class MailingService
 
                     $email->update(['status' => MailingEnum::SENT]);
                 } catch (\Exception $e) {
-                    Log::error("Email failed to send: " . $e->getMessage());
+                    Log::error('Email failed to send: '.$e->getMessage());
 
                     $email->increment('attempts');
                     if ($email->attempts >= $email->max_attempts) {
                         $email->update([
                             'status' => MailingEnum::FAILED,
-                            'error_response' => $e->getMessage()
+                            'error_response' => $e->getMessage(),
                         ]);
                     }
                 }
@@ -48,4 +49,3 @@ class MailingService
         });
     }
 }
-

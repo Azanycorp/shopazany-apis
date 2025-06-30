@@ -2,19 +2,18 @@
 
 namespace App\Http\Controllers\Api;
 
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use App\Services\User\CustomerService;
-use App\Http\Requests\OrderRateRequest;
 use App\Http\Requests\CustomerSupportRequest;
+use App\Http\Requests\OrderRateRequest;
 use App\Http\Requests\PurchaseServiceRequest;
+use App\Services\User\CustomerService;
+use Illuminate\Http\Request;
 
 class CustomerController extends Controller
 {
     public function __construct(
         protected CustomerService $service
-    )
-    {}
+    ) {}
 
     public function dashboardAnalytics(int $userId)
     {
@@ -55,7 +54,7 @@ class CustomerController extends Controller
     {
         $request->validate([
             'user_id' => ['required', 'integer', 'exists:users,id'],
-            'product_id' => ['required', 'integer']
+            'product_id' => ['required', 'integer'],
         ]);
 
         return $this->service->wishlist($request);

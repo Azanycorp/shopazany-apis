@@ -11,8 +11,7 @@ class CartController extends Controller
 {
     public function __construct(
         protected CartService $service
-    )
-    {}
+    ) {}
 
     public function addToCart(CartRequest $request)
     {

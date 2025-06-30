@@ -2,19 +2,20 @@
 
 namespace App\Http\Controllers\Api;
 
-use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
-use App\Services\SuperAdminService;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Gate;
+use App\Http\Requests\Admin\CollationCentreRequest;
 use App\Http\Requests\Admin\HubRequest;
 use App\Http\Requests\AdminUserRequest;
 use App\Http\Requests\ShippingAgentRequest;
-use App\Http\Requests\Admin\CollationCentreRequest;
+use App\Services\SuperAdminService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
+use Symfony\Component\HttpFoundation\Response;
 
 class AdminController extends Controller
 {
     const MESSAGE = '403 Forbidden';
+
     public function __construct(
         private SuperAdminService $superAdminService
     ) {}
@@ -23,7 +24,8 @@ class AdminController extends Controller
     {
         return $this->superAdminService->deliveryOverview();
     }
-    //Collation Centers
+
+    // Collation Centers
     public function allCollationCentres()
     {
         return $this->superAdminService->allCollationCentres();
@@ -48,7 +50,8 @@ class AdminController extends Controller
     {
         return $this->superAdminService->deleteCollationCentre($id);
     }
-    //Collation Centers Hubs
+
+    // Collation Centers Hubs
     public function allCollationCentreHubs()
     {
         return $this->superAdminService->allCollationCentreHubs();
@@ -74,52 +77,57 @@ class AdminController extends Controller
         return $this->superAdminService->deleteHub($id);
     }
 
-
-    //Admin Users
+    // Admin Users
     public function adminUsers()
     {
         abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+
         return $this->superAdminService->adminUsers();
     }
 
     public function addAdmin(AdminUserRequest $request)
     {
         abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+
         return $this->superAdminService->addAdmin($request);
     }
 
     public function viewAdminUser($id)
     {
         abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+
         return $this->superAdminService->viewAdmin($id);
     }
 
     public function editAdminUser(Request $request, $id)
     {
         abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+
         return $this->superAdminService->editAdmin($request, $id);
     }
 
     public function verifyPassword(Request $request)
     {
         abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+
         return $this->superAdminService->verifyPassword($request);
     }
 
     public function revokeAccess($id)
     {
         abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+
         return $this->superAdminService->revokeAccess($id);
     }
 
     public function removeAdmin($id)
     {
         abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+
         return $this->superAdminService->removeAdmin($id);
     }
 
-
-    //ShippingAgents section
+    // ShippingAgents section
     public function shippingAgents()
     {
         return $this->superAdminService->shippingAgents();
@@ -144,6 +152,4 @@ class AdminController extends Controller
     {
         return $this->superAdminService->deleteShippingAgent($id);
     }
-
-
 }

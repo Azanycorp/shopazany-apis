@@ -23,7 +23,7 @@ class AssignPermissionRequest extends FormRequest
     {
         return [
             'role_id' => ['required', 'integer', 'exists:roles,id'],
-            'permissions' => ['required', 'array']
+            'permissions' => ['required', 'array'],
         ];
     }
 }

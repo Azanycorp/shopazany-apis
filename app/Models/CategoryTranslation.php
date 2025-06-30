@@ -7,13 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 
 class CategoryTranslation extends Model
 {
-    protected $table = "category_translations";
-    
+    protected $table = 'category_translations';
+
     use HasFactory;
 
     protected $fillable = ['name', 'lang', 'category_id'];
 
-    public function category(){
-    	return $this->belongsTo(Category::class);
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
     }
 }
