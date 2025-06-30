@@ -19,44 +19,41 @@ jobs:
         extensions: mbstring, dom, fileinfo, mysql, curl
         tools: composer:v2
 
-    - name: Configure SSH Environment
+    - name: Configure SSH
       run: |
         mkdir -p ~/.ssh
         echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_rsa
-        chmod 700 ~/.ssh
         chmod 600 ~/.ssh/id_rsa
-        echo "${{ secrets.VPS_HOST }} ${{ secrets.SSH_FINGERPRINT }}" > ~/.ssh/known_hosts
-        chmod 644 ~/.ssh/known_hosts
-        echo "Host bluehost" >> ~/.ssh/config
+        echo "${{ secrets.VPS_HOST }} ecdsa-sha2-nistp256 ${{ secrets.SSH_FINGERPRINT }}" > ~/.ssh/known_hosts
+        echo "Host bluehost" > ~/.ssh/config
         echo "  HostName ${{ secrets.VPS_HOST }}" >> ~/.ssh/config
         echo "  User ${{ secrets.VPS_USERNAME }}" >> ~/.ssh/config
         echo "  IdentityFile ~/.ssh/id_rsa" >> ~/.ssh/config
         echo "  IdentitiesOnly yes" >> ~/.ssh/config
-        echo "  StrictHostKeyChecking yes" >> ~/.ssh/config
 
-    - name: Verify SSH Connection
+    - name: Validate SSH Access
       run: |
-        echo "Testing SSH connection..."
-        ssh -vT ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} "echo 'SSH connection successful!'" || true
-        echo "Debug info:"
-        ls -la ~/.ssh
-        cat ~/.ssh/config
+        ssh -o BatchMode=yes \
+            -o StrictHostKeyChecking=yes \
+            -i ~/.ssh/id_rsa \
+            ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} \
+            "echo 'SSH validation successful'"
 
-    - name: Sync Files via Rsync
+    - name: Rsync Deployment
       run: |
         rsync -avz --delete \
           --exclude='.env' \
           --exclude='storage/*' \
           --exclude='vendor/' \
-          -e "ssh -v -i ~/.ssh/id_rsa" \
+          -e "ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=yes" \
           ./ ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:${{ secrets.VPS_BACKEND_PATH }}
 
-    - name: Run Remote Commands
+    - name: Execute Remote Commands
       run: |
-        ssh -v -i ~/.ssh/id_rsa \
+        ssh -i ~/.ssh/id_rsa \
           ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} \
           "cd ${{ secrets.VPS_BACKEND_PATH }} && \
-          composer install --no-dev --optimize-autoloader && \
+          /usr/local/bin/composer install --no-dev --optimize-autoloader && \
           php artisan optimize:clear && \
           php artisan optimize && \
           chmod -R 755 storage bootstrap/cache"
