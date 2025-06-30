@@ -2,7 +2,7 @@ name: Deploy to BlueHost
 
 on:
   push:
-    branches: [ deploy ]
+    branches: [deploy]
 
 jobs:
   deploy:
@@ -19,29 +19,30 @@ jobs:
         extensions: mbstring, dom, fileinfo, mysql, curl
         tools: composer:v2
 
-    - name: Install SSH Key
-      uses: shimataro/ssh-key-action@v2
-      with:
-        key: ${{ secrets.VPS_SSH_KEY }}
-        known_hosts: 'temp'
-        config: |
-          Host bluehost
-            HostName ${{ secrets.VPS_HOST }}
-            User ${{ secrets.VPS_USERNAME }}
-            IdentityFile ~/.ssh/id_rsa
-            StrictHostKeyChecking yes
-
-    - name: Configure SSH
+    - name: Configure SSH Environment
       run: |
         mkdir -p ~/.ssh
+        echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_rsa
         chmod 700 ~/.ssh
         chmod 600 ~/.ssh/id_rsa
-        echo "${{ secrets.VPS_HOST }} ${{ secrets.SSH_FINGERPRINT }}" >> ~/.ssh/known_hosts
+        echo "${{ secrets.VPS_HOST }} ${{ secrets.SSH_FINGERPRINT }}" > ~/.ssh/known_hosts
         chmod 644 ~/.ssh/known_hosts
-        ssh-keygen -l -f ~/.ssh/known_hosts | grep "${{ secrets.VPS_HOST }}"
-        ssh -v -T git@bluehost || true  # Test connection, ignore errors
+        echo "Host bluehost" >> ~/.ssh/config
+        echo "  HostName ${{ secrets.VPS_HOST }}" >> ~/.ssh/config
+        echo "  User ${{ secrets.VPS_USERNAME }}" >> ~/.ssh/config
+        echo "  IdentityFile ~/.ssh/id_rsa" >> ~/.ssh/config
+        echo "  IdentitiesOnly yes" >> ~/.ssh/config
+        echo "  StrictHostKeyChecking yes" >> ~/.ssh/config
 
-    - name: Sync Files
+    - name: Verify SSH Connection
+      run: |
+        echo "Testing SSH connection..."
+        ssh -vT ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} "echo 'SSH connection successful!'" || true
+        echo "Debug info:"
+        ls -la ~/.ssh
+        cat ~/.ssh/config
+
+    - name: Sync Files via Rsync
       run: |
         rsync -avz --delete \
           --exclude='.env' \
@@ -50,7 +51,7 @@ jobs:
           -e "ssh -v -i ~/.ssh/id_rsa" \
           ./ ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:${{ secrets.VPS_BACKEND_PATH }}
 
-    - name: Remote Commands
+    - name: Run Remote Commands
       run: |
         ssh -v -i ~/.ssh/id_rsa \
           ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} \
