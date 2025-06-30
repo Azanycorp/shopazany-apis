@@ -22,22 +22,24 @@ jobs:
     - name: Configure SSH
       run: |
         mkdir -p ~/.ssh
+        chmod 700 ~/.ssh
         echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
-        echo "${{ secrets.VPS_HOST }} ecdsa-sha2-nistp256 ${{ secrets.SSH_FINGERPRINT }}" > ~/.ssh/known_hosts
-        echo "Host bluehost" > ~/.ssh/config
-        echo "  HostName ${{ secrets.VPS_HOST }}" >> ~/.ssh/config
-        echo "  User ${{ secrets.VPS_USERNAME }}" >> ~/.ssh/config
-        echo "  IdentityFile ~/.ssh/id_rsa" >> ~/.ssh/config
-        echo "  IdentitiesOnly yes" >> ~/.ssh/config
+        
+        # Add all host key types to known_hosts
+        ssh-keyscan -t rsa,ecdsa,ed25519 ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
+        chmod 644 ~/.ssh/known_hosts
+        
+        # Verify host key
+        ssh-keygen -lf ~/.ssh/known_hosts
 
-    - name: Validate SSH Access
+    - name: Test SSH Connection
       run: |
         ssh -o BatchMode=yes \
             -o StrictHostKeyChecking=yes \
             -i ~/.ssh/id_rsa \
             ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} \
-            "echo 'SSH validation successful'"
+            "echo 'SSH connection successful!'"
 
     - name: Rsync Deployment
       run: |
@@ -48,12 +50,12 @@ jobs:
           -e "ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=yes" \
           ./ ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:${{ secrets.VPS_BACKEND_PATH }}
 
-    - name: Execute Remote Commands
+    - name: Run Remote Commands
       run: |
         ssh -i ~/.ssh/id_rsa \
           ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} \
           "cd ${{ secrets.VPS_BACKEND_PATH }} && \
-          /usr/local/bin/composer install --no-dev --optimize-autoloader && \
+          composer install --no-dev --optimize-autoloader && \
           php artisan optimize:clear && \
           php artisan optimize && \
           chmod -R 755 storage bootstrap/cache"
