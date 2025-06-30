@@ -24,7 +24,7 @@ class AffiliateSettingsRequest extends FormRequest
     {
         return [
             'two_factor_enabled' => ['boolean'],
-            //'password' => ['string', 'confirmed', Password::defaults()]
+            // 'password' => ['string', 'confirmed', Password::defaults()]
         ];
     }
 }

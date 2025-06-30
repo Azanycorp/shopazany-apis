@@ -7,13 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 
 class AttributeTranslation extends Model
 {
-    protected $table = "attribute_translations";
+    protected $table = 'attribute_translations';
 
     use HasFactory;
 
     protected $fillable = ['name', 'lang', 'attribute_id'];
 
-    public function attribute(){
+    public function attribute()
+    {
         return $this->belongsTo(Attribute::class);
     }
 }

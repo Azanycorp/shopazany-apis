@@ -3,7 +3,6 @@
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -37,9 +36,9 @@ class ResetPasswordNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-        ->line('Forgot Password?')
-        ->action('Click to reset', $this->url)
-        ->line('Thank you');
+            ->line('Forgot Password?')
+            ->action('Click to reset', $this->url)
+            ->line('Thank you');
     }
 
     /**

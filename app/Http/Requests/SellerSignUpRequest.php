@@ -30,7 +30,7 @@ class SellerSignUpRequest extends FormRequest
             'address' => ['required', 'string'],
             'country_id' => ['required', 'integer', 'exists:countries,id'],
             'state_id' => ['required', 'integer', 'exists:states,id'],
-            'password' => ['required', 'string', 'confirmed', Password::defaults()]
+            'password' => ['required', 'string', 'confirmed', Password::defaults()],
         ];
     }
 }

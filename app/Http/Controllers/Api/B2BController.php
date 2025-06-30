@@ -2,17 +2,16 @@
 
 namespace App\Http\Controllers\Api;
 
-use Illuminate\Http\Request;
-use App\Services\B2B\BuyerService;
-use App\Http\Requests\LoginRequest;
-use App\Services\B2B\SellerService;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\B2B\BusinessInformationRequest;
+use App\Http\Requests\B2B\BuyerOnboardingRequest;
 use App\Http\Requests\B2B\CodeRequest;
-use App\Services\B2B\Auth\AuthService;
 use App\Http\Requests\B2B\SignupRequest;
 use App\Http\Requests\B2B\VerifyCodeRequest;
-use App\Http\Requests\B2B\BuyerOnboardingRequest;
-use App\Http\Requests\B2B\BusinessInformationRequest;
+use App\Http\Requests\LoginRequest;
+use App\Services\B2B\Auth\AuthService;
+use App\Services\B2B\BuyerService;
+use App\Services\B2B\SellerService;
 
 class B2BController extends Controller
 {
@@ -20,8 +19,7 @@ class B2BController extends Controller
         protected AuthService $service,
         protected SellerService $sellerService,
         protected BuyerService $buyerService,
-    )
-    {}
+    ) {}
 
     public function login(LoginRequest $request)
     {
@@ -57,6 +55,7 @@ class B2BController extends Controller
     {
         return $this->buyerService->searchProduct();
     }
+
     public function getSocialLinks()
     {
         return $this->buyerService->getSocialLinks();
@@ -106,6 +105,7 @@ class B2BController extends Controller
     {
         return $this->buyerService->getBanners();
     }
+
     public function getClientLogos()
     {
         return $this->buyerService->getClientLogos();

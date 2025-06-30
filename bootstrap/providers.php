@@ -2,8 +2,9 @@
 
 return [
     App\Providers\AppServiceProvider::class,
-    Maatwebsite\Excel\ExcelServiceProvider::class,
+    App\Providers\AuthServiceProvider::class,
     Jenssegers\Agent\AgentServiceProvider::class,
+    Maatwebsite\Excel\ExcelServiceProvider::class,
+    Torann\Currency\CurrencyServiceProvider::class,
     Unicodeveloper\Paystack\PaystackServiceProvider::class,
-    \Torann\Currency\CurrencyServiceProvider::class,
 ];

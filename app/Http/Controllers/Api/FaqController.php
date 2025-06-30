@@ -18,7 +18,7 @@ class FaqController extends Controller
     {
         $data = Faq::select('id', 'question', 'answer')->get();
 
-        return $this->success($data, "FAQs");
+        return $this->success($data, 'FAQs');
     }
 
     /**
@@ -28,10 +28,10 @@ class FaqController extends Controller
     {
         Faq::create([
             'question' => $request->question,
-            'answer' => $request->answer
+            'answer' => $request->answer,
         ]);
 
-        return $this->success(null, "Added successfully", 201);
+        return $this->success(null, 'Added successfully', 201);
     }
 
     /**
@@ -40,7 +40,8 @@ class FaqController extends Controller
     public function show(Faq $faq)
     {
         $data = Faq::select('id', 'question', 'answer')->findOrFail($faq->id);
-        return $this->success($data, "FAQ Detail");
+
+        return $this->success($data, 'FAQ Detail');
     }
 
     /**
@@ -52,10 +53,10 @@ class FaqController extends Controller
 
         $data->update([
             'question' => $request->question,
-            'answer' => $request->answer
+            'answer' => $request->answer,
         ]);
 
-        return $this->success(null, "Updated successfully");
+        return $this->success(null, 'Updated successfully');
     }
 
     /**
@@ -67,6 +68,6 @@ class FaqController extends Controller
 
         $data->delete();
 
-        return $this->success(null, "Deleted successfully");
+        return $this->success(null, 'Deleted successfully');
     }
 }

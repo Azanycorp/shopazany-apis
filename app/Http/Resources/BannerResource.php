@@ -15,13 +15,13 @@ class BannerResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => (int)$this->id,
-            'title' => (string)$this->title,
-            'image' => (string)$this->image,
-            'start_date' => (string)$this->start_date,
-            'end_date' => (string)$this->end_date,
+            'id' => (int) $this->id,
+            'title' => (string) $this->title,
+            'image' => (string) $this->image,
+            'start_date' => (string) $this->start_date,
+            'end_date' => (string) $this->end_date,
             'products' => $this->products,
-            'status' => (string)$this->status,
+            'status' => (string) $this->status,
         ];
     }
 }

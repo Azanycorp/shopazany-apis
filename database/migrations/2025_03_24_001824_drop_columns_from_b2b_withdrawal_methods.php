@@ -16,6 +16,4 @@ return new class extends Migration
             $table->dropColumn('account_type');
         });
     }
-
-    
 };

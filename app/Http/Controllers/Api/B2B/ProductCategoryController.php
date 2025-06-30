@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\Api\B2B;
 
-use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Gate;
 use App\Http\Requests\CategoryRequest;
 use App\Http\Requests\SubCategoryRequest;
 use App\Services\B2B\ProductCategoryService;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Gate;
 
 class ProductCategoryController extends Controller
 {
@@ -27,6 +27,7 @@ class ProductCategoryController extends Controller
 
         return $this->service->createCategory($request);
     }
+
     public function updateCategory(CategoryRequest $request, $id)
     {
         abort_if(Gate::denies('category_create'), Response::HTTP_FORBIDDEN, self::MESSAGE);

@@ -1,32 +1,32 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\ApiController;
-use App\Http\Controllers\Api\FaqController;
-use App\Http\Controllers\Api\RoleController;
-use App\Http\Controllers\Api\SizeController;
-use App\Http\Controllers\Api\UnitController;
-use App\Http\Controllers\Api\AdminController;
-use App\Http\Controllers\Api\BrandController;
-use App\Http\Controllers\Api\ColorController;
-use App\Http\Controllers\Api\OrderController;
-use App\Http\Controllers\Api\FinanceController;
-use App\Http\Controllers\Api\CategoryController;
-use App\Http\Controllers\Api\SettingsController;
-use App\Http\Controllers\Api\AdminAuthController;
-use App\Http\Controllers\Api\DashboardController;
-use App\Http\Controllers\Api\AdminCouponController;
-use App\Http\Controllers\Api\AdminSellerController;
-use App\Http\Controllers\Api\BannerPromoController;
-use App\Http\Controllers\Api\RewardPointController;
-use App\Http\Controllers\Api\AdminProductController;
-use App\Http\Controllers\Api\B2B\B2BAdminController;
-use App\Http\Controllers\Api\AdminCustomerController;
 use App\Http\Controllers\Api\AdminAffiliateController;
+use App\Http\Controllers\Api\AdminAuthController;
+use App\Http\Controllers\Api\AdminController;
+use App\Http\Controllers\Api\AdminCouponController;
+use App\Http\Controllers\Api\AdminCustomerController;
+use App\Http\Controllers\Api\AdminProductController;
+use App\Http\Controllers\Api\AdminSellerController;
+use App\Http\Controllers\Api\ApiController;
 use App\Http\Controllers\Api\B2B\B2BAdminBuyerController;
+use App\Http\Controllers\Api\B2B\B2BAdminController;
 use App\Http\Controllers\Api\B2B\B2BAdminSellerController;
 use App\Http\Controllers\Api\B2B\B2BBannerPromoController;
 use App\Http\Controllers\Api\B2B\ProductCategoryController;
+use App\Http\Controllers\Api\BannerPromoController;
+use App\Http\Controllers\Api\BrandController;
+use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\ColorController;
+use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\FaqController;
+use App\Http\Controllers\Api\FinanceController;
+use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\RewardPointController;
+use App\Http\Controllers\Api\RoleController;
+use App\Http\Controllers\Api\SettingsController;
+use App\Http\Controllers\Api\SizeController;
+use App\Http\Controllers\Api\UnitController;
+use Illuminate\Support\Facades\Route;
 
 Route::middleware('validate.header')
     ->group(function (): void {
@@ -134,7 +134,6 @@ Route::middleware('validate.header')
                 Route::get('/{user_id}', 'viewSeller');
                 Route::get('/payment-history/{user_id}', 'paymentHistory');
 
-
                 Route::patch('/{user_id}/edit', 'editSeller');
                 Route::delete('/remove/{user_id}', 'removeSeller');
 
@@ -222,7 +221,7 @@ Route::middleware('validate.header')
 
             Route::get('/generate/users/link', [ApiController::class, 'referralGenerate']);
 
-            //Shipping Agency
+            // Shipping Agency
             Route::prefix('shipping-management')
                 ->controller(B2BAdminController::class)
                 ->group(function (): void {
@@ -247,37 +246,37 @@ Route::middleware('validate.header')
 
             Route::controller(AdminController::class)
                 ->group(function () {
-                //Admin users
-                Route::prefix('admin-users')->group(function () {
-                    Route::get('/', 'adminUsers');
-                    Route::post('/add', 'addAdmin');
-                    Route::get('/details/{id}', 'viewAdminUser');
-                    Route::post('/update/{id}', 'editAdminUser');
-                    Route::post('/revoke-access/{id}', 'revokeAccess');
-                    Route::post('/verify-password', 'verifyPassword');
-                    Route::delete('/delete-account/{id}', 'removeAdmin');
-                });
+                    // Admin users
+                    Route::prefix('admin-users')->group(function () {
+                        Route::get('/', 'adminUsers');
+                        Route::post('/add', 'addAdmin');
+                        Route::get('/details/{id}', 'viewAdminUser');
+                        Route::post('/update/{id}', 'editAdminUser');
+                        Route::post('/revoke-access/{id}', 'revokeAccess');
+                        Route::post('/verify-password', 'verifyPassword');
+                        Route::delete('/delete-account/{id}', 'removeAdmin');
+                    });
 
-                //delivery (collation centers and hubs)
-                Route::get('/delivery-overview', 'deliveryOverview');
-                Route::prefix('collation-centre')->group(function () {
-                    Route::get('/', 'allCollationCentres');
-                    Route::post('/add', 'addCollationCentre');
-                    Route::get('/details/{id}', 'viewCollationCentre');
-                    Route::patch('/update/{id}', 'editCollationCentre');
-                    Route::delete('/delete/{id}', 'deleteCollationCentre');
+                    // delivery (collation centers and hubs)
+                    Route::get('/delivery-overview', 'deliveryOverview');
+                    Route::prefix('collation-centre')->group(function () {
+                        Route::get('/', 'allCollationCentres');
+                        Route::post('/add', 'addCollationCentre');
+                        Route::get('/details/{id}', 'viewCollationCentre');
+                        Route::patch('/update/{id}', 'editCollationCentre');
+                        Route::delete('/delete/{id}', 'deleteCollationCentre');
 
-                    Route::prefix('hubs')->group(function () {
-                        Route::get('/', 'allCollationCentreHubs');
-                        Route::post('/add', 'addHub');
-                        Route::get('/details/{id}', 'viewHub');
-                        Route::patch('/update/{id}', 'editHub');
-                        Route::delete('/delete/{id}', 'deleteHub');
+                        Route::prefix('hubs')->group(function () {
+                            Route::get('/', 'allCollationCentreHubs');
+                            Route::post('/add', 'addHub');
+                            Route::get('/details/{id}', 'viewHub');
+                            Route::patch('/update/{id}', 'editHub');
+                            Route::delete('/delete/{id}', 'deleteHub');
+                        });
                     });
                 });
-            });
 
-            //b2b admin
+            // b2b admin
             Route::prefix('b2b')->group(function () {
                 Route::controller(B2BAdminController::class)->group(function () {
                     Route::get('/dashboard', 'dashboard');
@@ -377,7 +376,7 @@ Route::middleware('validate.header')
                         Route::delete('/delete/{id}', 'deletePromo');
                     });
 
-                //buyers
+                // buyers
                 Route::prefix('buyer')
                     ->controller(B2BAdminBuyerController::class)
                     ->group(function (): void {
@@ -393,7 +392,7 @@ Route::middleware('validate.header')
                         Route::delete('/remove/{user_id}', 'removeBuyer');
                     });
 
-                //Sellers
+                // Sellers
                 Route::prefix('seller')
                     ->controller(B2BAdminSellerController::class)
                     ->group(function (): void {
@@ -414,7 +413,7 @@ Route::middleware('validate.header')
                             });
                     });
 
-                //Withdrawal requests
+                // Withdrawal requests
                 Route::prefix('widthrawal-request')
                     ->controller(B2BAdminController::class)
                     ->group(function (): void {
@@ -424,7 +423,7 @@ Route::middleware('validate.header')
                         Route::post('/cancel/{id}', 'cancelWidthrawalRequest');
                     });
 
-                //Withdrawal method requests
+                // Withdrawal method requests
                 Route::prefix('widthrawal-method-request')
                     ->controller(B2BAdminController::class)
                     ->group(function (): void {
@@ -434,7 +433,7 @@ Route::middleware('validate.header')
                         Route::post('/reject/{id}', 'rejectWidthrawalMethod');
                     });
 
-                //Subscriprion plans
+                // Subscriprion plans
                 Route::prefix('subscription-plans')
                     ->controller(B2BAdminController::class)
                     ->group(function (): void {
@@ -445,7 +444,7 @@ Route::middleware('validate.header')
                         Route::delete('/remove/{id}', 'deleteSubscriptionPlan');
                     });
 
-                //Seller Product Approval requests
+                // Seller Product Approval requests
                 Route::prefix('product-approval-request')
                     ->controller(B2BAdminController::class)
                     ->group(function (): void {
@@ -455,7 +454,7 @@ Route::middleware('validate.header')
                         Route::post('/reject/{id}', 'rejectProduct');
                     });
 
-                //Rfq
+                // Rfq
                 Route::middleware('cacheResponse:300')
                     ->prefix('rfqs')
                     ->controller(B2BAdminController::class)
@@ -464,7 +463,7 @@ Route::middleware('validate.header')
                         Route::get('/details/{id}', 'rfqDetails');
                     });
 
-                //Orders
+                // Orders
                 Route::middleware('cacheResponse:300')
                     ->prefix('orders')
                     ->controller(B2BAdminController::class)

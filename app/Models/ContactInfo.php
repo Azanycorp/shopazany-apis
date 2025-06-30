@@ -19,7 +19,7 @@ class ContactInfo extends Model
     protected function casts(): array
     {
         return [
-            'social_media' => 'array'
+            'social_media' => 'array',
         ];
     }
 }

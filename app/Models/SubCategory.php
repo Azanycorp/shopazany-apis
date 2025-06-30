@@ -13,8 +13,9 @@ class SubCategory extends Model
         'category_id',
         'name',
         'image',
+        'public_id',
         'slug',
-        'status'
+        'status',
     ];
 
     public function category()

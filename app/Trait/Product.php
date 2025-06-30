@@ -2,29 +2,24 @@
 
 namespace App\Trait;
 
-use Illuminate\Support\Facades\Storage;
-
 trait Product
 {
     public function uploadFrontImage($request, $folderPath)
     {
         if ($request->hasFile('front_image')) {
-            $path = $request->file('front_image')->store($folderPath->frontImage, 's3');
-            return Storage::disk('s3')->url($path);
+            return uploadImage($request, 'front_image', $folderPath->frontImage);
         }
 
-        return null;
+        return [
+            'url' => null,
+            'public_id' => null,
+        ];
     }
 
-    public function uploadAdditionalImages($request, $folderPath, $product)
+    public function uploadAdditionalImages($request, $name, $product)
     {
-        if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $image) {
-                $path = $image->store($folderPath->folder, 's3');
-                $url = Storage::disk('s3')->url($path);
-                $product->productimages()->create(['image' => $url]);
-            }
-        }
+        $folder = folderNames('product', $name, null, 'images');
+        uploadMultipleProductImage($request, 'images', $folder->folder, $product);
     }
 
     public function createProductRecord($request, $user, $slug, $url)
@@ -52,14 +47,15 @@ trait Product
             'discount_value' => $request->discount_value,
             'current_stock_quantity' => $request->current_stock_quantity,
             'minimum_order_quantity' => $request->minimum_order_quantity,
-            'image' => $url,
+            'image' => $url['url'],
+            'public_id' => $url['public_id'],
             'added_by' => $user->type,
             'country_id' => $user->country ?? 160,
             'default_currency' => $user->default_currency,
         ]);
     }
 
-    public function createProductVariations($request, $product)
+    public function createProductVariations($request, $product, $name)
     {
         $variations = collect($request->variation)->map(fn ($item) => json_decode($item, true));
         $variationImages = $request->file('variation_image', []);
@@ -68,8 +64,8 @@ trait Product
             $imageUrl = null;
 
             if (isset($variationImages[$index])) {
-                $path = $variationImages[$index]->store('product/variations', 's3');
-                $imageUrl = Storage::disk('s3')->url($path);
+                $folder = folderNames('product', $name, null, 'variations');
+                $imageUrl = uploadImageFile($variationImages[$index], $folder->folder);
             }
 
             $product->productVariations()->create([
@@ -77,14 +73,14 @@ trait Product
                 'sku' => $variation['sku'],
                 'price' => $variation['price'],
                 'stock' => $variation['stock'],
-                'image' => $imageUrl
+                'image' => $imageUrl['url'],
             ]);
         }
     }
 
     public function calculateFinalPrice($basePrice, $discountType = null, $discountValue = 0)
     {
-        if (!$discountType || $discountValue <= 0) {
+        if (! $discountType || $discountValue <= 0) {
             return $basePrice;
         }
 
@@ -99,7 +95,7 @@ trait Product
         return $basePrice;
     }
 
-    public function updateProductVariations($request, $product)
+    public function updateProductVariations($request, $product, $name)
     {
         $processedVariationIds = [];
 
@@ -111,8 +107,8 @@ trait Product
             $imageUrl = null;
 
             if (isset($variationImages[$index])) {
-                $path = $variationImages[$index]->store('product/variations', 's3');
-                $imageUrl = Storage::disk('s3')->url($path);
+                $folder = folderNames('product', $name, null, 'variations');
+                $imageUrl = uploadImageFile($variationImages[$index], $folder->folder);
             }
 
             if ($variationId) {
@@ -123,7 +119,7 @@ trait Product
                         'sku' => $variation['sku'],
                         'price' => $variation['price'],
                         'stock' => $variation['stock'],
-                        'image' => $imageUrl ?? $existingVariation->image,
+                        'image' => $imageUrl['url'] ?? $existingVariation->image,
                     ]);
 
                     $processedVariationIds[] = $existingVariation->id;
@@ -134,7 +130,7 @@ trait Product
                     'sku' => $variation['sku'],
                     'price' => $variation['price'],
                     'stock' => $variation['stock'],
-                    'image' => $imageUrl,
+                    'image' => $imageUrl['url'] ?? null,
                 ]);
 
                 $processedVariationIds[] = $newVariation->id;
@@ -144,6 +140,5 @@ trait Product
         $product->productVariations()
             ->whereNotIn('id', $processedVariationIds)
             ->delete();
-
     }
 }

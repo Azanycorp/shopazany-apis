@@ -10,7 +10,7 @@ use Laravel\Sanctum\HasApiTokens;
 
 class Admin extends Authenticatable
 {
-    use HasFactory, Notifiable, HasApiTokens;
+    use HasApiTokens, HasFactory, Notifiable;
 
     protected $fillable = [
         'first_name',
@@ -20,7 +20,7 @@ class Admin extends Authenticatable
         'phone_number',
         'password',
         'two_factor_enabled',
-        'status'
+        'status',
     ];
 
     protected $hidden = [
@@ -31,7 +31,7 @@ class Admin extends Authenticatable
     {
         $email = $this->email;
 
-        $url = config('services.reset_password_url') . '?token=' . $token . '&email=' . $email;
+        $url = config('services.reset_password_url').'?token='.$token.'&email='.$email;
 
         $this->notify(new ResetPasswordNotification($url));
     }
@@ -40,6 +40,7 @@ class Admin extends Authenticatable
     {
         return $this->hasMany(Product::class, 'admin_id');
     }
+
     public function blogs()
     {
         return $this->hasMany(Blog::class, 'admin_id');
@@ -54,5 +55,4 @@ class Admin extends Authenticatable
     {
         return $this->belongsToMany(Permission::class);
     }
-
 }

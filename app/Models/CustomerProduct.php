@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\App;
 
 class CustomerProduct extends Model
 {
-    protected $table = "customer_products";
+    protected $table = 'customer_products';
 
     use HasFactory;
 
@@ -18,6 +18,7 @@ class CustomerProduct extends Model
     {
         $lang = $lang === false ? App::getLocale() : $lang;
         $customer_product_translations = $this->customer_product_translations->where('lang', $lang)->first();
+
         return $customer_product_translations != null ? $customer_product_translations->$field : $this->$field;
     }
 

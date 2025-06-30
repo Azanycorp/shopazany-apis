@@ -4,17 +4,17 @@ namespace App\Models;
 
 use App\Trait\ClearsResponseCache;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class Product extends Model
 {
-    use HasFactory, ClearsResponseCache;
+    use ClearsResponseCache, HasFactory;
 
     protected $fillable = [
         'user_id',
@@ -39,6 +39,7 @@ class Product extends Model
         'current_stock_quantity',
         'minimum_order_quantity',
         'image',
+        'public_id',
         'added_by',
         'country_id',
         'is_featured',
@@ -88,7 +89,7 @@ class Product extends Model
     public function orders()
     {
         return $this->belongsToMany(Order::class, 'order_items')
-                    ->withPivot('product_quantity', 'price', 'sub_total', 'status');
+            ->withPivot('product_quantity', 'price', 'sub_total', 'status');
     }
 
     public function size(): BelongsTo
@@ -131,13 +132,13 @@ class Product extends Model
     {
         return Attribute::make(
             get: function () {
-                if (!Auth::guard('sanctum')->check()) {
+                if (! Auth::guard('sanctum')->check()) {
                     return false;
                 }
 
                 return Wishlist::where([
                     ['user_id', Auth::guard('sanctum')->id()],
-                    ['product_id', $this->id]
+                    ['product_id', $this->id],
                 ])->exists();
             }
         );
@@ -163,13 +164,13 @@ class Product extends Model
     public function scopeTopRated(Builder $query, $userId)
     {
         return $query->select(
-                'products.id',
-                'products.name',
-                'products.price',
-                'products.image',
-                'products.user_id',
-                DB::raw('CAST(COALESCE(ROUND(AVG(product_reviews.rating), 1), 0) AS DECIMAL(2,1)) as average_rating')
-            )
+            'products.id',
+            'products.name',
+            'products.price',
+            'products.image',
+            'products.user_id',
+            DB::raw('CAST(COALESCE(ROUND(AVG(product_reviews.rating), 1), 0) AS DECIMAL(2,1)) as average_rating')
+        )
             ->with('user:id,first_name,last_name,image')
             ->withCount('productReviews')
             ->where('products.user_id', $userId)
@@ -185,13 +186,13 @@ class Product extends Model
     public function scopeMostFavorite(Builder $query, $userId)
     {
         return $query->select(
-                'products.id',
-                'products.name',
-                'products.price',
-                'products.image',
-                'products.user_id',
-                DB::raw('CAST(COALESCE(ROUND(AVG(product_reviews.rating), 1), 0) AS DECIMAL(2,1)) as average_rating')
-            )
+            'products.id',
+            'products.name',
+            'products.price',
+            'products.image',
+            'products.user_id',
+            DB::raw('CAST(COALESCE(ROUND(AVG(product_reviews.rating), 1), 0) AS DECIMAL(2,1)) as average_rating')
+        )
             ->with('user:id,first_name,last_name,image')
             ->withCount('productReviews')
             ->where('products.user_id', $userId)

@@ -13,9 +13,10 @@ class Category extends Model
         'name',
         'slug',
         'image',
+        'public_id',
         'featured',
         'meta_title',
-        'meta_description'
+        'meta_description',
     ];
 
     public function subcategory()

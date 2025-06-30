@@ -15,18 +15,18 @@ class SubscriptionPlanResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => (int)$this->id,
-            'title' => (string)$this->title,
-            'cost' => (int)$this->cost,
-            'country_id' => (int)$this->country_id,
-            'currency' => (string)$this->currency,
-            'period' => (string)$this->period,
-            'tier' => (int)$this->tier,
-            'type' => (string)$this->type,
-            'designation' => (string)$this->designation,
-            'tagline' => (string)$this->tagline,
-            'details' => (string)$this->details,
-            'status' => (string)$this->status,
+            'id' => (int) $this->id,
+            'title' => (string) $this->title,
+            'cost' => (int) $this->cost,
+            'country_id' => (int) $this->country_id,
+            'currency' => (string) $this->currency,
+            'period' => (string) $this->period,
+            'tier' => (int) $this->tier,
+            'type' => (string) $this->type,
+            'designation' => (string) $this->designation,
+            'tagline' => (string) $this->tagline,
+            'details' => (string) $this->details,
+            'status' => (string) $this->status,
         ];
     }
 }

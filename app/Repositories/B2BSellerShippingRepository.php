@@ -40,13 +40,3 @@ class B2BSellerShippingRepository implements B2BRepositoryInterface
         return true;
     }
 }
-
-
-
-
-
-
-
-
-
-

@@ -11,9 +11,11 @@ class Blog extends Model
         'title',
         'type',
         'image',
+        'public_id',
         'slug',
         'description',
     ];
+
     public function user()
     {
         return $this->belongsTo(Admin::class, 'admin_id');

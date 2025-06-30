@@ -10,15 +10,14 @@ class FinanceController extends Controller
 {
     public function __construct(
         protected FinanceService $service
-    )
-    {}
+    ) {}
 
     public function addPaymentService(Request $request)
     {
         $request->validate([
             'name' => ['required', 'string', 'max:200'],
             'country_ids' => ['required', 'array'],
-            'country_ids.*' => ['required', 'integer', 'exists:countries,id']
+            'country_ids.*' => ['required', 'integer', 'exists:countries,id'],
         ]);
 
         return $this->service->addPaymentService($request);

@@ -15,7 +15,7 @@ class ShippingAgent extends Model
         'account_password',
         'api_live_key',
         'api_test_key',
-        'status'
+        'status',
     ];
 
     protected function casts(): array

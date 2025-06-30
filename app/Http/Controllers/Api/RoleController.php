@@ -7,14 +7,12 @@ use App\Http\Requests\Admin\AddPermissionRequest;
 use App\Http\Requests\Admin\AddRoleRequest;
 use App\Http\Requests\Admin\AssignPermissionRequest;
 use App\Services\Admin\RolePermissionService;
-use Illuminate\Http\Request;
 
 class RoleController extends Controller
 {
     public function __construct(
         protected RolePermissionService $service
-    )
-    {}
+    ) {}
 
     public function addRole(AddRoleRequest $request)
     {

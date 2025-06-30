@@ -2,77 +2,59 @@
 
 namespace App\Services\B2B;
 
-use App\Models\Rfq;
-use App\Models\Blog;
-use App\Models\User;
-use App\Models\Admin;
-use App\Trait\SignUp;
-use App\Enum\PlanType;
-use App\Enum\UserType;
 use App\Enum\AdminType;
-use App\Models\Country;
 use App\Enum\BannerType;
-use App\Enum\PlanStatus;
-use App\Enum\UserStatus;
-use App\Models\B2bOrder;
-use App\Enum\AdminStatus;
 use App\Enum\OrderStatus;
-use App\Models\B2bCompany;
-use App\Models\B2BProduct;
-use App\Models\ClientLogo;
-use App\Models\HomeBanner;
-use App\Models\PageBanner;
-use App\Models\UserWallet;
-use App\Enum\GeneralStatus;
+use App\Enum\PlanStatus;
+use App\Enum\PlanType;
 use App\Enum\ProductStatus;
-use App\Trait\HttpResponse;
-use Illuminate\Support\Str;
-use App\Models\Configuration;
-use App\Models\ShippingAgent;
-use App\Models\SocialSetting;
-use App\Mail\B2BNewAdminEmail;
-use App\Models\CollationCenter;
-use App\Models\SubscriptionPlan;
-use App\Models\WithdrawalRequest;
-use Illuminate\Support\Facades\DB;
-use App\Models\B2bWithdrawalMethod;
-use App\Models\BusinessInformation;
-use App\Http\Resources\BlogResource;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Storage;
+use App\Enum\UserStatus;
+use App\Enum\UserType;
 use App\Http\Resources\AdminUserResource;
-use App\Http\Resources\B2BSellerResource;
 use App\Http\Resources\B2BProductResource;
+use App\Http\Resources\B2BSellerResource;
+use App\Http\Resources\BlogResource;
 use App\Http\Resources\ClientLogoResource;
 use App\Http\Resources\SocialLinkResource;
-use App\Repositories\B2BProductRepository;
-use App\Http\Resources\ShippingAgentResource;
-use App\Http\Resources\CollationCentreResource;
 use App\Http\Resources\SubscriptionPlanResource;
+use App\Models\Admin;
+use App\Models\B2bCompany;
+use App\Models\B2bOrder;
+use App\Models\B2BProduct;
+use App\Models\Blog;
+use App\Models\ClientLogo;
+use App\Models\Configuration;
+use App\Models\PageBanner;
+use App\Models\Rfq;
+use App\Models\SocialSetting;
+use App\Models\SubscriptionPlan;
+use App\Models\User;
+use App\Models\WithdrawalRequest;
+use App\Repositories\B2BProductRepository;
 use App\Repositories\B2BSellerShippingRepository;
+use App\Trait\HttpResponse;
+use App\Trait\SignUp;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class AdminService
 {
     use HttpResponse, SignUp;
-    protected \App\Repositories\B2BProductRepository $b2bProductRepository;
-    protected \App\Repositories\B2BSellerShippingRepository $b2bSellerShippingRepository;
 
     public function __construct(
-        B2BProductRepository $b2bProductRepository,
-        B2BSellerShippingRepository $b2bSellerShippingRepository
-    ) {
-        $this->b2bProductRepository = $b2bProductRepository;
-        $this->b2bSellerShippingRepository = $b2bSellerShippingRepository;
-    }
+        protected B2BProductRepository $b2bProductRepository,
+        protected B2BSellerShippingRepository $b2bSellerShippingRepository
+    ) {}
 
-    //dashboard
+    // dashboard
     public function dashboard()
     {
-        $users =  User::all();
-        $orders =  B2bOrder::orderStats();
-        $rfqs =  Rfq::with(['buyer', 'seller'])->latest()->get();
-        $completion_request =  B2bOrder::where('status', OrderStatus::SHIPPED)->take(3)->get();
+        $users = User::all();
+        $orders = B2bOrder::orderStats();
+        $rfqs = Rfq::with(['buyer', 'seller'])->latest()->get();
+        $completion_request = B2bOrder::where('status', OrderStatus::SHIPPED)->take(3)->get();
         $data = [
             'buyers' => $users->where('type', UserType::B2B_BUYER)->count(),
             'sellers' => $users->where('type', UserType::B2B_SELLER)->count(),
@@ -86,14 +68,14 @@ class AdminService
             'completion_request' => $completion_request,
         ];
 
-        return $this->success($data, "Dashboard details");
+        return $this->success($data, 'Dashboard details');
     }
 
     public function getAllRfq()
     {
-        $rfqs =  Rfq::with(['buyer', 'seller'])->latest()->get();
-        $active_rfqs =  Rfq::where('status', OrderStatus::COMPLETED)->count();
-        $users =  User::all();
+        $rfqs = Rfq::with(['buyer', 'seller'])->latest()->get();
+        $active_rfqs = Rfq::where('status', OrderStatus::COMPLETED)->count();
+        $users = User::all();
 
         $data = [
             'buyers' => $users->where('type', UserType::B2B_BUYER)->count(),
@@ -102,34 +84,33 @@ class AdminService
             'recent_rfqs' => $rfqs,
         ];
 
-        return $this->success($data, "rfqs");
+        return $this->success($data, 'rfqs');
     }
 
     public function getRfqDetails($id)
     {
         $order = Rfq::with(['buyer', 'seller'])->findOrFail($id);
 
-        return $this->success($order, "Rfq details");
+        return $this->success($order, 'Rfq details');
     }
 
     public function getAllOrders()
     {
         $searchQuery = request()->input('search');
-        $orders =  B2bOrder::orderStats();
+        $orders = B2bOrder::orderStats();
         $international_orders = B2bOrder::when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
             $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
                 $subQuery->where('country_id', '!=', 160)
-                    ->where('order_no', 'LIKE', '%' . $searchQuery . '%');
+                    ->where('order_no', 'LIKE', '%'.$searchQuery.'%');
             });
         })->get();
 
         $local_orders = B2bOrder::with(['buyer', 'seller'])->when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
             $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
                 $subQuery->where('country_id', 160)
-                    ->where('order_no', 'LIKE', '%' . $searchQuery . '%');
+                    ->where('order_no', 'LIKE', '%'.$searchQuery.'%');
             });
         })->get();
-
 
         $data = [
             'all_orders' => $orders->total_orders,
@@ -142,23 +123,24 @@ class AdminService
 
         ];
 
-        return $this->success($data, "orders");
+        return $this->success($data, 'orders');
     }
 
     public function getOrderDetails($id)
     {
         $order = B2bOrder::with(['buyer', 'seller'])->findOrFail($id);
 
-        return $this->success($order, "Order details");
+        return $this->success($order, 'Order details');
     }
 
     public function markCompleted($id)
     {
         $order = B2bOrder::findOrFail($id);
         $order->update([
-            'status' => OrderStatus::DELIVERED
+            'status' => OrderStatus::DELIVERED,
         ]);
-        return $this->success(null, "Order Completed");
+
+        return $this->success(null, 'Order Completed');
     }
 
     public function cancelOrder($id)
@@ -168,12 +150,12 @@ class AdminService
         try {
             $order = B2bOrder::findOrFail($id);
             $order->update([
-                'status' => OrderStatus::CANCELLED
+                'status' => OrderStatus::CANCELLED,
             ]);
 
             $product = B2BProduct::find($order->product_id);
-            if (!$product) {
-                return $this->error(null, "Product not found", 404);
+            if (! $product) {
+                return $this->error(null, 'Product not found', 404);
             }
 
             $product->availability_quantity += $order->product_quantity;
@@ -182,15 +164,16 @@ class AdminService
 
             DB::commit();
 
-            return $this->success(null, "Order cancelled successfully.");
+            return $this->success(null, 'Order cancelled successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->error(null, "Failed to cancel order: " . $e->getMessage(), 500);
+
+            return $this->error(null, 'Failed to cancel order: '.$e->getMessage(), 500);
         }
     }
 
-    //Sellers
-    //Admin section
+    // Sellers
+    // Admin section
     public function allSellers()
     {
         $sellers = User::withCount('b2bProducts')
@@ -207,7 +190,7 @@ class AdminService
                 UserStatus::ACTIVE,
                 UserStatus::PENDING,
                 UserStatus::BLOCKED,
-                UserStatus::SUSPENDED
+                UserStatus::SUSPENDED,
             ])
             ->first();
 
@@ -217,7 +200,8 @@ class AdminService
             'inactive' => $sellersCounts->inactive,
             'sellers' => $sellers,
         ];
-        return $this->success($data, "sellers details");
+
+        return $this->success($data, 'sellers details');
     }
 
     public function approveSeller($id)
@@ -226,11 +210,11 @@ class AdminService
             ->where('id', $id)
             ->firstOrFail();
 
-        $user->is_admin_approve = !$user->is_admin_approve;
+        $user->is_admin_approve = ! $user->is_admin_approve;
         $user->status = $user->is_admin_approve ? UserStatus::ACTIVE : UserStatus::BLOCKED;
         $user->save();
 
-        $status = $user->is_admin_approve ? "Approved successfully" : "Disapproved successfully";
+        $status = $user->is_admin_approve ? 'Approved successfully' : 'Disapproved successfully';
 
         return $this->success(null, $status);
     }
@@ -246,10 +230,10 @@ class AdminService
         $query = B2BProduct::with(['b2bProductImages', 'category', 'country', 'user', 'subCategory'])
             ->where('user_id', $id);
 
-        if (!empty($search)) {
-            $query->where('name', 'like', '%' . $search . '%')
+        if (! empty($search)) {
+            $query->where('name', 'like', '%'.$search.'%')
                 ->orWhereHas('category', function ($q) use ($search): void {
-                    $q->where('name', 'like', '%' . $search . '%');
+                    $q->where('name', 'like', '%'.$search.'%');
                 });
         }
 
@@ -274,10 +258,10 @@ class AdminService
         ]);
 
         $data = [
-            'user_id' => $user->id
+            'user_id' => $user->id,
         ];
 
-        return $this->success($data, "Updated successfully");
+        return $this->success($data, 'Updated successfully');
     }
 
     public function banSeller($id)
@@ -290,7 +274,7 @@ class AdminService
         $user->is_admin_approve = 0;
         $user->save();
 
-        return $this->success(null, "User has been blocked successfully");
+        return $this->success(null, 'User has been blocked successfully');
     }
 
     public function removeSeller($id)
@@ -300,7 +284,8 @@ class AdminService
             ->firstOrFail();
 
         $user->delete();
-        return $this->success(null, "User removed successfully");
+
+        return $this->success(null, 'User removed successfully');
     }
 
     public function bulkRemove($request)
@@ -310,38 +295,42 @@ class AdminService
             ->get();
 
         if ($users->isEmpty()) {
-            return $this->error(null, "No matching users found.", 404);
+            return $this->error(null, 'No matching users found.', 404);
         }
 
         User::whereIn('id', $users->pluck('id'))->update([
             'status' => UserStatus::DELETED,
             'is_verified' => 0,
-            'is_admin_approve' => 0
+            'is_admin_approve' => 0,
         ]);
 
         User::whereIn('id', $users->pluck('id'))->delete();
-        return $this->success(null, "User(s) have been removed successfully");
+
+        return $this->success(null, 'User(s) have been removed successfully');
     }
 
-    //Seller Product
+    // Seller Product
     public function addSellerProduct($request)
     {
         $user = User::find($request->user_id);
 
         if (! $user) {
-            return $this->error(null, "User not found", 404);
+            return $this->error(null, 'User not found', 404);
         }
+
         $parts = explode('@', $user->email);
         $name = $parts[0];
         $res = folderNames('b2bproduct', $name, 'front_image');
         $slug = Str::slug($request->name);
+
         if (B2BProduct::where('slug', $slug)->exists()) {
-            $slug = $slug . '-' . uniqid();
+            $slug = $slug.'-'.uniqid();
         }
+
         if ($request->hasFile('front_image')) {
-            $path = $request->file('front_image')->store($res->frontImage, 's3');
-            $url = Storage::disk('s3')->url($path);
+            $url = uploadImage($request, 'front_image', $res->frontImage);
         }
+
         $data = [
             'user_id' => $user->id,
             'name' => $request->name,
@@ -350,7 +339,8 @@ class AdminService
             'sub_category_id' => $request->sub_category_id,
             'keywords' => $request->keywords,
             'description' => $request->description,
-            'front_image' => $url,
+            'front_image' => $url['url'] ?? null,
+            'public_id' => $url['public_id'] ?? null,
             'minimum_order_quantity' => $request->minimum_order_quantity,
             'unit_price' => $request->unit,
             'quantity' => $request->quantity,
@@ -358,17 +348,14 @@ class AdminService
             'fob_price' => $request->fob_price,
             'country_id' => is_int($user->country) ? $user->country : 160,
         ];
-        $product = $this->b2bProductRepository->create($data);
-        if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $image) {
-                $path = $image->store($res->folder, 's3');
-                $url = Storage::disk('s3')->url($path);
 
-                $product->b2bProductImages()->create([
-                    'image' => $url,
-                ]);
-            }
+        $product = $this->b2bProductRepository->create($data);
+
+        if ($request->hasFile('images')) {
+            $folder = folderNames('product', $name, null, 'images');
+            uploadMultipleB2BProductImage($request, 'images', $folder->folder, $product);
         }
+
         return $this->success(null, 'Product added successfully', 201);
     }
 
@@ -376,11 +363,11 @@ class AdminService
     {
         $user = User::find($user_id);
         $prod = B2BProduct::where('user_id', $user->id)->find($product_id);
-        if (!$user) {
-            return $this->error(null, "No user found.", 404);
+        if (! $user) {
+            return $this->error(null, 'No user found.', 404);
         }
-        if (!$prod) {
-            return $this->error(null, "No product found.", 404);
+        if (! $prod) {
+            return $this->error(null, 'No product found.', 404);
         }
         $data = new B2BProductResource($prod);
 
@@ -391,15 +378,19 @@ class AdminService
     {
         $prod = B2BProduct::find($product_id);
         $user = User::find($user_id);
-        if (!$user) {
-            return $this->error(null, "No user found.", 404);
+
+        if (! $user) {
+            return $this->error(null, 'No user found.', 404);
         }
-        if (!$prod) {
-            return $this->error(null, "No Product found.", 404);
+
+        if (! $prod) {
+            return $this->error(null, 'No Product found.', 404);
         }
+
         if ($prod->user_id != $user_id) {
-            return $this->error(null, "Unauthorized action.", 401);
+            return $this->error(null, 'Unauthorized action.', 401);
         }
+
         $parts = explode('@', $user->email);
         $name = $parts[0];
 
@@ -409,17 +400,14 @@ class AdminService
             $slug = Str::slug($request->name);
 
             if (B2BProduct::where('slug', $slug)->exists()) {
-                $slug = $slug . '-' . uniqid();
+                $slug = $slug.'-'.uniqid();
             }
         } else {
             $slug = $prod->slug;
         }
 
         if ($request->hasFile('front_image')) {
-            $path = $request->file('front_image')->store($res->frontImage, 's3');
-            $url = Storage::disk('s3')->url($path);
-        } else {
-            $url = $prod->front_image;
+            $url = uploadImage($request, 'front_image', $res->frontImage);
         }
 
         $data = [
@@ -430,7 +418,8 @@ class AdminService
             'sub_category_id' => $request->sub_category_id ?? $prod->name,
             'keywords' => $request->keywords ?? $prod->keywords,
             'description' => $request->description ?? $prod->description,
-            'front_image' => $url,
+            'front_image' => $url['url'] ?? $prod->front_image,
+            'public_id' => $url['public_id'] ?? $prod->public_id,
             'quantity' => $request->quantity ?? $prod->quantity,
             'minimum_order_quantity' => $request->minimum_order_quantity ?? $prod->minimum_order_quantity,
             'unit_price' => $request->unit ?? $prod->unit_price,
@@ -441,14 +430,8 @@ class AdminService
 
         if ($request->hasFile('images')) {
             $product->b2bProductImages()->delete();
-            foreach ($request->file('images') as $image) {
-                $path = $image->store($res->folder, 's3');
-                $url = Storage::disk('s3')->url($path);
-
-                $product->b2bProductImages()->create([
-                    'image' => $url,
-                ]);
-            }
+            $folder = folderNames('product', $name, null, 'images');
+            uploadMultipleB2BProductImage($request, 'images', $folder->folder, $product);
         }
 
         return $this->success(null, 'Product updated successfully');
@@ -457,14 +440,19 @@ class AdminService
     public function removeSellerProduct($user_id, $product_id)
     {
         $user = User::find($user_id);
-        if (!$user) {
-            return $this->error(null, "No user found.", 404);
+
+        if (! $user) {
+            return $this->error(null, 'No user found.', 404);
         }
+
         $prod = B2BProduct::where('user_id', $user->id)->find($product_id);
-        if (!$prod) {
-            return $this->error(null, "No product found.", 404);
+
+        if (! $prod) {
+            return $this->error(null, 'No product found.', 404);
         }
+
         $prod->delete();
+
         return $this->success(null, 'Product Deleted successfully');
     }
 
@@ -477,7 +465,7 @@ class AdminService
                 SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as pending_buyers
             ', [
                 UserStatus::ACTIVE,
-                UserStatus::PENDING
+                UserStatus::PENDING,
             ])
             ->first();
 
@@ -493,7 +481,7 @@ class AdminService
             'buyers' => $buyers,
         ];
 
-        return $this->success($data, "Buyers retrieved successfully.");
+        return $this->success($data, 'Buyers retrieved successfully.');
     }
 
     public function viewBuyer($id)
@@ -503,25 +491,31 @@ class AdminService
             ->where('type', UserType::B2B_BUYER)
             ->where('id', $id)
             ->firstOrFail();
-        return $this->success($user, "Buyer details");
+
+        return $this->success($user, 'Buyer details');
     }
 
     public function editBuyer($request, $id)
     {
         $user = User::findOrFail($id);
 
-        if (!empty($request->email) && User::where('email', $request->email)->where('id', '!=', $id)->exists()) {
-            return $this->error(null, "Email already exists.");
+        if (! empty($request->email) && User::where('email', $request->email)->where('id', '!=', $id)->exists()) {
+            return $this->error(null, 'Email already exists.');
         }
 
-        $image = $request->hasFile('image') ? uploadUserImage($request, 'image', $user) : $user->image;
+        $image = $request->hasFile('image') ? 
+            uploadUserImage($request, 'image', $user) : 
+            ['url' => $user->image, 'public_id' => $user->public_id];
+
         $user->update([
             'first_name' => $request->first_name ?? $user->first_name,
             'last_name' => $request->last_name ?? $user->last_name,
             'email' => $request->email ?? $user->email,
-            'image' => $request->image ? $image : $user->image,
+            'image' => $image['url'],
+            'public_id' => $image['public_id'],
         ]);
-        return $this->success($user, "Buyer details");
+
+        return $this->success($user, 'Buyer details');
     }
 
     public function editBuyerCompany($request, $id)
@@ -529,7 +523,7 @@ class AdminService
         $user = User::findOrFail($id);
         $company = B2bCompany::where('user_id', $user->id)->first();
 
-        if (!$company) {
+        if (! $company) {
             return $this->error(null, 'No company found to update', 404);
         }
 
@@ -540,7 +534,7 @@ class AdminService
             'service_type' => $request->service_type ?? $company->service_type,
         ]);
 
-        return $this->success($company, "company details");
+        return $this->success($company, 'company details');
     }
 
     public function removeBuyer($id)
@@ -548,7 +542,7 @@ class AdminService
         $user = User::findOrFail($id);
         $user->delete();
 
-        return $this->success(null, "User removed successfully");
+        return $this->success(null, 'User removed successfully');
     }
 
     public function bulkRemoveBuyer($request)
@@ -556,30 +550,30 @@ class AdminService
         $users = User::whereIn('id', $request->user_ids)->get();
 
         if ($users->isEmpty()) {
-            return $this->error(null, "No matching users found.", 404);
+            return $this->error(null, 'No matching users found.', 404);
         }
 
         User::whereIn('id', $users->pluck('id'))->update([
             'status' => UserStatus::DELETED,
             'is_verified' => 0,
-            'is_admin_approve' => 0
+            'is_admin_approve' => 0,
         ]);
 
         User::whereIn('id', $users->pluck('id'))->delete();
 
-        return $this->success(null, "User(s) have been removed successfully");
+        return $this->success(null, 'User(s) have been removed successfully');
     }
 
     public function approveBuyer($id)
     {
         $user = User::findOrFail($id);
 
-        $user->is_admin_approve = !$user->is_admin_approve;
+        $user->is_admin_approve = ! $user->is_admin_approve;
         $user->status = $user->is_admin_approve ? UserStatus::ACTIVE : UserStatus::BLOCKED;
 
         $user->save();
 
-        $status = $user->is_admin_approve ? "Approved successfully" : "Disapproved successfully";
+        $status = $user->is_admin_approve ? 'Approved successfully' : 'Disapproved successfully';
 
         return $this->success(null, $status);
     }
@@ -593,16 +587,17 @@ class AdminService
 
         $user->save();
 
-        return $this->success(null, "User has been blocked successfully");
+        return $this->success(null, 'User has been blocked successfully');
     }
 
-    //CMS / Promo and banners
+    // CMS / Promo and banners
     public function adminProfile()
     {
         $authUser = userAuth();
         $user = Admin::where('type', AdminType::B2B)
             ->where('id', $authUser->id)
             ->firstOrFail();
+
         $data = new AdminUserResource($user);
 
         return $this->success($data, 'Profile detail');
@@ -647,18 +642,21 @@ class AdminService
             ->where('id', $authUser->id)
             ->firstOrFail();
 
-        if (!Hash::check($request->old_password, $user->password)) {
+        if (! Hash::check($request->old_password, $user->password)) {
             return $this->error('Old password is incorrect.', 400);
         }
+
         $user->update([
             'password' => bcrypt($request->password),
         ]);
+
         return $this->success(null, 'Password updated');
     }
 
     public function getConfigDetails()
     {
         $config = Configuration::firstOrFail();
+
         return $this->success($config, 'Config details');
     }
 
@@ -681,7 +679,7 @@ class AdminService
             'withdrawal_fee',
             'seller_perc',
             'paystack_perc',
-            'paystack_fixed'
+            'paystack_fixed',
         ]);
 
         Configuration::updateOrCreate([], $configData);
@@ -692,39 +690,50 @@ class AdminService
     public function getPageBanners()
     {
         $banners = PageBanner::select('id', 'page', 'section', 'type', 'banner_url')->where('type', BannerType::B2B)->latest()->get();
+
         return $this->success($banners, 'Banners');
     }
 
     public function updatePageBanner($request, $id)
     {
         $banner = PageBanner::where('type', BannerType::B2B)->findOrFail($id);
-        $banner_url = $banner && $request->hasFile('banner_url')
-            ? uploadImage($request, 'banner_url', 'home-banner')
-            : ($banner ? $banner->banner_url : null);
+
+        if ($banner && $request->hasFile('banner_url')) {
+            $banner_url = uploadImage($request, 'banner_url', 'home-banner');
+        }
 
         $banner->update([
             'page' => $request->page ?? $banner->page,
             'section' => $request->section ?? $banner->section,
             'type' => BannerType::B2B,
-            'banner_url' => $banner_url,
+            'banner_url' => $banner_url['url'] ?? $banner->banner_url,
         ]);
+
         return $this->success(null, 'Details updated');
     }
+
     public function addPageBanner($request)
     {
-        $banner_url = $request->hasFile('banner_url') ? uploadImage($request, 'banner_url', 'home-banner') : null;
+        $banner_url = $request->hasFile('banner_url') ? 
+            uploadImage($request, 'banner_url', 'home-banner') : 
+            ['url' => null];
 
         PageBanner::create([
             'page' => $request->page,
             'section' => $request->section,
-            'type' =>  BannerType::B2B,
-            'banner_url' => $banner_url,
+            'type' => BannerType::B2B,
+            'banner_url' => $banner_url['url'],
         ]);
-        return $this->success(null, 'Banner added');
+
+        return $this->success(null, 'Banner added', 201);
     }
+
     public function getPageBanner($id)
     {
-        $banner = PageBanner::select('id', 'page', 'section', 'type', 'banner_url')->where('type', BannerType::B2B)->findOrFail($id);
+        $banner = PageBanner::select('id', 'page', 'section', 'type', 'banner_url')
+            ->where('type', BannerType::B2B)
+            ->findOrFail($id);
+
         return $this->success($banner, 'Banner details');
     }
 
@@ -732,13 +741,14 @@ class AdminService
     {
         $banner = PageBanner::where('type', BannerType::B2B)->findOrFail($id);
         $banner->delete();
+
         return $this->success(null, 'Details Deleted');
     }
 
-    //seller withdrawal request
+    // seller withdrawal request
     public function widthrawalRequests()
     {
-        $payouts =  WithdrawalRequest::select(['id', 'user_id', 'amount', 'status', 'created_at'])
+        $payouts = WithdrawalRequest::select(['id', 'user_id', 'amount', 'status', 'created_at'])
             ->with(['user' => function ($query): void {
                 $query->select('id', 'first_name', 'last_name')->where('type', UserType::B2B_SELLER);
             }])->latest()->get();
@@ -750,31 +760,38 @@ class AdminService
         return $this->success($payouts, 'Withdrawal requests');
     }
 
-    //seller Product request
+    // seller Product request
     public function allProducts()
     {
-        $products =  B2BProduct::with(['user' => function ($query): void {
-            $query->select('id', 'first_name', 'last_name')->where('type', UserType::B2B_SELLER);
-        }])->where('status', OrderStatus::PENDING)->latest()->get();
+        $products = B2BProduct::with(['user' => function ($query): void {
+                $query->select('id', 'first_name', 'last_name')
+                    ->where('type', UserType::B2B_SELLER);
+            }])
+            ->whereStatus(OrderStatus::PENDING)
+            ->latest()
+            ->get();
 
         if ($products->isEmpty()) {
             return $this->error(null, 'No record found', 404);
         }
+
         return $this->success($products, 'Products listing');
     }
 
     public function viewProduct($id)
     {
         $product = B2BProduct::with(['user' => function ($query): void {
-            $query->select('id', 'first_name', 'last_name')->where('type', UserType::B2B_SELLER);
-        }])->findOrFail($id);
+                $query->select('id', 'first_name', 'last_name')
+                    ->where('type', UserType::B2B_SELLER);
+            }])
+            ->findOrFail($id);
 
         return $this->success($product, 'Product details');
     }
 
     public function approveProduct($id)
     {
-        $product =  B2BProduct::findOrFail($id);
+        $product = B2BProduct::findOrFail($id);
 
         $product->update([
             'status' => ProductStatus::ACTIVE,
@@ -786,19 +803,21 @@ class AdminService
     public function rejectProduct($request, $id)
     {
         $product = B2BProduct::findOrFail($id);
+
         $product->update([
             'status' => ProductStatus::DECLINED,
-            'admin_comment' => $request->note
+            'admin_comment' => $request->note,
         ]);
 
         return $this->success(null, 'Comment Submitted successfully');
     }
 
-    //Subscription Plans
+    // Subscription Plans
     public function b2bSubscriptionPlans()
     {
         $plans = SubscriptionPlan::where('type', PlanType::B2B)->latest()->get();
         $data = SubscriptionPlanResource::collection($plans);
+
         return $this->success($data, 'All B2B Plans');
     }
 
@@ -816,29 +835,34 @@ class AdminService
             'tagline' => $request->tagline,
             'details' => $request->details,
             'type' => PlanType::B2B,
-            'status' => PlanStatus::ACTIVE
+            'status' => PlanStatus::ACTIVE,
         ]);
+
         return $this->success($plan, 'Plan added successfully', 201);
     }
 
     public function viewSubscriptionPlan($id)
     {
         $plan = SubscriptionPlan::where('type', PlanType::B2B)->find($id);
-        if (!$plan) {
+        if (! $plan) {
             return $this->error(null, 'Plan not found', 404);
         }
 
         $data = new SubscriptionPlanResource($plan);
+
         return $this->success($data, 'Plan details');
     }
 
     public function editSubscriptionPlan($request, $id)
     {
         $plan = SubscriptionPlan::where('type', PlanType::B2B)->find($id);
-        if (!$plan) {
+
+        if (! $plan) {
             return $this->error(null, 'Plan not found', 404);
         }
+
         $currencyCode = $this->currencyCode($request);
+
         $plan->update([
             'title' => $request->title,
             'cost' => $request->cost,
@@ -849,8 +873,9 @@ class AdminService
             'designation' => $request->designation,
             'tagline' => $request->tagline,
             'details' => $request->details,
-            'status' => $request->status ?? PlanStatus::ACTIVE
+            'status' => $request->status ?? PlanStatus::ACTIVE,
         ]);
+
         return $this->success(null, 'Details updated successfully');
     }
 
@@ -871,27 +896,36 @@ class AdminService
         return $this->success(null, 'Plan deleted successfully.');
     }
 
-    //Blog Section
+    // Blog Section
     public function allBlogs()
     {
         $currentUserId = userAuthId();
-        $blogs = Blog::with('user')->where('admin_id', $currentUserId)->where('type', BannerType::B2B)->latest()->get();
+        $blogs = Blog::with('user')
+            ->where('admin_id', $currentUserId)
+            ->where('type', BannerType::B2B)
+            ->latest()
+            ->get();
+
         $data = BlogResource::collection($blogs);
+
         return $this->success($data, 'Added Blogs');
     }
 
     public function addBlog($request)
     {
         $currentUserId = userAuthId();
-        $url =  uploadImage($request, 'image', 'blog');
+        $url = uploadImage($request, 'image', 'blog');
+
         $plan = Blog::create([
             'admin_id' => $currentUserId,
             'title' => $request->title,
             'type' => BannerType::B2B,
             'slug' => Str::slug($request->title),
             'description' => $request->description,
-            'image' => $url,
+            'image' => $url['url'],
+            'public_id' => $url['public_id'],
         ]);
+
         return $this->success($plan, 'Plan added successfully', 201);
     }
 
@@ -899,18 +933,25 @@ class AdminService
     {
         $blog = Blog::findOrFail($id);
         $data = new BlogResource($blog);
+
         return $this->success($data, 'Blog details');
     }
 
     public function updateBlog($request, $id)
     {
-        $blog = Blog::where('id', $id)->where('type', BannerType::B2B)->firstOrFail();
-        $url = $request->file('image') ? uploadImage($request, 'image', 'blog') : $blog->image;
+        $blog = Blog::where('id', $id)
+            ->where('type', BannerType::B2B)
+            ->firstOrFail();
+
+        $url = $request->file('image') ? 
+            uploadImage($request, 'image', 'blog') : 
+            ['url' => $blog->image, 'public_id' => $blog->public_id];
 
         $blog->update([
             'title' => $request->title ?? $blog->title,
             'description' => $request->description ?? $blog->description,
-            'image' => $url,
+            'image' => $url['url'],
+            'public_id' => $url['public_id'],
         ]);
 
         return $this->success('Details updated successfully');
@@ -920,11 +961,11 @@ class AdminService
     {
         $blog = Blog::where('id', $id)->where('type', BannerType::B2B)->firstOrFail();
         $blog->delete();
+
         return $this->success('Blog deleted successfully.');
     }
 
-
-    //Client Logo Section
+    // Client Logo Section
     public function allClientLogos()
     {
         $clients = ClientLogo::latest()->get();
@@ -936,12 +977,13 @@ class AdminService
 
     public function addClientLogo($request)
     {
-        $url =  uploadImage($request, 'logo', 'clients');
+        $url = uploadImage($request, 'logo', 'clients');
 
         $plan = ClientLogo::create([
             'name' => $request->name,
-            'logo' => $url,
+            'logo' => $url['url'],
         ]);
+
         return $this->success($plan, 'Client Logo added successfully', 201);
     }
 
@@ -950,6 +992,7 @@ class AdminService
         $client = ClientLogo::findOrFail($id);
 
         $data = new ClientLogoResource($client);
+
         return $this->success($data, 'Client details');
     }
 
@@ -957,11 +1000,11 @@ class AdminService
     {
         $client = ClientLogo::where('id', $id)->firstOrFail();
 
-        $url = $request->file('logo') ? uploadImage($request, 'logo', 'clients') : $client->logo;
+        $url = $request->file('logo') ? uploadImage($request, 'logo', 'clients') : ['url' => $client->logo];
 
         $client->update([
             'name' => $request->name ?? $client->name,
-            'logo' => $url,
+            'logo' => $url['url'],
         ]);
 
         return $this->success('Details updated successfully');
@@ -974,9 +1017,9 @@ class AdminService
         $client->delete();
 
         return $this->success('Blog deleted successfully.');
-    //Social Links
+        // Social Links
     }
-    
+
     public function getSocialLinks()
     {
         $links = SocialSetting::latest()->get();
@@ -995,6 +1038,7 @@ class AdminService
         ]);
 
         $data = new SocialLinkResource($link);
+
         return $this->success($data, 'link added successfully', 201);
     }
 
@@ -1025,6 +1069,7 @@ class AdminService
         $link = SocialSetting::findOrFail($id);
 
         $link->delete();
+
         return $this->success(null, 'Link deleted successfully.');
     }
 }

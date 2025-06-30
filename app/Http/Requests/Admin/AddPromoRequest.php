@@ -25,7 +25,7 @@ class AddPromoRequest extends FormRequest
             'coupon_type' => ['required', 'in:product,total_orders,welcome_coupon'],
             'coupon_code' => ['required', 'string', 'unique:promos,coupon_code'],
             'discount' => ['required', 'integer'],
-            'discount_type' => ['required', 'in:amount,percent']
+            'discount_type' => ['required', 'in:amount,percent'],
         ];
     }
 }

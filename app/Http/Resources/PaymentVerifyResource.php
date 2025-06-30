@@ -17,7 +17,7 @@ class PaymentVerifyResource extends JsonResource
         return [
             'message' => $this->message,
             'value' => (object) [
-                'status' => $this->data->status
+                'status' => $this->data->status,
             ],
         ];
     }

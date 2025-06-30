@@ -2,17 +2,17 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
-use App\Models\User;
 use App\Models\Action;
-use Illuminate\Foundation\Testing\WithFaker;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\WithFaker;
+use Tests\TestCase;
 
 class SignUpTest extends TestCase
 {
     use RefreshDatabase, WithFaker;
 
-    public function setUp(): void
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -32,7 +32,7 @@ class SignUpTest extends TestCase
         ];
 
         $password = 'ValidPass123!@#';
-        $email = 'test'. rand(00, 99) . '@gmail.com';
+        $email = 'test'.rand(00, 99).'@gmail.com';
 
         $payload = [
             'first_name' => $this->faker->firstName,
@@ -46,7 +46,7 @@ class SignUpTest extends TestCase
         $response = $this->postJson('/api/connect/signup', $payload, $headers);
 
         $response->assertStatus(200)
-                 ->assertJson(['message' => 'Created successfully']);
+            ->assertJson(['message' => 'Created successfully']);
 
         $this->assertDatabaseHas('users', [
             'email' => $payload['email'],
@@ -77,7 +77,7 @@ class SignUpTest extends TestCase
         $response = $this->postJson('/api/connect/signup', $payload, $headers);
 
         $response->assertStatus(422)
-                 ->assertJsonValidationErrors(['first_name', 'last_name', 'email', 'password', 'terms']);
+            ->assertJsonValidationErrors(['first_name', 'last_name', 'email', 'password', 'terms']);
     }
 
     /**
@@ -90,11 +90,11 @@ class SignUpTest extends TestCase
         ];
 
         User::factory()->create([
-            'referrer_code' => 'REF1234'
+            'referrer_code' => 'REF1234',
         ]);
 
         $password = $password = $this->faker->password(16);
-        $email = 'test'. rand(00, 99) . '@gmail.com';
+        $email = 'test'.rand(00, 99).'@gmail.com';
 
         $payload = [
             'first_name' => $this->faker->firstName,
@@ -108,7 +108,7 @@ class SignUpTest extends TestCase
         $response = $this->postJson('/api/connect/signup?referrer=REF1234', $payload, $headers);
 
         $response->assertStatus(200)
-                 ->assertJson(['message' => 'Created successfully']);
+            ->assertJson(['message' => 'Created successfully']);
 
         $this->assertDatabaseHas('users', [
             'email' => $payload['email'],

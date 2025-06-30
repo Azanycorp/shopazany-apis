@@ -16,7 +16,7 @@ class UserBusinessInformation extends Model
         'identity_type',
         'file',
         'confirm',
-        'status'
+        'status',
     ];
 
     public function user()

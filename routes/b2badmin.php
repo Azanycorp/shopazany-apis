@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\B2B\ProductCategoryController;
 use App\Http\Controllers\Api\AdminAuthController;
+use App\Http\Controllers\Api\B2B\ProductCategoryController;
+use Illuminate\Support\Facades\Route;
 
 Route::middleware('validate.header')
     ->group(function (): void {

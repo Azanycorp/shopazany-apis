@@ -14,7 +14,7 @@ class UserActivityLog extends Model
         'action',
         'points_awarded',
         'description',
-        'status'
+        'status',
     ];
 
     public function user()
@@ -28,7 +28,7 @@ class UserActivityLog extends Model
         $actionSlug = $action['slug'];
         $pointsAwarded = $action['points'];
 
-        $log = new self();
+        $log = new self;
 
         $log->user_id = $user['id'];
         $log->action = $actionSlug;

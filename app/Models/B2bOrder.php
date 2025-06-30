@@ -2,12 +2,11 @@
 
 namespace App\Models;
 
-use App\Models\Country;
 use App\Trait\ClearsResponseCache;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 
 class B2bOrder extends Model
 {
@@ -30,25 +29,29 @@ class B2bOrder extends Model
         'delivery_date',
         'shipped_date',
         'centre_id',
-        'country_id'
+        'country_id',
     ];
 
     public function product(): BelongsTo
     {
         return $this->belongsTo(B2BProduct::class);
     }
+
     public function seller(): BelongsTo
     {
         return $this->belongsTo(User::class, 'seller_id', 'id');
     }
+
     public function collationCentre(): BelongsTo
     {
         return $this->belongsTo(CollationCenter::class, 'centre_id');
     }
+
     public function country(): BelongsTo
     {
         return $this->belongsTo(Country::class);
     }
+
     public function buyer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'buyer_id', 'id');
@@ -59,7 +62,7 @@ class B2bOrder extends Model
         return [
             'shipping_address' => 'array',
             'billing_address' => 'array',
-            'product_data' => 'array'
+            'product_data' => 'array',
         ];
     }
 

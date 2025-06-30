@@ -7,13 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 
 class CityTranslation extends Model
 {
-    protected $table = "city_translations";
-    
+    protected $table = 'city_translations';
+
     use HasFactory;
 
     protected $fillable = ['name', 'lang', 'city_id'];
 
-    public function city(){
+    public function city()
+    {
         return $this->belongsTo(City::class);
     }
 }

@@ -4,7 +4,6 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Gate;
 use Symfony\Component\HttpFoundation\Response;
 
 class AuthGates
@@ -16,22 +15,8 @@ class AuthGates
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $user = $request?->user()?->load('roles.permissions');
-
-        if($user){
-            $permissions = [];
-
-            foreach($user->roles as $role) {
-                foreach($role->permissions as $singlePermission){
-                    $permissions[] = $singlePermission->name;
-                }
-            }
-
-            collect($permissions)->unique()->each(function ($permission): void {
-                Gate::define($permission, function($user): true {
-                    return true;
-                });
-            });
+        if ($user = $request->user()) {
+            $user->load('roles.permissions');
         }
 
         return $next($request);

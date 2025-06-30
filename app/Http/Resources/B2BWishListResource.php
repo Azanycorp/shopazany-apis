@@ -17,11 +17,11 @@ class B2BWishListResource extends JsonResource
         $average_rating = $this->b2bProductReview->avg('rating');
 
         return [
-            'id' => (int)$this->id,
+            'id' => (int) $this->id,
             'product' => $this->product,
             'qty' => $this->qty,
             'rating' => floatval($average_rating),
-            'review_count' => (int)$this->b2bProductReview?->count(),
+            'review_count' => (int) $this->b2bProductReview?->count(),
         ];
     }
 }

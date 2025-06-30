@@ -15,9 +15,9 @@ class SocialLinkResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'name' => (string)$this->name,
-            'icon' => (string)$this->icon,
-            'url' => (string)$this->url,
+            'name' => (string) $this->name,
+            'icon' => (string) $this->icon,
+            'url' => (string) $this->url,
         ];
     }
 }

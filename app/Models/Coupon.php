@@ -22,7 +22,7 @@ class Coupon extends Model
     protected function casts(): array
     {
         return [
-            'used_by' => 'array'
+            'used_by' => 'array',
         ];
     }
 }

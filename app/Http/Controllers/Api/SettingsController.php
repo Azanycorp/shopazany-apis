@@ -12,13 +12,12 @@ class SettingsController extends Controller
 {
     public function __construct(
         protected SettingsService $service
-    )
-    {}
+    ) {}
 
     public function addSeo(Request $request)
     {
         $request->validate([
-            'keywords' => ['required', 'array']
+            'keywords' => ['required', 'array'],
         ]);
 
         return $this->service->addSeo($request);

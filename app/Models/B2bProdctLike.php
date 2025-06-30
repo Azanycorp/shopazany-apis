@@ -16,6 +16,7 @@ class B2bProdctLike extends Model
     {
         return $this->belongsTo(User::class, 'buyer_id');
     }
+
     public function b2bProduct(): BelongsTo
     {
         return $this->belongsTo(B2BProduct::class, 'product_id');

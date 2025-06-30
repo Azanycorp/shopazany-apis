@@ -16,13 +16,13 @@ class HubResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'name' => (string)$this->name,
-            'location' => (string)$this->location,
-            'note' => (string)$this->note,
-            'city' => (string)$this->city,
+            'name' => (string) $this->name,
+            'location' => (string) $this->location,
+            'note' => (string) $this->note,
+            'city' => (string) $this->city,
             'country' => $this->country?->name,
             'collation_center' => $this->collationCenter?->name,
-            'status' => (string)$this->status,
+            'status' => (string) $this->status,
         ];
     }
 }

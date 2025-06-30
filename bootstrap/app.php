@@ -1,22 +1,22 @@
 <?php
 
 use App\Http\Middleware\AuthCheck;
-use App\Http\Middleware\B2BBuyer;
 use App\Http\Middleware\AuthGates;
+use App\Http\Middleware\B2BBuyer;
 use App\Http\Middleware\B2BSeller;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Route;
-use Illuminate\Foundation\Application;
-use App\Http\Middleware\CheckWalletBalance;
+use App\Http\Middleware\BlockUserAfterFailedAttempts;
 use App\Http\Middleware\BuyerAuthMiddleware;
+use App\Http\Middleware\CheckUserCountry;
+use App\Http\Middleware\CheckWalletBalance;
+use App\Http\Middleware\EnsureUserIsOwner;
 use App\Http\Middleware\SellerAuthMiddleware;
+use App\Http\Middleware\ValidateHeader;
+use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Route;
 use Spatie\ResponseCache\Middlewares\CacheResponse;
-use App\Http\Middleware\BlockUserAfterFailedAttempts;
-use App\Http\Middleware\CheckUserCountry;
-use App\Http\Middleware\EnsureUserIsOwner;
-use App\Http\Middleware\ValidateHeader;
 use Spatie\ResponseCache\Middlewares\DoNotCacheResponse;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -54,7 +54,7 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions) {
         $exceptions->reportable(function (Throwable $e) {
-            Log::channel('slack')->error($e->getMessage(),[
+            Log::channel('slack')->error($e->getMessage(), [
                 'file' => $e->getFile(),
                 'Line' => $e->getLine(),
                 'code' => $e->getCode(),

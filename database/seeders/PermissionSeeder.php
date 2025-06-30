@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Permission;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class PermissionSeeder extends Seeder
@@ -15,67 +14,67 @@ class PermissionSeeder extends Seeder
     {
         $data = [
             [
-                'name' => 'overview'
+                'name' => 'overview',
             ],
             [
-                'name' => 'order_management'
+                'name' => 'order_management',
             ],
             [
-                'name' => 'seller_management'
+                'name' => 'seller_management',
             ],
             [
-                'name' => 'customer_management'
+                'name' => 'customer_management',
             ],
             [
-                'name' => 'banner_promo'
+                'name' => 'banner_promo',
             ],
             [
-                'name' => 'points_management'
+                'name' => 'points_management',
             ],
             [
-                'name' => 'add_new_product'
+                'name' => 'add_new_product',
             ],
             [
-                'name' => 'product_list'
+                'name' => 'product_list',
             ],
             [
-                'name' => 'pending_products'
+                'name' => 'pending_products',
             ],
             [
-                'name' => 'seller_products'
+                'name' => 'seller_products',
             ],
             [
-                'name' => 'azany_products'
+                'name' => 'azany_products',
             ],
             [
-                'name' => 'categories'
+                'name' => 'categories',
             ],
             [
-                'name' => 'advert_requests'
+                'name' => 'advert_requests',
             ],
             [
-                'name' => 'manage_blogs'
+                'name' => 'manage_blogs',
             ],
             [
-                'name' => 'manage_policy_pages'
+                'name' => 'manage_policy_pages',
             ],
             [
-                'name' => 'subscriptions'
+                'name' => 'subscriptions',
             ],
             [
-                'name' => 'roles_permissions'
+                'name' => 'roles_permissions',
             ],
             [
-                'name' => 'category_create'
+                'name' => 'category_create',
             ],
             [
-                'name' => 'sub_category_create'
+                'name' => 'sub_category_create',
             ],
             [
-                'name' => 'sub_category'
+                'name' => 'sub_category',
             ],
             [
-                'name' => 'category_featured_status'
+                'name' => 'category_featured_status',
             ],
         ];
 

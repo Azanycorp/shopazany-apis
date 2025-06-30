@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Foundation\Http\FormRequest;
 
 class EditBuyerRequest extends FormRequest
@@ -24,7 +23,7 @@ class EditBuyerRequest extends FormRequest
     {
 
         return [
-            'email' => ['required','email'],
+            'email' => ['required', 'email'],
             'first_name' => ['required'],
             'last_name' => ['required'],
         ];

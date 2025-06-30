@@ -19,11 +19,11 @@ class B2BQuoteResource extends JsonResource
             : 0;
 
         return [
-            'id' => (int)$this->id,
+            'id' => (int) $this->id,
             'product' => $this->product,
             'qty' => $this->qty,
             'rating' => floatval($average_rating),
-            'review_count' => (int)$this->b2b_product_review_count,
+            'review_count' => (int) $this->b2b_product_review_count,
         ];
     }
 }

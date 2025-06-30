@@ -58,8 +58,8 @@ class CustomerOrderDetailResource extends JsonResource
         })->toArray();
 
         return [
-            'id' => (int)$this->id,
-            'order_no' => (string)$this->order_no,
+            'id' => (int) $this->id,
+            'order_no' => (string) $this->order_no,
             'total_amount' => $totalConvertedAmount,
             'customer' => (object) [
                 'id' => $this->user?->id,
@@ -69,7 +69,7 @@ class CustomerOrderDetailResource extends JsonResource
             ],
             'products' => $products,
             'shipping_address' => (object) [
-                'name' => $this->user?->userShippingAddress()->first()?->first_name . ' ' . $this->user?->userShippingAddress()->first()?->last_name,
+                'name' => $this->user?->userShippingAddress()->first()?->first_name.' '.$this->user?->userShippingAddress()->first()?->last_name,
                 'phone' => $this->user?->userShippingAddress()->first()?->phone,
                 'email' => $this->user?->userShippingAddress()->first()?->email,
                 'address' => $this->user?->userShippingAddress()->first()?->street_address,
@@ -86,7 +86,7 @@ class CustomerOrderDetailResource extends JsonResource
             }),
             'order_date' => Carbon::parse($this->created_at)->format('d M Y'),
             'order_time' => Carbon::parse($this->created_at)->format('h:i A'),
-            'payment_status' => strtolower($this->payment_status) === "success" ? "paid" : "not-paid",
+            'payment_status' => strtolower($this->payment_status) === 'success' ? 'paid' : 'not-paid',
             'payment_method' => $this->payment_method,
             'status' => $this->status,
         ];

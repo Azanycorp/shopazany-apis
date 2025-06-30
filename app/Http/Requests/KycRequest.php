@@ -31,7 +31,7 @@ class KycRequest extends FormRequest
             'phone_number' => ['required', 'string'],
             'document_number' => ['required', 'string'],
             'document_type' => ['required', 'string'],
-            'image' => ['required', 'image', 'mimes:png,jpg,jpeg']
+            'image' => ['required', 'image', 'mimes:png,jpg,jpeg'],
         ];
     }
 }

@@ -15,24 +15,26 @@ class RewardPointController extends Controller
 
     public function __construct(
         protected RewardPointService $service
-    )
-    {}
+    ) {}
 
     public function addPoints(AddRewardPointRequest $request)
     {
         abort_if(Gate::denies('points_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+
         return $this->service->addPoints($request);
     }
 
     public function getPoints()
     {
         abort_if(Gate::denies('points_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+
         return $this->service->getPoints();
     }
 
     public function getOnePoints($id)
     {
         abort_if(Gate::denies('points_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+
         return $this->service->getOnePoints($id);
     }
 
@@ -54,18 +56,21 @@ class RewardPointController extends Controller
     public function deletePoints($id)
     {
         abort_if(Gate::denies('points_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+
         return $this->service->deletePoints($id);
     }
 
     public function addPointSetting(Request $request)
     {
         abort_if(Gate::denies('points_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+
         return $this->service->addPointSetting($request);
     }
 
     public function getPointSetting()
     {
         abort_if(Gate::denies('points_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+
         return $this->service->getPointSetting();
     }
 }

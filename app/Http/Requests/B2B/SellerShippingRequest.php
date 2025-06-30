@@ -28,8 +28,8 @@ class SellerShippingRequest extends FormRequest
             'email' => ['required', 'email'],
             'street' => ['required', 'string'],
             'city' => ['required', 'string'],
-            'state_id' => ['required', 'integer','exists:states,id'],
-            'country_id' => ['required', 'integer','exists:countries,id']
+            'state_id' => ['required', 'integer', 'exists:states,id'],
+            'country_id' => ['required', 'integer', 'exists:countries,id'],
         ];
     }
 }
