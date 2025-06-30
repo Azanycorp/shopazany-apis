@@ -43,7 +43,6 @@ jobs:
         rsync -avz --delete \
           --exclude='.env' \
           --exclude='storage/*' \
-          --exclude='vendor/' \
           --exclude='node_modules/' \
           -e "ssh -i ~/.ssh/id_rsa -o LogLevel=ERROR" \
           ./ ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:${{ secrets.VPS_BACKEND_PATH }}
