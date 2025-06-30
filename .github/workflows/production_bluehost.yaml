@@ -1,42 +1,53 @@
-name: Production Deployment
+name: Deploy to BlueHost
 
 on:
   push:
-    branches: [deploy]
+    branches: [ deploy ]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      - name: Setup PHP 8.2
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.2'
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.2'
+        extensions: mbstring, dom, fileinfo, mysql, curl
+        tools: composer:v2
 
-      - name: Install dependencies
-        run: |
-          composer install --no-dev --prefer-dist --optimize-autoloader
+    - name: Install SSH Key
+      uses: shimataro/ssh-key-action@v2
+      with:
+        key: ${{ secrets.VPS_SSH_KEY }}
+        known_hosts: 'temp'  # Required by action but we override below
 
-      - name: 📂 Sync files
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_SERVER }}  # Should be ftp.erq.peg.mybluehost.me
-          username: ${{ secrets.FTP_USERNAME }}  # Must include @host: user@erq.peg.mybluehost.me
-          password: ${{ secrets.FTP_PASSWORD }}
-          protocol: ftp
-          port: 21
-          server-dir: ./   #./public_html/  # Critical Bluehost fix - relative path
-          local-dir: ./  # Deploys entire repo (adjust if needed)
-          ftp-passive-mode: true  # Required for Bluehost
-          ftp-ignore-passive-ip: true  # Fixes passive IP issues
-          dangerous-clean-slate: false  # Safety precaution
-          verbose: true  # Enable detailed logs
-          exclude: |
-            */.git
-            */.git/**
-            */node_modules/*
-            */node_modules//
-            fileToExclude.txt
+    - name: Configure SSH
+      run: |
+        mkdir -p ~/.ssh
+        # Add server fingerprint (from GitHub Secrets)
+        echo "${{ secrets.VPS_HOST }} ${{ secrets.SSH_FINGERPRINT }}" >> ~/.ssh/known_hosts
+        # Verify fingerprint
+        ssh-keygen -l -f ~/.ssh/known_hosts | grep "${{ secrets.VPS_HOST }}"
+
+    - name: Sync Files
+      run: |
+        rsync -avz --delete \
+          --exclude='.env' \
+          --exclude='storage/*' \
+          --exclude='vendor/' \
+          -e "ssh -o StrictHostKeyChecking=yes" \
+          ./ ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:${{ secrets.VPS_BACKEND_PATH }}
+
+    - name: Remote Commands
+      run: |
+        ssh -o StrictHostKeyChecking=yes \
+          ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} \
+          "cd ${{ secrets.VPS_BACKEND_PATH }} && \
+          composer install --no-dev --optimize-autoloader && \
+          php artisan optimize:clear && \
+          php artisan optimize && \
+          chmod -R 755 storage bootstrap/cache"
