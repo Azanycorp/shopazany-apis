@@ -9,6 +9,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    # -----------------------------------
+    # STEP 1: Prepare the environment
+    # -----------------------------------
     - name: Checkout code
       uses: actions/checkout@v3
 
@@ -19,50 +22,103 @@ jobs:
         extensions: mbstring, dom, fileinfo, mysql, curl
         tools: composer:v2
 
+    # -----------------------------------
+    # STEP 2: SSH Setup & Validation
+    # -----------------------------------
     - name: Configure SSH Environment
       run: |
         mkdir -p ~/.ssh
         echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
         
-        # Get all host key types
-        ssh-keyscan -t rsa,ecdsa,ed25519 ${{ secrets.VPS_HOST }} > ~/.ssh/known_hosts 
+        # Add server fingerprint
+        ssh-keyscan -t ecdsa ${{ secrets.VPS_HOST }} > ~/.ssh/known_hosts
         chmod 644 ~/.ssh/known_hosts
-        
-        # Debug output
-        echo "=== SSH Configuration ==="
-        ls -la ~/.ssh
-        echo "Known hosts:"
-        cat ~/.ssh/known_hosts
-        echo "Private key head:"
-        head -n 3 ~/.ssh/id_rsa 
 
-    - name: Test SSH Connection (With Debug)
+    - name: Validate SSH Key
       run: |
-        echo "=== Testing SSH Connection ==="
-        ssh -vvv -o BatchMode=yes \
-            -o StrictHostKeyChecking=yes \
-            -i ~/.ssh/id_rsa \
-            ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} \
-            "echo 'SSH connection successful!'" || true
+        echo "=== SSH Key Validation ==="
+        
+        # 1. Verify key file exists
+        if [ ! -f ~/.ssh/id_rsa ]; then
+          echo "::error::Private key file not found"
+          exit 1
+        fi
+        
+        # 2. Check key format headers
+        if ! grep -q "BEGIN OPENSSH PRIVATE KEY" ~/.ssh/id_rsa; then
+          echo "::error::Missing BEGIN OPENSSH PRIVATE KEY header"
+          head -n 1 ~/.ssh/id_rsa
+          exit 1
+        fi
+        
+        if ! grep -q "END OPENSSH PRIVATE KEY" ~/.ssh/id_rsa; then
+          echo "::error::Missing END OPENSSH PRIVATE KEY footer"
+          exit 1
+        fi
+        
+        # 3. Validate key structure
+        if ! ssh-keygen -l -f ~/.ssh/id_rsa >/dev/null 2>&1; then
+          echo "::error::Invalid key format"
+          exit 1
+        fi
+        
+        # 4. Test public key derivation
+        if ! ssh-keygen -y -f ~/.ssh/id_rsa >/dev/null 2>&1; then
+          echo "::error::Failed to derive public key"
+          exit 1
+        fi
+        
+        echo "✓ SSH key is valid"
+        echo "Fingerprint: $(ssh-keygen -lf ~/.ssh/id_rsa | awk '{print $2}')"
 
-    - name: Rsync Deployment
-      if: success()
+    - name: Test SSH Connection
+      run: |
+        echo "=== Testing Connection ==="
+        ssh -vvv -i ~/.ssh/id_rsa \
+          -o StrictHostKeyChecking=yes \
+          -o IdentitiesOnly=yes \
+          ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} \
+          "echo '✓ Successfully connected to server'"
+      timeout-minutes: 2
+
+    # -----------------------------------
+    # STEP 3: Deployment
+    # -----------------------------------
+    - name: Install Dependencies
+      run: composer install --no-dev --optimize-autoloader
+
+    - name: Sync Files
       run: |
         rsync -avz --delete \
           --exclude='.env' \
           --exclude='storage/*' \
           --exclude='vendor/' \
-          -e "ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=yes" \
+          --exclude='node_modules/' \
+          -e "ssh -i ~/.ssh/id_rsa -o IdentitiesOnly=yes" \
           ./ ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:${{ secrets.VPS_BACKEND_PATH }}
 
-    - name: Run Remote Commands
-      if: success()
+    # -----------------------------------
+    # STEP 4: Remote Commands
+    # -----------------------------------
+    - name: Run Post-Deployment Commands
       run: |
         ssh -i ~/.ssh/id_rsa \
           ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} \
           "cd ${{ secrets.VPS_BACKEND_PATH }} && \
-          composer install --no-dev --optimize-autoloader && \
           php artisan optimize:clear && \
           php artisan optimize && \
-          chmod -R 755 storage bootstrap/cache"
+          chmod -R 755 storage bootstrap/cache && \
+          echo '✓ Deployment completed successfully'"
+
+    # -----------------------------------
+    # STEP 5: Final Verification
+    # -----------------------------------
+    - name: Verify Deployment
+      run: |
+        echo "=== Deployment Verification ==="
+        ssh -i ~/.ssh/id_rsa \
+          ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} \
+          "cd ${{ secrets.VPS_BACKEND_PATH }} && \
+          php artisan --version && \
+          ls -la storage/framework/"
