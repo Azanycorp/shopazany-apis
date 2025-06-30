@@ -13,7 +13,7 @@ jobs:
     # STEP 1: Prepare the environment
     # -----------------------------------
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v3 
 
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
