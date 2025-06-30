@@ -19,29 +19,35 @@ jobs:
         extensions: mbstring, dom, fileinfo, mysql, curl
         tools: composer:v2
 
-    - name: Configure SSH
+    - name: Configure SSH Environment
       run: |
         mkdir -p ~/.ssh
-        chmod 700 ~/.ssh
         echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
         
-        # Add all host key types to known_hosts
-        ssh-keyscan -t rsa,ecdsa,ed25519 ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
+        # Get all host key types
+        ssh-keyscan -t rsa,ecdsa,ed25519 ${{ secrets.VPS_HOST }} > ~/.ssh/known_hosts
         chmod 644 ~/.ssh/known_hosts
         
-        # Verify host key
-        ssh-keygen -lf ~/.ssh/known_hosts
+        # Debug output
+        echo "=== SSH Configuration ==="
+        ls -la ~/.ssh
+        echo "Known hosts:"
+        cat ~/.ssh/known_hosts
+        echo "Private key head:"
+        head -n 3 ~/.ssh/id_rsa
 
-    - name: Test SSH Connection
+    - name: Test SSH Connection (With Debug)
       run: |
-        ssh -o BatchMode=yes \
+        echo "=== Testing SSH Connection ==="
+        ssh -vvv -o BatchMode=yes \
             -o StrictHostKeyChecking=yes \
             -i ~/.ssh/id_rsa \
             ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} \
-            "echo 'SSH connection successful!'"
+            "echo 'SSH connection successful!'" || true
 
     - name: Rsync Deployment
+      if: success()
       run: |
         rsync -avz --delete \
           --exclude='.env' \
@@ -51,6 +57,7 @@ jobs:
           ./ ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:${{ secrets.VPS_BACKEND_PATH }}
 
     - name: Run Remote Commands
+      if: success()
       run: |
         ssh -i ~/.ssh/id_rsa \
           ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} \
