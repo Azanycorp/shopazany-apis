@@ -2,31 +2,31 @@
 
 namespace App\Services;
 
-use App\Models\Admin;
-use App\Trait\SignUp;
-use App\Enum\PlanStatus;
-use App\Models\B2bOrder;
 use App\Enum\AdminStatus;
 use App\Enum\AdminType;
 use App\Enum\MailingEnum;
 use App\Enum\OrderStatus;
-use App\Trait\HttpResponse;
-use Illuminate\Support\Str;
+use App\Enum\PlanStatus;
+use App\Http\Resources\CollationCentreResource;
+use App\Http\Resources\HubResource;
+use App\Http\Resources\ShippingAgentResource;
+use App\Mail\B2BNewAdminEmail;
+use App\Models\Admin;
+use App\Models\B2bOrder;
+use App\Models\CollationCenter;
 use App\Models\PickupStation;
 use App\Models\ShippingAgent;
-use App\Mail\B2BNewAdminEmail;
-use App\Models\CollationCenter;
-use Illuminate\Support\Facades\DB;
-use App\Http\Resources\HubResource;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Contracts\Pipeline\Hub;
-use App\Http\Resources\ShippingAgentResource;
-use App\Http\Resources\CollationCentreResource;
+use App\Trait\HttpResponse;
+use App\Trait\SignUp;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class SuperAdminService
 {
     use HttpResponse, SignUp;
+
     public function getDashboardDetails()
     {
         $centers = CollationCenter::with(['country', 'hubs.country'])->latest('id')->get();
@@ -44,10 +44,11 @@ class SuperAdminService
             'inactive_centers' => $collation_counts->inactive_centers ?? 0,
             'centers' => CollationCentreResource::collection($centers),
         ];
+
         return $this->success($collation_details, 'All available collation centres');
     }
 
-    //Collation centers
+    // Collation centers
     public function deliveryOverview()
     {
         $order_counts = B2bOrder::selectRaw('
@@ -67,6 +68,7 @@ class SuperAdminService
             'hubs' => $hubs,
             'collation_centers' => $collation_centers,
         ];
+
         return $this->success($details, 'delivery overview');
     }
 
@@ -98,7 +100,7 @@ class SuperAdminService
             'note' => $request->note,
             'city' => $request->city,
             'country_id' => $request->country_id ?? 160,
-            'status' => PlanStatus::ACTIVE
+            'status' => PlanStatus::ACTIVE,
         ]);
 
         return $this->success($centre, 'Centre added successfully', 201);
@@ -108,7 +110,7 @@ class SuperAdminService
     {
         $centre = CollationCenter::with(['country', 'hubs.country'])->find($id);
 
-        if (!$centre) {
+        if (! $centre) {
             return $this->error(null, 'Centre not found', 404);
         }
 
@@ -143,7 +145,7 @@ class SuperAdminService
     ', [
             OrderStatus::DELIVERED,
             OrderStatus::PENDING,
-            OrderStatus::CANCELLED
+            OrderStatus::CANCELLED,
         ])->first()->toArray() ?? ['total_orders' => 0, 'completed' => 0, 'pending' => 0, 'cancelled' => 0];
     }
 
@@ -151,7 +153,7 @@ class SuperAdminService
     {
         $centre = CollationCenter::find($id);
 
-        if (!$centre) {
+        if (! $centre) {
             return $this->error(null, 'Centre not found', 404);
         }
 
@@ -161,7 +163,7 @@ class SuperAdminService
             'note' => $request->note ?? $centre->note,
             'city' => $request->city ?? $centre->city,
             'country_id' => $request->country_id ?? $centre->country_id,
-            'status' => $request->status ?? $centre->status
+            'status' => $request->status ?? $centre->status,
         ]);
 
         return $this->success(null, 'Details updated successfully');
@@ -171,12 +173,12 @@ class SuperAdminService
     {
         $centre = CollationCenter::with('hubs')->find($id);
 
-        if (!$centre) {
+        if (! $centre) {
             return $this->error(null, 'Centre not found', 404);
         }
 
         if ($centre->hubs->exists()) {
-            return $this->error(null, "Category can not be deleted because it has content", 422);
+            return $this->error(null, 'Category can not be deleted because it has content', 422);
         }
 
         $centre->delete();
@@ -202,7 +204,7 @@ class SuperAdminService
             'note' => $request->note,
             'city' => $request->city,
             'country_id' => $request->country_id,
-            'status' => PlanStatus::ACTIVE
+            'status' => PlanStatus::ACTIVE,
         ]);
 
         return $this->success($hub, 'Hub added successfully', 201);
@@ -212,11 +214,12 @@ class SuperAdminService
     {
         $centre = PickupStation::with(['country', 'collationCenter'])->find($id);
 
-        if (!$centre) {
+        if (! $centre) {
             return $this->error(null, 'Hub not found', 404);
         }
 
         $data = new HubResource($centre);
+
         return $this->success($data, 'Hub details');
     }
 
@@ -224,7 +227,7 @@ class SuperAdminService
     {
         $hub = PickupStation::find($id);
 
-        if (!$hub) {
+        if (! $hub) {
             return $this->error(null, 'Hub not found', 404);
         }
 
@@ -235,7 +238,7 @@ class SuperAdminService
             'note' => $request->note ?? $hub->note,
             'city' => $request->city ?? $hub->city,
             'country_id' => $request->country_id ?? $hub->country_id,
-            'status' => $request->status ?? $hub->status
+            'status' => $request->status ?? $hub->status,
         ]);
 
         return $this->success(null, 'Details updated successfully');
@@ -245,7 +248,7 @@ class SuperAdminService
     {
         $hub = PickupStation::find($id);
 
-        if (!$hub) {
+        if (! $hub) {
             return $this->error(null, 'Hub not found', 404);
         }
 
@@ -254,7 +257,7 @@ class SuperAdminService
         return $this->success(null, 'Hub deleted successfully.');
     }
 
-    //Admin User Management
+    // Admin User Management
     public function adminUsers()
     {
         $user = Auth::user();
@@ -307,7 +310,7 @@ class SuperAdminService
             DB::commit();
 
             $type = MailingEnum::ADMIN_ACCOUNT;
-            $subject = "Admin Account Creation email";
+            $subject = 'Admin Account Creation email';
             $mail_class = B2BNewAdminEmail::class;
 
             mailSend($type, $admin, $subject, $mail_class, $loginDetails);
@@ -322,6 +325,7 @@ class SuperAdminService
     public function viewAdmin($id)
     {
         $admin = Admin::findOrFail($id);
+
         return $this->success($admin, 'Admin details');
     }
 
@@ -358,10 +362,12 @@ class SuperAdminService
 
         return $this->error(null, 'Password do not match');
     }
+
     public function revokeAccess($id)
     {
         $admin = Admin::findOrFail($id);
         $admin->permissions()->detach();
+
         return $this->success(null, 'Access Revoked');
     }
 
@@ -370,14 +376,16 @@ class SuperAdminService
         $admin = Admin::findOrFail($id);
         $admin->permissions()->detach();
         $admin->delete();
+
         return $this->success(null, 'Deleted successfully');
     }
 
-    //Shipping Agents
+    // Shipping Agents
     public function shippingAgents()
     {
         $agents = ShippingAgent::latest()->get();
         $data = ShippingAgentResource::collection($agents);
+
         return $this->success($data, 'All Agents');
     }
 
@@ -401,6 +409,7 @@ class SuperAdminService
     {
         $agent = ShippingAgent::findOrFail($id);
         $data = new ShippingAgentResource($agent);
+
         return $this->success($data, 'Agent details');
     }
 
@@ -418,6 +427,7 @@ class SuperAdminService
             'api_test_key' => $request->api_test_key ?? $agent->api_test_key,
             'status' => $request->status ?? $agent->status,
         ]);
+
         return $this->success(null, 'Details updated successfully');
     }
 
@@ -425,6 +435,7 @@ class SuperAdminService
     {
         $agent = ShippingAgent::findOrFail($id);
         $agent->delete();
+
         return $this->success(null, 'Details deleted successfully');
     }
 }

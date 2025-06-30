@@ -14,7 +14,7 @@ class OrderRate extends Model
         'user_id',
         'order_no',
         'rating',
-        'description'
+        'description',
     ];
 
     public function user(): BelongsTo

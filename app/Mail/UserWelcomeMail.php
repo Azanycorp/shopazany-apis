@@ -3,7 +3,6 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
@@ -15,7 +14,9 @@ class UserWelcomeMail extends Mailable
     use Queueable, SerializesModels;
 
     public $user;
+
     public $baseUrl;
+
     public $loginUrl;
 
     /**
@@ -68,13 +69,14 @@ class UserWelcomeMail extends Mailable
     {
         if (App::environment('production')) {
             return [
-                'baseUrl' => "https://shopazany.com/en",
-                'loginUrl' => "https://shopazany.com/en/login"
+                'baseUrl' => 'https://shopazany.com/en',
+                'loginUrl' => 'https://shopazany.com/en/login',
             ];
         }
+
         return [
-            'baseUrl' => "https://fe-staging.shopazany.com/en",
-            'loginUrl' => "https://fe-staging.shopazany.com/en/login"
+            'baseUrl' => 'https://fe-staging.shopazany.com/en',
+            'loginUrl' => 'https://fe-staging.shopazany.com/en/login',
         ];
     }
 }

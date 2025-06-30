@@ -8,7 +8,9 @@ use Illuminate\Support\Facades\Log;
 class ChargeUserService
 {
     protected $baseUrl;
+
     protected $subscription;
+
     private static $secret_key;
 
     public function __construct($subscription)
@@ -25,29 +27,29 @@ class ChargeUserService
 
     public function run()
     {
-        $url = $this->baseUrl . "/transaction/charge_authorization";
+        $url = $this->baseUrl.'/transaction/charge_authorization';
 
         try {
 
             $fields = [
-            'authorization_code' => $this->subscription?->authorization_data?->authorization_code,
-            'email' => $this->subscription?->user?->email,
-            'amount' => $this->subscription?->subscriptionPlan?->cost * 100,
+                'authorization_code' => $this->subscription?->authorization_data?->authorization_code,
+                'email' => $this->subscription?->user?->email,
+                'amount' => $this->subscription?->subscriptionPlan?->cost * 100,
             ];
 
             $fields_string = http_build_query($fields);
 
             $ch = curl_init();
 
-            curl_setopt($ch,CURLOPT_URL, $url);
-            curl_setopt($ch,CURLOPT_POST, true);
-            curl_setopt($ch,CURLOPT_POSTFIELDS, $fields_string);
-            curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-            "Authorization: Bearer " . self::$secret_key,
-            "Cache-Control: no-cache",
-            ));
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $fields_string);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'Authorization: Bearer '.self::$secret_key,
+                'Cache-Control: no-cache',
+            ]);
 
-            curl_setopt($ch,CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
             $result = curl_exec($ch);
             $err = curl_error($ch);
@@ -67,12 +69,7 @@ class ChargeUserService
         } catch (Exception $e) {
             Log::info($e->getMessage());
         }
+
         return null;
     }
 }
-
-
-
-
-
-

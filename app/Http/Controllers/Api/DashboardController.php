@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Services\Admin\DashboardService;
-use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Gate;
 
@@ -14,8 +13,7 @@ class DashboardController extends Controller
 
     public function __construct(
         protected DashboardService $service
-    )
-    {}
+    ) {}
 
     public function dashboardAnalytics()
     {
@@ -37,6 +35,4 @@ class DashboardController extends Controller
 
         return $this->service->bestSellingCat();
     }
-
-
 }

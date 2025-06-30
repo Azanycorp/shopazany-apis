@@ -24,7 +24,7 @@ class OrderRateRequest extends FormRequest
         return [
             'user_id' => ['required', 'integer', 'exists:users,id'],
             'order_no' => ['required', 'string', 'exists:orders,order_no'],
-            'rating' => ['required', 'numeric', 'between:0,5']
+            'rating' => ['required', 'numeric', 'between:0,5'],
         ];
     }
 }

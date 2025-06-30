@@ -53,14 +53,14 @@ class CartResource extends JsonResource
             'price' => $this->convertPrice($defaultCurrency),
             'image' => optional($this->product)->image,
             'brand' => optional($this->product->brand)->name,
-            'country_id' => (int)optional($this->product)->country_id,
+            'country_id' => (int) optional($this->product)->country_id,
             'currency' => $this->product?->shopCountry?->currency,
         ];
     }
 
     private function transformVariation($defaultCurrency): ?array
     {
-        if (!$this->variation) {
+        if (! $this->variation) {
             return null;
         }
 
@@ -113,4 +113,3 @@ class CartResource extends JsonResource
         );
     }
 }
-

@@ -10,14 +10,14 @@ class Upload extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $table = "uploads";
-    
+    protected $table = 'uploads';
+
     protected $fillable = [
         'file_original_name', 'file_name', 'user_id', 'extension', 'type', 'file_size',
     ];
 
     public function user()
     {
-    	return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class);
     }
 }

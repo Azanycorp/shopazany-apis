@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class B2BSellerShippingAddress extends Model
 {
     use ClearsResponseCache;
+
     protected $fillable = [
         'user_id',
         'address_name',
@@ -27,7 +28,7 @@ class B2BSellerShippingAddress extends Model
     protected function casts(): array
     {
         return [
-            'is_default' => 'boolean'
+            'is_default' => 'boolean',
         ];
     }
 

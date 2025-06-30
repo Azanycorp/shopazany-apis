@@ -8,10 +8,15 @@ use Jenssegers\Agent\Agent;
 class UserLogAction
 {
     protected $user;
+
     protected $request;
+
     protected $action;
+
     protected $description;
+
     protected $response;
+
     protected \Jenssegers\Agent\Agent $agent;
 
     public function __construct($request, $action, $description, $response, $user = null)
@@ -21,7 +26,7 @@ class UserLogAction
         $this->action = $action;
         $this->description = $description;
         $this->response = $response;
-        $this->agent = new Agent();
+        $this->agent = new Agent;
     }
 
     public function run(): void
@@ -38,14 +43,13 @@ class UserLogAction
                 'browser' => $this->agent->browser(),
                 'platform' => $this->agent->platform(),
                 'device_name' => $this->agent->device(),
-                'is_robot' => $this->agent->robot()
+                'is_robot' => $this->agent->robot(),
             ]),
             'request' => $this->request->getContent(),
             'response' => is_object($this->response) && method_exists($this->response, 'getContent')
             ? $this->response->getContent()
             : $this->response,
-            'performed_at' => now()
+            'performed_at' => now(),
         ]);
     }
 }
-

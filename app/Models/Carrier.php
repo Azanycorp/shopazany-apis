@@ -7,16 +7,18 @@ use Illuminate\Database\Eloquent\Model;
 
 class Carrier extends Model
 {
-    protected $table = "carriers";
+    protected $table = 'carriers';
 
     use HasFactory;
 
-    public function carrier_ranges(){
-    	return $this->hasMany(CarrierRange::class);
+    public function carrier_ranges()
+    {
+        return $this->hasMany(CarrierRange::class);
     }
-    
-    public function carrier_range_prices(){
-    	return $this->hasMany(CarrierRangePrice::class);
+
+    public function carrier_range_prices()
+    {
+        return $this->hasMany(CarrierRangePrice::class);
     }
 
     public function scopeActive($query)

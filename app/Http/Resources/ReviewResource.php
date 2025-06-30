@@ -20,7 +20,7 @@ class ReviewResource extends JsonResource
             'rating' => $this->rating,
             'review' => $this->review,
             'created_at' => $this->created_at,
-            'user' => (object)[
+            'user' => (object) [
                 'id' => $this->user?->id,
                 'first_name' => $this->user?->first_name,
                 'last_name' => $this->user?->last_name,

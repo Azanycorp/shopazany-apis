@@ -13,7 +13,7 @@ class RolePermissionService
     public function addRole($request)
     {
         $role = Role::create([
-            'name' => $request->name
+            'name' => $request->name,
         ]);
 
         $role->permissions()->sync($request->permissions);
@@ -31,7 +31,7 @@ class RolePermissionService
     public function addPermission($request)
     {
         Permission::create([
-            'name' => $request->name
+            'name' => $request->name,
         ]);
 
         return $this->success(null, 'Permission created successfully');
@@ -52,10 +52,3 @@ class RolePermissionService
         return $this->success(null, 'Assigned successfully');
     }
 }
-
-
-
-
-
-
-

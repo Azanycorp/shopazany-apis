@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Action;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class ActionSeeder extends Seeder

@@ -20,11 +20,11 @@ class CustomerService
 
         $users = User::with(['userCountry', 'state', 'wallet', 'wishlist.product', 'payments.order'])
             ->where('type', UserType::CUSTOMER)
-            ->where(function($queryBuilder) use ($query): void {
-                $queryBuilder->where('first_name', 'LIKE', '%' . $query . '%')
-                            ->orWhere('last_name', 'LIKE', '%' . $query . '%')
-                            ->orWhere('middlename', 'LIKE', '%' . $query . '%')
-                            ->orWhere('email', 'LIKE', '%' . $query . '%');
+            ->where(function ($queryBuilder) use ($query): void {
+                $queryBuilder->where('first_name', 'LIKE', '%'.$query.'%')
+                    ->orWhere('last_name', 'LIKE', '%'.$query.'%')
+                    ->orWhere('middlename', 'LIKE', '%'.$query.'%')
+                    ->orWhere('email', 'LIKE', '%'.$query.'%');
             })
             ->paginate(25);
 
@@ -50,8 +50,8 @@ class CustomerService
             ->where('type', 'customer')
             ->find($id);
 
-        if (!$user) {
-            return $this->error(null, "User not found", 404);
+        if (! $user) {
+            return $this->error(null, 'User not found', 404);
         }
 
         $data = new CustomerResource($user);
@@ -69,15 +69,15 @@ class CustomerService
             ->find($request->user_id);
 
         if (! $user) {
-            return $this->error(null, "User not found", 404);
+            return $this->error(null, 'User not found', 404);
         }
 
         $user->update([
             'status' => UserStatus::BLOCKED,
-            'is_admin_approve' => 0
+            'is_admin_approve' => 0,
         ]);
 
-        return $this->success(null, "User has been blocked successfully");
+        return $this->success(null, 'User has been blocked successfully');
     }
 
     public function removeCustomer($request)
@@ -91,7 +91,7 @@ class CustomerService
 
         User::whereIn('id', $request->user_ids)->delete();
 
-        return $this->success(null, "User(s) have been removed successfully");
+        return $this->success(null, 'User(s) have been removed successfully');
     }
 
     public function filter(): array
@@ -135,22 +135,30 @@ class CustomerService
             'is_admin_approve' => 1,
             'status' => $request->status,
         ]);
-        $image = $request->hasFile('image') ? uploadUserImage($request, 'image', $user) : null;
-        $user->update(['image' => $image]);
-        return $this->success(null, "User has been created successfully");
+
+        $image = $request->hasFile('image') ? uploadUserImage($request, 'image', $user) : ['url' => null, 'public_id' => null];
+
+        $user->update([
+            'image' => $image['url'],
+            'public_id' => $image['public_id'],
+        ]);
+
+        return $this->success(null, 'User has been created successfully');
     }
 
     public function editCustomer($request)
     {
         $user = User::where('id', $request->user_id)
-        ->where('type', 'customer')
-        ->first();
+            ->where('type', 'customer')
+            ->first();
 
-        if (!$user) {
-            return $this->error(null, "User not found", 404);
+        if (! $user) {
+            return $this->error(null, 'User not found', 404);
         }
 
-        $image = $request->hasFile('image') ? uploadUserImage($request, 'image', $user) : $user->image;
+        $image = $request->hasFile('image') ? 
+            uploadUserImage($request, 'image', $user) : 
+            ['url' => $user->image, 'public_id' => $user->public_id];
 
         $user->update([
             'first_name' => $request->first_name,
@@ -159,11 +167,12 @@ class CustomerService
             'email' => $request->email,
             'phone' => $request->phone,
             'date_of_birth' => $request->date_of_birth,
-            'image' => $image,
+            'image' => $image['url'],
+            'public_id' => $image['public_id'],
             'status' => $request->status,
         ]);
 
-        return $this->success(null, "User has been updated successfully");
+        return $this->success(null, 'User has been updated successfully');
     }
 
     public function getPayment($id)
@@ -171,8 +180,6 @@ class CustomerService
         $payment = Payment::with(['user', 'order'])->findOrFail($id);
         $data = new PaymentResource($payment);
 
-        return $this->success($data, "Payment detail");
+        return $this->success($data, 'Payment detail');
     }
-
 }
-

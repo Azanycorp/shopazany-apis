@@ -6,13 +6,14 @@ use App\Enum\UserStatus;
 use App\Http\Controllers\Controller;
 use App\Services\Admin\CustomerService;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 
 class AdminCustomerController extends Controller
 {
     protected \App\Services\Admin\CustomerService $service;
+
     const MESSAGE = '403 Forbidden';
 
     public function __construct(CustomerService $service)
@@ -23,12 +24,14 @@ class AdminCustomerController extends Controller
     public function allCustomers(): array
     {
         abort_if(Gate::denies('customer_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+
         return $this->service->allCustomers();
     }
 
     public function viewCustomer($id)
     {
         abort_if(Gate::denies('customer_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+
         return $this->service->viewCustomer($id);
     }
 
@@ -36,7 +39,7 @@ class AdminCustomerController extends Controller
     {
         abort_if(Gate::denies('customer_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
         $request->validate([
-            'user_id' => ['required', 'integer', 'exists:users,id']
+            'user_id' => ['required', 'integer', 'exists:users,id'],
         ]);
 
         return $this->service->banCustomer($request);
@@ -56,6 +59,7 @@ class AdminCustomerController extends Controller
     public function filter(): array
     {
         abort_if(Gate::denies('customer_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+
         return $this->service->filter();
     }
 
@@ -68,7 +72,7 @@ class AdminCustomerController extends Controller
                 UserStatus::BLOCKED,
                 UserStatus::DELETED,
                 UserStatus::PENDING,
-                UserStatus::SUSPENDED
+                UserStatus::SUSPENDED,
             ])],
         ]);
 
@@ -84,7 +88,7 @@ class AdminCustomerController extends Controller
                 UserStatus::BLOCKED,
                 UserStatus::DELETED,
                 UserStatus::PENDING,
-                UserStatus::SUSPENDED
+                UserStatus::SUSPENDED,
             ])],
         ]);
 
@@ -94,7 +98,7 @@ class AdminCustomerController extends Controller
     public function getPayment($id)
     {
         abort_if(Gate::denies('customer_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+
         return $this->service->getPayment($id);
     }
-
 }

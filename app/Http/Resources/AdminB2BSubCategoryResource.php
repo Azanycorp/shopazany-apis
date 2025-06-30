@@ -15,13 +15,13 @@ class AdminB2BSubCategoryResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => (int)$this->id,
-            'name' => (string)$this->name,
-            'slug' => (string)$this->slug,
-            'image' => (string)$this->image,
-            'product_count' => (int)$this->products?->count(),
-            'products' => (object)$this->products,
-            'status' => (string)$this->status,
+            'id' => (int) $this->id,
+            'name' => (string) $this->name,
+            'slug' => (string) $this->slug,
+            'image' => (string) $this->image,
+            'product_count' => (int) $this->products?->count(),
+            'products' => (object) $this->products,
+            'status' => (string) $this->status,
         ];
     }
 }

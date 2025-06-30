@@ -19,7 +19,7 @@ class CountryFactory extends Factory
         return [
             'sortname' => fake()->countryCode(),
             'name' => fake()->country(),
-            'phonecode' => '234'
+            'phonecode' => '234',
         ];
     }
 }

@@ -31,7 +31,7 @@ class BuyerOnboardingRequest extends FormRequest
             'company_name' => ['required', 'string'],
             'company_size' => ['required', 'string'],
             'country_id' => ['required', 'integer', 'exists:countries,id'],
-            'password' => ['required', 'string', 'confirmed', Password::defaults()]
+            'password' => ['required', 'string', 'confirmed', Password::defaults()],
         ];
     }
 }

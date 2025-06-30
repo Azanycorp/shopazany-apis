@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class B2BPromoWelcomeCoupon extends Model
 {
-    protected $table = "b2b_promo_welcome_coupons";
+    protected $table = 'b2b_promo_welcome_coupons';
 
     protected $fillable = [
         'promo_id',

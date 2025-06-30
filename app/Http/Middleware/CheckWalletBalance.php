@@ -20,7 +20,7 @@ class CheckWalletBalance
     {
         $user = $request?->user()?->load('wallet');
 
-        if (!$user || !$user->wallet) {
+        if (! $user || ! $user->wallet) {
             return $this->error(null, 'Wallet not found.', 403);
         }
 

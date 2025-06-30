@@ -3,24 +3,24 @@
 namespace App\Services\Admin;
 
 use App\Enum\AdminType;
-use App\Models\Admin;
-use App\Trait\SignUp;
-use App\Enum\PlanType;
-use App\Models\AboutUs;
 use App\Enum\PlanStatus;
+use App\Enum\PlanType;
 use App\Enum\UserStatus;
-use App\Mail\AdminUserMail;
-use App\Models\ContactInfo;
-use App\Trait\HttpResponse;
-use Illuminate\Support\Str;
-use App\Models\CookiePolicy;
-use App\Models\TermsService;
-use App\Models\SeoConfiguration;
-use App\Models\SubscriptionPlan;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\App;
 use App\Http\Resources\AdminUserResource;
 use App\Http\Resources\SubscriptionPlanResource;
+use App\Mail\AdminUserMail;
+use App\Models\AboutUs;
+use App\Models\Admin;
+use App\Models\ContactInfo;
+use App\Models\CookiePolicy;
+use App\Models\SeoConfiguration;
+use App\Models\SubscriptionPlan;
+use App\Models\TermsService;
+use App\Trait\HttpResponse;
+use App\Trait\SignUp;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class SettingsService
 {
@@ -44,7 +44,8 @@ class SettingsService
                 'image' => $path,
             ]
         );
-        return $this->success(null, "Successful", 201);
+
+        return $this->success(null, 'Successful', 201);
     }
 
     public function getSeo()
@@ -52,7 +53,7 @@ class SettingsService
         $seo = SeoConfiguration::first();
 
         if (! $seo) {
-            return $this->error(null, "Empty", 404);
+            return $this->error(null, 'Empty', 404);
         }
 
         $data = [
@@ -64,7 +65,7 @@ class SettingsService
             'image' => $seo->image,
         ];
 
-        return $this->success($data, "Seo configuration");
+        return $this->success($data, 'Seo configuration');
     }
 
     public function addTermsService($request)
@@ -77,7 +78,8 @@ class SettingsService
                 'description' => $request->description,
             ]
         );
-        return $this->success(null, "Successful", 201);
+
+        return $this->success(null, 'Successful', 201);
     }
 
     public function getTermsService()
@@ -85,7 +87,7 @@ class SettingsService
         $terms = TermsService::first();
 
         if (! $terms) {
-            return $this->error([], "Empty", 404);
+            return $this->error([], 'Empty', 404);
         }
 
         $data = [
@@ -95,7 +97,7 @@ class SettingsService
             'description' => $terms->description,
         ];
 
-        return $this->success($data, "Terms of Service");
+        return $this->success($data, 'Terms of Service');
     }
 
     public function addCookiePolicy($request)
@@ -108,7 +110,8 @@ class SettingsService
                 'status' => $request->status,
             ]
         );
-        return $this->success(null, "Successful", 201);
+
+        return $this->success(null, 'Successful', 201);
     }
 
     public function getCookiePolicy()
@@ -116,7 +119,7 @@ class SettingsService
         $cookie = CookiePolicy::first();
 
         if (! $cookie) {
-            return $this->error([], "Empty", 404);
+            return $this->error([], 'Empty', 404);
         }
 
         $data = [
@@ -126,7 +129,7 @@ class SettingsService
             'status' => $cookie->status,
         ];
 
-        return $this->success($data, "Cookie Policy");
+        return $this->success($data, 'Cookie Policy');
     }
 
     public function addAboutUs($request)
@@ -148,7 +151,8 @@ class SettingsService
                 'image_two' => $imageTwo,
             ]
         );
-        return $this->success(null, "Successful", 201);
+
+        return $this->success(null, 'Successful', 201);
     }
 
     public function getAboutUs()
@@ -156,7 +160,7 @@ class SettingsService
         $about = AboutUs::first();
 
         if (! $about) {
-            return $this->error([], "Empty", 404);
+            return $this->error([], 'Empty', 404);
         }
 
         $data = [
@@ -169,7 +173,7 @@ class SettingsService
             'image_two' => $about->image_two,
         ];
 
-        return $this->success($data, "About Us");
+        return $this->success($data, 'About Us');
     }
 
     public function addContactInfo($request)
@@ -182,7 +186,8 @@ class SettingsService
                 'email' => $request->email,
             ]
         );
-        return $this->success(null, "Successful");
+
+        return $this->success(null, 'Successful');
     }
 
     public function getContactInfo()
@@ -190,7 +195,7 @@ class SettingsService
         $contact = ContactInfo::first();
 
         if (! $contact) {
-            return $this->error([], "Empty", 404);
+            return $this->error([], 'Empty', 404);
         }
 
         $data = [
@@ -200,7 +205,7 @@ class SettingsService
             'email' => $contact->email,
         ];
 
-        return $this->success($data, "Contact info");
+        return $this->success($data, 'Contact info');
     }
 
     public function addSocial($request)
@@ -211,14 +216,16 @@ class SettingsService
                 'social_media' => $request->social_media,
             ]
         );
-        return $this->success(null, "Successful");
+
+        return $this->success(null, 'Successful');
     }
+
     public function getSocial()
     {
         $contact = ContactInfo::first();
 
         if (! $contact) {
-            return $this->error([], "Empty", 404);
+            return $this->error([], 'Empty', 404);
         }
 
         $data = [
@@ -226,7 +233,7 @@ class SettingsService
             'social_media' => $contact->social_media,
         ];
 
-        return $this->success($data, "Social");
+        return $this->success($data, 'Social');
     }
 
     public function addPlan($request)
@@ -243,8 +250,9 @@ class SettingsService
             'designation' => $request->designation,
             'details' => $request->details,
             'type' => PlanType::B2C,
-            'status' => PlanStatus::ACTIVE
+            'status' => PlanStatus::ACTIVE,
         ]);
+
         return $this->success(null, 'Plan added successfully', 201);
     }
 
@@ -253,7 +261,7 @@ class SettingsService
         $plan = SubscriptionPlan::where('type', PlanType::B2C)->findOrFail($id);
         $data = new SubscriptionPlanResource($plan);
 
-        return $this->success($data, "Subscription plan detail");
+        return $this->success($data, 'Subscription plan detail');
     }
 
     public function getPlanByCountry($countryId)
@@ -263,7 +271,7 @@ class SettingsService
             ->get();
         $data = SubscriptionPlanResource::collection($plan);
 
-        return $this->success($data, "Subscription plan");
+        return $this->success($data, 'Subscription plan');
     }
 
     public function updatePlan($request, $id)
@@ -278,7 +286,7 @@ class SettingsService
             'tagline' => $request->tagline,
             'designation' => $request->designation,
             'details' => $request->details,
-            'status' => PlanStatus::ACTIVE
+            'status' => PlanStatus::ACTIVE,
         ]);
 
         return $this->success(null, 'Plan updated successfully');
@@ -306,12 +314,12 @@ class SettingsService
                 'phone_number' => $request->phone_number,
                 'type' => AdminType::B2C,
                 'password' => bcrypt($password),
-                'status' => UserStatus::ACTIVE
+                'status' => UserStatus::ACTIVE,
             ]);
             $admin->permissions()->sync($request->permissions);
             DB::commit();
 
-            defer(fn() => send_email($request->email, new AdminUserMail($admin, $password)));
+            defer(fn () => send_email($request->email, new AdminUserMail($admin, $password)));
 
             return $this->success(null, 'Created successfully', 201);
         } catch (\Throwable $th) {
@@ -327,9 +335,9 @@ class SettingsService
 
         $users = Admin::with(['permissions', 'roles.permissions'])
             ->where(function ($query) use ($search): void {
-                $query->where('first_name', 'LIKE', '%' . $search . '%')
-                    ->orWhere('last_name', 'LIKE', '%' . $search . '%')
-                    ->orWhere('email', 'LIKE', '%' . $search . '%');
+                $query->where('first_name', 'LIKE', '%'.$search.'%')
+                    ->orWhere('last_name', 'LIKE', '%'.$search.'%')
+                    ->orWhere('email', 'LIKE', '%'.$search.'%');
             })
             ->paginate(25);
 
@@ -360,7 +368,7 @@ class SettingsService
                 'first_name' => $request->first_name,
                 'last_name' => $request->last_name,
                 'email' => $request->email,
-                'phone_number' => $request->phone_number
+                'phone_number' => $request->phone_number,
             ]);
 
             $admin->roles()->sync($request->role_id);

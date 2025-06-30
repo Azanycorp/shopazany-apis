@@ -11,7 +11,7 @@ class RewardService
     public function rewardUser($user, $actionName, $status, $newUser = null)
     {
         $action = Action::where('slug', $actionName)->first();
-        if (!$action) {
+        if (! $action) {
             return 0;
         }
 
@@ -62,7 +62,3 @@ class RewardService
         return $action->points;
     }
 }
-
-
-
-

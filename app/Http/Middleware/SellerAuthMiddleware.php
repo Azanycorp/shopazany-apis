@@ -17,17 +17,16 @@ class SellerAuthMiddleware
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
-
     public function handle(Request $request, Closure $next): Response
     {
         $user = $request->user();
 
-        if (!$user) {
-            return $this->error(null, "Unauthorized action.", 401);
+        if (! $user) {
+            return $this->error(null, 'Unauthorized action.', 401);
         }
 
         if ($user && $user->type !== UserType::SELLER) {
-            return $this->error(null, "Unauthorized action.", 401);
+            return $this->error(null, 'Unauthorized action.', 401);
         }
 
         return $next($request);

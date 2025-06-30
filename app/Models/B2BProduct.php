@@ -2,19 +2,17 @@
 
 namespace App\Models;
 
-use App\Models\B2bProdctLike;
-use App\Models\B2bProdctReview;
 use App\Trait\ClearsResponseCache;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class B2BProduct extends Model
 {
     protected $table = 'b2b_products';
 
-    use HasFactory, ClearsResponseCache;
+    use ClearsResponseCache, HasFactory;
 
     protected $fillable = [
         'user_id',
@@ -25,6 +23,7 @@ class B2BProduct extends Model
         'keywords',
         'description',
         'front_image',
+        'public_id',
         'minimum_order_quantity',
         'unit_price',
         'quantity',
@@ -41,7 +40,7 @@ class B2BProduct extends Model
     protected function casts(): array
     {
         return [
-            'keywords' => 'array'
+            'keywords' => 'array',
         ];
     }
 

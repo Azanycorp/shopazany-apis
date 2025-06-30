@@ -2,17 +2,17 @@
 
 namespace App\Http\Controllers\Api\B2B;
 
-use Illuminate\Http\Request;
-use App\Services\B2B\AdminService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\EditBuyerRequest;
+use App\Services\B2B\AdminService;
+use Illuminate\Http\Request;
 
 class B2BAdminBuyerController extends Controller
 {
-
     public function __construct(
         private AdminService $buyerService
     ) {}
+
     public function allBuyers()
     {
 

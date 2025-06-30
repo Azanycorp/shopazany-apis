@@ -2,13 +2,13 @@
 
 namespace App\Trait;
 
-use App\Models\User;
-use Illuminate\Support\Str;
 use App\Enum\WithdrawalStatus;
+use App\Models\User;
 use App\Models\WithdrawalRequest;
 use App\Notifications\WithdrawalNotification;
 use App\Services\PayoutService;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 trait Transfer
 {
@@ -19,14 +19,14 @@ trait Transfer
         User::with(['withdrawalRequests' => function ($query) {
             $query->where('status', WithdrawalStatus::PENDING);
         }, 'paymentMethods'])
-        ->whereHas('withdrawalRequests', function ($query) {
-            $query->where('status', WithdrawalStatus::PENDING);
-        })
-        ->chunk(100, function ($users) use (&$requests) {
-            foreach ($users as $user) {
-                $this->extractUserPaystackRequests($user, $requests);
-            }
-        });
+            ->whereHas('withdrawalRequests', function ($query) {
+                $query->where('status', WithdrawalStatus::PENDING);
+            })
+            ->chunk(100, function ($users) use (&$requests) {
+                foreach ($users as $user) {
+                    $this->extractUserPaystackRequests($user, $requests);
+                }
+            });
 
         return $requests;
     }
@@ -35,7 +35,7 @@ trait Transfer
     {
         $paymentMethod = $user->paymentMethods->where('is_default', true)->first();
 
-        if (!$paymentMethod || $paymentMethod->platform !== 'paystack') {
+        if (! $paymentMethod || $paymentMethod->platform !== 'paystack') {
             return;
         }
 
@@ -45,7 +45,7 @@ trait Transfer
             }
 
             $amount = intval($request->amount * 100);
-            if ($amount <= 0 || !$paymentMethod->recipient_code) {
+            if ($amount <= 0 || ! $paymentMethod->recipient_code) {
                 continue;
             }
 
@@ -84,7 +84,7 @@ trait Transfer
                 );
             }
         } catch (\Exception $e) {
-            Log::error('Paystack bulk transfer exception: ' . $e);
+            Log::error('Paystack bulk transfer exception: '.$e);
 
             foreach ($chunk as $item) {
                 $this->markRequestFailed($item['request_id'], $item['user_id'], $e->getMessage());
@@ -108,7 +108,7 @@ trait Transfer
         } else {
             $this->markRequestFailed($request->id, $user->id, $errorMessage);
             $user->wallet->increment('balance', $request->amount);
-            Log::error("Failed to queue Paystack bulk transfer: " . json_encode($errorMessage));
+            Log::error('Failed to queue Paystack bulk transfer: '.json_encode($errorMessage));
         }
     }
 
@@ -128,8 +128,8 @@ trait Transfer
     protected function isValidTransferRequest(array $payload): bool
     {
         if (
-            !isset($payload['reference']) ||
-            !isset($payload['amount'])
+            ! isset($payload['reference']) ||
+            ! isset($payload['amount'])
         ) {
             return false;
         }
@@ -139,7 +139,7 @@ trait Transfer
 
         $request = WithdrawalRequest::where('reference', $reference)->first();
 
-        if (!$request) {
+        if (! $request) {
             return false;
         }
 
@@ -149,8 +149,4 @@ trait Transfer
 
         return true;
     }
-
 }
-
-
-

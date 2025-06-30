@@ -2,23 +2,22 @@
 
 namespace App\Http\Controllers\Api;
 
-use Illuminate\Http\Request;
-use App\Models\ShippingAgent;
-use App\Models\CollationCenter;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AccountLookupRequest;
-use App\Http\Requests\PaymentRequest;
-use App\Services\Payment\PaymentService;
-use App\Http\Resources\ShippingAgentResource;
 use App\Http\Requests\AuthorizeNetCardRequest;
 use App\Http\Requests\B2BAuthorizeNetCardRequest;
+use App\Http\Requests\PaymentRequest;
+use App\Http\Resources\ShippingAgentResource;
+use App\Models\CollationCenter;
+use App\Models\ShippingAgent;
+use App\Services\Payment\PaymentService;
+use Illuminate\Http\Request;
 
 class PaymentController extends Controller
 {
     public function __construct(
         protected PaymentService $service
-    )
-    {}
+    ) {}
 
     public function getShippingAgents()
     {
@@ -30,7 +29,7 @@ class PaymentController extends Controller
 
         $details = [
             'centres' => $centres,
-            'agents' => $data
+            'agents' => $data,
         ];
 
         return $this->success($details, 'Available Agents and Collation centres');

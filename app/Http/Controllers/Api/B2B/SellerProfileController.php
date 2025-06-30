@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Api\B2B;
 
-use Illuminate\Http\Request;
-use App\Services\B2B\SellerService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ChangePasswordRequest;
+use App\Services\B2B\SellerService;
+use Illuminate\Http\Request;
 
 class SellerProfileController extends Controller
 {
@@ -32,5 +32,4 @@ class SellerProfileController extends Controller
     {
         return $this->service->editCompany($request);
     }
-
 }

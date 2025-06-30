@@ -2,15 +2,17 @@
 
 namespace App\Actions;
 
-use App\Enum\PaymentType;
 use App\Models\Payment;
 use App\Models\PaymentLog;
 
 class PaymentLogAction
 {
     protected $data;
+
     protected $paymentData;
+
     protected $method;
+
     protected $status;
 
     public function __construct($data, $paymentData, $method, $status)
@@ -47,17 +49,7 @@ class PaymentLogAction
             'status' => $this->status,
             'type' => $this->data->type,
         ]);
+
         return $payment;
     }
 }
-
-
-
-
-
-
-
-
-
-
-

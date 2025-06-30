@@ -27,7 +27,7 @@ class BlockUserAfterFailedAttempts
             return response()->json(['message' => 'Your account has been blocked due to too many failed attempts.'], 403);
         }
 
-        if (!Auth::attempt($request->only('email', 'password'))) {
+        if (! Auth::attempt($request->only('email', 'password'))) {
             $attempts = Cache::get($key, 0) + 1;
             Cache::put($key, $attempts, now()->addMinutes(30));
 
@@ -37,6 +37,7 @@ class BlockUserAfterFailedAttempts
                     $user->save();
                 }
                 Cache::forget($key);
+
                 return response()->json(['message' => 'Your account has been blocked due to too many failed attempts.'], 403);
             }
 

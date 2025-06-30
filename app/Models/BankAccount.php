@@ -13,7 +13,7 @@ class BankAccount extends Model
         'user_id',
         'account_name',
         'bank_name',
-        'account_number'
+        'account_number',
     ];
 
     public function user()

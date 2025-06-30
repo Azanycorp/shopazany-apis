@@ -6,14 +6,13 @@ use App\Enum\PaymentType;
 use App\Http\Resources\SubscriptionHistoryResource;
 use App\Http\Resources\SubscriptionPlanResource;
 use App\Models\SubscriptionPlan;
+use App\Models\User;
 use App\Services\Payment\AuthorizeNetSubscriptionPaymentProcessor;
 use App\Services\Payment\HandlePaymentService;
 use App\Services\Payment\PaymentDetailsService;
 use App\Services\Payment\PaystackPaymentProcessor;
-use App\Models\User;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 
 class SubscriptionService
 {
@@ -28,23 +27,23 @@ class SubscriptionService
             ->get();
         $data = SubscriptionPlanResource::collection($plan);
 
-        return $this->success($data, "Subscription plans");
+        return $this->success($data, 'Subscription plans');
     }
 
     public function subscriptionPayment($request)
     {
         $paymentProcessor = match ($request->type) {
-            PaymentType::PAYSTACK => new PaystackPaymentProcessor(),
-            PaymentType::AUTHORIZE => new AuthorizeNetSubscriptionPaymentProcessor(),
-            default => throw new \Exception("Unsupported payment method"),
+            PaymentType::PAYSTACK => new PaystackPaymentProcessor,
+            PaymentType::AUTHORIZE => new AuthorizeNetSubscriptionPaymentProcessor,
+            default => throw new \Exception('Unsupported payment method'),
         };
 
         $paymentService = new HandlePaymentService($paymentProcessor);
 
-        $paymentDetails = match($request->type) {
+        $paymentDetails = match ($request->type) {
             PaymentType::PAYSTACK => PaymentDetailsService::paystackSubcriptionPayDetails($request),
             PaymentType::AUTHORIZE => PaymentDetailsService::authorizeNetSubcriptionPayDetails($request),
-            default => throw new \Exception("Unsupported payment method"),
+            default => throw new \Exception('Unsupported payment method'),
         };
 
         if (isset($paymentDetails['error'])) {
@@ -59,7 +58,7 @@ class SubscriptionService
         $currentUserId = Auth::id();
 
         if ($currentUserId != $userId) {
-            return $this->error(null, "Unauthorized action.", 401);
+            return $this->error(null, 'Unauthorized action.', 401);
         }
 
         $user = User::with(['userSubscriptions.subscriptionPlan'])
@@ -67,12 +66,13 @@ class SubscriptionService
             ->append('subscription_history');
 
         $data = SubscriptionHistoryResource::collection($user->subscription_history);
-        return $this->success($data, "Subscription histories");
+
+        return $this->success($data, 'Subscription histories');
     }
 
     public static function creditAffiliate($referrer, $amount, $currency)
     {
-        if(!$referrer) {
+        if (! $referrer) {
             return;
         }
 
@@ -91,7 +91,3 @@ class SubscriptionService
         $wallet->increment('balance', $subcriptionBonus);
     }
 }
-
-
-
-

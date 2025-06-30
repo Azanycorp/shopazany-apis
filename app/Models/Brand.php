@@ -13,8 +13,6 @@ class Brand extends Model
         'name',
         'slug',
         'image',
-        'status'
+        'status',
     ];
 }
-
-

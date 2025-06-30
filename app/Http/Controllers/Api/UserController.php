@@ -14,8 +14,7 @@ class UserController extends Controller
 {
     public function __construct(
         protected UserService $service
-    )
-    {}
+    ) {}
 
     public function profile()
     {
@@ -35,7 +34,7 @@ class UserController extends Controller
     public function removeBankAccount(Request $request)
     {
         $request->validate([
-            'user_id' => ['required', 'integer', 'exists:users,id']
+            'user_id' => ['required', 'integer', 'exists:users,id'],
         ]);
 
         return $this->service->removeBankAccount($request);
@@ -55,9 +54,9 @@ class UserController extends Controller
     {
         $request->validate([
             'user_id' => ['required', 'integer', 'exists:users,id'],
-            'type' => ['required', 'in:payment,commision']
+            'type' => ['required', 'in:payment,commision'],
         ], [
-            'type' => "Type should either be payment or commision"
+            'type' => 'Type should either be payment or commision',
         ]);
 
         return $this->service->earningOption($request);

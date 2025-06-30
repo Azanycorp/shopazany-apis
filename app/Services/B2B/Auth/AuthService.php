@@ -2,17 +2,15 @@
 
 namespace App\Services\B2B\Auth;
 
-use App\Models\User;
-use App\Enum\UserLog;
-use App\Trait\SignUp;
-use App\Enum\UserType;
-use App\Enum\UserStatus;
 use App\Enum\MailingEnum;
-use App\Trait\HttpResponse;
-use App\Mail\UserWelcomeMail;
-use App\Mail\SignUpVerifyMail;
-use Illuminate\Support\Facades\DB;
+use App\Enum\UserLog;
+use App\Enum\UserStatus;
+use App\Enum\UserType;
+use App\Models\User;
 use App\Services\Auth\LoginService;
+use App\Trait\HttpResponse;
+use App\Trait\SignUp;
+use Illuminate\Support\Facades\DB;
 
 class AuthService
 {
@@ -37,14 +35,14 @@ class AuthService
                 'verification_code' => $code,
                 'is_verified' => 0,
                 'info_source' => $request->info_source ?? null,
-                'password' => bcrypt($request->password)
+                'password' => bcrypt($request->password),
             ]);
             if ($request->referrer_code) {
                 $affiliate = User::with('wallet')
                     ->where(['referrer_code' => $request->referrer_code, 'is_affiliate_member' => 1])
                     ->first();
 
-                if (!$affiliate) {
+                if (! $affiliate) {
                     return $this->error(null, 'No Affiliate found!', 404);
                 }
 
@@ -52,7 +50,7 @@ class AuthService
             }
 
             $description = "User with email: {$request->email} signed up as b2b seller";
-            $response = $this->success(null, "Created successfully", 201);
+            $response = $this->success(null, 'Created successfully', 201);
             $action = UserLog::CREATED;
 
             logUserAction($request, $action, $description, $response, $user);
@@ -76,7 +74,7 @@ class AuthService
             ->first();
 
         if (! $user) {
-            return $this->error(null, "Invalid code", 404);
+            return $this->error(null, 'Invalid code', 404);
         }
 
         $user->update([
@@ -88,7 +86,7 @@ class AuthService
         ]);
 
         $type = MailingEnum::EMAIL_VERIFICATION;
-        $subject = "Email verification";
+        $subject = 'Email verification';
         $mail_class = "App\Mail\UserWelcomeMail";
         $data = [
             'user' => $user,
@@ -97,7 +95,7 @@ class AuthService
 
         $description = "User with email address {$request->email} verified OTP";
         $action = UserLog::CREATED;
-        $response = $this->success(['user_id' => $user->id], "Verified successfully");
+        $response = $this->success(['user_id' => $user->id], 'Verified successfully');
 
         logUserAction($request, $action, $description, $response, $user);
 
@@ -108,12 +106,12 @@ class AuthService
     {
         $user = User::getUserEmail($request->email);
 
-        if (!$user) {
-            return $this->error(null, "User not found", 404);
+        if (! $user) {
+            return $this->error(null, 'User not found', 404);
         }
 
         if ($user->email_verified_at !== null && $user->status === UserStatus::ACTIVE) {
-            return $this->error(null, "Account has been verified", 400);
+            return $this->error(null, 'Account has been verified', 400);
         }
 
         try {
@@ -125,7 +123,7 @@ class AuthService
             ]);
 
             $type = MailingEnum::RESEND_CODE;
-            $subject = "Resend code";
+            $subject = 'Resend code';
             $mail_class = "App\Mail\SignUpVerifyMail";
             $data = [
                 'user' => $user,
@@ -134,7 +132,7 @@ class AuthService
 
             $description = "User with email address {$request->email} has requested a code to be resent.";
             $action = UserLog::CODE_RESENT;
-            $response = $this->success(null, "Code resent successfully");
+            $response = $this->success(null, 'Code resent successfully');
 
             logUserAction($request, $action, $description, $response, $user);
 
@@ -145,6 +143,7 @@ class AuthService
             $response = $this->error(null, $e->getMessage(), 500);
 
             logUserAction($request, $action, $description, $response, $user);
+
             return $response;
         }
     }
@@ -173,7 +172,7 @@ class AuthService
                 'email_verified_at' => null,
                 'verification_code' => $code,
                 'is_verified' => 0,
-                'password' => bcrypt($request->password)
+                'password' => bcrypt($request->password),
             ]);
 
             $user->b2bCompany()->create([
@@ -186,13 +185,13 @@ class AuthService
             ]);
 
             $description = "User with email: {$request->email} signed up as b2b buyer";
-            $response = $this->success(null, "Created successfully");
+            $response = $this->success(null, 'Created successfully');
             $action = UserLog::CREATED;
 
             logUserAction($request, $action, $description, $response, $user);
             DB::commit();
 
-            return $this->success($user, "Created successfully");
+            return $this->success($user, 'Created successfully');
         } catch (\Exception $e) {
             DB::rollBack();
 

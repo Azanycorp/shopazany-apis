@@ -12,7 +12,7 @@ class State extends Model
 
     protected $fillable = [
         'country_id',
-        'name'
+        'name',
     ];
 
     public function country(): BelongsTo

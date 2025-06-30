@@ -2,35 +2,34 @@
 
 namespace App\Http\Controllers\Api\B2B;
 
-use Illuminate\Http\Request;
-use Illuminate\Http\Response;
-use App\Services\B2B\AdminService;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Gate;
-use App\Http\Requests\AdminUserRequest;
 use App\Http\Requests\Admin\BlogRequest;
-use App\Http\Requests\SocialLinkRequest;
-use App\Http\Requests\ShippingAgentRequest;
-use App\Http\Requests\Admin\NewBannerRequest;
 use App\Http\Requests\Admin\ClientLogoRequest;
+use App\Http\Requests\Admin\NewBannerRequest;
+use App\Http\Requests\Admin\SubscriptionPlanRequest;
 use App\Http\Requests\Admin\UpdateBlogRequest;
 use App\Http\Requests\ChangeAdminPasswordRequest;
-use App\Http\Requests\Admin\SubscriptionPlanRequest;
+use App\Http\Requests\SocialLinkRequest;
+use App\Services\B2B\AdminService;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Gate;
 
 class B2BAdminController extends Controller
 {
     const MESSAGE = '403 Forbidden';
+
     public function __construct(
         private AdminService $adminService
     ) {}
 
-    //dashboard
+    // dashboard
     public function dashboard()
     {
         return $this->adminService->dashboard();
     }
 
-    //RFQS
+    // RFQS
     public function allRfq()
     {
         return $this->adminService->getAllRfq();
@@ -41,29 +40,36 @@ class B2BAdminController extends Controller
         return $this->adminService->getRfqDetails($id);
     }
 
-    //Orders
+    // Orders
     public function allOrders(Request $request)
     {
         abort_if(Gate::denies('order_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+
         return $this->adminService->getAllOrders($request);
     }
+
     public function markCompleted($id)
     {
         abort_if(Gate::denies('mark_complete'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+
         return $this->adminService->markCompleted($id);
     }
+
     public function cancelOrder($id)
     {
         abort_if(Gate::denies('cancel_order'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+
         return $this->adminService->cancelOrder($id);
     }
 
     public function orderDetails($id)
     {
         abort_if(Gate::denies('order_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+
         return $this->adminService->getOrderDetails($id);
     }
-    //profile
+
+    // profile
     public function adminProfile()
     {
         return $this->adminService->adminProfile();
@@ -88,10 +94,12 @@ class B2BAdminController extends Controller
     {
         return $this->adminService->getConfigDetails();
     }
+
     public function UpdateConfigDetails(Request $request)
     {
         return $this->adminService->UpdateConfigDetails($request);
     }
+
     public function getAllBanners()
     {
         return $this->adminService->getPageBanners();
@@ -101,21 +109,23 @@ class B2BAdminController extends Controller
     {
         return $this->adminService->addPageBanner($request);
     }
+
     public function updatePageBanner(Request $request, $id)
     {
         return $this->adminService->updatePageBanner($request, $id);
     }
+
     public function deletePageBanner($id)
     {
         return $this->adminService->deletePageBanner($id);
     }
+
     public function editPageBanner($id)
     {
         return $this->adminService->getPageBanner($id);
     }
 
-
-    //Seller Products Approval Request
+    // Seller Products Approval Request
     public function allProducts()
     {
         return $this->adminService->allProducts();
@@ -136,8 +146,7 @@ class B2BAdminController extends Controller
         return $this->adminService->rejectProduct($request, $id);
     }
 
-
-    //Subscription plans
+    // Subscription plans
     public function b2bSubscriptionPlans()
     {
         return $this->adminService->b2bSubscriptionPlans();
@@ -163,7 +172,7 @@ class B2BAdminController extends Controller
         return $this->adminService->deleteSubscriptionPlan($id);
     }
 
-    //Blog Section
+    // Blog Section
     public function getBlogs()
     {
         return $this->adminService->allBlogs();
@@ -189,7 +198,7 @@ class B2BAdminController extends Controller
         return $this->adminService->deleteBlog($id);
     }
 
-    //Client Logoff Section
+    // Client Logoff Section
     public function allClientLogos()
     {
         return $this->adminService->allClientLogos();
@@ -215,8 +224,8 @@ class B2BAdminController extends Controller
         return $this->adminService->deleteClientLogo($id);
 
     }
-    
-    //Social links section
+
+    // Social links section
 
     public function socialLinks()
     {

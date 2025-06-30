@@ -12,19 +12,21 @@ class B2bOrderRating extends Model
         'seller_id',
         'order_no',
         'rating',
-        'description'
+        'description',
     ];
 
     public function seller(): BelongsTo
     {
-        return $this->belongsTo(User::class,'seller_id');
+        return $this->belongsTo(User::class, 'seller_id');
     }
+
     public function buyer(): BelongsTo
     {
-        return $this->belongsTo(User::class,'buyer_id');
+        return $this->belongsTo(User::class, 'buyer_id');
     }
+
     public function product(): BelongsTo
     {
-        return $this->belongsTo(B2BProduct::class,'product_id');
+        return $this->belongsTo(B2BProduct::class, 'product_id');
     }
 }

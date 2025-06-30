@@ -6,16 +6,16 @@ use App\Mail\LoginVerifyMail;
 use App\Models\Action;
 use App\Models\User;
 use App\Services\Auth\LoginService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class LoginTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function setUp(): void
+    protected function setUp(): void
     {
         parent::setUp();
         Mail::fake();
@@ -100,7 +100,7 @@ class LoginTest extends TestCase
             'password' => 'password',
         ]));
 
-        //Mail::assertSent(LoginVerifyMail::class);
+        // Mail::assertSent(LoginVerifyMail::class);
 
         $responseData = json_decode($response->getContent(), true);
 

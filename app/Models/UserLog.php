@@ -20,12 +20,13 @@ class UserLog extends Model
         'device',
         'request',
         'response',
-        'performed_at'
+        'performed_at',
     ];
 
-    protected function cast():array{
+    protected function cast(): array
+    {
         return [
-            'device' => 'object'
+            'device' => 'object',
         ];
     }
 }

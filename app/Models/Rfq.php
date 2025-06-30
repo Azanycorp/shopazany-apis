@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 
 class Rfq extends Model
 {
@@ -27,13 +27,15 @@ class Rfq extends Model
     protected function casts(): array
     {
         return [
-            'product_data' => 'array'
+            'product_data' => 'array',
         ];
     }
+
     public function seller(): BelongsTo
     {
         return $this->belongsTo(User::class, 'seller_id', 'id');
     }
+
     public function buyer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'buyer_id', 'id');

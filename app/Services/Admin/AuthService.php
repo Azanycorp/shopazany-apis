@@ -19,14 +19,14 @@ class AuthService
         if (Auth::guard('admin')->attempt($request->only(['email', 'password']))) {
             $user = Admin::with('roles.permissions')->where('email', $request->email)->first();
 
-            if($user->status === LoginStatus::INACTIVE){
+            if ($user->status === LoginStatus::INACTIVE) {
                 return $this->error([
                     'id' => $user->id,
-                    'status' => LoginStatus::INACTIVE
-                ], "Account inactive", 400);
+                    'status' => LoginStatus::INACTIVE,
+                ], 'Account inactive', 400);
             }
 
-            $token = $user->createToken('API Token of '. $user->email);
+            $token = $user->createToken('API Token of '.$user->email);
 
             return $this->success([
                 'id' => $user->id,
@@ -38,7 +38,7 @@ class AuthService
                         'name' => $role?->name,
                         'permissions' => $role?->permissions->flatMap(function ($permission): array {
                             return [$permission->name];
-                        })->toArray()
+                        })->toArray(),
                     ];
                 })->toArray() : [],
                 'user_permissions' => $user->permissions ? $user->permissions->flatMap(function ($permission): array {
@@ -54,7 +54,7 @@ class AuthService
     {
         $user = Admin::where('email', $request->email)->first();
 
-        if (!$user) {
+        if (! $user) {
             return $this->error('error', 'We can\'t find a user with that email address', 404);
         }
 
@@ -71,7 +71,7 @@ class AuthService
     {
         $user = Admin::where('email', $request->email)->first();
 
-        if (!$user) {
+        if (! $user) {
             return $this->error('error', 'We can\'t find a user with that email address', 404);
         }
 
@@ -89,5 +89,3 @@ class AuthService
             : response()->json(['message' => __($status)], 500);
     }
 }
-
-

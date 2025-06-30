@@ -29,40 +29,41 @@ class UpdateProductPrice extends Command
     public function handle(): void
     {
         Product::with(['user'])
-        ->where('status', ProductStatus::ACTIVE)
-        ->chunk(100, function ($products) {
-            // Get all unique currencies in one query to avoid multiple DB calls
-            $currencyCodes = $products->pluck('user.default_currency')->filter()->unique()->toArray();
-            $exchangeRates = $this->getExchangeRates($currencyCodes);
+            ->where('status', ProductStatus::ACTIVE)
+            ->chunk(100, function ($products) {
+                // Get all unique currencies in one query to avoid multiple DB calls
+                $currencyCodes = $products->pluck('user.default_currency')->filter()->unique()->toArray();
+                $exchangeRates = $this->getExchangeRates($currencyCodes);
 
-            $updatedProducts = [];
+                $updatedProducts = [];
 
-            foreach ($products as $product) {
-                $currency = $product->user?->default_currency ?? 'USD';
-                $rate = $exchangeRates[$currency] ?? null;
+                foreach ($products as $product) {
+                    $currency = $product->user?->default_currency ?? 'USD';
+                    $rate = $exchangeRates[$currency] ?? null;
 
-                if (!$rate) {
-                    $this->error("Conversion rate not available for currency {$currency} for product ID {$product->id}");
-                    continue;
+                    if (! $rate) {
+                        $this->error("Conversion rate not available for currency {$currency} for product ID {$product->id}");
+
+                        continue;
+                    }
+
+                    $usdPrice = round($product->price / $rate, 2);
+                    $newPrice = round($usdPrice * $rate, 2);
+
+                    // Prepare data for batch update
+                    $updatedProducts[] = [
+                        'id' => $product->id,
+                        'usd_price' => $usdPrice,
+                        'price' => $newPrice,
+                    ];
                 }
 
-                $usdPrice = round($product->price / $rate, 2);
-                $newPrice = round($usdPrice * $rate, 2);
-
-                // Prepare data for batch update
-                $updatedProducts[] = [
-                    'id' => $product->id,
-                    'usd_price' => $usdPrice,
-                    'price' => $newPrice,
-                ];
-            }
-
-            // Batch update products in one query
-            if ($updatedProducts !== []) {
-                $this->batchUpdateProducts($updatedProducts);
-                $this->info("Updated " . count($updatedProducts) . " products successfully.");
-            }
-        });
+                // Batch update products in one query
+                if ($updatedProducts !== []) {
+                    $this->batchUpdateProducts($updatedProducts);
+                    $this->info('Updated '.count($updatedProducts).' products successfully.');
+                }
+            });
     }
 
     /**

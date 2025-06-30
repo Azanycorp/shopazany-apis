@@ -16,55 +16,61 @@ class BannerPromoController extends Controller
 
     public function __construct(
         protected BannerPromoService $service
-    )
-    {}
+    ) {}
 
     public function addBanner(AddBannerRequest $request)
     {
         abort_if(Gate::denies('banner_promo'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+
         return $this->service->addBanner($request);
     }
 
     public function banners()
     {
         abort_if(Gate::denies('banner_promo'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+
         return $this->service->banners();
     }
 
     public function getOneBanner($id)
     {
         abort_if(Gate::denies('banner_promo'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+
         return $this->service->getOneBanner($id);
     }
 
     public function editBanner(Request $request, $id)
     {
         abort_if(Gate::denies('banner_promo'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+
         return $this->service->editBanner($request, $id);
     }
 
     public function deleteBanner($id)
     {
         abort_if(Gate::denies('banner_promo'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+
         return $this->service->deleteBanner($id);
     }
 
     public function addPromo(AddPromoRequest $request)
     {
         abort_if(Gate::denies('banner_promo'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+
         return $this->service->addPromo($request);
     }
 
     public function promos()
     {
         abort_if(Gate::denies('banner_promo'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+
         return $this->service->promos();
     }
 
     public function deletePromo($id)
     {
         abort_if(Gate::denies('banner_promo'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+
         return $this->service->deletePromo($id);
     }
-
 }

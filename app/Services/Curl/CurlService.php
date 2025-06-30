@@ -5,7 +5,9 @@ namespace App\Services\Curl;
 class CurlService
 {
     protected $url;
+
     protected $headers = [];
+
     protected $fields;
 
     public function __construct(string $url, array $headers = [], array $fields = [])
@@ -19,17 +21,17 @@ class CurlService
 
     public function execute()
     {
-        $url = "https://api.paystack.co/transfer/bulk";
+        $url = 'https://api.paystack.co/transfer/bulk';
 
         $fields_string = http_build_query($this->fields);
 
         $ch = curl_init();
 
-        curl_setopt($ch,CURLOPT_URL, $url);
-        curl_setopt($ch,CURLOPT_POST, true);
-        curl_setopt($ch,CURLOPT_POSTFIELDS, $fields_string);
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $fields_string);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $this->headers);
-        curl_setopt($ch,CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
         $response = curl_exec($ch);
 
@@ -42,10 +44,7 @@ class CurlService
         }
 
         curl_close($ch);
+
         return json_decode($response, true);
     }
 }
-
-
-
-

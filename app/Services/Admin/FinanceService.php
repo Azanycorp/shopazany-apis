@@ -3,9 +3,9 @@
 namespace App\Services\Admin;
 
 use App\Http\Resources\PaymentServiceResource;
+use App\Models\PaymentService;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
-use App\Models\PaymentService;
 
 class FinanceService
 {
@@ -15,14 +15,15 @@ class FinanceService
     {
         $slug = Str::slug($request->name);
         if (PaymentService::where('slug', $slug)->exists()) {
-            $slug = $slug . '-' . uniqid();
+            $slug = $slug.'-'.uniqid();
         }
         $paymentService = PaymentService::create([
             'name' => $request->name,
-            'slug' => $slug
+            'slug' => $slug,
         ]);
         $paymentService->countries()->sync($request->country_ids);
-        return $this->success(null, "Created successfully");
+
+        return $this->success(null, 'Created successfully');
     }
 
     public function getPaymentService()
@@ -50,12 +51,12 @@ class FinanceService
         $slug = Str::slug($request->name);
 
         if (PaymentService::where('slug', $slug)->exists()) {
-            $slug = $slug . '-' . uniqid();
+            $slug = $slug.'-'.uniqid();
         }
 
         $paymentService->update([
             'name' => $request->name,
-            'slug' => $slug
+            'slug' => $slug,
         ]);
 
         $paymentService->countries()->sync($request->country_ids);
@@ -71,8 +72,3 @@ class FinanceService
         return $this->success(null, 'Deleted successfully');
     }
 }
-
-
-
-
-

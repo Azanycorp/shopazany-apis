@@ -3,7 +3,6 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
@@ -12,7 +11,9 @@ use Illuminate\Queue\SerializesModels;
 class B2BNewAdminEmail extends Mailable
 {
     use Queueable, SerializesModels;
+
     protected $loginDetails;
+
     /**
      * Create a new message instance.
      */
@@ -25,7 +26,6 @@ class B2BNewAdminEmail extends Mailable
      * Get the message envelope.
      */
 
-
     /**
      * Get the message content definition.
      */
@@ -35,7 +35,7 @@ class B2BNewAdminEmail extends Mailable
             ->view(
                 'mail.b2b-new-admin',
                 [
-                    'loginDetails' => $this->loginDetails
+                    'loginDetails' => $this->loginDetails,
                 ]
             );
     }

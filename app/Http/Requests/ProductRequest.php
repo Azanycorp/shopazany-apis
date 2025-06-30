@@ -69,22 +69,22 @@ class ProductRequest extends FormRequest
             $decoded = json_decode($value, true);
 
             if (json_last_error() !== JSON_ERROR_NONE) {
-                return $fail("Each variation must be a valid JSON string.");
+                return $fail('Each variation must be a valid JSON string.');
             }
 
             $requiredKeys = ['variation', 'sku', 'price', 'stock'];
 
             foreach ($requiredKeys as $key) {
-                if (!isset($decoded[$key]) || $decoded[$key] === '' || $decoded[$key] === null) {
+                if (! isset($decoded[$key]) || $decoded[$key] === '' || $decoded[$key] === null) {
                     return $fail("The '{$key}' in variation cannot be empty.");
                 }
             }
 
-            if (!is_numeric($decoded['price']) || $decoded['price'] < 0) {
+            if (! is_numeric($decoded['price']) || $decoded['price'] < 0) {
                 return $fail("The 'price' in variation must be a non-negative number.");
             }
 
-            if (!is_numeric($decoded['stock']) || $decoded['stock'] < 0) {
+            if (! is_numeric($decoded['stock']) || $decoded['stock'] < 0) {
                 return $fail("The 'stock' in variation must be a non-negative number.");
             }
         };

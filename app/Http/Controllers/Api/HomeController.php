@@ -12,8 +12,7 @@ class HomeController extends Controller
 {
     public function __construct(
         protected HomeService $service
-    )
-    {}
+    ) {}
 
     public function bestSelling()
     {
@@ -69,7 +68,7 @@ class HomeController extends Controller
     {
         $request->validate([
             'user_id' => ['required', 'integer', 'exists:users,id'],
-            'product_id' => ['required', 'integer']
+            'product_id' => ['required', 'integer'],
         ]);
 
         return $this->service->saveForLater($request);

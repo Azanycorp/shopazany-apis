@@ -2,12 +2,12 @@
 
 namespace App\Observers;
 
-use App\Models\Order;
-use App\Mail\SellerOrderMail;
 use App\Mail\CustomerOrderMail;
+use App\Mail\SellerOrderMail;
+use App\Models\Order;
 use App\Models\User;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Contracts\Events\ShouldHandleEventsAfterCommit;
+use Illuminate\Support\Facades\Mail;
 
 class OrderObserver implements ShouldHandleEventsAfterCommit
 {

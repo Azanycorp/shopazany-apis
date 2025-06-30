@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('account_name')->nullable();
             $table->string('account_number')->nullable();
             $table->string('bank')->nullable();
-            $table->enum('status', ['paid', 'pending','cancelled'])->default('pending');
+            $table->enum('status', ['paid', 'pending', 'cancelled'])->default('pending');
             $table->timestamp('date_paid')->nullable();
             $table->timestamps();
         });

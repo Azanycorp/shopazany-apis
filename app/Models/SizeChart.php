@@ -7,12 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class SizeChart extends Model
 {
-    protected $table = "size_charts";
-    
+    protected $table = 'size_charts';
+
     use HasFactory;
 
     protected $guarded = [];
-    
+
     public function sizeChartDetails()
     {
         return $this->hasMany(SizeChartDetail::class);

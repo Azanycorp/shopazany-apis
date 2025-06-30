@@ -23,7 +23,7 @@ class ProductImportRequest extends FormRequest
     {
         return [
             'user_id' => ['required', 'integer', 'exists:users,id'],
-            'file' => ['required', 'file', 'mimes:xlsx']
+            'file' => ['required', 'file', 'mimes:xlsx'],
         ];
     }
 }

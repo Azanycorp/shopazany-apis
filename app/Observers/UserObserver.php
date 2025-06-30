@@ -3,13 +3,13 @@
 namespace App\Observers;
 
 use App\Enum\MailingEnum;
-use App\Models\User;
-use App\Enum\UserType;
-use App\Models\Product;
-use App\Models\UserWallet;
 use App\Enum\ProductStatus;
+use App\Enum\UserType;
 use App\Mail\SignUpVerifyMail;
 use App\Models\Action;
+use App\Models\Product;
+use App\Models\User;
+use App\Models\UserWallet;
 use App\Models\Wallet;
 use Illuminate\Contracts\Events\ShouldHandleEventsAfterCommit;
 
@@ -21,10 +21,10 @@ class UserObserver implements ShouldHandleEventsAfterCommit
     public function created(User $user): void
     {
         $type = MailingEnum::SIGN_UP_OTP;
-        $subject = "Verify Account";
+        $subject = 'Verify Account';
         $mail_class = SignUpVerifyMail::class;
         $data = [
-            'user' => $user
+            'user' => $user,
         ];
         mailSend($type, $user, $subject, $mail_class, $data);
 

@@ -1,20 +1,19 @@
 <?php
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\ApiController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\B2BSellerController;
 use App\Http\Controllers\Api\CartController;
-use App\Http\Controllers\Api\HomeController;
-use App\Http\Controllers\Api\UserController;
-use App\Http\Controllers\Api\SellerController;
-use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\CustomerController;
-use App\Http\Controllers\Api\B2BSellerController;
 use App\Http\Controllers\Api\GoogleAuthController;
+use App\Http\Controllers\Api\HomeController;
 use App\Http\Controllers\Api\MailingListController;
+use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\SellerController;
 use App\Http\Controllers\Api\SubscriptionController;
+use App\Http\Controllers\Api\UserController;
+use Illuminate\Support\Facades\Route;
 
 Route::middleware('validate.header')
     ->group(function (): void {
@@ -35,9 +34,9 @@ Route::middleware('validate.header')
                     Route::post('/logout', 'logout');
                     Route::post('/verify/email', 'verify');
                     Route::post('/seller/signup', 'sellerSignup')
-                        ->middleware('throttle:6,1');;
+                        ->middleware('throttle:6,1');
                     Route::post('/affiliate/signup', 'affiliateSignup')
-                        ->middleware('throttle:6,1');;
+                        ->middleware('throttle:6,1');
                 });
 
             Route::get('/country', [ApiController::class, 'country']);
@@ -129,7 +128,7 @@ Route::middleware('validate.header')
 
                     // Payment Method
                     Route::get('/method/{country_id}', 'getPaymentMethod');
-                    //Shipping Agent
+                    // Shipping Agent
                     Route::get('/shipping-agents', 'getShippingAgents');
                 });
 
@@ -183,45 +182,45 @@ Route::middleware('validate.header')
                 ->prefix('customer')
                 ->controller(CustomerController::class)
                 ->group(function (): void {
-                // Account and Dashboard Routes
-                Route::get('/account-overview/{user_id}', 'acountOverview');
-                Route::get('/activity/{user_id}', 'activity');
-                Route::get('/dashboard/analytic/{user_id}', 'dashboardAnalytics');
+                    // Account and Dashboard Routes
+                    Route::get('/account-overview/{user_id}', 'acountOverview');
+                    Route::get('/activity/{user_id}', 'activity');
+                    Route::get('/dashboard/analytic/{user_id}', 'dashboardAnalytics');
 
-                // Order Routes
-                Route::get('/recent-orders/{user_id}', 'recentOrders');
-                Route::get('/orders/{user_id}', 'getOrders');
-                Route::get('/order/detail/{order_no}', 'getOrderDetail');
-                Route::post('/rate/order', 'rateOrder');
+                    // Order Routes
+                    Route::get('/recent-orders/{user_id}', 'recentOrders');
+                    Route::get('/orders/{user_id}', 'getOrders');
+                    Route::get('/order/detail/{order_no}', 'getOrderDetail');
+                    Route::post('/rate/order', 'rateOrder');
 
-                //Reward Point
-                Route::get('/reward/dashboard/{user_id}', 'rewardDashboard');
-                Route::post('/redeem/point', 'redeemPoint');
+                    // Reward Point
+                    Route::get('/reward/dashboard/{user_id}', 'rewardDashboard');
+                    Route::post('/redeem/point', 'redeemPoint');
 
-                // Reward partners (service)
-                Route::prefix('service')->group(function () {
-                    Route::get('/', 'getServices');
-                    Route::post('/purchase', 'purchaseService');
-                    Route::get('/company/detail/{slug}', 'getCompanyDetail');
-                    Route::get('/company', 'getCompanies');
-                    Route::get('/by-category/{slug}', 'getServicesByCategory');
-                    Route::get('/category', 'getCategories');
-                    Route::get('/detail/{id}', 'getServiceDetail');
+                    // Reward partners (service)
+                    Route::prefix('service')->group(function () {
+                        Route::get('/', 'getServices');
+                        Route::post('/purchase', 'purchaseService');
+                        Route::get('/company/detail/{slug}', 'getCompanyDetail');
+                        Route::get('/company', 'getCompanies');
+                        Route::get('/by-category/{slug}', 'getServicesByCategory');
+                        Route::get('/category', 'getCategories');
+                        Route::get('/detail/{id}', 'getServiceDetail');
 
-                    Route::prefix('customer')->group(function () {
-                        Route::get('/', 'getCustomers');
+                        Route::prefix('customer')->group(function () {
+                            Route::get('/', 'getCustomers');
+                        });
                     });
+
+                    // Support Route
+                    Route::post('/support', 'support');
+
+                    // Wishlist Routes
+                    Route::post('/wishlist', 'wishlist');
+                    Route::get('/wishlist/{user_id}', 'getWishlist');
+                    Route::get('/wishlist/single/{user_id}/{wishlist_id}', 'getSingleWishlist');
+                    Route::delete('/wishlist/remove/{user_id}/{wishlist_id}', 'removeWishlist');
                 });
-
-                // Support Route
-                Route::post('/support', 'support');
-
-                // Wishlist Routes
-                Route::post('/wishlist', 'wishlist');
-                Route::get('/wishlist/{user_id}', 'getWishlist');
-                Route::get('/wishlist/single/{user_id}/{wishlist_id}', 'getSingleWishlist');
-                Route::delete('/wishlist/remove/{user_id}/{wishlist_id}', 'removeWishlist');
-            });
 
             Route::post('customer/mailing/subscribe', [MailingListController::class, 'signup']);
 
@@ -229,51 +228,51 @@ Route::middleware('validate.header')
                 ->prefix('seller')
                 ->controller(SellerController::class)
                 ->group(function (): void {
-                // Business Information
-                Route::post('/business/information', 'businessInfo');
-                Route::get('/dashboard/analytic/{user_id}', 'dashboardAnalytics');
+                    // Business Information
+                    Route::post('/business/information', 'businessInfo');
+                    Route::get('/dashboard/analytic/{user_id}', 'dashboardAnalytics');
 
-                // Product Routes
-                Route::prefix('product')->group(function (): void {
-                    Route::post('/create', 'createProduct');
-                    Route::post('/edit/{product_id}/{user_id}', 'updateProduct')
-                        ->middleware('ensure.user');
-                    Route::get('/{user_id}', 'getProduct')
-                        ->middleware('ensure.user');
-                    Route::get('/top-selling/{user_id}', 'topSelling')
-                        ->middleware('ensure.user');
-                    Route::delete('/delete/{product_id}/{user_id}', 'deleteProduct')
-                        ->middleware('ensure.user');
-                    Route::post('/import', 'productImport');
-                    Route::get('/export/{user_id}/{type}', 'export');
+                    // Product Routes
+                    Route::prefix('product')->group(function (): void {
+                        Route::post('/create', 'createProduct');
+                        Route::post('/edit/{product_id}/{user_id}', 'updateProduct')
+                            ->middleware('ensure.user');
+                        Route::get('/{user_id}', 'getProduct')
+                            ->middleware('ensure.user');
+                        Route::get('/top-selling/{user_id}', 'topSelling')
+                            ->middleware('ensure.user');
+                        Route::delete('/delete/{product_id}/{user_id}', 'deleteProduct')
+                            ->middleware('ensure.user');
+                        Route::post('/import', 'productImport');
+                        Route::get('/export/{user_id}/{type}', 'export');
 
-                    // Product Attributes
-                    Route::prefix('attribute')->group(function (): void {
-                        Route::post('/create', 'createAttribute');
-                        Route::get('/{user_id}', 'getAttribute')
-                            ->middleware('ensure.user');
-                        Route::get('/{id}/{user_id}', 'getSingleAttribute')
-                            ->middleware('ensure.user');
-                        Route::patch('/edit/{id}/{user_id}', 'updateAttribute')
-                            ->middleware('ensure.user');
-                        Route::delete('/delete/{id}/{user_id}', 'deleteAttribute')
+                        // Product Attributes
+                        Route::prefix('attribute')->group(function (): void {
+                            Route::post('/create', 'createAttribute');
+                            Route::get('/{user_id}', 'getAttribute')
+                                ->middleware('ensure.user');
+                            Route::get('/{id}/{user_id}', 'getSingleAttribute')
+                                ->middleware('ensure.user');
+                            Route::patch('/edit/{id}/{user_id}', 'updateAttribute')
+                                ->middleware('ensure.user');
+                            Route::delete('/delete/{id}/{user_id}', 'deleteAttribute')
+                                ->middleware('ensure.user');
+                        });
+
+                        Route::get('/{product_id}/{user_id}', 'getSingleProduct')
                             ->middleware('ensure.user');
                     });
 
-                    Route::get('/{product_id}/{user_id}', 'getSingleProduct')
-                        ->middleware('ensure.user');
+                    // Orders Routes
+                    Route::prefix('orders/{user_id}')->group(function (): void {
+                        Route::get('/', 'getAllOrders')
+                            ->middleware('ensure.user');
+                        Route::get('/summary', 'getOrderSummary');
+                        Route::get('/{id}', 'getOrderDetail');
+                        Route::patch('/update-status/{id}', 'updateOrderStatus');
+                    });
                 });
-
-                // Orders Routes
-                Route::prefix('orders/{user_id}')->group(function (): void {
-                    Route::get('/', 'getAllOrders')
-                        ->middleware('ensure.user');
-                    Route::get('/summary', 'getOrderSummary');
-                    Route::get('/{id}', 'getOrderDetail');
-                    Route::patch('/update-status/{id}', 'updateOrderStatus');
-                });
-            });
         });
     });
 
-require __DIR__ . '/b2b.php';
+require __DIR__.'/b2b.php';

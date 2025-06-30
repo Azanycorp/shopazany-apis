@@ -2,11 +2,9 @@
 
 namespace Database\Seeders;
 
-use App\Enum\OrderStatus;
 use App\Models\Order;
-use Illuminate\Support\Str;
 use Illuminate\Database\Seeder;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Illuminate\Support\Str;
 
 class OrderSeeder extends Seeder
 {
@@ -66,7 +64,7 @@ class OrderSeeder extends Seeder
                 'country_id' => 108,
                 'created_at' => now(),
                 'updated_at' => now(),
-            ]
+            ],
         ];
 
         Order::insert($data);

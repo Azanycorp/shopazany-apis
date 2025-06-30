@@ -7,8 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class CarrierRangePrice extends Model
 {
-    protected $table = "carrier_range_prices";
-    
+    protected $table = 'carrier_range_prices';
+
     use HasFactory;
 
     public function carrier()

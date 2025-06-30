@@ -25,7 +25,7 @@ class BankAccountRequest extends FormRequest
             'user_id' => ['required', 'integer', 'exists:users,id'],
             'account_name' => ['required', 'string', 'max:100'],
             'bank_name' => ['required', 'string', 'max:50'],
-            'account_number' => ['required', 'integer']
+            'account_number' => ['required', 'integer'],
         ];
     }
 }
