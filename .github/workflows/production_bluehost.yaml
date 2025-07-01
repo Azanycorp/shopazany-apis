@@ -1,76 +1,65 @@
-name: Deploy to BlueHost
+name: Production Deployment
 
 on:
   push:
-    branches: [deploy]
+    branches: [deploy]  # Change to your production branch
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest 
-
+    runs-on: ubuntu-latest
     steps:
-    # -----------------------------------
-    # STEP 1: Prepare the environment
-    # -----------------------------------
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Setup PHP
-      uses: shivammathur/setup-php@v2
-      with:
-        php-version: '8.2'
-        extensions: mbstring, dom, fileinfo, mysql, curl 
-        tools: composer:v2
+      - name: Setup PHP 8.2
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, xml, ctype, json, tokenizer, openssl # Add any required extensions
 
-    # -----------------------------------
-    # STEP 2: SSH Setup
-    # -----------------------------------
-    - name: Configure SSH Environment
-      run: |
-        mkdir -p ~/.ssh
-        echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
-        ssh-keyscan -t ecdsa ${{ secrets.VPS_HOST }} > ~/.ssh/known_hosts
+      - name: Install dependencies
+        run: |
+          composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction
+          composer dump-autoload --optimize
 
-    # -----------------------------------
-    # STEP 3: Deployment
-    # -----------------------------------
-    - name: Install Dependencies
-      run: composer install --no-dev --optimize-autoloader
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
 
-    - name: Sync Files
-      run: |
-        rsync -avz --delete \
-          --exclude='.env' \
-          --exclude='storage/*' \
-          --exclude='node_modules/' \
-          -e "ssh -i ~/.ssh/id_rsa -o LogLevel=ERROR" \
-          ./ ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:${{ secrets.VPS_BACKEND_PATH }}
+      - name: Create remote directories
+        run: |
+          ssh -o StrictHostKeyChecking=no \
+              ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} \
+              "mkdir -p ${{ secrets.VPS_BACKEND_PATH }}/{storage/framework/views,storage/framework/cache,bootstrap/cache,storage/logs}"
 
-   # -----------------------------------
-    # STEP 4: Post-Deployment Commands
-    # -----------------------------------
-    - name: Execute Remote Commands
-      run: |
-        set +e
-        ssh -i ~/.ssh/id_rsa \
-          -o ConnectTimeout=30 \
-          ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} \
-          "cd ${{ secrets.VPS_BACKEND_PATH }} && \
-          (/usr/local/bin/php artisan optimize:clear || echo 'Artisan clear failed') && \
-          (/usr/local/bin/php artisan optimize || echo 'Artisan optimize failed') && \
-          (chmod -R 755 storage bootstrap/cache || echo 'Chmod failed') && \
-          echo '✓ Post-deployment steps attempted'"
-        set -e
+      - name: Rsync application files
+        run: |
+          rsync -avz --delete \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='.env' \
+            --exclude='node_modules' \
+            --exclude='storage' \
+            --exclude='tests' \
+            -e "ssh -o StrictHostKeyChecking=no" \
+            ./ \
+            ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:${{ secrets.VPS_BACKEND_PATH }}/
 
-    # -----------------------------------
-    # STEP 5: Verification
-    # -----------------------------------
-    - name: Verify Deployment
-      run: |
-        ssh -i ~/.ssh/id_rsa \
-          ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} \
-          "cd ${{ secrets.VPS_BACKEND_PATH }} && \
-          /usr/local/bin/php artisan --version && \
-          ls -la storage/framework/ && \
-          echo '✓ Verification successful'" 
+      - name: Set permissions
+        run: |
+          ssh -o StrictHostKeyChecking=no \
+              ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} \
+              "chmod -R 755 ${{ secrets.VPS_BACKEND_PATH }}/storage \
+               && chmod -R 755 ${{ secrets.VPS_BACKEND_PATH }}/bootstrap/cache"
+
+      - name: Run deployment commands
+        run: |
+          ssh -o StrictHostKeyChecking=no \
+              ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} \
+              "cd ${{ secrets.VPS_BACKEND_PATH }} && \
+               php artisan config:clear && \
+               php artisan view:clear && \
+               php artisan cache:clear && \
+               php artisan optimize && \
+               php artisan storage:link"
