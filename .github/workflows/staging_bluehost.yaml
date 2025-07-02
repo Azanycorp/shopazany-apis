@@ -1,42 +1,61 @@
-name: staging Deployment
+name: Staging Deployment
 
 on:
   push:
-    branches: [staging]
+    branches: [ ------ ]  
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4 
 
       - name: Setup PHP 8.2
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
+          extensions: mbstring, xml, ctype, json, tokenizer, openssl # Add any required extensions
 
       - name: Install dependencies
         run: |
-          composer install --no-dev --prefer-dist --optimize-autoloader
-
-      - name: 📂 Sync files
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+          composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction
+          composer dump-autoload --optimize
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
         with:
-          server: ${{ secrets.FTP_SERVER }}  # Should be ftp.erq.peg.mybluehost.me
-          username: ${{ secrets.FTP_USERNAME }}  # Must include @host: user@erq.peg.mybluehost.me
-          password: ${{ secrets.FTP_PASSWORD }}
-          protocol: ftp
-          port: 21
-          server-dir: ./   #./public_html/  # Critical Bluehost fix - relative path
-          local-dir: ./  # Deploys entire repo (adjust if needed)
-          ftp-passive-mode: true  # Required for Bluehost
-          ftp-ignore-passive-ip: true  # Fixes passive IP issues
-          dangerous-clean-slate: false  # Safety precaution
-          verbose: true  # Enable detailed logs
-          exclude: |
-            */.git
-            */.git/**
-            */node_modules/*
-            */node_modules//
-            fileToExclude.txt
+          ssh-private-key: ${{ secrets.VPS_SSH_KEY_ST }}
+
+      - name: Create remote directories
+        run: |
+          ssh -o StrictHostKeyChecking=no \
+              ${{ secrets.VPS_USERNAME_ST }}@${{ secrets.VPS_HOST_ST }} \
+              "mkdir -p ${{ secrets.VPS_BACKEND_PATH_ST }}/{storage/framework/views,storage/framework/cache,bootstrap/cache,storage/logs}"
+      - name: Rsync application files
+        run: |
+          rsync -avz --delete \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='.env' \
+            --exclude='node_modules' \
+            --exclude='storage' \
+            --exclude='tests' \
+            -e "ssh -o StrictHostKeyChecking=no" \
+            ./ \
+            ${{ secrets.VPS_USERNAME_ST }}@${{ secrets.VPS_HOST_ST }}:${{ secrets.VPS_BACKEND_PATH_ST }}/
+      - name: Set permissions
+        run: |
+          ssh -o StrictHostKeyChecking=no \
+              ${{ secrets.VPS_USERNAME_ST }}@${{ secrets.VPS_HOST_ST }} \
+              "chmod -R 755 ${{ secrets.VPS_BACKEND_PATH_ST }}/storage \
+               && chmod -R 755 ${{ secrets.VPS_BACKEND_PATH_ST }}/bootstrap/cache"
+      - name: Run deployment commands
+        run: |
+          ssh -o StrictHostKeyChecking=no \
+              ${{ secrets.VPS_USERNAME_ST }}@${{ secrets.VPS_HOST_ST }} \
+              "cd ${{ secrets.VPS_BACKEND_PATH_ST }} && \
+               php artisan config:clear && \
+               php artisan view:clear && \
+               php artisan cache:clear && \
+               php artisan optimize && \
+               php artisan storage:link"
