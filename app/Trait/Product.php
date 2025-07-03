@@ -61,7 +61,7 @@ trait Product
         $variationImages = $request->file('variation_image', []);
 
         foreach ($variations as $index => $variation) {
-            $imageUrl = null;
+            $imageUrl = ['url' => null];
 
             if (isset($variationImages[$index])) {
                 $folder = folderNames('product', $name, null, 'variations');
@@ -104,7 +104,7 @@ trait Product
 
         foreach ($variations as $index => $variation) {
             $variationId = $variation['id'] ?? null;
-            $imageUrl = null;
+            $imageUrl = $imageUrl = ['url' => null];
 
             if (isset($variationImages[$index])) {
                 $folder = folderNames('product', $name, null, 'variations');
