@@ -108,7 +108,7 @@ class SellerService extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return $this->error(null, 'Failed to create product: '.$e->getMessage(), 500);
+            return $this->error(null, 'Failed to create product: '.$e, 500);
         }
     }
 
