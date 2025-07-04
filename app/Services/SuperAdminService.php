@@ -2,27 +2,28 @@
 
 namespace App\Services;
 
-use App\Enum\AdminStatus;
+use App\Models\Admin;
+use App\Trait\SignUp;
 use App\Enum\AdminType;
+use App\Enum\PlanStatus;
+use App\Models\B2bOrder;
+use App\Models\Shipment;
+use App\Enum\AdminStatus;
 use App\Enum\MailingEnum;
 use App\Enum\OrderStatus;
-use App\Enum\PlanStatus;
-use App\Http\Resources\CollationCentreResource;
-use App\Http\Resources\HubResource;
-use App\Http\Resources\ShippingAgentResource;
-use App\Mail\B2BNewAdminEmail;
-use App\Models\Admin;
-use App\Models\B2bOrder;
-use App\Models\CollationCenter;
-use App\Models\PickupStation;
-use App\Models\Shipment;
-use App\Models\ShippingAgent;
 use App\Trait\HttpResponse;
-use App\Trait\SignUp;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use App\Models\PickupStation;
+use App\Models\ShippingAgent;
+use App\Mail\B2BNewAdminEmail;
+use App\Models\CollationCenter;
+use Illuminate\Support\Facades\DB;
+use App\Http\Resources\HubResource;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use App\Http\Resources\ShipmentResource;
+use App\Http\Resources\ShippingAgentResource;
+use App\Http\Resources\CollationCentreResource;
 
 class SuperAdminService
 {

@@ -14,24 +14,34 @@ class ShipmentResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        return [
+         return [
             'id' => (int) $this->id,
-            'uuid' => (string) $this->uuid,
-            'first_name' => (string) $this->first_name,
-            'last_name' => (string) $this->last_name,
-            'middlename' => (string) $this->middlename,
-            'email' => (string) $this->email,
-            'address' => (string) $this->address,
-            'city' => (string) $this->city,
-            'postal_code' => (string) $this->postal_code,
-            'phone' => (string) $this->phone,
-            'country_id' => (string) $this->country,
-            'state_id' => (string) $this->state_id,
-            'referrer_code' => (string) $this->referrer_code,
-            'referrer_link' => (string) $this->referrer_link,
-            'date_of_birth' => (string) $this->date_of_birth,
-            'is_verified' => (bool) $this->is_verified,
-            'income_type' => (string) $this->income_type,
-            'image' => (string) $this->image,
+            'product_quantity' => (string) $this->product_quantity,
+            'order_no' => (string) $this->order_no,
+            'shipping_address' => $this->shipping_address,
+            'shipping_agent' => $this->shipping_agent,
+            'collation_center' => $this->collationCentre?->name,
+            'billing_address' => $this->billing_address,
+            'product_data' => $this->product_data,
+            'total_amount' => (string) $this->total_amount,
+            'payment_method' => (string) $this->payment_method,
+            'payment_status' => (string) $this->payment_status,
+            'status' => (string) $this->status,
+            'country' => (string) $this->country?->name,
+            'delivery_date' => (string) $this->delivery_date,
+            'shipped_date' => (string) $this->shipped_date,
+            'seller' => (object) [
+                'first_name' => $this?->seller?->first_name,
+                'last_name' => $this?->seller?->last_name,
+                'email' => $this?->seller?->email,
+                'phone' => $this?->seller?->phone,
+            ],
+            'buyer' => (object) [
+                'first_name' => $this?->buyer?->first_name,
+                'last_name' => $this?->buyer?->last_name,
+                'email' => $this?->buyer?->email,
+                'phone' => $this?->buyer?->phone,
+            ],
+        ];
     }
 }
