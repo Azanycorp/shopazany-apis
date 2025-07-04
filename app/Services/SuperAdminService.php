@@ -15,6 +15,7 @@ use App\Models\Admin;
 use App\Models\B2bOrder;
 use App\Models\CollationCenter;
 use App\Models\PickupStation;
+use App\Models\Shipment;
 use App\Models\ShippingAgent;
 use App\Trait\HttpResponse;
 use App\Trait\SignUp;
@@ -437,5 +438,14 @@ class SuperAdminService
         $agent->delete();
 
         return $this->success(null, 'Details deleted successfully');
+    }
+
+    // get shipments
+    public function shipments()
+    {
+        $shipments = Shipment::latest()->get();
+        $data = ShipmentResource::collection($shipments);
+
+        return $this->success($data, 'All Shipments');
     }
 }
