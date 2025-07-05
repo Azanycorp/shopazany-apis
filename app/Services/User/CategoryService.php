@@ -33,8 +33,8 @@ class CategoryService
             Category::create([
                 'name' => $request->name,
                 'slug' => $slug,
-                'image' => $url['url'],
-                'public_id' => $url['public_id'],
+                'image' => $url['url'] ?? null,
+                'public_id' => $url['public_id'] ?? null,
                 'featured' => 1,
             ]);
 
@@ -87,8 +87,8 @@ class CategoryService
             $category->subcategory()->create([
                 'name' => $request->name,
                 'slug' => Str::slug($request->name),
-                'image' => $url['url'],
-                'public_id' => $url['public_id'],
+                'image' => $url['url'] ?? null,
+                'public_id' => $url['public_id'] ?? null,
             ]);
 
             return $this->success(null, 'Created successfully');
