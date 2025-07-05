@@ -13,6 +13,7 @@ use App\Http\Requests\AdminUserRequest;
 use App\Http\Resources\AdminUserResource;
 use App\Http\Requests\ShippingAgentRequest;
 use Symfony\Component\HttpFoundation\Response;
+use App\Http\Requests\ChangeAdminPasswordRequest;
 use App\Http\Requests\Admin\CollationCentreRequest;
 
 class AdminController extends Controller
@@ -156,61 +157,24 @@ class AdminController extends Controller
         return $this->superAdminService->deleteShippingAgent($id);
     }
 
+    // profile
     public function adminProfile()
     {
-        $authUser = userAuth();
-        $user = Admin::where('id', $authUser->id)->firstOrFail();
-
-        $data = new AdminUserResource($user);
-
-        return $this->success($data, 'Profile details');
+        return $this->superAdminService->adminProfile();
     }
 
-    public function updateAdminProfile($request)
+    public function updateAdminProfile(Request $request)
     {
-        $authUser = userAuth();
-        $user = Admin::where('id', $authUser->id)
-            ->firstOrFail();
-
-        $user->update([
-            'first_name' => $request->first_name ?? $user->first_name,
-            'last_name' => $request->last_name ?? $user->last_name,
-            'email' => $request->email ?? $user->email,
-            'phone_number' => $request->phone_number ?? $user->phone_number,
-        ]);
-
-        $data = new AdminUserResource($user);
-
-        return $this->success($data, 'Profile detail');
+        return $this->superAdminService->updateAdminProfile($request);
     }
 
-    public function enableTwoFactor($request)
+    public function updateAdminPassword(ChangeAdminPasswordRequest $request)
     {
-        $authUser = userAuth();
-        $user = Admin::where('id', $authUser->id)
-            ->firstOrFail();
-
-        $user->update([
-            'two_factor_enabled' => $request->two_factor_enabled,
-        ]);
-
-        return $this->success('Settings updated');
+        return $this->superAdminService->updateAdminPassword($request);
     }
 
-    public function updateAdminPassword($request)
+    public function enable2FA(Request $request)
     {
-        $authUser = userAuth();
-        $user = Admin::where('id', $authUser->id)
-            ->firstOrFail();
-
-        if (!Hash::check($request->old_password, $user->password)) {
-            return $this->error('Old password is incorrect.', 400);
-        }
-
-        $user->update([
-            'password' => bcrypt($request->password),
-        ]);
-
-        return $this->success(null, 'Password updated');
+        return $this->superAdminService->enableTwoFactor($request);
     }
 }
