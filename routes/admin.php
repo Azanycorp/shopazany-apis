@@ -256,6 +256,13 @@ Route::middleware('validate.header')
                         Route::post('/verify-password', 'verifyPassword');
                         Route::delete('/delete-account/{id}', 'removeAdmin');
                     });
+                    Route::prefix('profile')->group(function () {
+                        Route::get('/', 'adminProfile');
+                        Route::post('/update', 'updateAdminProfile');
+                        Route::post('/verify-password', 'verifyPassword');
+                        Route::post('/update-password', 'updateAdminPassword');
+                        Route::post('/enabble-2fa', 'enableTwoFactor');
+                    });
 
                     // delivery (collation centers and hubs)
                     Route::get('/delivery-overview', 'deliveryOverview');
