@@ -2,15 +2,18 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Models\Admin;
+use Illuminate\Http\Request;
+use App\Services\SuperAdminService;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Admin\CollationCentreRequest;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Hash;
 use App\Http\Requests\Admin\HubRequest;
 use App\Http\Requests\AdminUserRequest;
+use App\Http\Resources\AdminUserResource;
 use App\Http\Requests\ShippingAgentRequest;
-use App\Services\SuperAdminService;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Gate;
 use Symfony\Component\HttpFoundation\Response;
+use App\Http\Requests\Admin\CollationCentreRequest;
 
 class AdminController extends Controller
 {
@@ -151,5 +154,63 @@ class AdminController extends Controller
     public function deleteShippingAgent($id)
     {
         return $this->superAdminService->deleteShippingAgent($id);
+    }
+
+    public function adminProfile()
+    {
+        $authUser = userAuth();
+        $user = Admin::where('id', $authUser->id)->firstOrFail();
+
+        $data = new AdminUserResource($user);
+
+        return $this->success($data, 'Profile details');
+    }
+
+    public function updateAdminProfile($request)
+    {
+        $authUser = userAuth();
+        $user = Admin::where('id', $authUser->id)
+            ->firstOrFail();
+
+        $user->update([
+            'first_name' => $request->first_name ?? $user->first_name,
+            'last_name' => $request->last_name ?? $user->last_name,
+            'email' => $request->email ?? $user->email,
+            'phone_number' => $request->phone_number ?? $user->phone_number,
+        ]);
+
+        $data = new AdminUserResource($user);
+
+        return $this->success($data, 'Profile detail');
+    }
+
+    public function enableTwoFactor($request)
+    {
+        $authUser = userAuth();
+        $user = Admin::where('id', $authUser->id)
+            ->firstOrFail();
+
+        $user->update([
+            'two_factor_enabled' => $request->two_factor_enabled,
+        ]);
+
+        return $this->success('Settings updated');
+    }
+
+    public function updateAdminPassword($request)
+    {
+        $authUser = userAuth();
+        $user = Admin::where('id', $authUser->id)
+            ->firstOrFail();
+
+        if (!Hash::check($request->old_password, $user->password)) {
+            return $this->error('Old password is incorrect.', 400);
+        }
+
+        $user->update([
+            'password' => bcrypt($request->password),
+        ]);
+
+        return $this->success(null, 'Password updated');
     }
 }
