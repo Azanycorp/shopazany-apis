@@ -450,4 +450,21 @@ class SuperAdminService
 
         return $this->success($data, 'Profile details');
     }
+
+      public function updateAdminProfile($request)
+    {
+        $authUser = userAuth();
+        $user = Admin::where('id', $authUser->id)
+            ->firstOrFail();
+
+        $user->update([
+            'first_name' => $request->first_name,
+            'last_name' => $request->last_name,
+            'email' => $request->email,
+            'phone_number' => $request->phone_number,
+        ]);
+        $data = new AdminUserResource($user);
+
+        return $this->success($data, 'Profile detail');
+    }
 }
