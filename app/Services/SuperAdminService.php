@@ -440,7 +440,7 @@ class SuperAdminService
         return $this->success(null, 'Details deleted successfully');
     }
 
-     // CMS / Promo and banners
+    // CMS / Promo and banners
     public function adminProfile()
     {
         $authUser = userAuth();
@@ -451,7 +451,7 @@ class SuperAdminService
         return $this->success($data, 'Profile details');
     }
 
-      public function updateAdminProfile($request)
+    public function updateAdminProfile($request)
     {
         $authUser = userAuth();
         $user = Admin::where('id', $authUser->id)
@@ -466,5 +466,35 @@ class SuperAdminService
         $data = new AdminUserResource($user);
 
         return $this->success($data, 'Profile detail');
+    }
+
+    public function enableTwoFactor($request)
+    {
+        $authUser = userAuth();
+        $user = Admin::where('id', $authUser->id)
+            ->firstOrFail();
+
+        $user->update([
+            'two_factor_enabled' => $request->two_factor_enabled,
+        ]);
+
+        return $this->success('Settings updated');
+    }
+
+    public function updateAdminPassword($request)
+    {
+        $authUser = userAuth();
+        $user = Admin::where('id', $authUser->id)
+            ->firstOrFail();
+
+        if (!Hash::check($request->old_password, $user->password)) {
+            return $this->error('Old password is incorrect.', 400);
+        }
+
+        $user->update([
+            'password' => bcrypt($request->password),
+        ]);
+
+        return $this->success(null, 'Password updated');
     }
 }
