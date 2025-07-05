@@ -3,15 +3,17 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Admin;
-use Illuminate\Http\Request;
 use App\Services\SuperAdminService;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
+use App\Http\Requests\B2B\CodeRequest;
 use App\Http\Requests\Admin\HubRequest;
 use App\Http\Requests\AdminUserRequest;
+use Illuminate\Support\Facades\Request;
 use App\Http\Resources\AdminUserResource;
 use App\Http\Requests\ShippingAgentRequest;
+use App\Http\Requests\VerificationCodeRequest;
 use Symfony\Component\HttpFoundation\Response;
 use App\Http\Requests\ChangeAdminPasswordRequest;
 use App\Http\Requests\Admin\CollationCentreRequest;
@@ -178,13 +180,13 @@ class AdminController extends Controller
         return $this->superAdminService->enableTwoFactor($request);
     }
 
-    public function verifyCode(Request $request)
+    public function sendCode()
     {
-        return $this->superAdminService->verifyCode($request);
+        return $this->superAdminService->sendCode();
     }
 
-    function sendCode()
+    public function verifyCode(VerificationCodeRequest $request)
     {
-        return $this->superAdminService->sendCode($request);
+        return $this->superAdminService->verifyCode($request);
     }
 }

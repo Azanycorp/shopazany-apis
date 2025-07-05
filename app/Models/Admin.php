@@ -21,6 +21,8 @@ class Admin extends Authenticatable
         'password',
         'two_factor_enabled',
         'status',
+        'verification_code',
+        'verification_code_expire_at',
     ];
 
     protected $hidden = [
@@ -31,7 +33,7 @@ class Admin extends Authenticatable
     {
         $email = $this->email;
 
-        $url = config('services.reset_password_url').'?token='.$token.'&email='.$email;
+        $url = config('services.reset_password_url') . '?token=' . $token . '&email=' . $email;
 
         $this->notify(new ResetPasswordNotification($url));
     }

@@ -526,4 +526,22 @@ class SuperAdminService
 
         return $this->success('A verification code has been sent to you');
     }
+
+    public function verifyCode($request)
+    {
+        $user = Admin::where('verification_code', $request->verification_code)->first();
+        if (!$user) {
+            return $this->error('Invalide code entered, please try it again.', 422);
+        }
+
+        if ($user->verification_code_expire_at < now()) {
+            return $this->error('Verification Code has Expired!', 404);
+        }
+
+        $user->update([
+            'verification_code' => null,
+            'verification_code_expire_at' => null,
+        ]);
+        return $this->success("Code Verified");
+    }
 }

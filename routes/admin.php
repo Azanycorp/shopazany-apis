@@ -261,6 +261,8 @@ Route::middleware('validate.header')
                         Route::get('/', 'adminProfile');
                         Route::post('/update', 'updateAdminProfile');
                         Route::post('/verify-password', 'verifyPassword');
+                        Route::get('/send-code', 'sendCode');
+                        Route::post('/verify-code', 'verifyCode');
                         Route::post('/update-password', 'updateAdminPassword');
                         Route::post('/enable-2fa', 'enable2FA');
                     });
