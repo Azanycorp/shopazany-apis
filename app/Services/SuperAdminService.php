@@ -20,6 +20,8 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Resources\HubResource;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\AccountVerificationEmail;
 use App\Http\Resources\AdminUserResource;
 use App\Http\Resources\ShippingAgentResource;
 use App\Http\Resources\CollationCentreResource;
@@ -496,5 +498,32 @@ class SuperAdminService
         ]);
 
         return $this->success(null, 'Password updated');
+    }
+
+    public function sendCode()
+    {
+        $admin = userAuth();
+
+        if (!$admin->email) {
+            return $this->error('Oops! No email found to send code.', 404);
+        }
+
+        $verificationCode = mt_rand(1000, 9999);
+        $expiry = now()->addMinutes(30);
+
+        $admin->update([
+            'verification_code' => $verificationCode,
+            'verification_code_expire_at' => $expiry,
+        ]);
+
+        $type = MailingEnum::ACCOUNT_VERIFICATION;
+        $subject = 'Account Verification';
+        $mail_class = AccountVerificationEmail::class;
+        $data = [
+            'user' => $admin,
+        ];
+        mailSend($type, $admin, $subject, $mail_class, $data);
+
+        return $this->success('A verification code has been sent to you');
     }
 }

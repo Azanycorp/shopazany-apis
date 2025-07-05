@@ -177,4 +177,14 @@ class AdminController extends Controller
     {
         return $this->superAdminService->enableTwoFactor($request);
     }
+
+    public function verifyCode(Request $request)
+    {
+        return $this->superAdminService->verifyCode($request);
+    }
+
+    function sendCode()
+    {
+        return $this->superAdminService->sendCode($request);
+    }
 }
