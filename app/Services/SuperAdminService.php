@@ -2,26 +2,27 @@
 
 namespace App\Services;
 
-use App\Enum\AdminStatus;
+use App\Models\Admin;
+use App\Trait\SignUp;
 use App\Enum\AdminType;
+use App\Enum\PlanStatus;
+use App\Models\B2bOrder;
+use App\Enum\AdminStatus;
 use App\Enum\MailingEnum;
 use App\Enum\OrderStatus;
-use App\Enum\PlanStatus;
-use App\Http\Resources\CollationCentreResource;
-use App\Http\Resources\HubResource;
-use App\Http\Resources\ShippingAgentResource;
-use App\Mail\B2BNewAdminEmail;
-use App\Models\Admin;
-use App\Models\B2bOrder;
-use App\Models\CollationCenter;
+use App\Trait\HttpResponse;
+use Illuminate\Support\Str;
 use App\Models\PickupStation;
 use App\Models\ShippingAgent;
-use App\Trait\HttpResponse;
-use App\Trait\SignUp;
-use Illuminate\Support\Facades\Auth;
+use App\Mail\B2BNewAdminEmail;
+use App\Models\CollationCenter;
 use Illuminate\Support\Facades\DB;
+use App\Http\Resources\HubResource;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
+use App\Http\Resources\AdminUserResource;
+use App\Http\Resources\ShippingAgentResource;
+use App\Http\Resources\CollationCentreResource;
 
 class SuperAdminService
 {
@@ -437,5 +438,16 @@ class SuperAdminService
         $agent->delete();
 
         return $this->success(null, 'Details deleted successfully');
+    }
+
+     // CMS / Promo and banners
+    public function adminProfile()
+    {
+        $authUser = userAuth();
+        $user = Admin::where('id', $authUser->id)->firstOrFail();
+
+        $data = new AdminUserResource($user);
+
+        return $this->success($data, 'Profile details');
     }
 }
