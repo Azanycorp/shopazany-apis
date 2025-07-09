@@ -25,7 +25,7 @@ class ProcessEmails extends Command
     /**
      * Execute the console command.
      */
-    public function handle(MailingService $emailService)
+    public function handle(MailingService $emailService): int
     {
         try {
             $emailService->sendEmails(15);

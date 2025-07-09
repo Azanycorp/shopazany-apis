@@ -32,17 +32,17 @@ class WithdrawRequestPayout extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): void
     {
         $this->info('Processing pending withdrawal requests...');
 
-        User::with(['withdrawalRequests' => function ($query) {
+        User::with(['withdrawalRequests' => function ($query): void {
             $query->where('status', WithdrawalStatus::PENDING)->limit(1);
         }, 'paymentMethods'])
-            ->whereHas('withdrawalRequests', function ($query) {
+            ->whereHas('withdrawalRequests', function ($query): void {
                 $query->where('status', WithdrawalStatus::PENDING);
             })
-            ->chunk(100, function ($users) {
+            ->chunk(100, function ($users): void {
                 foreach ($users as $user) {
                     $this->withdraw($user);
                 }
@@ -53,7 +53,7 @@ class WithdrawRequestPayout extends Command
         $this->info('Withdrawal request processing completed.');
     }
 
-    private function withdraw($user)
+    private function withdraw(\App\Models\User $user): void
     {
         if ($user->paymentMethods->isEmpty()) {
             $this->warn("Skipping user {$user->id}: No payment method found.");
@@ -102,7 +102,7 @@ class WithdrawRequestPayout extends Command
         }
     }
 
-    private function runPayount($attempt, $maxRetries, $request, $user, $withdrawalAmount, $data)
+    private function runPayount(int $attempt, int $maxRetries, $request, $user, $withdrawalAmount, array $data): void
     {
         while ($attempt < $maxRetries) {
             DB::beginTransaction();
@@ -135,16 +135,15 @@ class WithdrawRequestPayout extends Command
         }
     }
 
-    private function executePayout($data, $request, $user)
+    private function executePayout(array $data, $request, $user)
     {
         if ($data['platform'] === 'authorize') {
             return PayoutService::authorizeTransfer($request, $user, $data['data']);
-        } else {
-            throw new \Exception("Unsupported payment platform: {$data['platform']}");
         }
+        throw new \Exception("Unsupported payment platform: {$data['platform']}");
     }
 
-    private function handlePayoutFailure($request, $user, $exception, $attempt, $maxRetries)
+    private function handlePayoutFailure($request, $user, \Exception $exception, int|float $attempt, $maxRetries): void
     {
         if ($attempt >= $maxRetries) {
             Log::error("Payout failed for user {$user->id}, withdrawal ID {$request->id}", ['error' => $exception->getMessage()]);
@@ -156,13 +155,13 @@ class WithdrawRequestPayout extends Command
         }
     }
 
-    private function processPaystackBulkTransfers()
+    private function processPaystackBulkTransfers(): void
     {
         $this->info('Processing Paystack bulk withdrawals...');
 
         $paystackRequests = $this->collectPaystackRequests();
 
-        if (empty($paystackRequests)) {
+        if ($paystackRequests === []) {
             $this->info('No Paystack withdrawals to process.');
 
             return;

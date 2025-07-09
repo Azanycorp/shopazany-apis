@@ -16,11 +16,11 @@ class OrderResource extends JsonResource
     {
         $user = $request->user();
 
-        $sellerProducts = $this->products->filter(function ($product) use ($user) {
+        $sellerProducts = $this->products->filter(function ($product) use ($user): bool {
             return $product->user_id === $user->id;
         });
 
-        $totalAmountForSeller = $sellerProducts->sum(function ($product) use ($user) {
+        $totalAmountForSeller = $sellerProducts->sum(function ($product) use ($user): float {
             return currencyConvert(
                 $product->shopCountry->currency ?? 'USD',
                 $product->pivot->sub_total,

@@ -22,7 +22,7 @@ class CouponService
         return $this->success(null, 'Coupons created successfully', 201);
     }
 
-    private function createMultiUseCoupon($request)
+    private function createMultiUseCoupon($request): void
     {
         do {
             $code = strtoupper(Str::random(8));
@@ -43,7 +43,7 @@ class CouponService
         ]);
     }
 
-    private function createOneTimeCoupon($request)
+    private function createOneTimeCoupon($request): void
     {
         for ($i = 0; $i < $request->numbers; $i++) {
             do {

@@ -2,15 +2,21 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Models\Admin;
+use App\Services\SuperAdminService;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Admin\CollationCentreRequest;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Hash;
+use App\Http\Requests\B2B\CodeRequest;
 use App\Http\Requests\Admin\HubRequest;
 use App\Http\Requests\AdminUserRequest;
+use Illuminate\Support\Facades\Request;
+use App\Http\Resources\AdminUserResource;
 use App\Http\Requests\ShippingAgentRequest;
-use App\Services\SuperAdminService;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Gate;
+use App\Http\Requests\VerificationCodeRequest;
 use Symfony\Component\HttpFoundation\Response;
+use App\Http\Requests\ChangeAdminPasswordRequest;
+use App\Http\Requests\Admin\CollationCentreRequest;
 
 class AdminController extends Controller
 {
@@ -151,5 +157,36 @@ class AdminController extends Controller
     public function deleteShippingAgent($id)
     {
         return $this->superAdminService->deleteShippingAgent($id);
+    }
+
+    // profile
+    public function adminProfile()
+    {
+        return $this->superAdminService->adminProfile();
+    }
+
+    public function updateAdminProfile(Request $request)
+    {
+        return $this->superAdminService->updateAdminProfile($request);
+    }
+
+    public function updateAdminPassword(ChangeAdminPasswordRequest $request)
+    {
+        return $this->superAdminService->updateAdminPassword($request);
+    }
+
+    public function enable2FA(Request $request)
+    {
+        return $this->superAdminService->enableTwoFactor($request);
+    }
+
+    public function sendCode()
+    {
+        return $this->superAdminService->sendCode();
+    }
+
+    public function verifyCode(VerificationCodeRequest $request)
+    {
+        return $this->superAdminService->verifyCode($request);
     }
 }

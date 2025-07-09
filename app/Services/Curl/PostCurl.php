@@ -6,11 +6,11 @@ use Exception;
 
 class PostCurl
 {
-    protected $url;
+    protected string $url;
 
     protected $headers = [];
 
-    protected $fields;
+    protected array $fields;
 
     public function __construct(string $url, array $headers = [], array $fields = [])
     {
@@ -36,7 +36,7 @@ class PostCurl
 
         $response = curl_exec($ch);
 
-        if (curl_errno($ch)) {
+        if (curl_errno($ch) !== 0) {
             $error_msg = curl_error($ch);
             curl_close($ch);
             throw new Exception("cURL error: $error_msg");

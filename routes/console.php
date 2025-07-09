@@ -15,7 +15,7 @@ Schedule::command('emails:process')
     ->everyMinute();
 Schedule::daily()
     ->withoutOverlapping()
-    ->group(function () {
+    ->group(function (): void {
         Schedule::command('currency:update -o');
         Schedule::command('queue:prune-batches --hours=48 --unfinished=72');
         // Product stock and pricing updates
@@ -36,6 +36,6 @@ Schedule::command('usersubscriptions:charge')
 // Withdrawal request processing
 Schedule::everyTenMinutes()
     ->withoutOverlapping()
-    ->group(function () {
+    ->group(function (): void {
         Schedule::command('withdraw-request:process');
     });

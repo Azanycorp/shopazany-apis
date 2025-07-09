@@ -26,7 +26,7 @@ class RewardPointService
         if (is_string($countryIds)) {
             $countryIds = explode(',', $countryIds);
         }
-        $countryIds = array_map(fn ($id) => (int) trim($id, '"'), $countryIds);
+        $countryIds = array_map(fn ($id): int => (int) trim($id, '"'), $countryIds);
 
         Action::create([
             'name' => $request->name,
@@ -108,7 +108,7 @@ class RewardPointService
             if (is_string($countryIds)) {
                 $countryIds = explode(',', $countryIds);
             }
-            $countryIds = array_map(fn ($id) => (int) trim($id, '"'), $countryIds);
+            $countryIds = array_map(fn ($id): int => (int) trim($id, '"'), $countryIds);
         }
 
         $action->update([

@@ -272,9 +272,9 @@ class HomeService
     {
         $countryId = request()->query('country_id', 231);
 
-        $category = Category::with(['products' => function ($query) use ($countryId) {
+        $category = Category::with(['products' => function ($query) use ($countryId): void {
             $query->where('status', ProductStatus::ACTIVE)
-                ->when($countryId, function ($query) use ($countryId) {
+                ->when($countryId, function ($query) use ($countryId): void {
                     $query->where('country_id', $countryId);
                 })
                 ->select('id', 'name', 'slug', 'price', 'image', 'category_id', 'discount_price', 'default_currency')
@@ -298,7 +298,7 @@ class HomeService
         $countryId = request()->query('country_id', 231);
 
         $products = Product::where('status', ProductStatus::ACTIVE)
-            ->when($countryId, function ($query) use ($countryId) {
+            ->when($countryId, function ($query) use ($countryId): void {
                 $query->where('country_id', $countryId);
             })
             ->select(['id', 'name', 'slug', 'description', 'discount_price', 'price', 'image', 'country_id'])
@@ -556,7 +556,7 @@ class HomeService
             ])
             ->get();
 
-        $products->each(function ($product) {
+        $products->each(function ($product): void {
             $product->default_currency = $product->shopCountry?->currency ?? 'USD';
             unset($product->shopCountry);
         });

@@ -59,7 +59,7 @@ class ChargeUserSubscriptions extends Command
             if ($response['status'] === true) {
 
                 $user = User::with([
-                    'referrer' => function ($query) {
+                    'referrer' => function ($query): void {
                         $query->with('wallet');
                     },
                     'userSubscription',
