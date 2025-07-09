@@ -15,6 +15,8 @@ enum MailingEnum: string
 
     const EMAIL_VERIFICATION = 'email_verification';
 
+    const ACCOUNT_VERIFICATION = 'account_verification';
+
     const ORDER_STATUS_UPDATED = 'order_status_updated';
 
     const ADMIN_ACCOUNT = 'Admin new account';

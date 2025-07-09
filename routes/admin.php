@@ -257,6 +257,16 @@ Route::middleware('validate.header')
                         Route::delete('/delete-account/{id}', 'removeAdmin');
                     });
 
+                    Route::prefix('profile')->group(function () {
+                        Route::get('/', 'adminProfile');
+                        Route::post('/update', 'updateAdminProfile');
+                        Route::post('/verify-password', 'verifyPassword');
+                        Route::get('/send-code', 'sendCode');
+                        Route::post('/verify-code', 'verifyCode');
+                        Route::post('/update-password', 'updateAdminPassword');
+                        Route::post('/enable-2fa', 'enable2FA');
+                    });
+
                     // delivery (collation centers and hubs)
                     Route::get('/delivery-overview', 'deliveryOverview');
                     Route::prefix('collation-centre')->group(function (): void {
