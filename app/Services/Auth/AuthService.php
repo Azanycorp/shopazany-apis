@@ -403,7 +403,7 @@ class AuthService extends Controller
         $referrer->save();
     }
 
-    private function userTrigger($user, $request, $referrer_link, $referrer_code, $code)
+    private function userTrigger($user, $request, string $referrer_link, $referrer_code, string $code)
     {
         $currencyCode = $this->currencyCode($request);
         if ($user) {

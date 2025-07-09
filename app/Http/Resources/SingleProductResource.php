@@ -16,7 +16,7 @@ class SingleProductResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $item_sold = Order::whereHas('products', function ($query) {
+        $item_sold = Order::whereHas('products', function ($query): void {
             $query->where('product_id', $this->id);
         })
             ->where('status', OrderStatus::DELIVERED)

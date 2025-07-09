@@ -16,13 +16,13 @@ class OrderDetailResource extends JsonResource
     public function toArray(Request $request): array
     {
         $user = $request->user();
-        $sellerProducts = $this->products->filter(function ($product) use ($user) {
+        $sellerProducts = $this->products->filter(function ($product) use ($user): bool {
             return $product->user_id === $user->id;
         });
         $userCurrency = $user?->default_currency ?? 'USD';
         $totalConvertedAmount = 0;
 
-        $products = $sellerProducts->map(function ($product) use ($userCurrency, &$totalConvertedAmount) {
+        $products = $sellerProducts->map(function ($product) use ($userCurrency, &$totalConvertedAmount): array {
             $productCurrency = optional($product->shopCountry)->currency ?? 'USD';
 
             $convertedSubTotal = currencyConvert(
@@ -40,7 +40,7 @@ class OrderDetailResource extends JsonResource
                 'description' => (string) $product->description,
                 'price' => (float) $product->pivot->price,
                 'quantity' => (int) $product->pivot->product_quantity,
-                'sub_total' => (float) $convertedSubTotal,
+                'sub_total' => $convertedSubTotal,
                 'original_currency' => (string) $productCurrency,
                 'image' => (string) $product->image,
                 'status' => (string) $product->pivot->status,
@@ -48,7 +48,7 @@ class OrderDetailResource extends JsonResource
                     'id' => $selectedVariation->id,
                     'variation' => $selectedVariation->variation,
                     'sku' => $selectedVariation->sku,
-                    'price' => (float) currencyConvert(
+                    'price' => currencyConvert(
                         optional(value: $selectedVariation->product->shopCountry)->currency,
                         $selectedVariation->price,
                         $userCurrency

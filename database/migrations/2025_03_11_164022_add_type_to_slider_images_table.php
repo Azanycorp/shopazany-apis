@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('slider_images', function (Blueprint $table) {
+        Schema::table('slider_images', function (Blueprint $table): void {
             $table->string('type')->nullable()->after('link');
         });
     }

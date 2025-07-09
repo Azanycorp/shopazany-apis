@@ -265,14 +265,14 @@ class SuperAdminService
 
         $admins = Admin::with('permissions:id,name')
             ->select('id', 'first_name', 'last_name', 'email', 'created_at')
-            ->when($user->type === 'b2c_admin', function ($query) {
+            ->when($user->type === 'b2c_admin', function ($query): void {
                 $query->where('type', AdminType::B2C);
             })
-            ->when($user->type === 'b2b_admin', function ($query) {
+            ->when($user->type === 'b2b_admin', function ($query): void {
                 $query->where('type', AdminType::B2B);
             })
-            ->when($searchQuery, function ($queryBuilder) use ($searchQuery) {
-                $queryBuilder->where(function ($subQuery) use ($searchQuery) {
+            ->when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
+                $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
                     $subQuery->where('first_name', 'LIKE', "%{$searchQuery}%")
                         ->orWhere('email', 'LIKE', "%{$searchQuery}%");
                 });

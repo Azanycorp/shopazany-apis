@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Storage;
 
 class LocalUploader
 {
-    public function upload($file, $folder)
+    public function upload($file, $folder): array
     {
         $path = Storage::disk('public')->putFile($folder, $file);
 
@@ -20,7 +20,7 @@ class LocalUploader
         ];
     }
 
-    public function delete($publicId)
+    public function delete($publicId): void
     {
         if (! Storage::disk('public')->delete($publicId)) {
             throw new \Exception('Failed to delete from local disk.');

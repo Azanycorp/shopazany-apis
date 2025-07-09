@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('payment_methods', function (Blueprint $table) {
+        Schema::table('payment_methods', function (Blueprint $table): void {
             $table->string('platform')->nullable()->after('type');
             $table->string('routing_number')->nullable()->after('account_name');
         });
@@ -22,7 +22,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('payment_methods', function (Blueprint $table) {
+        Schema::table('payment_methods', function (Blueprint $table): void {
             $table->dropColumn('platform');
             $table->dropColumn('routing_number');
         });

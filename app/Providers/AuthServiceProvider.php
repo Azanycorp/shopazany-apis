@@ -20,7 +20,7 @@ class AuthServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Gate::before(function ($user, $ability) {
+        Gate::before(function ($user, $ability): ?true {
             $permissions = $user->roles->flatMap->permissions->pluck('name')->unique();
 
             return $permissions->contains($ability) ? true : null;

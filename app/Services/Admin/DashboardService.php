@@ -43,7 +43,7 @@ class DashboardService
             ->where('orders.status', OrderStatus::DELIVERED)
             ->whereBetween('orders.created_at', [$startDate, $endDate])
             ->get()
-            ->sum(fn ($order) => currencyConvert($order->currency, $order->total_amount, 'USD'));
+            ->sum(fn ($order): float => currencyConvert($order->currency, $order->total_amount, 'USD'));
 
         $userStats = User::selectRaw('
                 SUM(CASE WHEN status = ? AND created_at >= ? THEN 1 ELSE 0 END) as active_users,

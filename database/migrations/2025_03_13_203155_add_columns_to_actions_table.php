@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('actions', function (Blueprint $table) {
+        Schema::table('actions', function (Blueprint $table): void {
             $table->text('description')->nullable()->after('slug');
             $table->string('icon')->nullable()->after('description');
             $table->string('verification_type')->nullable()->after('icon');
@@ -24,7 +24,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('actions', function (Blueprint $table) {
+        Schema::table('actions', function (Blueprint $table): void {
             $table->dropColumn('description');
             $table->dropColumn('icon');
             $table->dropColumn('verification_type');

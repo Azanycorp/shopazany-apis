@@ -111,7 +111,7 @@ Route::middleware('validate.header')
                 Route::patch('/approve', 'approveCustomer');
                 Route::patch('/ban', 'banCustomer');
 
-                Route::prefix('category')->controller(ProductCategoryController::class)->group(function () {
+                Route::prefix('category')->controller(ProductCategoryController::class)->group(function (): void {
                     Route::post('/create', 'createCategory');
                     Route::get('/all', 'adminCategories')->middleware('cacheResponse:300');
                     Route::get('/analytics', 'categoryAnalytic');
@@ -234,7 +234,7 @@ Route::middleware('validate.header')
 
             Route::prefix('affiliate')
                 ->controller(AdminAffiliateController::class)
-                ->group(function () {
+                ->group(function (): void {
                     Route::get('/overview', 'overview')
                         ->middleware('cacheResponse:600');
                     Route::get('/users', 'allUsers')
@@ -245,9 +245,9 @@ Route::middleware('validate.header')
                 });
 
             Route::controller(AdminController::class)
-                ->group(function () {
+                ->group(function (): void {
                     // Admin users
-                    Route::prefix('admin-users')->group(function () {
+                    Route::prefix('admin-users')->group(function (): void {
                         Route::get('/', 'adminUsers');
                         Route::post('/add', 'addAdmin');
                         Route::get('/details/{id}', 'viewAdminUser');
@@ -259,14 +259,14 @@ Route::middleware('validate.header')
 
                     // delivery (collation centers and hubs)
                     Route::get('/delivery-overview', 'deliveryOverview');
-                    Route::prefix('collation-centre')->group(function () {
+                    Route::prefix('collation-centre')->group(function (): void {
                         Route::get('/', 'allCollationCentres');
                         Route::post('/add', 'addCollationCentre');
                         Route::get('/details/{id}', 'viewCollationCentre');
                         Route::patch('/update/{id}', 'editCollationCentre');
                         Route::delete('/delete/{id}', 'deleteCollationCentre');
 
-                        Route::prefix('hubs')->group(function () {
+                        Route::prefix('hubs')->group(function (): void {
                             Route::get('/', 'allCollationCentreHubs');
                             Route::post('/add', 'addHub');
                             Route::get('/details/{id}', 'viewHub');
@@ -277,8 +277,8 @@ Route::middleware('validate.header')
                 });
 
             // b2b admin
-            Route::prefix('b2b')->group(function () {
-                Route::controller(B2BAdminController::class)->group(function () {
+            Route::prefix('b2b')->group(function (): void {
+                Route::controller(B2BAdminController::class)->group(function (): void {
                     Route::get('/dashboard', 'dashboard');
 
                     Route::get('/profile', 'adminProfile');
@@ -288,7 +288,7 @@ Route::middleware('validate.header')
                     Route::get('/get-config', 'getConfigDetails');
                     Route::post('/update-config', 'updateConfigDetails');
 
-                    Route::prefix('page-banners')->group(function () {
+                    Route::prefix('page-banners')->group(function (): void {
                         Route::get('/', 'getAllBanners');
                         Route::post('/add', 'addNewBanner');
                         Route::post('/update/{id}', 'updatePageBanner');
@@ -296,7 +296,7 @@ Route::middleware('validate.header')
                         Route::delete('/delete/{id}', 'deletePageBanner');
                     });
 
-                    Route::prefix('blog')->group(function () {
+                    Route::prefix('blog')->group(function (): void {
                         Route::get('/', 'getBlogs');
                         Route::post('/create', 'addBlog');
                         Route::get('/details/{id}', 'getBlog');
@@ -304,14 +304,14 @@ Route::middleware('validate.header')
                         Route::delete('/delete/{id}', 'deleteBlog');
                     });
 
-                    Route::prefix('client-logo')->group(function () {
+                    Route::prefix('client-logo')->group(function (): void {
                         Route::get('/', 'allClientLogos');
                         Route::post('/create', 'addClientLogo');
                         Route::get('/details/{id}', 'getClientLogo');
                         Route::post('/update/{id}', 'updateClientLogo');
                         Route::delete('/delete/{id}', 'deleteClientLogo');
                     });
-                    Route::prefix('social-links')->group(function () {
+                    Route::prefix('social-links')->group(function (): void {
                         Route::get('/', 'socialLinks');
                         Route::post('/add', 'addLink');
                         Route::get('/details/{id}', 'viewLink');
@@ -322,7 +322,7 @@ Route::middleware('validate.header')
 
                 Route::prefix('admin-users')
                     ->controller(AdminController::class)
-                    ->group(function () {
+                    ->group(function (): void {
                         Route::get('/', 'adminUsers');
                         Route::post('/add', 'addAdmin');
                         Route::get('/details/{id}', 'viewAdminUser');
@@ -334,7 +334,7 @@ Route::middleware('validate.header')
 
                 Route::prefix('category')
                     ->controller(ProductCategoryController::class)
-                    ->group(function () {
+                    ->group(function (): void {
                         Route::post('/create', 'createCategory');
                         Route::get('/all', 'adminCategories')->middleware('cacheResponse:300');
                         Route::get('/analytics', 'categoryAnalytic');

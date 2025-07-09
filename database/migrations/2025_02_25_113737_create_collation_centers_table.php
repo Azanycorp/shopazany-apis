@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('collation_centers', function (Blueprint $table) {
+        Schema::create('collation_centers', function (Blueprint $table): void {
             $table->id();
             $table->string('name');
             $table->string('location');

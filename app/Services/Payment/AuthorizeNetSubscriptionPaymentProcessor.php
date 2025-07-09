@@ -80,7 +80,7 @@ class AuthorizeNetSubscriptionPaymentProcessor implements PaymentStrategy
         return $controller->executeWithApiResponse(\net\authorize\api\constants\ANetEnvironment::SANDBOX);
     }
 
-    private function handleSuccessResponse($response, $tresponse, $user, array $paymentDetails, $payment)
+    private function handleSuccessResponse($response, $tresponse, $user, array $paymentDetails, \net\authorize\api\contract\v1\PaymentType $payment): array
     {
         // $subUser = User::findOrFail($user->id);
         $referrer = User::with(['wallet'])->find($paymentDetails['referrer_id']);
@@ -143,7 +143,7 @@ class AuthorizeNetSubscriptionPaymentProcessor implements PaymentStrategy
         ];
     }
 
-    private function handleErrorResponse($tresponse, $response, $user)
+    private function handleErrorResponse($tresponse, $response, $user): array
     {
         $msg = $tresponse != null ? 'Payment failed: '.$tresponse->getErrors()[0]->getErrorText() : 'Payment failed: '.$response->getMessages()->getMessage()[0]->getText();
 

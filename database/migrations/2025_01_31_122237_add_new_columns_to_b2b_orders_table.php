@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('b2b_orders', function (Blueprint $table) {
+        Schema::table('b2b_orders', function (Blueprint $table): void {
             //
             $table->longText('billing_address')->nullable();
             $table->integer('country_id')->nullable();
@@ -23,7 +23,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('b2b_orders', function (Blueprint $table) {
+        Schema::table('b2b_orders', function (Blueprint $table): void {
             //
             $table->longText('billing_address')->nullable();
             $table->integer('country_id')->nullable();

@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('pickup_stations', function (Blueprint $table) {
+        Schema::create('pickup_stations', function (Blueprint $table): void {
             $table->id();
             $table->unsignedBigInteger('collation_center_id');
             $table->string('name');

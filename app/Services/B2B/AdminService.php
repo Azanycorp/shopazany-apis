@@ -219,7 +219,7 @@ class AdminService
         return $this->success(null, $status);
     }
 
-    public function viewSeller($id)
+    public function viewSeller($id): array
     {
         $user = User::where('type', UserType::B2B_SELLER)
             ->where('id', $id)
@@ -374,7 +374,7 @@ class AdminService
         return $this->success($data, 'Product details');
     }
 
-    public function editSellerProduct($request, $user_id, $product_id)
+    public function editSellerProduct($request, $user_id, int $product_id)
     {
         $prod = B2BProduct::find($product_id);
         $user = User::find($user_id);

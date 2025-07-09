@@ -152,7 +152,7 @@ class PaymentService
         return $this->success($banks, 'Banks retrieved successfully');
     }
 
-    public function accountLookUp($request)
+    public function accountLookUp($request): array
     {
         $url = config('services.paystack.bank_base_url').'/resolve?account_number='.$request->account_number.'&bank_code='.$request->bank_code;
 

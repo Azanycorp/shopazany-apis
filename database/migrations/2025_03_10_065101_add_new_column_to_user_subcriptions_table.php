@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('user_subcriptions', function (Blueprint $table) {
+        Schema::table('user_subcriptions', function (Blueprint $table): void {
             $table->string('subscription_type')->nullable()->after('authorization_data');
             $table->longText('authorization_data')->nullable()->change();
         });
@@ -22,7 +22,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('user_subcriptions', function (Blueprint $table) {
+        Schema::table('user_subcriptions', function (Blueprint $table): void {
             $table->dropColumn('subscription_type');
             $table->longText('authorization_data')->change();
         });

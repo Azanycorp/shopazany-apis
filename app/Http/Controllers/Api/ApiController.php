@@ -73,7 +73,7 @@ class ApiController extends Controller
         return $this->adminService->shopByCountry($request);
     }
 
-    public function getShopByCountry()
+    public function getShopByCountry(): array
     {
         return $this->adminService->getShopByCountry();
     }
