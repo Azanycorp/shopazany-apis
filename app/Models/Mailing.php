@@ -27,7 +27,7 @@ class Mailing extends Model
         ];
     }
 
-    public static function saveData($data): self
+    public static function saveData(array $data): self
     {
         $mail = new self;
         $mail->type = $data['type'];

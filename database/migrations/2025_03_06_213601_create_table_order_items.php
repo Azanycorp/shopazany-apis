@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('order_items', function (Blueprint $table) {
+        Schema::create('order_items', function (Blueprint $table): void {
             $table->id();
             $table->foreignId('order_id')->constrained()->onDelete('cascade');
             $table->foreignId('product_id')->constrained()->onDelete('cascade');
@@ -21,7 +21,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::table('orders', function (Blueprint $table) {
+        Schema::table('orders', function (Blueprint $table): void {
             if (config('database.default') !== 'sqlite') {
                 $table->dropColumn('seller_id');
                 $table->dropColumn('product_id');
@@ -37,7 +37,7 @@ return new class extends Migration
     {
         Schema::dropIfExists('order_items');
 
-        Schema::table('orders', function (Blueprint $table) {
+        Schema::table('orders', function (Blueprint $table): void {
             $table->foreignId('product_id')->constrained()->onDelete('cascade');
             $table->integer('product_quantity');
         });

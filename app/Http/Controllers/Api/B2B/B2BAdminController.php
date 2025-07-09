@@ -45,7 +45,7 @@ class B2BAdminController extends Controller
     {
         abort_if(Gate::denies('order_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
 
-        return $this->adminService->getAllOrders($request);
+        return $this->adminService->getAllOrders();
     }
 
     public function markCompleted($id)

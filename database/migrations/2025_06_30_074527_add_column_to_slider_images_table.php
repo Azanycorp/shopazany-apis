@@ -11,19 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('slider_images', function (Blueprint $table) {
+        Schema::table('slider_images', function (Blueprint $table): void {
             $table->string('public_id')->nullable()->after('image');
         });
 
-        Schema::table('banners', function (Blueprint $table) {
+        Schema::table('banners', function (Blueprint $table): void {
             $table->string('public_id')->nullable()->after('image');
         });
 
-        Schema::table('b2b_products', function (Blueprint $table) {
+        Schema::table('b2b_products', function (Blueprint $table): void {
             $table->string('public_id')->nullable()->after('front_image');
         });
 
-        Schema::table('blogs', function (Blueprint $table) {
+        Schema::table('blogs', function (Blueprint $table): void {
             $table->string('public_id')->nullable()->after('image');
         });
     }
@@ -33,19 +33,19 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('slider_images', function (Blueprint $table) {
+        Schema::table('slider_images', function (Blueprint $table): void {
             $table->dropColumn('public_id');
         });
 
-        Schema::table('banners', function (Blueprint $table) {
+        Schema::table('banners', function (Blueprint $table): void {
             $table->dropColumn('public_id');
         });
 
-        Schema::table('b2b_products', function (Blueprint $table) {
+        Schema::table('b2b_products', function (Blueprint $table): void {
             $table->dropColumn('public_id');
         });
 
-        Schema::table('blogs', function (Blueprint $table) {
+        Schema::table('blogs', function (Blueprint $table): void {
             $table->dropColumn('public_id');
         });
     }

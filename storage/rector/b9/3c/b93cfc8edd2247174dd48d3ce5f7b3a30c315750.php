@@ -2,5 +2,5 @@
 
 return \Rector\Caching\ValueObject\CacheItem::__set_state(array(
    'variableKey' => 'file_hash',
-   'data' => 'ebd3e845a8f56ae631e7a4608940f480',
+   'data' => 'fe74dff1065eba53d0c9e5558cd4bddc',
 ));

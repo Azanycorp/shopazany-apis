@@ -4,11 +4,11 @@ namespace App\Services\Curl;
 
 class CurlService
 {
-    protected $url;
+    protected string $url;
 
     protected $headers = [];
 
-    protected $fields;
+    protected array $fields;
 
     public function __construct(string $url, array $headers = [], array $fields = [])
     {
@@ -35,7 +35,7 @@ class CurlService
 
         $response = curl_exec($ch);
 
-        if (curl_errno($ch)) {
+        if (curl_errno($ch) !== 0) {
             return [
                 'status' => false,
                 'message' => curl_error($ch),

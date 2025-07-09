@@ -16,7 +16,7 @@ class CustomerOrderResource extends JsonResource
     {
         $user = $request->user();
 
-        $totalAmountForSeller = $this->products->sum(function ($product) use ($user) {
+        $totalAmountForSeller = $this->products->sum(function ($product) use ($user): float {
             return currencyConvert(
                 $product->shopCountry->currency ?? 'USD',
                 $product->pivot->sub_total,

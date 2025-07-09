@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('payment_methods', function (Blueprint $table) {
+        Schema::table('payment_methods', function (Blueprint $table): void {
             $table->dropColumn('swift');
             $table->dropColumn('bank_branch');
             $table->dropColumn('paypal_email');
@@ -22,7 +22,7 @@ return new class extends Migration
             $table->longText('data')->nullable()->after('recipient_code');
         });
 
-        Schema::table('withdrawal_requests', function (Blueprint $table) {
+        Schema::table('withdrawal_requests', function (Blueprint $table): void {
             $table->string('user_type')->nullable()->after('user_id');
             $table->string('status')->nullable()->change();
         });
@@ -33,7 +33,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('payment_methods', function (Blueprint $table) {
+        Schema::table('payment_methods', function (Blueprint $table): void {
             $table->string('swift')->nullable();
             $table->string('bank_branch')->nullable();
             $table->string('paypal_email')->nullable();
@@ -42,7 +42,7 @@ return new class extends Migration
             $table->dropColumn('data');
         });
 
-        Schema::table('withdrawal_requests', function (Blueprint $table) {
+        Schema::table('withdrawal_requests', function (Blueprint $table): void {
             $table->dropColumn('user_type');
             $table->string('status')->nullable(false)->change();
         });

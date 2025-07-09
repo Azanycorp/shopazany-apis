@@ -8,19 +8,24 @@ trait General
 {
     use HttpResponse;
 
-    protected function determineOrderStatus($statuses)
+    protected function determineOrderStatus($statuses): string
     {
         if ($statuses->contains(OrderStatus::PENDING)) {
             return OrderStatus::PENDING;
-        } elseif ($statuses->contains(OrderStatus::CONFIRMED)) {
+        }
+        if ($statuses->contains(OrderStatus::CONFIRMED)) {
             return OrderStatus::CONFIRMED;
-        } elseif ($statuses->contains(OrderStatus::PROCESSING)) {
+        }
+        if ($statuses->contains(OrderStatus::PROCESSING)) {
             return OrderStatus::PROCESSING;
-        } elseif ($statuses->contains(OrderStatus::SHIPPED)) {
+        }
+        if ($statuses->contains(OrderStatus::SHIPPED)) {
             return OrderStatus::SHIPPED;
-        } elseif ($statuses->contains(OrderStatus::DELIVERED)) {
+        }
+        if ($statuses->contains(OrderStatus::DELIVERED)) {
             return OrderStatus::DELIVERED;
-        } elseif ($statuses->contains(OrderStatus::CANCELLED)) {
+        }
+        if ($statuses->contains(OrderStatus::CANCELLED)) {
             return OrderStatus::CANCELLED;
         }
 
@@ -40,5 +45,6 @@ trait General
                 $status
             );
         }
+        return null;
     }
 }

@@ -136,7 +136,7 @@ class UserService extends Controller
             return $this->error(null, 'Insufficient balance for withdrawal', 400);
         }
 
-        DB::transaction(function () use ($wallet, $user, $request, $auth) {
+        DB::transaction(function () use ($wallet, $user, $request, $auth): void {
             $newBalance = $wallet->balance - $request->amount;
 
             $userType = $auth->type === UserType::SELLER ? 'b2c_seller' : 'b2c_affiliate';
@@ -259,7 +259,7 @@ class UserService extends Controller
             $transactionQuery->where('status', $status);
         }
 
-        $transactions = $transactionQuery->get()->map(function ($transaction) {
+        $transactions = $transactionQuery->get()->map(function ($transaction): array {
             return [
                 'id' => $transaction->id,
                 'transaction_id' => $transaction->id,
@@ -275,7 +275,7 @@ class UserService extends Controller
             $withdrawalQuery->where('status', $status);
         }
 
-        $withdrawals = $withdrawalQuery->get()->map(function ($withdrawal) {
+        $withdrawals = $withdrawalQuery->get()->map(function ($withdrawal): array {
             return [
                 'id' => $withdrawal->id,
                 'transaction_id' => $withdrawal->reference,
@@ -409,7 +409,7 @@ class UserService extends Controller
         $searchQuery = request()->query('search');
         $statusFilter = request()->query('status');
 
-        $user = User::with(['referrals' => function ($query) use ($searchQuery, $statusFilter) {
+        $user = User::with(['referrals' => function ($query) use ($searchQuery, $statusFilter): void {
             $query->select(
                 'users.id',
                 'users.first_name',
@@ -435,7 +435,7 @@ class UserService extends Controller
         $data = [
             'total_referrals' => $user->referrals_count,
             'total_signed_up' => $totalSignedUp,
-            'referrals' => $user->referrals ? $user->referrals->map(function ($referral) {
+            'referrals' => $user->referrals ? $user->referrals->map(function ($referral): array {
                 return [
                     'id' => $referral->id,
                     'name' => $referral->first_name.' '.$referral->last_name,
@@ -471,7 +471,7 @@ class UserService extends Controller
             $withdrawalQuery->where('status', $status);
         }
 
-        $withdrawals = $withdrawalQuery->get()->map(function ($withdrawal) {
+        $withdrawals = $withdrawalQuery->get()->map(function ($withdrawal): array {
             return [
                 'id' => $withdrawal->id,
                 'transaction_id' => $withdrawal->reference,

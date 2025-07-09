@@ -70,7 +70,7 @@ class SubscriptionService
         return $this->success($data, 'Subscription histories');
     }
 
-    public static function creditAffiliate($referrer, $amount, $currency)
+    public static function creditAffiliate($referrer, $amount, $currency): void
     {
         if (! $referrer) {
             return;

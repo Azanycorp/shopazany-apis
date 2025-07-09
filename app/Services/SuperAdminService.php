@@ -2,26 +2,29 @@
 
 namespace App\Services;
 
-use App\Enum\AdminStatus;
+use App\Models\Admin;
+use App\Trait\SignUp;
 use App\Enum\AdminType;
+use App\Enum\PlanStatus;
+use App\Models\B2bOrder;
+use App\Enum\AdminStatus;
 use App\Enum\MailingEnum;
 use App\Enum\OrderStatus;
-use App\Enum\PlanStatus;
-use App\Http\Resources\CollationCentreResource;
-use App\Http\Resources\HubResource;
-use App\Http\Resources\ShippingAgentResource;
-use App\Mail\B2BNewAdminEmail;
-use App\Models\Admin;
-use App\Models\B2bOrder;
-use App\Models\CollationCenter;
+use App\Trait\HttpResponse;
+use Illuminate\Support\Str;
 use App\Models\PickupStation;
 use App\Models\ShippingAgent;
-use App\Trait\HttpResponse;
-use App\Trait\SignUp;
-use Illuminate\Support\Facades\Auth;
+use App\Mail\B2BNewAdminEmail;
+use App\Models\CollationCenter;
 use Illuminate\Support\Facades\DB;
+use App\Http\Resources\HubResource;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\AccountVerificationEmail;
+use App\Http\Resources\AdminUserResource;
+use App\Http\Resources\ShippingAgentResource;
+use App\Http\Resources\CollationCentreResource;
 
 class SuperAdminService
 {
@@ -265,14 +268,14 @@ class SuperAdminService
 
         $admins = Admin::with('permissions:id,name')
             ->select('id', 'first_name', 'last_name', 'email', 'created_at')
-            ->when($user->type === 'b2c_admin', function ($query) {
+            ->when($user->type === 'b2c_admin', function ($query): void {
                 $query->where('type', AdminType::B2C);
             })
-            ->when($user->type === 'b2b_admin', function ($query) {
+            ->when($user->type === 'b2b_admin', function ($query): void {
                 $query->where('type', AdminType::B2B);
             })
-            ->when($searchQuery, function ($queryBuilder) use ($searchQuery) {
-                $queryBuilder->where(function ($subQuery) use ($searchQuery) {
+            ->when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
+                $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
                     $subQuery->where('first_name', 'LIKE', "%{$searchQuery}%")
                         ->orWhere('email', 'LIKE', "%{$searchQuery}%");
                 });
@@ -437,5 +440,108 @@ class SuperAdminService
         $agent->delete();
 
         return $this->success(null, 'Details deleted successfully');
+    }
+
+    // CMS / Promo and banners
+    public function adminProfile()
+    {
+        $authUser = userAuth();
+        $user = Admin::where('id', $authUser->id)->firstOrFail();
+
+        $data = new AdminUserResource($user);
+
+        return $this->success($data, 'Profile details');
+    }
+
+    public function updateAdminProfile($request)
+    {
+        $authUser = userAuth();
+        $user = Admin::where('id', $authUser->id)
+            ->firstOrFail();
+
+        $user->update([
+            'first_name' => $request->first_name,
+            'last_name' => $request->last_name,
+            'email' => $request->email,
+            'phone_number' => $request->phone_number,
+        ]);
+        $data = new AdminUserResource($user);
+
+        return $this->success($data, 'Profile detail');
+    }
+
+    public function enableTwoFactor($request)
+    {
+        $authUser = userAuth();
+        $user = Admin::where('id', $authUser->id)
+            ->firstOrFail();
+
+        $user->update([
+            'two_factor_enabled' => $request->two_factor_enabled,
+        ]);
+
+        return $this->success('Settings updated');
+    }
+
+    public function updateAdminPassword($request)
+    {
+        $authUser = userAuth();
+        $user = Admin::where('id', $authUser->id)
+            ->firstOrFail();
+
+        if (!Hash::check($request->old_password, $user->password)) {
+            return $this->error('Old password is incorrect.', 400);
+        }
+
+        $user->update([
+            'password' => bcrypt($request->password),
+        ]);
+
+        return $this->success(null, 'Password updated');
+    }
+
+    public function sendCode()
+    {
+        $admin = userAuth();
+
+        if (!$admin->email) {
+            return $this->error('Oops! No email found to send code.', 404);
+        }
+
+        $verificationCode = mt_rand(1000, 9999);
+        $expiry = now()->addMinutes(30);
+
+        $admin->update([
+            'verification_code' => $verificationCode,
+            'verification_code_expire_at' => $expiry,
+        ]);
+
+        $type = MailingEnum::ACCOUNT_VERIFICATION;
+        $subject = 'Account Verification';
+        $mail_class = AccountVerificationEmail::class;
+        $data = [
+            'user' => $admin,
+        ];
+        mailSend($type, $admin, $subject, $mail_class, $data);
+
+        return $this->success('A verification code has been sent to you');
+    }
+
+    public function verifyCode($request)
+    {
+        $user = Admin::where('verification_code', $request->verification_code)->first();
+        if (!$user) {
+            return $this->error('Invalide code entered, please try it again.', 422);
+        }
+
+        if ($user->verification_code_expire_at < now()) {
+            return $this->error('Verification Code has Expired!', 404);
+        }
+
+        $user->update([
+            'verification_code' => null,
+            'verification_code_expire_at' => null,
+        ]);
+        return $this->success("Code Verified");
     }
 }

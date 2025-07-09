@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('wallets', function (Blueprint $table) {
+        Schema::table('wallets', function (Blueprint $table): void {
             $table->decimal('points_cleared', 10, 2)->default(0)->after('reward_point');
         });
     }
@@ -21,7 +21,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('wallets', function (Blueprint $table) {
+        Schema::table('wallets', function (Blueprint $table): void {
             $table->dropColumn('points_cleared');
         });
     }

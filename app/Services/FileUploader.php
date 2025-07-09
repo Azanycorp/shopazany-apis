@@ -62,7 +62,7 @@ class FileUploader
         throw new \Exception('All providers failed after retries.');
     }
 
-    public function deleteFile($publicId)
+    public function deleteFile($publicId): void
     {
         if (! $publicId) {
             return;

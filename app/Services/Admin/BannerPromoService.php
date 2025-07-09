@@ -21,7 +21,7 @@ class BannerPromoService
 
         $products = $request->products;
 
-        $prods = array_map(function ($seat) {
+        $prods = array_map(function ($seat): int {
             return (int) trim($seat, '"');
         }, $products);
 

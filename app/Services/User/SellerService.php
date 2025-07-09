@@ -275,7 +275,7 @@ class SellerService extends Controller
         return $this->success(null, 'Deleted successfully');
     }
 
-    public function getAllOrders($id)
+    public function getAllOrders($id): array
     {
         $status = request()->query('status');
 
@@ -288,7 +288,7 @@ class SellerService extends Controller
             OrderStatus::CANCELLED,
         ];
 
-        $orders = Order::whereHas('products', function ($query) use ($id) {
+        $orders = Order::whereHas('products', function ($query) use ($id): void {
             $query->where('user_id', $id);
         })
             ->with(['user', 'products.shopCountry'])
@@ -330,7 +330,7 @@ class SellerService extends Controller
             return $this->error(null, 'Unauthorized action.', 401);
         }
 
-        $order = Order::whereHas('products', function ($query) use ($userId) {
+        $order = Order::whereHas('products', function ($query) use ($userId): void {
             $query->where('user_id', $userId);
         })
             ->with([
@@ -378,7 +378,7 @@ class SellerService extends Controller
         }
 
         $sellerProducts = $order->products()
-            ->whereHas('user', function ($query) use ($currentUserId) {
+            ->whereHas('user', function ($query) use ($currentUserId): void {
                 $query->where('user_id', $currentUserId);
             })->get();
 
@@ -472,11 +472,11 @@ class SellerService extends Controller
         }
 
         $totalProducts = Product::where('user_id', $userId)->count();
-        $totalOrders = Order::whereHas('products', function ($query) use ($userId) {
+        $totalOrders = Order::whereHas('products', function ($query) use ($userId): void {
             $query->where('user_id', $userId);
         })->count();
 
-        $orderCounts = Order::whereHas('products', function ($query) use ($userId) {
+        $orderCounts = Order::whereHas('products', function ($query) use ($userId): void {
             $query->where('user_id', $userId);
         })
             ->selectRaw('
@@ -526,7 +526,7 @@ class SellerService extends Controller
             return $this->error(null, 'Unauthorized action.', 401);
         }
 
-        $orders = Order::whereHas('products', function ($query) use ($userId) {
+        $orders = Order::whereHas('products', function ($query) use ($userId): void {
             $query->where('user_id', $userId);
         })
             ->with(['user', 'products.shopCountry'])
@@ -568,7 +568,7 @@ class SellerService extends Controller
         return $this->success($data, 'Top Selling Products');
     }
 
-    public function createAttribute($request)
+    public function createAttribute(array $request)
     {
         $user = User::with('productAttributes')
             ->findOrFail($request->user_id);
@@ -586,7 +586,7 @@ class SellerService extends Controller
 
     public function getAttribute($userId)
     {
-        $user = User::with(['productAttributes' => function ($query) {
+        $user = User::with(['productAttributes' => function ($query): void {
             $query->select('id', 'user_id', 'name', 'value', 'use_for_variation');
         }])
             ->find($userId);
@@ -602,7 +602,7 @@ class SellerService extends Controller
 
     public function getSingleAttribute($attributeId, $userId)
     {
-        $user = User::with(['productAttributes' => function ($query) {
+        $user = User::with(['productAttributes' => function ($query): void {
             $query->select('id', 'user_id', 'name', 'value', 'use_for_variation');
         }])
             ->find($userId);
@@ -624,7 +624,7 @@ class SellerService extends Controller
 
     public function updateAttribute($request, $attributeId, $userId)
     {
-        $user = User::with(['productAttributes' => function ($query) {
+        $user = User::with(['productAttributes' => function ($query): void {
             $query->select('id', 'user_id', 'name', 'value', 'use_for_variation');
         }])
             ->find($userId);

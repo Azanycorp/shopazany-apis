@@ -141,7 +141,7 @@ class SellerService
 
     public function paymentHistory($id)
     {
-        $orders = Order::whereHas('products', function ($query) use ($id) {
+        $orders = Order::whereHas('products', function ($query) use ($id): void {
             $query->where('user_id', $id);
         })
             ->with('payments')

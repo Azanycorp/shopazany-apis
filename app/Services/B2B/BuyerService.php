@@ -106,7 +106,7 @@ class BuyerService
 
     public function removeCustomer($request)
     {
-        DB::transaction(function () use ($request) {
+        DB::transaction(function () use ($request): void {
             User::whereIn('id', $request->user_ids)
                 ->update([
                     'status' => UserStatus::DELETED,
@@ -306,7 +306,7 @@ class BuyerService
     {
         $categories = B2bProductCategory::with(['subcategory', 'products', 'products.b2bProductReview', 'products.b2bLikes'])
             ->withCount('products') // Count products in the category
-            ->with(['products' => function ($query) {
+            ->with(['products' => function ($query): void {
                 $query->withCount('b2bProductReview'); // Count reviews for each product
             }])
             ->where('featured', 1)
@@ -339,7 +339,7 @@ class BuyerService
         $categories = B2BProductCategory::select('id', 'name', 'slug', 'image')
             ->with(['products.b2bProductReview', 'products.b2bLikes', 'subcategory'])
             ->withCount('products')
-            ->with(['products' => function ($query) {
+            ->with(['products' => function ($query): void {
                 $query->withCount('b2bProductReview'); // Count reviews for each product
             }])
             ->get();
@@ -425,7 +425,7 @@ class BuyerService
     {
         $category = B2bProductCategory::with(['subcategory', 'products', 'products.b2bProductReview', 'products.b2bLikes'])
             ->withCount('products')
-            ->with(['products' => function ($query) {
+            ->with(['products' => function ($query): void {
                 $query->withCount('b2bProductReview');
             }])
             ->select('id', 'name', 'slug', 'image')
@@ -444,7 +444,7 @@ class BuyerService
             'b2bLikes',
             'country',
             'b2bProductImages',
-            'b2bProductReview.user' => function ($query) {
+            'b2bProductReview.user' => function ($query): void {
                 $query->select('id', 'first_name', 'last_name')
                     ->where('type', UserType::B2B_BUYER);
             },
@@ -519,10 +519,12 @@ class BuyerService
 
         try {
             foreach ($quotes as $quote) {
-                if (empty($quote->product_data['unit_price']) || empty($quote->qty)) {
+                if (empty($quote->product_data['unit_price'])) {
                     continue;
                 }
-
+                if (empty($quote->qty)) {
+                    continue;
+                }
                 $product = B2BProduct::findOrFail($quote->product_id);
                 $unit_price = currencyConvert(
                     userAuth()->default_currency,

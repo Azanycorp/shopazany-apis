@@ -20,7 +20,7 @@ class CustomerOrderDetailResource extends JsonResource
 
         $totalConvertedAmount = 0;
 
-        $products = $this->products->map(function ($product) use ($userCurrency, &$totalConvertedAmount) {
+        $products = $this->products->map(function ($product) use ($userCurrency, &$totalConvertedAmount): array {
             $productCurrency = optional($product->shopCountry)->currency ?? 'USD';
 
             $convertedSubTotal = currencyConvert(
@@ -38,7 +38,7 @@ class CustomerOrderDetailResource extends JsonResource
                 'description' => (string) $product->description,
                 'price' => (float) $product->pivot->price,
                 'quantity' => (int) $product->pivot->product_quantity,
-                'sub_total' => (float) $convertedSubTotal,
+                'sub_total' => $convertedSubTotal,
                 'original_currency' => (string) $productCurrency,
                 'image' => (string) $product->image,
                 'status' => (string) $product->pivot->status,
@@ -46,7 +46,7 @@ class CustomerOrderDetailResource extends JsonResource
                     'id' => $selectedVariation->id,
                     'variation' => $selectedVariation->variation,
                     'sku' => $selectedVariation->sku,
-                    'price' => (float) currencyConvert(
+                    'price' => currencyConvert(
                         optional(value: $selectedVariation->product->shopCountry)->currency,
                         $selectedVariation->price,
                         $userCurrency
@@ -77,7 +77,7 @@ class CustomerOrderDetailResource extends JsonResource
                 'state' => $this->user?->userShippingAddress()->first()?->state,
                 'zip' => $this->user?->userShippingAddress()->first()?->zip,
             ],
-            'activities' => $this->orderActivities->map(function ($activity) {
+            'activities' => $this->orderActivities->map(function ($activity): array {
                 return [
                     'message' => $activity->message,
                     'status' => $activity->status,

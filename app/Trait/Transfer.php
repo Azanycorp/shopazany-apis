@@ -16,13 +16,13 @@ trait Transfer
     {
         $requests = [];
 
-        User::with(['withdrawalRequests' => function ($query) {
+        User::with(['withdrawalRequests' => function ($query): void {
             $query->where('status', WithdrawalStatus::PENDING);
         }, 'paymentMethods'])
-            ->whereHas('withdrawalRequests', function ($query) {
+            ->whereHas('withdrawalRequests', function ($query): void {
                 $query->where('status', WithdrawalStatus::PENDING);
             })
-            ->chunk(100, function ($users) use (&$requests) {
+            ->chunk(100, function ($users) use (&$requests): void {
                 foreach ($users as $user) {
                     $this->extractUserPaystackRequests($user, $requests);
                 }
@@ -45,7 +45,10 @@ trait Transfer
             }
 
             $amount = intval($request->amount * 100);
-            if ($amount <= 0 || ! $paymentMethod->recipient_code) {
+            if ($amount <= 0) {
+                continue;
+            }
+            if (! $paymentMethod->recipient_code) {
                 continue;
             }
 
@@ -142,11 +145,6 @@ trait Transfer
         if (! $request) {
             return false;
         }
-
-        if (intval($request->amount * 100) !== $amount) {
-            return false;
-        }
-
-        return true;
+        return intval($request->amount * 100) === $amount;
     }
 }

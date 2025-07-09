@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('b2b_orders', function (Blueprint $table) {
+        Schema::table('b2b_orders', function (Blueprint $table): void {
             $table->bigInteger('center_id')->nullable();
         });
     }
@@ -21,7 +21,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('b2b_orders', function (Blueprint $table) {
+        Schema::table('b2b_orders', function (Blueprint $table): void {
             $table->dropColumn('center_id');
         });
     }

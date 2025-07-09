@@ -68,7 +68,7 @@ class CartResource extends JsonResource
             'id' => $this->variation->id,
             'variation' => $this->variation->variation,
             'sku' => $this->variation->sku,
-            'price' => (float) currencyConvert(
+            'price' => currencyConvert(
                 $this->variation?->product?->shopCountry?->currency,
                 $this->variation?->price,
                 $defaultCurrency
@@ -86,27 +86,27 @@ class CartResource extends JsonResource
         ];
     }
 
-    private function convertProductPrice($defaultCurrency)
+    private function convertProductPrice($defaultCurrency): float
     {
-        return (float) currencyConvert(
+        return currencyConvert(
             $this->product?->shopCountry?->currency,
             $this->product?->product_price,
             $defaultCurrency
         );
     }
 
-    private function convertPrice($defaultCurrency)
+    private function convertPrice($defaultCurrency): float
     {
-        return (float) currencyConvert(
+        return currencyConvert(
             $this->product?->shopCountry?->currency,
             $this->product?->discounted_price,
             $defaultCurrency
         );
     }
 
-    private function convertDiscountPrice($defaultCurrency)
+    private function convertDiscountPrice($defaultCurrency): float
     {
-        return (float) currencyConvert(
+        return currencyConvert(
             $this->product?->shopCountry?->currency,
             $this->product?->discount_value,
             $defaultCurrency

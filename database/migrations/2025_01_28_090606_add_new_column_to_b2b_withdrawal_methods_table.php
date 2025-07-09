@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('b2b_withdrawal_methods', function (Blueprint $table) {
+        Schema::table('b2b_withdrawal_methods', function (Blueprint $table): void {
             //
             $table->integer('is_default')->after('bic_swift_code')->default(0);
         });
@@ -22,7 +22,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('b2b_withdrawal_methods', function (Blueprint $table) {
+        Schema::table('b2b_withdrawal_methods', function (Blueprint $table): void {
             //
             $table->integer('is_default')->after('bic_swift_code')->default(0);
         });

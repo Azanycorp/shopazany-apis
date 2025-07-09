@@ -441,7 +441,7 @@ class SellerService extends Controller
         return $this->success($data, 'All address');
     }
 
-    public function getShippingById($user_id, $shipping_id)
+    public function getShippingById($user_id, int $shipping_id)
     {
         $currentUserId = userAuthId();
 
@@ -455,7 +455,7 @@ class SellerService extends Controller
         return $this->success($data, 'Address detail');
     }
 
-    public function updateShipping($request, $shipping_id)
+    public function updateShipping($request, int $shipping_id)
     {
         $currentUserId = userAuthId();
 
@@ -481,7 +481,7 @@ class SellerService extends Controller
         return $this->success(null, 'Updated successfully');
     }
 
-    public function deleteShipping($user_id, $shipping_id)
+    public function deleteShipping($user_id, int $shipping_id)
     {
         $currentUserId = userAuthId();
 

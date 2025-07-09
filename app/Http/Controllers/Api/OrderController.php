@@ -37,7 +37,7 @@ class OrderController extends Controller
         return $this->service->intOrder();
     }
 
-    public function orderDetail($id)
+    public function orderDetail($id): array
     {
         abort_if(Gate::denies('order_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
 

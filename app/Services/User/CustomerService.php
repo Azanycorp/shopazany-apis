@@ -423,7 +423,7 @@ class CustomerService
             return $services;
         }
 
-        $services['data'] = collect($services['data'])->map(function ($item) {
+        $services['data'] = collect($services['data'])->map(function (array $item) {
             $price = (float) $item['price'];
             $currency = $item['currency'];
 
@@ -452,7 +452,7 @@ class CustomerService
             return $services;
         }
 
-        $services['data'] = collect($services['data'])->map(function ($item) {
+        $services['data'] = collect($services['data'])->map(function (array $item) {
             $price = (float) $item['price'];
             $currency = $item['currency'];
 
@@ -487,7 +487,7 @@ class CustomerService
             return $services;
         }
 
-        $services['data']['additional_products'] = collect($services['data']['additional_products'])->map(function ($item) {
+        $services['data']['additional_products'] = collect($services['data']['additional_products'])->map(function (array $item) {
             $price = (float) $item['price'];
             $currency = $item['currency'];
 

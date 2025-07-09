@@ -198,7 +198,7 @@ Route::middleware('validate.header')
                     Route::post('/redeem/point', 'redeemPoint');
 
                     // Reward partners (service)
-                    Route::prefix('service')->group(function () {
+                    Route::prefix('service')->group(function (): void {
                         Route::get('/', 'getServices');
                         Route::post('/purchase', 'purchaseService');
                         Route::get('/company/detail/{slug}', 'getCompanyDetail');
@@ -207,7 +207,7 @@ Route::middleware('validate.header')
                         Route::get('/category', 'getCategories');
                         Route::get('/detail/{id}', 'getServiceDetail');
 
-                        Route::prefix('customer')->group(function () {
+                        Route::prefix('customer')->group(function (): void {
                             Route::get('/', 'getCustomers');
                         });
                     });

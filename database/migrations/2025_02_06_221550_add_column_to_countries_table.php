@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('countries', function (Blueprint $table) {
+        Schema::table('countries', function (Blueprint $table): void {
             $table->integer('is_allowed')->default(1)->after('phonecode');
         });
     }
