@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Admin;
+use App\Models\Order;
 use App\Trait\SignUp;
 use App\Enum\AdminType;
 use App\Enum\PlanStatus;
@@ -22,7 +23,9 @@ use App\Http\Resources\HubResource;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use App\Http\Resources\OrderResource;
 use App\Mail\AccountVerificationEmail;
+use App\Http\Resources\B2BOrderResource;
 use App\Http\Resources\AdminUserResource;
 use App\Http\Resources\ShippingAgentResource;
 use App\Http\Resources\CollationCentreResource;
@@ -263,6 +266,26 @@ class SuperAdminService
 
         return $this->success(null, 'Hub deleted successfully.');
     }
+
+
+    public function orderFinder($request)
+    {
+        $order = Order::where('order_no', $request->order_number)->first();
+
+        if ($order) {
+            return $this->success(new OrderResource($order), 'Order found successfully.');
+        }
+
+        $b2bOrder = B2bOrder::where('order_no', $request->order_number)->first();
+
+        if ($b2bOrder) {
+            return $this->success(new B2BOrderResource($b2bOrder), 'Order found successfully.');
+        }
+
+        return $this->error(null, 'Order not found.', 404);
+    }
+
+
 
     // Admin User Management
     public function adminUsers()

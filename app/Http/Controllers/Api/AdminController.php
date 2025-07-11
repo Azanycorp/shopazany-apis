@@ -15,6 +15,7 @@ use App\Http\Resources\AdminUserResource;
 use App\Http\Requests\ShippingAgentRequest;
 use App\Http\Requests\VerificationCodeRequest;
 use Symfony\Component\HttpFoundation\Response;
+use App\Http\Requests\Admin\OrderFinderRequest;
 use App\Http\Requests\ChangeAdminPasswordRequest;
 use App\Http\Requests\Admin\CollationCentreRequest;
 
@@ -55,6 +56,11 @@ class AdminController extends Controller
     public function deleteCollationCentre($id)
     {
         return $this->superAdminService->deleteCollationCentre($id);
+    }
+
+    public function orderFinder(OrderFinderRequest $request)
+    {
+        return $this->superAdminService->orderFinder($request);
     }
 
     // Collation Centers Hubs
@@ -194,7 +200,7 @@ class AdminController extends Controller
     {
         return $this->superAdminService->getNotifications();
     }
-    
+
     public function getNotification($id)
     {
         return $this->superAdminService->getNotification($id);

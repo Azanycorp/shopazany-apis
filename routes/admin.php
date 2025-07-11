@@ -280,6 +280,7 @@ Route::middleware('validate.header')
                         Route::prefix('hubs')->group(function (): void {
                             Route::get('/', 'allCollationCentreHubs');
                             Route::post('/add', 'addHub');
+                            Route::post('/order-finder', 'orderFinder');
                             Route::get('/details/{id}', 'viewHub');
                             Route::patch('/update/{id}', 'editHub');
                             Route::delete('/delete/{id}', 'deleteHub');
