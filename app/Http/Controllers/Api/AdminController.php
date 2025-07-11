@@ -189,4 +189,19 @@ class AdminController extends Controller
     {
         return $this->superAdminService->verifyCode($request);
     }
+
+    public function getNotifications()
+    {
+        return $this->superAdminService->getNotifications();
+    }
+    
+    public function getNotification($id)
+    {
+        return $this->superAdminService->getNotification($id);
+    }
+
+    public function markRead($id)
+    {
+        return $this->superAdminService->markRead($id);
+    }
 }
