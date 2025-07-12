@@ -269,6 +269,7 @@ Route::middleware('validate.header')
 
                     // delivery (collation centers and hubs)
                     Route::get('/delivery-overview', 'deliveryOverview');
+
                     Route::prefix('collation-centre')->group(function (): void {
                         Route::get('/', 'allCollationCentres');
                         Route::post('/add', 'addCollationCentre');
@@ -279,10 +280,17 @@ Route::middleware('validate.header')
                         Route::prefix('hubs')->group(function (): void {
                             Route::get('/', 'allCollationCentreHubs');
                             Route::post('/add', 'addHub');
+                            Route::post('/order-finder', 'orderFinder');
                             Route::get('/details/{id}', 'viewHub');
                             Route::patch('/update/{id}', 'editHub');
                             Route::delete('/delete/{id}', 'deleteHub');
                         });
+                    });
+
+                    Route::prefix('notification')->group(function (): void {
+                        Route::get('/', 'getNotifications');
+                        Route::get('/details/{id}', 'getNotification');
+                        Route::patch('/mark-read/{id}', 'markRead');
                     });
                 });
 

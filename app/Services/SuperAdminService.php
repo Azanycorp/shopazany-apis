@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Admin;
+use App\Models\Order;
 use App\Trait\SignUp;
 use App\Enum\AdminType;
 use App\Enum\PlanStatus;
@@ -16,15 +17,19 @@ use App\Models\PickupStation;
 use App\Models\ShippingAgent;
 use App\Mail\B2BNewAdminEmail;
 use App\Models\CollationCenter;
+use App\Models\AdminNotification;
 use Illuminate\Support\Facades\DB;
 use App\Http\Resources\HubResource;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use App\Http\Resources\OrderResource;
 use App\Mail\AccountVerificationEmail;
+use App\Http\Resources\B2BOrderResource;
 use App\Http\Resources\AdminUserResource;
 use App\Http\Resources\ShippingAgentResource;
 use App\Http\Resources\CollationCentreResource;
+use App\Http\Resources\AdminNotificationResource;
 
 class SuperAdminService
 {
@@ -105,7 +110,7 @@ class SuperAdminService
             'country_id' => $request->country_id ?? 160,
             'status' => PlanStatus::ACTIVE,
         ]);
-
+        createNotification('New Collation Centre Added', 'New collation centre created ' . $centre->name);
         return $this->success($centre, 'Centre added successfully', 201);
     }
 
@@ -210,6 +215,8 @@ class SuperAdminService
             'status' => PlanStatus::ACTIVE,
         ]);
 
+        createNotification('New Hub Added', 'New hub created ' . $hub->name);
+
         return $this->success($hub, 'Hub added successfully', 201);
     }
 
@@ -259,6 +266,26 @@ class SuperAdminService
 
         return $this->success(null, 'Hub deleted successfully.');
     }
+
+
+    public function orderFinder($request)
+    {
+        $order = Order::where('order_no', $request->order_number)->first();
+
+        if ($order) {
+            return $this->success(new OrderResource($order), 'Order found successfully.');
+        }
+
+        $b2bOrder = B2bOrder::where('order_no', $request->order_number)->first();
+
+        if ($b2bOrder) {
+            return $this->success(new B2BOrderResource($b2bOrder), 'Order found successfully.');
+        }
+
+        return $this->error(null, 'Order not found.', 404);
+    }
+
+
 
     // Admin User Management
     public function adminUsers()
@@ -317,6 +344,8 @@ class SuperAdminService
             $mail_class = B2BNewAdminEmail::class;
 
             mailSend($type, $admin, $subject, $mail_class, $loginDetails);
+
+            createNotification('New Admin Added', 'New admin account created for ' . $admin->fullName);
 
             return $this->success($admin, 'Admin user added successfully', 201);
         } catch (\Throwable $th) {
@@ -405,6 +434,8 @@ class SuperAdminService
             'status' => $request->status,
         ]);
 
+        createNotification('New Shipping Agent Added', 'New shipping agent created ' . $agent->name);
+
         return $this->success($agent, 'Agent added successfully', 201);
     }
 
@@ -465,6 +496,9 @@ class SuperAdminService
             'email' => $request->email,
             'phone_number' => $request->phone_number,
         ]);
+
+        createNotification('Admin Profile Updated', 'Admin profile updated for ' . $user->fullName);
+
         $data = new AdminUserResource($user);
 
         return $this->success($data, 'Profile detail');
@@ -479,6 +513,8 @@ class SuperAdminService
         $user->update([
             'two_factor_enabled' => $request->two_factor_enabled,
         ]);
+
+        createNotification('Two Factor Authentication Updated', 'Two factor authentication updated for ' . $user->fullName);
 
         return $this->success('Settings updated');
     }
@@ -543,5 +579,36 @@ class SuperAdminService
             'verification_code_expire_at' => null,
         ]);
         return $this->success("Code Verified");
+    }
+
+    //AdminNotification
+    public function getNotifications()
+    {
+        $notifications = AdminNotification::latest()->get();
+        $data = AdminNotificationResource::collection($notifications);
+        return $this->success($data, 'All notifications');
+    }
+
+    public function getNotification($id)
+    {
+        $notification = AdminNotification::find($id);
+
+        if (!$notification) {
+            return $this->error(null, 'Notification not found', 404);
+        }
+
+        $notification->update(['is_read' => true]);
+
+        $data = new AdminNotificationResource($notification);
+        return $this->success($data, 'Notification details');
+    }
+
+    public function markRead($id)
+    {
+        $notification = AdminNotification::findOrFail($id);
+
+        $notification->update(['is_read' => true]);
+
+        return $this->success(null, 'Notification marked as read');
     }
 }
