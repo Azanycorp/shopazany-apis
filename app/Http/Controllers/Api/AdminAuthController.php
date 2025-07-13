@@ -9,12 +9,10 @@ use Illuminate\Http\Request;
 
 class AdminAuthController extends Controller
 {
-    protected \App\Services\Admin\AuthService $service;
-
-    public function __construct(AuthService $authService)
-    {
-        $this->service = $authService;
-    }
+    public function __construct(
+        protected AuthService $service
+    )
+    {}
 
     public function login(AdminLoginRequest $request)
     {
