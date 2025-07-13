@@ -461,9 +461,10 @@ if (! function_exists('logUserAction')) {
 }
 
 if (! function_exists('generateVerificationCode')) {
-    function generateVerificationCode(): string
+    function generateVerificationCode(int $length = 6): string
     {
-        return str_pad(mt_rand(0, 999999), 6, '0', STR_PAD_LEFT);
+        $number = mt_rand(0, pow(10, $length) - 1);
+        return str_pad((string) $number, $length, '0', STR_PAD_LEFT);
     }
 }
 

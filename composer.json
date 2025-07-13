@@ -15,7 +15,7 @@
         "authorizenet/authorizenet": "^2.0",
         "imagekit/imagekit": "^4.0",
         "jenssegers/agent": "^2.6",
-        "laravel/framework": "^12.19.3",
+        "laravel/framework": "^12.20",
         "laravel/sanctum": "^4.1",
         "laravel/socialite": "^5.20",
         "laravel/tinker": "^2.10",
