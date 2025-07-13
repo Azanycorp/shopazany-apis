@@ -7,6 +7,21 @@ use Illuminate\Support\Str;
 
 class SuperAdminService
 {
+    public function clearCache()
+    {
+        Artisan::call('optimize:clear');
+        return response()->json(['message' => 'cached files cleared!']);
+    }
+
+    public function runMigration()
+    {
+        Artisan::call('migrate', ['--force' => true]);
+        return response()->json([
+            'message' => 'Migration completed successfully.',
+            'output' => Artisan::output(),
+        ]);
+    }
+
     public function seedRun()
     {
         $seederClass = Str::studly(request()->input('seeder_class'));

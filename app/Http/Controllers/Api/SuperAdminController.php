@@ -13,8 +13,18 @@ class SuperAdminController extends Controller
     )
     {}
 
+    public function clearCache()
+    {
+        return $this->superAdminService->clearCache();
+    }
+
+    public function runMigration()
+    {
+        return $this->superAdminService->runMigration();
+    }
+
     public function seedRun()
     {
-        $this->superAdminService->seedRun();
+       return $this->superAdminService->seedRun();
     }
 }

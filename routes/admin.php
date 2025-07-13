@@ -32,8 +32,9 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware('validate.header')
     ->group(function (): void {
-
-        Route::post('/seed/run', [SuperAdminController::class, 'seedRun']);
+        Route::get('/clear-cache', [SuperAdminController::class, 'clearCache']);
+        Route::post('/run-migration', [SuperAdminController::class, 'runMigration']);
+        Route::post('/seed-run', [SuperAdminController::class, 'seedRun']);
 
         Route::prefix('connect')->controller(AdminAuthController::class)->group(function (): void {
             Route::post('/login', 'login');
