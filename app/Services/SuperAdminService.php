@@ -18,6 +18,7 @@ use App\Models\ShippingAgent;
 use App\Mail\B2BNewAdminEmail;
 use App\Models\CollationCenter;
 use App\Models\AdminNotification;
+use App\Traits\AdminNotifications;
 use Illuminate\Support\Facades\DB;
 use App\Http\Resources\HubResource;
 use Illuminate\Support\Facades\Auth;
@@ -25,6 +26,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use App\Http\Resources\OrderResource;
 use App\Mail\AccountVerificationEmail;
+use App\Traits\SuperAdminNotification;
 use App\Http\Resources\B2BOrderResource;
 use App\Http\Resources\AdminUserResource;
 use App\Http\Resources\ShippingAgentResource;
@@ -33,7 +35,7 @@ use App\Http\Resources\AdminNotificationResource;
 
 class SuperAdminService
 {
-    use HttpResponse, SignUp;
+    use HttpResponse, SuperAdminNotification, SignUp;
 
     public function getDashboardDetails()
     {
@@ -110,7 +112,7 @@ class SuperAdminService
             'country_id' => $request->country_id ?? 160,
             'status' => PlanStatus::ACTIVE,
         ]);
-        createNotification('New Collation Centre Added', 'New collation centre created ' . $centre->name);
+        $this->createNotification('New Collation Centre Added', 'New collation centre created ' . $centre->name);
         return $this->success($centre, 'Centre added successfully', 201);
     }
 
@@ -215,7 +217,7 @@ class SuperAdminService
             'status' => PlanStatus::ACTIVE,
         ]);
 
-        createNotification('New Hub Added', 'New hub created ' . $hub->name);
+        $this->createNotification('New Hub Added', 'New hub created ' . $hub->name);
 
         return $this->success($hub, 'Hub added successfully', 201);
     }
@@ -270,13 +272,13 @@ class SuperAdminService
 
     public function orderFinder($request)
     {
-        $order = Order::where('order_no', $request->order_number)->first();
+        $order = Order::where('order_no', $request->order_number)->firstOrFail();
 
         if ($order) {
             return $this->success(new OrderResource($order), 'Order found successfully.');
         }
 
-        $b2bOrder = B2bOrder::where('order_no', $request->order_number)->first();
+        $b2bOrder = B2bOrder::where('order_no', $request->order_number)->firstOrFail();
 
         if ($b2bOrder) {
             return $this->success(new B2BOrderResource($b2bOrder), 'Order found successfully.');
@@ -284,8 +286,6 @@ class SuperAdminService
 
         return $this->error(null, 'Order not found.', 404);
     }
-
-
 
     // Admin User Management
     public function adminUsers()
@@ -345,7 +345,7 @@ class SuperAdminService
 
             mailSend($type, $admin, $subject, $mail_class, $loginDetails);
 
-            createNotification('New Admin Added', 'New admin account created for ' . $admin->fullName);
+            $this->createNotification('New Admin Added', 'New admin account created for ' . $admin->fullName);
 
             return $this->success($admin, 'Admin user added successfully', 201);
         } catch (\Throwable $th) {
@@ -434,7 +434,7 @@ class SuperAdminService
             'status' => $request->status,
         ]);
 
-        createNotification('New Shipping Agent Added', 'New shipping agent created ' . $agent->name);
+        $this->createNotification('New Shipping Agent Added', 'New shipping agent created ' . $agent->name);
 
         return $this->success($agent, 'Agent added successfully', 201);
     }
@@ -606,6 +606,10 @@ class SuperAdminService
     public function markRead($id)
     {
         $notification = AdminNotification::findOrFail($id);
+
+        if ($notification->is_read) {
+            return $this->error(null, 'Notification already read');
+        }
 
         $notification->update(['is_read' => true]);
 

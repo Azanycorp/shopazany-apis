@@ -709,16 +709,6 @@ if (! function_exists('mailSend')) {
     }
 }
 
-if (! function_exists('createNotification')) {
-    function createNotification($title, $content): void
-    {
-        AdminNotification::create([
-            'title' => $title,
-            'content' => $content,
-        ]);
-    }
-}
-
 if (! function_exists('currencyCodeByCountryId')) {
     function currencyCodeByCountryId($countryId): string
     {
