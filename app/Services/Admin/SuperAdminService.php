@@ -24,7 +24,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Resources\OrderResource;
 use App\Mail\AccountVerificationEmail;
-use App\Traits\SuperAdminNotification;
+use App\Trait\SuperAdminNotification;
 use Illuminate\Support\Facades\Artisan;
 use App\Http\Resources\B2BOrderResource;
 use App\Http\Resources\AdminUserResource;
@@ -36,6 +36,7 @@ class SuperAdminService
 {
 
     use HttpResponse, SuperAdminNotification, SignUp;
+
     public function clearCache()
     {
         Artisan::call('optimize:clear');
@@ -337,12 +338,6 @@ class SuperAdminService
 
         $admins = Admin::with('permissions:id,name')
             ->select('id', 'first_name', 'last_name', 'email', 'created_at')
-            ->when($user->type === 'b2c_admin', function ($query): void {
-                $query->where('type', AdminType::B2C);
-            })
-            ->when($user->type === 'b2b_admin', function ($query): void {
-                $query->where('type', AdminType::B2B);
-            })
             ->when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
                 $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
                     $subQuery->where('first_name', 'LIKE', "%{$searchQuery}%")
@@ -650,7 +645,7 @@ class SuperAdminService
         $notification = AdminNotification::findOrFail($id);
 
         if ($notification->is_read) {
-            return $this->error(null, 'Notification already read');
+            return $this->error(null, 'Notification already marked read');
         }
 
         $notification->update(['is_read' => true]);
