@@ -13,7 +13,8 @@ return new class extends Migration
     {
         Schema::create('shippments', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('hub_id');
+            $table->unsignedBigInteger('hub_id')->nullable();
+            $table->unsignedBigInteger('collation_id')->nullable();
             $table->string('shippment_id')->unique();
             $table->json('package')->nullable();
             $table->json('customer')->nullable();

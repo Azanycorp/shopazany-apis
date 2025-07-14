@@ -12,6 +12,7 @@ use App\Enum\AdminStatus;
 use App\Enum\MailingEnum;
 use App\Enum\OrderStatus;
 use App\Models\Shippment;
+use App\Enum\CentreStatus;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
 use App\Models\PickupStation;
@@ -138,8 +139,10 @@ class SuperAdminService
 
         $collation_details = [
             'total_centers' => $total_centers,
-            'active_centers' => $statusCounts[PlanStatus::ACTIVE] ?? 0,
-            'inactive_centers' => $statusCounts[PlanStatus::INACTIVE] ?? 0,
+            'active_centers' => $statusCounts[CentreStatus::ACTIVE] ?? 0,
+            'inactive_centers' => $statusCounts[CentreStatus::INACTIVE] ?? 0,
+            'under_maintenance' => $statusCounts[CentreStatus::MAINTENANCE] ?? 0,
+            'daily_processing' => $statusCounts[CentreStatus::PROCESSING] ?? 0,
             'centers' => $data,
         ];
 
@@ -243,10 +246,23 @@ class SuperAdminService
     // Hubs under Collation centers
     public function allCollationCentreHUbs()
     {
-        $centers = PickupStation::with(['country', 'collationCenter'])->latest()->get();
-        $data = HubResource::collection($centers);
+        $hubs = PickupStation::with(['country', 'collationCenter'])->latest()->get();
 
-        return $this->success($data, 'All available collation centres hubs');
+        $total_hubs = PickupStation::count();
+
+        $statusCounts = PickupStation::select('status', DB::raw('count(*) as count'))
+            ->groupBy('status')
+            ->pluck('count', 'status');
+
+        $data = [
+            'total_hubs' => $total_hubs,
+            'active_hubs' => $statusCounts[CentreStatus::ACTIVE] ?? 0,
+            'inactive_hubs' => $statusCounts[CentreStatus::INACTIVE] ?? 0,
+            'pending' => $statusCounts[CentreStatus::PENDING] ?? 0,
+            'hubs' => HubResource::collection($hubs),
+        ];
+
+        return $this->success($data, 'All available collation centre hubs');
     }
 
     public function addHub($request)

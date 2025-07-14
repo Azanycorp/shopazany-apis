@@ -8,6 +8,7 @@ class Shippment extends Model
 {
     protected $fillable = [
         'hub_id',
+        'collation_id',
         'shippment_id',
         'package',
         'customer',
