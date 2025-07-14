@@ -23,6 +23,7 @@ class OrderFinderRequest extends FormRequest
     {
         return [
             'order_number' => 'required|string|max:255',
+            'pickup_id' => 'required|integer',
         ];
     }
 }

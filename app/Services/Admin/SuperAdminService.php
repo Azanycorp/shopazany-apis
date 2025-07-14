@@ -11,6 +11,7 @@ use App\Models\B2bOrder;
 use App\Enum\AdminStatus;
 use App\Enum\MailingEnum;
 use App\Enum\OrderStatus;
+use App\Models\Shippment;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
 use App\Models\PickupStation;
@@ -23,8 +24,8 @@ use App\Http\Resources\HubResource;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Resources\OrderResource;
-use App\Mail\AccountVerificationEmail;
 use App\Trait\SuperAdminNotification;
+use App\Mail\AccountVerificationEmail;
 use Illuminate\Support\Facades\Artisan;
 use App\Http\Resources\B2BOrderResource;
 use App\Http\Resources\AdminUserResource;
@@ -104,7 +105,7 @@ class SuperAdminService
     // Collation centers
     public function deliveryOverview()
     {
-        $order_counts = B2bOrder::selectRaw('
+        $order_counts = Shippment::selectRaw('
         COUNT(*) as total_orders,
         SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as out_for_delivery,
         SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as delivered
@@ -230,8 +231,8 @@ class SuperAdminService
             return $this->error(null, 'Centre not found', 404);
         }
 
-        if ($centre->hubs->exists()) {
-            return $this->error(null, 'Category can not be deleted because it has content', 422);
+        if (count($centre->hubs) > 0) {
+            return $this->error(null, 'Centre can not be deleted because it has content', 422);
         }
 
         $centre->delete();
@@ -267,13 +268,34 @@ class SuperAdminService
 
     public function viewHub($id)
     {
-        $centre = PickupStation::with(['country', 'collationCenter'])->find($id);
+        $hub = PickupStation::with(['country', 'collationCenter'])->find($id);
 
-        if (! $centre) {
+        if (! $hub) {
             return $this->error(null, 'Hub not found', 404);
         }
 
-        $data = new HubResource($centre);
+        $order_counts = Shippment::selectRaw('
+        COUNT(*) as total_orders,
+        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as out_for_delivery,
+        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as delivered,
+        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as ready_for_pickup,
+        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as in_transit
+    ', [
+            OrderStatus::SHIPPED,
+            OrderStatus::DELIVERED,
+            OrderStatus::READY_FOR_PICKUP,
+            OrderStatus::IN_TRANSIT
+        ])
+            ->where('hub_id', $hub->id)
+            ->first();
+
+        $data = [
+            'current_items'      => $order_counts->total_orders ?? 0,
+            'total_processed'    => $order_counts->delivered ?? 0,
+            'ready_for_pickup'   => $order_counts->ready_for_pickup ?? 0,
+            'awaiting_dispatch'  => $order_counts->in_transit ?? 0,
+            'hub'                => new HubResource($hub),
+        ];
 
         return $this->success($data, 'Hub details');
     }
@@ -315,6 +337,12 @@ class SuperAdminService
 
     public function orderFinder($request)
     {
+        $hub = PickupStation::find($request->pickup_id);
+
+        if (! $hub) {
+            return $this->error(null, 'Hub not found', 404);
+        }
+
         $order = Order::where('order_no', $request->order_number)->firstOrFail();
 
         if ($order) {
