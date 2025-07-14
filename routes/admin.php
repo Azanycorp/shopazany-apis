@@ -498,6 +498,7 @@ Route::middleware('validate.header')
                                 Route::prefix('collation-centre')->group(function (): void {
                                     Route::get('/', 'allCollationCentres');
                                     Route::post('/add', 'addCollationCentre');
+                                    Route::post('/order-finder', 'findCollationCentreOrder');
                                     Route::get('/details/{id}', 'viewCollationCentre');
                                     Route::patch('/update/{id}', 'editCollationCentre');
                                     Route::delete('/delete/{id}', 'deleteCollationCentre');
@@ -505,7 +506,7 @@ Route::middleware('validate.header')
                                     Route::prefix('hubs')->group(function (): void {
                                         Route::get('/', 'allCollationCentreHubs');
                                         Route::post('/add', 'addHub');
-                                        Route::post('/order-finder', 'orderFinder');
+                                        Route::post('/order-finder', 'findPickupLocationOrder');
                                         Route::get('/details/{id}', 'viewHub');
                                         Route::patch('/update/{id}', 'editHub');
                                         Route::delete('/delete/{id}', 'deleteHub');

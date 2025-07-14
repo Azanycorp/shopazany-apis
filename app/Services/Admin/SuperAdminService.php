@@ -26,6 +26,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Resources\OrderResource;
 use App\Trait\SuperAdminNotification;
+use App\Trait\FindOrders;
 use App\Mail\AccountVerificationEmail;
 use Illuminate\Support\Facades\Artisan;
 use App\Http\Resources\B2BOrderResource;
@@ -37,7 +38,7 @@ use App\Http\Resources\AdminNotificationResource;
 class SuperAdminService
 {
 
-    use HttpResponse, SuperAdminNotification, SignUp;
+    use HttpResponse, FindOrders, SuperAdminNotification, SignUp;
 
     public function clearCache()
     {
@@ -351,27 +352,14 @@ class SuperAdminService
     }
 
 
-    public function orderFinder($request)
+    public function findPickupLocationOrder($request)
     {
-        $hub = PickupStation::find($request->pickup_id);
+        return $this->findHubOrder($request);
+    }
 
-        if (! $hub) {
-            return $this->error(null, 'Hub not found', 404);
-        }
-
-        $order = Order::where('order_no', $request->order_number)->firstOrFail();
-
-        if ($order) {
-            return $this->success(new OrderResource($order), 'Order found successfully.');
-        }
-
-        $b2bOrder = B2bOrder::where('order_no', $request->order_number)->firstOrFail();
-
-        if ($b2bOrder) {
-            return $this->success(new B2BOrderResource($b2bOrder), 'Order found successfully.');
-        }
-
-        return $this->error(null, 'Order not found.', 404);
+    public function findCollationCentreOrder($request)
+    {
+        return $this->findCollationOrder($request);
     }
 
     // Admin User Management

@@ -2,44 +2,30 @@
 
 namespace App\Http\Controllers\Api;
 
-use Illuminate\Http\Request;
-use Illuminate\Http\Response;
+use App\Models\Admin;
+use App\Services\SuperAdminService;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Hash;
+use App\Http\Requests\B2B\CodeRequest;
 use App\Http\Requests\Admin\HubRequest;
 use App\Http\Requests\AdminUserRequest;
-use App\Services\Admin\SuperAdminService;
+use Illuminate\Support\Facades\Request;
+use App\Http\Resources\AdminUserResource;
 use App\Http\Requests\ShippingAgentRequest;
 use App\Http\Requests\VerificationCodeRequest;
+use Symfony\Component\HttpFoundation\Response;
 use App\Http\Requests\Admin\OrderFinderRequest;
 use App\Http\Requests\ChangeAdminPasswordRequest;
-use App\Http\Requests\Admin\HubOrderFinderRequest;
 use App\Http\Requests\Admin\CollationCentreRequest;
 
-class SuperAdminController extends Controller
+class AdminController extends Controller
 {
     const MESSAGE = '403 Forbidden';
 
     public function __construct(
-        protected SuperAdminService $superAdminService,
-    )
-    {}
-
-    public function clearCache()
-    {
-        return $this->superAdminService->clearCache();
-    }
-
-    public function runMigration()
-    {
-        return $this->superAdminService->runMigration();
-    }
-
-    public function seedRun()
-    {
-       return $this->superAdminService->seedRun();
-    }
-
+        private SuperAdminService $superAdminService
+    ) {}
 
     public function deliveryOverview()
     {
@@ -72,14 +58,9 @@ class SuperAdminController extends Controller
         return $this->superAdminService->deleteCollationCentre($id);
     }
 
-    public function findCollationCentreOrder(OrderFinderRequest $request)
+    public function orderFinder(OrderFinderRequest $request)
     {
-        return $this->superAdminService->findCollationCentreOrder($request);
-    }
-
-    public function findPickupLocationOrder(HubOrderFinderRequest $request)
-    {
-        return $this->superAdminService->findPickupLocationOrder($request);
+        return $this->superAdminService->orderFinder($request);
     }
 
     // Collation Centers Hubs
