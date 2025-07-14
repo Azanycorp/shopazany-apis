@@ -6,17 +6,15 @@ use App\Models\Admin;
 use App\Services\SuperAdminService;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Hash;
-use App\Http\Requests\B2B\CodeRequest;
 use App\Http\Requests\Admin\HubRequest;
 use App\Http\Requests\AdminUserRequest;
 use Illuminate\Support\Facades\Request;
-use App\Http\Resources\AdminUserResource;
 use App\Http\Requests\ShippingAgentRequest;
 use App\Http\Requests\VerificationCodeRequest;
 use Symfony\Component\HttpFoundation\Response;
 use App\Http\Requests\Admin\OrderFinderRequest;
 use App\Http\Requests\ChangeAdminPasswordRequest;
+use App\Http\Requests\Admin\HubOrderFinderRequest;
 use App\Http\Requests\Admin\CollationCentreRequest;
 
 class AdminController extends Controller
@@ -26,6 +24,7 @@ class AdminController extends Controller
     public function __construct(
         private SuperAdminService $superAdminService
     ) {}
+
 
     public function deliveryOverview()
     {
@@ -58,9 +57,14 @@ class AdminController extends Controller
         return $this->superAdminService->deleteCollationCentre($id);
     }
 
-    public function orderFinder(OrderFinderRequest $request)
+    public function findCollationCentreOrder(OrderFinderRequest $request)
     {
-        return $this->superAdminService->orderFinder($request);
+        return $this->superAdminService->findCollationCentreOrder($request);
+    }
+
+    public function findPickupLocationOrder(HubOrderFinderRequest $request)
+    {
+        return $this->superAdminService->findPickupLocationOrder($request);
     }
 
     // Collation Centers Hubs

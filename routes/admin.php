@@ -250,7 +250,7 @@ Route::middleware('validate.header')
                         Route::post('/reset-password', 'resetPassword');
                     });
 
-                Route::controller(SuperAdminController::class)
+                Route::controller(AdminController::class)
                     ->group(function (): void {
                         // Admin users
                         Route::prefix('admin-users')->group(function (): void {
