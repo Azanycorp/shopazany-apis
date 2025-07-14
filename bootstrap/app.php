@@ -10,6 +10,7 @@ use App\Http\Middleware\CheckUserCountry;
 use App\Http\Middleware\CheckWalletBalance;
 use App\Http\Middleware\EnsureUserIsOwner;
 use App\Http\Middleware\SellerAuthMiddleware;
+use App\Http\Middleware\SuperAdminCheck;
 use App\Http\Middleware\ValidateHeader;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -50,6 +51,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'auth.check' => AuthCheck::class,
             'validate.header' => ValidateHeader::class,
             'ensure.user' => EnsureUserIsOwner::class,
+            'role:super_admin' => SuperAdminCheck::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

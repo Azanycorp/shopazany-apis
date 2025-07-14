@@ -24,10 +24,14 @@ class Admin extends Authenticatable
         'status',
         'verification_code',
         'verification_code_expire_at',
+        'modules',
     ];
 
     protected $hidden = [
         'password',
+        'remember_token',
+        'verification_code',
+        'verification_code_expire_at',
     ];
 
     protected function fullName(): Attribute
@@ -35,6 +39,12 @@ class Admin extends Authenticatable
         return Attribute::make(get: function (): string {
             return "{$this->first_name} {$this->last_name}";
         });
+    }
+    protected function casts(): array
+    {
+        return [
+            'modules' => 'array',
+        ];
     }
 
     public function sendPasswordResetNotification($token): void
