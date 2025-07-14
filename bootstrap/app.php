@@ -51,7 +51,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'auth.check' => AuthCheck::class,
             'validate.header' => ValidateHeader::class,
             'ensure.user' => EnsureUserIsOwner::class,
-            'role' => SuperAdminCheck::class,
+            'role:super_admin' => SuperAdminCheck::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
