@@ -250,7 +250,55 @@ Route::middleware('validate.header')
                         Route::post('/reset-password', 'resetPassword');
                     });
 
+                Route::controller(SuperAdminController::class)
+                    ->group(function (): void {
+                        // Admin users
+                        Route::prefix('admin-users')->group(function (): void {
+                            Route::get('/', 'adminUsers');
+                            Route::post('/add', 'addAdmin');
+                            Route::get('/details/{id}', 'viewAdminUser');
+                            Route::post('/update/{id}', 'editAdminUser');
+                            Route::post('/revoke-access/{id}', 'revokeAccess');
+                            Route::post('/verify-password', 'verifyPassword');
+                            Route::delete('/delete-account/{id}', 'removeAdmin');
+                        });
 
+                        Route::prefix('profile')->group(function () {
+                            Route::get('/', 'adminProfile');
+                            Route::post('/update', 'updateAdminProfile');
+                            Route::post('/verify-password', 'verifyPassword');
+                            Route::get('/send-code', 'sendCode');
+                            Route::post('/verify-code', 'verifyCode');
+                            Route::post('/update-password', 'updateAdminPassword');
+                            Route::post('/enable-2fa', 'enable2FA');
+                        });
+
+                        // delivery (collation centers and hubs)
+                        Route::get('/delivery-overview', 'deliveryOverview');
+                        Route::prefix('collation-centre')->group(function (): void {
+                            Route::get('/', 'allCollationCentres');
+                            Route::post('/add', 'addCollationCentre');
+                            Route::post('/order-finder', 'findCollationCentreOrder');
+                            Route::get('/details/{id}', 'viewCollationCentre');
+                            Route::patch('/update/{id}', 'editCollationCentre');
+                            Route::delete('/delete/{id}', 'deleteCollationCentre');
+
+                            Route::prefix('hubs')->group(function (): void {
+                                Route::get('/', 'allCollationCentreHubs');
+                                Route::post('/add', 'addHub');
+                                Route::post('/order-finder', 'findPickupLocationOrder');
+                                Route::get('/details/{id}', 'viewHub');
+                                Route::patch('/update/{id}', 'editHub');
+                                Route::delete('/delete/{id}', 'deleteHub');
+                            });
+                        });
+
+                        Route::prefix('notification')->group(function (): void {
+                            Route::get('/', 'getNotifications');
+                            Route::get('/details/{id}', 'getNotification');
+                            Route::patch('/mark-read/{id}', 'markRead');
+                        });
+                    });
 
                 // b2b admin
                 Route::prefix('b2b')->group(function (): void {
@@ -469,56 +517,6 @@ Route::middleware('validate.header')
                     ->group(function (): void {
                         Route::get('/', 'index');
                         Route::post('/logout', 'logout');
-
-                        Route::controller(SuperAdminController::class)
-                            ->group(function (): void {
-                                // Admin users
-                                Route::prefix('admin-users')->group(function (): void {
-                                    Route::get('/', 'adminUsers');
-                                    Route::post('/add', 'addAdmin');
-                                    Route::get('/details/{id}', 'viewAdminUser');
-                                    Route::post('/update/{id}', 'editAdminUser');
-                                    Route::post('/revoke-access/{id}', 'revokeAccess');
-                                    Route::post('/verify-password', 'verifyPassword');
-                                    Route::delete('/delete-account/{id}', 'removeAdmin');
-                                });
-
-                                Route::prefix('profile')->group(function () {
-                                    Route::get('/', 'adminProfile');
-                                    Route::post('/update', 'updateAdminProfile');
-                                    Route::post('/verify-password', 'verifyPassword');
-                                    Route::get('/send-code', 'sendCode');
-                                    Route::post('/verify-code', 'verifyCode');
-                                    Route::post('/update-password', 'updateAdminPassword');
-                                    Route::post('/enable-2fa', 'enable2FA');
-                                });
-
-                                // delivery (collation centers and hubs)
-                                Route::get('/delivery-overview', 'deliveryOverview');
-                                Route::prefix('collation-centre')->group(function (): void {
-                                    Route::get('/', 'allCollationCentres');
-                                    Route::post('/add', 'addCollationCentre');
-                                    Route::post('/order-finder', 'findCollationCentreOrder');
-                                    Route::get('/details/{id}', 'viewCollationCentre');
-                                    Route::patch('/update/{id}', 'editCollationCentre');
-                                    Route::delete('/delete/{id}', 'deleteCollationCentre');
-
-                                    Route::prefix('hubs')->group(function (): void {
-                                        Route::get('/', 'allCollationCentreHubs');
-                                        Route::post('/add', 'addHub');
-                                        Route::post('/order-finder', 'findPickupLocationOrder');
-                                        Route::get('/details/{id}', 'viewHub');
-                                        Route::patch('/update/{id}', 'editHub');
-                                        Route::delete('/delete/{id}', 'deleteHub');
-                                    });
-                                });
-
-                                Route::prefix('notification')->group(function (): void {
-                                    Route::get('/', 'getNotifications');
-                                    Route::get('/details/{id}', 'getNotification');
-                                    Route::patch('/mark-read/{id}', 'markRead');
-                                });
-                            });
                     });
             });
     });

@@ -28,8 +28,6 @@ class SuperAdminSeeder extends Seeder
             'status' => UserStatus::ACTIVE,
         ];
 
-        $admin = Admin::create($user);
-        $admin_permissions = Permission::all();
-        $admin->permissions()->sync($admin_permissions);
+        Admin::create($user);
     }
 }
