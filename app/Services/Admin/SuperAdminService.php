@@ -59,4 +59,20 @@ class SuperAdminService
 
         return $this->success($user, "Profile");
     }
+
+    public function get2fa()
+    {
+        return "This is 2FA";
+    }
+
+    public function changePassword($request)
+    {
+        $user = Admin::findOrFail($request->user_id);
+
+        $user->update([
+            'password' => $request->password
+        ]);
+
+        return $this->success(null, "Password changed successfully");
+    }
 }

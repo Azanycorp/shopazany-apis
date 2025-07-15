@@ -32,4 +32,14 @@ class SuperAdminController extends Controller
     {
         return $this->superAdminService->getProfile($userId);
     }
+
+    public function get2fa()
+    {
+        return $this->superAdminService->get2fa();
+    }
+
+    public function changePassword(Request $request)
+    {
+        return $this->superAdminService->changePassword($request);
+    }
 }

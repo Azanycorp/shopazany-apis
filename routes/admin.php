@@ -508,6 +508,8 @@ Route::middleware('validate.header')
                     ->controller(SuperAdminController::class)
                     ->group(function (): void {
                         Route::get('/profile/{user_id}', 'getProfile');
+                        Route::patch('/2fa/{user_id}', 'get2fa');
+                        Route::post('/change-password', 'changePassword');
                     });
             });
     });
