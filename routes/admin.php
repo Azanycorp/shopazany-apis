@@ -278,7 +278,7 @@ Route::middleware('validate.header')
                         Route::prefix('collation-centre')->group(function (): void {
                             Route::get('/', 'allCollationCentres');
                             Route::post('/add', 'addCollationCentre');
-                            Route::post('/order-finder', 'findCollationCentreOrder');
+                            Route::post('/log-item', 'findCollationCentreOrder');
                             Route::get('/details/{id}', 'viewCollationCentre');
                             Route::patch('/update/{id}', 'editCollationCentre');
                             Route::delete('/delete/{id}', 'deleteCollationCentre');
@@ -286,7 +286,7 @@ Route::middleware('validate.header')
                             Route::prefix('hubs')->group(function (): void {
                                 Route::get('/', 'allCollationCentreHubs');
                                 Route::post('/add', 'addHub');
-                                Route::post('/order-finder', 'findPickupLocationOrder');
+                                Route::post('/log-item', 'findPickupLocationOrder');
                                 Route::get('/details/{id}', 'viewHub');
                                 Route::patch('/update/{id}', 'editHub');
                                 Route::delete('/delete/{id}', 'deleteHub');
@@ -298,9 +298,10 @@ Route::middleware('validate.header')
                             Route::get('/details/{id}', 'getNotification');
                             Route::patch('/mark-read/{id}', 'markRead');
                         });
-                        
+
                         Route::prefix('shippments')->group(function (): void {
                             Route::get('/', 'allShippments');
+                              Route::get('/order-finder', 'findOrder');
                             Route::get('/details/{id}', 'shippmentDetails');
                             Route::patch('/update/{id}', 'updateShippmentDetails');
                         });

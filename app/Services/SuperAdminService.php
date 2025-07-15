@@ -310,6 +310,11 @@ class SuperAdminService
     }
 
 
+    public function findOrder()
+    {
+        return $this->searchOrder();
+    }
+
     public function findPickupLocationOrder($request)
     {
         return $this->findHubOrder($request);
@@ -669,6 +674,19 @@ class SuperAdminService
     public function shippmentDetails($id)
     {
         $shippment = Shippment::findOrFail($id);
+        return $this->success($shippment, 'shippment details');
+    }
+
+    public function updateShippmentDetails($request, $id)
+    {
+        $shippment = Shippment::findOrFail($id);
+        $shippment->update([
+            'current_location' => $request->current_location,
+            'activity' => $request->activity,
+            'note' => $request->note,
+            'status' => $request->status,
+            'destination_name' => $request->destination_name,
+        ]);
         return $this->success($shippment, 'shippment details');
     }
 }

@@ -221,10 +221,16 @@ class AdminController extends Controller
         return $this->superAdminService->allShippments();
     }
 
+    public function findOrder()
+    {
+        return $this->superAdminService->findOrder();
+    }
+
     public function shippmentDetails($id)
     {
         return $this->superAdminService->shippmentDetails($id);
     }
+
     public function updateShippmentDetails(Request $request, $id)
     {
         return $this->superAdminService->updateShippmentDetails($request, $id);

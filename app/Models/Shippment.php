@@ -26,4 +26,13 @@ class Shippment extends Model
         'dispatch_phone',
         'expected_delivery_time',
     ];
+
+     protected function casts(): array
+    {
+        return [
+            'package' => 'array',
+            'customer' => 'array',
+            'vendor' => 'array',
+        ];
+    }
 }
