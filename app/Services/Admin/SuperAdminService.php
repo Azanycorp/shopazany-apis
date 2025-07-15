@@ -4,9 +4,12 @@ namespace App\Services\Admin;
 
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Str;
+use App\Trait\HttpResponse;
 
 class SuperAdminService
 {
+    use HttpResponse;
+
     public function clearCache()
     {
         Artisan::call('optimize:clear');
@@ -48,5 +51,12 @@ class SuperAdminService
                 'details' => $e->getMessage(),
             ], 500);
         }
+    }
+
+    public function getProfile($userId)
+    {
+        $user = Admin::findOrFail($userId);
+
+        return $this->success($user, "Profile");
     }
 }
