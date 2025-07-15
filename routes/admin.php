@@ -298,6 +298,12 @@ Route::middleware('validate.header')
                             Route::get('/details/{id}', 'getNotification');
                             Route::patch('/mark-read/{id}', 'markRead');
                         });
+                        
+                        Route::prefix('shippments')->group(function (): void {
+                            Route::get('/', 'allShippments');
+                            Route::get('/details/{id}', 'shippmentDetails');
+                            Route::patch('/update/{id}', 'updateShippmentDetails');
+                        });
                     });
 
                 // b2b admin

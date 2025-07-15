@@ -38,7 +38,7 @@ use App\Http\Resources\AdminNotificationResource;
 
 class SuperAdminService
 {
-    use HttpResponse, FindOrders,SuperAdminNotification, SignUp;
+    use HttpResponse, FindOrders, SuperAdminNotification, SignUp;
 
 
     public function getDashboardDetails()
@@ -641,5 +641,34 @@ class SuperAdminService
         $notification->update(['is_read' => true]);
 
         return $this->success(null, 'Notification marked as read');
+    }
+
+    //Shippments
+    public function allShippments()
+    {
+        $order_counts = Shippment::selectRaw('
+        COUNT(*) as total_orders,
+        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as cancelled,
+        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as delivered,
+        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as in_transit
+    ', [
+            OrderStatus::CANCELLED,
+            OrderStatus::DELIVERED,
+            OrderStatus::IN_TRANSIT
+        ])->first();
+
+        $data = [
+            'total_shippments'      => $order_counts->total_orders ?? 0,
+            'in_transit'  => $order_counts->in_transit ?? 0,
+            'completed'    => $order_counts->delivered ?? 0,
+            'failed'   => $order_counts->cancelled ?? 0,
+        ];
+        return $this->success($data, 'Shippment Data');
+    }
+
+    public function shippmentDetails($id)
+    {
+        $shippment = Shippment::findOrFail($id);
+        return $this->success($shippment, 'shippment details');
     }
 }

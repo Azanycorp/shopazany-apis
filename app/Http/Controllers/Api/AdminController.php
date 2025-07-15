@@ -214,4 +214,19 @@ class AdminController extends Controller
     {
         return $this->superAdminService->markRead($id);
     }
+
+    //Shippments
+    public function allShippments()
+    {
+        return $this->superAdminService->allShippments();
+    }
+
+    public function shippmentDetails($id)
+    {
+        return $this->superAdminService->shippmentDetails($id);
+    }
+    public function updateShippmentDetails(Request $request, $id)
+    {
+        return $this->superAdminService->updateShippmentDetails($request, $id);
+    }
 }
