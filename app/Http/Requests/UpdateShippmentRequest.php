@@ -22,7 +22,6 @@ class UpdateShippmentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'verification_code' => ['required'],
             'current_location' => ['required'],
             'activity' => ['required'],
             'note' => ['required'],
