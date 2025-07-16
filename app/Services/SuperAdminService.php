@@ -89,25 +89,43 @@ class SuperAdminService
 
     public function allCollationCentres()
     {
-        $total_centers = CollationCenter::count();
-        $statusCounts = CollationCenter::select('status', DB::raw('count(*) as count'))
-            ->groupBy('status')
-            ->pluck('count', 'status');
+        $query = CollationCenter::with(['country', 'hubs.country'])
+            ->when(request()->status, function ($q, $status) {
+                $q->where('status', $status);
+            })
+            ->when(request()->search, function ($q, $search) {
+                $q->where(function ($query) use ($search) {
+                    $query->where('city', 'like', '%' . $search . '%')
+                        ->orWhere('location', 'like', '%' . $search . '%');
+                });
+            });
 
-        $centers = CollationCenter::with(['country', 'hubs.country'])->latest()->get();
-        $data = CollationCentreResource::collection($centers);
+        $center_counts = CollationCenter::selectRaw('
+        COUNT(*) as total_centers,
+        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as active,
+        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as in_active,
+        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as maintenance,
+        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as processing
+    ', [
+            CentreStatus::ACTIVE,
+            CentreStatus::INACTIVE,
+            CentreStatus::MAINTENANCE,
+            CentreStatus::PROCESSING,
+        ])->first();
 
-        $collation_details = [
-            'total_centers' => $total_centers,
-            'active_centers' => $statusCounts[CentreStatus::ACTIVE] ?? 0,
-            'inactive_centers' => $statusCounts[CentreStatus::INACTIVE] ?? 0,
-            'under_maintenance' => $statusCounts[CentreStatus::MAINTENANCE] ?? 0,
-            'daily_processing' => $statusCounts[CentreStatus::PROCESSING] ?? 0,
-            'centers' => $data,
+
+        $data = [
+            'total_centers' => $center_counts->total_centers ?? 0,
+            'active_centers' =>  $center_counts->active ?? 0,
+            'inactive_centers' => $center_counts->in_active ?? 0,
+            'under_maintenance' => $center_counts->maintenance ?? 0,
+            'daily_processing' => $center_counts->processing ?? 0,
+            'centers' => CollationCentreResource::collection($query->latest()->get()),
         ];
 
-        return $this->success($collation_details, 'All available collation centres');
+        return $this->success($data, 'Filtered collation centres');
     }
+
 
     public function addCollationCentre($request)
     {
@@ -204,7 +222,7 @@ class SuperAdminService
     }
 
     // Hubs under Collation centers
-    public function allCollationCentreHUbs()
+    public function allHubs()
     {
         $hubs = PickupStation::with(['country', 'collationCenter'])->latest()->get();
 
@@ -664,7 +682,7 @@ class SuperAdminService
         ])->first();
         $shippments = Shippment::latest()->get();
         $data = [
-            'total_shippments'      => $order_counts->total_orders ?? 0,
+            'total_shippments'  => $order_counts->total_orders ?? 0,
             'in_transit'  => $order_counts->in_transit ?? 0,
             'completed'    => $order_counts->delivered ?? 0,
             'failed'   => $order_counts->cancelled ?? 0,

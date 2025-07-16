@@ -71,7 +71,7 @@ class AdminController extends Controller
     // Collation Centers Hubs
     public function allCollationCentreHubs()
     {
-        return $this->superAdminService->allCollationCentreHubs();
+        return $this->superAdminService->allHubs();
     }
 
     public function addHub(HubRequest $request)
