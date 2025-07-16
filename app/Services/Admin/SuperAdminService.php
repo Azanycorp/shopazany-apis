@@ -2,6 +2,7 @@
 
 namespace App\Services\Admin;
 
+use App\Models\Admin;
 use App\Trait\SignUp;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
@@ -9,8 +10,7 @@ use Illuminate\Support\Facades\Artisan;
 
 class SuperAdminService
 {
-
-    use HttpResponse, SignUp;
+    use HttpResponse;
 
     public function clearCache()
     {
@@ -53,5 +53,12 @@ class SuperAdminService
                 'details' => $e->getMessage(),
             ], 500);
         }
+    }
+
+    public function getProfile($userId)
+    {
+        $user = Admin::findOrFail($userId);
+
+        return $this->success($user, "Profile");
     }
 }

@@ -522,8 +522,7 @@ Route::middleware('validate.header')
                 Route::middleware(['auth:sanctum', 'role:super_admin'])
                     ->controller(SuperAdminController::class)
                     ->group(function (): void {
-                        Route::get('/', 'index');
-                        Route::post('/logout', 'logout');
+                        Route::get('/profile/{user_id}', 'getProfile');
                     });
             });
     });

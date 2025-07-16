@@ -34,4 +34,8 @@ class SuperAdminController extends Controller
        return $this->superAdminService->seedRun();
     }
 
+    public function getProfile($userId)
+    {
+        return $this->superAdminService->getProfile($userId);
+    }
 }
