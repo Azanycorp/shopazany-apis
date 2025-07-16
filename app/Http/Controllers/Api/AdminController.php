@@ -10,6 +10,7 @@ use App\Http\Requests\Admin\HubRequest;
 use App\Http\Requests\AdminUserRequest;
 use Illuminate\Support\Facades\Request;
 use App\Http\Requests\ShippingAgentRequest;
+use App\Http\Requests\UpdateShippmentRequest;
 use App\Http\Requests\VerificationCodeRequest;
 use Symfony\Component\HttpFoundation\Response;
 use App\Http\Requests\Admin\OrderFinderRequest;
@@ -231,7 +232,7 @@ class AdminController extends Controller
         return $this->superAdminService->shippmentDetails($id);
     }
 
-    public function updateShippmentDetails(Request $request, $id)
+    public function updateShippmentDetails(UpdateShippmentRequest $request, $id)
     {
         return $this->superAdminService->updateShippmentDetails($request, $id);
     }
