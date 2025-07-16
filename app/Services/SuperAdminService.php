@@ -126,7 +126,6 @@ class SuperAdminService
         return $this->success($data, 'Filtered collation centres');
     }
 
-
     public function addCollationCentre($request)
     {
         $centre = CollationCenter::create([
@@ -149,40 +148,34 @@ class SuperAdminService
             return $this->error(null, 'Centre not found', 404);
         }
 
-        // Fetch order statistics for B2B and B2C
-        $b2b_order_counts = $this->getOrderCounts(B2bOrder::where('centre_id', $centre->id));
-
-        // Ensure I avoid null values by providing default 0 values
-        $total_deliveries = $b2b_order_counts['total_orders'] ?? 0;
-        $completed = $b2b_order_counts['completed'] ?? 0;
-        $pending = $b2b_order_counts['pending'] ?? 0;
-        $cancelled = $b2b_order_counts['cancelled'] ?? 0;
-
-        // Using resource transformation
-        $data = new CollationCentreResource($centre);
-
-        return $this->success([
-            'total_deliveries' => $total_deliveries,
-            'completed' => $completed,
-            'pending' => $pending,
-            'cancelled' => $cancelled,
-            'center' => $data,
-        ], 'Centre details.');
-    }
-
-    private function getOrderCounts($query)
-    {
-        return $query->selectRaw('
+        $order_counts = Shippment::selectRaw('
         COUNT(*) as total_orders,
-        COALESCE(SUM(CASE WHEN status = ? THEN 1 ELSE 0 END), 0) as completed,
-        COALESCE(SUM(CASE WHEN status = ? THEN 1 ELSE 0 END), 0) as pending,
-        COALESCE(SUM(CASE WHEN status = ? THEN 1 ELSE 0 END), 0) as cancelled
+        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as out_for_delivery,
+        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as delivered,
+        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as ready_for_pickup,
+        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as in_transit
     ', [
+            OrderStatus::SHIPPED,
             OrderStatus::DELIVERED,
-            OrderStatus::PENDING,
-            OrderStatus::CANCELLED,
-        ])->first()->toArray() ?? ['total_orders' => 0, 'completed' => 0, 'pending' => 0, 'cancelled' => 0];
+            OrderStatus::READY_FOR_PICKUP,
+            OrderStatus::IN_TRANSIT
+        ])
+            ->where('hub_id', $centre->id)
+            ->first();
+        $shippments = Shippment::where('collation_id', $centre->id)->latest()->get();
+
+        $data = [
+            'current_batches'      => $order_counts->total_orders ?? 0,
+            'total_processed'    => $order_counts->delivered ?? 0,
+            'daily_throughout'   => $order_counts->ready_for_pickup ?? 0,
+            'awaiting_dispatch'  => $order_counts->in_transit ?? 0,
+            'center'                => new CollationCentreResource($centre),
+            'shippments'   => ShippmentResource::collection($shippments)
+        ];
+
+        return $this->success($data, 'Centre details');
     }
+
 
     public function editCollationCentre($request, $id)
     {
@@ -283,12 +276,15 @@ class SuperAdminService
             ->where('hub_id', $hub->id)
             ->first();
 
+        $shippments = Shippment::where('hub_id', $hub->id)->latest()->get();
+
         $data = [
             'current_items'      => $order_counts->total_orders ?? 0,
             'total_processed'    => $order_counts->delivered ?? 0,
             'ready_for_pickup'   => $order_counts->ready_for_pickup ?? 0,
             'awaiting_dispatch'  => $order_counts->in_transit ?? 0,
             'hub'                => new HubResource($hub),
+            'shippments'   => ShippmentResource::collection($shippments)
         ];
 
         return $this->success($data, 'Hub details');
