@@ -162,6 +162,7 @@ class SuperAdminService
         ])
             ->where('hub_id', $centre->id)
             ->first();
+
         $shippments = Shippment::where('collation_id', $centre->id)->latest()->get();
 
         $data = [
@@ -632,7 +633,9 @@ class SuperAdminService
     public function getNotifications()
     {
         $notifications = AdminNotification::latest()->get();
+
         $data = AdminNotificationResource::collection($notifications);
+        
         return $this->success($data, 'All notifications');
     }
 
@@ -644,9 +647,8 @@ class SuperAdminService
             return $this->error(null, 'Notification not found', 404);
         }
 
-        $notification->update(['is_read' => true]);
-
         $data = new AdminNotificationResource($notification);
+
         return $this->success($data, 'Notification details');
     }
 
@@ -676,7 +678,9 @@ class SuperAdminService
             OrderStatus::DELIVERED,
             OrderStatus::IN_TRANSIT
         ])->first();
+
         $shippments = Shippment::latest()->get();
+
         $data = [
             'total_shippments'  => $order_counts->total_orders ?? 0,
             'in_transit'  => $order_counts->in_transit ?? 0,
@@ -684,18 +688,21 @@ class SuperAdminService
             'failed'   => $order_counts->cancelled ?? 0,
             'shippments'   => ShippmentResource::collection($shippments)
         ];
+
         return $this->success($data, 'Shippment Data');
     }
 
     public function shippmentDetails($id)
     {
         $shippment = Shippment::findOrFail($id);
+
         return $this->success(new ShippmentResource($shippment), 'shippment details');
     }
 
     public function updateShippmentDetails($request, $id)
     {
         $shippment = Shippment::findOrFail($id);
+
         $shippment->update([
             'current_location' => $request->current_location,
             'activity' => $request->activity,
@@ -703,6 +710,7 @@ class SuperAdminService
             'status' => $request->status,
             'destination_name' => $request->destination_name,
         ]);
+
         return $this->success(null, 'shippment details Updated');
     }
 }
