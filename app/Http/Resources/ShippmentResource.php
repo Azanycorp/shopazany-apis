@@ -32,6 +32,13 @@ class ShippmentResource extends JsonResource
             'destination_name' => $this->destination_name,
             'dispatch_phone' => $this->dispatch_phone,
             'expected_delivery_time' => $this->expected_delivery_time,
+            'activities' => $this->activities ? $this->activities->map(function ($activity): array {
+                return [
+                    'action' => $activity?->action,
+                    'date' => $activity?->created_at->todateString(),
+
+                ];
+            })->toArray() : [],
         ];
     }
 }

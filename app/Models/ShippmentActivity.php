@@ -10,4 +10,8 @@ class ShippmentActivity extends Model
         'shippment_id',
         'action',
     ];
+   
+    protected $hidden = [
+        'updated_at'
+    ];
 }

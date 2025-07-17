@@ -77,9 +77,9 @@ trait FindOrders
 
             $items = $array['product_quantity'];
             $vendor = $array['vendor'];
-            $package = $array['product_data'];
+            return $package = $array['product_data']->only('id','user_id');
             $customer = $array['customer'];
-            Shippment::create([
+            $shippment = Shippment::create([
                 'collation_id' => $centre->id,
                 'shippment_id' => Str::random(20),
                 'package' => $package,
@@ -92,6 +92,10 @@ trait FindOrders
                 'activity' => $request->activity,
                 'note' => $request->note,
                 'items' => $items,
+            ]);
+
+            $shippment->activities()->create([
+                'action' => $request->activity
             ]);
             return $this->success(null, 'Item Logged successfully.');
         }
