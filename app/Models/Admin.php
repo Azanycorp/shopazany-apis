@@ -30,8 +30,6 @@ class Admin extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
-        'verification_code',
-        'verification_code_expire_at',
     ];
 
     protected function fullName(): Attribute
