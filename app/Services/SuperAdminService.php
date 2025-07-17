@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Admin;
+use App\Models\Order;
 use App\Trait\SignUp;
 use App\Enum\AdminType;
 use App\Enum\PlanStatus;
@@ -10,25 +11,36 @@ use App\Models\B2bOrder;
 use App\Enum\AdminStatus;
 use App\Enum\MailingEnum;
 use App\Enum\OrderStatus;
+use App\Models\Shippment;
+use App\Trait\FindOrders;
+use App\Enum\CentreStatus;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
 use App\Models\PickupStation;
 use App\Models\ShippingAgent;
 use App\Mail\B2BNewAdminEmail;
 use App\Models\CollationCenter;
+use App\Models\AdminNotification;
+use App\Traits\AdminNotifications;
 use Illuminate\Support\Facades\DB;
 use App\Http\Resources\HubResource;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use App\Http\Resources\OrderResource;
+use App\Trait\SuperAdminNotification;
 use App\Mail\AccountVerificationEmail;
+use App\Http\Resources\B2BOrderResource;
 use App\Http\Resources\AdminUserResource;
+use App\Http\Resources\ShippmentResource;
 use App\Http\Resources\ShippingAgentResource;
 use App\Http\Resources\CollationCentreResource;
+use App\Http\Resources\AdminNotificationResource;
 
 class SuperAdminService
 {
-    use HttpResponse, SignUp;
+    use HttpResponse, FindOrders, SuperAdminNotification, SignUp;
+
 
     public function getDashboardDetails()
     {
@@ -54,7 +66,7 @@ class SuperAdminService
     // Collation centers
     public function deliveryOverview()
     {
-        $order_counts = B2bOrder::selectRaw('
+        $order_counts = Shippment::selectRaw('
         COUNT(*) as total_orders,
         SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as out_for_delivery,
         SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as delivered
@@ -77,22 +89,41 @@ class SuperAdminService
 
     public function allCollationCentres()
     {
-        $total_centers = CollationCenter::count();
-        $statusCounts = CollationCenter::select('status', DB::raw('count(*) as count'))
-            ->groupBy('status')
-            ->pluck('count', 'status');
+        $query = CollationCenter::with(['country', 'hubs.country'])
+            ->when(request()->status, function ($q, $status) {
+                $q->where('status', $status);
+            })
+            ->when(request()->search, function ($q, $search) {
+                $q->where(function ($query) use ($search) {
+                    $query->where('city', 'like', '%' . $search . '%')
+                        ->orWhere('location', 'like', '%' . $search . '%');
+                });
+            });
 
-        $centers = CollationCenter::with(['country', 'hubs.country'])->latest()->get();
-        $data = CollationCentreResource::collection($centers);
+        $center_counts = CollationCenter::selectRaw('
+        COUNT(*) as total_centers,
+        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as active,
+        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as in_active,
+        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as maintenance,
+        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as processing
+    ', [
+            CentreStatus::ACTIVE,
+            CentreStatus::INACTIVE,
+            CentreStatus::MAINTENANCE,
+            CentreStatus::PROCESSING,
+        ])->first();
 
-        $collation_details = [
-            'total_centers' => $total_centers,
-            'active_centers' => $statusCounts[PlanStatus::ACTIVE] ?? 0,
-            'inactive_centers' => $statusCounts[PlanStatus::INACTIVE] ?? 0,
-            'centers' => $data,
+
+        $data = [
+            'total_centers' => $center_counts->total_centers ?? 0,
+            'active_centers' =>  $center_counts->active ?? 0,
+            'inactive_centers' => $center_counts->in_active ?? 0,
+            'under_maintenance' => $center_counts->maintenance ?? 0,
+            'daily_processing' => $center_counts->processing ?? 0,
+            'centers' => CollationCentreResource::collection($query->latest()->get()),
         ];
 
-        return $this->success($collation_details, 'All available collation centres');
+        return $this->success($data, 'Filtered collation centres');
     }
 
     public function addCollationCentre($request)
@@ -105,7 +136,7 @@ class SuperAdminService
             'country_id' => $request->country_id ?? 160,
             'status' => PlanStatus::ACTIVE,
         ]);
-
+        $this->createNotification('New Collation Centre Added', 'New collation centre created ' . $centre->name);
         return $this->success($centre, 'Centre added successfully', 201);
     }
 
@@ -117,40 +148,35 @@ class SuperAdminService
             return $this->error(null, 'Centre not found', 404);
         }
 
-        // Fetch order statistics for B2B and B2C
-        $b2b_order_counts = $this->getOrderCounts(B2bOrder::where('centre_id', $centre->id));
-
-        // Ensure I avoid null values by providing default 0 values
-        $total_deliveries = $b2b_order_counts['total_orders'] ?? 0;
-        $completed = $b2b_order_counts['completed'] ?? 0;
-        $pending = $b2b_order_counts['pending'] ?? 0;
-        $cancelled = $b2b_order_counts['cancelled'] ?? 0;
-
-        // Using resource transformation
-        $data = new CollationCentreResource($centre);
-
-        return $this->success([
-            'total_deliveries' => $total_deliveries,
-            'completed' => $completed,
-            'pending' => $pending,
-            'cancelled' => $cancelled,
-            'center' => $data,
-        ], 'Centre details.');
-    }
-
-    private function getOrderCounts($query)
-    {
-        return $query->selectRaw('
+        $order_counts = Shippment::selectRaw('
         COUNT(*) as total_orders,
-        COALESCE(SUM(CASE WHEN status = ? THEN 1 ELSE 0 END), 0) as completed,
-        COALESCE(SUM(CASE WHEN status = ? THEN 1 ELSE 0 END), 0) as pending,
-        COALESCE(SUM(CASE WHEN status = ? THEN 1 ELSE 0 END), 0) as cancelled
+        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as out_for_delivery,
+        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as delivered,
+        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as ready_for_pickup,
+        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as in_transit
     ', [
+            OrderStatus::SHIPPED,
             OrderStatus::DELIVERED,
-            OrderStatus::PENDING,
-            OrderStatus::CANCELLED,
-        ])->first()->toArray() ?? ['total_orders' => 0, 'completed' => 0, 'pending' => 0, 'cancelled' => 0];
+            OrderStatus::READY_FOR_PICKUP,
+            OrderStatus::IN_TRANSIT
+        ])
+            ->where('hub_id', $centre->id)
+            ->first();
+
+        $shippments = Shippment::where('collation_id', $centre->id)->latest()->get();
+
+        $data = [
+            'current_batches'      => $order_counts->total_orders ?? 0,
+            'total_processed'    => $order_counts->delivered ?? 0,
+            'daily_throughout'   => $order_counts->ready_for_pickup ?? 0,
+            'awaiting_dispatch'  => $order_counts->in_transit ?? 0,
+            'center'                => new CollationCentreResource($centre),
+            'shippments'   => ShippmentResource::collection($shippments)
+        ];
+
+        return $this->success($data, 'Centre details');
     }
+
 
     public function editCollationCentre($request, $id)
     {
@@ -180,8 +206,8 @@ class SuperAdminService
             return $this->error(null, 'Centre not found', 404);
         }
 
-        if ($centre->hubs->exists()) {
-            return $this->error(null, 'Category can not be deleted because it has content', 422);
+        if (count($centre->hubs) > 0) {
+            return $this->error(null, 'Centre can not be deleted because it has content', 422);
         }
 
         $centre->delete();
@@ -190,12 +216,25 @@ class SuperAdminService
     }
 
     // Hubs under Collation centers
-    public function allCollationCentreHUbs()
+    public function allHubs()
     {
-        $centers = PickupStation::with(['country', 'collationCenter'])->latest()->get();
-        $data = HubResource::collection($centers);
+        $hubs = PickupStation::with(['country', 'collationCenter'])->latest()->get();
 
-        return $this->success($data, 'All available collation centres hubs');
+        $total_hubs = PickupStation::count();
+
+        $statusCounts = PickupStation::select('status', DB::raw('count(*) as count'))
+            ->groupBy('status')
+            ->pluck('count', 'status');
+
+        $data = [
+            'total_hubs' => $total_hubs,
+            'active_hubs' => $statusCounts[CentreStatus::ACTIVE] ?? 0,
+            'inactive_hubs' => $statusCounts[CentreStatus::INACTIVE] ?? 0,
+            'pending' => $statusCounts[CentreStatus::PENDING] ?? 0,
+            'hubs' => HubResource::collection($hubs),
+        ];
+
+        return $this->success($data, 'All available collation centre hubs');
     }
 
     public function addHub($request)
@@ -210,18 +249,44 @@ class SuperAdminService
             'status' => PlanStatus::ACTIVE,
         ]);
 
+        $this->createNotification('New Hub Added', 'New hub created ' . $hub->name);
+
         return $this->success($hub, 'Hub added successfully', 201);
     }
 
     public function viewHub($id)
     {
-        $centre = PickupStation::with(['country', 'collationCenter'])->find($id);
+        $hub = PickupStation::with(['country', 'collationCenter'])->find($id);
 
-        if (! $centre) {
+        if (! $hub) {
             return $this->error(null, 'Hub not found', 404);
         }
 
-        $data = new HubResource($centre);
+        $order_counts = Shippment::selectRaw('
+        COUNT(*) as total_orders,
+        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as out_for_delivery,
+        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as delivered,
+        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as ready_for_pickup,
+        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as in_transit
+    ', [
+            OrderStatus::SHIPPED,
+            OrderStatus::DELIVERED,
+            OrderStatus::READY_FOR_PICKUP,
+            OrderStatus::IN_TRANSIT
+        ])
+            ->where('hub_id', $hub->id)
+            ->first();
+
+        $shippments = Shippment::where('hub_id', $hub->id)->latest()->get();
+
+        $data = [
+            'current_items'      => $order_counts->total_orders ?? 0,
+            'total_processed'    => $order_counts->delivered ?? 0,
+            'ready_for_pickup'   => $order_counts->ready_for_pickup ?? 0,
+            'awaiting_dispatch'  => $order_counts->in_transit ?? 0,
+            'hub'                => new HubResource($hub),
+            'shippments'   => ShippmentResource::collection($shippments)
+        ];
 
         return $this->success($data, 'Hub details');
     }
@@ -260,6 +325,22 @@ class SuperAdminService
         return $this->success(null, 'Hub deleted successfully.');
     }
 
+
+    public function findOrder()
+    {
+        return $this->searchOrder();
+    }
+
+    public function findPickupLocationOrder($request)
+    {
+        return $this->findHubOrder($request);
+    }
+
+    public function findCollationCentreOrder($request)
+    {
+        return $this->findCollationOrder($request);
+    }
+
     // Admin User Management
     public function adminUsers()
     {
@@ -268,12 +349,6 @@ class SuperAdminService
 
         $admins = Admin::with('permissions:id,name')
             ->select('id', 'first_name', 'last_name', 'email', 'created_at')
-            ->when($user->type === 'b2c_admin', function ($query): void {
-                $query->where('type', AdminType::B2C);
-            })
-            ->when($user->type === 'b2b_admin', function ($query): void {
-                $query->where('type', AdminType::B2B);
-            })
             ->when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
                 $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
                     $subQuery->where('first_name', 'LIKE', "%{$searchQuery}%")
@@ -317,6 +392,8 @@ class SuperAdminService
             $mail_class = B2BNewAdminEmail::class;
 
             mailSend($type, $admin, $subject, $mail_class, $loginDetails);
+
+            $this->createNotification('New Admin Added', 'New admin account created for ' . $admin->fullName);
 
             return $this->success($admin, 'Admin user added successfully', 201);
         } catch (\Throwable $th) {
@@ -405,6 +482,8 @@ class SuperAdminService
             'status' => $request->status,
         ]);
 
+        $this->createNotification('New Shipping Agent Added', 'New shipping agent created ' . $agent->name);
+
         return $this->success($agent, 'Agent added successfully', 201);
     }
 
@@ -465,6 +544,9 @@ class SuperAdminService
             'email' => $request->email,
             'phone_number' => $request->phone_number,
         ]);
+
+        $this->createNotification('Admin Profile Updated', 'Admin profile updated for ' . $user->fullName);
+
         $data = new AdminUserResource($user);
 
         return $this->success($data, 'Profile detail');
@@ -479,6 +561,8 @@ class SuperAdminService
         $user->update([
             'two_factor_enabled' => $request->two_factor_enabled,
         ]);
+
+        $this->createNotification('Two Factor Authentication Updated', 'Two factor authentication updated for ' . $user->fullName);
 
         return $this->success('Settings updated');
     }
@@ -543,5 +627,90 @@ class SuperAdminService
             'verification_code_expire_at' => null,
         ]);
         return $this->success("Code Verified");
+    }
+
+    //AdminNotification
+    public function getNotifications()
+    {
+        $notifications = AdminNotification::latest()->get();
+
+        $data = AdminNotificationResource::collection($notifications);
+        
+        return $this->success($data, 'All notifications');
+    }
+
+    public function getNotification($id)
+    {
+        $notification = AdminNotification::find($id);
+
+        if (!$notification) {
+            return $this->error(null, 'Notification not found', 404);
+        }
+
+        $data = new AdminNotificationResource($notification);
+
+        return $this->success($data, 'Notification details');
+    }
+
+    public function markRead($id)
+    {
+        $notification = AdminNotification::findOrFail($id);
+
+        if ($notification->is_read) {
+            return $this->error(null, 'Notification already marked read');
+        }
+
+        $notification->update(['is_read' => true]);
+
+        return $this->success(null, 'Notification marked as read');
+    }
+
+    //Shippments
+    public function allShippments()
+    {
+        $order_counts = Shippment::selectRaw('
+        COUNT(*) as total_orders,
+        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as cancelled,
+        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as delivered,
+        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as in_transit
+    ', [
+            OrderStatus::CANCELLED,
+            OrderStatus::DELIVERED,
+            OrderStatus::IN_TRANSIT
+        ])->first();
+
+        $shippments = Shippment::latest()->get();
+
+        $data = [
+            'total_shippments'  => $order_counts->total_orders ?? 0,
+            'in_transit'  => $order_counts->in_transit ?? 0,
+            'completed'    => $order_counts->delivered ?? 0,
+            'failed'   => $order_counts->cancelled ?? 0,
+            'shippments'   => ShippmentResource::collection($shippments)
+        ];
+
+        return $this->success($data, 'Shippment Data');
+    }
+
+    public function shippmentDetails($id)
+    {
+        $shippment = Shippment::findOrFail($id);
+
+        return $this->success(new ShippmentResource($shippment), 'shippment details');
+    }
+
+    public function updateShippmentDetails($request, $id)
+    {
+        $shippment = Shippment::findOrFail($id);
+
+        $shippment->update([
+            'current_location' => $request->current_location,
+            'activity' => $request->activity,
+            'note' => $request->note,
+            'status' => $request->status,
+            'destination_name' => $request->destination_name,
+        ]);
+
+        return $this->success(null, 'shippment details Updated');
     }
 }
