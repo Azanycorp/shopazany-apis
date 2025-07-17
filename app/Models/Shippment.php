@@ -10,6 +10,7 @@ class Shippment extends Model
         'hub_id',
         'collation_id',
         'shippment_id',
+        'type',
         'package',
         'customer',
         'vendor',

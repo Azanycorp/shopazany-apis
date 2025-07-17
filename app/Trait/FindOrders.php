@@ -7,6 +7,7 @@ use App\Models\B2bOrder;
 use App\Models\Shippment;
 use Illuminate\Support\Str;
 use App\Models\PickupStation;
+use App\Enum\ShippmentCategory;
 use App\Models\CollationCenter;
 use App\Http\Resources\OrderResource;
 use App\Http\Resources\B2BOrderResource;
@@ -82,6 +83,7 @@ trait FindOrders
             $shippment = Shippment::create([
                 'collation_id' => $centre->id,
                 'shippment_id' => Str::random(20),
+                'type' => ShippmentCategory::INCOMING,
                 'package' => $package,
                 'customer' => $customer,
                 'vendor' => $vendor,
