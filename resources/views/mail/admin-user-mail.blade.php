@@ -77,14 +77,14 @@
 
         <!-- Body Section -->
         <div class="email-body">
-            <p>Hi <strong>{{ $user->first_name }}</strong>,</p>
+            <p>Hi <strong>{{ data_get($user, 'first_name', '') }}</strong>,</p>
 
             <p>We’re excited to welcome you to the <strong>Azany</strong> admin team! Below are your login details for accessing the Admin Portal:</p>
 
             <!-- Login Details Section -->
             <div class="login-details">
                 <p><strong>Login URL:</strong> <a href="https://shopazany.com">https://shopazany.com</a></p>
-                <p><strong>Username:</strong> {{ $user->email }}</p>
+                <p><strong>Username:</strong> {{ data_get($user, 'email', '') }}</p>
                 <p><strong>Password:</strong> {{ $pass }}</p>
             </div>
 
