@@ -3,6 +3,7 @@
 namespace App\Services\Admin;
 
 use App\Enum\AdminStatus;
+use App\Enum\AdminType;
 use App\Enum\MailingEnum;
 use App\Models\Admin;
 use App\Trait\HttpResponse;
@@ -83,6 +84,7 @@ class SuperAdminService
         $admin = Admin::create(
             $request->validated()
             + [
+                'type' => AdminType::SUPER_ADMIN,
                 'password' => $password,
                 'status' => AdminStatus::ACTIVE,
             ]
