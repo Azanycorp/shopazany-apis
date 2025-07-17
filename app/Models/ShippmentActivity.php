@@ -8,9 +8,10 @@ class ShippmentActivity extends Model
 {
     protected $fillable = [
         'shippment_id',
-        'action',
+        'comment',
+        'note',
     ];
-   
+
     protected $hidden = [
         'updated_at'
     ];

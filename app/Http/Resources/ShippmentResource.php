@@ -25,8 +25,6 @@ class ShippmentResource extends JsonResource
             'expected_delivery_date' => $this->expected_delivery_date,
             'start_origin' => $this->start_origin,
             'current_location' => $this->current_location,
-            'activity' => $this->activity,
-            'note' => $this->note,
             'items' => $this->items,
             'dispatch_name' => $this->dispatch_name,
             'destination_name' => $this->destination_name,
@@ -34,7 +32,8 @@ class ShippmentResource extends JsonResource
             'expected_delivery_time' => $this->expected_delivery_time,
             'activities' => $this->activities ? $this->activities->map(function ($activity): array {
                 return [
-                    'action' => $activity?->action,
+                    'action' => $activity?->comment,
+                    'note' => $activity?->note,
                     'date' => $activity?->created_at->todateString(),
 
                 ];

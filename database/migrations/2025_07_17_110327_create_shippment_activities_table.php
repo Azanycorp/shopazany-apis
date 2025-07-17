@@ -14,7 +14,8 @@ return new class extends Migration
         Schema::create('shippment_activities', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('shippment_id');
-            $table->longText('action');
+            $table->longText('comment');
+            $table->longText('note')->nullable();
             $table->timestamps();
         });
     }

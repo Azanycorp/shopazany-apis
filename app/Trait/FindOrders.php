@@ -12,6 +12,7 @@ use App\Models\CollationCenter;
 use App\Http\Resources\OrderResource;
 use App\Http\Resources\B2BOrderResource;
 use App\Http\Resources\SearchB2BOrderResource;
+use App\Http\Resources\ShippmentResource;
 
 trait FindOrders
 {
@@ -78,7 +79,7 @@ trait FindOrders
 
             $items = $array['product_quantity'];
             $vendor = $array['vendor'];
-            return $package = $array['product_data']->only('id','user_id');
+            $package = collect($array['product_data'])->only(['name', 'fob_price', 'front_image']);
             $customer = $array['customer'];
             $shippment = Shippment::create([
                 'collation_id' => $centre->id,
@@ -91,15 +92,14 @@ trait FindOrders
                 'priority' => $request->priority,
                 'expected_delivery_date' => $request->expected_delivery_date,
                 'start_origin' => $centre->name,
-                'activity' => $request->activity,
-                'note' => $request->note,
                 'items' => $items,
             ]);
 
             $shippment->activities()->create([
-                'action' => $request->activity
+                'comment' => $request->activity,
+                'note' => $request->note
             ]);
-            return $this->success(null, 'Item Logged successfully.');
+            return $this->success(new ShippmentResource($shippment), 'Item Logged successfully.');
         }
 
         return $this->error(null, 'Order not found.', 404);
