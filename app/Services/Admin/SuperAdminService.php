@@ -2,9 +2,11 @@
 
 namespace App\Services\Admin;
 
-use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Str;
+use App\Models\Admin;
+use App\Trait\SignUp;
 use App\Trait\HttpResponse;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Artisan;
 
 class SuperAdminService
 {
