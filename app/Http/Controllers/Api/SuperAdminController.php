@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\AddUserRequest;
 use Illuminate\Support\Facades\Gate;
 use App\Http\Requests\Admin\HubRequest;
 use App\Http\Requests\AdminUserRequest;
@@ -44,16 +45,8 @@ class SuperAdminController extends Controller
         return $this->superAdminService->getProfile($userId);
     }
 
-    public function addUser(Request $request)
+    public function addUser(AddUserRequest $request)
     {
-        $request->validate([
-            'first_name' => ['required', 'string', 'max:100'],
-            'last_name' => ['required', 'string', 'max:100'],
-            'email' => ['required', 'email'],
-            'phone_number' => ['required', 'string'],
-            'modules' => ['required', 'array']
-        ]);
-
         return $this->superAdminService->addUser($request);
     }
 
