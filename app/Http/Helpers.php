@@ -2,6 +2,7 @@
 
 use App\Actions\UserLogAction;
 use App\Models\Action;
+use App\Models\AdminNotification;
 use App\Models\B2BRequestRefund;
 use App\Models\BusinessSetting;
 use App\Models\Country;
@@ -299,7 +300,7 @@ if (! function_exists('uploadUserImage')) {
         $parts = explode('@', $user->email);
         $name = $parts[0];
 
-        $folder = folderName('profile')."/{$name}";
+        $folder = folderName('profile') . "/{$name}";
 
         if (! is_null($user) && ! empty($user->public_id)) {
             app(FileUploader::class)->deleteFile($user->public_id);
@@ -446,7 +447,7 @@ if (! function_exists('generateTransactionReference')) {
     function generateTransactionReference(): string
     {
         do {
-            $reference = 'TXN'.strtoupper(Str::random(8)).time();
+            $reference = 'TXN' . strtoupper(Str::random(8)) . time();
         } while (Transaction::where('reference', $reference)->exists());
 
         return $reference;
@@ -471,7 +472,7 @@ if (! function_exists('generateVerificationCode')) {
 if (! function_exists('generateRefCode')) {
     function generateRefCode(): string
     {
-        return 'AZY-'.sprintf('%06d', mt_rand(1, 999999));
+        return 'AZY-' . sprintf('%06d', mt_rand(1, 999999));
     }
 }
 
@@ -490,10 +491,10 @@ if (! function_exists('generate_referrer_link')) {
     function generate_referrer_link(string $referrer_code): string
     {
         if (App::environment('production')) {
-            return config('services.frontend.seller_baseurl').'?referrer='.$referrer_code;
+            return config('services.frontend.seller_baseurl') . '?referrer=' . $referrer_code;
         }
 
-        return config('services.frontend.staging_seller_baseurl').'?referrer='.$referrer_code;
+        return config('services.frontend.staging_seller_baseurl') . '?referrer=' . $referrer_code;
     }
 }
 
@@ -519,9 +520,9 @@ if (! function_exists('generate_referrer_links')) {
             ? $baseUrls['staging']
             : ($baseUrls[$environment] ?? $baseUrls['staging']);
 
-        return array_map(fn ($key, $url): array => [
+        return array_map(fn($key, $url): array => [
             'name' => $key,
-            'link' => $url.'?referrer='.$referrer_code,
+            'link' => $url . '?referrer=' . $referrer_code,
         ], array_keys($selectedBaseUrls), $selectedBaseUrls);
     }
 }
@@ -550,13 +551,13 @@ if (! function_exists('abbreviateNumber')) {
     function abbreviateNumber($number)
     {
         if ($number >= 1000000000) {
-            return number_format($number / 1000000000, 1).'B';
+            return number_format($number / 1000000000, 1) . 'B';
         }
         if ($number >= 1000000) {
-            return number_format($number / 1000000, 1).'M';
+            return number_format($number / 1000000, 1) . 'M';
         }
         if ($number >= 1000) {
-            return number_format($number / 1000, 1).'K';
+            return number_format($number / 1000, 1) . 'K';
         }
 
         return $number;
@@ -609,10 +610,10 @@ if (! function_exists('getCurrencyCode')) {
 if (! function_exists('generateRefundComplaintNumber')) {
     function generateRefundComplaintNumber(string $prefix = 'RFC'): string
     {
-        $uniqueNumber = $prefix.'-'.strtoupper(Str::random(8)).'-'.time();
+        $uniqueNumber = $prefix . '-' . strtoupper(Str::random(8)) . '-' . time();
 
         while (B2BRequestRefund::where('complaint_number', $uniqueNumber)->exists()) {
-            $uniqueNumber = $prefix.'-'.strtoupper(Str::random(8)).'-'.time();
+            $uniqueNumber = $prefix . '-' . strtoupper(Str::random(8)) . '-' . time();
         }
 
         return $uniqueNumber;
@@ -625,11 +626,11 @@ if (! function_exists('orderNo')) {
         $timestamp = now()->timestamp;
         $randomNumber = mt_rand(100000, 999999);
 
-        $uniqueOrderNumber = 'ORD-'.$timestamp.'-'.$randomNumber;
+        $uniqueOrderNumber = 'ORD-' . $timestamp . '-' . $randomNumber;
 
         while (Order::where('order_no', $uniqueOrderNumber)->exists()) {
             $randomNumber = mt_rand(100000, 999999);
-            $uniqueOrderNumber = 'ORD-'.$timestamp.'-'.$randomNumber;
+            $uniqueOrderNumber = 'ORD-' . $timestamp . '-' . $randomNumber;
         }
 
         return $uniqueOrderNumber;

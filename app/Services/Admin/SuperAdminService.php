@@ -3,13 +3,13 @@
 namespace App\Services\Admin;
 
 use App\Enum\MailingEnum;
+use App\Models\Admin;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Artisan;
 use App\Mail\AdminUserMail;
 use App\Mail\ChangePasswordMail;
 use App\Http\Resources\SuperAdminProfileResource;
-use App\Models\Admin;
 
 class SuperAdminService
 {
