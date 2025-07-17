@@ -85,7 +85,7 @@ class SuperAdminService
             $request->validated()
             + [
                 'type' => AdminType::SUPER_ADMIN,
-                'password' => $password,
+                'password' => bcrypt($password),
                 'status' => AdminStatus::ACTIVE,
             ]
         );
@@ -113,7 +113,7 @@ class SuperAdminService
         }
 
         if ($request->has('change_password')) {
-            $code = Str::random(6);
+            $code = generateVerificationCode(4);
             $user->update([
                 'verification_code' => $code,
                 'verification_code_expire_at' => now()->addMinutes(15),
