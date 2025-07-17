@@ -522,7 +522,12 @@ Route::middleware('validate.header')
                 Route::middleware(['auth:sanctum', 'role:super_admin'])
                     ->controller(SuperAdminController::class)
                     ->group(function (): void {
+                        Route::post('/add-user', 'addUser');
+                        Route::get('/profiles', 'getProfiles');
                         Route::get('/profile/{user_id}', 'getProfile');
+                        Route::post('/security', 'security');
+                        Route::post('/verify-code', 'verifyCode');
+                        Route::post('/change-password', 'changePassword');
                     });
             });
     });
