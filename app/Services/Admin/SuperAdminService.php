@@ -141,6 +141,8 @@ class SuperAdminService
             'verification_code_expire_at' => null,
         ]);
 
+        cache()->put("password_reset_verified_{$user->id}", true, now()->addMinutes(10));
+
         return $this->success(null, "Code verified successfully");
     }
 
@@ -148,7 +150,11 @@ class SuperAdminService
     {
         $user = Admin::findOrFail($request->user_id);
 
-        $user->update(['password' => $request->password]);
+        if (! cache()->pull("password_reset_verified_{$user->id}")) {
+            return $this->error(null, 'You must verify the code first', 403);
+        }
+
+        $user->update(['password' => bcrypt($request->password)]);
 
         return $this->success(null, "Password changed successfully");
     }
