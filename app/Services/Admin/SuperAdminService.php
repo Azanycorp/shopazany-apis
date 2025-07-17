@@ -85,7 +85,7 @@ class SuperAdminService
             $request->validated()
             + [
                 'type' => AdminType::SUPER_ADMIN,
-                'password' => $password,
+                'password' => bcrypt($password),
                 'status' => AdminStatus::ACTIVE,
             ]
         );
