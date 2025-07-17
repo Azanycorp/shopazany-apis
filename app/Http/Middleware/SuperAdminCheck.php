@@ -2,7 +2,7 @@
 
 namespace App\Http\Middleware;
 
-use App\Enum\UserType;
+use App\Enum\AdminType;
 use App\Trait\HttpResponse;
 use Closure;
 use Illuminate\Http\Request;
@@ -25,7 +25,7 @@ class SuperAdminCheck
             return $this->error(null, 'Unauthorized action.', 401);
         }
 
-        if ($user && $user->type !== UserType::SUPER_ADMIN) {
+        if ($user && $user->type !== AdminType::SUPER_ADMIN) {
             return $this->error(null, 'Unauthorized action.', 401);
         }
 
