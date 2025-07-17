@@ -28,18 +28,49 @@ class SuperAdminController extends Controller
        return $this->superAdminService->seedRun();
     }
 
+    public function getProfiles()
+    {
+       return $this->superAdminService->getProfiles();
+    }
+
     public function getProfile($userId)
     {
         return $this->superAdminService->getProfile($userId);
     }
 
-    public function get2fa()
+    public function addUser(Request $request)
     {
-        return $this->superAdminService->get2fa();
+        $request->validate([
+            'first_name' => ['required', 'string', 'max:100'],
+            'last_name' => ['required', 'string', 'max:100'],
+            'email' => ['required', 'email'],
+            'phone_number' => ['required', 'string'],
+            'modules' => ['required', 'array']
+        ]);
+
+        return $this->superAdminService->addUser($request);
+    }
+
+    public function security(Request $request)
+    {
+        return $this->superAdminService->security($request);
+    }
+
+    public function verifyCode(Request $request)
+    {
+        $request->validate(['code'  => 'required|string']);
+
+        return $this->superAdminService->verifyCode($request);
     }
 
     public function changePassword(Request $request)
     {
+        $request->validate([
+            'user_id' => ['required', 'exists:admins,id'],
+            'password' => ['required', 'string', 'min:8'],
+            'confirm_password' => ['required', 'string', 'same:password'],
+        ]);
+
         return $this->superAdminService->changePassword($request);
     }
 }
