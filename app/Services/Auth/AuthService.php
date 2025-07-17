@@ -288,6 +288,16 @@ class AuthService extends Controller
             }
         );
 
+        if (! $user->is_verified && ! $user->is_admin_approve && empty($user->email_verified_at)) {
+            $user->update([
+                'is_verified' => 1,
+                'is_admin_approve' => 1,
+                'verification_code' => null,
+                'email_verified_at' => now(),
+                'status' => UserStatus::ACTIVE,
+            ]);
+        }
+
         $description = "User with email address {$request->email} changed password successfully";
         $action = UserLog::PASSWORD_RESET;
         $response = $this->success(null, 'Reset successfully');
