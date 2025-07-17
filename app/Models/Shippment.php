@@ -27,12 +27,17 @@ class Shippment extends Model
         'expected_delivery_time',
     ];
 
-     protected function casts(): array
+    protected function casts(): array
     {
         return [
             'package' => 'array',
             'customer' => 'array',
             'vendor' => 'array',
         ];
+    }
+
+    public function activities()
+    {
+        return $this->hasMany(ShippmentActivity::class, 'shippment_id');
     }
 }
