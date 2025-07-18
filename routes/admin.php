@@ -495,7 +495,7 @@ Route::middleware('validate.header')
                         Route::post('/verify-code', 'verifyCode');
                         Route::post('/change-password', 'changePassword');
                         Route::get('/profile/{user_id}', 'getProfile');
-                        
+
                         // delivery (collation centers and hubs)
                         Route::controller(AdminController::class)->group(function (): void {
                             Route::get('/delivery-overview', 'deliveryOverview');
