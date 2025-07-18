@@ -7,13 +7,18 @@ use App\Models\B2bOrder;
 use App\Models\Shippment;
 use Illuminate\Support\Str;
 use App\Models\PickupStation;
+use App\Enum\ShippmentCategory;
 use App\Models\CollationCenter;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Resources\OrderResource;
+use App\Trait\SuperAdminNotification;
 use App\Http\Resources\B2BOrderResource;
+use App\Http\Resources\ShippmentResource;
 use App\Http\Resources\SearchB2BOrderResource;
 
 trait FindOrders
 {
+    use SuperAdminNotification;
     public function searchOrder()
     {
 
@@ -49,7 +54,35 @@ trait FindOrders
         $b2bOrder = B2bOrder::where('order_no', $request->order_number)->first();
 
         if ($b2bOrder) {
-            return $this->success(new B2BOrderResource($b2bOrder), 'Order found successfully.');
+            $resource = new SearchB2BOrderResource($b2bOrder);
+            $array = $resource->toArray(request());
+
+            $items = $array['product_quantity'];
+            $vendor = $array['vendor'];
+            $package = $array['product'];
+            $customer = $array['customer'];
+            $shippment = Shippment::create([
+                'collation_id' => $hub->id,
+                'shippment_id' => Str::random(20),
+                'type' => ShippmentCategory::INCOMING,
+                'package' => $package,
+                'customer' => $customer,
+                'vendor' => $vendor,
+                'status' => $request->status,
+                'priority' => $request->priority,
+                'expected_delivery_date' => $request->expected_delivery_date,
+                'start_origin' => $hub->name,
+                'items' => $items,
+            ]);
+
+            $shippment->activities()->create([
+                'comment' => $request->activity,
+                'note' => $request->note
+            ]);
+
+            $this->createNotification('New Shippment created', 'New Shippment created at ' . $hub->name . 'Pickup station/hub ' . 'by ' . Auth::user()->fullName);
+
+            return $this->success(new ShippmentResource($shippment), 'Item Logged successfully.');
         }
 
         return $this->error(null, 'Order not found.', 404);
@@ -77,11 +110,12 @@ trait FindOrders
 
             $items = $array['product_quantity'];
             $vendor = $array['vendor'];
-            $package = $array['product_data'];
+            $package = $array['product'];
             $customer = $array['customer'];
-            Shippment::create([
+            $shippment = Shippment::create([
                 'collation_id' => $centre->id,
                 'shippment_id' => Str::random(20),
+                'type' => ShippmentCategory::INCOMING,
                 'package' => $package,
                 'customer' => $customer,
                 'vendor' => $vendor,
@@ -89,11 +123,17 @@ trait FindOrders
                 'priority' => $request->priority,
                 'expected_delivery_date' => $request->expected_delivery_date,
                 'start_origin' => $centre->name,
-                'activity' => $request->activity,
-                'note' => $request->note,
                 'items' => $items,
             ]);
-            return $this->success(null, 'Item Logged successfully.');
+
+            $shippment->activities()->create([
+                'comment' => $request->activity,
+                'note' => $request->note
+            ]);
+
+            $this->createNotification('New Shippment created', 'New Shippment created at ' . $centre->name . 'Collation centre ' . 'by ' . Auth::user()->fullName);
+
+            return $this->success(new ShippmentResource($shippment), 'Item Logged successfully.');
         }
 
         return $this->error(null, 'Order not found.', 404);

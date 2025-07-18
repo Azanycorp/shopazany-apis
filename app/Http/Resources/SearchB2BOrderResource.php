@@ -16,7 +16,7 @@ class SearchB2BOrderResource extends JsonResource
     {
         return [
             'product_quantity' => (string) $this->product_quantity,
-            'product_data' => $this->product_data,
+            'product' => collect($this->product_data)->only(['name', 'fob_price', 'front_image']),
             'total_amount' => (string) $this->total_amount,
             'vendor' => (object) [
                 'business_name' => $this?->seller?->businessInformation?->business_name,
