@@ -635,7 +635,7 @@ class SuperAdminService
         $notifications = AdminNotification::latest()->get();
 
         $data = AdminNotificationResource::collection($notifications);
-        
+
         return $this->success($data, 'All notifications');
     }
 
@@ -705,10 +705,13 @@ class SuperAdminService
 
         $shippment->update([
             'current_location' => $request->current_location,
-            'activity' => $request->activity,
             'note' => $request->note,
             'status' => $request->status,
             'destination_name' => $request->destination_name,
+        ]);
+
+        $shippment->activities()->create([
+            'action' => $request->activity
         ]);
 
         return $this->success(null, 'shippment details Updated');
