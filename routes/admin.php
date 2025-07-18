@@ -495,43 +495,41 @@ Route::middleware('validate.header')
                         Route::post('/verify-code', 'verifyCode');
                         Route::post('/change-password', 'changePassword');
                         Route::get('/profile/{user_id}', 'getProfile');
-                    });
-
-                Route::middleware(['auth:sanctum', 'role.super_admin'])->group(function (): void {
-                    Route::controller(AdminController::class)->group(function (): void {
+                        
                         // delivery (collation centers and hubs)
-                        Route::get('/delivery-overview', 'deliveryOverview');
-                        Route::prefix('collation-centre')->group(function (): void {
-                            Route::get('/', 'allCollationCentres');
-                            Route::post('/add', 'addCollationCentre');
-                            Route::post('/log-item', 'findCollationCentreOrder');
-                            Route::get('/details/{id}', 'viewCollationCentre');
-                            Route::patch('/update/{id}', 'editCollationCentre');
-                            Route::delete('/delete/{id}', 'deleteCollationCentre');
+                        Route::controller(AdminController::class)->group(function (): void {
+                            Route::get('/delivery-overview', 'deliveryOverview');
+                            Route::prefix('collation-centre')->group(function (): void {
+                                Route::get('/', 'allCollationCentres');
+                                Route::post('/add', 'addCollationCentre');
+                                Route::post('/log-item', 'findCollationCentreOrder');
+                                Route::get('/details/{id}', 'viewCollationCentre');
+                                Route::patch('/update/{id}', 'editCollationCentre');
+                                Route::delete('/delete/{id}', 'deleteCollationCentre');
 
-                            Route::prefix('hubs')->group(function (): void {
-                                Route::get('/', 'allCollationCentreHubs');
-                                Route::post('/add', 'addHub');
-                                Route::post('/log-item', 'findPickupLocationOrder');
-                                Route::get('/details/{id}', 'viewHub');
-                                Route::patch('/update/{id}', 'editHub');
-                                Route::delete('/delete/{id}', 'deleteHub');
+                                Route::prefix('hubs')->group(function (): void {
+                                    Route::get('/', 'allCollationCentreHubs');
+                                    Route::post('/add', 'addHub');
+                                    Route::post('/log-item', 'findPickupLocationOrder');
+                                    Route::get('/details/{id}', 'viewHub');
+                                    Route::patch('/update/{id}', 'editHub');
+                                    Route::delete('/delete/{id}', 'deleteHub');
+                                });
+                            });
+
+                            Route::prefix('notification')->group(function (): void {
+                                Route::get('/', 'getNotifications');
+                                Route::get('/details/{id}', 'getNotification');
+                                Route::patch('/mark-read/{id}', 'markRead');
+                            });
+
+                            Route::prefix('shippments')->group(function (): void {
+                                Route::get('/', 'allShippments');
+                                Route::get('/order-finder', 'findOrder');
+                                Route::get('/details/{id}', 'shippmentDetails');
+                                Route::patch('/update/{id}', 'updateShippmentDetails');
                             });
                         });
-
-                        Route::prefix('notification')->group(function (): void {
-                            Route::get('/', 'getNotifications');
-                            Route::get('/details/{id}', 'getNotification');
-                            Route::patch('/mark-read/{id}', 'markRead');
-                        });
-
-                        Route::prefix('shippments')->group(function (): void {
-                            Route::get('/', 'allShippments');
-                            Route::get('/order-finder', 'findOrder');
-                            Route::get('/details/{id}', 'shippmentDetails');
-                            Route::patch('/update/{id}', 'updateShippmentDetails');
-                        });
-                    });
                 });
             });
     });
