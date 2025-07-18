@@ -141,7 +141,7 @@ class SuperAdminService
         if (! $user) {
             return $this->error(null, 'Invalid code', 404);
         }
-        
+
         $user->update([
             'verification_code' => null,
             'verification_code_expire_at' => null,
