@@ -519,9 +519,14 @@ Route::middleware('validate.header')
                         Route::post('/reset/password', 'reset');
                     });
 
-                Route::middleware(['auth:sanctum', 'role:super_admin'])
+                Route::middleware(['auth:sanctum', 'role.super_admin'])
                     ->controller(SuperAdminController::class)
                     ->group(function (): void {
+                        Route::post('/add-user', 'addUser');
+                        Route::get('/profiles', 'getProfiles');
+                        Route::post('/security', 'security');
+                        Route::post('/verify-code', 'verifyCode');
+                        Route::post('/change-password', 'changePassword');
                         Route::get('/profile/{user_id}', 'getProfile');
                     });
             });

@@ -568,7 +568,7 @@ class SellerService extends Controller
         return $this->success($data, 'Top Selling Products');
     }
 
-    public function createAttribute(array $request)
+    public function createAttribute($request)
     {
         $user = User::with('productAttributes')
             ->findOrFail($request->user_id);
