@@ -524,10 +524,10 @@ Route::middleware('validate.header')
                     ->group(function (): void {
                         Route::post('/add-user', 'addUser');
                         Route::get('/profiles', 'getProfiles');
-                        Route::get('/profile/{user_id}', 'getProfile');
                         Route::post('/security', 'security');
                         Route::post('/verify-code', 'verifyCode');
                         Route::post('/change-password', 'changePassword');
+                        Route::get('/profile/{user_id}', 'getProfile');
                     });
             });
     });
