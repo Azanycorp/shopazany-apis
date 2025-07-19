@@ -525,7 +525,7 @@ Route::middleware('validate.header')
 
                             Route::prefix('shippments')->group(function (): void {
                                 Route::get('/', 'allShippments');
-                                Route::get('/order-finder', 'findOrder');
+                                Route::get('/order-finder/{order_number}', 'findOrder');
                                 Route::get('/details/{id}', 'shippmentDetails');
                                 Route::patch('/update/{id}', 'updateShippmentDetails');
                             });
