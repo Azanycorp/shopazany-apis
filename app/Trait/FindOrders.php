@@ -40,47 +40,44 @@ trait FindOrders
             return $this->error(null, 'Hub not found', 404);
         }
 
-        $order = Order::where('order_no', $request->order_number)->first();
-
-        if ($order) {
+        if ($order = Order::firstWhere('order_no', $orderNumber)) {
             return $this->success(new OrderResource($order), 'Order found successfully.');
         }
 
-        $b2bOrder = B2bOrder::where('order_no', $request->order_number)->first();
-
-        if ($b2bOrder) {
-            $resource = new SearchB2BOrderResource($b2bOrder);
-            $array = $resource->toArray(request());
-
-            $items = $array['product_quantity'];
-            $vendor = $array['vendor'];
-            $package = $array['product'];
-            $customer = $array['customer'];
-            $shippment = Shippment::create([
-                'collation_id' => $hub->id,
-                'shippment_id' => Str::random(20),
-                'type' => ShippmentCategory::INCOMING,
-                'package' => $package,
-                'customer' => $customer,
-                'vendor' => $vendor,
-                'status' => $request->status,
-                'priority' => $request->priority,
-                'expected_delivery_date' => $request->expected_delivery_date,
-                'start_origin' => $hub->name,
-                'items' => $items,
-            ]);
-
-            $shippment->activities()->create([
-                'comment' => $request->activity,
-                'note' => $request->note
-            ]);
-
-            $this->createNotification('New Shippment created', 'New Shippment created at ' . $hub->name . 'Pickup station/hub ' . 'by ' . Auth::user()->fullName);
-
-            return $this->success(new ShippmentResource($shippment), 'Item Logged successfully.');
+        if (! $b2bOrder = B2bOrder::firstWhere('order_no', $orderNumber)) {
+            return $this->error(null, 'Order not found.', 404);
         }
 
-        return $this->error(null, 'Order not found.', 404);
+        $resource = new SearchB2BOrderResource($b2bOrder);
+        $array = $resource->toArray(request());
+
+        $items = $array['product_quantity'];
+        $vendor = $array['vendor'];
+        $package = $array['product'];
+        $customer = $array['customer'];
+
+        $shippment = Shippment::create([
+            'collation_id' => $hub->id,
+            'shippment_id' => Str::random(20),
+            'type' => ShippmentCategory::INCOMING,
+            'package' => $package,
+            'customer' => $customer,
+            'vendor' => $vendor,
+            'status' => $request->status,
+            'priority' => $request->priority,
+            'expected_delivery_date' => $request->expected_delivery_date,
+            'start_origin' => $hub->name,
+            'items' => $items,
+        ]);
+
+        $shippment->activities()->create([
+            'comment' => $request->activity,
+            'note' => $request->note
+        ]);
+
+        $this->createNotification('New Shippment created', 'New Shippment created at ' . $hub->name . 'Pickup station/hub ' . 'by ' . Auth::user()->fullName);
+
+        return $this->success(new ShippmentResource($shippment), 'Item Logged successfully.');
     }
 
     public function findCollationOrder($request)
@@ -91,46 +88,43 @@ trait FindOrders
             return $this->error(null, 'Center not found', 404);
         }
 
-        $order = Order::where('order_no', $request->order_number)->first();
-
-        if ($order) {
+        if ($order = Order::firstWhere('order_no', $orderNumber)) {
             return $this->success(new OrderResource($order), 'Order found successfully.');
         }
 
-        $b2bOrder = B2bOrder::where('order_no', $request->order_number)->first();
-
-        if ($b2bOrder) {
-            $resource = new SearchB2BOrderResource($b2bOrder);
-            $array = $resource->toArray(request());
-
-            $items = $array['product_quantity'];
-            $vendor = $array['vendor'];
-            $package = $array['product'];
-            $customer = $array['customer'];
-            $shippment = Shippment::create([
-                'collation_id' => $centre->id,
-                'shippment_id' => Str::random(20),
-                'type' => ShippmentCategory::INCOMING,
-                'package' => $package,
-                'customer' => $customer,
-                'vendor' => $vendor,
-                'status' => $request->status,
-                'priority' => $request->priority,
-                'expected_delivery_date' => $request->expected_delivery_date,
-                'start_origin' => $centre->name,
-                'items' => $items,
-            ]);
-
-            $shippment->activities()->create([
-                'comment' => $request->activity,
-                'note' => $request->note
-            ]);
-
-            $this->createNotification('New Shippment created', 'New Shippment created at ' . $centre->name . 'Collation centre ' . 'by ' . Auth::user()->fullName);
-
-            return $this->success(new ShippmentResource($shippment), 'Item Logged successfully.');
+        if (! $b2bOrder = B2bOrder::firstWhere('order_no', $orderNumber)) {
+            return $this->error(null, 'Order not found.', 404);
         }
 
-        return $this->error(null, 'Order not found.', 404);
+        $resource = new SearchB2BOrderResource($b2bOrder);
+        $array = $resource->toArray(request());
+
+        $items = $array['product_quantity'];
+        $vendor = $array['vendor'];
+        $package = $array['product'];
+        $customer = $array['customer'];
+
+        $shippment = Shippment::create([
+            'collation_id' => $centre->id,
+            'shippment_id' => Str::random(20),
+            'type' => ShippmentCategory::INCOMING,
+            'package' => $package,
+            'customer' => $customer,
+            'vendor' => $vendor,
+            'status' => $request->status,
+            'priority' => $request->priority,
+            'expected_delivery_date' => $request->expected_delivery_date,
+            'start_origin' => $centre->name,
+            'items' => $items,
+        ]);
+
+        $shippment->activities()->create([
+            'comment' => $request->activity,
+            'note' => $request->note
+        ]);
+
+        $this->createNotification('New Shippment created', 'New Shippment created at ' . $centre->name . 'Collation centre ' . 'by ' . Auth::user()->fullName);
+
+        return $this->success(new ShippmentResource($shippment), 'Item Logged successfully.');
     }
 }
