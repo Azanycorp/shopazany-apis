@@ -19,8 +19,10 @@ trait FindOrders
 {
     use SuperAdminNotification;
 
-    public function searchOrder()
+    public function searchOrder($request)
     {
+        $orderNumber = $request->order_nuumber;
+
         if ($order = Order::firstWhere('order_no', $orderNumber)) {
             return $this->success(new OrderResource($order), 'Order found successfully.');
         }
@@ -35,6 +37,7 @@ trait FindOrders
     public function findHubOrder($request)
     {
         $hub = PickupStation::find($request->pickup_id);
+        $orderNumber = $request->order_nuumber;
 
         if (! $hub) {
             return $this->error(null, 'Hub not found', 404);
@@ -83,6 +86,7 @@ trait FindOrders
     public function findCollationOrder($request)
     {
         $centre = CollationCenter::find($request->collation_id);
+        $orderNumber = $request->order_nuumber;
 
         if (! $centre) {
             return $this->error(null, 'Center not found', 404);
