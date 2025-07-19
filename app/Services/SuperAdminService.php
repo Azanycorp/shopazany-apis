@@ -3,11 +3,8 @@
 namespace App\Services;
 
 use App\Models\Admin;
-use App\Models\Order;
 use App\Trait\SignUp;
-use App\Enum\AdminType;
 use App\Enum\PlanStatus;
-use App\Models\B2bOrder;
 use App\Enum\AdminStatus;
 use App\Enum\MailingEnum;
 use App\Enum\OrderStatus;
@@ -21,16 +18,12 @@ use App\Models\ShippingAgent;
 use App\Mail\B2BNewAdminEmail;
 use App\Models\CollationCenter;
 use App\Models\AdminNotification;
-use App\Traits\AdminNotifications;
 use Illuminate\Support\Facades\DB;
 use App\Http\Resources\HubResource;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
-use App\Http\Resources\OrderResource;
 use App\Trait\SuperAdminNotification;
 use App\Mail\AccountVerificationEmail;
-use App\Http\Resources\B2BOrderResource;
 use App\Http\Resources\AdminUserResource;
 use App\Http\Resources\ShippmentResource;
 use App\Http\Resources\ShippingAgentResource;
@@ -40,7 +33,6 @@ use App\Http\Resources\AdminNotificationResource;
 class SuperAdminService
 {
     use HttpResponse, FindOrders, SuperAdminNotification, SignUp;
-
 
     public function getDashboardDetails()
     {
@@ -326,9 +318,9 @@ class SuperAdminService
     }
 
 
-    public function findOrder()
+    public function findOrder(Request $request)
     {
-        return $this->searchOrder();
+        return $this->searchOrder($request);
     }
 
     public function findPickupLocationOrder($request)
