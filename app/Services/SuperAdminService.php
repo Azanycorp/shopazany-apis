@@ -317,8 +317,7 @@ class SuperAdminService
         return $this->success(null, 'Hub deleted successfully.');
     }
 
-
-    public function findOrder(Request $request)
+    public function findOrder($request)
     {
         return $this->searchOrder($request);
     }

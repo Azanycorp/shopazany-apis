@@ -21,7 +21,7 @@ trait FindOrders
 
     public function searchOrder($request)
     {
-        $orderNumber = $request->order_number;
+        $orderNumber = $request->order_nuumber;
 
         if ($order = Order::firstWhere('order_no', $orderNumber)) {
             return $this->success(new OrderResource($order), 'Order found successfully.');
@@ -36,14 +36,17 @@ trait FindOrders
 
     public function findHubOrder($request)
     {
-        $orderNumber = $request->order_number;
-
         $hub = PickupStation::find($request->pickup_id);
+        $orderNumber = $request->order_nuumber;
+
+        if (! $hub) {
+            return $this->error(null, 'Hub not found', 404);
+        }
 
         if ($order = Order::firstWhere('order_no', $orderNumber)) {
             return $this->success(new OrderResource($order), 'Order found successfully.');
         }
-    
+
         if (! $b2bOrder = B2bOrder::firstWhere('order_no', $orderNumber)) {
             return $this->error(null, 'Order not found.', 404);
         }
@@ -72,30 +75,28 @@ trait FindOrders
 
         $shippment->activities()->create([
             'comment' => $request->activity,
-            'note' => $request->note,
+            'note' => $request->note
         ]);
-    
-        $this->createNotification(
-            'New Shippment created',
-            'New Shippment created at ' . $hub->name . ' Pickup station/hub by ' . Auth::user()->fullName
-        );
-    
-        return $this->success(new ShippmentResource($shippment), 'Item logged successfully.');
+
+        $this->createNotification('New Shippment created', 'New Shippment created at ' . $hub->name . 'Pickup station/hub ' . 'by ' . Auth::user()->fullName);
+
+        return $this->success(new ShippmentResource($shippment), 'Item Logged successfully.');
     }
 
     public function findCollationOrder($request)
     {
         $centre = CollationCenter::find($request->collation_id);
+        $orderNumber = $request->order_nuumber;
 
         if (! $centre) {
             return $this->error(null, 'Center not found', 404);
         }
 
-        if ($order = Order::firstWhere('order_no', $request->order_number)) {
+        if ($order = Order::firstWhere('order_no', $orderNumber)) {
             return $this->success(new OrderResource($order), 'Order found successfully.');
         }
 
-        if (! $b2bOrder = B2bOrder::firstWhere('order_no', $request->order_number)) {
+        if (! $b2bOrder = B2bOrder::firstWhere('order_no', $orderNumber)) {
             return $this->error(null, 'Order not found.', 404);
         }
 
@@ -126,10 +127,7 @@ trait FindOrders
             'note' => $request->note
         ]);
 
-        $this->createNotification(
-            'New Shippment created',
-            'New Shippment created at ' . $centre->name . 'Collation centre ' . 'by ' . Auth::user()->fullName
-        );
+        $this->createNotification('New Shippment created', 'New Shippment created at ' . $centre->name . 'Collation centre ' . 'by ' . Auth::user()->fullName);
 
         return $this->success(new ShippmentResource($shippment), 'Item Logged successfully.');
     }
