@@ -573,6 +573,17 @@ class SellerService extends Controller
         $user = User::with('productAttributes')
             ->findOrFail($request->user_id);
 
+        $attributeNames = collect($request['attributes'])->pluck('name')->toArray();
+
+        $existing = $user->productAttributes()
+            ->whereIn('name', $attributeNames)
+            ->pluck('name')
+            ->toArray();
+
+        if (!empty($existing)) {
+            return $this->error(null, 'Attribute(s) already exist: ' . implode(', ', $existing), 400);
+        }
+
         foreach ($request['attributes'] as $attribute) {
             $user->productAttributes()->create([
                 'name' => $attribute['name'],
@@ -587,24 +598,22 @@ class SellerService extends Controller
     public function getAttribute($userId)
     {
         $user = User::with(['productAttributes' => function ($query): void {
-            $query->select('id', 'user_id', 'name', 'value', 'use_for_variation');
-        }])
+                $query->select('id', 'user_id', 'name', 'value', 'use_for_variation');
+            }])
             ->find($userId);
 
         if (! $user) {
             return $this->error(null, 'User not found', 404);
         }
 
-        $data = $user->productAttributes;
-
-        return $this->success($data, 'All Attributes');
+        return $this->success($user->productAttributes, 'All Attributes');
     }
 
     public function getSingleAttribute($attributeId, $userId)
     {
         $user = User::with(['productAttributes' => function ($query): void {
-            $query->select('id', 'user_id', 'name', 'value', 'use_for_variation');
-        }])
+                $query->select('id', 'user_id', 'name', 'value', 'use_for_variation');
+            }])
             ->find($userId);
 
         if (! $user) {
@@ -624,21 +633,29 @@ class SellerService extends Controller
 
     public function updateAttribute($request, $attributeId, $userId)
     {
-        $user = User::with(['productAttributes' => function ($query): void {
-            $query->select('id', 'user_id', 'name', 'value', 'use_for_variation');
-        }])
-            ->find($userId);
+        $user = User::with('productAttributes')->find($userId);
 
         if (! $user) {
             return $this->error(null, 'User not found', 404);
         }
 
         $attribute = $user->productAttributes()
-            ->select('id', 'user_id', 'name', 'value', 'use_for_variation')
-            ->find($attributeId);
+            ->where('id', $attributeId)
+            ->first();
 
         if (! $attribute) {
             return $this->error(null, 'Attribute not found', 404);
+        }
+
+        if ($request->name !== $attribute->name) {
+            $duplicate = $user->productAttributes()
+                ->where('name', $request->name)
+                ->where('id', '!=', $attributeId)
+                ->exists();
+
+            if ($duplicate) {
+                return $this->error(null, 'Another attribute with this name already exists', 400);
+            }
         }
 
         $attribute->update([
