@@ -222,9 +222,9 @@ class AdminController extends Controller
         return $this->superAdminService->allShippments();
     }
 
-    public function findOrder()
+    public function findOrder(Request $request)
     {
-        return $this->superAdminService->findOrder();
+        return $this->superAdminService->findOrder($request);
     }
 
     public function shippmentDetails($id)

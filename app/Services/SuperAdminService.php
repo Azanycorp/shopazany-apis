@@ -3,11 +3,8 @@
 namespace App\Services;
 
 use App\Models\Admin;
-use App\Models\Order;
 use App\Trait\SignUp;
-use App\Enum\AdminType;
 use App\Enum\PlanStatus;
-use App\Models\B2bOrder;
 use App\Enum\AdminStatus;
 use App\Enum\MailingEnum;
 use App\Enum\OrderStatus;
@@ -21,16 +18,12 @@ use App\Models\ShippingAgent;
 use App\Mail\B2BNewAdminEmail;
 use App\Models\CollationCenter;
 use App\Models\AdminNotification;
-use App\Traits\AdminNotifications;
 use Illuminate\Support\Facades\DB;
 use App\Http\Resources\HubResource;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
-use App\Http\Resources\OrderResource;
 use App\Trait\SuperAdminNotification;
 use App\Mail\AccountVerificationEmail;
-use App\Http\Resources\B2BOrderResource;
 use App\Http\Resources\AdminUserResource;
 use App\Http\Resources\ShippmentResource;
 use App\Http\Resources\ShippingAgentResource;
@@ -40,7 +33,6 @@ use App\Http\Resources\AdminNotificationResource;
 class SuperAdminService
 {
     use HttpResponse, FindOrders, SuperAdminNotification, SignUp;
-
 
     public function getDashboardDetails()
     {
@@ -325,10 +317,9 @@ class SuperAdminService
         return $this->success(null, 'Hub deleted successfully.');
     }
 
-
-    public function findOrder()
+    public function findOrder($request)
     {
-        return $this->searchOrder();
+        return $this->searchOrder($request);
     }
 
     public function findPickupLocationOrder($request)
@@ -635,7 +626,7 @@ class SuperAdminService
         $notifications = AdminNotification::latest()->get();
 
         $data = AdminNotificationResource::collection($notifications);
-        
+
         return $this->success($data, 'All notifications');
     }
 
@@ -705,10 +696,13 @@ class SuperAdminService
 
         $shippment->update([
             'current_location' => $request->current_location,
-            'activity' => $request->activity,
             'note' => $request->note,
             'status' => $request->status,
             'destination_name' => $request->destination_name,
+        ]);
+
+        $shippment->activities()->create([
+            'action' => $request->activity
         ]);
 
         return $this->success(null, 'shippment details Updated');

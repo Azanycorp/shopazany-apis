@@ -19,7 +19,8 @@ class SuperAdminProfileResource extends JsonResource
             'first_name' => $this->first_name,
             'last_name' => $this->last_name,
             'email' => $this->email,
-            'permissions' => $this->modules
+            'permissions' => $this->modules,
+            '2fa_enabled' => $this->two_factor_enabled,
         ];
     }
 }
