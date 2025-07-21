@@ -236,4 +236,14 @@ class AdminController extends Controller
     {
         return $this->superAdminService->updateShippmentDetails($request, $id);
     }
+
+    public function readyForDelivery(Request $request, $id)
+    {
+        return $this->superAdminService->readyForDelivery($request, $id);
+    }
+
+    public function readyToSender(Request $request, $id)
+    {
+        return $this->superAdminService->readyToSender($request, $id);
+    }
 }

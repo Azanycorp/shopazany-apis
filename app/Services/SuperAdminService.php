@@ -293,7 +293,7 @@ class SuperAdminService
     public function deleteHub($id)
     {
         $hub = PickupStation::findOrFail($id);
-        
+
         $hub->delete();
 
         return $this->success(null, 'Hub deleted successfully.');
@@ -684,7 +684,50 @@ class SuperAdminService
         ]);
 
         $shippment->activities()->create([
-            'action' => $request->activity
+            'comment' => $request->activity,
+            'note' => $request->note
+        ]);
+
+        return $this->success(null, 'shippment details Updated');
+    }
+
+    public function readyForDelivery($request, $id)
+    {
+        $shippment = Shippment::findOrFail($id);
+
+        $shippment->update([
+            'note' => $request->note,
+            'status' => $request->status,
+            'destination_name' => $request->destination_name,
+            'dispatch_name' => $request->dispatch_name,
+            'dispatch_phone' => $request->dispatch_phone,
+            'expected_delivery_time' => $request->expected_delivery_time,
+        ]);
+
+        $shippment->activities()->create([
+            'comment' => $request->activity,
+            'note' => $request->note
+        ]);
+
+        return $this->success(null, 'shippment details Updated');
+    }
+
+    public function readyToSender($request, $id)
+    {
+        $shippment = Shippment::findOrFail($id);
+
+        $shippment->update([
+            'note' => $request->note,
+            'status' => $request->status,
+            'destination_name' => $request->destination_name,
+            'dispatch_name' => $request->dispatch_name,
+            'dispatch_phone' => $request->dispatch_phone,
+            'expected_delivery_time' => $request->expected_delivery_time,
+        ]);
+
+        $shippment->activities()->create([
+            'comment' => $request->activity,
+            'note' => $request->note
         ]);
 
         return $this->success(null, 'shippment details Updated');

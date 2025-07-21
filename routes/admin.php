@@ -528,6 +528,8 @@ Route::middleware('validate.header')
                                 Route::get('/order-finder/{order_number}', 'findOrder');
                                 Route::get('/details/{id}', 'shippmentDetails');
                                 Route::patch('/update/{id}', 'updateShippmentDetails');
+                                Route::patch('/delivery/{id}', 'readyForDelivery');
+                                Route::patch('/return/{id}', 'returnToSender');
                             });
                         });
                 });
