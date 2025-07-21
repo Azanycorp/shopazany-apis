@@ -27,7 +27,11 @@ class Shippment extends Model
         'dispatch_phone',
         'expected_delivery_time',
         'reciever_name',
-        'reciever_phone'
+        'reciever_phone',
+        'vehicle_number',
+        'delivery_address',
+        'transfer_reason',
+        'destination_hub'
     ];
 
     protected function casts(): array

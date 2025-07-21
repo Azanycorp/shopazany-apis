@@ -246,9 +246,14 @@ class AdminController extends Controller
     {
         return $this->superAdminService->readyToSender($request, $id);
     }
-    
+
     public function readyForPickup(Request $request, $id)
     {
         return $this->superAdminService->readyForPickup($request, $id);
+    }
+
+    public function readyForDispatched(Request $request, $id)
+    {
+        return $this->superAdminService->readyForDispatched($request, $id);
     }
 }

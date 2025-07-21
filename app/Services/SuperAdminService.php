@@ -697,15 +697,15 @@ class SuperAdminService
 
         $shippment->update([
             'status' => $request->status,
-            'destination_name' => $request->destination_name,
             'dispatch_name' => $request->dispatch_name,
             'dispatch_phone' => $request->dispatch_phone,
-            'expected_delivery_time' => $request->expected_delivery_time,
+            'vehicle_number' => $request->vehicle_number,
+            'delivery_address' => $request->delivery_address,
         ]);
 
         $shippment->activities()->create([
             'comment' => $request->activity,
-            'note' => $request->note
+            'note' => $request->activity
         ]);
 
         return $this->success(null, 'shippment details Updated');
@@ -717,10 +717,7 @@ class SuperAdminService
 
         $shippment->update([
             'status' => $request->status,
-            'destination_name' => $request->destination_name,
-            'dispatch_name' => $request->dispatch_name,
-            'dispatch_phone' => $request->dispatch_phone,
-            'expected_delivery_time' => $request->expected_delivery_time,
+            'note' => $request->note,
         ]);
 
         $shippment->activities()->create([
@@ -743,9 +740,32 @@ class SuperAdminService
 
         $shippment->activities()->create([
             'comment' => $request->activity,
-            'note' => $request->note
+            'note' => $request->activity
         ]);
 
         return $this->success(null, 'shippment details Updated');
+    }
+
+    public function readyForDispatched($request, $id)
+    {
+        $shippment = Shippment::findOrFail($id);
+
+        $shippment->update([
+            'status' => $request->status,
+            'destination_name' => $request->destination_name,
+            'dispatch_name' => $request->dispatch_name,
+            'dispatch_phone' => $request->dispatch_phone,
+            'expected_delivery_time' => $request->expected_delivery_time,
+            'vehicle_number' => $request->vehicle_number,
+            'delivery_address' => $request->delivery_address,
+            'note' => $request->note,
+        ]);
+
+        $shippment->activities()->create([
+            'comment' => $request->activity,
+            'note' => $request->note
+        ]);
+
+        return $this->success(null, 'shippment dispatched');
     }
 }

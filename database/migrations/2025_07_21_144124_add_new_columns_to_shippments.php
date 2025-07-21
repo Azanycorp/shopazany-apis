@@ -14,6 +14,10 @@ return new class extends Migration
         Schema::table('shippments', function (Blueprint $table) {
             $table->string('reciever_name')->nullable();
             $table->string('reciever_phone')->nullable();
+            $table->string('vehicle_number')->nullable();
+            $table->string('delivery_address')->nullable();
+            $table->text('transfer_reason')->nullable();
+            $table->string('destination_hub')->nullable();
         });
     }
 
@@ -23,7 +27,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('shippments', function (Blueprint $table) {
-            $table->dropColumn(['reciever_name', 'reciever_phone']);
+            $table->dropColumn(['reciever_name', 'vehicle_number','transfer_reason','destination_hub', 'delivery_address', 'reciever_phone']);
         });
     }
 };

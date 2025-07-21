@@ -531,6 +531,7 @@ Route::middleware('validate.header')
                                 Route::patch('/delivery/{id}', 'readyForDelivery');
                                 Route::patch('/return/{id}', 'returnToSender');
                                 Route::patch('/pickup/{id}', 'readyForPickup');
+                                Route::patch('/dispatched/{id}', 'readyForDispatched');
                             });
                         });
                 });
