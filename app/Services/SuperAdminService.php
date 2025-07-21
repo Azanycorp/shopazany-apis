@@ -676,17 +676,20 @@ class SuperAdminService
     {
         $shippment = Shippment::findOrFail($id);
 
-        $shippment->update([
-            'current_location' => $request->current_location,
-            'note' => $request->note,
-            'status' => $request->status,
-            'destination_name' => $request->destination_name,
-        ]);
+        DB::transaction(function () use ($shippment, $request) {
 
-        $shippment->activities()->create([
-            'comment' => $request->activity,
-            'note' => $request->note
-        ]);
+            $shippment->update([
+                'current_location' => $request->current_location,
+                'note' => $request->note,
+                'status' => $request->status,
+                'destination_name' => $request->destination_name,
+            ]);
+
+            $shippment->activities()->create([
+                'comment' => $request->activity,
+                'note' => $request->note
+            ]);
+        });
 
         return $this->success(new ShippmentResource($shippment), 'shippment details Updated');
     }
@@ -694,19 +697,22 @@ class SuperAdminService
     public function readyForDelivery($request, $id)
     {
         $shippment = Shippment::findOrFail($id);
+        
+        DB::transaction(function () use ($shippment, $request) {
 
-        $shippment->update([
-            'status' => $request->status,
-            'dispatch_name' => $request->dispatch_name,
-            'dispatch_phone' => $request->dispatch_phone,
-            'vehicle_number' => $request->vehicle_number,
-            'delivery_address' => $request->delivery_address,
-        ]);
+            $shippment->update([
+                'status' => $request->status,
+                'dispatch_name' => $request->dispatch_name,
+                'dispatch_phone' => $request->dispatch_phone,
+                'vehicle_number' => $request->vehicle_number,
+                'delivery_address' => $request->delivery_address,
+            ]);
 
-        $shippment->activities()->create([
-            'comment' => $request->activity,
-            'note' => $request->activity
-        ]);
+            $shippment->activities()->create([
+                'comment' => $request->activity,
+                'note' => $request->activity
+            ]);
+        });
 
         return $this->success(new ShippmentResource($shippment), 'shippment details Updated');
     }
@@ -715,15 +721,18 @@ class SuperAdminService
     {
         $shippment = Shippment::findOrFail($id);
 
-        $shippment->update([
-            'status' => $request->status,
-            'note' => $request->note,
-        ]);
+        DB::transaction(function () use ($shippment, $request) {
 
-        $shippment->activities()->create([
-            'comment' => $request->activity,
-            'note' => $request->note
-        ]);
+            $shippment->update([
+                'status' => $request->status,
+                'note' => $request->note,
+            ]);
+
+            $shippment->activities()->create([
+                'comment' => $request->activity,
+                'note' => $request->note
+            ]);
+        });
 
         return $this->success(new ShippmentResource($shippment), 'shippment details Updated');
     }
@@ -732,16 +741,19 @@ class SuperAdminService
     {
         $shippment = Shippment::findOrFail($id);
 
-        $shippment->update([
-            'status' => $request->status,
-            'reciever_name' => $request->reciever_name,
-            'reciever_phone' => $request->reciever_phone,
-        ]);
+        DB::transaction(function () use ($shippment, $request) {
 
-        $shippment->activities()->create([
-            'comment' => $request->activity,
-            'note' => $request->activity
-        ]);
+            $shippment->update([
+                'status' => $request->status,
+                'reciever_name' => $request->reciever_name,
+                'reciever_phone' => $request->reciever_phone,
+            ]);
+
+            $shippment->activities()->create([
+                'comment' => $request->activity,
+                'note' => $request->activity
+            ]);
+        });
 
         return $this->success(new ShippmentResource($shippment), 'shippment details Updated');
     }
@@ -750,24 +762,28 @@ class SuperAdminService
     {
         $shippment = Shippment::findOrFail($id);
 
-        $shippment->update([
-            'status' => $request->status,
-            'destination_name' => $request->destination_name,
-            'dispatch_name' => $request->dispatch_name,
-            'dispatch_phone' => $request->dispatch_phone,
-            'expected_delivery_time' => $request->expected_delivery_time,
-            'vehicle_number' => $request->vehicle_number,
-            'delivery_address' => $request->delivery_address,
-            'note' => $request->note,
-        ]);
+        DB::transaction(function () use ($shippment, $request) {
 
-        $shippment->activities()->create([
-            'comment' => $request->activity,
-            'note' => $request->note
-        ]);
+            $shippment->update([
+                'status' => $request->status,
+                'destination_name' => $request->destination_name,
+                'dispatch_name' => $request->dispatch_name,
+                'dispatch_phone' => $request->dispatch_phone,
+                'expected_delivery_time' => $request->expected_delivery_time,
+                'vehicle_number' => $request->vehicle_number,
+                'delivery_address' => $request->delivery_address,
+                'note' => $request->note,
+            ]);
+
+            $shippment->activities()->create([
+                'comment' => $request->activity,
+                'note' => $request->note
+            ]);
+        });
 
         return $this->success(new ShippmentResource($shippment), 'shippment dispatched');
     }
+
 
     public function transferShippment($request, $id)
     {
@@ -776,18 +792,21 @@ class SuperAdminService
         if ($shippment->collation_id) {
             return $this->error(null, 'shippment belongs to collation centre');
         }
-        
-        $shippment->update([
-            'status' => $request->status,
-            'transfer_reason' => $request->transfer_reason,
-            'hub_id' => $request->hub_id,
-            'note' => $request->note,
-        ]);
 
-        $shippment->activities()->create([
-            'comment' => $request->activity,
-            'note' => $request->note
-        ]);
+        DB::transaction(function () use ($shippment, $request) {
+
+            $shippment->update([
+                'status' => $request->status,
+                'transfer_reason' => $request->transfer_reason,
+                'hub_id' => $request->hub_id,
+                'note' => $request->note,
+            ]);
+
+            $shippment->activities()->create([
+                'comment' => $request->activity,
+                'note' => $request->note
+            ]);
+        });
 
         return $this->success(new ShippmentResource($shippment), 'shippment transfered');
     }
