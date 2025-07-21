@@ -688,7 +688,7 @@ class SuperAdminService
             'note' => $request->note
         ]);
 
-        return $this->success(null, 'shippment details Updated');
+        return $this->success(new ShippmentResource($shippment), 'shippment details Updated');
     }
 
     public function readyForDelivery($request, $id)
@@ -708,10 +708,10 @@ class SuperAdminService
             'note' => $request->activity
         ]);
 
-        return $this->success(null, 'shippment details Updated');
+        return $this->success(new ShippmentResource($shippment), 'shippment details Updated');
     }
 
-    public function readyToSender($request, $id)
+    public function returnToSender($request, $id)
     {
         $shippment = Shippment::findOrFail($id);
 
@@ -725,7 +725,7 @@ class SuperAdminService
             'note' => $request->note
         ]);
 
-        return $this->success(null, 'shippment details Updated');
+        return $this->success(new ShippmentResource($shippment), 'shippment details Updated');
     }
 
     public function readyForPickup($request, $id)
@@ -743,7 +743,7 @@ class SuperAdminService
             'note' => $request->activity
         ]);
 
-        return $this->success(null, 'shippment details Updated');
+        return $this->success(new ShippmentResource($shippment), 'shippment details Updated');
     }
 
     public function readyForDispatched($request, $id)
@@ -766,13 +766,17 @@ class SuperAdminService
             'note' => $request->note
         ]);
 
-        return $this->success(null, 'shippment dispatched');
+        return $this->success(new ShippmentResource($shippment), 'shippment dispatched');
     }
 
     public function transferShippment($request, $id)
     {
         $shippment = Shippment::findOrFail($id);
 
+        if ($shippment->collation_id) {
+            return $this->error(null, 'shippment belongs to collation centre');
+        }
+        
         $shippment->update([
             'status' => $request->status,
             'transfer_reason' => $request->transfer_reason,
@@ -785,6 +789,6 @@ class SuperAdminService
             'note' => $request->note
         ]);
 
-        return $this->success(null, 'shippment dispatched');
+        return $this->success(new ShippmentResource($shippment), 'shippment transfered');
     }
 }

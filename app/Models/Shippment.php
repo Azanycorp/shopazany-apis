@@ -42,6 +42,16 @@ class Shippment extends Model
         ];
     }
 
+    public function collationCentre()
+    {
+        return $this->belongsTo(CollationCenter::class, 'collation_id');
+    }
+    
+    public function hub()
+    {
+        return $this->belongsTo(PickupStation::class, 'hub_id');
+    }
+
     public function activities()
     {
         return $this->hasMany(ShippmentActivity::class, 'shippment_id');
