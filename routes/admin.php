@@ -530,6 +530,7 @@ Route::middleware('validate.header')
                                 Route::patch('/update/{id}', 'updateShippmentDetails');
                                 Route::patch('/delivery/{id}', 'readyForDelivery');
                                 Route::patch('/return/{id}', 'returnToSender');
+                                Route::patch('/pickup/{id}', 'readyForPickup');
                             });
                         });
                 });
