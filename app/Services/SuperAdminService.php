@@ -9,7 +9,6 @@ use App\Enum\AdminStatus;
 use App\Enum\MailingEnum;
 use App\Enum\OrderStatus;
 use App\Models\Shippment;
-use App\Trait\FindOrders;
 use App\Enum\CentreStatus;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
@@ -29,10 +28,15 @@ use App\Http\Resources\ShippmentResource;
 use App\Http\Resources\ShippingAgentResource;
 use App\Http\Resources\CollationCentreResource;
 use App\Http\Resources\AdminNotificationResource;
+use App\Http\Resources\OrderResource;
+use App\Models\B2bOrder;
+use App\Models\Order;
+use App\Http\Resources\SearchB2BOrderResource;
+use App\Enum\ShippmentCategory;
 
 class SuperAdminService
 {
-    use HttpResponse, FindOrders, SuperAdminNotification, SignUp;
+    use HttpResponse, SuperAdminNotification, SignUp;
 
     public function getDashboardDetails()
     {
@@ -105,7 +109,6 @@ class SuperAdminService
             CentreStatus::PROCESSING,
         ])->first();
 
-
         $data = [
             'total_centers' => $center_counts->total_centers ?? 0,
             'active_centers' =>  $center_counts->active ?? 0,
@@ -168,7 +171,6 @@ class SuperAdminService
 
         return $this->success($data, 'Centre details');
     }
-
 
     public function editCollationCentre($request, $id)
     {
@@ -301,17 +303,115 @@ class SuperAdminService
 
     public function findOrder($request)
     {
-        return $this->searchOrder($request);
+        $orderNumber = $request->order_nuumber;
+
+        if ($order = Order::firstWhere('order_no', $orderNumber)) {
+            return $this->success(new OrderResource($order), 'Order found successfully.');
+        }
+
+        if ($b2bOrder = B2bOrder::firstWhere('order_no', $orderNumber)) {
+            return $this->success(new SearchB2BOrderResource($b2bOrder), 'B2B order found successfully.');
+        }
+
+        return $this->error(null, 'Order not found.', 404);
     }
 
     public function findPickupLocationOrder($request)
     {
-        return $this->findHubOrder($request);
+        $hub = PickupStation::find($request->pickup_id);
+        $orderNumber = $request->order_nuumber;
+
+        if (! $hub) {
+            return $this->error(null, 'Hub not found', 404);
+        }
+
+        if ($order = Order::firstWhere('order_no', $orderNumber)) {
+            return $this->success(new OrderResource($order), 'Order found successfully.');
+        }
+
+        if (! $b2bOrder = B2bOrder::firstWhere('order_no', $orderNumber)) {
+            return $this->error(null, 'Order not found.', 404);
+        }
+
+        $resource = new SearchB2BOrderResource($b2bOrder);
+        $array = $resource->toArray(request());
+
+        $items = $array['product_quantity'];
+        $vendor = $array['vendor'];
+        $package = $array['product'];
+        $customer = $array['customer'];
+
+        $shippment = Shippment::create([
+            'collation_id' => $hub->id,
+            'shippment_id' => Str::random(20),
+            'type' => ShippmentCategory::INCOMING,
+            'package' => $package,
+            'customer' => $customer,
+            'vendor' => $vendor,
+            'status' => $request->status,
+            'priority' => $request->priority,
+            'expected_delivery_date' => $request->expected_delivery_date,
+            'start_origin' => $hub->name,
+            'items' => $items,
+        ]);
+
+        $shippment->activities()->create([
+            'comment' => $request->activity,
+            'note' => $request->note
+        ]);
+
+        $this->createNotification('New Shippment created', 'New Shippment created at ' . $hub->name . 'Pickup station/hub ' . 'by ' . Auth::user()->fullName);
+
+        return $this->success(new ShippmentResource($shippment), 'Item Logged successfully.');
     }
 
     public function findCollationCentreOrder($request)
     {
-        return $this->findCollationOrder($request);
+        $centre = CollationCenter::find($request->collation_id);
+        $orderNumber = $request->order_nuumber;
+
+        if (! $centre) {
+            return $this->error(null, 'Center not found', 404);
+        }
+
+        if ($order = Order::firstWhere('order_no', $orderNumber)) {
+            return $this->success(new OrderResource($order), 'Order found successfully.');
+        }
+
+        if (! $b2bOrder = B2bOrder::firstWhere('order_no', $orderNumber)) {
+            return $this->error(null, 'Order not found.', 404);
+        }
+
+        $resource = new SearchB2BOrderResource($b2bOrder);
+        $array = $resource->toArray(request());
+
+        $items = $array['product_quantity'];
+        $vendor = $array['vendor'];
+        $package = $array['product'];
+        $customer = $array['customer'];
+
+        $shippment = Shippment::create([
+            'collation_id' => $centre->id,
+            'shippment_id' => Str::random(20),
+            'type' => ShippmentCategory::INCOMING,
+            'package' => $package,
+            'customer' => $customer,
+            'vendor' => $vendor,
+            'status' => $request->status,
+            'priority' => $request->priority,
+            'expected_delivery_date' => $request->expected_delivery_date,
+            'start_origin' => $centre->name,
+            'items' => $items,
+        ]);
+
+        $shippment->activities()->create([
+            'comment' => $request->activity,
+            'note' => $request->note
+        ]);
+
+        $this->createNotification('New Shippment created', 'New Shippment created at ' . $centre->name . 'Collation centre ' . 'by ' . Auth::user()->fullName);
+
+        return $this->success(new ShippmentResource($shippment), 'Item Logged successfully.');
     }
 
     // Admin User Management
@@ -498,7 +598,7 @@ class SuperAdminService
     public function adminProfile()
     {
         $authUser = userAuth();
-        $user = Admin::where('id', $authUser->id)->firstOrFail();
+        $user = Admin::findOrFail($authUser->id);
 
         $data = new AdminUserResource($user);
 
@@ -508,8 +608,7 @@ class SuperAdminService
     public function updateAdminProfile($request)
     {
         $authUser = userAuth();
-        $user = Admin::where('id', $authUser->id)
-            ->firstOrFail();
+        $user = Admin::findOrFail($authUser->id);
 
         $user->update([
             'first_name' => $request->first_name,
@@ -528,8 +627,7 @@ class SuperAdminService
     public function enableTwoFactor($request)
     {
         $authUser = userAuth();
-        $user = Admin::where('id', $authUser->id)
-            ->firstOrFail();
+        $user = Admin::findOrFail($authUser->id);
 
         $user->update([
             'two_factor_enabled' => $request->two_factor_enabled,
@@ -537,17 +635,16 @@ class SuperAdminService
 
         $this->createNotification('Two Factor Authentication Updated', 'Two factor authentication updated for ' . $user->fullName);
 
-        return $this->success('Settings updated');
+        return $this->success(null, 'Settings updated');
     }
 
     public function updateAdminPassword($request)
     {
         $authUser = userAuth();
-        $user = Admin::where('id', $authUser->id)
-            ->firstOrFail();
+        $user = Admin::findOrFail($authUser->id);
 
-        if (!Hash::check($request->old_password, $user->password)) {
-            return $this->error('Old password is incorrect.', 400);
+        if (! Hash::check($request->old_password, $user->password)) {
+            return $this->error(null, 'Old password is incorrect.', 400);
         }
 
         $user->update([
@@ -561,11 +658,11 @@ class SuperAdminService
     {
         $admin = userAuth();
 
-        if (!$admin->email) {
-            return $this->error('Oops! No email found to send code.', 404);
+        if (! $admin->email) {
+            return $this->error(null, 'Oops! No email found to send code.', 404);
         }
 
-        $verificationCode = mt_rand(1000, 9999);
+        $verificationCode = generateVerificationCode(4);
         $expiry = now()->addMinutes(30);
 
         $admin->update([
@@ -581,25 +678,26 @@ class SuperAdminService
         ];
         mailSend($type, $admin, $subject, $mail_class, $data);
 
-        return $this->success('A verification code has been sent to you');
+        return $this->success(null, 'A verification code has been sent to you');
     }
 
     public function verifyCode($request)
     {
         $user = Admin::where('verification_code', $request->verification_code)->first();
-        if (!$user) {
-            return $this->error('Invalide code entered, please try it again.', 422);
+
+        if (! $user) {
+            return $this->error(null, 'Invalide code entered, please try it again.', 422);
         }
 
         if ($user->verification_code_expire_at < now()) {
-            return $this->error('Verification Code has Expired!', 404);
+            return $this->error(null, 'Verification Code has Expired!', 404);
         }
 
         $user->update([
             'verification_code' => null,
             'verification_code_expire_at' => null,
         ]);
-        return $this->success("Code Verified");
+        return $this->success(null, "Code Verified");
     }
 
     //AdminNotification
@@ -697,7 +795,7 @@ class SuperAdminService
     public function readyForDelivery($request, $id)
     {
         $shippment = Shippment::findOrFail($id);
-        
+
         DB::transaction(function () use ($shippment, $request) {
 
             $shippment->update([
