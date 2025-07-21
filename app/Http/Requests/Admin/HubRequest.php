@@ -23,7 +23,6 @@ class HubRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'collation_center_id' => ['required', 'numeric', 'exists:collation_centers,id'],
             'location' => ['required'],
             'note' => ['required'],
             'city' => ['required'],
