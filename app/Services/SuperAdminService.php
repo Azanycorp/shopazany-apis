@@ -36,7 +36,7 @@ class SuperAdminService
 
     public function getDashboardDetails()
     {
-        $centers = CollationCenter::with(['country', 'hubs.country'])->latest('id')->get();
+        $centers = CollationCenter::with('country')->latest()->get();
 
         $collation_counts = CollationCenter::selectRaw('
         COUNT(*) as total_centers,
@@ -81,7 +81,7 @@ class SuperAdminService
 
     public function allCollationCentres()
     {
-        $query = CollationCenter::with(['country', 'hubs.country'])
+        $query = CollationCenter::with('country')
             ->when(request()->status, function ($q, $status) {
                 $q->where('status', $status);
             })
@@ -134,7 +134,7 @@ class SuperAdminService
 
     public function viewCollationCentre($id)
     {
-        $centre = CollationCenter::with(['country', 'hubs.country'])->find($id);
+        $centre = CollationCenter::with('country')->find($id);
 
         if (! $centre) {
             return $this->error(null, 'Centre not found', 404);
@@ -152,7 +152,7 @@ class SuperAdminService
             OrderStatus::READY_FOR_PICKUP,
             OrderStatus::IN_TRANSIT
         ])
-            ->where('hub_id', $centre->id)
+            ->where('collation_id', $centre->id)
             ->first();
 
         $shippments = Shippment::where('collation_id', $centre->id)->latest()->get();
@@ -192,15 +192,7 @@ class SuperAdminService
 
     public function deleteCollationCentre($id)
     {
-        $centre = CollationCenter::with('hubs')->find($id);
-
-        if (! $centre) {
-            return $this->error(null, 'Centre not found', 404);
-        }
-
-        if (count($centre->hubs) > 0) {
-            return $this->error(null, 'Centre can not be deleted because it has content', 422);
-        }
+        $centre = CollationCenter::findOrFail($id);
 
         $centre->delete();
 
@@ -210,7 +202,7 @@ class SuperAdminService
     // Hubs under Collation centers
     public function allHubs()
     {
-        $hubs = PickupStation::with(['country', 'collationCenter'])->latest()->get();
+        $hubs = PickupStation::with('country')->latest()->get();
 
         $total_hubs = PickupStation::count();
 
@@ -232,7 +224,6 @@ class SuperAdminService
     public function addHub($request)
     {
         $hub = PickupStation::create([
-            'collation_center_id' => $request->collation_center_id,
             'name' => $request->name,
             'location' => $request->location,
             'note' => $request->note,
@@ -248,11 +239,7 @@ class SuperAdminService
 
     public function viewHub($id)
     {
-        $hub = PickupStation::with(['country', 'collationCenter'])->find($id);
-
-        if (! $hub) {
-            return $this->error(null, 'Hub not found', 404);
-        }
+        $hub = PickupStation::with('country')->findOrFail($id);
 
         $order_counts = Shippment::selectRaw('
         COUNT(*) as total_orders,
@@ -292,7 +279,6 @@ class SuperAdminService
         }
 
         $hub->update([
-            'collation_center_id' => $request->collation_center_id ?? $hub->collation_center_id,
             'name' => $request->name ?? $hub->name,
             'location' => $request->location ?? $hub->location,
             'note' => $request->note ?? $hub->note,
@@ -306,12 +292,8 @@ class SuperAdminService
 
     public function deleteHub($id)
     {
-        $hub = PickupStation::find($id);
-
-        if (! $hub) {
-            return $this->error(null, 'Hub not found', 404);
-        }
-
+        $hub = PickupStation::findOrFail($id);
+        
         $hub->delete();
 
         return $this->success(null, 'Hub deleted successfully.');
