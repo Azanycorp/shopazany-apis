@@ -768,4 +768,23 @@ class SuperAdminService
 
         return $this->success(null, 'shippment dispatched');
     }
+
+    public function transferShippment($request, $id)
+    {
+        $shippment = Shippment::findOrFail($id);
+
+        $shippment->update([
+            'status' => $request->status,
+            'transfer_reason' => $request->transfer_reason,
+            'hub_id' => $request->hub_id,
+            'note' => $request->note,
+        ]);
+
+        $shippment->activities()->create([
+            'comment' => $request->activity,
+            'note' => $request->note
+        ]);
+
+        return $this->success(null, 'shippment dispatched');
+    }
 }

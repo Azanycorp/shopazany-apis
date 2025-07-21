@@ -30,8 +30,7 @@ class Shippment extends Model
         'reciever_phone',
         'vehicle_number',
         'delivery_address',
-        'transfer_reason',
-        'destination_hub'
+        'transfer_reason'
     ];
 
     protected function casts(): array
