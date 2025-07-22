@@ -303,7 +303,7 @@ class SuperAdminService
 
     public function findOrder($request)
     {
-        $orderNumber = $request->order_nuumber;
+        $orderNumber = $request->order_number;
 
         if ($order = Order::firstWhere('order_no', $orderNumber)) {
             return $this->success(new OrderResource($order), 'Order found successfully.');
@@ -319,7 +319,7 @@ class SuperAdminService
     public function findPickupLocationOrder($request)
     {
         $hub = PickupStation::find($request->pickup_id);
-        $orderNumber = $request->order_nuumber;
+        $orderNumber = $request->order_number;
 
         if (! $hub) {
             return $this->error(null, 'Hub not found', 404);
@@ -342,8 +342,7 @@ class SuperAdminService
         $customer = $array['customer'];
 
         $shippment = Shippment::create([
-            'collation_id' => $hub->id,
-            'shippment_id' => Str::random(20),
+            'hub_id' => $hub->id,
             'type' => ShippmentCategory::INCOMING,
             'package' => $package,
             'customer' => $customer,
@@ -368,7 +367,7 @@ class SuperAdminService
     public function findCollationCentreOrder($request)
     {
         $centre = CollationCenter::find($request->collation_id);
-        $orderNumber = $request->order_nuumber;
+        $orderNumber = $request->order_number;
 
         if (! $centre) {
             return $this->error(null, 'Center not found', 404);
@@ -392,7 +391,6 @@ class SuperAdminService
 
         $shippment = Shippment::create([
             'collation_id' => $centre->id,
-            'shippment_id' => Str::random(20),
             'type' => ShippmentCategory::INCOMING,
             'package' => $package,
             'customer' => $customer,

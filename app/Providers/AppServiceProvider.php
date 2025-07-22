@@ -2,23 +2,25 @@
 
 namespace App\Providers;
 
-use App\Contracts\B2BRepositoryInterface;
-use App\Models\Order;
 use App\Models\User;
-use App\Observers\OrderObserver;
-use App\Observers\UserObserver;
-use App\Repositories\B2BProductRepository;
-use App\Repositories\B2BSellerShippingRepository;
-use Illuminate\Cache\RateLimiting\Limit;
-use Illuminate\Database\Eloquent\Model;
+use App\Models\Order;
+use App\Models\Shippment;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Facades\URL;
-use Illuminate\Support\ServiceProvider;
-use Illuminate\Validation\Rules\Password;
-use Laravel\Sanctum\PersonalAccessToken;
 use Laravel\Sanctum\Sanctum;
+use App\Observers\UserObserver;
+use App\Observers\OrderObserver;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\URL;
+use App\Observers\ShippmentObserver;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\ServiceProvider;
+use Illuminate\Cache\RateLimiting\Limit;
+use Laravel\Sanctum\PersonalAccessToken;
+use App\Contracts\B2BRepositoryInterface;
+use Illuminate\Validation\Rules\Password;
+use App\Repositories\B2BProductRepository;
+use Illuminate\Support\Facades\RateLimiter;
+use App\Repositories\B2BSellerShippingRepository;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -55,6 +57,7 @@ class AppServiceProvider extends ServiceProvider
 
         User::observe(UserObserver::class);
         Order::observe(OrderObserver::class);
+        Shippment::observe(ShippmentObserver::class);
 
         $this->configureCommands();
         $this->configureModels();
