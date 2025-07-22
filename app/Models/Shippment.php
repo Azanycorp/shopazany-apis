@@ -26,6 +26,11 @@ class Shippment extends Model
         'destination_name',
         'dispatch_phone',
         'expected_delivery_time',
+        'reciever_name',
+        'reciever_phone',
+        'vehicle_number',
+        'delivery_address',
+        'transfer_reason'
     ];
 
     protected function casts(): array
@@ -35,6 +40,16 @@ class Shippment extends Model
             'customer' => 'array',
             'vendor' => 'array',
         ];
+    }
+
+    public function collationCentre()
+    {
+        return $this->belongsTo(CollationCenter::class, 'collation_id');
+    }
+    
+    public function hub()
+    {
+        return $this->belongsTo(PickupStation::class, 'hub_id');
     }
 
     public function activities()

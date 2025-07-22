@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Requests\Admin;
+namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class HubRequest extends FormRequest
+class TransferShippmentRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,11 +22,7 @@ class HubRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:255'],
-            'location' => ['required'],
-            'note' => ['required'],
-            'city' => ['required'],
-            'country_id' => ['required', 'numeric', 'exists:countries,id'],
+            'hub_id' => ['required', 'integer', 'exists:pickup_stations,id'],
         ];
     }
 }

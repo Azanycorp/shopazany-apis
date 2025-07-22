@@ -40,7 +40,7 @@ class SuperAdminService
 
     public function getDashboardDetails()
     {
-        $centers = CollationCenter::with(['country', 'hubs.country'])->latest('id')->get();
+        $centers = CollationCenter::with('country')->latest()->get();
 
         $collation_counts = CollationCenter::selectRaw('
         COUNT(*) as total_centers,
@@ -85,7 +85,7 @@ class SuperAdminService
 
     public function allCollationCentres()
     {
-        $query = CollationCenter::with(['country', 'hubs.country'])
+        $query = CollationCenter::with('country')
             ->when(request()->status, function ($q, $status) {
                 $q->where('status', $status);
             })
@@ -137,7 +137,7 @@ class SuperAdminService
 
     public function viewCollationCentre($id)
     {
-        $centre = CollationCenter::with(['country', 'hubs.country'])->find($id);
+        $centre = CollationCenter::with('country')->find($id);
 
         if (! $centre) {
             return $this->error(null, 'Centre not found', 404);
@@ -155,7 +155,7 @@ class SuperAdminService
             OrderStatus::READY_FOR_PICKUP,
             OrderStatus::IN_TRANSIT
         ])
-            ->where('hub_id', $centre->id)
+            ->where('collation_id', $centre->id)
             ->first();
 
         $shippments = Shippment::where('collation_id', $centre->id)->latest()->get();
@@ -194,15 +194,7 @@ class SuperAdminService
 
     public function deleteCollationCentre($id)
     {
-        $centre = CollationCenter::with('hubs')->find($id);
-
-        if (! $centre) {
-            return $this->error(null, 'Centre not found', 404);
-        }
-
-        if (! $centre->hubs->isEmpty()) {
-            return $this->error(null, 'Centre can not be deleted because it has content', 422);
-        }
+        $centre = CollationCenter::findOrFail($id);
 
         $centre->delete();
 
@@ -212,7 +204,7 @@ class SuperAdminService
     // Hubs under Collation centers
     public function allHubs()
     {
-        $hubs = PickupStation::with(['country', 'collationCenter'])->latest()->get();
+        $hubs = PickupStation::with('country')->latest()->get();
 
         $total_hubs = PickupStation::count();
 
@@ -234,7 +226,6 @@ class SuperAdminService
     public function addHub($request)
     {
         $hub = PickupStation::create([
-            'collation_center_id' => $request->collation_center_id,
             'name' => $request->name,
             'location' => $request->location,
             'note' => $request->note,
@@ -250,11 +241,7 @@ class SuperAdminService
 
     public function viewHub($id)
     {
-        $hub = PickupStation::with(['country', 'collationCenter'])->find($id);
-
-        if (! $hub) {
-            return $this->error(null, 'Hub not found', 404);
-        }
+        $hub = PickupStation::with('country')->findOrFail($id);
 
         $order_counts = Shippment::selectRaw('
         COUNT(*) as total_orders,
@@ -294,7 +281,6 @@ class SuperAdminService
         }
 
         $hub->update([
-            'collation_center_id' => $request->collation_center_id ?? $hub->collation_center_id,
             'name' => $request->name ?? $hub->name,
             'location' => $request->location ?? $hub->location,
             'note' => $request->note ?? $hub->note,
@@ -308,11 +294,7 @@ class SuperAdminService
 
     public function deleteHub($id)
     {
-        $hub = PickupStation::find($id);
-
-        if (! $hub) {
-            return $this->error(null, 'Hub not found', 404);
-        }
+        $hub = PickupStation::findOrFail($id);
 
         $hub->delete();
 
@@ -792,17 +774,138 @@ class SuperAdminService
     {
         $shippment = Shippment::findOrFail($id);
 
-        $shippment->update([
-            'current_location' => $request->current_location,
-            'note' => $request->note,
-            'status' => $request->status,
-            'destination_name' => $request->destination_name,
-        ]);
+        DB::transaction(function () use ($shippment, $request) {
 
-        $shippment->activities()->create([
-            'action' => $request->activity
-        ]);
+            $shippment->update([
+                'current_location' => $request->current_location,
+                'note' => $request->note,
+                'status' => $request->status,
+                'destination_name' => $request->destination_name,
+            ]);
 
-        return $this->success(null, 'shippment details Updated');
+            $shippment->activities()->create([
+                'comment' => $request->activity,
+                'note' => $request->note
+            ]);
+        });
+
+        return $this->success(new ShippmentResource($shippment), 'shippment details Updated');
+    }
+
+    public function readyForDelivery($request, $id)
+    {
+        $shippment = Shippment::findOrFail($id);
+
+        DB::transaction(function () use ($shippment, $request) {
+
+            $shippment->update([
+                'status' => $request->status,
+                'dispatch_name' => $request->dispatch_name,
+                'dispatch_phone' => $request->dispatch_phone,
+                'vehicle_number' => $request->vehicle_number,
+                'delivery_address' => $request->delivery_address,
+            ]);
+
+            $shippment->activities()->create([
+                'comment' => $request->activity,
+                'note' => $request->activity
+            ]);
+        });
+
+        return $this->success(new ShippmentResource($shippment), 'shippment details Updated');
+    }
+
+    public function returnToSender($request, $id)
+    {
+        $shippment = Shippment::findOrFail($id);
+
+        DB::transaction(function () use ($shippment, $request) {
+
+            $shippment->update([
+                'status' => $request->status,
+                'note' => $request->note,
+            ]);
+
+            $shippment->activities()->create([
+                'comment' => $request->activity,
+                'note' => $request->note
+            ]);
+        });
+
+        return $this->success(new ShippmentResource($shippment), 'shippment details Updated');
+    }
+
+    public function readyForPickup($request, $id)
+    {
+        $shippment = Shippment::findOrFail($id);
+
+        DB::transaction(function () use ($shippment, $request) {
+
+            $shippment->update([
+                'status' => $request->status,
+                'reciever_name' => $request->reciever_name,
+                'reciever_phone' => $request->reciever_phone,
+            ]);
+
+            $shippment->activities()->create([
+                'comment' => $request->activity,
+                'note' => $request->activity
+            ]);
+        });
+
+        return $this->success(new ShippmentResource($shippment), 'shippment details Updated');
+    }
+
+    public function readyForDispatched($request, $id)
+    {
+        $shippment = Shippment::findOrFail($id);
+
+        DB::transaction(function () use ($shippment, $request) {
+
+            $shippment->update([
+                'status' => $request->status,
+                'destination_name' => $request->destination_name,
+                'dispatch_name' => $request->dispatch_name,
+                'dispatch_phone' => $request->dispatch_phone,
+                'expected_delivery_time' => $request->expected_delivery_time,
+                'vehicle_number' => $request->vehicle_number,
+                'delivery_address' => $request->delivery_address,
+                'note' => $request->note,
+            ]);
+
+            $shippment->activities()->create([
+                'comment' => $request->activity,
+                'note' => $request->note
+            ]);
+        });
+
+        return $this->success(new ShippmentResource($shippment), 'shippment dispatched');
+    }
+
+
+    public function transferShippment($request, $id)
+    {
+        $shippment = Shippment::findOrFail($id);
+
+        if ($shippment->collation_id) {
+            return $this->error(null, 'shippment belongs to collation centre');
+        }
+
+        DB::transaction(function () use ($shippment, $request) {
+
+            $shippment->update([
+                'status' => $request->status,
+                'transfer_reason' => $request->transfer_reason,
+                'hub_id' => $request->hub_id,
+                'note' => $request->note,
+            ]);
+
+            $shippment->activities()->create([
+                'comment' => $request->activity,
+                'note' => $request->note
+            ]);
+        });
+
+        return $this->success(new ShippmentResource($shippment), 'shippment transfered');
     }
 }

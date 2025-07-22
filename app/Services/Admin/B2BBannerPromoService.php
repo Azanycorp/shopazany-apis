@@ -40,9 +40,7 @@ class B2BBannerPromoService
     public function banners()
     {
         $banners = Banner::where('type', BannerType::B2B)->latest()->get();
-        if ($banners->isEmpty()) {
-            return $this->error(null, 'No record found', 404);
-        }
+       
         $data = B2BBannerResource::collection($banners);
 
         return $this->success($data, 'Banners');
@@ -50,7 +48,7 @@ class B2BBannerPromoService
 
     public function getOneBanner($id)
     {
-        $banner = Banner::where('type', BannerType::B2B)->findOrFail($id);
+        $banner = Banner::where('type', BannerType::B2B)->where('id', $id)->firstOrFail();
         $data = new B2BBannerResource($banner);
 
         return $this->success($data, 'Banner detail');
@@ -58,7 +56,7 @@ class B2BBannerPromoService
 
     public function editBanner($request, $id)
     {
-        $banner = Banner::where('type', BannerType::B2B)->findOrFail($id);
+        $banner = Banner::where('type', BannerType::B2B)->where('id', $id)->firstOrFail();
 
         if ($request->hasFile('image')) {
             $image = uploadImage($request, 'image', 'banner', null, $banner);
@@ -78,7 +76,7 @@ class B2BBannerPromoService
 
     public function deleteBanner($id)
     {
-        $banner = Banner::where('type', BannerType::B2B)->findOrFail($id);
+        $banner = Banner::where('type', BannerType::B2B)->where('id', $id)->firstOrFail();
         $banner->delete();
 
         return $this->success(null, 'Deleted successfully');
