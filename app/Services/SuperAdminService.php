@@ -326,8 +326,8 @@ class SuperAdminService
             return $this->error(null, 'Hub not found', 404);
         }
 
-        if ($order = Order::firstWhere('order_no', $orderNumber)) {
-            return $this->success(new OrderResource($order), 'Order found successfully.');
+        if ($order = Order::with(['user', 'products'])->firstWhere('order_no', $orderNumber)) {
+            return $this->success(new ShipmentB2COrderResource($order), 'Order found successfully.');
         }
 
         if (! $b2bOrder = B2bOrder::firstWhere('order_no', $orderNumber)) {
@@ -375,8 +375,8 @@ class SuperAdminService
             return $this->error(null, 'Center not found', 404);
         }
 
-        if ($order = Order::firstWhere('order_no', $orderNumber)) {
-            return $this->success(new OrderResource($order), 'Order found successfully.');
+        if ($order = Order::with(['user', 'products'])->firstWhere('order_no', $orderNumber)) {
+            return $this->success(new ShipmentB2COrderResource($order), 'Order found successfully.');
         }
 
         if (! $b2bOrder = B2bOrder::firstWhere('order_no', $orderNumber)) {
