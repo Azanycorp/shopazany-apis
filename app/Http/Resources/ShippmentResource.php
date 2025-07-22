@@ -16,7 +16,8 @@ class ShippmentResource extends JsonResource
     {
         return [
             'id' => (int) $this->id,
-            'shippment_id' => $this->shippment_id,
+            'collationCentre' => $this->collationCentre?->name,
+            'hub' => $this->hub?->name,
             'package' => (object)$this->package,
             'customer' => (object)$this->customer,
             'vendor' => (object)$this->vendor,
@@ -30,6 +31,11 @@ class ShippmentResource extends JsonResource
             'destination_name' => $this->destination_name,
             'dispatch_phone' => $this->dispatch_phone,
             'expected_delivery_time' => $this->expected_delivery_time,
+            'reciever_name' => $this->reciever_name,
+            'reciever_phone' => $this->reciever_phone,
+            'vehicle_number' => $this->vehicle_number,
+            'delivery_address' => $this->delivery_address,
+            'transfer_reason' => $this->transfer_reason,
             'activities' => $this->activities ? $this->activities->map(function ($activity): array {
                 return [
                     'action' => $activity?->comment,

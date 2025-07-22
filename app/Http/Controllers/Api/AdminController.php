@@ -3,17 +3,18 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Admin;
+use Illuminate\Http\Request;
 use App\Services\SuperAdminService;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
 use App\Http\Requests\Admin\HubRequest;
 use App\Http\Requests\AdminUserRequest;
-use Illuminate\Support\Facades\Request;
 use App\Http\Requests\ShippingAgentRequest;
 use App\Http\Requests\UpdateShippmentRequest;
 use App\Http\Requests\VerificationCodeRequest;
 use Symfony\Component\HttpFoundation\Response;
 use App\Http\Requests\Admin\OrderFinderRequest;
+use App\Http\Requests\TransferShippmentRequest;
 use App\Http\Requests\ChangeAdminPasswordRequest;
 use App\Http\Requests\Admin\HubOrderFinderRequest;
 use App\Http\Requests\Admin\CollationCentreRequest;
@@ -235,5 +236,29 @@ class AdminController extends Controller
     public function updateShippmentDetails(UpdateShippmentRequest $request, $id)
     {
         return $this->superAdminService->updateShippmentDetails($request, $id);
+    }
+
+    public function readyForDelivery(Request $request, $id)
+    {
+        return $this->superAdminService->readyForDelivery($request, $id);
+    }
+
+    public function readyForPickup(Request $request, $id)
+    {
+        return $this->superAdminService->readyForPickup($request, $id);
+    }
+
+    public function returnToSender(Request $request, $id)
+    {
+        return $this->superAdminService->returnToSender($request, $id);
+    }
+
+    public function readyForDispatched(Request $request, $id)
+    {
+        return $this->superAdminService->readyForDispatched($request, $id);
+    }
+    public function transferShippment(TransferShippmentRequest $request, $id)
+    {
+        return $this->superAdminService->transferShippment($request, $id);
     }
 }

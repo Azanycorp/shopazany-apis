@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class PickupStation extends Model
 {
     protected $fillable = [
-        'collation_center_id',
         'name',
         'location',
         'status',
@@ -22,8 +21,4 @@ class PickupStation extends Model
         return $this->belongsTo(Country::class, 'country_id');
     }
 
-    public function collationCenter(): BelongsTo
-    {
-        return $this->belongsTo(CollationCenter::class, 'collation_center_id');
-    }
 }
