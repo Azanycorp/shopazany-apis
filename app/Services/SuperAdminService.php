@@ -33,6 +33,7 @@ use App\Models\B2bOrder;
 use App\Models\Order;
 use App\Http\Resources\SearchB2BOrderResource;
 use App\Enum\ShippmentCategory;
+use App\Http\Resources\ShipmentB2COrderResource;
 
 class SuperAdminService
 {
@@ -303,10 +304,10 @@ class SuperAdminService
 
     public function findOrder($request)
     {
-        $orderNumber = $request->order_nuumber;
+        $orderNumber = $request->order_number;
 
-        if ($order = Order::firstWhere('order_no', $orderNumber)) {
-            return $this->success(new OrderResource($order), 'Order found successfully.');
+        if ($order = Order::with(['user', 'products'])->firstWhere('order_no', $orderNumber)) {
+            return $this->success(new ShipmentB2COrderResource($order), 'Order found successfully.');
         }
 
         if ($b2bOrder = B2bOrder::firstWhere('order_no', $orderNumber)) {
@@ -319,7 +320,7 @@ class SuperAdminService
     public function findPickupLocationOrder($request)
     {
         $hub = PickupStation::find($request->pickup_id);
-        $orderNumber = $request->order_nuumber;
+        $orderNumber = $request->order_number;
 
         if (! $hub) {
             return $this->error(null, 'Hub not found', 404);
@@ -368,7 +369,7 @@ class SuperAdminService
     public function findCollationCentreOrder($request)
     {
         $centre = CollationCenter::find($request->collation_id);
-        $orderNumber = $request->order_nuumber;
+        $orderNumber = $request->order_number;
 
         if (! $centre) {
             return $this->error(null, 'Center not found', 404);
