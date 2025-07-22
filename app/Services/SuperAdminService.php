@@ -3,8 +3,10 @@
 namespace App\Services;
 
 use App\Models\Admin;
+use App\Models\Order;
 use App\Trait\SignUp;
 use App\Enum\PlanStatus;
+use App\Models\B2bOrder;
 use App\Enum\AdminStatus;
 use App\Enum\MailingEnum;
 use App\Enum\OrderStatus;
@@ -15,24 +17,23 @@ use Illuminate\Support\Str;
 use App\Models\PickupStation;
 use App\Models\ShippingAgent;
 use App\Mail\B2BNewAdminEmail;
+use App\Models\ShippmentBatch;
+use App\Enum\ShippmentCategory;
 use App\Models\CollationCenter;
 use App\Models\AdminNotification;
 use Illuminate\Support\Facades\DB;
 use App\Http\Resources\HubResource;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use App\Http\Resources\OrderResource;
 use App\Trait\SuperAdminNotification;
 use App\Mail\AccountVerificationEmail;
 use App\Http\Resources\AdminUserResource;
 use App\Http\Resources\ShippmentResource;
 use App\Http\Resources\ShippingAgentResource;
+use App\Http\Resources\SearchB2BOrderResource;
 use App\Http\Resources\CollationCentreResource;
 use App\Http\Resources\AdminNotificationResource;
-use App\Http\Resources\OrderResource;
-use App\Models\B2bOrder;
-use App\Models\Order;
-use App\Http\Resources\SearchB2BOrderResource;
-use App\Enum\ShippmentCategory;
 
 class SuperAdminService
 {
@@ -143,7 +144,7 @@ class SuperAdminService
             return $this->error(null, 'Centre not found', 404);
         }
 
-        $order_counts = Shippment::selectRaw('
+        $order_counts = ShippmentBatch::selectRaw('
         COUNT(*) as total_orders,
         SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as out_for_delivery,
         SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as delivered,

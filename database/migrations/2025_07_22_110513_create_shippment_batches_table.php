@@ -13,6 +13,18 @@ return new class extends Migration
     {
         Schema::create('shippment_batches', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('collation_id');
+            $table->json('shippment_ids');
+            $table->double('items')->default(0);
+            $table->string('status')->default('in-transit');
+            $table->string('priority')->default('low');
+            $table->string('destination_state')->nullable();
+            $table->string('destination_centre')->nullable();
+            $table->string('vehicle')->nullable();
+            $table->text('driver_name')->nullable();
+            $table->string('departure')->nullable();
+            $table->string('arrival')->nullable();
+            $table->text('note')->nullable();
             $table->timestamps();
         });
     }
