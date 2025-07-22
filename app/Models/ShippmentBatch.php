@@ -9,6 +9,7 @@ class ShippmentBatch extends Model
     protected $fillable = [
         'collation_id',
         'shippment_ids',
+        'batch_id',
         'items',
         'status',
         'priority',

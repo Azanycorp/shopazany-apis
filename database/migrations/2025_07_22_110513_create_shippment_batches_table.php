@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('shippment_batches', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('collation_id');
+            $table->string('batch_id');
             $table->json('shippment_ids');
             $table->double('items')->default(0);
             $table->string('status')->default('in-transit');

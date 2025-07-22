@@ -167,7 +167,7 @@ class SuperAdminService
             'daily_throughout'   => $order_counts->ready_for_pickup ?? 0,
             'awaiting_dispatch'  => $order_counts->in_transit ?? 0,
             'center'                => new CollationCentreResource($centre),
-            'shippments'   => ShippmentResource::collection($shippments)
+            'batches'   => ShippmentResource::collection($shippments)
         ];
 
         return $this->success($data, 'Centre details');
