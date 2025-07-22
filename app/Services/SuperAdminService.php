@@ -25,6 +25,7 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Resources\HubResource;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use App\Http\Resources\BatchResource;
 use App\Http\Resources\OrderResource;
 use App\Trait\SuperAdminNotification;
 use App\Mail\AccountVerificationEmail;
@@ -159,7 +160,7 @@ class SuperAdminService
             ->where('collation_id', $centre->id)
             ->first();
 
-        $shippments = Shippment::where('collation_id', $centre->id)->latest()->get();
+        $shippments = ShippmentBatch::where('collation_id', $centre->id)->latest()->get();
 
         $data = [
             'current_batches'      => $order_counts->total_orders ?? 0,
@@ -167,7 +168,7 @@ class SuperAdminService
             'daily_throughout'   => $order_counts->ready_for_pickup ?? 0,
             'awaiting_dispatch'  => $order_counts->in_transit ?? 0,
             'center'                => new CollationCentreResource($centre),
-            'batches'   => ShippmentResource::collection($shippments)
+            'batches'   => BatchResource::collection($shippments)
         ];
 
         return $this->success($data, 'Centre details');
