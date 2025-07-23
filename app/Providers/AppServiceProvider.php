@@ -17,6 +17,8 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Cache\RateLimiting\Limit;
 use Laravel\Sanctum\PersonalAccessToken;
 use App\Contracts\B2BRepositoryInterface;
+use App\Models\ShippmentBatch;
+use App\Observers\BatchObserver;
 use Illuminate\Validation\Rules\Password;
 use App\Repositories\B2BProductRepository;
 use Illuminate\Support\Facades\RateLimiter;
@@ -58,6 +60,7 @@ class AppServiceProvider extends ServiceProvider
         User::observe(UserObserver::class);
         Order::observe(OrderObserver::class);
         Shippment::observe(ShippmentObserver::class);
+        ShippmentBatch::observe(BatchObserver::class);
 
         $this->configureCommands();
         $this->configureModels();

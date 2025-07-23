@@ -6,43 +6,23 @@ use App\Models\ShippmentBatch;
 
 class BatchObserver
 {
-    /**
-     * Handle the ShippmentBatch "created" event.
-     */
-    public function created(ShippmentBatch $shippmentBatch): void
+   public function creating(ShippmentBatch $batch)
     {
-        //
-    }
+        $year = date('Y');
+        $prefix = "BCH-$year-";
 
-    /**
-     * Handle the ShippmentBatch "updated" event.
-     */
-    public function updated(ShippmentBatch $shippmentBatch): void
-    {
-        //
-    }
+        $last = ShippmentBatch::where('batch_id', 'like', "$prefix%")
+            ->lockForUpdate()
+            ->orderBy('batch_id', 'desc')
+            ->first();
 
-    /**
-     * Handle the ShippmentBatch "deleted" event.
-     */
-    public function deleted(ShippmentBatch $shippmentBatch): void
-    {
-        //
-    }
+        if ($last) {
+            $lastNumber = (int) substr($last->batch_id, -3);
+            $nextNumber = str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
+        } else {
+            $nextNumber = '0001';
+        }
 
-    /**
-     * Handle the ShippmentBatch "restored" event.
-     */
-    public function restored(ShippmentBatch $shippmentBatch): void
-    {
-        //
-    }
-
-    /**
-     * Handle the ShippmentBatch "force deleted" event.
-     */
-    public function forceDeleted(ShippmentBatch $shippmentBatch): void
-    {
-        //
+        $batch->batch_id = $prefix . $nextNumber;
     }
 }

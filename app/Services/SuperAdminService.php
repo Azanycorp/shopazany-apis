@@ -322,6 +322,7 @@ class SuperAdminService
     public function findPickupLocationOrder($request)
     {
         $hub = PickupStation::find($request->pickup_id);
+
         $orderNumber = $request->order_number;
 
         if (! $hub) {
@@ -329,7 +330,37 @@ class SuperAdminService
         }
 
         if ($order = Order::with(['user', 'products'])->firstWhere('order_no', $orderNumber)) {
-            return $this->success(new ShipmentB2COrderResource($order), 'Order found successfully.');
+
+            $resource = new ShipmentB2COrderResource($order);
+
+            $array = $resource->toArray(request());
+
+            $items = $array['products'][0]['quantity'];;
+            $vendor = $array['vendor'];
+            $package = $array['products'];
+            $customer = $array['customer'];
+
+            $shippment = Shippment::create([
+                'hub_id' => $hub->id,
+                'type' => ShippmentCategory::INCOMING,
+                'package' => $package,
+                'customer' => $customer,
+                'vendor' => $vendor,
+                'status' => $request->status,
+                'priority' => $request->priority,
+                'expected_delivery_date' => $request->expected_delivery_date,
+                'start_origin' => $hub->name,
+                'items' => $items,
+            ]);
+
+            $shippment->activities()->create([
+                'comment' => $request->activity,
+                'note' => $request->note
+            ]);
+
+            $this->createNotification('New Shippment created', 'New Shippment created at ' . $hub->name . 'Pickup station/hub ' . 'by ' . Auth::user()->fullName);
+
+            return $this->success(new ShippmentResource($shippment), 'Item Logged successfully.');
         }
 
         if (! $b2bOrder = B2bOrder::firstWhere('order_no', $orderNumber)) {
@@ -377,6 +408,33 @@ class SuperAdminService
         }
 
         if ($order = Order::with(['user', 'products'])->firstWhere('order_no', $orderNumber)) {
+            $resource = new ShipmentB2COrderResource($order);
+
+            $array = $resource->toArray(request());
+
+            $items = $array['products'][0]['quantity'];;
+            $vendor = $array['vendor'];
+            $package = $array['products'];
+            $customer = $array['customer'];
+
+            $shippment = Shippment::create([
+                'collation_id' => $centre->id,
+                'type' => ShippmentCategory::INCOMING,
+                'package' => $package,
+                'customer' => $customer,
+                'vendor' => $vendor,
+                'status' => $request->status,
+                'priority' => $request->priority,
+                'expected_delivery_date' => $request->expected_delivery_date,
+                'start_origin' => $centre->name,
+                'items' => $items,
+            ]);
+
+            $shippment->activities()->create([
+                'comment' => $request->activity,
+                'note' => $request->note
+            ]);
+
             return $this->success(new ShipmentB2COrderResource($order), 'Order found successfully.');
         }
 
@@ -883,7 +941,6 @@ class SuperAdminService
         return $this->success(new ShippmentResource($shippment), 'shippment dispatched');
     }
 
-
     public function transferShippment($request, $id)
     {
         $shippment = Shippment::findOrFail($id);
@@ -905,6 +962,36 @@ class SuperAdminService
                 'comment' => $request->activity,
                 'note' => $request->note
             ]);
+        });
+
+        return $this->success(new ShippmentResource($shippment), 'shippment transfered');
+    }
+
+    //Batch management
+    public function createBatch($request, $id)
+    {
+        $centre = CollationCenter::find($id);
+
+        if (!$centre) {
+            return $this->error(null, 'Centre not found');
+        }
+
+        DB::transaction(function () use ($centre, $request) {
+
+            $shippment = ShippmentBatch::create([
+                'collation_id' => $centre->id,
+                'type' => ShippmentCategory::INCOMING,
+                'shippment_ids' => $request->shippment_ids,
+                'batch_id' => $request->shippment_ids,
+                'note' => $request->shippment_ids,
+            ]);
+
+            $shippment->activities()->create([
+                'comment' => $request->activity,
+                'note' => $request->note
+            ]);
+
+            $this->createNotification('New Shippment created', 'New Shippment created at ' . $hub->name . 'Pickup station/hub ' . 'by ' . Auth::user()->fullName);
         });
 
         return $this->success(new ShippmentResource($shippment), 'shippment transfered');
