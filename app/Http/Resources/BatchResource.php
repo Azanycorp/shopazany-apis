@@ -28,6 +28,7 @@ class BatchResource extends JsonResource
             'destination_centre' => $this->destination_centre,
             'vehicle' => $this->vehicle,
             'driver_name' => $this->driver_name,
+            'driver_phone' => $this->driver_phone,
             'departure' => $this->departure,
             'arrival' => $this->arrival,
             'note' => $this->note,

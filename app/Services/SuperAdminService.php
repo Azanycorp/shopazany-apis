@@ -996,9 +996,35 @@ class SuperAdminService
         return $this->success(null, 'batch created ');
     }
 
+    public function dispatchBatch($request, $id)
+    {
+        $batch = ShippmentBatch::findOrFail($id);
+
+        DB::transaction(function () use ($batch, $request) {
+
+            $batch->update([
+                'status' => OrderStatus::DISPATCHED,
+                'vehicle' => $request->vehicle,
+                'driver_name' => $request->driver_name,
+                'driver_phone' => $request->driver_phone,
+                'departure' => $request->departure,
+                'arrival' => $request->arrival,
+                'note' => $request->note,
+            ]);
+
+            $batch->activities()->create([
+                'comment' => $request->note,
+                'note' => $request->note
+            ]);
+        });
+
+        return $this->success(new BatchResource($batch), 'Batch dispatched');
+    }
+
     public function batchDetails($id)
     {
         $batch = ShippmentBatch::findOrFail($id);
-        return $this->success(new BatchResource($batch), 'batch details ');
+
+        return $this->success(new BatchResource($batch), 'Batch details ');
     }
 }

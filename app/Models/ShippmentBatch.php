@@ -18,6 +18,7 @@ class ShippmentBatch extends Model
         'destination_centre',
         'vehicle',
         'driver_name',
+        'driver_phone',
         'departure',
         'arrival',
         'note',
@@ -39,7 +40,7 @@ class ShippmentBatch extends Model
     {
         return $this->belongsTo(CollationCenter::class, 'collation_id');
     }
-    
+
     public function hub()
     {
         return $this->belongsTo(PickupStation::class, 'hub_id');

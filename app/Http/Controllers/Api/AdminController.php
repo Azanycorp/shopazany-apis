@@ -273,4 +273,9 @@ class AdminController extends Controller
     {
         return $this->superAdminService->batchDetails($id);
     }
+
+    public function dispatchBatch(Request $request, $id)
+    {
+        return $this->superAdminService->dispatchBatch($request, $id);
+    }
 }

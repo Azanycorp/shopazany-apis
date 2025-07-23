@@ -24,6 +24,7 @@ return new class extends Migration
             $table->string('destination_centre')->nullable();
             $table->string('vehicle')->nullable();
             $table->text('driver_name')->nullable();
+            $table->text('driver_phone')->nullable();
             $table->string('departure')->nullable();
             $table->string('arrival')->nullable();
             $table->text('note')->nullable();
