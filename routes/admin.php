@@ -536,7 +536,6 @@ Route::middleware('validate.header')
                             });
 
                             Route::prefix('batch')->group(function (): void {
-                                Route::get('/', 'allShipments');
                                 Route::post('/create', 'createBatch');
                                 Route::get('/details/{id}', 'batchDetails');
                                 Route::patch('/dispatch/{id}', 'dispatchBatch');
