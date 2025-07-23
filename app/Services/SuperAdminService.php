@@ -161,7 +161,7 @@ class SuperAdminService
             ->where('collation_id', $centre->id)
             ->first();
 
-        $shippments = ShippmentBatch::where('collation_id', $centre->id)->latest()->get();
+        $batches = ShippmentBatch::where('collation_id', $centre->id)->latest()->get();
 
         $data = [
             'current_batches'      => $order_counts->total_orders ?? 0,
@@ -169,7 +169,7 @@ class SuperAdminService
             'daily_throughout'   => $order_counts->ready_for_pickup ?? 0,
             'awaiting_dispatch'  => $order_counts->in_transit ?? 0,
             'center'                => new CollationCentreResource($centre),
-            'batches'   => BatchResource::collection($shippments)
+            'batches'   => BatchResource::collection($batches)
         ];
 
         return $this->success($data, 'Centre details');
@@ -968,9 +968,9 @@ class SuperAdminService
     }
 
     //Batch management
-    public function createBatch($request, $id)
+    public function createBatch($request)
     {
-        $centre = CollationCenter::find($id);
+        $centre = CollationCenter::find($request->collation_id);
 
         if (!$centre) {
             return $this->error(null, 'Centre not found');
@@ -978,22 +978,27 @@ class SuperAdminService
 
         DB::transaction(function () use ($centre, $request) {
 
-            $shippment = ShippmentBatch::create([
+            $batch = ShippmentBatch::create([
                 'collation_id' => $centre->id,
                 'type' => ShippmentCategory::INCOMING,
                 'shippment_ids' => $request->shippment_ids,
-                'batch_id' => $request->shippment_ids,
-                'note' => $request->shippment_ids,
+                'note' => $request->note,
             ]);
 
-            $shippment->activities()->create([
-                'comment' => $request->activity,
+            $batch->activities()->create([
+                'comment' => $request->note,
                 'note' => $request->note
             ]);
 
-            $this->createNotification('New Shippment created', 'New Shippment created at ' . $hub->name . 'Pickup station/hub ' . 'by ' . Auth::user()->fullName);
+            $this->createNotification('New Shippment batch created', 'New Shippment batch created at ' . $centre->name . 'centre ' . 'by ' . Auth::user()->fullName);
         });
 
-        return $this->success(new ShippmentResource($shippment), 'shippment transfered');
+        return $this->success(null, 'batch created ');
+    }
+
+    public function batchDetails($id)
+    {
+        $batch = ShippmentBatch::findOrFail($id);
+        return $this->success(new BatchResource($batch), 'batch details ');
     }
 }

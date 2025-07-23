@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('collation_id');
             $table->string('batch_id');
+            $table->string('type');
             $table->json('shippment_ids');
             $table->double('items')->default(0);
             $table->string('status')->default('in-transit');

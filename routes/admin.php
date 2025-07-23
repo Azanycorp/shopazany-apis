@@ -534,6 +534,12 @@ Route::middleware('validate.header')
                                 Route::patch('/dispatched/{id}', 'readyForDispatched');
                                 Route::patch('/transfer/{id}', 'transferShippment');
                             });
+
+                            Route::prefix('batch')->group(function (): void {
+                                Route::get('/', 'allShipments');
+                                Route::post('/create', 'createBatch');
+                                Route::get('/details/{id}', 'batchDetails');
+                            });
                         });
                 });
             });

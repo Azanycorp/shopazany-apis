@@ -2,6 +2,8 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Shipment;
+use App\Models\Shippment;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -18,7 +20,7 @@ class BatchResource extends JsonResource
             'id' => (int) $this->id,
             'collationCentre' => $this->collationCentre?->name,
             'batch_id' => $this->batch_id,
-            'shippment_ids' => $this->current_location,
+            'shippments' => Shippment::whereIn('id', $this->shippment_ids)->get(),
             'items' => $this->items,
             'status' => $this->status,
             'priority' => $this->priority,
@@ -30,6 +32,14 @@ class BatchResource extends JsonResource
             'arrival' => $this->arrival,
             'note' => $this->note,
             'date' => $this->created_at->todateString(),
+            'activities' => $this->activities ? $this->activities->map(function ($activity): array {
+                return [
+                    'action' => $activity?->comment,
+                    'note' => $activity?->note,
+                    'date' => $activity?->created_at->todateString(),
+
+                ];
+            })->toArray() : [],
         ];
     }
 }

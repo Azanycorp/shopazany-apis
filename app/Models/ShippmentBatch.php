@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\BatchActivity;
 use Illuminate\Database\Eloquent\Model;
 
 class ShippmentBatch extends Model
@@ -27,5 +28,20 @@ class ShippmentBatch extends Model
         return [
             'shippment_ids' => 'array',
         ];
+    }
+
+     public function activities()
+    {
+        return $this->hasMany(BatchActivity::class, 'batch_id','id');
+    }
+
+    public function collationCentre()
+    {
+        return $this->belongsTo(CollationCenter::class, 'collation_id');
+    }
+    
+    public function hub()
+    {
+        return $this->belongsTo(PickupStation::class, 'hub_id');
     }
 }

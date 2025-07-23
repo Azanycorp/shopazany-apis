@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Models\Admin;
 use Illuminate\Http\Request;
+use App\Http\Requests\BatchRequest;
 use App\Services\SuperAdminService;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
@@ -257,8 +258,19 @@ class AdminController extends Controller
     {
         return $this->superAdminService->readyForDispatched($request, $id);
     }
+
     public function transferShippment(TransferShippmentRequest $request, $id)
     {
         return $this->superAdminService->transferShippment($request, $id);
+    }
+
+    public function createBatch(BatchRequest $request)
+    {
+        return $this->superAdminService->createBatch($request);
+    }
+
+    public function batchDetails($id)
+    {
+        return $this->superAdminService->batchDetails($id);
     }
 }
