@@ -523,8 +523,8 @@ Route::middleware('validate.header')
                                 Route::patch('/mark-read/{id}', 'markRead');
                             });
 
-                            Route::prefix('shippments')->group(function (): void {
-                                Route::get('/', 'allShippments');
+                            Route::prefix('shipments')->group(function (): void {
+                                Route::get('/', 'allShipments');
                                 Route::get('/order-finder/{order_number}', 'findOrder');
                                 Route::get('/details/{id}', 'shippmentDetails');
                                 Route::patch('/update/{id}', 'updateShippmentDetails');
