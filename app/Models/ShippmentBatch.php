@@ -31,9 +31,14 @@ class ShippmentBatch extends Model
         ];
     }
 
-     public function activities()
+    public function getShippmentsAttribute()
     {
-        return $this->hasMany(BatchActivity::class, 'batch_id','id');
+        return Shippment::whereIn('id', $this->shippment_ids ?? [])->get();
+    }
+
+    public function activities()
+    {
+        return $this->hasMany(BatchActivity::class, 'batch_id', 'id');
     }
 
     public function collationCentre()

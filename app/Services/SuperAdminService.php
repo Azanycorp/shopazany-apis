@@ -335,7 +335,7 @@ class SuperAdminService
 
             $array = $resource->toArray(request());
 
-            $items = $array['products'][0]['quantity'];;
+            $items = $array['products'][0]['quantity'];
             $vendor = $array['vendor'];
             $package = $array['products'];
             $customer = $array['customer'];
@@ -343,6 +343,7 @@ class SuperAdminService
             $shippment = Shippment::create([
                 'hub_id' => $hub->id,
                 'type' => ShippmentCategory::INCOMING,
+                'shippment_id' => 'SHP-' . Str::random(5),
                 'package' => $package,
                 'customer' => $customer,
                 'vendor' => $vendor,
@@ -378,6 +379,7 @@ class SuperAdminService
         $shippment = Shippment::create([
             'hub_id' => $hub->id,
             'type' => ShippmentCategory::INCOMING,
+            'shippment_id' => 'SHP-' . Str::random(5),
             'package' => $package,
             'customer' => $customer,
             'vendor' => $vendor,
@@ -412,7 +414,7 @@ class SuperAdminService
 
             $array = $resource->toArray(request());
 
-            $items = $array['products'][0]['quantity'];;
+            $items = $array['products'][0]['quantity'];
             $vendor = $array['vendor'];
             $package = $array['products'];
             $customer = $array['customer'];
@@ -420,6 +422,7 @@ class SuperAdminService
             $shippment = Shippment::create([
                 'collation_id' => $centre->id,
                 'type' => ShippmentCategory::INCOMING,
+                'shippment_id' => 'SHP-' . Str::random(5),
                 'package' => $package,
                 'customer' => $customer,
                 'vendor' => $vendor,
@@ -453,6 +456,7 @@ class SuperAdminService
         $shippment = Shippment::create([
             'collation_id' => $centre->id,
             'type' => ShippmentCategory::INCOMING,
+            'shippment_id' => 'SHP-' . Str::random(5),
             'package' => $package,
             'customer' => $customer,
             'vendor' => $vendor,
@@ -981,6 +985,7 @@ class SuperAdminService
             $batch = ShippmentBatch::create([
                 'collation_id' => $centre->id,
                 'type' => ShippmentCategory::INCOMING,
+                 'batch_id' => 'BCH-'.Str::random(5),
                 'shippment_ids' => $request->shippment_ids,
                 'note' => $request->note,
             ]);

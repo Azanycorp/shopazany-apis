@@ -20,7 +20,7 @@ class BatchResource extends JsonResource
             'id' => (int) $this->id,
             'collationCentre' => $this->collationCentre?->name,
             'batch_id' => $this->batch_id,
-            'shippments' => Shippment::whereIn('id', $this->shippment_ids)->get(),
+            'shippments' => $this->shippments,
             'items' => $this->items,
             'status' => $this->status,
             'priority' => $this->priority,

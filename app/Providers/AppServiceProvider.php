@@ -59,8 +59,6 @@ class AppServiceProvider extends ServiceProvider
 
         User::observe(UserObserver::class);
         Order::observe(OrderObserver::class);
-        Shippment::observe(ShippmentObserver::class);
-        ShippmentBatch::observe(BatchObserver::class);
 
         $this->configureCommands();
         $this->configureModels();
