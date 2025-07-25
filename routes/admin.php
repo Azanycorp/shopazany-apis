@@ -502,7 +502,6 @@ Route::middleware('validate.header')
                             Route::prefix('collation-centre')->group(function (): void {
                                 Route::get('/', 'allCollationCentres');
                                 Route::post('/add', 'addCollationCentre');
-                                Route::post('/log-item', 'findCollationCentreOrder');
                                 Route::get('/details/{id}', 'viewCollationCentre');
                                 Route::patch('/update/{id}', 'editCollationCentre');
                                 Route::delete('/delete/{id}', 'deleteCollationCentre');

@@ -692,6 +692,19 @@ if (! function_exists('currencyConvertTo')) {
     }
 }
 
+if (! function_exists('generateBatchId')) {
+    function generateBatchId(): string
+    {
+        return 'BCH-' . date('Y') . '-' . random_int(100, 999);
+    }
+}
+if (! function_exists('generateShipmentId')) {
+    function generateShipmentId(): string
+    {
+        return 'SHP-' . date('Y') . '-' . random_int(100, 999);
+    }
+}
+
 if (! function_exists('mailSend')) {
     function mailSend($type, $recipient, $subject, $mail_class, $payloadData = []): void
     {

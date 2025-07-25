@@ -60,11 +60,6 @@ class AdminController extends Controller
         return $this->superAdminService->deleteCollationCentre($id);
     }
 
-    public function findCollationCentreOrder(OrderFinderRequest $request)
-    {
-        return $this->superAdminService->findCollationCentreOrder($request);
-    }
-
     public function findPickupLocationOrder(HubOrderFinderRequest $request)
     {
         return $this->superAdminService->findPickupLocationOrder($request);

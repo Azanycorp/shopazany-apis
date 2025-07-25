@@ -331,19 +331,37 @@ class SuperAdminService
 
         if ($order = Order::with(['user', 'products'])->firstWhere('order_no', $orderNumber)) {
 
-            $resource = new ShipmentB2COrderResource($order);
+            $items = optional($order->products->first())->pivot->product_quantity;
 
-            $array = $resource->toArray(request());
+            $firstProductUser = optional($order->products->first())->user;
+            $vendor = $firstProductUser ? [
+                'business_name' => $firstProductUser->company_name,
+                'contact' => $firstProductUser->phone,
+                'location' => $firstProductUser->address,
+            ] : null;
 
-            $items = $array['products'][0]['quantity'];
-            $vendor = $array['vendor'];
-            $package = $array['products'];
-            $customer = $array['customer'];
+            $package = $order->products->map(function ($product) {
+              return (object) [
+                    'name' => $product->name,
+                    'quantity' => $product->pivot->product_quantity,
+                    'price' => $product->pivot->price,
+                    'sub_total' => $product->pivot->sub_total,
+                    'image' => $product->image,
+                ];
+            })->values()->toArray();
+
+            $customerUser = $order->user;
+            $customer = $customerUser ? [
+                'first_name' => $customerUser->first_name,
+                'last_name' => $customerUser->last_name,
+                'email' => $customerUser->email,
+                'address' => $customerUser->address,
+            ] : null;
 
             $shippment = Shippment::create([
                 'hub_id' => $hub->id,
                 'type' => ShippmentCategory::INCOMING,
-                'shippment_id' => 'SHP-' . Str::random(5),
+                'shippment_id' => generateShipmentId(),
                 'package' => $package,
                 'customer' => $customer,
                 'vendor' => $vendor,
@@ -364,22 +382,34 @@ class SuperAdminService
             return $this->success(new ShippmentResource($shippment), 'Item Logged successfully.');
         }
 
-        if (! $b2bOrder = B2bOrder::firstWhere('order_no', $orderNumber)) {
+        if (! $b2bOrder = B2bOrder::with(['seller.businessInformation', 'buyer'])->firstWhere('order_no', $orderNumber)) {
             return $this->error(null, 'Order not found.', 404);
         }
 
-        $resource = new SearchB2BOrderResource($b2bOrder);
-        $array = $resource->toArray(request());
+        $items = (string) $b2bOrder->product_quantity;
+        $package = collect($b2bOrder->product_data ?? [])->only(['name', 'fob_price', 'front_image']);
 
-        $items = $array['product_quantity'];
-        $vendor = $array['vendor'];
-        $package = $array['product'];
-        $customer = $array['customer'];
+        $businessInfo = optional($b2bOrder->seller)->businessInformation;
+        $vendor = $businessInfo ? (object) [
+            'business_name' => $businessInfo->business_name,
+            'contact' => $businessInfo->business_phone,
+            'location' => $businessInfo->business_location,
+        ] : null;
+
+        $buyer = $b2bOrder->buyer;
+        $customer = $buyer ? (object) [
+            'name' => $buyer->fullName,
+            'email' => $buyer->email,
+            'phone' => $buyer->phone,
+            'city' => $buyer->city,
+            'address' => $buyer->address,
+        ] : null;
+
 
         $shippment = Shippment::create([
             'hub_id' => $hub->id,
             'type' => ShippmentCategory::INCOMING,
-            'shippment_id' => 'SHP-' . Str::random(5),
+            'shippment_id' => generateShipmentId(),
             'package' => $package,
             'customer' => $customer,
             'vendor' => $vendor,
@@ -396,83 +426,6 @@ class SuperAdminService
         ]);
 
         $this->createNotification('New Shippment created', 'New Shippment created at ' . $hub->name . 'Pickup station/hub ' . 'by ' . Auth::user()->fullName);
-
-        return $this->success(new ShippmentResource($shippment), 'Item Logged successfully.');
-    }
-
-    public function findCollationCentreOrder($request)
-    {
-        $centre = CollationCenter::find($request->collation_id);
-        $orderNumber = $request->order_number;
-
-        if (! $centre) {
-            return $this->error(null, 'Center not found', 404);
-        }
-
-        if ($order = Order::with(['user', 'products'])->firstWhere('order_no', $orderNumber)) {
-            $resource = new ShipmentB2COrderResource($order);
-
-            $array = $resource->toArray(request());
-
-            $items = $array['products'][0]['quantity'];
-            $vendor = $array['vendor'];
-            $package = $array['products'];
-            $customer = $array['customer'];
-
-            $shippment = Shippment::create([
-                'collation_id' => $centre->id,
-                'type' => ShippmentCategory::INCOMING,
-                'shippment_id' => 'SHP-' . Str::random(5),
-                'package' => $package,
-                'customer' => $customer,
-                'vendor' => $vendor,
-                'status' => $request->status,
-                'priority' => $request->priority,
-                'expected_delivery_date' => $request->expected_delivery_date,
-                'start_origin' => $centre->name,
-                'items' => $items,
-            ]);
-
-            $shippment->activities()->create([
-                'comment' => $request->activity,
-                'note' => $request->note
-            ]);
-
-            return $this->success(new ShipmentB2COrderResource($order), 'Order found successfully.');
-        }
-
-        if (! $b2bOrder = B2bOrder::firstWhere('order_no', $orderNumber)) {
-            return $this->error(null, 'Order not found.', 404);
-        }
-
-        $resource = new SearchB2BOrderResource($b2bOrder);
-        $array = $resource->toArray(request());
-
-        $items = $array['product_quantity'];
-        $vendor = $array['vendor'];
-        $package = $array['product'];
-        $customer = $array['customer'];
-
-        $shippment = Shippment::create([
-            'collation_id' => $centre->id,
-            'type' => ShippmentCategory::INCOMING,
-            'shippment_id' => 'SHP-' . Str::random(5),
-            'package' => $package,
-            'customer' => $customer,
-            'vendor' => $vendor,
-            'status' => $request->status,
-            'priority' => $request->priority,
-            'expected_delivery_date' => $request->expected_delivery_date,
-            'start_origin' => $centre->name,
-            'items' => $items,
-        ]);
-
-        $shippment->activities()->create([
-            'comment' => $request->activity,
-            'note' => $request->note
-        ]);
-
-        $this->createNotification('New Shippment created', 'New Shippment created at ' . $centre->name . 'Collation centre ' . 'by ' . Auth::user()->fullName);
 
         return $this->success(new ShippmentResource($shippment), 'Item Logged successfully.');
     }
@@ -985,7 +938,7 @@ class SuperAdminService
             $batch = ShippmentBatch::create([
                 'collation_id' => $centre->id,
                 'type' => ShippmentCategory::INCOMING,
-                 'batch_id' => 'BCH-'.Str::random(5),
+                'batch_id' => generateBatchId(),
                 'shippment_ids' => $request->shippment_ids,
                 'note' => $request->note,
             ]);
