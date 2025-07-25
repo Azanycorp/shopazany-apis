@@ -362,7 +362,7 @@ class SuperAdminService
                 'hub_id' => $hub->id,
                 'type' => ShippmentCategory::INCOMING,
                 'shippment_id' => generateShipmentId(),
-                'package' => $package,
+                'package' => $package[0],
                 'customer' => $customer,
                 'vendor' => $vendor,
                 'status' => $request->status,
