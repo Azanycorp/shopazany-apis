@@ -502,7 +502,6 @@ Route::middleware('validate.header')
                             Route::prefix('collation-centre')->group(function (): void {
                                 Route::get('/', 'allCollationCentres');
                                 Route::post('/add', 'addCollationCentre');
-                                Route::post('/log-item', 'findCollationCentreOrder');
                                 Route::get('/details/{id}', 'viewCollationCentre');
                                 Route::patch('/update/{id}', 'editCollationCentre');
                                 Route::delete('/delete/{id}', 'deleteCollationCentre');
@@ -533,6 +532,12 @@ Route::middleware('validate.header')
                                 Route::patch('/pickup/{id}', 'readyForPickup');
                                 Route::patch('/dispatched/{id}', 'readyForDispatched');
                                 Route::patch('/transfer/{id}', 'transferShipment');
+                            });
+
+                            Route::prefix('batch')->group(function (): void {
+                                Route::post('/create', 'createBatch');
+                                Route::get('/details/{id}', 'batchDetails');
+                                Route::patch('/dispatch/{id}', 'dispatchBatch');
                             });
                         });
                 });
