@@ -21,7 +21,6 @@ class HubResource extends JsonResource
             'note' => (string) $this->note,
             'city' => (string) $this->city,
             'country' => $this->country?->name,
-            'collation_center' => $this->collationCenter?->name,
             'status' => (string) $this->status,
         ];
     }

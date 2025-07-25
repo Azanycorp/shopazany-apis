@@ -22,16 +22,6 @@ class CollationCentreResource extends JsonResource
             'city' => (string) $this->city,
             'country' => $this->country?->name,
             'status' => (string) $this->status,
-            'hubs_count' => $this->hubs->count(),
-            'hubs' => $this->hubs ? $this->hubs->map(function ($hub): array {
-                return [
-                    'id' => $hub->id,
-                    'name' => $hub?->name,
-                    'location' => $hub?->location,
-                    'city' => $hub?->city,
-                    'country' => $hub?->country?->name,
-                ];
-            })->toArray() : [],
         ];
     }
 }

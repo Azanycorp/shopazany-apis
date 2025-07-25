@@ -3,17 +3,19 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Admin;
+use Illuminate\Http\Request;
+use App\Http\Requests\BatchRequest;
 use App\Services\SuperAdminService;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
 use App\Http\Requests\Admin\HubRequest;
 use App\Http\Requests\AdminUserRequest;
-use Illuminate\Support\Facades\Request;
 use App\Http\Requests\ShippingAgentRequest;
 use App\Http\Requests\UpdateShippmentRequest;
 use App\Http\Requests\VerificationCodeRequest;
 use Symfony\Component\HttpFoundation\Response;
 use App\Http\Requests\Admin\OrderFinderRequest;
+use App\Http\Requests\TransferShippmentRequest;
 use App\Http\Requests\ChangeAdminPasswordRequest;
 use App\Http\Requests\Admin\HubOrderFinderRequest;
 use App\Http\Requests\Admin\CollationCentreRequest;
@@ -56,11 +58,6 @@ class AdminController extends Controller
     public function deleteCollationCentre($id)
     {
         return $this->superAdminService->deleteCollationCentre($id);
-    }
-
-    public function findCollationCentreOrder(OrderFinderRequest $request)
-    {
-        return $this->superAdminService->findCollationCentreOrder($request);
     }
 
     public function findPickupLocationOrder(HubOrderFinderRequest $request)
@@ -217,9 +214,9 @@ class AdminController extends Controller
     }
 
     //Shippments
-    public function allShippments()
+    public function allShipments()
     {
-        return $this->superAdminService->allShippments();
+        return $this->superAdminService->allShipments();
     }
 
     public function findOrder(Request $request)
@@ -227,13 +224,38 @@ class AdminController extends Controller
         return $this->superAdminService->findOrder($request);
     }
 
-    public function shippmentDetails($id)
+    public function shipmentDetails($id)
     {
-        return $this->superAdminService->shippmentDetails($id);
+        return $this->superAdminService->shipmentDetails($id);
     }
 
-    public function updateShippmentDetails(UpdateShippmentRequest $request, $id)
+    public function updateShipmentDetails(UpdateShippmentRequest $request, $id)
     {
-        return $this->superAdminService->updateShippmentDetails($request, $id);
+        return $this->superAdminService->updateShipmentDetails($request, $id);
+    }
+
+    public function readyForDelivery(Request $request, $id)
+    {
+        return $this->superAdminService->readyForDelivery($request, $id);
+    }
+
+    public function readyForPickup(Request $request, $id)
+    {
+        return $this->superAdminService->readyForPickup($request, $id);
+    }
+
+    public function returnToSender(Request $request, $id)
+    {
+        return $this->superAdminService->returnToSender($request, $id);
+    }
+
+    public function readyForDispatched(Request $request, $id)
+    {
+        return $this->superAdminService->readyForDispatched($request, $id);
+    }
+
+    public function transferShipment(TransferShippmentRequest $request, $id)
+    {
+        return $this->superAdminService->transferShipment($request, $id);
     }
 }
