@@ -26,7 +26,6 @@ use App\Http\Resources\HubResource;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Resources\BatchResource;
-use App\Http\Resources\OrderResource;
 use App\Trait\SuperAdminNotification;
 use App\Mail\AccountVerificationEmail;
 use App\Http\Resources\AdminUserResource;
@@ -779,14 +778,14 @@ class SuperAdminService
         return $this->success($data, 'Shippment Data');
     }
 
-    public function shippmentDetails($id)
+    public function shipmentDetails($id)
     {
         $shippment = Shippment::findOrFail($id);
 
         return $this->success(new ShippmentResource($shippment), 'shippment details');
     }
 
-    public function updateShippmentDetails($request, $id)
+    public function updateShipmentDetails($request, $id)
     {
         $shippment = Shippment::findOrFail($id);
 
@@ -898,7 +897,7 @@ class SuperAdminService
         return $this->success(new ShippmentResource($shippment), 'shippment dispatched');
     }
 
-    public function transferShippment($request, $id)
+    public function transferShipment($request, $id)
     {
         $shippment = Shippment::findOrFail($id);
 

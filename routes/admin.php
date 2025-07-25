@@ -525,13 +525,13 @@ Route::middleware('validate.header')
                             Route::prefix('shipments')->group(function (): void {
                                 Route::get('/', 'allShipments');
                                 Route::get('/order-finder/{order_number}', 'findOrder');
-                                Route::get('/details/{id}', 'shippmentDetails');
-                                Route::patch('/update/{id}', 'updateShippmentDetails');
+                                Route::get('/details/{id}', 'shipmentDetails');
+                                Route::patch('/update/{id}', 'updateShipmentDetails');
                                 Route::patch('/delivery/{id}', 'readyForDelivery');
                                 Route::patch('/return/{id}', 'returnToSender');
                                 Route::patch('/pickup/{id}', 'readyForPickup');
                                 Route::patch('/dispatched/{id}', 'readyForDispatched');
-                                Route::patch('/transfer/{id}', 'transferShippment');
+                                Route::patch('/transfer/{id}', 'transferShipment');
                             });
 
                             Route::prefix('batch')->group(function (): void {

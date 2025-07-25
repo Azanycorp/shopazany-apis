@@ -214,9 +214,9 @@ class AdminController extends Controller
     }
 
     //Shippments
-    public function allShippments()
+    public function allShipments()
     {
-        return $this->superAdminService->allShippments();
+        return $this->superAdminService->allShipments();
     }
 
     public function findOrder(Request $request)
@@ -224,14 +224,14 @@ class AdminController extends Controller
         return $this->superAdminService->findOrder($request);
     }
 
-    public function shippmentDetails($id)
+    public function shipmentDetails($id)
     {
-        return $this->superAdminService->shippmentDetails($id);
+        return $this->superAdminService->shipmentDetails($id);
     }
 
-    public function updateShippmentDetails(UpdateShippmentRequest $request, $id)
+    public function updateShipmentDetails(UpdateShippmentRequest $request, $id)
     {
-        return $this->superAdminService->updateShippmentDetails($request, $id);
+        return $this->superAdminService->updateShipmentDetails($request, $id);
     }
 
     public function readyForDelivery(Request $request, $id)
@@ -254,23 +254,8 @@ class AdminController extends Controller
         return $this->superAdminService->readyForDispatched($request, $id);
     }
 
-    public function transferShippment(TransferShippmentRequest $request, $id)
+    public function transferShipment(TransferShippmentRequest $request, $id)
     {
-        return $this->superAdminService->transferShippment($request, $id);
-    }
-
-    public function createBatch(BatchRequest $request)
-    {
-        return $this->superAdminService->createBatch($request);
-    }
-
-    public function batchDetails($id)
-    {
-        return $this->superAdminService->batchDetails($id);
-    }
-
-    public function dispatchBatch(Request $request, $id)
-    {
-        return $this->superAdminService->dispatchBatch($request, $id);
+        return $this->superAdminService->transferShipment($request, $id);
     }
 }

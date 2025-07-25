@@ -2,7 +2,6 @@
 
 use App\Actions\UserLogAction;
 use App\Models\Action;
-use App\Models\AdminNotification;
 use App\Models\B2BRequestRefund;
 use App\Models\BusinessSetting;
 use App\Models\Country;
@@ -695,13 +694,13 @@ if (! function_exists('currencyConvertTo')) {
 if (! function_exists('generateBatchId')) {
     function generateBatchId(): string
     {
-        return 'BCH-' . date('Y') . '-' . random_int(100, 999);
+        return 'BCH-' . date('Y') . '-' . random_int(10000000, 99999999);
     }
 }
 if (! function_exists('generateShipmentId')) {
     function generateShipmentId(): string
     {
-        return 'SHP-' . date('Y') . '-' . random_int(100, 999);
+        return 'SHP-' . date('Y') . '-' . random_int(10000000, 99999999);
     }
 }
 
