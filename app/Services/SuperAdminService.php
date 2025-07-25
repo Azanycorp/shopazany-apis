@@ -3,8 +3,10 @@
 namespace App\Services;
 
 use App\Models\Admin;
+use App\Models\Order;
 use App\Trait\SignUp;
 use App\Enum\PlanStatus;
+use App\Models\B2bOrder;
 use App\Enum\AdminStatus;
 use App\Enum\MailingEnum;
 use App\Enum\OrderStatus;
@@ -15,24 +17,23 @@ use Illuminate\Support\Str;
 use App\Models\PickupStation;
 use App\Models\ShippingAgent;
 use App\Mail\B2BNewAdminEmail;
+use App\Models\ShippmentBatch;
+use App\Enum\ShippmentCategory;
 use App\Models\CollationCenter;
 use App\Models\AdminNotification;
 use Illuminate\Support\Facades\DB;
 use App\Http\Resources\HubResource;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use App\Http\Resources\BatchResource;
 use App\Trait\SuperAdminNotification;
 use App\Mail\AccountVerificationEmail;
 use App\Http\Resources\AdminUserResource;
 use App\Http\Resources\ShippmentResource;
 use App\Http\Resources\ShippingAgentResource;
+use App\Http\Resources\SearchB2BOrderResource;
 use App\Http\Resources\CollationCentreResource;
 use App\Http\Resources\AdminNotificationResource;
-use App\Http\Resources\OrderResource;
-use App\Models\B2bOrder;
-use App\Models\Order;
-use App\Http\Resources\SearchB2BOrderResource;
-use App\Enum\ShippmentCategory;
 use App\Http\Resources\ShipmentB2COrderResource;
 
 class SuperAdminService
@@ -144,7 +145,7 @@ class SuperAdminService
             return $this->error(null, 'Centre not found', 404);
         }
 
-        $order_counts = Shippment::selectRaw('
+        $order_counts = ShippmentBatch::selectRaw('
         COUNT(*) as total_orders,
         SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as out_for_delivery,
         SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as delivered,
@@ -159,7 +160,7 @@ class SuperAdminService
             ->where('collation_id', $centre->id)
             ->first();
 
-        $shippments = Shippment::where('collation_id', $centre->id)->latest()->get();
+        $batches = ShippmentBatch::where('collation_id', $centre->id)->latest()->get();
 
         $data = [
             'current_batches'      => $order_counts->total_orders ?? 0,
@@ -167,7 +168,7 @@ class SuperAdminService
             'daily_throughout'   => $order_counts->ready_for_pickup ?? 0,
             'awaiting_dispatch'  => $order_counts->in_transit ?? 0,
             'center'                => new CollationCentreResource($centre),
-            'shippments'   => ShippmentResource::collection($shippments)
+            'batches'   => BatchResource::collection($batches)
         ];
 
         return $this->success($data, 'Centre details');
@@ -320,6 +321,7 @@ class SuperAdminService
     public function findPickupLocationOrder($request)
     {
         $hub = PickupStation::find($request->pickup_id);
+
         $orderNumber = $request->order_number;
 
         if (! $hub) {
@@ -327,25 +329,86 @@ class SuperAdminService
         }
 
         if ($order = Order::with(['user', 'products'])->firstWhere('order_no', $orderNumber)) {
-            return $this->success(new ShipmentB2COrderResource($order), 'Order found successfully.');
+
+            $items = optional($order->products->first())->pivot->product_quantity;
+
+            $firstProductUser = optional($order->products->first())->user;
+            $vendor = $firstProductUser ? [
+                'business_name' => $firstProductUser->company_name,
+                'contact' => $firstProductUser->phone,
+                'location' => $firstProductUser->address,
+            ] : null;
+
+            $package = $order->products->map(function ($product) {
+              return (object) [
+                    'name' => $product->name,
+                    'quantity' => $product->pivot->product_quantity,
+                    'price' => $product->pivot->price,
+                    'sub_total' => $product->pivot->sub_total,
+                    'image' => $product->image,
+                ];
+            })->values()->toArray();
+
+            $customerUser = $order->user;
+            $customer = $customerUser ? [
+                'first_name' => $customerUser->first_name,
+                'last_name' => $customerUser->last_name,
+                'email' => $customerUser->email,
+                'address' => $customerUser->address,
+            ] : null;
+
+            $shippment = Shippment::create([
+                'hub_id' => $hub->id,
+                'type' => ShippmentCategory::INCOMING,
+                'shippment_id' => generateShipmentId(),
+                'package' => $package[0],
+                'customer' => $customer,
+                'vendor' => $vendor,
+                'status' => $request->status,
+                'priority' => $request->priority,
+                'expected_delivery_date' => $request->expected_delivery_date,
+                'start_origin' => $hub->name,
+                'items' => $items,
+            ]);
+
+            $shippment->activities()->create([
+                'comment' => $request->activity,
+                'note' => $request->note
+            ]);
+
+            $this->createNotification('New Shippment created', 'New Shippment created at ' . $hub->name . 'Pickup station/hub ' . 'by ' . Auth::user()->fullName);
+
+            return $this->success(new ShippmentResource($shippment), 'Item Logged successfully.');
         }
 
-        if (! $b2bOrder = B2bOrder::firstWhere('order_no', $orderNumber)) {
+        if (! $b2bOrder = B2bOrder::with(['seller.businessInformation', 'buyer'])->firstWhere('order_no', $orderNumber)) {
             return $this->error(null, 'Order not found.', 404);
         }
 
-        $resource = new SearchB2BOrderResource($b2bOrder);
-        $array = $resource->toArray(request());
+        $items = (string) $b2bOrder->product_quantity;
+        $package = collect($b2bOrder->product_data ?? [])->only(['name', 'fob_price', 'front_image']);
 
-        $items = $array['product_quantity'];
-        $vendor = $array['vendor'];
-        $package = $array['product'];
-        $customer = $array['customer'];
+        $businessInfo = optional($b2bOrder->seller)->businessInformation;
+        $vendor = $businessInfo ? (object) [
+            'business_name' => $businessInfo->business_name,
+            'contact' => $businessInfo->business_phone,
+            'location' => $businessInfo->business_location,
+        ] : null;
+
+        $buyer = $b2bOrder->buyer;
+        $customer = $buyer ? (object) [
+            'name' => $buyer->fullName,
+            'email' => $buyer->email,
+            'phone' => $buyer->phone,
+            'city' => $buyer->city,
+            'address' => $buyer->address,
+        ] : null;
+
 
         $shippment = Shippment::create([
-            'collation_id' => $hub->id,
-            'shippment_id' => Str::random(20),
+            'hub_id' => $hub->id,
             'type' => ShippmentCategory::INCOMING,
+            'shippment_id' => generateShipmentId(),
             'package' => $package,
             'customer' => $customer,
             'vendor' => $vendor,
@@ -362,55 +425,6 @@ class SuperAdminService
         ]);
 
         $this->createNotification('New Shippment created', 'New Shippment created at ' . $hub->name . 'Pickup station/hub ' . 'by ' . Auth::user()->fullName);
-
-        return $this->success(new ShippmentResource($shippment), 'Item Logged successfully.');
-    }
-
-    public function findCollationCentreOrder($request)
-    {
-        $centre = CollationCenter::find($request->collation_id);
-        $orderNumber = $request->order_number;
-
-        if (! $centre) {
-            return $this->error(null, 'Center not found', 404);
-        }
-
-        if ($order = Order::with(['user', 'products'])->firstWhere('order_no', $orderNumber)) {
-            return $this->success(new ShipmentB2COrderResource($order), 'Order found successfully.');
-        }
-
-        if (! $b2bOrder = B2bOrder::firstWhere('order_no', $orderNumber)) {
-            return $this->error(null, 'Order not found.', 404);
-        }
-
-        $resource = new SearchB2BOrderResource($b2bOrder);
-        $array = $resource->toArray(request());
-
-        $items = $array['product_quantity'];
-        $vendor = $array['vendor'];
-        $package = $array['product'];
-        $customer = $array['customer'];
-
-        $shippment = Shippment::create([
-            'collation_id' => $centre->id,
-            'shippment_id' => Str::random(20),
-            'type' => ShippmentCategory::INCOMING,
-            'package' => $package,
-            'customer' => $customer,
-            'vendor' => $vendor,
-            'status' => $request->status,
-            'priority' => $request->priority,
-            'expected_delivery_date' => $request->expected_delivery_date,
-            'start_origin' => $centre->name,
-            'items' => $items,
-        ]);
-
-        $shippment->activities()->create([
-            'comment' => $request->activity,
-            'note' => $request->note
-        ]);
-
-        $this->createNotification('New Shippment created', 'New Shippment created at ' . $centre->name . 'Collation centre ' . 'by ' . Auth::user()->fullName);
 
         return $this->success(new ShippmentResource($shippment), 'Item Logged successfully.');
     }
@@ -764,14 +778,14 @@ class SuperAdminService
         return $this->success($data, 'Shippment Data');
     }
 
-    public function shippmentDetails($id)
+    public function shipmentDetails($id)
     {
         $shippment = Shippment::findOrFail($id);
 
         return $this->success(new ShippmentResource($shippment), 'shippment details');
     }
 
-    public function updateShippmentDetails($request, $id)
+    public function updateShipmentDetails($request, $id)
     {
         $shippment = Shippment::findOrFail($id);
 
@@ -883,8 +897,7 @@ class SuperAdminService
         return $this->success(new ShippmentResource($shippment), 'shippment dispatched');
     }
 
-
-    public function transferShippment($request, $id)
+    public function transferShipment($request, $id)
     {
         $shippment = Shippment::findOrFail($id);
 
@@ -908,5 +921,67 @@ class SuperAdminService
         });
 
         return $this->success(new ShippmentResource($shippment), 'shippment transfered');
+    }
+
+    //Batch management
+    public function createBatch($request)
+    {
+        $centre = CollationCenter::find($request->collation_id);
+
+        if (!$centre) {
+            return $this->error(null, 'Centre not found');
+        }
+
+        DB::transaction(function () use ($centre, $request) {
+
+            $batch = ShippmentBatch::create([
+                'collation_id' => $centre->id,
+                'type' => ShippmentCategory::INCOMING,
+                'batch_id' => generateBatchId(),
+                'shippment_ids' => $request->shipment_ids,
+                'note' => $request->note,
+            ]);
+
+            $batch->activities()->create([
+                'comment' => $request->note,
+                'note' => $request->note
+            ]);
+
+            $this->createNotification('New Shippment batch created', 'New Shippment batch created at ' . $centre->name . 'centre ' . 'by ' . Auth::user()->fullName);
+        });
+
+        return $this->success(null, 'batch created ');
+    }
+
+    public function dispatchBatch($request, $id)
+    {
+        $batch = ShippmentBatch::findOrFail($id);
+
+        DB::transaction(function () use ($batch, $request) {
+
+            $batch->update([
+                'status' => OrderStatus::DISPATCHED,
+                'vehicle' => $request->vehicle,
+                'driver_name' => $request->driver_name,
+                'driver_phone' => $request->driver_phone,
+                'departure' => $request->departure,
+                'arrival' => $request->arrival,
+                'note' => $request->note,
+            ]);
+
+            $batch->activities()->create([
+                'comment' => $request->note,
+                'note' => $request->note
+            ]);
+        });
+
+        return $this->success(new BatchResource($batch), 'Batch dispatched');
+    }
+
+    public function batchDetails($id)
+    {
+        $batch = ShippmentBatch::findOrFail($id);
+
+        return $this->success(new BatchResource($batch), 'Batch details ');
     }
 }

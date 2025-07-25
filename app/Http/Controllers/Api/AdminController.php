@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Models\Admin;
 use Illuminate\Http\Request;
+use App\Http\Requests\BatchRequest;
 use App\Services\SuperAdminService;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
@@ -57,11 +58,6 @@ class AdminController extends Controller
     public function deleteCollationCentre($id)
     {
         return $this->superAdminService->deleteCollationCentre($id);
-    }
-
-    public function findCollationCentreOrder(OrderFinderRequest $request)
-    {
-        return $this->superAdminService->findCollationCentreOrder($request);
     }
 
     public function findPickupLocationOrder(HubOrderFinderRequest $request)
