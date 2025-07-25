@@ -17,7 +17,7 @@ class ShippmentResource extends JsonResource
         return [
             'id' => (int) $this->id,
             'collationCentre' => $this->collationCentre?->name,
-            'shippment_id' => $this->shippment_id,
+            'shipment_id' => $this->shippment_id,
             'hub' => $this->hub?->name,
             'package' => (object)$this->package,
             'customer' => (object)$this->customer,

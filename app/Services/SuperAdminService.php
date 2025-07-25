@@ -939,7 +939,7 @@ class SuperAdminService
                 'collation_id' => $centre->id,
                 'type' => ShippmentCategory::INCOMING,
                 'batch_id' => generateBatchId(),
-                'shippment_ids' => $request->shippment_ids,
+                'shippment_ids' => $request->shipment_ids,
                 'note' => $request->note,
             ]);
 

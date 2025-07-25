@@ -23,8 +23,8 @@ class BatchRequest extends FormRequest
     {
         return [
             'collation_id' => ['required', 'integer', 'exists:collation_centers,id'],
-             'shippment_ids' => ['required','array'],
-              'shippment_ids.*' => ['required', 'integer', 'exists:shippments,id'],
+            'shipment_ids' => ['required', 'array'],
+            'shipment_ids.*' => ['required', 'integer', 'exists:shippments,id'],
         ];
     }
 }
