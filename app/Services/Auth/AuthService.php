@@ -214,8 +214,9 @@ class AuthService extends Controller
             'status' => UserStatus::ACTIVE,
         ]);
 
-        if ($user->pending_referrer_code) {
+        if ($user->pending_referrer_code !== null) {
             $this->handleReferrers($user->pending_referrer_code, $user);
+            $user->update(['pending_referrer_code' => null]);
         }
 
         $type = MailingEnum::EMAIL_VERIFICATION;
