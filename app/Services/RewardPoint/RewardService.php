@@ -41,6 +41,7 @@ class RewardService
             $wallet->refresh();
 
             $user->referrals()->syncWithoutDetaching($newUser);
+            $newUser->update(['pending_referrer_code' => null]);
         }
 
         if ($user->type === UserType::CUSTOMER) {
