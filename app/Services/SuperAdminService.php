@@ -45,10 +45,10 @@ class SuperAdminService
         $centers = CollationCenter::with('country')->latest()->get();
 
         $collation_counts = CollationCenter::selectRaw('
-        COUNT(*) as total_centers,
-        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as active_centers,
-        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as inactive_centers
-    ', [PlanStatus::ACTIVE, PlanStatus::INACTIVE])
+                COUNT(*) as total_centers,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as active_centers,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as inactive_centers
+            ', [PlanStatus::ACTIVE, PlanStatus::INACTIVE])
             ->first();
 
         $collation_details = [
@@ -65,10 +65,10 @@ class SuperAdminService
     public function deliveryOverview()
     {
         $order_counts = Shippment::selectRaw('
-        COUNT(*) as total_orders,
-        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as out_for_delivery,
-        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as delivered
-        ', [OrderStatus::SHIPPED, OrderStatus::DELIVERED])
+            COUNT(*) as total_orders,
+            SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as out_for_delivery,
+            SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as delivered
+            ', [OrderStatus::SHIPPED, OrderStatus::DELIVERED])
             ->first();
 
         $collation_centers = CollationCenter::where('status', PlanStatus::ACTIVE)->count();
@@ -99,12 +99,12 @@ class SuperAdminService
             });
 
         $center_counts = CollationCenter::selectRaw('
-        COUNT(*) as total_centers,
-        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as active,
-        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as in_active,
-        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as maintenance,
-        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as processing
-    ', [
+                COUNT(*) as total_centers,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as active,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as in_active,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as maintenance,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as processing
+            ', [
             CentreStatus::ACTIVE,
             CentreStatus::INACTIVE,
             CentreStatus::MAINTENANCE,
@@ -133,7 +133,9 @@ class SuperAdminService
             'country_id' => $request->country_id ?? 160,
             'status' => PlanStatus::ACTIVE,
         ]);
+
         $this->createNotification('New Collation Centre Added', 'New collation centre created ' . $centre->name);
+
         return $this->success($centre, 'Centre added successfully', 201);
     }
 
@@ -146,12 +148,12 @@ class SuperAdminService
         }
 
         $order_counts = ShippmentBatch::selectRaw('
-        COUNT(*) as total_orders,
-        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as out_for_delivery,
-        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as delivered,
-        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as ready_for_pickup,
-        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as in_transit
-    ', [
+                COUNT(*) as total_orders,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as out_for_delivery,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as delivered,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as ready_for_pickup,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as in_transit
+            ', [
             OrderStatus::SHIPPED,
             OrderStatus::DELIVERED,
             OrderStatus::READY_FOR_PICKUP,
@@ -163,11 +165,11 @@ class SuperAdminService
         $batches = ShippmentBatch::where('collation_id', $centre->id)->latest()->get();
 
         $data = [
-            'current_batches'      => $order_counts->total_orders ?? 0,
+            'current_batches'    => $order_counts->total_orders ?? 0,
             'total_processed'    => $order_counts->delivered ?? 0,
             'daily_throughout'   => $order_counts->ready_for_pickup ?? 0,
             'awaiting_dispatch'  => $order_counts->in_transit ?? 0,
-            'center'                => new CollationCentreResource($centre),
+            'center'             => new CollationCentreResource($centre),
             'batches'   => BatchResource::collection($batches)
         ];
 
@@ -246,17 +248,17 @@ class SuperAdminService
         $hub = PickupStation::with('country')->findOrFail($id);
 
         $order_counts = Shippment::selectRaw('
-        COUNT(*) as total_orders,
-        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as out_for_delivery,
-        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as delivered,
-        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as ready_for_pickup,
-        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as in_transit
-    ', [
-            OrderStatus::SHIPPED,
-            OrderStatus::DELIVERED,
-            OrderStatus::READY_FOR_PICKUP,
-            OrderStatus::IN_TRANSIT
-        ])
+                COUNT(*) as total_orders,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as out_for_delivery,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as delivered,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as ready_for_pickup,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as in_transit
+            ', [
+                OrderStatus::SHIPPED,
+                OrderStatus::DELIVERED,
+                OrderStatus::READY_FOR_PICKUP,
+                OrderStatus::IN_TRANSIT
+            ])
             ->where('hub_id', $hub->id)
             ->first();
 
@@ -332,11 +334,11 @@ class SuperAdminService
 
             $items = optional($order->products->first())->pivot->product_quantity;
 
-            $firstProductUser = optional($order->products->first())->user;
-            $vendor = $firstProductUser ? [
-                'business_name' => $firstProductUser->company_name,
-                'contact' => $firstProductUser->phone,
-                'location' => $firstProductUser->address,
+            $seller = optional($order->products->first())->user;
+            $vendor = $seller ? [
+                'business_name' => $seller->company_name,
+                'contact' => $seller->phone,
+                'location' => $seller->address,
             ] : null;
 
             $package = $order->products->map(function ($product) {
@@ -350,6 +352,7 @@ class SuperAdminService
             })->values()->toArray();
 
             $customerUser = $order->user;
+
             $customer = $customerUser ? [
                 'first_name' => $customerUser->first_name,
                 'last_name' => $customerUser->last_name,
@@ -361,7 +364,7 @@ class SuperAdminService
                 'hub_id' => $hub->id,
                 'type' => ShippmentCategory::INCOMING,
                 'shippment_id' => generateShipmentId(),
-                'package' => $package[0],
+                'package' => $package,
                 'customer' => $customer,
                 'vendor' => $vendor,
                 'status' => $request->status,
