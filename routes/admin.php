@@ -490,6 +490,7 @@ Route::middleware('validate.header')
                     ->controller(SuperAdminController::class)
                     ->group(function (): void {
                         Route::post('/add-user', 'addUser');
+                        Route::get('/all-users', 'getUsers');
                         Route::get('/profiles', 'getProfiles');
                         Route::post('/security', 'security');
                         Route::post('/verify-code', 'verifyCode');

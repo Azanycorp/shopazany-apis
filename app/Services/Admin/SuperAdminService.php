@@ -102,6 +102,25 @@ class SuperAdminService
         return $this->success(null, "User added successfully", 201);
     }
 
+    public function getUsers()
+    {
+        $user = Auth::user();
+        $searchQuery = request()->input('search');
+
+        $admins = Admin::with('permissions:id,name')
+            ->select('id', 'first_name', 'last_name', 'email', 'created_at')
+            ->when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
+                $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
+                    $subQuery->where('first_name', 'LIKE', "%{$searchQuery}%")
+                        ->orWhere('email', 'LIKE', "%{$searchQuery}%");
+                });
+            })
+            ->orderByDesc('created_at')
+            ->get();
+
+        return $this->success($admins, 'All Admin Users');
+    }
+
     public function security($request)
     {
         $user = Admin::findOrFail($request->user_id);

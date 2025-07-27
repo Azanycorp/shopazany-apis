@@ -50,6 +50,11 @@ class SuperAdminController extends Controller
         return $this->superAdminService->addUser($request);
     }
 
+    public function getUsers()
+    {
+        return $this->superAdminService->getUsers();
+    }
+
     public function security(Request $request)
     {
         return $this->superAdminService->security($request);
