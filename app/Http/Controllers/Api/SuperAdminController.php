@@ -45,14 +45,14 @@ class SuperAdminController extends Controller
         return $this->superAdminService->getProfile($userId);
     }
 
+    public function deleteAdmin($userId)
+    {
+        return $this->superAdminService->deleteAdmin($userId);
+    }
+
     public function addUser(AddUserRequest $request)
     {
         return $this->superAdminService->addUser($request);
-    }
-
-    public function getUsers()
-    {
-        return $this->superAdminService->getUsers();
     }
 
     public function security(Request $request)

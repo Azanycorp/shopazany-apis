@@ -62,7 +62,7 @@ class SuperAdminService
 
     public function getProfiles()
     {
-        $users = Admin::all();
+        $users = Admin::where('type', AdminType::SUPER_ADMIN)->latest()->get();
 
         $data = SuperAdminProfileResource::collection($users);
 
@@ -71,11 +71,20 @@ class SuperAdminService
 
     public function getProfile($userId)
     {
-        $user = Admin::findOrFail($userId);
+        $user = Admin::where('type', AdminType::SUPER_ADMIN)->where('id', $userId)->firstOrFail();
 
         $data = new SuperAdminProfileResource($user);
 
         return $this->success($data, "Profile");
+    }
+
+    public function deleteAdmin($userId)
+    {
+        $admin = Admin::where('type', AdminType::SUPER_ADMIN)->where('id', $userId)->firstOrFail();
+
+        $admin->delete();
+
+        return $this->success(null, "Admin deleted");
     }
 
     public function addUser($request)
@@ -83,11 +92,11 @@ class SuperAdminService
         $password = Str::random(8);
         $admin = Admin::create(
             $request->validated()
-            + [
-                'type' => AdminType::SUPER_ADMIN,
-                'password' => bcrypt($password),
-                'status' => AdminStatus::ACTIVE,
-            ]
+                + [
+                    'type' => AdminType::SUPER_ADMIN,
+                    'password' => bcrypt($password),
+                    'status' => AdminStatus::ACTIVE,
+                ]
         );
 
         $type = MailingEnum::ADMIN_ACCOUNT;
@@ -100,25 +109,6 @@ class SuperAdminService
         mailSend($type, $admin, $subject, $mail_class, $data);
 
         return $this->success(null, "User added successfully", 201);
-    }
-
-    public function getUsers()
-    {
-        $user = Auth::user();
-        $searchQuery = request()->input('search');
-
-        $admins = Admin::with('permissions:id,name')
-            ->select('id', 'first_name', 'last_name', 'email', 'created_at')
-            ->when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
-                $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
-                    $subQuery->where('first_name', 'LIKE', "%{$searchQuery}%")
-                        ->orWhere('email', 'LIKE', "%{$searchQuery}%");
-                });
-            })
-            ->orderByDesc('created_at')
-            ->get();
-
-        return $this->success($admins, 'All Admin Users');
     }
 
     public function security($request)

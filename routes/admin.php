@@ -490,12 +490,12 @@ Route::middleware('validate.header')
                     ->controller(SuperAdminController::class)
                     ->group(function (): void {
                         Route::post('/add-user', 'addUser');
-                        Route::get('/all-users', 'getUsers');
                         Route::get('/profiles', 'getProfiles');
                         Route::post('/security', 'security');
                         Route::post('/verify-code', 'verifyCode');
                         Route::post('/change-password', 'changePassword');
                         Route::get('/profile/{user_id}', 'getProfile');
+                        Route::delete('/delete-user/{user_id}', 'deleteAdmin');
 
                         // delivery (collation centers and hubs)
                         Route::controller(AdminController::class)->group(function (): void {
@@ -541,6 +541,6 @@ Route::middleware('validate.header')
                                 Route::patch('/dispatch/{id}', 'dispatchBatch');
                             });
                         });
-                });
+                    });
             });
     });
