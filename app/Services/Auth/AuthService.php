@@ -11,12 +11,10 @@ use App\Enum\UserStatus;
 use App\Enum\MailingEnum;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
-use Illuminate\Mail\Message;
 use App\Mail\UserWelcomeMail;
 use App\Mail\SignUpVerifyMail;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
 
 class AuthService extends Controller
@@ -218,7 +216,6 @@ class AuthService extends Controller
 
         if ($user->pending_referrer_code) {
             $this->handleReferrers($user->pending_referrer_code, $user);
-            $user->update(['pending_referrer_code' => null]);
         }
 
         $type = MailingEnum::EMAIL_VERIFICATION;
