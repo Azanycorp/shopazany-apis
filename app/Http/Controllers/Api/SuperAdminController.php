@@ -17,8 +17,7 @@ class SuperAdminController extends Controller
 
     public function __construct(
         protected SuperAdminService $superAdminService,
-    )
-    {}
+    ) {}
 
     public function clearCache()
     {
@@ -32,12 +31,12 @@ class SuperAdminController extends Controller
 
     public function seedRun()
     {
-       return $this->superAdminService->seedRun();
+        return $this->superAdminService->seedRun();
     }
 
     public function getProfiles()
     {
-       return $this->superAdminService->getProfiles();
+        return $this->superAdminService->getProfiles();
     }
 
     public function getProfile($userId)
@@ -76,5 +75,31 @@ class SuperAdminController extends Controller
         ]);
 
         return $this->superAdminService->changePassword($request);
+    }
+
+    //Affiliate section
+    public function affiliateOverview()
+    {
+        return $this->superAdminService->affiliateOverview();
+    }
+
+    public function allAffiliates()
+    {
+        return $this->superAdminService->allAffiliates();
+    }
+
+    public function affiliateDetail($id)
+    {
+        return $this->superAdminService->affiliateDetail($id);
+    }
+
+    public function suspendAffiliate($id)
+    {
+        return $this->superAdminService->suspendAffiliate($id);
+    }
+
+    public function resetAffiliatePassword(Request $request)
+    {
+        return $this->superAdminService->resetAffiliatePassword($request);
     }
 }
