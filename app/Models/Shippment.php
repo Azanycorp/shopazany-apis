@@ -46,7 +46,7 @@ class Shippment extends Model
     {
         return $this->belongsTo(CollationCenter::class, 'collation_id');
     }
-    
+
     public function hub()
     {
         return $this->belongsTo(PickupStation::class, 'hub_id');
