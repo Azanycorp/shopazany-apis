@@ -1008,6 +1008,7 @@ class AdminService
     public function editShippingAgent($request, $id)
     {
         $agent = ShippingAgent::findOrFail($id);
+
         $agent->update([
             'name' => $request->name ?? $agent->name,
             'type' => $request->type ?? $agent->type,
@@ -1026,6 +1027,7 @@ class AdminService
     public function deleteShippingAgent($id)
     {
         $agent = ShippingAgent::findOrFail($id);
+
         $agent->delete();
 
         return $this->success(null, 'Details deleted successfully');

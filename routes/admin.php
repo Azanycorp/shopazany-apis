@@ -252,17 +252,6 @@ Route::middleware('validate.header')
 
                 Route::controller(AdminController::class)
                     ->group(function (): void {
-                        // Admin users
-                        Route::prefix('admin-users')->group(function (): void {
-                            Route::get('/', 'adminUsers');
-                            Route::post('/add', 'addAdmin');
-                            Route::get('/details/{id}', 'viewAdminUser');
-                            Route::post('/update/{id}', 'editAdminUser');
-                            Route::post('/revoke-access/{id}', 'revokeAccess');
-                            Route::post('/verify-password', 'verifyPassword');
-                            Route::delete('/delete-account/{id}', 'removeAdmin');
-                        });
-
                         Route::prefix('profile')->group(function () {
                             Route::get('/', 'adminProfile');
                             Route::post('/update', 'updateAdminProfile');
@@ -278,7 +267,6 @@ Route::middleware('validate.header')
                 Route::prefix('b2b')->group(function (): void {
                     Route::controller(B2BAdminController::class)->group(function (): void {
                         Route::get('/dashboard', 'dashboard');
-
                         Route::get('/profile', 'adminProfile');
                         Route::post('/update-profile', 'updateAdminProfile');
                         Route::post('/update-password', 'updateAdminPassword');
