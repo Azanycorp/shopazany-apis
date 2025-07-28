@@ -91,32 +91,6 @@ class AdminController extends Controller
         return $this->superAdminService->deleteHub($id);
     }
 
-    // ShippingAgents section
-    public function shippingAgents()
-    {
-        return $this->superAdminService->shippingAgents();
-    }
-
-    public function addShippingAgent(ShippingAgentRequest $request)
-    {
-        return $this->superAdminService->addShippingAgent($request);
-    }
-
-    public function viewShippingAgent($id)
-    {
-        return $this->superAdminService->viewShippingAgent($id);
-    }
-
-    public function editShippingAgent(ShippingAgentRequest $request, $id)
-    {
-        return $this->superAdminService->editShippingAgent($request, $id);
-    }
-
-    public function deleteShippingAgent($id)
-    {
-        return $this->superAdminService->deleteShippingAgent($id);
-    }
-
     // profile
     public function adminProfile()
     {

@@ -318,17 +318,15 @@ Route::middleware('validate.header')
                         });
                     });
 
-                    Route::prefix('admin-users')
-                        ->controller(AdminController::class)
-                        ->group(function (): void {
-                            Route::get('/', 'adminUsers');
-                            Route::post('/add', 'addAdmin');
-                            Route::get('/details/{id}', 'viewAdminUser');
-                            Route::post('/update/{id}', 'editAdminUser');
-                            Route::post('/revoke-access/{id}', 'revokeAccess');
-                            Route::post('/verify-password', 'verifyPassword');
-                            Route::delete('/delete-account/{id}', 'removeAdmin');
-                        });
+                    Route::prefix('admin-users')->group(function (): void {
+                        Route::get('/', 'adminUsers');
+                        Route::post('/add', 'addAdmin');
+                        Route::get('/details/{id}', 'viewAdminUser');
+                        Route::post('/update/{id}', 'editAdminUser');
+                        Route::post('/revoke-access/{id}', 'revokeAccess');
+                        Route::post('/verify-password', 'verifyPassword');
+                        Route::delete('/delete-account/{id}', 'removeAdmin');
+                    });
 
                     Route::prefix('category')
                         ->controller(ProductCategoryController::class)
@@ -443,8 +441,8 @@ Route::middleware('validate.header')
                         });
 
                     // Seller Product Approval requests
-                    Route::prefix('product-approval-request')
-                        ->controller(B2BAdminController::class)
+                    Route::controller(B2BAdminController::class)
+                        ->prefix('product-approval-request')
                         ->group(function (): void {
                             Route::get('/', 'allProducts');
                             Route::get('/view/{id}', 'viewProduct');
@@ -453,18 +451,16 @@ Route::middleware('validate.header')
                         });
 
                     // Rfq
-                    Route::middleware('cacheResponse:300')
+                    Route::controller(B2BAdminController::class)
                         ->prefix('rfqs')
-                        ->controller(B2BAdminController::class)
                         ->group(function (): void {
                             Route::get('/', 'allRfq');
                             Route::get('/details/{id}', 'rfqDetails');
                         });
 
                     // Orders
-                    Route::middleware('cacheResponse:300')
+                    Route::controller(B2BAdminController::class)
                         ->prefix('orders')
-                        ->controller(B2BAdminController::class)
                         ->group(function (): void {
                             Route::get('/', 'allOrders');
                             Route::get('/details/{id}', 'orderDetails');

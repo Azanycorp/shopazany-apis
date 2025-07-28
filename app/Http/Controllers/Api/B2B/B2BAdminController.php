@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Gate;
 use App\Http\Requests\AdminUserRequest;
 use App\Http\Requests\Admin\BlogRequest;
 use App\Http\Requests\SocialLinkRequest;
+use App\Http\Requests\ShippingAgentRequest;
 use App\Http\Requests\Admin\NewBannerRequest;
 use App\Http\Requests\Admin\ClientLogoRequest;
 use App\Http\Requests\Admin\UpdateBlogRequest;
@@ -302,4 +303,31 @@ class B2BAdminController extends Controller
 
         return $this->adminService->removeAdmin($id);
     }
+
+    // ShippingAgents section
+    public function shippingAgents()
+    {
+        return $this->adminService->shippingAgents();
+    }
+
+    public function addShippingAgent(ShippingAgentRequest $request)
+    {
+        return $this->adminService->addShippingAgent($request);
+    }
+
+    public function viewShippingAgent($id)
+    {
+        return $this->adminService->viewShippingAgent($id);
+    }
+
+    public function editShippingAgent(ShippingAgentRequest $request, $id)
+    {
+        return $this->adminService->editShippingAgent($request, $id);
+    }
+
+    public function deleteShippingAgent($id)
+    {
+        return $this->adminService->deleteShippingAgent($id);
+    }
+
 }

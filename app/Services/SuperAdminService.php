@@ -432,67 +432,6 @@ class SuperAdminService
         return $this->success(new ShippmentResource($shippment), 'Item Logged successfully.');
     }
 
-    // Shipping Agents
-    public function shippingAgents()
-    {
-        $agents = ShippingAgent::latest()->get();
-        $data = ShippingAgentResource::collection($agents);
-
-        return $this->success($data, 'All Agents');
-    }
-
-    public function addShippingAgent($request)
-    {
-        $agent = ShippingAgent::create([
-            'name' => $request->name,
-            'type' => $request->type,
-            'country_ids' => $request->country_ids,
-            'account_email' => $request->account_email,
-            'account_password' => $request->account_password,
-            'api_live_key' => $request->api_live_key,
-            'api_test_key' => $request->api_test_key,
-            'status' => $request->status,
-        ]);
-
-        $this->createNotification('New Shipping Agent Added', 'New shipping agent created ' . $agent->name);
-
-        return $this->success($agent, 'Agent added successfully', 201);
-    }
-
-    public function viewShippingAgent($id)
-    {
-        $agent = ShippingAgent::findOrFail($id);
-        $data = new ShippingAgentResource($agent);
-
-        return $this->success($data, 'Agent details');
-    }
-
-    public function editShippingAgent($request, $id)
-    {
-        $agent = ShippingAgent::findOrFail($id);
-        $agent->update([
-            'name' => $request->name ?? $agent->name,
-            'type' => $request->type ?? $agent->type,
-            'logo' => $request->logo ?? $agent->logo,
-            'country_ids' => $request->country_ids ?? $agent->country_ids,
-            'account_email' => $request->account_email ?? $agent->account_email,
-            'account_password' => $request->account_password ?? $agent->account_password,
-            'api_live_key' => $request->api_live_key ?? $agent->api_live_key,
-            'api_test_key' => $request->api_test_key ?? $agent->api_test_key,
-            'status' => $request->status ?? $agent->status,
-        ]);
-
-        return $this->success(null, 'Details updated successfully');
-    }
-
-    public function deleteShippingAgent($id)
-    {
-        $agent = ShippingAgent::findOrFail($id);
-        $agent->delete();
-
-        return $this->success(null, 'Details deleted successfully');
-    }
-
     // CMS / Promo and banners
     public function adminProfile()
     {
@@ -636,7 +575,7 @@ class SuperAdminService
     }
 
     //Shippments
-    public function allShippments()
+    public function allShipments()
     {
         $order_counts = Shippment::selectRaw('
         COUNT(*) as total_orders,
