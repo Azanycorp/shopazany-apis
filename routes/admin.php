@@ -309,6 +309,7 @@ Route::middleware('validate.header')
                             Route::post('/update/{id}', 'updateClientLogo');
                             Route::delete('/delete/{id}', 'deleteClientLogo');
                         });
+
                         Route::prefix('social-links')->group(function (): void {
                             Route::get('/', 'socialLinks');
                             Route::post('/add', 'addLink');
@@ -316,16 +317,16 @@ Route::middleware('validate.header')
                             Route::post('/update/{id}', 'editLink');
                             Route::delete('/delete/{id}', 'deleteLink');
                         });
-                    });
 
-                    Route::prefix('admin-users')->group(function (): void {
-                        Route::get('/', 'adminUsers');
-                        Route::post('/add', 'addAdmin');
-                        Route::get('/details/{id}', 'viewAdminUser');
-                        Route::post('/update/{id}', 'editAdminUser');
-                        Route::post('/revoke-access/{id}', 'revokeAccess');
-                        Route::post('/verify-password', 'verifyPassword');
-                        Route::delete('/delete-account/{id}', 'removeAdmin');
+                        Route::prefix('admin-users')->group(function (): void {
+                            Route::get('/', 'adminUsers');
+                            Route::post('/add', 'addAdmin');
+                            Route::get('/details/{id}', 'viewAdminUser');
+                            Route::post('/update/{id}', 'editAdminUser');
+                            Route::post('/revoke-access/{id}', 'revokeAccess');
+                            Route::post('/verify-password', 'verifyPassword');
+                            Route::delete('/delete-account/{id}', 'removeAdmin');
+                        });
                     });
 
                     Route::prefix('category')
@@ -441,8 +442,8 @@ Route::middleware('validate.header')
                         });
 
                     // Seller Product Approval requests
-                    Route::controller(B2BAdminController::class)
-                        ->prefix('product-approval-request')
+                    Route::prefix('product-approval-request')
+                        ->controller(B2BAdminController::class)
                         ->group(function (): void {
                             Route::get('/', 'allProducts');
                             Route::get('/view/{id}', 'viewProduct');
@@ -451,16 +452,18 @@ Route::middleware('validate.header')
                         });
 
                     // Rfq
-                    Route::controller(B2BAdminController::class)
+                    Route::middleware('cacheResponse:300')
                         ->prefix('rfqs')
+                        ->controller(B2BAdminController::class)
                         ->group(function (): void {
                             Route::get('/', 'allRfq');
                             Route::get('/details/{id}', 'rfqDetails');
                         });
 
                     // Orders
-                    Route::controller(B2BAdminController::class)
+                    Route::middleware('cacheResponse:300')
                         ->prefix('orders')
+                        ->controller(B2BAdminController::class)
                         ->group(function (): void {
                             Route::get('/', 'allOrders');
                             Route::get('/details/{id}', 'orderDetails');

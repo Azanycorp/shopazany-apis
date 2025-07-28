@@ -1035,13 +1035,16 @@ class AdminService
     // Admin User Management
     public function adminUsers()
     {
+        $authUser = userAuth();
+
         $searchQuery = request()->input('search');
 
         $admins = Admin::with('permissions:id,name')
-            ->where('type', AdminType::B2B)
             ->select('id', 'first_name', 'last_name', 'email', 'created_at')
-            ->when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
-                $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
+            ->where('type', AdminType::B2B)
+            ->whereNot('id', $authUser->id)
+            ->when($searchQuery, function ($queryBuilder) use ($searchQuery) {
+                $queryBuilder->where(function ($subQuery) use ($searchQuery) {
                     $subQuery->where('first_name', 'LIKE', "%{$searchQuery}%")
                         ->orWhere('email', 'LIKE', "%{$searchQuery}%");
                 });
@@ -1051,6 +1054,7 @@ class AdminService
 
         return $this->success($admins, 'All Admin Users');
     }
+
 
     public function addAdmin($request)
     {
@@ -1093,14 +1097,14 @@ class AdminService
 
     public function viewAdmin($id)
     {
-        $admin = Admin::findOrFail($id);
+        $admin = Admin::where('type', AdminType::B2B)->where('id', $id)->firstOrFail();
 
         return $this->success($admin, 'Admin details');
     }
 
     public function editAdmin($request, $id)
     {
-        $admin = Admin::findOrFail($id);
+        $admin = Admin::where('type', AdminType::B2B)->where('id', $id)->firstOrFail();
 
         $admin->update([
             'first_name' => $request->first_name,
@@ -1122,7 +1126,7 @@ class AdminService
     {
         $currentUserId = userAuthId();
 
-        $admin = Admin::findOrFail($currentUserId);
+        $admin = Admin::where('type', AdminType::B2B)->where('id', $currentUserId)->firstOrFail();
 
         if (Hash::check($request->password, $admin->password)) {
             return $this->success(null, 'Password matched');
@@ -1133,7 +1137,8 @@ class AdminService
 
     public function revokeAccess($id)
     {
-        $admin = Admin::where('type', AdminType::B2B)->firstOrFail($id);
+        $admin = Admin::where('type', AdminType::B2B)->where('id', $id)->firstOrFail();
+
         $admin->permissions()->detach();
 
         return $this->success(null, 'Access Revoked');
@@ -1141,8 +1146,10 @@ class AdminService
 
     public function removeAdmin($id)
     {
-        $admin = Admin::where('type', AdminType::B2B)->firstOrFail($id);
+        $admin = Admin::where('type', AdminType::B2B)->where('id', $id)->firstOrFail();
+
         $admin->permissions()->detach();
+
         $admin->delete();
 
         return $this->success(null, 'Deleted successfully');
