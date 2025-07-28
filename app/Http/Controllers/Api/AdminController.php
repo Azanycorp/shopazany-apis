@@ -91,56 +91,6 @@ class AdminController extends Controller
         return $this->superAdminService->deleteHub($id);
     }
 
-    // Admin Users
-    public function adminUsers()
-    {
-        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
-
-        return $this->superAdminService->adminUsers();
-    }
-
-    public function addAdmin(AdminUserRequest $request)
-    {
-        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
-
-        return $this->superAdminService->addAdmin($request);
-    }
-
-    public function viewAdminUser($id)
-    {
-        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
-
-        return $this->superAdminService->viewAdmin($id);
-    }
-
-    public function editAdminUser(Request $request, $id)
-    {
-        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
-
-        return $this->superAdminService->editAdmin($request, $id);
-    }
-
-    public function verifyPassword(Request $request)
-    {
-        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
-
-        return $this->superAdminService->verifyPassword($request);
-    }
-
-    public function revokeAccess($id)
-    {
-        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
-
-        return $this->superAdminService->revokeAccess($id);
-    }
-
-    public function removeAdmin($id)
-    {
-        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
-
-        return $this->superAdminService->removeAdmin($id);
-    }
-
     // ShippingAgents section
     public function shippingAgents()
     {
