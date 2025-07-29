@@ -183,7 +183,6 @@ class SuperAdminService
 
     //Affiliate section
 
-
     public function affiliateOverview()
     {
         $startDate = Carbon::now()->subDays(7)->startOfDay();
@@ -264,7 +263,6 @@ class SuperAdminService
         return $this->success($data, 'Affiliate Overview');
     }
 
-
     public function allAffiliates()
     {
         $topAffiliates = User::where('is_affiliate_member', 1)
@@ -294,7 +292,6 @@ class SuperAdminService
         return $this->withPagination($topAffiliates, 'Affiliate Users');
     }
 
-
     public function affiliateDetail($id)
     {
         $user = User::withCount(['referrals'])
@@ -318,7 +315,6 @@ class SuperAdminService
                 'status' => $referral->status,
                 'subscription_status' => $referral->subscription_status,
                 'joined' => $referral->created_at,
-                'platform' => 'B2C',
             ]),
         ];
 

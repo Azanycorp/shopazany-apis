@@ -776,6 +776,35 @@ class SuperAdminService
         return $this->success(null, 'batch created ');
     }
 
+    public function processBatch($request)
+    {
+        $centre = CollationCenter::find($request->collation_id);
+
+        if (!$centre) {
+            return $this->error(null, 'Centre not found');
+        }
+
+        DB::transaction(function () use ($centre, $request) {
+
+            $batch = ShippmentBatch::create([
+                'collation_id' => $centre->id,
+                'type' => ShippmentCategory::INCOMING,
+                'batch_id' => generateBatchId(),
+                'shippment_ids' => $request->shipment_ids,
+                'note' => $request->note,
+            ]);
+
+            $batch->activities()->create([
+                'comment' => $request->note,
+                'note' => $request->note
+            ]);
+
+            $this->createNotification('New Shippment batch created', 'New Shippment batch created at ' . $centre->name . 'centre ' . 'by ' . Auth::user()->fullName);
+        });
+
+        return $this->success(null, 'batch created ');
+    }
+
     public function dispatchBatch($request, $id)
     {
         $batch = ShippmentBatch::findOrFail($id);
