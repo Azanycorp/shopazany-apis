@@ -77,29 +77,4 @@ class SuperAdminController extends Controller
         return $this->superAdminService->changePassword($request);
     }
 
-    //Affiliate section
-    public function affiliateOverview()
-    {
-        return $this->superAdminService->affiliateOverview();
-    }
-
-    public function allAffiliates()
-    {
-        return $this->superAdminService->allAffiliates();
-    }
-
-    public function affiliateDetail($id)
-    {
-        return $this->superAdminService->affiliateDetail($id);
-    }
-
-    public function suspendAffiliate($id)
-    {
-        return $this->superAdminService->suspendAffiliate($id);
-    }
-
-    public function resetAffiliatePassword(Request $request)
-    {
-        return $this->superAdminService->resetAffiliatePassword($request);
-    }
 }

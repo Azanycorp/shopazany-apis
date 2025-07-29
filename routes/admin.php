@@ -484,16 +484,6 @@ Route::middleware('validate.header')
                         Route::get('/profile/{user_id}', 'getProfile');
                         Route::delete('/delete-user/{user_id}', 'deleteAdmin');
 
-                        Route::prefix('affiliate')
-                            ->group(function (): void {
-                                Route::get('/overview', 'affiliateOverview');
-                                Route::get('/users', 'allAffiliates');
-                                Route::get('/user/{id}', 'affiliateDetail');
-                                Route::patch('/suspend/{id}', 'suspendAffiliate');
-                                Route::post('/reset-password', 'resetAffiliatePassword');
-                            });
-
-
                         // delivery (collation centers and hubs)
                         Route::controller(AdminController::class)->group(function (): void {
                             Route::get('/delivery-overview', 'deliveryOverview');
@@ -534,6 +524,7 @@ Route::middleware('validate.header')
 
                             Route::prefix('batch')->group(function (): void {
                                 Route::post('/create', 'createBatch');
+                                Route::patch('/process/{id}', 'processBatch');
                                 Route::get('/details/{id}', 'batchDetails');
                                 Route::patch('/dispatch/{id}', 'dispatchBatch');
                             });

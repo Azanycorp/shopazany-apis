@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
 use App\Http\Requests\Admin\HubRequest;
 use App\Http\Requests\AdminUserRequest;
+use App\Http\Requests\ProcessBatchRequest;
 use App\Http\Requests\ShippingAgentRequest;
 use App\Http\Requests\UpdateShippmentRequest;
 use App\Http\Requests\VerificationCodeRequest;
@@ -181,5 +182,20 @@ class AdminController extends Controller
     public function transferShipment(TransferShippmentRequest $request, $id)
     {
         return $this->superAdminService->transferShipment($request, $id);
+    }
+
+    public function batchDetails($id)
+    {
+        return $this->superAdminService->batchDetails($id);
+    }
+
+    public function createBatch(BatchRequest $request)
+    {
+        return $this->superAdminService->createBatch($request);
+    }
+
+    public function processBatch(ProcessBatchRequest $request, $id)
+    {
+        return $this->superAdminService->processBatch($request, $id);
     }
 }

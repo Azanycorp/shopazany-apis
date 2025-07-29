@@ -254,11 +254,11 @@ class SuperAdminService
                 SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as ready_for_pickup,
                 SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as in_transit
             ', [
-                OrderStatus::SHIPPED,
-                OrderStatus::DELIVERED,
-                OrderStatus::READY_FOR_PICKUP,
-                OrderStatus::IN_TRANSIT
-            ])
+            OrderStatus::SHIPPED,
+            OrderStatus::DELIVERED,
+            OrderStatus::READY_FOR_PICKUP,
+            OrderStatus::IN_TRANSIT
+        ])
             ->where('hub_id', $hub->id)
             ->first();
 
@@ -342,7 +342,7 @@ class SuperAdminService
             ] : null;
 
             $package = $order->products->map(function ($product) {
-              return (object) [
+                return (object) [
                     'name' => $product->name,
                     'quantity' => $product->pivot->product_quantity,
                     'price' => $product->pivot->price,
@@ -761,8 +761,13 @@ class SuperAdminService
                 'collation_id' => $centre->id,
                 'type' => ShippmentCategory::INCOMING,
                 'batch_id' => generateBatchId(),
-                'shippment_ids' => $request->shipment_ids,
-                'note' => $request->note,
+                "origin_hub" => $request->origin_hub,
+                "destination_hub" => $request->destination_hub,
+                "items" => $request->items_count,
+                "weight" => $request->weight,
+                "priority" => $request->priority,
+                "shippment_ids" => $request->shipment_ids,
+                "note" => $request->note
             ]);
 
             $batch->activities()->create([
@@ -773,23 +778,20 @@ class SuperAdminService
             $this->createNotification('New Shippment batch created', 'New Shippment batch created at ' . $centre->name . 'centre ' . 'by ' . Auth::user()->fullName);
         });
 
-        return $this->success(null, 'batch created ');
+        return $this->success(null, 'batch created successfully');
     }
 
-    public function processBatch($request)
+    public function processBatch($request,$id)
     {
-        $centre = CollationCenter::find($request->collation_id);
+        $batch = ShippmentBatch::find($id);
 
-        if (!$centre) {
-            return $this->error(null, 'Centre not found');
+        if (!$batch) {
+            return $this->error(null, 'Batch not found');
         }
 
-        DB::transaction(function () use ($centre, $request) {
+        DB::transaction(function () use ($batch, $request) {
 
-            $batch = ShippmentBatch::create([
-                'collation_id' => $centre->id,
-                'type' => ShippmentCategory::INCOMING,
-                'batch_id' => generateBatchId(),
+            $batch->update([
                 'shippment_ids' => $request->shipment_ids,
                 'note' => $request->note,
             ]);
@@ -799,10 +801,10 @@ class SuperAdminService
                 'note' => $request->note
             ]);
 
-            $this->createNotification('New Shippment batch created', 'New Shippment batch created at ' . $centre->name . 'centre ' . 'by ' . Auth::user()->fullName);
+            $this->createNotification('Shippment batch Processed', 'Shippment batch processed ' . 'by ' . Auth::user()->fullName);
         });
 
-        return $this->success(null, 'batch created ');
+        return $this->success(null, 'batch Processed ');
     }
 
     public function dispatchBatch($request, $id)
