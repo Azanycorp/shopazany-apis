@@ -529,6 +529,16 @@ Route::middleware('validate.header')
                                 Route::patch('/dispatch/{id}', 'dispatchBatch');
                             });
                         });
+                        //Affiliate
+                        Route::prefix('affiliate')
+                            ->controller(AdminAffiliateController::class)
+                            ->group(function (): void {
+                                Route::get('/overview', 'overview');
+                                Route::get('/users', 'allUsers');
+                                Route::get('/user/{id}', 'userDetail');
+                                Route::patch('/suspend/{id}', 'suspend');
+                                Route::post('/reset-password', 'resetPassword');
+                            });
                     });
             });
     });

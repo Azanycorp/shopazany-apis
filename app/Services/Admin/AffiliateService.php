@@ -105,21 +105,21 @@ class AffiliateService
             ->orderByDesc('wallets.balance')
             ->paginate(25);
 
-        $data = $topAffiliates->map(function ($user): array {
-            return [
-                'id' => $user->id,
-                'first_name' => $user->first_name,
-                'last_name' => $user->last_name,
-                'earnings' => $user->wallet_balance ?? 0,
-                'default_currency' => $user->default_currency,
-                'referred' => $user->referrals_count ?? 0,
-                'referrer_code' => $user->referrer_code,
-                'referrer_link' => $user->referrer_link,
-                'status' => $user->status,
-            ];
-        });
+       $topAffiliates->getCollection()->transform(function ($user) {
+        return [
+            'id' => $user->id,
+            'first_name' => $user->first_name,
+            'last_name' => $user->last_name,
+            'earnings' => $user->wallet_balance ?? 0,
+            'default_currency' => $user->default_currency,
+            'referred' => $user->referrals_count ?? 0,
+            'referrer_code' => $user->referrer_code,
+            'referrer_link' => $user->referrer_link,
+            'status' => $user->status,
+        ];
+    });
 
-        return $this->withPagination($data, 'Affiliate Users');
+        return $this->withPagination($topAffiliates, 'Affiliate Users');
     }
 
     public function userDetail($id)
