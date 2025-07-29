@@ -252,17 +252,6 @@ Route::middleware('validate.header')
 
                 Route::controller(AdminController::class)
                     ->group(function (): void {
-                        // Admin users
-                        Route::prefix('admin-users')->group(function (): void {
-                            Route::get('/', 'adminUsers');
-                            Route::post('/add', 'addAdmin');
-                            Route::get('/details/{id}', 'viewAdminUser');
-                            Route::post('/update/{id}', 'editAdminUser');
-                            Route::post('/revoke-access/{id}', 'revokeAccess');
-                            Route::post('/verify-password', 'verifyPassword');
-                            Route::delete('/delete-account/{id}', 'removeAdmin');
-                        });
-
                         Route::prefix('profile')->group(function () {
                             Route::get('/', 'adminProfile');
                             Route::post('/update', 'updateAdminProfile');
@@ -278,7 +267,6 @@ Route::middleware('validate.header')
                 Route::prefix('b2b')->group(function (): void {
                     Route::controller(B2BAdminController::class)->group(function (): void {
                         Route::get('/dashboard', 'dashboard');
-
                         Route::get('/profile', 'adminProfile');
                         Route::post('/update-profile', 'updateAdminProfile');
                         Route::post('/update-password', 'updateAdminPassword');
@@ -309,6 +297,7 @@ Route::middleware('validate.header')
                             Route::post('/update/{id}', 'updateClientLogo');
                             Route::delete('/delete/{id}', 'deleteClientLogo');
                         });
+
                         Route::prefix('social-links')->group(function (): void {
                             Route::get('/', 'socialLinks');
                             Route::post('/add', 'addLink');
@@ -316,11 +305,8 @@ Route::middleware('validate.header')
                             Route::post('/update/{id}', 'editLink');
                             Route::delete('/delete/{id}', 'deleteLink');
                         });
-                    });
 
-                    Route::prefix('admin-users')
-                        ->controller(AdminController::class)
-                        ->group(function (): void {
+                        Route::prefix('admin-users')->group(function (): void {
                             Route::get('/', 'adminUsers');
                             Route::post('/add', 'addAdmin');
                             Route::get('/details/{id}', 'viewAdminUser');
@@ -329,6 +315,7 @@ Route::middleware('validate.header')
                             Route::post('/verify-password', 'verifyPassword');
                             Route::delete('/delete-account/{id}', 'removeAdmin');
                         });
+                    });
 
                     Route::prefix('category')
                         ->controller(ProductCategoryController::class)
@@ -495,6 +482,7 @@ Route::middleware('validate.header')
                         Route::post('/verify-code', 'verifyCode');
                         Route::post('/change-password', 'changePassword');
                         Route::get('/profile/{user_id}', 'getProfile');
+                        Route::delete('/delete-user/{user_id}', 'deleteAdmin');
 
                         // delivery (collation centers and hubs)
                         Route::controller(AdminController::class)->group(function (): void {
@@ -536,10 +524,21 @@ Route::middleware('validate.header')
 
                             Route::prefix('batch')->group(function (): void {
                                 Route::post('/create', 'createBatch');
+                                Route::patch('/process/{id}', 'processBatch');
                                 Route::get('/details/{id}', 'batchDetails');
                                 Route::patch('/dispatch/{id}', 'dispatchBatch');
                             });
                         });
-                });
+                        //Affiliate
+                        Route::prefix('affiliate')
+                            ->controller(AdminAffiliateController::class)
+                            ->group(function (): void {
+                                Route::get('/overview', 'overview');
+                                Route::get('/users', 'allUsers');
+                                Route::get('/user/{id}', 'userDetail');
+                                Route::patch('/suspend/{id}', 'suspend');
+                                Route::post('/reset-password', 'resetPassword');
+                            });
+                    });
             });
     });

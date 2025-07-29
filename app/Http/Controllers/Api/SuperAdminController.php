@@ -17,8 +17,7 @@ class SuperAdminController extends Controller
 
     public function __construct(
         protected SuperAdminService $superAdminService,
-    )
-    {}
+    ) {}
 
     public function clearCache()
     {
@@ -32,17 +31,22 @@ class SuperAdminController extends Controller
 
     public function seedRun()
     {
-       return $this->superAdminService->seedRun();
+        return $this->superAdminService->seedRun();
     }
 
     public function getProfiles()
     {
-       return $this->superAdminService->getProfiles();
+        return $this->superAdminService->getProfiles();
     }
 
     public function getProfile($userId)
     {
         return $this->superAdminService->getProfile($userId);
+    }
+
+    public function deleteAdmin($userId)
+    {
+        return $this->superAdminService->deleteAdmin($userId);
     }
 
     public function addUser(AddUserRequest $request)
@@ -72,4 +76,5 @@ class SuperAdminController extends Controller
 
         return $this->superAdminService->changePassword($request);
     }
+
 }
