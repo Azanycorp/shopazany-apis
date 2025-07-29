@@ -725,7 +725,7 @@ class SuperAdminService
         $shippment = Shippment::findOrFail($id);
 
         if ($shippment->collation_id) {
-            return $this->error(null, 'shippment belongs to collation centre');
+            return $this->error(null, 'shippment belongs to collation centre', 404);
         }
 
         DB::transaction(function () use ($shippment, $request) {
@@ -743,7 +743,7 @@ class SuperAdminService
             ]);
         });
 
-        return $this->success(new ShippmentResource($shippment), 'shippment transfered');
+        return $this->success(new ShippmentResource($shippment), 'shipment transfered');
     }
 
     //Batch management
@@ -752,7 +752,7 @@ class SuperAdminService
         $centre = CollationCenter::find($request->collation_id);
 
         if (!$centre) {
-            return $this->error(null, 'Centre not found');
+            return $this->error(null, 'Centre not found', 404);
         }
 
         DB::transaction(function () use ($centre, $request) {
@@ -775,10 +775,10 @@ class SuperAdminService
                 'note' => $request->note
             ]);
 
-            $this->createNotification('New Shippment batch created', 'New Shippment batch created at ' . $centre->name . 'centre ' . 'by ' . Auth::user()->fullName);
+            $this->createNotification('New Shipment batch created', 'New Shipment batch created at ' . $centre->name . 'centre ' . 'by ' . Auth::user()->fullName);
         });
 
-        return $this->success(null, 'batch created successfully');
+        return $this->success(null, 'Batch created successfully');
     }
 
     public function processBatch($request,$id)
@@ -786,7 +786,7 @@ class SuperAdminService
         $batch = ShippmentBatch::find($id);
 
         if (!$batch) {
-            return $this->error(null, 'Batch not found');
+            return $this->error(null, 'Batch not found', 404);
         }
 
         DB::transaction(function () use ($batch, $request) {
@@ -804,7 +804,7 @@ class SuperAdminService
             $this->createNotification('Shippment batch Processed', 'Shippment batch processed ' . 'by ' . Auth::user()->fullName);
         });
 
-        return $this->success(null, 'batch Processed ');
+        return $this->success(null, 'Batch Processed');
     }
 
     public function dispatchBatch($request, $id)
@@ -836,6 +836,6 @@ class SuperAdminService
     {
         $batch = ShippmentBatch::findOrFail($id);
 
-        return $this->success(new BatchResource($batch), 'Batch details ');
+        return $this->success(new BatchResource($batch), 'Batch details');
     }
 }
