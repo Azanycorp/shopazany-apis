@@ -22,6 +22,9 @@ class ShippmentBatch extends Model
         'departure',
         'arrival',
         'note',
+        'origin_hub',
+        'destination_hub',
+        'weight',
     ];
 
     protected function casts(): array
