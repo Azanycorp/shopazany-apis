@@ -911,9 +911,7 @@ class AdminService
             ->latest()
             ->get();
 
-        $data = BlogResource::collection($blogs);
-
-        return $this->success($data, 'Added Blogs');
+        return $this->success(BlogResource::collection($blogs), 'Added Blogs');
     }
 
     public function addBlog($request)
@@ -937,9 +935,8 @@ class AdminService
     public function getBlog($id)
     {
         $blog = Blog::findOrFail($id);
-        $data = new BlogResource($blog);
 
-        return $this->success($data, 'Blog details');
+        return $this->success(new BlogResource($blog), 'Blog details');
     }
 
     public function updateBlog($request, $id)
