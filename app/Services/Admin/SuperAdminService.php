@@ -2,20 +2,26 @@
 
 namespace App\Services\Admin;
 
-use App\Enum\AdminStatus;
-use App\Enum\AdminType;
-use App\Enum\MailingEnum;
+use Carbon\Carbon;
+use App\Models\User;
 use App\Models\Admin;
+use App\Enum\AdminType;
+use App\Enum\UserStatus;
+use App\Enum\AdminStatus;
+use App\Enum\MailingEnum;
+use App\Mail\AdminUserMail;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Artisan;
-use App\Mail\AdminUserMail;
+use App\Enum\WithdrawalStatus;
 use App\Mail\ChangePasswordMail;
+use App\Trait\SuperAdminNotification;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Password;
 use App\Http\Resources\SuperAdminProfileResource;
 
 class SuperAdminService
 {
-    use HttpResponse;
+    use HttpResponse, SuperAdminNotification;
 
     public function clearCache()
     {
@@ -62,7 +68,7 @@ class SuperAdminService
 
     public function getProfiles()
     {
-        $users = Admin::all();
+        $users = Admin::where('type', AdminType::SUPER_ADMIN)->whereNot('id', auth()->user()->id)->latest()->get();
 
         $data = SuperAdminProfileResource::collection($users);
 
@@ -71,11 +77,20 @@ class SuperAdminService
 
     public function getProfile($userId)
     {
-        $user = Admin::findOrFail($userId);
+        $user = Admin::where('type', AdminType::SUPER_ADMIN)->where('id', $userId)->firstOrFail();
 
         $data = new SuperAdminProfileResource($user);
 
         return $this->success($data, "Profile");
+    }
+
+    public function deleteAdmin($userId)
+    {
+        $admin = Admin::where('type', AdminType::SUPER_ADMIN)->where('id', $userId)->firstOrFail();
+
+        $admin->delete();
+
+        return $this->success(null, "Admin deleted");
     }
 
     public function addUser($request)
@@ -83,11 +98,11 @@ class SuperAdminService
         $password = Str::random(8);
         $admin = Admin::create(
             $request->validated()
-            + [
-                'type' => AdminType::SUPER_ADMIN,
-                'password' => bcrypt($password),
-                'status' => AdminStatus::ACTIVE,
-            ]
+                + [
+                    'type' => AdminType::SUPER_ADMIN,
+                    'password' => bcrypt($password),
+                    'status' => AdminStatus::ACTIVE,
+                ]
         );
 
         $type = MailingEnum::ADMIN_ACCOUNT;
@@ -98,6 +113,7 @@ class SuperAdminService
             'pass' => $password,
         ];
         mailSend($type, $admin, $subject, $mail_class, $data);
+        $this->createNotification('New Admin Added', 'New admin account created for ' . $admin->fullName);
 
         return $this->success(null, "User added successfully", 201);
     }
@@ -164,4 +180,5 @@ class SuperAdminService
 
         return $this->success(null, "Password changed successfully");
     }
+
 }

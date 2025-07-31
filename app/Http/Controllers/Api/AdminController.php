@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
 use App\Http\Requests\Admin\HubRequest;
 use App\Http\Requests\AdminUserRequest;
+use App\Http\Requests\ProcessBatchRequest;
 use App\Http\Requests\ShippingAgentRequest;
 use App\Http\Requests\UpdateShippmentRequest;
 use App\Http\Requests\VerificationCodeRequest;
@@ -89,82 +90,6 @@ class AdminController extends Controller
     public function deleteHub($id)
     {
         return $this->superAdminService->deleteHub($id);
-    }
-
-    // Admin Users
-    public function adminUsers()
-    {
-        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
-
-        return $this->superAdminService->adminUsers();
-    }
-
-    public function addAdmin(AdminUserRequest $request)
-    {
-        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
-
-        return $this->superAdminService->addAdmin($request);
-    }
-
-    public function viewAdminUser($id)
-    {
-        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
-
-        return $this->superAdminService->viewAdmin($id);
-    }
-
-    public function editAdminUser(Request $request, $id)
-    {
-        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
-
-        return $this->superAdminService->editAdmin($request, $id);
-    }
-
-    public function verifyPassword(Request $request)
-    {
-        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
-
-        return $this->superAdminService->verifyPassword($request);
-    }
-
-    public function revokeAccess($id)
-    {
-        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
-
-        return $this->superAdminService->revokeAccess($id);
-    }
-
-    public function removeAdmin($id)
-    {
-        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
-
-        return $this->superAdminService->removeAdmin($id);
-    }
-
-    // ShippingAgents section
-    public function shippingAgents()
-    {
-        return $this->superAdminService->shippingAgents();
-    }
-
-    public function addShippingAgent(ShippingAgentRequest $request)
-    {
-        return $this->superAdminService->addShippingAgent($request);
-    }
-
-    public function viewShippingAgent($id)
-    {
-        return $this->superAdminService->viewShippingAgent($id);
-    }
-
-    public function editShippingAgent(ShippingAgentRequest $request, $id)
-    {
-        return $this->superAdminService->editShippingAgent($request, $id);
-    }
-
-    public function deleteShippingAgent($id)
-    {
-        return $this->superAdminService->deleteShippingAgent($id);
     }
 
     // profile
@@ -257,5 +182,20 @@ class AdminController extends Controller
     public function transferShipment(TransferShippmentRequest $request, $id)
     {
         return $this->superAdminService->transferShipment($request, $id);
+    }
+
+    public function batchDetails($id)
+    {
+        return $this->superAdminService->batchDetails($id);
+    }
+
+    public function createBatch(BatchRequest $request)
+    {
+        return $this->superAdminService->createBatch($request);
+    }
+
+    public function processBatch(ProcessBatchRequest $request, $id)
+    {
+        return $this->superAdminService->processBatch($request, $id);
     }
 }

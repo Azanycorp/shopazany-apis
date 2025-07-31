@@ -120,7 +120,7 @@
     <table class="container" cellpadding="0" cellspacing="0" border="0" style="max-width: 32rem; margin: 0 auto; padding: 1rem;">
         <tr>
             <td class="text-center" style="text-align: center; margin-bottom: 2rem;">
-                <img src="https://azany-uploads.s3.amazonaws.com/assets/logo.png" alt="Azany Logo" style="max-height: 6rem; margin: 0 auto; display: block; margin-bottom: 1rem;">
+                <img src="https://ik.imagekit.io/mdee2wnwm/Azany/logo/azanylogo.png?updatedAt=1753939975701" alt="Azany Logo" style="max-height: 6rem; margin: 0 auto; display: block; margin-bottom: 1rem;">
                 <h1 style="font-size: 1.25rem; font-weight: bold;">Hi <span style="font-weight: 600;">{{ $user['first_name'] }}</span>,</h1>
                 <p style="color: #4B5563; margin-bottom: 1.5rem;">Welcome to Azany!</p>
                 <p style="color: #6B7280;">Your #1 Global E-commerce Platform</p>
@@ -142,7 +142,7 @@
                             <table cellpadding="0" cellspacing="0" border="0" style="width: 100%; max-width: 36rem; margin: 0 auto;">
                                 <tr>
                                     <td style="text-align: center; padding-right: 1.25rem;">
-                                        <img src="https://azany-uploads.s3.amazonaws.com/assets/start.png" alt="Start" style="max-height: 8rem;">
+                                        <img src="https://ik.imagekit.io/mdee2wnwm/Azany/mail_images/Image.png?updatedAt=1753940375956" alt="Start" style="max-height: 8rem;">
                                     </td>
                                     <td style="text-align: left;">
                                         <h3 style="font-weight: bold; font-size: 0.875rem;">Let's get Started</h3>
@@ -158,7 +158,7 @@
                             <table cellpadding="0" cellspacing="0" border="0" style="width: 100%; max-width: 36rem; margin: 0 auto;">
                                 <tr>
                                     <td style="text-align: center; padding-right: 1.25rem;">
-                                        <img src="https://azany-uploads.s3.amazonaws.com/assets/verify.png" alt="Verify" style="max-height: 8rem;">
+                                        <img src="https://ik.imagekit.io/mdee2wnwm/Azany/mail_images/Image%20(1).png?updatedAt=1753940375361" alt="Verify" style="max-height: 8rem;">
                                     </td>
                                     <td style="text-align: left;">
                                         <h3 style="font-weight: bold; font-size: 0.875rem;">Verify your information</h3>
@@ -174,7 +174,7 @@
                             <table cellpadding="0" cellspacing="0" border="0" style="width: 100%; max-width: 36rem; margin: 0 auto;">
                                 <tr>
                                     <td style="text-align: center; padding-right: 1.25rem;">
-                                        <img src="https://azany-uploads.s3.amazonaws.com/assets/explore.png" alt="Explore" style="max-height: 8rem;">
+                                        <img src="https://ik.imagekit.io/mdee2wnwm/Azany/mail_images/Image%20(2).png?updatedAt=1753940375889" alt="Explore" style="max-height: 8rem;">
                                     </td>
                                     <td style="text-align: left;">
                                         <h3 style="font-weight: bold; font-size: 0.875rem;">Get Going</h3>
@@ -194,12 +194,12 @@
                 <table cellpadding="0" cellspacing="0" border="0" style="width: 100%; max-width: 72rem; margin: 2rem auto;">
                     <tr>
                         <td style="text-align: center; padding: 0.5rem;">
-                            <img src="https://azany-uploads.s3.amazonaws.com/assets/logo.png" alt="Azany Logo" style="max-height: 6rem;">
+                            <img src="https://ik.imagekit.io/mdee2wnwm/Azany/logo/azanylogo.png?updatedAt=1753939975701" alt="Azany Logo" style="max-height: 6rem;">
                         </td>
                         <td style="text-align: center; padding: 0.5rem;">
                             <h2 style="font-weight: bold; color: #E02014;">Support</h2>
                             <address style="color: #4B5563;">
-                                333 Freemont Street, California<br>
+                                320 W Lanier Ave Suite 200, Fayetteville, GA 30214<br>
                                 support@shopazany.com<br>
                                 +1 (800) 750-7442<br>
                                 +1 (470) 255-0365
@@ -208,10 +208,10 @@
                         <td style="text-align: center; padding: 0.5rem;">
                             <h2 style="font-weight: bold; color: #E02014;">Quick Links</h2>
                             <ul style="color: #4B5563; padding: 0; list-style-type: none;">
-                                <li>Privacy Policy</li>
-                                <li>Terms Of Use</li>
-                                <li>FAQ</li>
-                                <li>Contact</li>
+                                <li><a href="https://shopazany.com/en/privacy-policy"> Policy </a></li>
+                                <li><a href="https://shopazany.com/en/terms-and-conditions"> Terms Of Use </a></li>
+                                <li><a href="https://shopazany.com/en/support-policy"> Support Policy </a></li>
+                                <li><a href="https://shopazany.com/en/contact"> Contact </a></li>
                             </ul>
                         </td>
                     </tr>

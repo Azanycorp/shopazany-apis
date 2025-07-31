@@ -254,11 +254,11 @@ class SuperAdminService
                 SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as ready_for_pickup,
                 SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as in_transit
             ', [
-                OrderStatus::SHIPPED,
-                OrderStatus::DELIVERED,
-                OrderStatus::READY_FOR_PICKUP,
-                OrderStatus::IN_TRANSIT
-            ])
+            OrderStatus::SHIPPED,
+            OrderStatus::DELIVERED,
+            OrderStatus::READY_FOR_PICKUP,
+            OrderStatus::IN_TRANSIT
+        ])
             ->where('hub_id', $hub->id)
             ->first();
 
@@ -342,7 +342,7 @@ class SuperAdminService
             ] : null;
 
             $package = $order->products->map(function ($product) {
-              return (object) [
+                return (object) [
                     'name' => $product->name,
                     'quantity' => $product->pivot->product_quantity,
                     'price' => $product->pivot->price,
@@ -430,186 +430,6 @@ class SuperAdminService
         $this->createNotification('New Shippment created', 'New Shippment created at ' . $hub->name . 'Pickup station/hub ' . 'by ' . Auth::user()->fullName);
 
         return $this->success(new ShippmentResource($shippment), 'Item Logged successfully.');
-    }
-
-    // Admin User Management
-    public function adminUsers()
-    {
-        $user = Auth::user();
-        $searchQuery = request()->input('search');
-
-        $admins = Admin::with('permissions:id,name')
-            ->select('id', 'first_name', 'last_name', 'email', 'created_at')
-            ->when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
-                $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
-                    $subQuery->where('first_name', 'LIKE', "%{$searchQuery}%")
-                        ->orWhere('email', 'LIKE', "%{$searchQuery}%");
-                });
-            })
-            ->orderByDesc('created_at')
-            ->get();
-
-        return $this->success($admins, 'All Admin Users');
-    }
-
-    public function addAdmin($request)
-    {
-        DB::beginTransaction();
-        try {
-            $password = Str::random(5);
-
-            $admin = Admin::create([
-                'first_name' => $request->first_name,
-                'last_name' => $request->last_name,
-                'email' => $request->email,
-                'type' => $request->type,
-                'status' => AdminStatus::ACTIVE,
-                'phone_number' => $request->phone_number,
-                'password' => bcrypt($password),
-            ]);
-
-            $admin->permissions()->sync($request->permissions);
-
-            $loginDetails = [
-                'name' => $request->first_name,
-                'email' => $request->email,
-                'password' => $password,
-            ];
-
-            DB::commit();
-
-            $type = MailingEnum::ADMIN_ACCOUNT;
-            $subject = 'Admin Account Creation email';
-            $mail_class = B2BNewAdminEmail::class;
-
-            mailSend($type, $admin, $subject, $mail_class, $loginDetails);
-
-            $this->createNotification('New Admin Added', 'New admin account created for ' . $admin->fullName);
-
-            return $this->success($admin, 'Admin user added successfully', 201);
-        } catch (\Throwable $th) {
-            DB::rollBack();
-            throw $th;
-        }
-    }
-
-    public function viewAdmin($id)
-    {
-        $admin = Admin::findOrFail($id);
-
-        return $this->success($admin, 'Admin details');
-    }
-
-    public function editAdmin($request, $id)
-    {
-        $admin = Admin::findOrFail($id);
-
-        $admin->update([
-            'first_name' => $request->first_name,
-            'last_name' => $request->last_name,
-            'email' => $request->email,
-            'type' => $request->type,
-            'phone_number' => $request->phone_number,
-        ]);
-
-        $admin->roles()->sync($request->role_id);
-
-        if ($request->permissions) {
-            $admin->permissions()->sync($request->permissions);
-        }
-
-        return $this->success($admin, 'Details updated successfully');
-    }
-
-    public function verifyPassword($request)
-    {
-        $currentUserId = userAuthId();
-
-        $admin = Admin::findOrFail($currentUserId);
-
-        if (Hash::check($request->password, $admin->password)) {
-            return $this->success(null, 'Password matched');
-        }
-
-        return $this->error(null, 'Password do not match');
-    }
-
-    public function revokeAccess($id)
-    {
-        $admin = Admin::findOrFail($id);
-        $admin->permissions()->detach();
-
-        return $this->success(null, 'Access Revoked');
-    }
-
-    public function removeAdmin($id)
-    {
-        $admin = Admin::findOrFail($id);
-        $admin->permissions()->detach();
-        $admin->delete();
-
-        return $this->success(null, 'Deleted successfully');
-    }
-
-    // Shipping Agents
-    public function shippingAgents()
-    {
-        $agents = ShippingAgent::latest()->get();
-        $data = ShippingAgentResource::collection($agents);
-
-        return $this->success($data, 'All Agents');
-    }
-
-    public function addShippingAgent($request)
-    {
-        $agent = ShippingAgent::create([
-            'name' => $request->name,
-            'type' => $request->type,
-            'country_ids' => $request->country_ids,
-            'account_email' => $request->account_email,
-            'account_password' => $request->account_password,
-            'api_live_key' => $request->api_live_key,
-            'api_test_key' => $request->api_test_key,
-            'status' => $request->status,
-        ]);
-
-        $this->createNotification('New Shipping Agent Added', 'New shipping agent created ' . $agent->name);
-
-        return $this->success($agent, 'Agent added successfully', 201);
-    }
-
-    public function viewShippingAgent($id)
-    {
-        $agent = ShippingAgent::findOrFail($id);
-        $data = new ShippingAgentResource($agent);
-
-        return $this->success($data, 'Agent details');
-    }
-
-    public function editShippingAgent($request, $id)
-    {
-        $agent = ShippingAgent::findOrFail($id);
-        $agent->update([
-            'name' => $request->name ?? $agent->name,
-            'type' => $request->type ?? $agent->type,
-            'logo' => $request->logo ?? $agent->logo,
-            'country_ids' => $request->country_ids ?? $agent->country_ids,
-            'account_email' => $request->account_email ?? $agent->account_email,
-            'account_password' => $request->account_password ?? $agent->account_password,
-            'api_live_key' => $request->api_live_key ?? $agent->api_live_key,
-            'api_test_key' => $request->api_test_key ?? $agent->api_test_key,
-            'status' => $request->status ?? $agent->status,
-        ]);
-
-        return $this->success(null, 'Details updated successfully');
-    }
-
-    public function deleteShippingAgent($id)
-    {
-        $agent = ShippingAgent::findOrFail($id);
-        $agent->delete();
-
-        return $this->success(null, 'Details deleted successfully');
     }
 
     // CMS / Promo and banners
@@ -755,7 +575,7 @@ class SuperAdminService
     }
 
     //Shippments
-    public function allShippments()
+    public function allShipments()
     {
         $order_counts = Shippment::selectRaw('
         COUNT(*) as total_orders,
@@ -905,7 +725,7 @@ class SuperAdminService
         $shippment = Shippment::findOrFail($id);
 
         if ($shippment->collation_id) {
-            return $this->error(null, 'shippment belongs to collation centre');
+            return $this->error(null, 'shippment belongs to collation centre', 404);
         }
 
         DB::transaction(function () use ($shippment, $request) {
@@ -923,7 +743,7 @@ class SuperAdminService
             ]);
         });
 
-        return $this->success(new ShippmentResource($shippment), 'shippment transfered');
+        return $this->success(new ShippmentResource($shippment), 'shipment transfered');
     }
 
     //Batch management
@@ -932,7 +752,7 @@ class SuperAdminService
         $centre = CollationCenter::find($request->collation_id);
 
         if (!$centre) {
-            return $this->error(null, 'Centre not found');
+            return $this->error(null, 'Centre not found', 404);
         }
 
         DB::transaction(function () use ($centre, $request) {
@@ -941,6 +761,37 @@ class SuperAdminService
                 'collation_id' => $centre->id,
                 'type' => ShippmentCategory::INCOMING,
                 'batch_id' => generateBatchId(),
+                "origin_hub" => $request->origin_hub,
+                "destination_hub" => $request->destination_hub,
+                "items" => $request->items_count,
+                "weight" => $request->weight,
+                "priority" => $request->priority,
+                "shippment_ids" => $request->shipment_ids,
+                "note" => $request->note
+            ]);
+
+            $batch->activities()->create([
+                'comment' => $request->note,
+                'note' => $request->note
+            ]);
+
+            $this->createNotification('New Shipment batch created', 'New Shipment batch created at ' . $centre->name . 'centre ' . 'by ' . Auth::user()->fullName);
+        });
+
+        return $this->success(null, 'Batch created successfully');
+    }
+
+    public function processBatch($request,$id)
+    {
+        $batch = ShippmentBatch::find($id);
+
+        if (!$batch) {
+            return $this->error(null, 'Batch not found', 404);
+        }
+
+        DB::transaction(function () use ($batch, $request) {
+
+            $batch->update([
                 'shippment_ids' => $request->shipment_ids,
                 'note' => $request->note,
             ]);
@@ -950,10 +801,10 @@ class SuperAdminService
                 'note' => $request->note
             ]);
 
-            $this->createNotification('New Shippment batch created', 'New Shippment batch created at ' . $centre->name . 'centre ' . 'by ' . Auth::user()->fullName);
+            $this->createNotification('Shippment batch Processed', 'Shippment batch processed ' . 'by ' . Auth::user()->fullName);
         });
 
-        return $this->success(null, 'batch created ');
+        return $this->success(null, 'Batch Processed');
     }
 
     public function dispatchBatch($request, $id)
@@ -985,6 +836,6 @@ class SuperAdminService
     {
         $batch = ShippmentBatch::findOrFail($id);
 
-        return $this->success(new BatchResource($batch), 'Batch details ');
+        return $this->success(new BatchResource($batch), 'Batch details');
     }
 }
