@@ -29,4 +29,9 @@ class SubscriptionPlan extends Model
             'tagline' => 'array',
         ];
     }
+
+    public function subscriptions()
+    {
+        return $this->hasMany(UserSubcription::class, 'subscription_plan_id');
+    }
 }

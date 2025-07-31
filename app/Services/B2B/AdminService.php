@@ -57,9 +57,13 @@ class AdminService
     public function dashboard()
     {
         $users = User::all();
+
         $orders = B2bOrder::orderStats();
+
         $rfqs = Rfq::with(['buyer', 'seller'])->latest()->get();
+
         $completion_request = B2bOrder::where('status', OrderStatus::SHIPPED)->take(3)->get();
+        
         $data = [
             'buyers' => $users->where('type', UserType::B2B_BUYER)->count(),
             'sellers' => $users->where('type', UserType::B2B_SELLER)->count(),
@@ -79,7 +83,9 @@ class AdminService
     public function getAllRfq()
     {
         $rfqs = Rfq::with(['buyer', 'seller'])->latest()->get();
+
         $active_rfqs = Rfq::where('status', OrderStatus::COMPLETED)->count();
+
         $users = User::all();
 
         $data = [
@@ -141,6 +147,7 @@ class AdminService
     public function markCompleted($id)
     {
         $order = B2bOrder::findOrFail($id);
+
         $order->update([
             'status' => OrderStatus::DELIVERED,
         ]);
@@ -367,30 +374,35 @@ class AdminService
     public function viewSellerProduct($user_id, $product_id)
     {
         $user = User::find($user_id);
+
         $prod = B2BProduct::where('user_id', $user->id)->find($product_id);
+
         if (! $user) {
             return $this->error(null, 'No user found.', 404);
         }
+
         if (! $prod) {
             return $this->error(null, 'No product found.', 404);
         }
-        $data = new B2BProductResource($prod);
 
-        return $this->success($data, 'Product details');
+        return $this->success(new B2BProductResource($prod), 'Product details');
     }
 
     public function editSellerProduct($request, $user_id, int $product_id)
     {
         $prod = B2BProduct::find($product_id);
+
+        if (! $prod) {
+            return $this->error(null, 'No Product found.', 404);
+        }
+
         $user = User::find($user_id);
 
         if (! $user) {
             return $this->error(null, 'No user found.', 404);
         }
 
-        if (! $prod) {
-            return $this->error(null, 'No Product found.', 404);
-        }
+
 
         if ($prod->user_id != $user_id) {
             return $this->error(null, 'Unauthorized action.', 401);
@@ -526,6 +538,7 @@ class AdminService
     public function editBuyerCompany($request, $id)
     {
         $user = User::findOrFail($id);
+
         $company = B2bCompany::where('user_id', $user->id)->first();
 
         if (! $company) {
@@ -545,6 +558,7 @@ class AdminService
     public function removeBuyer($id)
     {
         $user = User::findOrFail($id);
+
         $user->delete();
 
         return $this->success(null, 'User removed successfully');
@@ -599,6 +613,7 @@ class AdminService
     public function adminProfile()
     {
         $authUser = userAuth();
+
         $user = Admin::where('type', AdminType::B2B)
             ->where('id', $authUser->id)
             ->firstOrFail();
@@ -629,6 +644,7 @@ class AdminService
     public function enableTwoFactor($request)
     {
         $authUser = userAuth();
+
         $user = Admin::where('type', AdminType::B2B)
             ->where('id', $authUser->id)
             ->firstOrFail();
@@ -643,6 +659,7 @@ class AdminService
     public function updateAdminPassword($request)
     {
         $authUser = userAuth();
+
         $user = Admin::where('type', AdminType::B2B)
             ->where('id', $authUser->id)
             ->firstOrFail();
@@ -701,7 +718,8 @@ class AdminService
 
     public function updatePageBanner($request, $id)
     {
-        $banner = PageBanner::where('type', BannerType::B2B)->findOrFail($id);
+        $banner = PageBanner::where('type', BannerType::B2B)
+            ->where('id', $id)->firstOrFail();
 
         if ($banner && $request->hasFile('banner_url')) {
             $banner_url = uploadImage($request, 'banner_url', 'home-banner');
@@ -737,14 +755,15 @@ class AdminService
     {
         $banner = PageBanner::select('id', 'page', 'section', 'type', 'banner_url')
             ->where('type', BannerType::B2B)
-            ->findOrFail($id);
+            ->where('id', $id)->firstOrFail();
 
         return $this->success($banner, 'Banner details');
     }
 
     public function deletePageBanner($id)
     {
-        $banner = PageBanner::where('type', BannerType::B2B)->findOrFail($id);
+        $banner = PageBanner::where('type', BannerType::B2B)->where('id', $id)->firstOrFail();
+
         $banner->delete();
 
         return $this->success(null, 'Details Deleted');
@@ -776,10 +795,6 @@ class AdminService
             ->latest()
             ->get();
 
-        if ($products->isEmpty()) {
-            return $this->error(null, 'No record found', 404);
-        }
-
         return $this->success($products, 'Products listing');
     }
 
@@ -789,7 +804,8 @@ class AdminService
             $query->select('id', 'first_name', 'last_name')
                 ->where('type', UserType::B2B_SELLER);
         }])
-            ->findOrFail($id);
+            ->where('id', $id)
+            ->firstOrFail();
 
         return $this->success($product, 'Product details');
     }
@@ -821,14 +837,14 @@ class AdminService
     public function b2bSubscriptionPlans()
     {
         $plans = SubscriptionPlan::where('type', PlanType::B2B)->latest()->get();
-        $data = SubscriptionPlanResource::collection($plans);
 
-        return $this->success($data, 'All B2B Plans');
+        return $this->success(SubscriptionPlanResource::collection($plans), 'All B2B Plans');
     }
 
     public function addSubscriptionPlan($request)
     {
         $currencyCode = $this->currencyCode($request);
+
         $plan = SubscriptionPlan::create([
             'title' => $request->title,
             'cost' => $request->cost,
@@ -843,7 +859,7 @@ class AdminService
             'status' => PlanStatus::ACTIVE,
         ]);
 
-        return $this->success($plan, 'Plan added successfully', 201);
+        return $this->success(new SubscriptionPlanResource($plan), 'Plan added successfully', 201);
     }
 
     public function viewSubscriptionPlan($id)
@@ -905,15 +921,14 @@ class AdminService
     public function allBlogs()
     {
         $currentUserId = userAuthId();
+
         $blogs = Blog::with('user')
             ->where('admin_id', $currentUserId)
             ->where('type', BannerType::B2B)
             ->latest()
             ->get();
 
-        $data = BlogResource::collection($blogs);
-
-        return $this->success($data, 'Added Blogs');
+        return $this->success(BlogResource::collection($blogs), 'Added Blogs');
     }
 
     public function addBlog($request)
@@ -937,9 +952,8 @@ class AdminService
     public function getBlog($id)
     {
         $blog = Blog::findOrFail($id);
-        $data = new BlogResource($blog);
 
-        return $this->success($data, 'Blog details');
+        return $this->success(new BlogResource($blog), 'Blog details');
     }
 
     public function updateBlog($request, $id)
@@ -970,15 +984,12 @@ class AdminService
         return $this->success('Blog deleted successfully.');
     }
 
-
     // Shipping Agents
     public function shippingAgents()
     {
         $agents = ShippingAgent::latest()->get();
 
-        $data = ShippingAgentResource::collection($agents);
-
-        return $this->success($data, 'All Agents');
+        return $this->success(ShippingAgentResource::collection($agents), 'All Agents');
     }
 
     public function addShippingAgent($request)
@@ -994,15 +1005,14 @@ class AdminService
             'status' => $request->status,
         ]);
 
-        return $this->success($agent, 'Agent added successfully', 201);
+        return $this->success(new ShippingAgentResource($agent), 'Agent added successfully', 201);
     }
 
     public function viewShippingAgent($id)
     {
         $agent = ShippingAgent::findOrFail($id);
-        $data = new ShippingAgentResource($agent);
 
-        return $this->success($data, 'Agent details');
+        return $this->success(new ShippingAgentResource($agent), 'Agent details');
     }
 
     public function editShippingAgent($request, $id)
@@ -1162,30 +1172,26 @@ class AdminService
     {
         $clients = ClientLogo::latest()->get();
 
-        $data = ClientLogoResource::collection($clients);
-
-        return $this->success($data, 'Added client Logos');
+        return $this->success(ClientLogoResource::collection($clients), 'Added client Logos');
     }
 
     public function addClientLogo($request)
     {
         $url = uploadImage($request, 'logo', 'clients');
 
-        $plan = ClientLogo::create([
+        $client = ClientLogo::create([
             'name' => $request->name,
             'logo' => $url['url'],
         ]);
 
-        return $this->success($plan, 'Client Logo added successfully', 201);
+        return $this->success(new ClientLogoResource($client), 'Client Logo added successfully', 201);
     }
 
     public function getClientLogo($id)
     {
         $client = ClientLogo::findOrFail($id);
 
-        $data = new ClientLogoResource($client);
-
-        return $this->success($data, 'Client details');
+        return $this->success(new ClientLogoResource($client), 'Client details');
     }
 
     public function updateClientLogo($request, $id)
@@ -1209,16 +1215,14 @@ class AdminService
         $client->delete();
 
         return $this->success('Blog deleted successfully.');
-        // Social Links
     }
 
+    // Social Links
     public function getSocialLinks()
     {
         $links = SocialSetting::latest()->get();
 
-        $data = SocialLinkResource::collection($links);
-
-        return $this->success($data, 'Social links');
+        return $this->success(SocialLinkResource::collection($links), 'Social links');
     }
 
     public function addSocialLink($request)
@@ -1229,18 +1233,14 @@ class AdminService
             'url' => $request->url,
         ]);
 
-        $data = new SocialLinkResource($link);
-
-        return $this->success($data, 'link added successfully', 201);
+        return $this->success(new SocialLinkResource($link), 'link added successfully', 201);
     }
 
     public function viewLink($id)
     {
         $link = SocialSetting::findOrFail($id);
 
-        $data = new SocialLinkResource($link);
-
-        return $this->success($data, 'link details');
+        return $this->success(new SocialLinkResource($link), 'link details');
     }
 
     public function editLink($request, $id)
