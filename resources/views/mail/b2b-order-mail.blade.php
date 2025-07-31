@@ -192,7 +192,7 @@
 <body>
     <div class="container">
         <div class="logo">
-            <img src="https://azany-uploads.s3.amazonaws.com/assets/logo.png" alt="Azany Logo">
+            <img src="https://ik.imagekit.io/mdee2wnwm/Azany/logo/azanylogo.png?updatedAt=1753939975701" alt="Azany Logo">
         </div>
         <h1>Hi {{ $orderedItems['buyer_name'] }},</h1>
         <h2>Order {{ $orderedItems['order_number'] }} Has been Placed.</h2>
@@ -200,7 +200,7 @@
 
         <div class="banner">
             <div class="banner-text">ORDER CONFIRMED</div>
-            <img src="https://azany-uploads.s3.amazonaws.com/assets/orderconfirmed.png" alt="Order Confirmed Banner">
+            <img src="https://ik.imagekit.io/mdee2wnwm/Azany/mail_images/Rectangle%206263.png?updatedAt=1753940698633" alt="Order Confirmed Banner">
         </div>
 
         <div class="message">
@@ -289,7 +289,7 @@
 
         <div class="footer">
             <div class="footer-logo">
-                <img src="https://azany-uploads.s3.amazonaws.com/assets/logo.png" alt="Azany Logo">
+                <img src="https://ik.imagekit.io/mdee2wnwm/Azany/logo/azanylogo.png?updatedAt=1753939975701" alt="Azany Logo">
             </div>
             <div class="footer-info">
                 <div>
