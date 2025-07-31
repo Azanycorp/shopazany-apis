@@ -64,8 +64,8 @@ class SellerService extends Controller
 
         $folder = folderName('document/businessreg');
 
-        $businessDoc = $request->hasFile('business_reg_document') ? 
-            uploadImage($request, 'business_reg_document', $folder) : 
+        $businessDoc = $request->hasFile('business_reg_document') ?
+            uploadImage($request, 'business_reg_document', $folder) :
             ['url' => null];
 
         $identifyTypeDoc = ['url' => null];
@@ -101,17 +101,18 @@ class SellerService extends Controller
         $authId = userAuthId();
 
         $user = User::findOrFail($authId);
-        $data = new B2BSellerProfileResource($user);
 
-        return $this->success($data, 'Seller profile');
+        return $this->success(new B2BSellerProfileResource($user), 'Seller profile');
     }
 
     public function editAccount($request)
     {
         $currentUserId = userAuthId();
+
         $user = User::find($currentUserId);
-        $image = $request->hasFile('logo') ? 
-            uploadUserImage($request, 'logo', $user) : 
+
+        $image = $request->hasFile('logo') ?
+            uploadUserImage($request, 'logo', $user) :
             ['url' => $user->image, 'public_id' => $user->public_id];
 
         $user->update([
@@ -188,11 +189,13 @@ class SellerService extends Controller
     public function b2bproductImport($request)
     {
         $currentUserId = userAuthId();
+
         if ($currentUserId != $request->user_id) {
             return $this->error(null, 'Unauthorized action.', 401);
         }
 
         $seller = User::find($currentUserId);
+
         if (! $seller) {
             return $this->error(null, 'User details not found.', 404);
         }
@@ -229,7 +232,7 @@ class SellerService extends Controller
             $slug = Str::slug($request->name);
 
             if (B2BProduct::where('slug', $slug)->exists()) {
-                $slug = $slug.'-'.uniqid();
+                $slug = $slug . '-' . uniqid();
             }
 
             if ($request->hasFile('front_image')) {
@@ -278,9 +281,11 @@ class SellerService extends Controller
         }
 
         $user = User::select('id')->findOrFail($request->user_id)->id;
+
         $search = request()->input('search');
 
         $products = $this->b2bProductRepository->all($user, $search);
+
         $data = B2BProductResource::collection($products);
 
         return $this->success($data, 'All products');
@@ -289,13 +294,13 @@ class SellerService extends Controller
     public function getProductById(int $product_id, $user_id)
     {
         $currentUserId = userAuthId();
+
         if ($currentUserId != $user_id) {
             return $this->error(null, 'Unauthorized action.', 401);
         }
         $prod = $this->b2bProductRepository->find($product_id);
-        $data = new B2BProductResource($prod);
 
-        return $this->success($data, 'Product details');
+        return $this->success(new B2BProductResource($prod), 'Product details');
     }
 
     public function updateProduct($request)
@@ -307,7 +312,9 @@ class SellerService extends Controller
         }
 
         $user = User::findOrFail($request->user_id);
+
         $prod = B2BProduct::find($request->product_id);
+
         if (! $prod) {
             return $this->error(null, 'No product found with this Id.', 404);
         }
@@ -321,7 +328,7 @@ class SellerService extends Controller
             $slug = Str::slug($request->name);
 
             if (B2BProduct::where('slug', $slug)->exists()) {
-                $slug = $slug.'-'.uniqid();
+                $slug = $slug . '-' . uniqid();
             }
         } else {
             $slug = $prod->slug;
@@ -450,9 +457,8 @@ class SellerService extends Controller
         }
 
         $shipping = $this->b2bSellerShippingRepository->find($shipping_id);
-        $data = new B2BSellerShippingAddressResource($shipping);
 
-        return $this->success($data, 'Address detail');
+        return $this->success(new B2BSellerShippingAddressResource($shipping), 'Address detail');
     }
 
     public function updateShipping($request, int $shipping_id)
@@ -610,8 +616,9 @@ class SellerService extends Controller
         if (! $currentUserId) {
             return $this->error(null, 'Unauthorized action.', 401);
         }
-        $startDate = now()->subDays(30); // 30 days ago
-        $endDate = now(); // Current date and time
+        $startDate = now()->subDays(30);
+
+        $endDate = now();
 
         $currentUserId = userAuthId();
         $totalSales = B2bOrder::where('seller_id', $currentUserId)
@@ -642,10 +649,11 @@ class SellerService extends Controller
 
     public function getOrderDetails($id)
     {
-        $order = B2bOrder::with(['buyer', 'seller'])->where('seller_id', userAuthId())->findOrFail($id);
-        $data = new B2BOrderResource($order);
+        $order = B2bOrder::with(['buyer', 'seller'])->where('seller_id', userAuthId())
+            ->where('id', $id)
+            ->firstOrFail();
 
-        return $this->success($data, 'order details');
+        return $this->success(new B2BOrderResource($order), 'order details');
     }
 
     // Rfq
@@ -656,15 +664,15 @@ class SellerService extends Controller
 
         $rfqs = Rfq::with('buyer')
             ->where('seller_id', userAuthId())
-            ->latest('id')
+            ->latest()
             ->get();
 
         $orders = B2bOrder::where('seller_id', userAuthId())->when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
             $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
                 $subQuery->where('seller_id', userAuthId())
-                    ->where('order_no', 'LIKE', '%'.$searchQuery.'%');
+                    ->where('order_no', 'LIKE', '%' . $searchQuery . '%');
             });
-        })->latest('id')->get();
+        })->latest()->get();
 
         $data = [
             'total_rfqs' => $rfqs->count(),
@@ -681,6 +689,7 @@ class SellerService extends Controller
         $rfq = Rfq::with(['buyer', 'seller'])->findOrFail($id);
 
         $messages = RfqMessage::with(['seller', 'buyer'])->where('rfq_id', $rfq->id)->get();
+
         $data = [
             'rfq' => $rfq,
             'messages' => $messages,
@@ -711,7 +720,7 @@ class SellerService extends Controller
         $orderedItems = [
             'quantity' => $order->product_quantity,
             'price' => $order->total_amount,
-            'buyer_name' => $user->first_name.' '.$user->last_name,
+            'buyer_name' => $user->first_name . ' ' . $user->last_name,
             'order_number' => $order->order_no,
         ];
 
@@ -751,6 +760,7 @@ class SellerService extends Controller
     public function markDelivered($data)
     {
         $order = B2bOrder::where('seller_id', userAuthId())->findOrFail($data->order_id);
+
         $user = User::find($order->buyer_id);
 
         if (! $user) {
@@ -779,15 +789,18 @@ class SellerService extends Controller
     public function confirmPayment($request)
     {
         $rfq = Rfq::findOrFail($request->rfq_id);
+
         $seller = User::select('id')->findOrFail($rfq->seller_id);
+
         $buyer = User::select('id', 'email', 'first_name', 'last_name')->findOrFail($rfq->buyer_id);
+
         $product = B2BProduct::select(['id', 'name', 'front_image', 'quantity', 'sold'])->findOrFail($rfq->product_id);
 
         DB::beginTransaction();
 
         try {
             $amount = $rfq->total_amount;
-            
+
             $total_amount = currencyConvert(
                 userAuth()->default_currency,
                 $amount,
@@ -799,7 +812,7 @@ class SellerService extends Controller
                 'seller_id' => $rfq->seller_id,
                 'product_id' => $rfq->product_id,
                 'product_quantity' => $rfq->product_quantity,
-                'order_no' => 'ORD-'.now()->timestamp.'-'.Str::random(8),
+                'order_no' => 'ORD-' . now()->timestamp . '-' . Str::random(8),
                 'product_data' => $product,
                 'total_amount' => $total_amount,
                 'payment_method' => PaymentType::OFFLINE,
@@ -812,7 +825,7 @@ class SellerService extends Controller
                 'image' => $product->front_image,
                 'quantity' => $rfq->product_quantity,
                 'price' => $total_amount,
-                'buyer_name' => $buyer->first_name.' '.$buyer->last_name,
+                'buyer_name' => $buyer->first_name . ' ' . $buyer->last_name,
                 'order_number' => $order->order_no,
                 'currency' => $buyer->default_currency ?? userAuth()->default_currency,
             ];
@@ -879,7 +892,9 @@ class SellerService extends Controller
     {
         $userId = userAuthId();
 
-        $order = B2bOrder::where('seller_id', $userId)->findOrFail($request->order_id);
+        $order = B2bOrder::where('seller_id', $userId)
+            ->where('id', $request->order_id)
+            ->firstOrFail();
 
         B2bOrderRating::create([
             'seller_id' => $userId,
@@ -894,7 +909,9 @@ class SellerService extends Controller
     public function orderFeeback($request)
     {
         $userId = userAuthId();
-        $order = B2bOrder::where('seller_id', $userId)->findOrFail($request->order_id);
+        $order = B2bOrder::where('seller_id', $userId)
+            ->where('id', $request->order_id)
+            ->firstOrFail();
 
         B2bOrderFeedback::create([
             'seller_id' => $userId,
@@ -932,7 +949,9 @@ class SellerService extends Controller
         ])->where('created_at', '<=', Carbon::today()->subDays(7))->sum('total_amount');
 
         $rfqs = Rfq::with('buyer')->where('seller_id', $currentUserId)->get();
+
         $payouts = WithdrawalRequest::where('user_id', $currentUserId)->get();
+
         $wallet = UserWallet::where('seller_id', $currentUserId)->first();
 
         if (! $wallet) {
@@ -980,10 +999,14 @@ class SellerService extends Controller
     public function withdrawalRequest($request)
     {
         $currentUserId = userAuthId();
+
         $user = User::with('paymentMethods')
             ->where('id', $currentUserId)
             ->first();
 
+        if (! $user) {
+            return $this->error(null, 'User not found', 404);
+        }
         $wallet = UserWallet::where('seller_id', $currentUserId)->first();
 
         if (! $wallet) {
@@ -1027,7 +1050,7 @@ class SellerService extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return $this->error(null, 'An error occurred while processing your request :'.$e->getMessage(), 500);
+            return $this->error(null, 'An error occurred while processing your request :' . $e->getMessage(), 500);
         }
     }
 
@@ -1113,6 +1136,7 @@ class SellerService extends Controller
         }
 
         $method = PaymentMethod::where('user_id', userAuthId())->where('id', $id)->firstOrFail();
+
         $method->update([
             'account_name' => $request->account_name,
             'account_number' => $request->account_number,
@@ -1125,6 +1149,7 @@ class SellerService extends Controller
     public function makeAccounDefaultt($request)
     {
         $method = PaymentMethod::findOrFail($request->id);
+
         PaymentMethod::where('user_id', userAuthId())
             ->where('is_default', true)
             ->update(['is_default' => 0]);
@@ -1139,6 +1164,7 @@ class SellerService extends Controller
     public function deleteMethod($id)
     {
         $method = PaymentMethod::findOrFail($id);
+        
         $method->delete();
 
         return $this->success(null, 'Withdrawal details deleted successfully', 200);
