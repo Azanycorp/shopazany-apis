@@ -123,7 +123,7 @@
     <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width: 32rem; margin: 0 auto; padding: 1rem;">
         <tr>
             <td style="text-align: center; margin-bottom: 2rem;">
-                <img src="https://azany-uploads.s3.amazonaws.com/assets/logo.png" alt="Azany Logo" style="max-height: 6rem; margin: 0 auto; display: block; margin-bottom: 1rem;">
+                <img src="https://ik.imagekit.io/mdee2wnwm/Azany/logo/azanylogo.png?updatedAt=1753939975701" alt="Azany Logo" style="max-height: 6rem; margin: 0 auto; display: block; margin-bottom: 1rem;">
                 <h3 style="font-size: 1.25rem; font-weight: bold;">Dear {{ $user->first_name }}</h3>
             </td>
         </tr>
@@ -134,7 +134,7 @@
         </tr>
         <tr style="margin-bottom: 2rem;">
             <td style="text-align: center; margin-bottom: 2rem;">
-                <img src="https://azany-uploads.s3.amazonaws.com/assets/lock.png" alt="Lock Icon" style="max-height: 9rem; margin: 0 auto; display: block;">
+                <img src="https://ik.imagekit.io/mdee2wnwm/Azany/mail_images/Image%20(3).png?updatedAt=1753940782471" alt="Lock Icon" style="max-height: 9rem; margin: 0 auto; display: block;">
             </td>
         </tr>
         <tr style="margin-bottom: 1rem;">
@@ -156,12 +156,12 @@
             <td style="padding: 0;">
                 <div class="footer-content" style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; margin-top: 2rem;">
                     <div class="footer-item" style="flex: 1; margin: 0 1rem; text-align: center; box-sizing: border-box;">
-                        <img src="https://azany-uploads.s3.amazonaws.com/assets/logo.png" alt="Azany Logo" style="max-height: 4.5rem;">
+                        <img src="https://ik.imagekit.io/mdee2wnwm/Azany/logo/azanylogo.png?updatedAt=1753939975701" alt="Azany Logo" style="max-height: 4.5rem;">
                     </div>
                     <div class="footer-item" style="flex: 1; margin: 0 1rem; text-align: center; box-sizing: border-box;">
                         <h2 style="color: #E02014;">Support</h2>
                         <address style="color: #4B5563;">
-                            333 Freemont Street, California<br>
+                            320 W Lanier Ave Suite 200, Fayetteville, GA 30214<br>
                             support@shopazany.com<br>
                             +1 (800) 750-7442 <br>
                             +1 (470) 255-0365
@@ -170,10 +170,10 @@
                     <div class="footer-item" style="flex: 1; margin: 0 1rem; text-align: center; box-sizing: border-box;">
                         <h2 style="color: #E02014;">Quick Links</h2>
                         <ul style="color: #4B5563; padding: 0; list-style-type: none;">
-                            <li>Privacy Policy</li>
-                            <li>Terms Of Use</li>
-                            <li>FAQ</li>
-                            <li>Contact</li>
+                            <li><a href="https://shopazany.com/en/privacy-policy"> Privacy Policy </a></li>
+                            <li><a href="https://shopazany.com/en/terms-and-conditions"> Terms Of Use </a></li>
+                            <li><a href="https://shopazany.com/en/support-policy"> Support Policy </a></li>
+                            <li><a href="https://shopazany.com/en/contact"> Contact </a></li>
                         </ul>
                     </div>
                 </div>
