@@ -192,7 +192,7 @@
 <body>
     <div class="container">
         <div class="logo">
-            <img src="https://azany-uploads.s3.amazonaws.com/assets/logo.png" alt="Azany Logo">
+            <img src="https://ik.imagekit.io/mdee2wnwm/Azany/logo/azanylogo.png?updatedAt=1753939975701" alt="Azany Logo">
         </div>
 
         <p class="subtitle">Your #1 Global E-commerce Platform</p>
@@ -210,21 +210,21 @@
 
         <div class="footer">
             <div class="footer-logo">
-                <img src="https://azany-uploads.s3.amazonaws.com/assets/logo.png" alt="Azany Logo">
+                <img src="https://ik.imagekit.io/mdee2wnwm/Azany/logo/azanylogo.png?updatedAt=1753939975701" alt="Azany Logo">
             </div>
             <div class="footer-info">
                 <div>
                     <h3>Support</h3>
-                    <p>333 Freemont Street, California</p>
+                    <p>320 W Lanier Ave Suite 200, Fayetteville, GA 30214</p>
                     <p>support@azany.com</p>
                     <p>+88015-88888-9999</p>
                 </div>
                 <div>
                     <h3>Quick Links</h3>
-                    <p>Privacy Policy</p>
-                    <p>Terms Of Use</p>
-                    <p>FAQ</p>
-                    <p>Contact</p>
+                    <p><a href="https://shopazany.com/en/privacy-policy"> Privacy Policy </a></p>
+                    <p><a href="https://shopazany.com/en/terms-and-conditions"> Terms Of Use </a></p>
+                    <p><a href="https://shopazany.com/en/support-policy"> Support Policy </a></p>
+                    <p><a href="https://shopazany.com/en/contact"> Contact </a></p>
                 </div>
             </div>
         </div>

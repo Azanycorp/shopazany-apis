@@ -71,7 +71,7 @@
     <div class="email-container">
         <!-- Header Section -->
         <div class="email-header">
-            <img src="https://azany-uploads.s3.amazonaws.com/assets/logo.png" alt="Azany Logo">
+            <img src="https://ik.imagekit.io/mdee2wnwm/Azany/logo/azanylogo.png?updatedAt=1753939975701" alt="Azany Logo">
             <h1>Welcome to Azany Admin Portal</h1>
         </div>
 
