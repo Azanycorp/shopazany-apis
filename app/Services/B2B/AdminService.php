@@ -905,6 +905,7 @@ class AdminService
     public function allBlogs()
     {
         $currentUserId = userAuthId();
+
         $blogs = Blog::with('user')
             ->where('admin_id', $currentUserId)
             ->where('type', BannerType::B2B)
@@ -967,15 +968,12 @@ class AdminService
         return $this->success('Blog deleted successfully.');
     }
 
-
     // Shipping Agents
     public function shippingAgents()
     {
         $agents = ShippingAgent::latest()->get();
 
-        $data = ShippingAgentResource::collection($agents);
-
-        return $this->success($data, 'All Agents');
+        return $this->success(ShippingAgentResource::collection($agents), 'All Agents');
     }
 
     public function addShippingAgent($request)
