@@ -991,15 +991,14 @@ class AdminService
             'status' => $request->status,
         ]);
 
-        return $this->success($agent, 'Agent added successfully', 201);
+        return $this->success(new ShippingAgentResource($agent), 'Agent added successfully', 201);
     }
 
     public function viewShippingAgent($id)
     {
         $agent = ShippingAgent::findOrFail($id);
-        $data = new ShippingAgentResource($agent);
 
-        return $this->success($data, 'Agent details');
+        return $this->success(new ShippingAgentResource($agent), 'Agent details');
     }
 
     public function editShippingAgent($request, $id)
@@ -1159,9 +1158,7 @@ class AdminService
     {
         $clients = ClientLogo::latest()->get();
 
-        $data = ClientLogoResource::collection($clients);
-
-        return $this->success($data, 'Added client Logos');
+        return $this->success(ClientLogoResource::collection($clients), 'Added client Logos');
     }
 
     public function addClientLogo($request)
@@ -1206,16 +1203,14 @@ class AdminService
         $client->delete();
 
         return $this->success('Blog deleted successfully.');
-        // Social Links
     }
 
+    // Social Links
     public function getSocialLinks()
     {
         $links = SocialSetting::latest()->get();
 
-        $data = SocialLinkResource::collection($links);
-
-        return $this->success($data, 'Social links');
+        return $this->success(SocialLinkResource::collection($links), 'Social links');
     }
 
     public function addSocialLink($request)
@@ -1226,18 +1221,14 @@ class AdminService
             'url' => $request->url,
         ]);
 
-        $data = new SocialLinkResource($link);
-
-        return $this->success($data, 'link added successfully', 201);
+        return $this->success(new SocialLinkResource($link), 'link added successfully', 201);
     }
 
     public function viewLink($id)
     {
         $link = SocialSetting::findOrFail($id);
 
-        $data = new SocialLinkResource($link);
-
-        return $this->success($data, 'link details');
+        return $this->success(new SocialLinkResource($link), 'link details');
     }
 
     public function editLink($request, $id)
