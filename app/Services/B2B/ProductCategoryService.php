@@ -62,9 +62,7 @@ class ProductCategoryService
             ->take(10)
             ->get();
 
-        $data = B2BCategoryResource::collection($categories);
-
-        return $this->success($data, 'Categories');
+        return $this->success(B2BCategoryResource::collection($categories), 'Categories');
     }
 
     public function adminCategories()
@@ -74,14 +72,12 @@ class ProductCategoryService
         $categories = B2BProductCategory::with(['products', 'subcategory'])
             ->withCount(['products', 'subcategory'])
             ->when($search, function ($query, string $search): void {
-                $query->where('name', 'like', '%'.$search.'%');
+                $query->where('name', 'like', '%' . $search . '%');
             })
-            ->latest('id')
+            ->latest()
             ->get();
 
-        $data = AdminCategoryResource::collection($categories);
-
-        return $this->success($data, 'Categories retrieved successfully');
+        return $this->success(AdminCategoryResource::collection($categories), 'Categories retrieved successfully');
     }
 
     public function createSubCategory($request)
@@ -143,8 +139,11 @@ class ProductCategoryService
             ->get();
 
         $totalActive = $categories->where('status', CategoryStatus::ACTIVE)->count();
+
         $subCategoryActiveCount = B2BProductSubCategory::where('status', CategoryStatus::ACTIVE)->count();
+
         $productActiveCount = B2BProduct::where('status', CategoryStatus::ACTIVE)->count();
+
         $productInactiveCount = B2BProduct::where('status', CategoryStatus::INACTIVE)->count();
 
         $data = [
@@ -162,16 +161,15 @@ class ProductCategoryService
     public function getAdminSubcategory()
     {
         $search = request()->query('search');
+
         $subcats = B2BProductSubCategory::with(['products', 'category'])
             ->withCount('products')
             ->when($search, function ($query, string $search): void {
-                $query->where('name', 'like', '%'.$search.'%');
+                $query->where('name', 'like', '%' . $search . '%');
             })
             ->get();
 
-        $data = AdminB2BSubCategoryResource::collection($subcats);
-
-        return $this->success($data, 'Sub categories');
+        return $this->success(AdminB2BSubCategoryResource::collection($subcats), 'Sub categories');
     }
 
     public function subStatus($request, $id)
@@ -190,6 +188,7 @@ class ProductCategoryService
     public function deleteCategory($id)
     {
         $category = B2bProductCategory::findOrFail($id);
+
         $category->delete();
 
         return $this->success(null, 'Deleted successfully');
@@ -198,6 +197,7 @@ class ProductCategoryService
     public function deleteSubCategory($id)
     {
         $subcat = B2BProductSubCategory::findOrFail($id);
+
         $subcat->delete();
 
         return $this->success(null, 'Deleted successfully');
