@@ -1165,21 +1165,19 @@ class AdminService
     {
         $url = uploadImage($request, 'logo', 'clients');
 
-        $plan = ClientLogo::create([
+        $client = ClientLogo::create([
             'name' => $request->name,
             'logo' => $url['url'],
         ]);
 
-        return $this->success($plan, 'Client Logo added successfully', 201);
+        return $this->success(new ClientLogoResource($client), 'Client Logo added successfully', 201);
     }
 
     public function getClientLogo($id)
     {
         $client = ClientLogo::findOrFail($id);
 
-        $data = new ClientLogoResource($client);
-
-        return $this->success($data, 'Client details');
+        return $this->success(new ClientLogoResource($client), 'Client details');
     }
 
     public function updateClientLogo($request, $id)
