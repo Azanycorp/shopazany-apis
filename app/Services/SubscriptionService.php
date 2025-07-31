@@ -87,7 +87,7 @@ class SubscriptionService
         );
 
         $convertedAmount = currencyConvert($currency, $amount, $referrer->default_currency);
-        $subcriptionBonus = round($convertedAmount * 0.05, 2);
+        $subcriptionBonus = round($convertedAmount * 0.10, 2);
         $wallet->increment('balance', $subcriptionBonus);
     }
 }
