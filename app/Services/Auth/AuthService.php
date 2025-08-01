@@ -353,10 +353,10 @@ class AuthService extends Controller
             DB::transaction(function () use ($request, $user): void {
                 $referrer_code = $this->determineReferrerCode($request);
 
-                $referrer_link = generate_referrer_link($referrer_code);
+                $referrer_links = generate_referrer_links($referrer_code);
                 $code = generateVerificationCode();
 
-                $data = $this->userTrigger($user, $request, $referrer_link, $referrer_code, $code);
+                $data = $this->userTrigger($user, $request, $referrer_links, $referrer_code, $code);
 
                 if ($request->referrer_code) {
                     $this->handleReferrer($request->referrer_code, $data);
@@ -413,7 +413,7 @@ class AuthService extends Controller
         $referrer->save();
     }
 
-    private function userTrigger($user, $request, string $referrer_link, $referrer_code, string $code)
+    private function userTrigger($user, $request, array $referrer_links, $referrer_code, string $code)
     {
         $currencyCode = $this->currencyCode($request);
         if ($user) {
@@ -427,7 +427,7 @@ class AuthService extends Controller
                 'default_currency' => $currencyCode,
                 'type' => UserType::SELLER,
                 'referrer_code' => $referrer_code,
-                'referrer_link' => $referrer_link,
+                'referrer_link' => $referrer_links,
                 'is_verified' => 1,
                 'is_affiliate_member' => 1,
                 'password' => bcrypt($request->password),
