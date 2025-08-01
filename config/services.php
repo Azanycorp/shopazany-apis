@@ -56,8 +56,8 @@ return [
         'seller_baseurl' => 'https://shopazany.com/en/seller-signup',
         'staging_seller_baseurl' => 'https://fe-staging.shopazany.com/en/seller-signup',
 
-        'b2b_baseurl' => 'https://b2b.shopazany.com/en/seller/register',
-        'b2b_staging_baseurl' => 'https://b2b-staging.shopazany.com/en/seller/register',
+        'b2b_baseurl' => 'https://b2b.shopazany.com/en/seller-signup',
+        'b2b_staging_baseurl' => 'https://b2b-staging.shopazany.com/en/seller-signup',
 
         'agricom_baseurl' => 'https://agriecom.shopazany.com/en/seller-signup',
         'agricom_staging_baseurl' => 'https://agriecom-staging.shopazany.com/en/seller-signup',
