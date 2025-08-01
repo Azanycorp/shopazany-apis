@@ -3,7 +3,7 @@ name: Build and Push Docker images to ECR
 on:
   push:
     branches:  [""]  # Trigger on push to the staging branch
-  
+
 
 jobs:
   build-and-push:
@@ -20,7 +20,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v3
         with:
           role-to-assume: arn:aws:iam::547130927936:role/shopazany-apis-github.oidc  # IAM role ARN
-          aws-region: us-east-1  # AWS region 
+          aws-region: us-east-1  # AWS region
 
       - name: Login to Amazon ECR
         id: login-ecr
