@@ -29,13 +29,13 @@ class AffiliateService
             ->count();
 
         $totalPaidOutInUSD = User::where('is_affiliate_member', 1)
-            ->whereHas('transactions', function ($query) use ($startDate, $endDate) {
+            ->whereHas('transactions', function ($query) use ($startDate, $endDate): void {
                 $query->where('type')
                     ->where('status', WithdrawalStatus::COMPLETED)
                     ->whereBetween('created_at', [$startDate, $endDate]);
             })
             ->get()
-            ->sum(function ($user) use ($startDate, $endDate) {
+            ->sum(function ($user) use ($startDate, $endDate): float {
                 $amount = $user->transactions()
                     ->where('type', 'withdrawal')
                     ->where('status', WithdrawalStatus::COMPLETED)
@@ -63,7 +63,7 @@ class AffiliateService
             });
 
         $topCountries = User::with('userCountry')
-            ->whereIn('id', function ($query) {
+            ->whereIn('id', function ($query): void {
                 $query->select('referee_id')
                     ->from('referral_relationships');
             })
@@ -74,7 +74,7 @@ class AffiliateService
                     'country' => $countryId,
                     'country_name' => optional($users->first()->userCountry)->name,
                     'referred' => $users->count(),
-                    'percentage' => round(($users->count() / User::whereIn('id', function ($query) {
+                    'percentage' => round(($users->count() / User::whereIn('id', function ($query): void {
                         $query->select('referee_id')->from('referral_relationships');
                     })->count()) * 100, 2),
                 ];
@@ -105,21 +105,21 @@ class AffiliateService
             ->orderByDesc('wallets.balance')
             ->paginate(25);
 
-        $data = $topAffiliates->map(function ($user): array {
-            return [
-                'id' => $user->id,
-                'first_name' => $user->first_name,
-                'last_name' => $user->last_name,
-                'earnings' => $user->wallet_balance ?? 0,
-                'default_currency' => $user->default_currency,
-                'referred' => $user->referrals_count ?? 0,
-                'referrer_code' => $user->referrer_code,
-                'referrer_link' => $user->referrer_link,
-                'status' => $user->status,
-            ];
-        });
+       $topAffiliates->getCollection()->transform(function ($user) {
+        return [
+            'id' => $user->id,
+            'first_name' => $user->first_name,
+            'last_name' => $user->last_name,
+            'earnings' => $user->wallet_balance ?? 0,
+            'default_currency' => $user->default_currency,
+            'referred' => $user->referrals_count ?? 0,
+            'referrer_code' => $user->referrer_code,
+            'referrer_link' => $user->referrer_link,
+            'status' => $user->status,
+        ];
+    });
 
-        return $this->withPagination($data, 'Affiliate Users');
+        return $this->withPagination($topAffiliates, 'Affiliate Users');
     }
 
     public function userDetail($id)
@@ -137,7 +137,7 @@ class AffiliateService
             'earnings' => $user->transactions_sum_amount ?? 0,
             'referred' => $user->referrals_count ?? 0,
             'status' => $user->status,
-            'referrals' => $user->referrals->map(fn ($referral) => [
+            'referrals' => $user->referrals->map(fn ($referral): array => [
                 'id' => $referral->id,
                 'first_name' => $referral->first_name,
                 'last_name' => $referral->last_name,

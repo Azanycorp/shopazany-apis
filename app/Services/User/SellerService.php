@@ -275,7 +275,7 @@ class SellerService extends Controller
         return $this->success(null, 'Deleted successfully');
     }
 
-    public function getAllOrders($id)
+    public function getAllOrders($id): array
     {
         $status = request()->query('status');
 
@@ -288,7 +288,7 @@ class SellerService extends Controller
             OrderStatus::CANCELLED,
         ];
 
-        $orders = Order::whereHas('products', function ($query) use ($id) {
+        $orders = Order::whereHas('products', function ($query) use ($id): void {
             $query->where('user_id', $id);
         })
             ->with(['user', 'products.shopCountry'])
@@ -330,7 +330,7 @@ class SellerService extends Controller
             return $this->error(null, 'Unauthorized action.', 401);
         }
 
-        $order = Order::whereHas('products', function ($query) use ($userId) {
+        $order = Order::whereHas('products', function ($query) use ($userId): void {
             $query->where('user_id', $userId);
         })
             ->with([
@@ -378,7 +378,7 @@ class SellerService extends Controller
         }
 
         $sellerProducts = $order->products()
-            ->whereHas('user', function ($query) use ($currentUserId) {
+            ->whereHas('user', function ($query) use ($currentUserId): void {
                 $query->where('user_id', $currentUserId);
             })->get();
 
@@ -472,11 +472,11 @@ class SellerService extends Controller
         }
 
         $totalProducts = Product::where('user_id', $userId)->count();
-        $totalOrders = Order::whereHas('products', function ($query) use ($userId) {
+        $totalOrders = Order::whereHas('products', function ($query) use ($userId): void {
             $query->where('user_id', $userId);
         })->count();
 
-        $orderCounts = Order::whereHas('products', function ($query) use ($userId) {
+        $orderCounts = Order::whereHas('products', function ($query) use ($userId): void {
             $query->where('user_id', $userId);
         })
             ->selectRaw('
@@ -526,7 +526,7 @@ class SellerService extends Controller
             return $this->error(null, 'Unauthorized action.', 401);
         }
 
-        $orders = Order::whereHas('products', function ($query) use ($userId) {
+        $orders = Order::whereHas('products', function ($query) use ($userId): void {
             $query->where('user_id', $userId);
         })
             ->with(['user', 'products.shopCountry'])
@@ -573,6 +573,17 @@ class SellerService extends Controller
         $user = User::with('productAttributes')
             ->findOrFail($request->user_id);
 
+        $attributeNames = collect($request['attributes'])->pluck('name')->toArray();
+
+        $existing = $user->productAttributes()
+            ->whereIn('name', $attributeNames)
+            ->pluck('name')
+            ->toArray();
+
+        if (!empty($existing)) {
+            return $this->error(null, 'Attribute(s) already exist: ' . implode(', ', $existing), 400);
+        }
+
         foreach ($request['attributes'] as $attribute) {
             $user->productAttributes()->create([
                 'name' => $attribute['name'],
@@ -586,25 +597,23 @@ class SellerService extends Controller
 
     public function getAttribute($userId)
     {
-        $user = User::with(['productAttributes' => function ($query) {
-            $query->select('id', 'user_id', 'name', 'value', 'use_for_variation');
-        }])
+        $user = User::with(['productAttributes' => function ($query): void {
+                $query->select('id', 'user_id', 'name', 'value', 'use_for_variation');
+            }])
             ->find($userId);
 
         if (! $user) {
             return $this->error(null, 'User not found', 404);
         }
 
-        $data = $user->productAttributes;
-
-        return $this->success($data, 'All Attributes');
+        return $this->success($user->productAttributes, 'All Attributes');
     }
 
     public function getSingleAttribute($attributeId, $userId)
     {
-        $user = User::with(['productAttributes' => function ($query) {
-            $query->select('id', 'user_id', 'name', 'value', 'use_for_variation');
-        }])
+        $user = User::with(['productAttributes' => function ($query): void {
+                $query->select('id', 'user_id', 'name', 'value', 'use_for_variation');
+            }])
             ->find($userId);
 
         if (! $user) {
@@ -624,21 +633,29 @@ class SellerService extends Controller
 
     public function updateAttribute($request, $attributeId, $userId)
     {
-        $user = User::with(['productAttributes' => function ($query) {
-            $query->select('id', 'user_id', 'name', 'value', 'use_for_variation');
-        }])
-            ->find($userId);
+        $user = User::with('productAttributes')->find($userId);
 
         if (! $user) {
             return $this->error(null, 'User not found', 404);
         }
 
         $attribute = $user->productAttributes()
-            ->select('id', 'user_id', 'name', 'value', 'use_for_variation')
-            ->find($attributeId);
+            ->where('id', $attributeId)
+            ->first();
 
         if (! $attribute) {
             return $this->error(null, 'Attribute not found', 404);
+        }
+
+        if ($request->name !== $attribute->name) {
+            $duplicate = $user->productAttributes()
+                ->where('name', $request->name)
+                ->where('id', '!=', $attributeId)
+                ->exists();
+
+            if ($duplicate) {
+                return $this->error(null, 'Another attribute with this name already exists', 400);
+            }
         }
 
         $attribute->update([

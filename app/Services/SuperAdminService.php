@@ -2,40 +2,53 @@
 
 namespace App\Services;
 
+use App\Models\Admin;
+use App\Models\Order;
+use App\Trait\SignUp;
+use App\Enum\PlanStatus;
+use App\Models\B2bOrder;
 use App\Enum\AdminStatus;
-use App\Enum\AdminType;
 use App\Enum\MailingEnum;
 use App\Enum\OrderStatus;
-use App\Enum\PlanStatus;
-use App\Http\Resources\CollationCentreResource;
-use App\Http\Resources\HubResource;
-use App\Http\Resources\ShippingAgentResource;
-use App\Mail\B2BNewAdminEmail;
-use App\Models\Admin;
-use App\Models\B2bOrder;
-use App\Models\CollationCenter;
+use App\Models\Shippment;
+use App\Enum\CentreStatus;
+use App\Trait\HttpResponse;
+use Illuminate\Support\Str;
 use App\Models\PickupStation;
 use App\Models\ShippingAgent;
-use App\Trait\HttpResponse;
-use App\Trait\SignUp;
-use Illuminate\Support\Facades\Auth;
+use App\Mail\B2BNewAdminEmail;
+use App\Models\ShippmentBatch;
+use App\Enum\ShippmentCategory;
+use App\Models\CollationCenter;
+use App\Models\AdminNotification;
 use Illuminate\Support\Facades\DB;
+use App\Http\Resources\HubResource;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
+use App\Http\Resources\BatchResource;
+use App\Trait\SuperAdminNotification;
+use App\Mail\AccountVerificationEmail;
+use App\Http\Resources\AdminUserResource;
+use App\Http\Resources\ShippmentResource;
+use App\Http\Resources\ShippingAgentResource;
+use App\Http\Resources\SearchB2BOrderResource;
+use App\Http\Resources\CollationCentreResource;
+use App\Http\Resources\AdminNotificationResource;
+use App\Http\Resources\ShipmentB2COrderResource;
 
 class SuperAdminService
 {
-    use HttpResponse, SignUp;
+    use HttpResponse, SuperAdminNotification, SignUp;
 
     public function getDashboardDetails()
     {
-        $centers = CollationCenter::with(['country', 'hubs.country'])->latest('id')->get();
+        $centers = CollationCenter::with('country')->latest()->get();
 
         $collation_counts = CollationCenter::selectRaw('
-        COUNT(*) as total_centers,
-        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as active_centers,
-        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as inactive_centers
-    ', [PlanStatus::ACTIVE, PlanStatus::INACTIVE])
+                COUNT(*) as total_centers,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as active_centers,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as inactive_centers
+            ', [PlanStatus::ACTIVE, PlanStatus::INACTIVE])
             ->first();
 
         $collation_details = [
@@ -51,11 +64,11 @@ class SuperAdminService
     // Collation centers
     public function deliveryOverview()
     {
-        $order_counts = B2bOrder::selectRaw('
-        COUNT(*) as total_orders,
-        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as out_for_delivery,
-        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as delivered
-        ', [OrderStatus::SHIPPED, OrderStatus::DELIVERED])
+        $order_counts = Shippment::selectRaw('
+            COUNT(*) as total_orders,
+            SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as out_for_delivery,
+            SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as delivered
+            ', [OrderStatus::SHIPPED, OrderStatus::DELIVERED])
             ->first();
 
         $collation_centers = CollationCenter::where('status', PlanStatus::ACTIVE)->count();
@@ -74,22 +87,40 @@ class SuperAdminService
 
     public function allCollationCentres()
     {
-        $total_centers = CollationCenter::count();
-        $statusCounts = CollationCenter::select('status', DB::raw('count(*) as count'))
-            ->groupBy('status')
-            ->pluck('count', 'status');
+        $query = CollationCenter::with('country')
+            ->when(request()->status, function ($q, $status) {
+                $q->where('status', $status);
+            })
+            ->when(request()->search, function ($q, $search) {
+                $q->where(function ($query) use ($search) {
+                    $query->where('city', 'like', '%' . $search . '%')
+                        ->orWhere('location', 'like', '%' . $search . '%');
+                });
+            });
 
-        $centers = CollationCenter::with(['country', 'hubs.country'])->latest()->get();
-        $data = CollationCentreResource::collection($centers);
+        $center_counts = CollationCenter::selectRaw('
+                COUNT(*) as total_centers,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as active,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as in_active,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as maintenance,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as processing
+            ', [
+            CentreStatus::ACTIVE,
+            CentreStatus::INACTIVE,
+            CentreStatus::MAINTENANCE,
+            CentreStatus::PROCESSING,
+        ])->first();
 
-        $collation_details = [
-            'total_centers' => $total_centers,
-            'active_centers' => $statusCounts[PlanStatus::ACTIVE] ?? 0,
-            'inactive_centers' => $statusCounts[PlanStatus::INACTIVE] ?? 0,
-            'centers' => $data,
+        $data = [
+            'total_centers' => $center_counts->total_centers ?? 0,
+            'active_centers' =>  $center_counts->active ?? 0,
+            'inactive_centers' => $center_counts->in_active ?? 0,
+            'under_maintenance' => $center_counts->maintenance ?? 0,
+            'daily_processing' => $center_counts->processing ?? 0,
+            'centers' => CollationCentreResource::collection($query->latest()->get()),
         ];
 
-        return $this->success($collation_details, 'All available collation centres');
+        return $this->success($data, 'Filtered collation centres');
     }
 
     public function addCollationCentre($request)
@@ -103,50 +134,46 @@ class SuperAdminService
             'status' => PlanStatus::ACTIVE,
         ]);
 
+        $this->createNotification('New Collation Centre Added', 'New collation centre created ' . $centre->name);
+
         return $this->success($centre, 'Centre added successfully', 201);
     }
 
     public function viewCollationCentre($id)
     {
-        $centre = CollationCenter::with(['country', 'hubs.country'])->find($id);
+        $centre = CollationCenter::with('country')->find($id);
 
         if (! $centre) {
             return $this->error(null, 'Centre not found', 404);
         }
 
-        // Fetch order statistics for B2B and B2C
-        $b2b_order_counts = $this->getOrderCounts(B2bOrder::where('centre_id', $centre->id));
-
-        // Ensure I avoid null values by providing default 0 values
-        $total_deliveries = $b2b_order_counts['total_orders'] ?? 0;
-        $completed = $b2b_order_counts['completed'] ?? 0;
-        $pending = $b2b_order_counts['pending'] ?? 0;
-        $cancelled = $b2b_order_counts['cancelled'] ?? 0;
-
-        // Using resource transformation
-        $data = new CollationCentreResource($centre);
-
-        return $this->success([
-            'total_deliveries' => $total_deliveries,
-            'completed' => $completed,
-            'pending' => $pending,
-            'cancelled' => $cancelled,
-            'center' => $data,
-        ], 'Centre details.');
-    }
-
-    private function getOrderCounts($query)
-    {
-        return $query->selectRaw('
-        COUNT(*) as total_orders,
-        COALESCE(SUM(CASE WHEN status = ? THEN 1 ELSE 0 END), 0) as completed,
-        COALESCE(SUM(CASE WHEN status = ? THEN 1 ELSE 0 END), 0) as pending,
-        COALESCE(SUM(CASE WHEN status = ? THEN 1 ELSE 0 END), 0) as cancelled
-    ', [
+        $order_counts = ShippmentBatch::selectRaw('
+                COUNT(*) as total_orders,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as out_for_delivery,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as delivered,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as ready_for_pickup,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as in_transit
+            ', [
+            OrderStatus::SHIPPED,
             OrderStatus::DELIVERED,
-            OrderStatus::PENDING,
-            OrderStatus::CANCELLED,
-        ])->first()->toArray() ?? ['total_orders' => 0, 'completed' => 0, 'pending' => 0, 'cancelled' => 0];
+            OrderStatus::READY_FOR_PICKUP,
+            OrderStatus::IN_TRANSIT
+        ])
+            ->where('collation_id', $centre->id)
+            ->first();
+
+        $batches = ShippmentBatch::where('collation_id', $centre->id)->latest()->get();
+
+        $data = [
+            'current_batches'    => $order_counts->total_orders ?? 0,
+            'total_processed'    => $order_counts->delivered ?? 0,
+            'daily_throughout'   => $order_counts->ready_for_pickup ?? 0,
+            'awaiting_dispatch'  => $order_counts->in_transit ?? 0,
+            'center'             => new CollationCentreResource($centre),
+            'batches'   => BatchResource::collection($batches)
+        ];
+
+        return $this->success($data, 'Centre details');
     }
 
     public function editCollationCentre($request, $id)
@@ -171,15 +198,7 @@ class SuperAdminService
 
     public function deleteCollationCentre($id)
     {
-        $centre = CollationCenter::with('hubs')->find($id);
-
-        if (! $centre) {
-            return $this->error(null, 'Centre not found', 404);
-        }
-
-        if ($centre->hubs->exists()) {
-            return $this->error(null, 'Category can not be deleted because it has content', 422);
-        }
+        $centre = CollationCenter::findOrFail($id);
 
         $centre->delete();
 
@@ -187,18 +206,30 @@ class SuperAdminService
     }
 
     // Hubs under Collation centers
-    public function allCollationCentreHUbs()
+    public function allHubs()
     {
-        $centers = PickupStation::with(['country', 'collationCenter'])->latest()->get();
-        $data = HubResource::collection($centers);
+        $hubs = PickupStation::with('country')->latest()->get();
 
-        return $this->success($data, 'All available collation centres hubs');
+        $total_hubs = PickupStation::count();
+
+        $statusCounts = PickupStation::select('status', DB::raw('count(*) as count'))
+            ->groupBy('status')
+            ->pluck('count', 'status');
+
+        $data = [
+            'total_hubs' => $total_hubs,
+            'active_hubs' => $statusCounts[CentreStatus::ACTIVE] ?? 0,
+            'inactive_hubs' => $statusCounts[CentreStatus::INACTIVE] ?? 0,
+            'pending' => $statusCounts[CentreStatus::PENDING] ?? 0,
+            'hubs' => HubResource::collection($hubs),
+        ];
+
+        return $this->success($data, 'All available collation centre hubs');
     }
 
     public function addHub($request)
     {
         $hub = PickupStation::create([
-            'collation_center_id' => $request->collation_center_id,
             'name' => $request->name,
             'location' => $request->location,
             'note' => $request->note,
@@ -207,18 +238,40 @@ class SuperAdminService
             'status' => PlanStatus::ACTIVE,
         ]);
 
+        $this->createNotification('New Hub Added', 'New hub created ' . $hub->name);
+
         return $this->success($hub, 'Hub added successfully', 201);
     }
 
     public function viewHub($id)
     {
-        $centre = PickupStation::with(['country', 'collationCenter'])->find($id);
+        $hub = PickupStation::with('country')->findOrFail($id);
 
-        if (! $centre) {
-            return $this->error(null, 'Hub not found', 404);
-        }
+        $order_counts = Shippment::selectRaw('
+                COUNT(*) as total_orders,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as out_for_delivery,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as delivered,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as ready_for_pickup,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as in_transit
+            ', [
+            OrderStatus::SHIPPED,
+            OrderStatus::DELIVERED,
+            OrderStatus::READY_FOR_PICKUP,
+            OrderStatus::IN_TRANSIT
+        ])
+            ->where('hub_id', $hub->id)
+            ->first();
 
-        $data = new HubResource($centre);
+        $shippments = Shippment::where('hub_id', $hub->id)->latest()->get();
+
+        $data = [
+            'current_items'      => $order_counts->total_orders ?? 0,
+            'total_processed'    => $order_counts->delivered ?? 0,
+            'ready_for_pickup'   => $order_counts->ready_for_pickup ?? 0,
+            'awaiting_dispatch'  => $order_counts->in_transit ?? 0,
+            'hub'                => new HubResource($hub),
+            'shippments'   => ShippmentResource::collection($shippments)
+        ];
 
         return $this->success($data, 'Hub details');
     }
@@ -232,7 +285,6 @@ class SuperAdminService
         }
 
         $hub->update([
-            'collation_center_id' => $request->collation_center_id ?? $hub->collation_center_id,
             'name' => $request->name ?? $hub->name,
             'location' => $request->location ?? $hub->location,
             'note' => $request->note ?? $hub->note,
@@ -246,196 +298,544 @@ class SuperAdminService
 
     public function deleteHub($id)
     {
-        $hub = PickupStation::find($id);
-
-        if (! $hub) {
-            return $this->error(null, 'Hub not found', 404);
-        }
+        $hub = PickupStation::findOrFail($id);
 
         $hub->delete();
 
         return $this->success(null, 'Hub deleted successfully.');
     }
 
-    // Admin User Management
-    public function adminUsers()
+    public function findOrder($request)
     {
-        $user = Auth::user();
-        $searchQuery = request()->input('search');
+        $orderNumber = $request->order_number;
 
-        $admins = Admin::with('permissions:id,name')
-            ->select('id', 'first_name', 'last_name', 'email', 'created_at')
-            ->when($user->type === 'b2c_admin', function ($query) {
-                $query->where('type', AdminType::B2C);
-            })
-            ->when($user->type === 'b2b_admin', function ($query) {
-                $query->where('type', AdminType::B2B);
-            })
-            ->when($searchQuery, function ($queryBuilder) use ($searchQuery) {
-                $queryBuilder->where(function ($subQuery) use ($searchQuery) {
-                    $subQuery->where('first_name', 'LIKE', "%{$searchQuery}%")
-                        ->orWhere('email', 'LIKE', "%{$searchQuery}%");
-                });
-            })
-            ->orderByDesc('created_at')
-            ->get();
+        if ($order = Order::with(['user', 'products'])->firstWhere('order_no', $orderNumber)) {
+            return $this->success(new ShipmentB2COrderResource($order), 'Order found successfully.');
+        }
 
-        return $this->success($admins, 'All Admin Users');
+        if ($b2bOrder = B2bOrder::firstWhere('order_no', $orderNumber)) {
+            return $this->success(new SearchB2BOrderResource($b2bOrder), 'B2B order found successfully.');
+        }
+
+        return $this->error(null, 'Order not found.', 404);
     }
 
-    public function addAdmin($request)
+    public function findPickupLocationOrder($request)
     {
-        DB::beginTransaction();
-        try {
-            $password = Str::random(5);
+        $hub = PickupStation::find($request->pickup_id);
 
-            $admin = Admin::create([
-                'first_name' => $request->first_name,
-                'last_name' => $request->last_name,
-                'email' => $request->email,
-                'type' => $request->type,
-                'status' => AdminStatus::ACTIVE,
-                'phone_number' => $request->phone_number,
-                'password' => bcrypt($password),
+        $orderNumber = $request->order_number;
+
+        if (! $hub) {
+            return $this->error(null, 'Hub not found', 404);
+        }
+
+        if ($order = Order::with(['user', 'products'])->firstWhere('order_no', $orderNumber)) {
+
+            $items = optional($order->products->first())->pivot->product_quantity;
+
+            $seller = optional($order->products->first())->user;
+            $vendor = $seller ? [
+                'business_name' => $seller->company_name,
+                'contact' => $seller->phone,
+                'location' => $seller->address,
+            ] : null;
+
+            $package = $order->products->map(function ($product) {
+                return (object) [
+                    'name' => $product->name,
+                    'quantity' => $product->pivot->product_quantity,
+                    'price' => $product->pivot->price,
+                    'sub_total' => $product->pivot->sub_total,
+                    'image' => $product->image,
+                ];
+            })->values()->toArray();
+
+            $customerUser = $order->user;
+
+            $customer = $customerUser ? [
+                'first_name' => $customerUser->first_name,
+                'last_name' => $customerUser->last_name,
+                'email' => $customerUser->email,
+                'address' => $customerUser->address,
+            ] : null;
+
+            $shippment = Shippment::create([
+                'hub_id' => $hub->id,
+                'type' => ShippmentCategory::INCOMING,
+                'shippment_id' => generateShipmentId(),
+                'package' => $package,
+                'customer' => $customer,
+                'vendor' => $vendor,
+                'status' => $request->status,
+                'priority' => $request->priority,
+                'expected_delivery_date' => $request->expected_delivery_date,
+                'start_origin' => $hub->name,
+                'items' => $items,
             ]);
 
-            $admin->permissions()->sync($request->permissions);
+            $shippment->activities()->create([
+                'comment' => $request->activity,
+                'note' => $request->note
+            ]);
 
-            $loginDetails = [
-                'name' => $request->first_name,
-                'email' => $request->email,
-                'password' => $password,
-            ];
+            $this->createNotification('New Shippment created', 'New Shippment created at ' . $hub->name . 'Pickup station/hub ' . 'by ' . Auth::user()->fullName);
 
-            DB::commit();
-
-            $type = MailingEnum::ADMIN_ACCOUNT;
-            $subject = 'Admin Account Creation email';
-            $mail_class = B2BNewAdminEmail::class;
-
-            mailSend($type, $admin, $subject, $mail_class, $loginDetails);
-
-            return $this->success($admin, 'Admin user added successfully', 201);
-        } catch (\Throwable $th) {
-            DB::rollBack();
-            throw $th;
+            return $this->success(new ShippmentResource($shippment), 'Item Logged successfully.');
         }
+
+        if (! $b2bOrder = B2bOrder::with(['seller.businessInformation', 'buyer'])->firstWhere('order_no', $orderNumber)) {
+            return $this->error(null, 'Order not found.', 404);
+        }
+
+        $items = (string) $b2bOrder->product_quantity;
+        $package = collect($b2bOrder->product_data ?? [])->only(['name', 'fob_price', 'front_image']);
+
+        $businessInfo = optional($b2bOrder->seller)->businessInformation;
+        $vendor = $businessInfo ? (object) [
+            'business_name' => $businessInfo->business_name,
+            'contact' => $businessInfo->business_phone,
+            'location' => $businessInfo->business_location,
+        ] : null;
+
+        $buyer = $b2bOrder->buyer;
+        $customer = $buyer ? (object) [
+            'name' => $buyer->fullName,
+            'email' => $buyer->email,
+            'phone' => $buyer->phone,
+            'city' => $buyer->city,
+            'address' => $buyer->address,
+        ] : null;
+
+
+        $shippment = Shippment::create([
+            'hub_id' => $hub->id,
+            'type' => ShippmentCategory::INCOMING,
+            'shippment_id' => generateShipmentId(),
+            'package' => $package,
+            'customer' => $customer,
+            'vendor' => $vendor,
+            'status' => $request->status,
+            'priority' => $request->priority,
+            'expected_delivery_date' => $request->expected_delivery_date,
+            'start_origin' => $hub->name,
+            'items' => $items,
+        ]);
+
+        $shippment->activities()->create([
+            'comment' => $request->activity,
+            'note' => $request->note
+        ]);
+
+        $this->createNotification('New Shippment created', 'New Shippment created at ' . $hub->name . 'Pickup station/hub ' . 'by ' . Auth::user()->fullName);
+
+        return $this->success(new ShippmentResource($shippment), 'Item Logged successfully.');
     }
 
-    public function viewAdmin($id)
+    // CMS / Promo and banners
+    public function adminProfile()
     {
-        $admin = Admin::findOrFail($id);
+        $authUser = userAuth();
+        $user = Admin::findOrFail($authUser->id);
 
-        return $this->success($admin, 'Admin details');
+        $data = new AdminUserResource($user);
+
+        return $this->success($data, 'Profile details');
     }
 
-    public function editAdmin($request, $id)
+    public function updateAdminProfile($request)
     {
-        $admin = Admin::findOrFail($id);
+        $authUser = userAuth();
+        $user = Admin::findOrFail($authUser->id);
 
-        $admin->update([
+        $user->update([
             'first_name' => $request->first_name,
             'last_name' => $request->last_name,
             'email' => $request->email,
-            'type' => $request->type,
             'phone_number' => $request->phone_number,
         ]);
 
-        $admin->roles()->sync($request->role_id);
+        $this->createNotification('Admin Profile Updated', 'Admin profile updated for ' . $user->fullName);
 
-        if ($request->permissions) {
-            $admin->permissions()->sync($request->permissions);
-        }
+        $data = new AdminUserResource($user);
 
-        return $this->success($admin, 'Details updated successfully');
+        return $this->success($data, 'Profile detail');
     }
 
-    public function verifyPassword($request)
+    public function enableTwoFactor($request)
     {
-        $currentUserId = userAuthId();
+        $authUser = userAuth();
+        $user = Admin::findOrFail($authUser->id);
 
-        $admin = Admin::findOrFail($currentUserId);
-
-        if (Hash::check($request->password, $admin->password)) {
-            return $this->success(null, 'Password matched');
-        }
-
-        return $this->error(null, 'Password do not match');
-    }
-
-    public function revokeAccess($id)
-    {
-        $admin = Admin::findOrFail($id);
-        $admin->permissions()->detach();
-
-        return $this->success(null, 'Access Revoked');
-    }
-
-    public function removeAdmin($id)
-    {
-        $admin = Admin::findOrFail($id);
-        $admin->permissions()->detach();
-        $admin->delete();
-
-        return $this->success(null, 'Deleted successfully');
-    }
-
-    // Shipping Agents
-    public function shippingAgents()
-    {
-        $agents = ShippingAgent::latest()->get();
-        $data = ShippingAgentResource::collection($agents);
-
-        return $this->success($data, 'All Agents');
-    }
-
-    public function addShippingAgent($request)
-    {
-        $agent = ShippingAgent::create([
-            'name' => $request->name,
-            'type' => $request->type,
-            'country_ids' => $request->country_ids,
-            'account_email' => $request->account_email,
-            'account_password' => $request->account_password,
-            'api_live_key' => $request->api_live_key,
-            'api_test_key' => $request->api_test_key,
-            'status' => $request->status,
+        $user->update([
+            'two_factor_enabled' => $request->two_factor_enabled,
         ]);
 
-        return $this->success($agent, 'Agent added successfully', 201);
+        $this->createNotification('Two Factor Authentication Updated', 'Two factor authentication updated for ' . $user->fullName);
+
+        return $this->success(null, 'Settings updated');
     }
 
-    public function viewShippingAgent($id)
+    public function updateAdminPassword($request)
     {
-        $agent = ShippingAgent::findOrFail($id);
-        $data = new ShippingAgentResource($agent);
+        $authUser = userAuth();
+        $user = Admin::findOrFail($authUser->id);
 
-        return $this->success($data, 'Agent details');
-    }
+        if (! Hash::check($request->old_password, $user->password)) {
+            return $this->error(null, 'Old password is incorrect.', 400);
+        }
 
-    public function editShippingAgent($request, $id)
-    {
-        $agent = ShippingAgent::findOrFail($id);
-        $agent->update([
-            'name' => $request->name ?? $agent->name,
-            'type' => $request->type ?? $agent->type,
-            'logo' => $request->logo ?? $agent->logo,
-            'country_ids' => $request->country_ids ?? $agent->country_ids,
-            'account_email' => $request->account_email ?? $agent->account_email,
-            'account_password' => $request->account_password ?? $agent->account_password,
-            'api_live_key' => $request->api_live_key ?? $agent->api_live_key,
-            'api_test_key' => $request->api_test_key ?? $agent->api_test_key,
-            'status' => $request->status ?? $agent->status,
+        $user->update([
+            'password' => bcrypt($request->password),
         ]);
 
-        return $this->success(null, 'Details updated successfully');
+        return $this->success(null, 'Password updated');
     }
 
-    public function deleteShippingAgent($id)
+    public function sendCode()
     {
-        $agent = ShippingAgent::findOrFail($id);
-        $agent->delete();
+        $admin = userAuth();
 
-        return $this->success(null, 'Details deleted successfully');
+        if (! $admin->email) {
+            return $this->error(null, 'Oops! No email found to send code.', 404);
+        }
+
+        $verificationCode = generateVerificationCode(4);
+        $expiry = now()->addMinutes(30);
+
+        $admin->update([
+            'verification_code' => $verificationCode,
+            'verification_code_expire_at' => $expiry,
+        ]);
+
+        $type = MailingEnum::ACCOUNT_VERIFICATION;
+        $subject = 'Account Verification';
+        $mail_class = AccountVerificationEmail::class;
+        $data = [
+            'user' => $admin,
+        ];
+        mailSend($type, $admin, $subject, $mail_class, $data);
+
+        return $this->success(null, 'A verification code has been sent to you');
+    }
+
+    public function verifyCode($request)
+    {
+        $user = Admin::where('verification_code', $request->verification_code)->first();
+
+        if (! $user) {
+            return $this->error(null, 'Invalide code entered, please try it again.', 422);
+        }
+
+        if ($user->verification_code_expire_at < now()) {
+            return $this->error(null, 'Verification Code has Expired!', 404);
+        }
+
+        $user->update([
+            'verification_code' => null,
+            'verification_code_expire_at' => null,
+        ]);
+        return $this->success(null, "Code Verified");
+    }
+
+    //AdminNotification
+    public function getNotifications()
+    {
+        $notifications = AdminNotification::latest()->get();
+
+        $data = AdminNotificationResource::collection($notifications);
+
+        return $this->success($data, 'All notifications');
+    }
+
+    public function getNotification($id)
+    {
+        $notification = AdminNotification::find($id);
+
+        if (!$notification) {
+            return $this->error(null, 'Notification not found', 404);
+        }
+
+        $data = new AdminNotificationResource($notification);
+
+        return $this->success($data, 'Notification details');
+    }
+
+    public function markRead($id)
+    {
+        $notification = AdminNotification::findOrFail($id);
+
+        if ($notification->is_read) {
+            return $this->error(null, 'Notification already marked read');
+        }
+
+        $notification->update(['is_read' => true]);
+
+        return $this->success(null, 'Notification marked as read');
+    }
+
+    //Shippments
+    public function allShipments()
+    {
+        $order_counts = Shippment::selectRaw('
+        COUNT(*) as total_orders,
+        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as cancelled,
+        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as delivered,
+        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as in_transit
+    ', [
+            OrderStatus::CANCELLED,
+            OrderStatus::DELIVERED,
+            OrderStatus::IN_TRANSIT
+        ])->first();
+
+        $shippments = Shippment::latest()->get();
+
+        $data = [
+            'total_shippments'  => $order_counts->total_orders ?? 0,
+            'in_transit'  => $order_counts->in_transit ?? 0,
+            'completed'    => $order_counts->delivered ?? 0,
+            'failed'   => $order_counts->cancelled ?? 0,
+            'shippments'   => ShippmentResource::collection($shippments)
+        ];
+
+        return $this->success($data, 'Shippment Data');
+    }
+
+    public function shipmentDetails($id)
+    {
+        $shippment = Shippment::findOrFail($id);
+
+        return $this->success(new ShippmentResource($shippment), 'shippment details');
+    }
+
+    public function updateShipmentDetails($request, $id)
+    {
+        $shippment = Shippment::findOrFail($id);
+
+        DB::transaction(function () use ($shippment, $request) {
+
+            $shippment->update([
+                'current_location' => $request->current_location,
+                'note' => $request->note,
+                'status' => $request->status,
+                'destination_name' => $request->destination_name,
+            ]);
+
+            $shippment->activities()->create([
+                'comment' => $request->activity,
+                'note' => $request->note
+            ]);
+        });
+
+        return $this->success(new ShippmentResource($shippment), 'shippment details Updated');
+    }
+
+    public function readyForDelivery($request, $id)
+    {
+        $shippment = Shippment::findOrFail($id);
+
+        DB::transaction(function () use ($shippment, $request) {
+
+            $shippment->update([
+                'status' => $request->status,
+                'dispatch_name' => $request->dispatch_name,
+                'dispatch_phone' => $request->dispatch_phone,
+                'vehicle_number' => $request->vehicle_number,
+                'delivery_address' => $request->delivery_address,
+            ]);
+
+            $shippment->activities()->create([
+                'comment' => $request->activity,
+                'note' => $request->activity
+            ]);
+        });
+
+        return $this->success(new ShippmentResource($shippment), 'shippment details Updated');
+    }
+
+    public function returnToSender($request, $id)
+    {
+        $shippment = Shippment::findOrFail($id);
+
+        DB::transaction(function () use ($shippment, $request) {
+
+            $shippment->update([
+                'status' => $request->status,
+                'note' => $request->note,
+            ]);
+
+            $shippment->activities()->create([
+                'comment' => $request->activity,
+                'note' => $request->note
+            ]);
+        });
+
+        return $this->success(new ShippmentResource($shippment), 'shippment details Updated');
+    }
+
+    public function readyForPickup($request, $id)
+    {
+        $shippment = Shippment::findOrFail($id);
+
+        DB::transaction(function () use ($shippment, $request) {
+
+            $shippment->update([
+                'status' => $request->status,
+                'reciever_name' => $request->reciever_name,
+                'reciever_phone' => $request->reciever_phone,
+            ]);
+
+            $shippment->activities()->create([
+                'comment' => $request->activity,
+                'note' => $request->activity
+            ]);
+        });
+
+        return $this->success(new ShippmentResource($shippment), 'shippment details Updated');
+    }
+
+    public function readyForDispatched($request, $id)
+    {
+        $shippment = Shippment::findOrFail($id);
+
+        DB::transaction(function () use ($shippment, $request) {
+
+            $shippment->update([
+                'status' => $request->status,
+                'destination_name' => $request->destination_name,
+                'dispatch_name' => $request->dispatch_name,
+                'dispatch_phone' => $request->dispatch_phone,
+                'expected_delivery_time' => $request->expected_delivery_time,
+                'vehicle_number' => $request->vehicle_number,
+                'delivery_address' => $request->delivery_address,
+                'note' => $request->note,
+            ]);
+
+            $shippment->activities()->create([
+                'comment' => $request->activity,
+                'note' => $request->note
+            ]);
+        });
+
+        return $this->success(new ShippmentResource($shippment), 'shippment dispatched');
+    }
+
+    public function transferShipment($request, $id)
+    {
+        $shippment = Shippment::findOrFail($id);
+
+        if ($shippment->collation_id) {
+            return $this->error(null, 'shippment belongs to collation centre', 404);
+        }
+
+        DB::transaction(function () use ($shippment, $request) {
+
+            $shippment->update([
+                'status' => $request->status,
+                'transfer_reason' => $request->transfer_reason,
+                'hub_id' => $request->hub_id,
+                'note' => $request->note,
+            ]);
+
+            $shippment->activities()->create([
+                'comment' => $request->activity,
+                'note' => $request->note
+            ]);
+        });
+
+        return $this->success(new ShippmentResource($shippment), 'shipment transfered');
+    }
+
+    //Batch management
+    public function createBatch($request)
+    {
+        $centre = CollationCenter::find($request->collation_id);
+
+        if (!$centre) {
+            return $this->error(null, 'Centre not found', 404);
+        }
+
+        DB::transaction(function () use ($centre, $request) {
+
+            $batch = ShippmentBatch::create([
+                'collation_id' => $centre->id,
+                'type' => ShippmentCategory::INCOMING,
+                'batch_id' => generateBatchId(),
+                "origin_hub" => $request->origin_hub,
+                "destination_hub" => $request->destination_hub,
+                "items" => $request->items_count,
+                "weight" => $request->weight,
+                "priority" => $request->priority,
+                "shippment_ids" => $request->shipment_ids,
+                "note" => $request->note
+            ]);
+
+            $batch->activities()->create([
+                'comment' => $request->note,
+                'note' => $request->note
+            ]);
+
+            $this->createNotification('New Shipment batch created', 'New Shipment batch created at ' . $centre->name . 'centre ' . 'by ' . Auth::user()->fullName);
+        });
+
+        return $this->success(null, 'Batch created successfully');
+    }
+
+    public function processBatch($request,$id)
+    {
+        $batch = ShippmentBatch::find($id);
+
+        if (!$batch) {
+            return $this->error(null, 'Batch not found', 404);
+        }
+
+        DB::transaction(function () use ($batch, $request) {
+
+            $batch->update([
+                'shippment_ids' => $request->shipment_ids,
+                'note' => $request->note,
+            ]);
+
+            $batch->activities()->create([
+                'comment' => $request->note,
+                'note' => $request->note
+            ]);
+
+            $this->createNotification('Shippment batch Processed', 'Shippment batch processed ' . 'by ' . Auth::user()->fullName);
+        });
+
+        return $this->success(null, 'Batch Processed');
+    }
+
+    public function dispatchBatch($request, $id)
+    {
+        $batch = ShippmentBatch::findOrFail($id);
+
+        DB::transaction(function () use ($batch, $request) {
+
+            $batch->update([
+                'status' => OrderStatus::DISPATCHED,
+                'vehicle' => $request->vehicle,
+                'driver_name' => $request->driver_name,
+                'driver_phone' => $request->driver_phone,
+                'departure' => $request->departure,
+                'arrival' => $request->arrival,
+                'note' => $request->note,
+            ]);
+
+            $batch->activities()->create([
+                'comment' => $request->note,
+                'note' => $request->note
+            ]);
+        });
+
+        return $this->success(new BatchResource($batch), 'Batch dispatched');
+    }
+
+    public function batchDetails($id)
+    {
+        $batch = ShippmentBatch::findOrFail($id);
+
+        return $this->success(new BatchResource($batch), 'Batch details');
     }
 }

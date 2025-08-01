@@ -149,10 +149,11 @@ class Product extends Model
         return Attribute::get(function () {
             $discountType = $this->discount_type;
             $discountValue = $this->discount_value;
-
             if ($discountType === 'percentage') {
                 return $this->product_price - ($this->product_price * ($discountValue / 100));
-            } elseif ($discountType === 'flat') {
+            }
+
+            if ($discountType === 'flat') {
                 return $this->product_price - $discountValue;
             }
 
@@ -175,7 +176,7 @@ class Product extends Model
             ->withCount('productReviews')
             ->where('products.user_id', $userId)
             ->leftJoin('product_reviews', 'products.id', '=', 'product_reviews.product_id')
-            ->withCount(['orders as sold_count' => function ($query) {
+            ->withCount(['orders as sold_count' => function ($query): void {
                 $query->select(DB::raw('COUNT(*)'));
             }])
             ->groupBy('products.id', 'products.name', 'products.price', 'products.image', 'products.user_id')
@@ -197,10 +198,10 @@ class Product extends Model
             ->withCount('productReviews')
             ->where('products.user_id', $userId)
             ->leftJoin('product_reviews', 'products.id', '=', 'product_reviews.product_id')
-            ->withCount(['orders as sold_count' => function ($query) {
+            ->withCount(['orders as sold_count' => function ($query): void {
                 $query->select(DB::raw('COUNT(*)'));
             }])
-            ->withCount(['wishlists as wishlist_count' => function ($query) {
+            ->withCount(['wishlists as wishlist_count' => function ($query): void {
                 $query->select(DB::raw('COUNT(*)'));
             }])
             ->groupBy('products.id', 'products.name', 'products.price', 'products.image', 'products.user_id')

@@ -71,20 +71,20 @@
     <div class="email-container">
         <!-- Header Section -->
         <div class="email-header">
-            <img src="https://azany-uploads.s3.amazonaws.com/assets/logo.png" alt="Azany Logo">
+            <img src="https://ik.imagekit.io/mdee2wnwm/Azany/logo/azanylogo.png?updatedAt=1753939975701" alt="Azany Logo">
             <h1>Welcome to Azany Admin Portal</h1>
         </div>
 
         <!-- Body Section -->
         <div class="email-body">
-            <p>Hi <strong>{{ $user->first_name }}</strong>,</p>
+            <p>Hi <strong>{{ data_get($user, 'first_name', '') }}</strong>,</p>
 
             <p>We’re excited to welcome you to the <strong>Azany</strong> admin team! Below are your login details for accessing the Admin Portal:</p>
 
             <!-- Login Details Section -->
             <div class="login-details">
                 <p><strong>Login URL:</strong> <a href="https://shopazany.com">https://shopazany.com</a></p>
-                <p><strong>Username:</strong> {{ $user->email }}</p>
+                <p><strong>Username:</strong> {{ data_get($user, 'email', '') }}</p>
                 <p><strong>Password:</strong> {{ $pass }}</p>
             </div>
 

@@ -6,7 +6,7 @@ use Exception;
 
 class GetCurl
 {
-    protected $url;
+    protected string $url;
 
     protected $headers = [];
 
@@ -28,7 +28,7 @@ class GetCurl
 
         $response = curl_exec($ch);
 
-        if (curl_errno($ch)) {
+        if (curl_errno($ch) !== 0) {
             throw new Exception('Curl error: '.curl_error($ch));
         }
 

@@ -2,15 +2,24 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Models\Admin;
+use Illuminate\Http\Request;
+use App\Http\Requests\BatchRequest;
+use App\Services\SuperAdminService;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Admin\CollationCentreRequest;
+use Illuminate\Support\Facades\Gate;
 use App\Http\Requests\Admin\HubRequest;
 use App\Http\Requests\AdminUserRequest;
+use App\Http\Requests\ProcessBatchRequest;
 use App\Http\Requests\ShippingAgentRequest;
-use App\Services\SuperAdminService;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Gate;
+use App\Http\Requests\UpdateShippmentRequest;
+use App\Http\Requests\VerificationCodeRequest;
 use Symfony\Component\HttpFoundation\Response;
+use App\Http\Requests\Admin\OrderFinderRequest;
+use App\Http\Requests\TransferShippmentRequest;
+use App\Http\Requests\ChangeAdminPasswordRequest;
+use App\Http\Requests\Admin\HubOrderFinderRequest;
+use App\Http\Requests\Admin\CollationCentreRequest;
 
 class AdminController extends Controller
 {
@@ -19,6 +28,7 @@ class AdminController extends Controller
     public function __construct(
         private SuperAdminService $superAdminService
     ) {}
+
 
     public function deliveryOverview()
     {
@@ -51,10 +61,15 @@ class AdminController extends Controller
         return $this->superAdminService->deleteCollationCentre($id);
     }
 
+    public function findPickupLocationOrder(HubOrderFinderRequest $request)
+    {
+        return $this->superAdminService->findPickupLocationOrder($request);
+    }
+
     // Collation Centers Hubs
     public function allCollationCentreHubs()
     {
-        return $this->superAdminService->allCollationCentreHubs();
+        return $this->superAdminService->allHubs();
     }
 
     public function addHub(HubRequest $request)
@@ -77,79 +92,110 @@ class AdminController extends Controller
         return $this->superAdminService->deleteHub($id);
     }
 
-    // Admin Users
-    public function adminUsers()
+    // profile
+    public function adminProfile()
     {
-        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
-
-        return $this->superAdminService->adminUsers();
+        return $this->superAdminService->adminProfile();
     }
 
-    public function addAdmin(AdminUserRequest $request)
+    public function updateAdminProfile(Request $request)
     {
-        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
-
-        return $this->superAdminService->addAdmin($request);
+        return $this->superAdminService->updateAdminProfile($request);
     }
 
-    public function viewAdminUser($id)
+    public function updateAdminPassword(ChangeAdminPasswordRequest $request)
     {
-        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
-
-        return $this->superAdminService->viewAdmin($id);
+        return $this->superAdminService->updateAdminPassword($request);
     }
 
-    public function editAdminUser(Request $request, $id)
+    public function enable2FA(Request $request)
     {
-        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
-
-        return $this->superAdminService->editAdmin($request, $id);
+        return $this->superAdminService->enableTwoFactor($request);
     }
 
-    public function verifyPassword(Request $request)
+    public function sendCode()
     {
-        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
-
-        return $this->superAdminService->verifyPassword($request);
+        return $this->superAdminService->sendCode();
     }
 
-    public function revokeAccess($id)
+    public function verifyCode(VerificationCodeRequest $request)
     {
-        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
-
-        return $this->superAdminService->revokeAccess($id);
+        return $this->superAdminService->verifyCode($request);
     }
 
-    public function removeAdmin($id)
+    public function getNotifications()
     {
-        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
-
-        return $this->superAdminService->removeAdmin($id);
+        return $this->superAdminService->getNotifications();
     }
 
-    // ShippingAgents section
-    public function shippingAgents()
+    public function getNotification($id)
     {
-        return $this->superAdminService->shippingAgents();
+        return $this->superAdminService->getNotification($id);
     }
 
-    public function addShippingAgent(ShippingAgentRequest $request)
+    public function markRead($id)
     {
-        return $this->superAdminService->addShippingAgent($request);
+        return $this->superAdminService->markRead($id);
     }
 
-    public function viewShippingAgent($id)
+    //Shippments
+    public function allShipments()
     {
-        return $this->superAdminService->viewShippingAgent($id);
+        return $this->superAdminService->allShipments();
     }
 
-    public function editShippingAgent(ShippingAgentRequest $request, $id)
+    public function findOrder(Request $request)
     {
-        return $this->superAdminService->editShippingAgent($request, $id);
+        return $this->superAdminService->findOrder($request);
     }
 
-    public function deleteShippingAgent($id)
+    public function shipmentDetails($id)
     {
-        return $this->superAdminService->deleteShippingAgent($id);
+        return $this->superAdminService->shipmentDetails($id);
+    }
+
+    public function updateShipmentDetails(UpdateShippmentRequest $request, $id)
+    {
+        return $this->superAdminService->updateShipmentDetails($request, $id);
+    }
+
+    public function readyForDelivery(Request $request, $id)
+    {
+        return $this->superAdminService->readyForDelivery($request, $id);
+    }
+
+    public function readyForPickup(Request $request, $id)
+    {
+        return $this->superAdminService->readyForPickup($request, $id);
+    }
+
+    public function returnToSender(Request $request, $id)
+    {
+        return $this->superAdminService->returnToSender($request, $id);
+    }
+
+    public function readyForDispatched(Request $request, $id)
+    {
+        return $this->superAdminService->readyForDispatched($request, $id);
+    }
+
+    public function transferShipment(TransferShippmentRequest $request, $id)
+    {
+        return $this->superAdminService->transferShipment($request, $id);
+    }
+
+    public function batchDetails($id)
+    {
+        return $this->superAdminService->batchDetails($id);
+    }
+
+    public function createBatch(BatchRequest $request)
+    {
+        return $this->superAdminService->createBatch($request);
+    }
+
+    public function processBatch(ProcessBatchRequest $request, $id)
+    {
+        return $this->superAdminService->processBatch($request, $id);
     }
 }

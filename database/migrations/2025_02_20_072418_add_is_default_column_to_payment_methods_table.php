@@ -11,11 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('payment_methods', function (Blueprint $table) {
+        Schema::table('payment_methods', function (Blueprint $table): void {
             $table->boolean('is_default')->default(false)->after('data');
         });
 
-        Schema::table('coupons', function (Blueprint $table) {
+        Schema::table('coupons', function (Blueprint $table): void {
             $table->integer('total_used')->default(0)->after('used');
         });
     }
@@ -25,11 +25,11 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('payment_methods', function (Blueprint $table) {
+        Schema::table('payment_methods', function (Blueprint $table): void {
             $table->dropColumn('is_default');
         });
 
-        Schema::table('coupons', function (Blueprint $table) {
+        Schema::table('coupons', function (Blueprint $table): void {
             $table->dropColumn('total_used');
         });
     }

@@ -113,7 +113,7 @@ class B2BController extends Controller
 
     public function promoBanners(SellerService $sellerService)
     {
-        return $this->buyerService->promoBanners($sellerService);
+        return $this->buyerService->promoBanners();
     }
 
     public function getPageBanners($page)

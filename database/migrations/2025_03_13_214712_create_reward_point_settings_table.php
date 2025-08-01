@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('reward_point_settings', function (Blueprint $table) {
+        Schema::create('reward_point_settings', function (Blueprint $table): void {
             $table->id();
             $table->string('point');
             $table->string('value');

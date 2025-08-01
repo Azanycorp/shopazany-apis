@@ -25,7 +25,7 @@ class CouponExpire extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): void
     {
         Coupon::wherePast('expire_at')
             ->whereStatus(EnumCoupon::ACTIVE)

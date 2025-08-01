@@ -135,7 +135,7 @@ if (! function_exists('getRelativePath')) {
 }
 
 if (! function_exists('getFolderPrefix')) {
-    function getFolderPrefix()
+    function getFolderPrefix(): string
     {
         $segments = request()->segments();
 
@@ -265,7 +265,7 @@ if (! function_exists('uploadMultipleB2BProductImage')) {
 }
 
 if (! function_exists('uploadFunction')) {
-    function uploadFunction($file, $folder, $model = null)
+    function uploadFunction($file, $folder, $model = null): array
     {
         if ($file->getSize() > 3000000) {
             abort(422, 'File size is larger than 3MB.');
@@ -285,7 +285,7 @@ if (! function_exists('uploadFunction')) {
 }
 
 if (! function_exists('deleteFile')) {
-    function deleteFile($model)
+    function deleteFile($model): void
     {
         if (! is_null($model) && ! empty($model->public_id)) {
             app(FileUploader::class)->deleteFile($model->public_id);
@@ -299,7 +299,7 @@ if (! function_exists('uploadUserImage')) {
         $parts = explode('@', $user->email);
         $name = $parts[0];
 
-        $folder = folderName('profile')."/{$name}";
+        $folder = folderName('profile') . "/{$name}";
 
         if (! is_null($user) && ! empty($user->public_id)) {
             app(FileUploader::class)->deleteFile($user->public_id);
@@ -446,7 +446,7 @@ if (! function_exists('generateTransactionReference')) {
     function generateTransactionReference(): string
     {
         do {
-            $reference = 'TXN'.strtoupper(Str::random(8)).time();
+            $reference = 'TXN' . strtoupper(Str::random(8)) . time();
         } while (Transaction::where('reference', $reference)->exists());
 
         return $reference;
@@ -461,16 +461,17 @@ if (! function_exists('logUserAction')) {
 }
 
 if (! function_exists('generateVerificationCode')) {
-    function generateVerificationCode(): string
+    function generateVerificationCode(int $length = 6): string
     {
-        return str_pad(mt_rand(0, 999999), 6, '0', STR_PAD_LEFT);
+        $number = mt_rand(0, pow(10, $length) - 1);
+        return str_pad((string) $number, $length, '0', STR_PAD_LEFT);
     }
 }
 
 if (! function_exists('generateRefCode')) {
     function generateRefCode(): string
     {
-        return 'AZY-'.sprintf('%06d', mt_rand(1, 999999));
+        return 'AZY-' . sprintf('%06d', mt_rand(1, 999999));
     }
 }
 
@@ -489,10 +490,10 @@ if (! function_exists('generate_referrer_link')) {
     function generate_referrer_link(string $referrer_code): string
     {
         if (App::environment('production')) {
-            return config('services.frontend.seller_baseurl').'?referrer='.$referrer_code;
+            return config('services.frontend.seller_baseurl') . '?referrer=' . $referrer_code;
         }
 
-        return config('services.frontend.staging_seller_baseurl').'?referrer='.$referrer_code;
+        return config('services.frontend.staging_seller_baseurl') . '?referrer=' . $referrer_code;
     }
 }
 
@@ -518,9 +519,9 @@ if (! function_exists('generate_referrer_links')) {
             ? $baseUrls['staging']
             : ($baseUrls[$environment] ?? $baseUrls['staging']);
 
-        return array_map(fn ($key, $url) => [
+        return array_map(fn($key, $url): array => [
             'name' => $key,
-            'link' => $url.'?referrer='.$referrer_code,
+            'link' => $url . '?referrer=' . $referrer_code,
         ], array_keys($selectedBaseUrls), $selectedBaseUrls);
     }
 }
@@ -549,13 +550,13 @@ if (! function_exists('abbreviateNumber')) {
     function abbreviateNumber($number)
     {
         if ($number >= 1000000000) {
-            return number_format($number / 1000000000, 1).'B';
+            return number_format($number / 1000000000, 1) . 'B';
         }
         if ($number >= 1000000) {
-            return number_format($number / 1000000, 1).'M';
+            return number_format($number / 1000000, 1) . 'M';
         }
         if ($number >= 1000) {
-            return number_format($number / 1000, 1).'K';
+            return number_format($number / 1000, 1) . 'K';
         }
 
         return $number;
@@ -585,7 +586,7 @@ if (! function_exists('folderNames')) {
         $basePath = "/{$envPrefix}/{$folderName}/{$user}";
 
         $fullFolder = $basePath;
-        if (! empty($anotherFolder)) {
+        if ($anotherFolder !== null && $anotherFolder !== '' && $anotherFolder !== '0') {
             $fullFolder .= "/{$anotherFolder}";
         }
 
@@ -608,10 +609,10 @@ if (! function_exists('getCurrencyCode')) {
 if (! function_exists('generateRefundComplaintNumber')) {
     function generateRefundComplaintNumber(string $prefix = 'RFC'): string
     {
-        $uniqueNumber = $prefix.'-'.strtoupper(Str::random(8)).'-'.time();
+        $uniqueNumber = $prefix . '-' . strtoupper(Str::random(8)) . '-' . time();
 
         while (B2BRequestRefund::where('complaint_number', $uniqueNumber)->exists()) {
-            $uniqueNumber = $prefix.'-'.strtoupper(Str::random(8)).'-'.time();
+            $uniqueNumber = $prefix . '-' . strtoupper(Str::random(8)) . '-' . time();
         }
 
         return $uniqueNumber;
@@ -624,11 +625,11 @@ if (! function_exists('orderNo')) {
         $timestamp = now()->timestamp;
         $randomNumber = mt_rand(100000, 999999);
 
-        $uniqueOrderNumber = 'ORD-'.$timestamp.'-'.$randomNumber;
+        $uniqueOrderNumber = 'ORD-' . $timestamp . '-' . $randomNumber;
 
         while (Order::where('order_no', $uniqueOrderNumber)->exists()) {
             $randomNumber = mt_rand(100000, 999999);
-            $uniqueOrderNumber = 'ORD-'.$timestamp.'-'.$randomNumber;
+            $uniqueOrderNumber = 'ORD-' . $timestamp . '-' . $randomNumber;
         }
 
         return $uniqueOrderNumber;
@@ -690,8 +691,21 @@ if (! function_exists('currencyConvertTo')) {
     }
 }
 
+if (! function_exists('generateBatchId')) {
+    function generateBatchId(): string
+    {
+        return 'BCH-' . date('Y') . '-' . random_int(10000000, 99999999);
+    }
+}
+if (! function_exists('generateShipmentId')) {
+    function generateShipmentId(): string
+    {
+        return 'SHP-' . date('Y') . '-' . random_int(10000000, 99999999);
+    }
+}
+
 if (! function_exists('mailSend')) {
-    function mailSend($type, $recipient, $subject, $mail_class, $payloadData = [])
+    function mailSend($type, $recipient, $subject, $mail_class, $payloadData = []): void
     {
         $data = [
             'type' => $type,
@@ -708,7 +722,7 @@ if (! function_exists('mailSend')) {
 }
 
 if (! function_exists('currencyCodeByCountryId')) {
-    function currencyCodeByCountryId($countryId)
+    function currencyCodeByCountryId($countryId): string
     {
         $currencyCode = 'NGN';
         if ($countryId) {
@@ -721,7 +735,7 @@ if (! function_exists('currencyCodeByCountryId')) {
 }
 
 if (! function_exists('logOrderActivity')) {
-    function logOrderActivity($orderId, $message, $status)
+    function logOrderActivity($orderId, $message, $status): void
     {
         OrderActivity::updateOrCreate(
             [
@@ -771,7 +785,7 @@ if (! function_exists('getRewards')) {
 if (! function_exists('userRewards')) {
     function userRewards($userId)
     {
-        $user = User::with(['userActions' => function ($query) {
+        $user = User::with(['userActions' => function ($query): void {
             $query->select('id', 'user_id', 'action_id', 'points')
                 ->with('action:id,name,icon,points');
         }])->findOrFail($userId);
@@ -788,7 +802,7 @@ if (! function_exists('userRewards')) {
 }
 
 if (! function_exists('pointConvert')) {
-    function pointConvert($point, $to)
+    function pointConvert($point, $to): float
     {
         $usdSetting = RewardPointSetting::where('currency', 'USD')->first();
         if (! $usdSetting) {
@@ -803,7 +817,7 @@ if (! function_exists('pointConvert')) {
 }
 
 if (! function_exists('amountToPoint')) {
-    function amountToPoint($amount, $currency)
+    function amountToPoint($amount, $currency): float
     {
         $usdSetting = RewardPointSetting::where('currency', 'USD')->first();
         if (! $usdSetting) {

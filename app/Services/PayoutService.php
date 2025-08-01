@@ -12,7 +12,10 @@ use net\authorize\api\controller as AnetController;
 
 class PayoutService
 {
-    public static function paystackTransfer($user, $fields)
+    /**
+     * @return mixed[]
+     */
+    public static function paystackTransfer($user, array $fields): array
     {
         $url = 'https://api.paystack.co/transfer';
         $token = config('paystack.secretKey');
@@ -49,7 +52,10 @@ class PayoutService
         ];
     }
 
-    public static function paystackBulkTransfer(array $transfers)
+    /**
+     * @return mixed[]
+     */
+    public static function paystackBulkTransfer(array $transfers): array
     {
         $url = 'https://api.paystack.co/transfer/bulk';
         $token = config('paystack.secretKey');
@@ -63,7 +69,7 @@ class PayoutService
         $body = [
             'currency' => 'NGN',
             'source' => 'balance',
-            'transfers' => array_map(function ($t) {
+            'transfers' => array_map(function (array $t): array {
                 return [
                     'reference' => $t['reference'],
                     'amount' => $t['amount'],
@@ -105,7 +111,7 @@ class PayoutService
         ];
     }
 
-    public static function authorizeTransfer($request, $user, $fields)
+    public static function authorizeTransfer($request, $user, array $fields): array
     {
         try {
             $merchantAuthentication = new AnetAPI\MerchantAuthenticationType;

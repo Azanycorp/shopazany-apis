@@ -11,11 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('products', function (Blueprint $table) {
+        Schema::table('products', function (Blueprint $table): void {
             $table->string('public_id')->nullable()->after('image');
         });
 
-        Schema::table('product_images', function (Blueprint $table) {
+        Schema::table('product_images', function (Blueprint $table): void {
             $table->string('public_id')->nullable()->after('image');
         });
     }
@@ -25,11 +25,11 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('products', function (Blueprint $table) {
+        Schema::table('products', function (Blueprint $table): void {
             $table->dropColumn('public_id');
         });
 
-        Schema::table('product_images', function (Blueprint $table) {
+        Schema::table('product_images', function (Blueprint $table): void {
             $table->dropColumn('public_id');
         });
     }

@@ -16,13 +16,13 @@ trait Product
         ];
     }
 
-    public function uploadAdditionalImages($request, $name, $product)
+    public function uploadAdditionalImages($request, $name, $product): void
     {
         $folder = folderNames('product', $name, null, 'images');
         uploadMultipleProductImage($request, 'images', $folder->folder, $product);
     }
 
-    public function createProductRecord($request, $user, $slug, $url)
+    public function createProductRecord($request, $user, $slug, array $url)
     {
         $price = $this->calculateFinalPrice(
             $request->product_price,
@@ -55,9 +55,9 @@ trait Product
         ]);
     }
 
-    public function createProductVariations($request, $product, $name)
+    public function createProductVariations($request, $product, $name): void
     {
-        $variations = collect($request->variation)->map(fn ($item) => json_decode($item, true));
+        $variations = collect($request->variation)->map(fn ($item): mixed => json_decode($item, true));
         $variationImages = $request->file('variation_image', []);
 
         foreach ($variations as $index => $variation) {
@@ -95,11 +95,11 @@ trait Product
         return $basePrice;
     }
 
-    public function updateProductVariations($request, $product, $name)
+    public function updateProductVariations($request, $product, $name): void
     {
         $processedVariationIds = [];
 
-        $variations = collect($request->variation)->map(fn ($item) => json_decode($item, true));
+        $variations = collect($request->variation)->map(fn ($item): mixed => json_decode($item, true));
         $variationImages = $request->file('variation_image', []);
 
         foreach ($variations as $index => $variation) {

@@ -2,12 +2,12 @@ name: Production Deployment
 
 on:
   push:
-    branches: [deploy]  # Change to your production branch
+    branches: [deploy]  # Change to your production branch 
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
-    steps:
+    runs-on: ubuntu-latest  
+    steps: 
       - name: Checkout code
         uses: actions/checkout@v4 
 

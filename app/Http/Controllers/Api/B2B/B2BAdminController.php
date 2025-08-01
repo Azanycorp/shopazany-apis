@@ -2,18 +2,20 @@
 
 namespace App\Http\Controllers\Api\B2B;
 
-use App\Http\Controllers\Controller;
-use App\Http\Requests\Admin\BlogRequest;
-use App\Http\Requests\Admin\ClientLogoRequest;
-use App\Http\Requests\Admin\NewBannerRequest;
-use App\Http\Requests\Admin\SubscriptionPlanRequest;
-use App\Http\Requests\Admin\UpdateBlogRequest;
-use App\Http\Requests\ChangeAdminPasswordRequest;
-use App\Http\Requests\SocialLinkRequest;
-use App\Services\B2B\AdminService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use App\Services\B2B\AdminService;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
+use App\Http\Requests\AdminUserRequest;
+use App\Http\Requests\Admin\BlogRequest;
+use App\Http\Requests\SocialLinkRequest;
+use App\Http\Requests\ShippingAgentRequest;
+use App\Http\Requests\Admin\NewBannerRequest;
+use App\Http\Requests\Admin\ClientLogoRequest;
+use App\Http\Requests\Admin\UpdateBlogRequest;
+use App\Http\Requests\ChangeAdminPasswordRequest;
+use App\Http\Requests\Admin\SubscriptionPlanRequest;
 
 class B2BAdminController extends Controller
 {
@@ -45,7 +47,7 @@ class B2BAdminController extends Controller
     {
         abort_if(Gate::denies('order_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
 
-        return $this->adminService->getAllOrders($request);
+        return $this->adminService->getAllOrders();
     }
 
     public function markCompleted($id)
@@ -222,7 +224,6 @@ class B2BAdminController extends Controller
     public function deleteClientLogo($id)
     {
         return $this->adminService->deleteClientLogo($id);
-
     }
 
     // Social links section
@@ -251,4 +252,82 @@ class B2BAdminController extends Controller
     {
         return $this->adminService->deleteLink($id);
     }
+
+
+    // Admin Users
+    public function adminUsers()
+    {
+        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+
+        return $this->adminService->adminUsers();
+    }
+
+    public function addAdmin(AdminUserRequest $request)
+    {
+        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+
+        return $this->adminService->addAdmin($request);
+    }
+
+    public function viewAdminUser($id)
+    {
+        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+
+        return $this->adminService->viewAdmin($id);
+    }
+
+    public function editAdminUser(Request $request, $id)
+    {
+        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+
+        return $this->adminService->editAdmin($request, $id);
+    }
+
+    public function verifyPassword(Request $request)
+    {
+        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+
+        return $this->adminService->verifyPassword($request);
+    }
+
+    public function revokeAccess($id)
+    {
+        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+
+        return $this->adminService->revokeAccess($id);
+    }
+
+    public function removeAdmin($id)
+    {
+        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+
+        return $this->adminService->removeAdmin($id);
+    }
+
+    // ShippingAgents section
+    public function shippingAgents()
+    {
+        return $this->adminService->shippingAgents();
+    }
+
+    public function addShippingAgent(ShippingAgentRequest $request)
+    {
+        return $this->adminService->addShippingAgent($request);
+    }
+
+    public function viewShippingAgent($id)
+    {
+        return $this->adminService->viewShippingAgent($id);
+    }
+
+    public function editShippingAgent(ShippingAgentRequest $request, $id)
+    {
+        return $this->adminService->editShippingAgent($request, $id);
+    }
+
+    public function deleteShippingAgent($id)
+    {
+        return $this->adminService->deleteShippingAgent($id);
+    }
+
 }

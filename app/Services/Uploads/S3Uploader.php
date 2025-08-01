@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Storage;
 
 class S3Uploader
 {
-    public function upload($file, $folder)
+    public function upload($file, $folder): array
     {
         $path = Storage::disk('s3')->putFile($folder, $file);
 
@@ -20,7 +20,7 @@ class S3Uploader
         ];
     }
 
-    public function delete($publicId)
+    public function delete($publicId): void
     {
         if (! Storage::disk('s3')->delete($publicId)) {
             throw new \Exception('Failed to delete from S3.');

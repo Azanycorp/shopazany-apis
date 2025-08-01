@@ -26,7 +26,7 @@ class AdminCouponController extends Controller
         return $this->couponService->createCoupon($request);
     }
 
-    public function getCoupon()
+    public function getCoupon(): array
     {
         return $this->couponService->getCoupon();
     }

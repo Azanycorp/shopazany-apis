@@ -70,7 +70,7 @@ class SubscriptionService
         return $this->success($data, 'Subscription histories');
     }
 
-    public static function creditAffiliate($referrer, $amount, $currency)
+    public static function creditAffiliate($referrer, $amount, $currency): void
     {
         if (! $referrer) {
             return;
@@ -87,7 +87,7 @@ class SubscriptionService
         );
 
         $convertedAmount = currencyConvert($currency, $amount, $referrer->default_currency);
-        $subcriptionBonus = round($convertedAmount * 0.05, 2);
+        $subcriptionBonus = round($convertedAmount * 0.10, 2);
         $wallet->increment('balance', $subcriptionBonus);
     }
 }

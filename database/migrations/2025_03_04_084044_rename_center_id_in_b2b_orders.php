@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('b2b_orders', function (Blueprint $table) {
+        Schema::table('b2b_orders', function (Blueprint $table): void {
             $table->renameColumn('center_id', 'centre_id');
         });
     }

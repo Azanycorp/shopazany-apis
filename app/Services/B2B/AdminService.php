@@ -2,42 +2,47 @@
 
 namespace App\Services\B2B;
 
+use App\Models\Rfq;
+use App\Models\Blog;
+use App\Models\User;
+use App\Models\Admin;
+use App\Trait\SignUp;
+use App\Enum\PlanType;
+use App\Enum\UserType;
 use App\Enum\AdminType;
 use App\Enum\BannerType;
-use App\Enum\OrderStatus;
 use App\Enum\PlanStatus;
-use App\Enum\PlanType;
-use App\Enum\ProductStatus;
 use App\Enum\UserStatus;
-use App\Enum\UserType;
-use App\Http\Resources\AdminUserResource;
-use App\Http\Resources\B2BProductResource;
-use App\Http\Resources\B2BSellerResource;
-use App\Http\Resources\BlogResource;
-use App\Http\Resources\ClientLogoResource;
-use App\Http\Resources\SocialLinkResource;
-use App\Http\Resources\SubscriptionPlanResource;
-use App\Models\Admin;
-use App\Models\B2bCompany;
 use App\Models\B2bOrder;
+use App\Enum\AdminStatus;
+use App\Enum\MailingEnum;
+use App\Enum\OrderStatus;
+use App\Models\B2bCompany;
 use App\Models\B2BProduct;
-use App\Models\Blog;
 use App\Models\ClientLogo;
-use App\Models\Configuration;
 use App\Models\PageBanner;
-use App\Models\Rfq;
-use App\Models\SocialSetting;
-use App\Models\SubscriptionPlan;
-use App\Models\User;
-use App\Models\WithdrawalRequest;
-use App\Repositories\B2BProductRepository;
-use App\Repositories\B2BSellerShippingRepository;
+use App\Enum\ProductStatus;
 use App\Trait\HttpResponse;
-use App\Trait\SignUp;
+use Illuminate\Support\Str;
+use App\Models\Configuration;
+use App\Models\ShippingAgent;
+use App\Models\SocialSetting;
+use App\Mail\B2BNewAdminEmail;
+use App\Models\SubscriptionPlan;
+use App\Models\WithdrawalRequest;
 use Illuminate\Support\Facades\DB;
+use App\Http\Resources\BlogResource;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
+use App\Http\Resources\AdminUserResource;
+use App\Http\Resources\B2BSellerResource;
+use App\Http\Resources\B2BProductResource;
+use App\Http\Resources\ClientLogoResource;
+use App\Http\Resources\SocialLinkResource;
+use App\Repositories\B2BProductRepository;
+use App\Http\Resources\ShippingAgentResource;
+use App\Http\Resources\SubscriptionPlanResource;
+use App\Repositories\B2BSellerShippingRepository;
 
 class AdminService
 {
@@ -52,9 +57,13 @@ class AdminService
     public function dashboard()
     {
         $users = User::all();
+
         $orders = B2bOrder::orderStats();
+
         $rfqs = Rfq::with(['buyer', 'seller'])->latest()->get();
+
         $completion_request = B2bOrder::where('status', OrderStatus::SHIPPED)->take(3)->get();
+        
         $data = [
             'buyers' => $users->where('type', UserType::B2B_BUYER)->count(),
             'sellers' => $users->where('type', UserType::B2B_SELLER)->count(),
@@ -74,7 +83,9 @@ class AdminService
     public function getAllRfq()
     {
         $rfqs = Rfq::with(['buyer', 'seller'])->latest()->get();
+
         $active_rfqs = Rfq::where('status', OrderStatus::COMPLETED)->count();
+
         $users = User::all();
 
         $data = [
@@ -101,14 +112,14 @@ class AdminService
         $international_orders = B2bOrder::when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
             $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
                 $subQuery->where('country_id', '!=', 160)
-                    ->where('order_no', 'LIKE', '%'.$searchQuery.'%');
+                    ->where('order_no', 'LIKE', '%' . $searchQuery . '%');
             });
         })->get();
 
         $local_orders = B2bOrder::with(['buyer', 'seller'])->when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
             $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
                 $subQuery->where('country_id', 160)
-                    ->where('order_no', 'LIKE', '%'.$searchQuery.'%');
+                    ->where('order_no', 'LIKE', '%' . $searchQuery . '%');
             });
         })->get();
 
@@ -136,6 +147,7 @@ class AdminService
     public function markCompleted($id)
     {
         $order = B2bOrder::findOrFail($id);
+
         $order->update([
             'status' => OrderStatus::DELIVERED,
         ]);
@@ -168,7 +180,7 @@ class AdminService
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return $this->error(null, 'Failed to cancel order: '.$e->getMessage(), 500);
+            return $this->error(null, 'Failed to cancel order: ' . $e->getMessage(), 500);
         }
     }
 
@@ -219,7 +231,7 @@ class AdminService
         return $this->success(null, $status);
     }
 
-    public function viewSeller($id)
+    public function viewSeller($id): array
     {
         $user = User::where('type', UserType::B2B_SELLER)
             ->where('id', $id)
@@ -231,9 +243,9 @@ class AdminService
             ->where('user_id', $id);
 
         if (! empty($search)) {
-            $query->where('name', 'like', '%'.$search.'%')
+            $query->where('name', 'like', '%' . $search . '%')
                 ->orWhereHas('category', function ($q) use ($search): void {
-                    $q->where('name', 'like', '%'.$search.'%');
+                    $q->where('name', 'like', '%' . $search . '%');
                 });
         }
 
@@ -324,7 +336,7 @@ class AdminService
         $slug = Str::slug($request->name);
 
         if (B2BProduct::where('slug', $slug)->exists()) {
-            $slug = $slug.'-'.uniqid();
+            $slug = $slug . '-' . uniqid();
         }
 
         if ($request->hasFile('front_image')) {
@@ -362,30 +374,35 @@ class AdminService
     public function viewSellerProduct($user_id, $product_id)
     {
         $user = User::find($user_id);
+
         $prod = B2BProduct::where('user_id', $user->id)->find($product_id);
+
         if (! $user) {
             return $this->error(null, 'No user found.', 404);
         }
+
         if (! $prod) {
             return $this->error(null, 'No product found.', 404);
         }
-        $data = new B2BProductResource($prod);
 
-        return $this->success($data, 'Product details');
+        return $this->success(new B2BProductResource($prod), 'Product details');
     }
 
-    public function editSellerProduct($request, $user_id, $product_id)
+    public function editSellerProduct($request, $user_id, int $product_id)
     {
         $prod = B2BProduct::find($product_id);
+
+        if (! $prod) {
+            return $this->error(null, 'No Product found.', 404);
+        }
+
         $user = User::find($user_id);
 
         if (! $user) {
             return $this->error(null, 'No user found.', 404);
         }
 
-        if (! $prod) {
-            return $this->error(null, 'No Product found.', 404);
-        }
+
 
         if ($prod->user_id != $user_id) {
             return $this->error(null, 'Unauthorized action.', 401);
@@ -400,7 +417,7 @@ class AdminService
             $slug = Str::slug($request->name);
 
             if (B2BProduct::where('slug', $slug)->exists()) {
-                $slug = $slug.'-'.uniqid();
+                $slug = $slug . '-' . uniqid();
             }
         } else {
             $slug = $prod->slug;
@@ -503,8 +520,8 @@ class AdminService
             return $this->error(null, 'Email already exists.');
         }
 
-        $image = $request->hasFile('image') ? 
-            uploadUserImage($request, 'image', $user) : 
+        $image = $request->hasFile('image') ?
+            uploadUserImage($request, 'image', $user) :
             ['url' => $user->image, 'public_id' => $user->public_id];
 
         $user->update([
@@ -521,6 +538,7 @@ class AdminService
     public function editBuyerCompany($request, $id)
     {
         $user = User::findOrFail($id);
+
         $company = B2bCompany::where('user_id', $user->id)->first();
 
         if (! $company) {
@@ -540,6 +558,7 @@ class AdminService
     public function removeBuyer($id)
     {
         $user = User::findOrFail($id);
+
         $user->delete();
 
         return $this->success(null, 'User removed successfully');
@@ -594,6 +613,7 @@ class AdminService
     public function adminProfile()
     {
         $authUser = userAuth();
+
         $user = Admin::where('type', AdminType::B2B)
             ->where('id', $authUser->id)
             ->firstOrFail();
@@ -624,6 +644,7 @@ class AdminService
     public function enableTwoFactor($request)
     {
         $authUser = userAuth();
+
         $user = Admin::where('type', AdminType::B2B)
             ->where('id', $authUser->id)
             ->firstOrFail();
@@ -638,6 +659,7 @@ class AdminService
     public function updateAdminPassword($request)
     {
         $authUser = userAuth();
+
         $user = Admin::where('type', AdminType::B2B)
             ->where('id', $authUser->id)
             ->firstOrFail();
@@ -696,7 +718,8 @@ class AdminService
 
     public function updatePageBanner($request, $id)
     {
-        $banner = PageBanner::where('type', BannerType::B2B)->findOrFail($id);
+        $banner = PageBanner::where('type', BannerType::B2B)
+            ->where('id', $id)->firstOrFail();
 
         if ($banner && $request->hasFile('banner_url')) {
             $banner_url = uploadImage($request, 'banner_url', 'home-banner');
@@ -714,8 +737,8 @@ class AdminService
 
     public function addPageBanner($request)
     {
-        $banner_url = $request->hasFile('banner_url') ? 
-            uploadImage($request, 'banner_url', 'home-banner') : 
+        $banner_url = $request->hasFile('banner_url') ?
+            uploadImage($request, 'banner_url', 'home-banner') :
             ['url' => null];
 
         PageBanner::create([
@@ -732,14 +755,15 @@ class AdminService
     {
         $banner = PageBanner::select('id', 'page', 'section', 'type', 'banner_url')
             ->where('type', BannerType::B2B)
-            ->findOrFail($id);
+            ->where('id', $id)->firstOrFail();
 
         return $this->success($banner, 'Banner details');
     }
 
     public function deletePageBanner($id)
     {
-        $banner = PageBanner::where('type', BannerType::B2B)->findOrFail($id);
+        $banner = PageBanner::where('type', BannerType::B2B)->where('id', $id)->firstOrFail();
+
         $banner->delete();
 
         return $this->success(null, 'Details Deleted');
@@ -764,16 +788,12 @@ class AdminService
     public function allProducts()
     {
         $products = B2BProduct::with(['user' => function ($query): void {
-                $query->select('id', 'first_name', 'last_name')
-                    ->where('type', UserType::B2B_SELLER);
-            }])
+            $query->select('id', 'first_name', 'last_name')
+                ->where('type', UserType::B2B_SELLER);
+        }])
             ->whereStatus(OrderStatus::PENDING)
             ->latest()
             ->get();
-
-        if ($products->isEmpty()) {
-            return $this->error(null, 'No record found', 404);
-        }
 
         return $this->success($products, 'Products listing');
     }
@@ -781,10 +801,11 @@ class AdminService
     public function viewProduct($id)
     {
         $product = B2BProduct::with(['user' => function ($query): void {
-                $query->select('id', 'first_name', 'last_name')
-                    ->where('type', UserType::B2B_SELLER);
-            }])
-            ->findOrFail($id);
+            $query->select('id', 'first_name', 'last_name')
+                ->where('type', UserType::B2B_SELLER);
+        }])
+            ->where('id', $id)
+            ->firstOrFail();
 
         return $this->success($product, 'Product details');
     }
@@ -816,14 +837,14 @@ class AdminService
     public function b2bSubscriptionPlans()
     {
         $plans = SubscriptionPlan::where('type', PlanType::B2B)->latest()->get();
-        $data = SubscriptionPlanResource::collection($plans);
 
-        return $this->success($data, 'All B2B Plans');
+        return $this->success(SubscriptionPlanResource::collection($plans), 'All B2B Plans');
     }
 
     public function addSubscriptionPlan($request)
     {
         $currencyCode = $this->currencyCode($request);
+
         $plan = SubscriptionPlan::create([
             'title' => $request->title,
             'cost' => $request->cost,
@@ -838,7 +859,7 @@ class AdminService
             'status' => PlanStatus::ACTIVE,
         ]);
 
-        return $this->success($plan, 'Plan added successfully', 201);
+        return $this->success(new SubscriptionPlanResource($plan), 'Plan added successfully', 201);
     }
 
     public function viewSubscriptionPlan($id)
@@ -900,15 +921,14 @@ class AdminService
     public function allBlogs()
     {
         $currentUserId = userAuthId();
+
         $blogs = Blog::with('user')
             ->where('admin_id', $currentUserId)
             ->where('type', BannerType::B2B)
             ->latest()
             ->get();
 
-        $data = BlogResource::collection($blogs);
-
-        return $this->success($data, 'Added Blogs');
+        return $this->success(BlogResource::collection($blogs), 'Added Blogs');
     }
 
     public function addBlog($request)
@@ -932,9 +952,8 @@ class AdminService
     public function getBlog($id)
     {
         $blog = Blog::findOrFail($id);
-        $data = new BlogResource($blog);
 
-        return $this->success($data, 'Blog details');
+        return $this->success(new BlogResource($blog), 'Blog details');
     }
 
     public function updateBlog($request, $id)
@@ -943,8 +962,8 @@ class AdminService
             ->where('type', BannerType::B2B)
             ->firstOrFail();
 
-        $url = $request->file('image') ? 
-            uploadImage($request, 'image', 'blog') : 
+        $url = $request->file('image') ?
+            uploadImage($request, 'image', 'blog') :
             ['url' => $blog->image, 'public_id' => $blog->public_id];
 
         $blog->update([
@@ -965,35 +984,214 @@ class AdminService
         return $this->success('Blog deleted successfully.');
     }
 
+    // Shipping Agents
+    public function shippingAgents()
+    {
+        $agents = ShippingAgent::latest()->get();
+
+        return $this->success(ShippingAgentResource::collection($agents), 'All Agents');
+    }
+
+    public function addShippingAgent($request)
+    {
+        $agent = ShippingAgent::create([
+            'name' => $request->name,
+            'type' => $request->type,
+            'country_ids' => $request->country_ids,
+            'account_email' => $request->account_email,
+            'account_password' => $request->account_password,
+            'api_live_key' => $request->api_live_key,
+            'api_test_key' => $request->api_test_key,
+            'status' => $request->status,
+        ]);
+
+        return $this->success(new ShippingAgentResource($agent), 'Agent added successfully', 201);
+    }
+
+    public function viewShippingAgent($id)
+    {
+        $agent = ShippingAgent::findOrFail($id);
+
+        return $this->success(new ShippingAgentResource($agent), 'Agent details');
+    }
+
+    public function editShippingAgent($request, $id)
+    {
+        $agent = ShippingAgent::findOrFail($id);
+
+        $agent->update([
+            'name' => $request->name ?? $agent->name,
+            'type' => $request->type ?? $agent->type,
+            'logo' => $request->logo ?? $agent->logo,
+            'country_ids' => $request->country_ids ?? $agent->country_ids,
+            'account_email' => $request->account_email ?? $agent->account_email,
+            'account_password' => $request->account_password ?? $agent->account_password,
+            'api_live_key' => $request->api_live_key ?? $agent->api_live_key,
+            'api_test_key' => $request->api_test_key ?? $agent->api_test_key,
+            'status' => $request->status ?? $agent->status,
+        ]);
+
+        return $this->success(null, 'Details updated successfully');
+    }
+
+    public function deleteShippingAgent($id)
+    {
+        $agent = ShippingAgent::findOrFail($id);
+
+        $agent->delete();
+
+        return $this->success(null, 'Details deleted successfully');
+    }
+
+
+    // Admin User Management
+    public function adminUsers()
+    {
+        $authUser = userAuth();
+
+        $searchQuery = request()->input('search');
+
+        $admins = Admin::with('permissions:id,name')
+            ->select('id', 'first_name', 'last_name', 'email', 'created_at')
+            ->where('type', AdminType::B2B)
+            ->whereNot('id', $authUser->id)
+            ->when($searchQuery, function ($queryBuilder) use ($searchQuery) {
+                $queryBuilder->where(function ($subQuery) use ($searchQuery) {
+                    $subQuery->where('first_name', 'LIKE', "%{$searchQuery}%")
+                        ->orWhere('email', 'LIKE', "%{$searchQuery}%");
+                });
+            })
+            ->latest()
+            ->get();
+
+        return $this->success($admins, 'All Admin Users');
+    }
+
+
+    public function addAdmin($request)
+    {
+        DB::beginTransaction();
+        try {
+            $password = Str::random(5);
+
+            $admin = Admin::create([
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'email' => $request->email,
+                'type' => AdminType::B2B,
+                'status' => AdminStatus::ACTIVE,
+                'phone_number' => $request->phone_number,
+                'password' => bcrypt($password),
+            ]);
+
+            $admin->permissions()->sync($request->permissions);
+
+            $loginDetails = [
+                'name' => $request->first_name,
+                'email' => $request->email,
+                'password' => $password,
+            ];
+
+            DB::commit();
+
+            $type = MailingEnum::ADMIN_ACCOUNT;
+            $subject = 'Admin Account Creation email';
+            $mail_class = B2BNewAdminEmail::class;
+
+            mailSend($type, $admin, $subject, $mail_class, $loginDetails);
+
+            return $this->success($admin, 'Admin user added successfully', 201);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            throw $th;
+        }
+    }
+
+    public function viewAdmin($id)
+    {
+        $admin = Admin::where('type', AdminType::B2B)->where('id', $id)->firstOrFail();
+
+        return $this->success($admin, 'Admin details');
+    }
+
+    public function editAdmin($request, $id)
+    {
+        $admin = Admin::where('type', AdminType::B2B)->where('id', $id)->firstOrFail();
+
+        $admin->update([
+            'first_name' => $request->first_name,
+            'last_name' => $request->last_name,
+            'email' => $request->email,
+            'phone_number' => $request->phone_number,
+        ]);
+
+        $admin->roles()->sync($request->role_id);
+
+        if ($request->permissions) {
+            $admin->permissions()->sync($request->permissions);
+        }
+
+        return $this->success($admin, 'Details updated successfully');
+    }
+
+    public function verifyPassword($request)
+    {
+        $currentUserId = userAuthId();
+
+        $admin = Admin::where('type', AdminType::B2B)->where('id', $currentUserId)->firstOrFail();
+
+        if (Hash::check($request->password, $admin->password)) {
+            return $this->success(null, 'Password matched');
+        }
+
+        return $this->error(null, 'Password do not match');
+    }
+
+    public function revokeAccess($id)
+    {
+        $admin = Admin::where('type', AdminType::B2B)->where('id', $id)->firstOrFail();
+
+        $admin->permissions()->detach();
+
+        return $this->success(null, 'Access Revoked');
+    }
+
+    public function removeAdmin($id)
+    {
+        $admin = Admin::where('type', AdminType::B2B)->where('id', $id)->firstOrFail();
+
+        $admin->permissions()->detach();
+
+        $admin->delete();
+
+        return $this->success(null, 'Deleted successfully');
+    }
+
     // Client Logo Section
     public function allClientLogos()
     {
         $clients = ClientLogo::latest()->get();
 
-        $data = ClientLogoResource::collection($clients);
-
-        return $this->success($data, 'Added client Logos');
+        return $this->success(ClientLogoResource::collection($clients), 'Added client Logos');
     }
 
     public function addClientLogo($request)
     {
         $url = uploadImage($request, 'logo', 'clients');
 
-        $plan = ClientLogo::create([
+        $client = ClientLogo::create([
             'name' => $request->name,
             'logo' => $url['url'],
         ]);
 
-        return $this->success($plan, 'Client Logo added successfully', 201);
+        return $this->success(new ClientLogoResource($client), 'Client Logo added successfully', 201);
     }
 
     public function getClientLogo($id)
     {
         $client = ClientLogo::findOrFail($id);
 
-        $data = new ClientLogoResource($client);
-
-        return $this->success($data, 'Client details');
+        return $this->success(new ClientLogoResource($client), 'Client details');
     }
 
     public function updateClientLogo($request, $id)
@@ -1017,16 +1215,14 @@ class AdminService
         $client->delete();
 
         return $this->success('Blog deleted successfully.');
-        // Social Links
     }
 
+    // Social Links
     public function getSocialLinks()
     {
         $links = SocialSetting::latest()->get();
 
-        $data = SocialLinkResource::collection($links);
-
-        return $this->success($data, 'Social links');
+        return $this->success(SocialLinkResource::collection($links), 'Social links');
     }
 
     public function addSocialLink($request)
@@ -1037,18 +1233,14 @@ class AdminService
             'url' => $request->url,
         ]);
 
-        $data = new SocialLinkResource($link);
-
-        return $this->success($data, 'link added successfully', 201);
+        return $this->success(new SocialLinkResource($link), 'link added successfully', 201);
     }
 
     public function viewLink($id)
     {
         $link = SocialSetting::findOrFail($id);
 
-        $data = new SocialLinkResource($link);
-
-        return $this->success($data, 'link details');
+        return $this->success(new SocialLinkResource($link), 'link details');
     }
 
     public function editLink($request, $id)

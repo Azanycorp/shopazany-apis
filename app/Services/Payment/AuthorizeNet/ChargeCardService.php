@@ -96,7 +96,7 @@ class ChargeCardService implements PaymentStrategy
         return $this->handleB2bResponse($response, $user, $paymentDetails, $orderNo, $payment);
     }
 
-    private function handleB2bResponse($response, $user, array $paymentDetails, $orderNo, $payment)
+    private function handleB2bResponse($response, $user, array $paymentDetails, string $orderNo, \net\authorize\api\contract\v1\PaymentType $payment)
     {
         if ($response != null) {
             if ($response->getMessages()->getResultCode() == 'Ok') {
@@ -282,7 +282,7 @@ class ChargeCardService implements PaymentStrategy
         return $transactionRequestType;
     }
 
-    private function addLineItems($transactionRequestType, array $paymentDetails): void
+    private function addLineItems(\net\authorize\api\contract\v1\TransactionRequestType $transactionRequestType, array $paymentDetails): void
     {
         if (isset($paymentDetails['lineItems']) && is_array($paymentDetails['lineItems'])) {
             foreach ($paymentDetails['lineItems'] as $item) {
@@ -317,7 +317,7 @@ class ChargeCardService implements PaymentStrategy
         return $controller->executeWithApiResponse(\net\authorize\api\constants\ANetEnvironment::SANDBOX);
     }
 
-    private function handleResponse($response, $user, array $paymentDetails, $orderNo, $payment)
+    private function handleResponse($response, $user, array $paymentDetails, string $orderNo, \net\authorize\api\contract\v1\PaymentType $payment)
     {
         if ($response != null) {
             if ($response->getMessages()->getResultCode() == 'Ok') {

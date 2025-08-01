@@ -23,4 +23,10 @@ enum OrderStatus: string
     const SHIPPED = 'shipped';
 
     const PAID = 'paid';
+
+    const READY_FOR_PICKUP = 'ready_for_pickup';
+
+    const IN_TRANSIT = 'in_transit';
+
+    const DISPATCHED = 'dispatched';
 }

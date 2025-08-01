@@ -6,7 +6,7 @@ use ImageKit\ImageKit;
 
 class ImageKitUploader
 {
-    public function upload($file, $folder)
+    public function upload($file, $folder): array
     {
         $imageKit = new ImageKit(
             config('services.imagekit.public_key'),
@@ -32,7 +32,7 @@ class ImageKitUploader
         ];
     }
 
-    public function delete($publicId)
+    public function delete($publicId): void
     {
         $imageKit = new ImageKit(
             config('services.imagekit.public_key'),
@@ -42,7 +42,7 @@ class ImageKitUploader
 
         $result = $imageKit->deleteFile($publicId);
 
-        if (! isset($result->result) || $result->result !== 'success') {
+        if ($result->result === null || $result->result !== 'success') {
             throw new \Exception('Failed to delete file from ImageKit.');
         }
     }

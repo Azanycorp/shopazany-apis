@@ -119,9 +119,10 @@ trait SignUp
             'used_by' => $usedBy,
             'status' => $coupon->status,
         ]);
+        return null;
     }
 
-    protected function currencyCode($request)
+    protected function currencyCode($request): string
     {
         $currencyCode = 'USD';
 

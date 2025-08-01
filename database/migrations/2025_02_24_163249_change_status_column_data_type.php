@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('payouts', function (Blueprint $table) {
+        Schema::table('payouts', function (Blueprint $table): void {
             $table->string('status')->nullable()->default('pending')->change();
         });
     }

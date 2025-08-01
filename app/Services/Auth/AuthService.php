@@ -2,20 +2,20 @@
 
 namespace App\Services\Auth;
 
-use App\Enum\MailingEnum;
-use App\Enum\UserLog;
-use App\Enum\UserStatus;
-use App\Enum\UserType;
-use App\Http\Controllers\Controller;
-use App\Mail\SignUpVerifyMail;
-use App\Mail\UserWelcomeMail;
-use App\Models\Action;
 use App\Models\User;
-use App\Trait\HttpResponse;
+use App\Enum\UserLog;
 use App\Trait\SignUp;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Password;
+use App\Enum\UserType;
+use App\Models\Action;
+use App\Enum\UserStatus;
+use App\Enum\MailingEnum;
+use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
+use App\Mail\UserWelcomeMail;
+use App\Mail\SignUpVerifyMail;
+use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Password;
 
 class AuthService extends Controller
 {
@@ -214,7 +214,7 @@ class AuthService extends Controller
             'status' => UserStatus::ACTIVE,
         ]);
 
-        if ($user->pending_referrer_code) {
+        if ($user->pending_referrer_code !== null) {
             $this->handleReferrers($user->pending_referrer_code, $user);
             $user->update(['pending_referrer_code' => null]);
         }
@@ -285,6 +285,16 @@ class AuthService extends Controller
                 ])->save();
             }
         );
+
+        if (! $user->is_verified && ! $user->is_admin_approve && empty($user->email_verified_at)) {
+            $user->update([
+                'is_verified' => 1,
+                'is_admin_approve' => 1,
+                'verification_code' => null,
+                'email_verified_at' => now(),
+                'status' => UserStatus::ACTIVE,
+            ]);
+        }
 
         $description = "User with email address {$request->email} changed password successfully";
         $action = UserLog::PASSWORD_RESET;
@@ -403,7 +413,7 @@ class AuthService extends Controller
         $referrer->save();
     }
 
-    private function userTrigger($user, $request, $referrer_link, $referrer_code, $code)
+    private function userTrigger($user, $request, string $referrer_link, $referrer_code, string $code)
     {
         $currencyCode = $this->currencyCode($request);
         if ($user) {

@@ -30,7 +30,7 @@ class UpdateProductPrice extends Command
     {
         Product::with(['user'])
             ->where('status', ProductStatus::ACTIVE)
-            ->chunk(100, function ($products) {
+            ->chunk(100, function ($products): void {
                 // Get all unique currencies in one query to avoid multiple DB calls
                 $currencyCodes = $products->pluck('user.default_currency')->filter()->unique()->toArray();
                 $exchangeRates = $this->getExchangeRates($currencyCodes);

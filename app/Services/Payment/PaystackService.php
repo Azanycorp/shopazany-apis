@@ -390,7 +390,7 @@ class PaystackService
         }
     }
 
-    public static function handleTransferSuccess($event): void
+    public static function handleTransferSuccess(array $event): void
     {
         $transferCode = $event['transfer_code'];
         $reference = $event['reference'];
@@ -425,7 +425,7 @@ class PaystackService
         }
     }
 
-    public static function handleTransferFailed($event)
+    public static function handleTransferFailed(array $event): void
     {
         $transferCode = $event['transfer_code'];
         $reference = $event['reference'];
@@ -467,7 +467,7 @@ class PaystackService
         }
     }
 
-    public static function handleTransferReversed($event)
+    public static function handleTransferReversed(array $event): void
     {
         $transferCode = $event['transfer_code'];
         $reference = $event['reference'];
@@ -509,7 +509,7 @@ class PaystackService
         }
     }
 
-    public static function createRecipient($fields, $method)
+    public static function createRecipient($fields, $method): void
     {
         $url = 'https://api.paystack.co/transferrecipient';
         $token = config('paystack.secretKey');
@@ -530,17 +530,17 @@ class PaystackService
         return $uniqueOrderNumber;
     }
 
-    private static function sendSellerOrderEmail($seller, $order, $orderNo, string $totalAmount): void
+    private static function sendSellerOrderEmail($seller, $order, string $orderNo, string $totalAmount): void
     {
         defer(fn () => send_email($seller->email, new SellerOrderMail($seller, $order, $orderNo, $totalAmount)));
     }
 
-    private static function sendOrderConfirmationEmail($user, $orderedItems, $orderNo, string $totalAmount): void
+    private static function sendOrderConfirmationEmail($user, $orderedItems, string $orderNo, string $totalAmount): void
     {
         defer(fn () => send_email($user->email, new CustomerOrderMail($user, $orderedItems, $orderNo, $totalAmount)));
     }
 
-    private static function logTransfer($data, $method)
+    private static function logTransfer(array $data, $method): void
     {
         $method->update([
             'recipient_code' => $data['recipient_code'],

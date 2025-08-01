@@ -105,10 +105,10 @@ class PaymentDetailsService
         }
 
         $user = User::with([
-            'referrer' => function ($query) {
+            'referrer' => function ($query): void {
                 $query->with('wallet');
             },
-            'userSubscriptions' => function ($query) {
+            'userSubscriptions' => function ($query): void {
                 $query->where('status', UserStatus::ACTIVE);
             },
         ])->findOrFail($request->user_id);
@@ -150,10 +150,10 @@ class PaymentDetailsService
         $amount = $request->input('amount');
 
         $user = User::with([
-            'referrer' => function ($query) {
+            'referrer' => function ($query): void {
                 $query->with('wallet');
             },
-            'userSubscriptions' => function ($query) {
+            'userSubscriptions' => function ($query): void {
                 $query->where('status', UserStatus::ACTIVE);
             },
         ])->findOrFail($request->user_id);

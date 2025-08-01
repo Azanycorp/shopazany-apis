@@ -58,7 +58,8 @@ Route::middleware('validate.header')
 
         Route::get('/banks', [PaymentController::class, 'getBanks']);
 
-        Route::prefix('user/category')
+        Route::middleware('cacheResponse:120')
+            ->prefix('user/category')
             ->controller(CategoryController::class)
             ->group(function (): void {
                 Route::get('/all', 'categories');
@@ -71,7 +72,7 @@ Route::middleware('validate.header')
             ->middleware('cacheResponse:86400');
         Route::get('/shop-by/country/{shop_country_id}', [ApiController::class, 'userShopByCountry']);
 
-        Route::middleware('cacheResponse:300')
+        Route::middleware('cacheResponse:120')
             ->controller(HomeController::class)
             ->group(function (): void {
                 Route::get('/best/selling', 'bestSelling');
@@ -198,7 +199,7 @@ Route::middleware('validate.header')
                     Route::post('/redeem/point', 'redeemPoint');
 
                     // Reward partners (service)
-                    Route::prefix('service')->group(function () {
+                    Route::prefix('service')->group(function (): void {
                         Route::get('/', 'getServices');
                         Route::post('/purchase', 'purchaseService');
                         Route::get('/company/detail/{slug}', 'getCompanyDetail');
@@ -207,7 +208,7 @@ Route::middleware('validate.header')
                         Route::get('/category', 'getCategories');
                         Route::get('/detail/{id}', 'getServiceDetail');
 
-                        Route::prefix('customer')->group(function () {
+                        Route::prefix('customer')->group(function (): void {
                             Route::get('/', 'getCustomers');
                         });
                     });

@@ -29,15 +29,15 @@ class ProductRequest extends FormRequest
             'product_price' => ['required', 'integer'],
             'current_stock_quantity' => ['required', 'integer'],
             'minimum_order_quantity' => ['required', 'integer'],
-            'front_image' => ['required', 'image', 'mimes:png,jpg,jpeg'],
+            'front_image' => ['required', 'image', 'mimes:png,jpg,jpeg', 'max:10240'],
             'images' => ['required', 'array'],
-            'images.*' => ['required', 'image'],
+            'images.*' => ['required', 'image', 'mimes:png,jpg,jpeg', 'max:10240'],
             'discount_type' => ['nullable', 'in:flat,percentage'],
             'discount_value' => ['nullable', 'numeric', 'min:0', $this->discountRule()],
             'variation' => ['required', 'array'],
             'variation.*' => ['required', 'string', $this->variationRule()],
             'variation_image' => ['nullable', 'array'],
-            'variation_image.*' => ['nullable', 'image', 'mimes:png,jpg,jpeg'],
+            'variation_image.*' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:10240'],
         ];
     }
 
@@ -53,7 +53,7 @@ class ProductRequest extends FormRequest
      */
     protected function discountRule(): \Closure
     {
-        return function ($attribute, $value, $fail) {
+        return function ($attribute, $value, $fail): void {
             if (request()->input('discount_type') === 'percentage' && $value > 100) {
                 $fail('The discount value cannot be more than 100 when the discount type is percentage.');
             }
