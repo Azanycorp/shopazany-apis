@@ -59,6 +59,32 @@ class AdminService
         return $this->success($data, 'Sliders');
     }
 
+    public function getOneSlider($id)
+    {
+        $slider = SliderImage::find($id);
+
+        if (! $slider) {
+            return $this->error(null, 'Slider not found', 404);
+        }
+
+        $data = new SliderResource($slider);
+
+        return $this->success($data, 'Slider detail');
+    }
+
+    public function deleteSlider($id)
+    {
+        $slider = SliderImage::find($id);
+
+        if (! $slider) {
+            return $this->error(null, 'Slider not found', 404);
+        }
+
+        $slider->delete();
+
+        return $this->success(null, 'Deleted successfully');
+    }
+
     public function categories()
     {
         $categories = Category::where('featured', 1)
