@@ -40,6 +40,10 @@ class AdminService
                 'link' => $request->link,
             ]);
 
+            if (Cache::has('home_sliders')) {
+                Cache::forget('home_sliders');
+            }
+
             return $this->success(null, 'Created successfully', 201);
         } catch (\Exception $e) {
             return $this->error(null, $e->getMessage(), 400);
@@ -78,6 +82,10 @@ class AdminService
 
         if (! $slider) {
             return $this->error(null, 'Slider not found', 404);
+        }
+
+        if (Cache::has('home_sliders')) {
+            Cache::forget('home_sliders');
         }
 
         $slider->delete();
