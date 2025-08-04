@@ -57,19 +57,23 @@ Route::middleware('validate.header')
                 Route::get('/profile', [ApiController::class, 'adminProfile']);
                 Route::post('/add/slider', [ApiController::class, 'addSlider']);
                 Route::get('/slider', [ApiController::class, 'slider']);
+                Route::get('/slider/{id}', [ApiController::class, 'getOneSlider']);
+                Route::delete('/slider/delete/{id}', [ApiController::class, 'deleteSlider']);
                 Route::resource('brand', BrandController::class);
                 Route::resource('color', ColorController::class);
                 Route::resource('unit', UnitController::class);
                 Route::resource('size', SizeController::class);
                 Route::post('/shop/country', [ApiController::class, 'shopByCountry']);
 
-                Route::prefix('banner')->controller(BannerPromoController::class)->group(function (): void {
-                    Route::post('/add', 'addBanner');
-                    Route::get('/', 'banners');
-                    Route::get('/{id}', 'getOneBanner');
-                    Route::post('/edit/{id}', 'editBanner');
-                    Route::delete('/delete/{id}', 'deleteBanner');
-                });
+                Route::prefix('banner')
+                    ->controller(BannerPromoController::class)
+                    ->group(function (): void {
+                        Route::post('/add', 'addBanner');
+                        Route::get('/', 'banners');
+                        Route::get('/{id}', 'getOneBanner');
+                        Route::post('/edit/{id}', 'editBanner');
+                        Route::delete('/delete/{id}', 'deleteBanner');
+                    });
 
                 Route::prefix('promo')->controller(BannerPromoController::class)->group(function (): void {
                     Route::post('/add', 'addPromo');
