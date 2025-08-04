@@ -28,6 +28,16 @@ class ApiController extends Controller
         return $this->adminService->slider();
     }
 
+    public function getOneSlider($id)
+    {
+        return $this->adminService->getOneSlider($id);
+    }
+
+    public function deleteSlider($id)
+    {
+        return $this->adminService->deleteSlider($id);
+    }
+
     public function categories()
     {
         return $this->adminService->categories();
