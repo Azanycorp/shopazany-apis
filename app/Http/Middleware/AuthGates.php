@@ -15,7 +15,8 @@ class AuthGates
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if ($user = $request->user()) {
+        $user = auth('admin')->user();
+        if ($user instanceof \App\Models\Admin) {
             $user->load('roles.permissions');
         }
 
