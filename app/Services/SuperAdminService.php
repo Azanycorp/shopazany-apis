@@ -366,6 +366,7 @@ class SuperAdminService
                 'shippment_id' => generateShipmentId(),
                 'package' => $package,
                 'customer' => $customer,
+                'item_condition' => $request->item_condition,
                 'vendor' => $vendor,
                 'status' => $request->status,
                 'priority' => $request->priority,
@@ -389,6 +390,7 @@ class SuperAdminService
         }
 
         $items = (string) $b2bOrder->product_quantity;
+        
         $package = collect($b2bOrder->product_data ?? [])->only(['name', 'fob_price', 'front_image']);
 
         $businessInfo = optional($b2bOrder->seller)->businessInformation;
@@ -732,6 +734,7 @@ class SuperAdminService
 
             $shippment->update([
                 'status' => $request->status,
+                'type' => ShippmentCategory::DROPOFF,
                 'transfer_reason' => $request->transfer_reason,
                 'hub_id' => $request->hub_id,
                 'note' => $request->note,
@@ -781,7 +784,7 @@ class SuperAdminService
         return $this->success(null, 'Batch created successfully');
     }
 
-    public function processBatch($request,$id)
+    public function processBatch($request, $id)
     {
         $batch = ShippmentBatch::find($id);
 

@@ -36,6 +36,7 @@ class ShippmentResource extends JsonResource
             'reciever_phone' => $this->reciever_phone,
             'vehicle_number' => $this->vehicle_number,
             'delivery_address' => $this->delivery_address,
+            'item_condition' => $this->item_condition,
             'transfer_reason' => $this->transfer_reason,
             'activities' => $this->activities ? $this->activities->map(function ($activity): array {
                 return [

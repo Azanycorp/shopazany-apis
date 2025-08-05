@@ -116,7 +116,7 @@ class SuperAdminAuthService
         }
 
         $user->update([
-            'password' => $request->password,
+            'password' => bcrypt($request->password),
         ]);
 
         return $this->success(null, 'Password reset successfully');
