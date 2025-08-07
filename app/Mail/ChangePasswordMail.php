@@ -12,15 +12,14 @@ use Illuminate\Queue\SerializesModels;
 class ChangePasswordMail extends Mailable
 {
     use Queueable, SerializesModels;
-
+    public $user;
     /**
      * Create a new message instance.
      */
-    public function __construct(
-        protected $user,
-        protected $code
-    )
-    {}
+    public function __construct($user)
+    {
+        $this->user = $user;
+    }
 
     /**
      * Get the message envelope.
@@ -41,7 +40,6 @@ class ChangePasswordMail extends Mailable
             markdown: 'mail.change-password-mail',
             with: [
                 'user' => $this->user,
-                'code' => $this->code,
             ]
         );
     }
