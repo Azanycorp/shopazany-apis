@@ -390,7 +390,7 @@ class SuperAdminService
         }
 
         $items = (string) $b2bOrder->product_quantity;
-        
+
         $package = collect($b2bOrder->product_data ?? [])->only(['name', 'fob_price', 'front_image']);
 
         $businessInfo = optional($b2bOrder->seller)->businessInformation;
@@ -503,6 +503,7 @@ class SuperAdminService
         }
 
         $verificationCode = generateVerificationCode(4);
+        
         $expiry = now()->addMinutes(30);
 
         $admin->update([
