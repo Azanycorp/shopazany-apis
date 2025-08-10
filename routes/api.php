@@ -115,17 +115,20 @@ Route::middleware('validate.header')
                 ->controller(PaymentController::class)
                 ->group(function (): void {
                     // Paystack
-                    Route::post('/paystack', 'processPayment');
+                    Route::post('/paystack', 'processPayment')
+                        ->middleware(['tx.replay', 'burst.guard']);
                     Route::get('/verify/paystack/{user_id}/{reference}', 'verifyPayment');
 
                     // Account LookUp
                     Route::post('/account-lookup', 'accountLookup');
 
                     // Authorize.net
-                    Route::post('/authorize', 'authorizeNetCard');
+                    Route::post('/authorize', 'authorizeNetCard')
+                        ->middleware(['tx.replay', 'burst.guard']);
 
                     // Authorize.net for B2B
-                    Route::post('/authorize-b2b', 'b2bAuthorizeNetCard');
+                    Route::post('/authorize-b2b', 'b2bAuthorizeNetCard')
+                        ->middleware(['tx.replay', 'burst.guard']);
 
                     // Payment Method
                     Route::get('/method/{country_id}', 'getPaymentMethod');
@@ -138,7 +141,8 @@ Route::middleware('validate.header')
                 ->controller(SubscriptionController::class)
                 ->group(function (): void {
                     Route::get('/country/{country_id}', 'getPlanByCountry');
-                    Route::post('/payment', 'subscriptionPayment');
+                    Route::post('/payment', 'subscriptionPayment')
+                        ->middleware(['tx.replay', 'burst.guard']);
                     Route::get('/history/{user_id}', 'subscriptionHistory');
                 });
 
@@ -147,7 +151,7 @@ Route::middleware('validate.header')
                 Route::post('/bank/account', 'bankAccount');
                 Route::delete('/remove/account', 'removeBankAccount');
                 Route::post('/withdraw', 'withdraw')
-                    ->middleware('check.wallet');
+                    ->middleware(['check.wallet', 'tx.replay', 'burst.guard']);
 
                 Route::post('/kyc', 'userKyc');
                 Route::post('/earning-option', 'earningOption');
@@ -156,7 +160,8 @@ Route::middleware('validate.header')
                     Route::post('/', 'addMethod');
                     Route::get('/history/{user_id}', 'withdrawalHistory');
                     Route::get('/method/{user_id}', 'withdrawalMethod');
-                    Route::post('/request', 'withdrawalRequest');
+                    Route::post('/request', 'withdrawalRequest')
+                        ->middleware(['tx.replay', 'burst.guard']);
                 });
 
                 Route::prefix('affiliate')->group(function (): void {
