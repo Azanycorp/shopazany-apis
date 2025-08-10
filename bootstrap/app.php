@@ -5,12 +5,14 @@ use App\Http\Middleware\AuthGates;
 use App\Http\Middleware\B2BBuyer;
 use App\Http\Middleware\B2BSeller;
 use App\Http\Middleware\BlockUserAfterFailedAttempts;
+use App\Http\Middleware\BurstGuard;
 use App\Http\Middleware\BuyerAuthMiddleware;
 use App\Http\Middleware\CheckUserCountry;
 use App\Http\Middleware\CheckWalletBalance;
 use App\Http\Middleware\EnsureUserIsOwner;
 use App\Http\Middleware\SellerAuthMiddleware;
 use App\Http\Middleware\SuperAdminCheck;
+use App\Http\Middleware\TransactionReplayShield;
 use App\Http\Middleware\ValidateHeader;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -52,6 +54,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'validate.header' => ValidateHeader::class,
             'ensure.user' => EnsureUserIsOwner::class,
             'role.super_admin' => SuperAdminCheck::class,
+            'tx.replay' => TransactionReplayShield::class,
+            'burst.guard' => BurstGuard::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
