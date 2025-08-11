@@ -17,7 +17,6 @@ class ShipmentB2COrderResource extends JsonResource
         return [
             'id' => (int) $this->id,
             'order_no' => (string) $this->order_no,
-            'customer' => optional($this->user)->first_name.' '.optional($this->user)->last_name,
             'order_date' => (string) $this->order_date,
             'total_amount' => $this->total_amount,
             'payment_method' => (string) $this->payment_method,
@@ -29,16 +28,14 @@ class ShipmentB2COrderResource extends JsonResource
                 'email' => $user->email,
                 'address' => $user->address,
             ]),
-            'products' => $this->whenLoaded('products', fn ($products) => $products->map(function ($product) {
-                return [
-                    'id' => $product->id,
-                    'name' => $product->name,
-                    'quantity' => $product->pivot->product_quantity,
-                    'price' => $product->pivot->price,
-                    'sub_total' => $product->pivot->sub_total,
-                    'image' => $product->image,
-                ];
-            })),
+            'products' => $this->whenLoaded('products', fn ($products) => $products->map(fn ($product) => [
+                'id' => $product->id,
+                'name' => $product->name,
+                'quantity' => $product->pivot->product_quantity,
+                'price' => $product->pivot->price,
+                'sub_total' => $product->pivot->sub_total,
+                'image' => $product->image,
+            ])),
             'vendor' => $this->whenLoaded('products', fn () => [
                 'id' => optional($this->products->first())->user->id,
                 'business_name' => optional($this->products->first())->user->company_name,

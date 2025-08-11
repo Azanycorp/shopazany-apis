@@ -18,8 +18,9 @@ class ShippmentResource extends JsonResource
             'id' => (int) $this->id,
             'collationCentre' => $this->collationCentre?->name,
             'shipment_id' => $this->shippment_id,
+            'order_number' => $this->order_number,
             'hub' => $this->hub?->name,
-            'package' => (object)$this->package,
+            'package' => $this->package,
             'customer' => (object)$this->customer,
             'vendor' => (object)$this->vendor,
             'status' => $this->status,
@@ -28,6 +29,7 @@ class ShippmentResource extends JsonResource
             'start_origin' => $this->start_origin,
             'current_location' => $this->current_location,
             'items' => $this->items,
+            'logged_items' => $this->logged_items,
             'dispatch_name' => $this->dispatch_name,
             'destination_name' => $this->destination_name,
             'dispatch_phone' => $this->dispatch_phone,
@@ -38,14 +40,7 @@ class ShippmentResource extends JsonResource
             'delivery_address' => $this->delivery_address,
             'item_condition' => $this->item_condition,
             'transfer_reason' => $this->transfer_reason,
-            'activities' => $this->activities ? $this->activities->map(function ($activity): array {
-                return [
-                    'action' => $activity?->comment,
-                    'note' => $activity?->note,
-                    'date' => $activity?->created_at->todateString(),
-
-                ];
-            })->toArray() : [],
+            'created_at' => $this->created_at,
         ];
     }
 }
