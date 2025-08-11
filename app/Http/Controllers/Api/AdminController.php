@@ -14,6 +14,7 @@ use App\Http\Requests\TransferShippmentRequest;
 use App\Http\Requests\ChangeAdminPasswordRequest;
 use App\Http\Requests\Admin\HubOrderFinderRequest;
 use App\Http\Requests\Admin\CollationCentreRequest;
+use App\Http\Requests\DispatchBatchRequest;
 
 class AdminController extends Controller
 {
@@ -186,6 +187,11 @@ class AdminController extends Controller
     public function createBatch(BatchRequest $request)
     {
         return $this->superAdminService->createBatch($request);
+    }
+
+    public function dispatchBatch(DispatchBatchRequest $request, $id)
+    {
+        return $this->superAdminService->dispatchBatch($request, $id);
     }
 
     public function processBatch(ProcessBatchRequest $request, $id)
