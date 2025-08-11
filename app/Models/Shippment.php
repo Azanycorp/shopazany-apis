@@ -10,6 +10,7 @@ class Shippment extends Model
         'hub_id',
         'collation_id',
         'shippment_id',
+        'order_number',
         'type',
         'package',
         'customer',
@@ -31,7 +32,8 @@ class Shippment extends Model
         'vehicle_number',
         'delivery_address',
         'transfer_reason',
-        'item_condition'
+        'item_condition',
+        'logged_items',
     ];
 
     protected function casts(): array
@@ -40,6 +42,7 @@ class Shippment extends Model
             'package' => 'array',
             'customer' => 'array',
             'vendor' => 'array',
+            'logged_items' => 'array',
         ];
     }
 
