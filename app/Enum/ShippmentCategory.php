@@ -4,7 +4,6 @@ namespace App\Enum;
 
 enum ShippmentCategory: string
 {
-    const INCOMING = 'icoming';
-
+    const INCOMING = 'incoming';
     const DROPOFF = 'drop_off';
 }

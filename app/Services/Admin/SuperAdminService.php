@@ -128,7 +128,7 @@ class SuperAdminService
             return $this->success(null, "Two-factor updated successfully");
         }
 
-        if ($request->has('change_password')) {
+        if ($request->boolean('change_password')) {
             $code = generateVerificationCode(4);
             $user->update([
                 'verification_code' => $code,
@@ -146,6 +146,8 @@ class SuperAdminService
 
             return $this->success(null, "Verification code sent successfully");
         }
+
+        return $this->error(null, 'Nothing to update. Provide two_factor or change_password.', 422);
     }
 
     public function verifyCode($request)

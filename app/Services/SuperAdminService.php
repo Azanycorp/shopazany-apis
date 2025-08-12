@@ -7,16 +7,12 @@ use App\Models\Order;
 use App\Trait\SignUp;
 use App\Enum\PlanStatus;
 use App\Models\B2bOrder;
-use App\Enum\AdminStatus;
 use App\Enum\MailingEnum;
 use App\Enum\OrderStatus;
 use App\Models\Shippment;
 use App\Enum\CentreStatus;
 use App\Trait\HttpResponse;
-use Illuminate\Support\Str;
 use App\Models\PickupStation;
-use App\Models\ShippingAgent;
-use App\Mail\B2BNewAdminEmail;
 use App\Models\ShippmentBatch;
 use App\Enum\ShippmentCategory;
 use App\Models\CollationCenter;
@@ -30,7 +26,6 @@ use App\Trait\SuperAdminNotification;
 use App\Mail\AccountVerificationEmail;
 use App\Http\Resources\AdminUserResource;
 use App\Http\Resources\ShippmentResource;
-use App\Http\Resources\ShippingAgentResource;
 use App\Http\Resources\SearchB2BOrderResource;
 use App\Http\Resources\CollationCentreResource;
 use App\Http\Resources\AdminNotificationResource;
@@ -39,7 +34,6 @@ use App\Http\Resources\ShipmentB2COrderResource;
 class SuperAdminService
 {
     use HttpResponse, SuperAdminNotification, SignUp;
-
     public function getDashboardDetails()
     {
         $centers = CollationCenter::with('country')->latest()->get();
@@ -324,117 +318,43 @@ class SuperAdminService
     {
         $hub = PickupStation::find($request->pickup_id);
 
-        $orderNumber = $request->order_number;
-
         if (! $hub) {
             return $this->error(null, 'Hub not found', 404);
         }
 
+        $orderNumber = $request->order_number;
+
+        if (Shippment::where('order_number', $orderNumber)->where('hub_id', $hub->id)->exists()) {
+            return $this->error(null, 'This order has already been logged at this hub.', 422);
+        }
+
+        $loggedItems = collect($request->items ?? [])
+            ->map(fn ($it) => [
+                'item_id' => $it['item_id'] ?? null,
+                'item_condition' => $it['item_condition'] ?? null,
+                'note' => $it['note'] ?? null,
+                'is_verified' => $it['is_verified'] ?? null,
+            ])->values()->all();
+
         if ($order = Order::with(['user', 'products'])->firstWhere('order_no', $orderNumber)) {
 
-            $items = optional($order->products->first())->pivot->product_quantity;
-
-            $seller = optional($order->products->first())->user;
-            $vendor = $seller ? [
-                'business_name' => $seller->company_name,
-                'contact' => $seller->phone,
-                'location' => $seller->address,
-            ] : null;
-
-            $package = $order->products->map(function ($product) {
-                return (object) [
-                    'name' => $product->name,
-                    'quantity' => $product->pivot->product_quantity,
-                    'price' => $product->pivot->price,
-                    'sub_total' => $product->pivot->sub_total,
-                    'image' => $product->image,
-                ];
-            })->values()->toArray();
-
-            $customerUser = $order->user;
-
-            $customer = $customerUser ? [
-                'first_name' => $customerUser->first_name,
-                'last_name' => $customerUser->last_name,
-                'email' => $customerUser->email,
-                'address' => $customerUser->address,
-            ] : null;
-
-            $shippment = Shippment::create([
-                'hub_id' => $hub->id,
-                'type' => ShippmentCategory::INCOMING,
-                'shippment_id' => generateShipmentId(),
-                'package' => $package,
-                'customer' => $customer,
-                'item_condition' => $request->item_condition,
-                'vendor' => $vendor,
-                'status' => $request->status,
-                'priority' => $request->priority,
-                'expected_delivery_date' => $request->expected_delivery_date,
-                'start_origin' => $hub->name,
-                'items' => $items,
-            ]);
-
-            $shippment->activities()->create([
-                'comment' => $request->activity,
-                'note' => $request->note
-            ]);
+            $data = $this->logB2CShipment($request, $order, $hub, $loggedItems, $orderNumber);
 
             $this->createNotification('New Shippment created', 'New Shippment created at ' . $hub->name . 'Pickup station/hub ' . 'by ' . Auth::user()->fullName);
 
-            return $this->success(new ShippmentResource($shippment), 'Item Logged successfully.');
+            return $this->success(new ShippmentResource($data['shipment']), 'Item Logged successfully.');
         }
 
         if (! $b2bOrder = B2bOrder::with(['seller.businessInformation', 'buyer'])->firstWhere('order_no', $orderNumber)) {
             return $this->error(null, 'Order not found.', 404);
         }
 
-        $items = (string) $b2bOrder->product_quantity;
-        
-        $package = collect($b2bOrder->product_data ?? [])->only(['name', 'fob_price', 'front_image']);
-
-        $businessInfo = optional($b2bOrder->seller)->businessInformation;
-        $vendor = $businessInfo ? (object) [
-            'business_name' => $businessInfo->business_name,
-            'contact' => $businessInfo->business_phone,
-            'location' => $businessInfo->business_location,
-        ] : null;
-
-        $buyer = $b2bOrder->buyer;
-        $customer = $buyer ? (object) [
-            'name' => $buyer->fullName,
-            'email' => $buyer->email,
-            'phone' => $buyer->phone,
-            'city' => $buyer->city,
-            'address' => $buyer->address,
-        ] : null;
-
-
-        $shippment = Shippment::create([
-            'hub_id' => $hub->id,
-            'type' => ShippmentCategory::INCOMING,
-            'shippment_id' => generateShipmentId(),
-            'package' => $package,
-            'customer' => $customer,
-            'vendor' => $vendor,
-            'status' => $request->status,
-            'priority' => $request->priority,
-            'expected_delivery_date' => $request->expected_delivery_date,
-            'start_origin' => $hub->name,
-            'items' => $items,
-        ]);
-
-        $shippment->activities()->create([
-            'comment' => $request->activity,
-            'note' => $request->note
-        ]);
+        $b2bData = $this->logB2BShipment($request, $b2bOrder, $hub, $loggedItems, $orderNumber);
 
         $this->createNotification('New Shippment created', 'New Shippment created at ' . $hub->name . 'Pickup station/hub ' . 'by ' . Auth::user()->fullName);
 
-        return $this->success(new ShippmentResource($shippment), 'Item Logged successfully.');
+        return $this->success(new ShippmentResource($b2bData['shipment']), 'Item Logged successfully.');
     }
-
-    // CMS / Promo and banners
     public function adminProfile()
     {
         $authUser = userAuth();
@@ -580,27 +500,26 @@ class SuperAdminService
     public function allShipments()
     {
         $order_counts = Shippment::selectRaw('
-        COUNT(*) as total_orders,
-        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as cancelled,
-        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as delivered,
-        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as in_transit
-    ', [
+            COUNT(*) as total_orders,
+            SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as cancelled,
+            SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as delivered,
+            SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as in_transit
+        ', [
             OrderStatus::CANCELLED,
             OrderStatus::DELIVERED,
             OrderStatus::IN_TRANSIT
         ])->first();
 
-        $shippments = Shippment::latest()->get();
+        $shippments = Shippment::latest()->paginate(25);
 
         $data = [
             'total_shippments'  => $order_counts->total_orders ?? 0,
             'in_transit'  => $order_counts->in_transit ?? 0,
             'completed'    => $order_counts->delivered ?? 0,
             'failed'   => $order_counts->cancelled ?? 0,
-            'shippments'   => ShippmentResource::collection($shippments)
         ];
 
-        return $this->success($data, 'Shippment Data');
+        return $this->withPagination(ShippmentResource::collection($shippments), 'Shippment Data', 200, $data);
     }
 
     public function shipmentDetails($id)
@@ -769,7 +688,7 @@ class SuperAdminService
                 "items" => $request->items_count,
                 "weight" => $request->weight,
                 "priority" => $request->priority,
-                "shippment_ids" => $request->shipment_ids,
+                "shippment_ids" => $request->shipment_ids ?? null,
                 "note" => $request->note
             ]);
 
