@@ -3,12 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AddUserRequest;
-use Illuminate\Support\Facades\Gate;
-use App\Http\Requests\Admin\HubRequest;
-use App\Http\Requests\AdminUserRequest;
 use App\Services\Admin\SuperAdminService;
 
 class SuperAdminController extends Controller
