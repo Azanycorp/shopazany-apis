@@ -124,7 +124,7 @@
         <tr>
             <td style="text-align: center; margin-bottom: 2rem;">
                 <img src="https://ik.imagekit.io/mdee2wnwm/Azany/logo/azanylogo.png?updatedAt=1753939975701" alt="Azany Logo" style="max-height: 6rem; margin: 0 auto; display: block; margin-bottom: 1rem;">
-                <h3 style="font-size: 1.25rem; font-weight: bold;">Dear {{ $user->first_name }}</h3>
+                <h3 style="font-size: 1.25rem; font-weight: bold;">Dear {{ $user['first_name'] }}</h3>
             </td>
         </tr>
         <tr>
