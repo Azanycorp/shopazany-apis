@@ -21,6 +21,7 @@ class Banner extends Model
         'type',
         'products',
         'status',
+        'deal_id',
     ];
 
     protected function casts(): array
@@ -30,12 +31,27 @@ class Banner extends Model
         ];
     }
 
+    public function deal()
+    {
+        return $this->belongsTo(Deal::class, 'deal_id');
+    }
+
     protected function products(): Attribute
     {
         return Attribute::make(
             get: fn ($value) => Product::whereIn('id', is_array($value) ? $value : json_decode($value, true))
                 ->select(['id', 'name', 'product_price', 'description', 'discount_price', 'slug'])
                 ->get()
+        );
+    }
+
+    protected function productIds(): Attribute
+    {
+        return Attribute::make(
+            get: fn ($value, $attributes) =>
+                is_array($attributes['products'])
+                    ? $attributes['products']
+                    : json_decode($attributes['products'], true)
         );
     }
 
