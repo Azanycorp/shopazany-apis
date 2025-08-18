@@ -21,6 +21,7 @@ class Banner extends Model
         'type',
         'products',
         'status',
+        'deal_id',
     ];
 
     protected function casts(): array
@@ -28,6 +29,11 @@ class Banner extends Model
         return [
             'products' => 'array',
         ];
+    }
+
+    public function deal()
+    {
+        return $this->belongsTo(Deal::class, 'deal_id');
     }
 
     protected function products(): Attribute
