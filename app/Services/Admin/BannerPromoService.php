@@ -7,6 +7,7 @@ use App\Enum\CouponType;
 use App\Http\Resources\BannerResource;
 use App\Http\Resources\PromoResource;
 use App\Models\Banner;
+use App\Models\Deal;
 use App\Models\Promo;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
@@ -35,6 +36,7 @@ class BannerPromoService
             'slug' => $slug,
             'image' => $image['url'],
             'public_id' => $image['public_id'],
+            'deal_id' => $request->deal_id,
             'start_date' => $request->start_date,
             'end_date' => $request->end_date,
             'products' => $prods,
@@ -46,7 +48,7 @@ class BannerPromoService
 
     public function banners()
     {
-        $banners = Banner::get();
+        $banners = Banner::with('deal')->get();
         $data = BannerResource::collection($banners);
 
         return $this->success($data, 'Banners');
@@ -54,8 +56,8 @@ class BannerPromoService
 
     public function getOneBanner($id)
     {
-        $banners = Banner::findOrFail($id);
-        $data = new BannerResource($banners);
+        $banner = Banner::with('deal')->findOrFail($id);
+        $data = new BannerResource($banner);
 
         return $this->success($data, 'Banner detail');
     }
@@ -67,6 +69,7 @@ class BannerPromoService
         $banner->update([
             'title' => $request->title,
             'image' => $request->image ? $image['url'] : $banner->image,
+            'deal_id' => $request->deal_id,
             'public_id' => $request->image ? $image['public_id'] : $banner->public_id,
             'start_date' => $request->start_date,
             'end_date' => $request->end_date,
@@ -176,5 +179,76 @@ class BannerPromoService
         ]);
 
         return $this->success(null, 'Created successfully');
+    }
+
+    public function addDeal($request)
+    {
+        if ($request->hasFile('image')) {
+            $image = uploadFunction($request->file('image'), 'deals');
+        }
+
+        $deal = Deal::query()->create([
+            'title' => $request->title,
+            'image' => $image['url'],
+            'public_id' => $image['public_id'],
+            'position' => $request->position,
+        ]);
+
+        return $this->success($deal, 'Deal added successfully');
+    }
+
+    public function deals()
+    {
+        $deals = Deal::select('id', 'title', 'image', 'position')
+            ->latest()
+            ->get();
+
+        return $this->success($deals, 'Deals');
+    }
+
+    public function getOneDeal($id)
+    {
+        $deal = Deal::find($id);
+
+        if (!$deal) {
+            return $this->error(null, 'Deal not found', 404);
+        }
+
+        return $this->success($deal, 'Deal');
+    }
+
+    public function editDeal($request, $id)
+    {
+        $deal = Deal::find($id);
+
+        if (!$deal) {
+            return $this->error(null, 'Deal not found', 404);
+        }
+
+        if ($request->hasFile('image')) {
+            $image = uploadFunction($request->file('image'), 'deals', $deal);
+        }
+
+        $deal->update([
+            'title' => $request->title ?? $deal->title,
+            'image' => $image['url'] ?? $deal->image,
+            'public_id' => $image['public_id'] ?? $deal->public_id,
+            'position' => $request->position ?? $deal->position,
+        ]);
+
+        return $this->success($deal, 'Deal updated successfully');
+    }
+
+    public function deleteDeal($id)
+    {
+        $deal = Deal::find($id);
+
+        if (!$deal) {
+            return $this->error(null, 'Deal not found', 404);
+        }
+
+        $deal->delete();
+
+        return $this->success(null, 'Deal deleted successfully');
     }
 }

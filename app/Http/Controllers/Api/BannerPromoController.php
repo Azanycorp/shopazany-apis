@@ -73,4 +73,45 @@ class BannerPromoController extends Controller
 
         return $this->service->deletePromo($id);
     }
+
+    public function addDeal(Request $request)
+    {
+        abort_if(Gate::denies('banner_promo'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+
+        $request->validate([
+            'title' => 'required|string',
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'position' => 'required|string|in:top,bottom',
+        ]);
+
+        return $this->service->addDeal($request);
+    }
+
+    public function deals()
+    {
+        abort_if(Gate::denies('banner_promo'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+
+        return $this->service->deals();
+    }
+
+    public function getOneDeal($id)
+    {
+        abort_if(Gate::denies('banner_promo'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+
+        return $this->service->getOneDeal($id);
+    }
+
+    public function editDeal(Request $request, $id)
+    {
+        abort_if(Gate::denies('banner_promo'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+
+        return $this->service->editDeal($request, $id);
+    }
+
+    public function deleteDeal($id)
+    {
+        abort_if(Gate::denies('banner_promo'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+
+        return $this->service->deleteDeal($id);
+    }
 }
