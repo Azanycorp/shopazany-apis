@@ -518,7 +518,7 @@ class HomeService
         return $this->error(null, 'Item not found in wishlist', 404);
     }
 
-    public function deals()
+    public function getDeals()
     {
         $deals = Deal::with('banners')
             ->select('id', 'title', 'slug', 'image', 'position')
