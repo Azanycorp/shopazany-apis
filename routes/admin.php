@@ -87,7 +87,7 @@ Route::middleware('validate.header')
                     Route::get('/best-selling-categories', 'bestSellingCat');
                 });
 
-                Route::prefix('deal')->controller(DashboardController::class)->group(function (): void {
+                Route::prefix('deal')->controller(BannerPromoController::class)->group(function (): void {
                     Route::post('/add', 'addDeal');
                     Route::get('/', 'deals');
                     Route::get('/{id}', 'getOneDeal');
