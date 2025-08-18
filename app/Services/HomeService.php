@@ -536,7 +536,7 @@ class HomeService
             return $this->error(null, 'Flash deal not found', 404);
         }
 
-        $productIds = $deal->products()->pluck('id')->toArray();
+        $productIds = $deal->product_ids;
         $products = Product::select(
             'id',
             'name',
