@@ -108,4 +108,14 @@ class HomeController extends Controller
     {
         return $this->service->singleFlashDeal($slug);
     }
+
+    public function getDeals()
+    {
+        return $this->service->getDeals();
+    }
+
+    public function getDealDetail($slug)
+    {
+        return $this->service->getDealDetail($slug);
+    }
 }
