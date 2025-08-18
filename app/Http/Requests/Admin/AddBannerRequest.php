@@ -28,6 +28,7 @@ class AddBannerRequest extends FormRequest
             'end_date' => ['required', 'date', 'date_format:Y-m-d H:i:s', 'after:start_date'],
             'products' => ['required', 'array', 'min:1'],
             'products.*' => ['exists:products,id'],
+            'deal_id' => ['required', 'integer', 'exists:deals,id'],
         ];
     }
 }
