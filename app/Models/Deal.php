@@ -8,6 +8,7 @@ class Deal extends Model
 {
     protected $fillable = [
         'title',
+        'slug',
         'image',
         'public_id',
         'position',

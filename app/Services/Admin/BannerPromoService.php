@@ -66,8 +66,15 @@ class BannerPromoService
     {
         $banner = Banner::findOrFail($id);
         $image = uploadImage($request, 'image', 'banner', null, $banner);
+
+        $slug = Str::slug($request->title);
+        if (Banner::where('slug', $slug)->exists()) {
+            $slug = $slug.'-'.uniqid();
+        }
+
         $banner->update([
             'title' => $request->title,
+            'slug' => $slug,
             'image' => $request->image ? $image['url'] : $banner->image,
             'deal_id' => $request->deal_id,
             'public_id' => $request->image ? $image['public_id'] : $banner->public_id,
@@ -187,8 +194,14 @@ class BannerPromoService
             $image = uploadFunction($request->file('image'), 'deals');
         }
 
+        $slug = Str::slug($request->title);
+        if (Deal::where('slug', $slug)->exists()) {
+            $slug = $slug.'-'.uniqid();
+        }
+
         $deal = Deal::query()->create([
             'title' => $request->title,
+            'slug' => $slug,
             'image' => $image['url'],
             'public_id' => $image['public_id'],
             'position' => $request->position,
@@ -199,7 +212,7 @@ class BannerPromoService
 
     public function deals()
     {
-        $deals = Deal::select('id', 'title', 'image', 'position')
+        $deals = Deal::select('id', 'title', 'slug', 'image', 'position')
             ->latest()
             ->get();
 
@@ -229,8 +242,14 @@ class BannerPromoService
             $image = uploadFunction($request->file('image'), 'deals', $deal);
         }
 
+        $slug = Str::slug($request->title);
+        if (Deal::where('slug', $slug)->exists()) {
+            $slug = $slug.'-'.uniqid();
+        }
+
         $deal->update([
             'title' => $request->title ?? $deal->title,
+            'slug' => $slug,
             'image' => $image['url'] ?? $deal->image,
             'public_id' => $image['public_id'] ?? $deal->public_id,
             'position' => $request->position ?? $deal->position,
