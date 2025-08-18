@@ -45,6 +45,16 @@ class Banner extends Model
         );
     }
 
+    protected function productIds(): Attribute
+    {
+        return Attribute::make(
+            get: fn ($value, $attributes) =>
+                is_array($attributes['products'])
+                    ? $attributes['products']
+                    : json_decode($attributes['products'], true)
+        );
+    }
+
     protected function b2bProducts(): Attribute
     {
         return Attribute::make(
