@@ -519,7 +519,8 @@ class HomeService
 
     public function flashDeals()
     {
-        $deals = Banner::select('id', 'title', 'slug', 'image', 'start_date', 'end_date')
+        $deals = Banner::with('deal')
+            ->select('id', 'title', 'slug', 'image', 'start_date', 'end_date')
             ->whereStatus(BannerStatus::ACTIVE)
             ->get();
 
