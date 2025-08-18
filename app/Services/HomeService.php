@@ -2,25 +2,26 @@
 
 namespace App\Services;
 
-use App\Enum\BannerStatus;
+use App\Models\Cart;
+use App\Models\Deal;
+use App\Models\User;
+use App\Models\Brand;
+use App\Models\Action;
+use App\Models\Banner;
+use App\Models\Product;
+use App\Models\Category;
+use App\Models\Wishlist;
 use App\Enum\OrderStatus;
-use App\Enum\ProductReviewStatus;
+use App\Enum\BannerStatus;
 use App\Enum\ProductStatus;
+use App\Trait\HttpResponse;
+use App\Enum\ProductReviewStatus;
+use Illuminate\Support\Facades\DB;
 use App\Http\Resources\ReviewResource;
 use App\Http\Resources\SellerDetailResource;
 use App\Http\Resources\SellerProductResource;
 use App\Http\Resources\SingleProductResource;
-use App\Models\Action;
-use App\Models\Banner;
-use App\Models\Brand;
-use App\Models\Cart;
-use App\Models\Category;
-use App\Models\Product;
-use App\Models\User;
-use App\Models\Wishlist;
-use App\Trait\HttpResponse;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\DB;
 
 class HomeService
 {
@@ -515,6 +516,29 @@ class HomeService
         }
 
         return $this->error(null, 'Item not found in wishlist', 404);
+    }
+
+    public function deals()
+    {
+        $deals = Deal::with('banners')
+            ->select('id', 'title', 'slug', 'image', 'position')
+            ->latest()
+            ->get();
+
+        return $this->success($deals, 'Deals');
+    }
+
+    public function getDealDetail($slug)
+    {
+        $deal = Deal::with('banners')
+            ->where('slug', $slug)
+            ->first();
+
+        if (! $deal) {
+            return $this->error(null, 'Deal not found', 404);
+        }
+
+        return $this->success($deal, 'Deal');
     }
 
     public function flashDeals()
