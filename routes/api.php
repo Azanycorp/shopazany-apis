@@ -284,3 +284,4 @@ Route::middleware('validate.header')
     });
 
 require __DIR__.'/b2b.php';
+require __DIR__.'/agriecom.php';
