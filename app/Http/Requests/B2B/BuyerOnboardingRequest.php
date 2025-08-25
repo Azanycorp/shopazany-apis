@@ -30,6 +30,7 @@ class BuyerOnboardingRequest extends FormRequest
             'average_spend' => ['required', 'string'],
             'company_name' => ['required', 'string'],
             'company_size' => ['required', 'string'],
+            'type' => ['required', 'string','in:b2b_buyer,b2b_agricom_buyer'],
             'country_id' => ['required', 'integer', 'exists:countries,id'],
             'password' => ['required', 'string', 'confirmed', Password::defaults()],
         ];

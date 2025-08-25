@@ -24,6 +24,7 @@ class SignupRequest extends FormRequest
     {
         return [
             'email' => ['required', 'email', 'email:rfc,dns', 'unique:users,email'],
+            'type' => ['required', 'string','in:b2b_seller,b2b_agricom_seller'],
             'password' => ['required', 'string', 'confirmed', Password::defaults()],
         ];
     }
