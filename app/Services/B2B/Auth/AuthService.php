@@ -30,7 +30,7 @@ class AuthService
             $code = generateVerificationCode();
             $user = User::create([
                 'email' => $request->email,
-                'type' => UserType::B2B_SELLER,
+                'type' => $request->type,//UserType::B2B_SELLER,
                 'email_verified_at' => null,
                 'verification_code' => $code,
                 'is_verified' => 0,
