@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\AgriEcomSeller;
 use App\Http\Middleware\AuthCheck;
 use App\Http\Middleware\AuthGates;
 use App\Http\Middleware\B2BBuyer;
@@ -56,6 +57,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role.super_admin' => SuperAdminCheck::class,
             'tx.replay' => TransactionReplayShield::class,
             'burst.guard' => BurstGuard::class,
+            'agriecom_seller.auth' => AgriEcomSeller::class
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

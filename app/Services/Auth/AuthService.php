@@ -68,7 +68,7 @@ class AuthService extends Controller
             $user = $this->createUser($request);
 
             $description = "User with email: {$request->email} signed up";
-            $response = $this->success(null, 'Created successfully');
+            $response = $this->success(null, 'Created successfully', 201);
             $action = UserLog::CREATED;
 
             logUserAction($request, $action, $description, $response, $user);
