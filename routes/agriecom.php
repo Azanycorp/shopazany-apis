@@ -16,10 +16,15 @@ Route::middleware('validate.header')
                 Route::post('/resend-code', 'resendCode');
             });
 
+        // Buisness Info
+        Route::post('/business-information', 'createBusinessInformation');
+
         Route::group(['middleware' => ['auth:api', 'auth.check', 'agriecom_seller.auth']], function (): void {
             Route::controller(SellerController::class)
                 ->group(function () {
-                    Route::post('/business-information', 'createBusinessInformation');
+                    Route::get('/', function () {
+                        return "";
+                    });
                 });
         });
     });
