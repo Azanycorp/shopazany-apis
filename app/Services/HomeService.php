@@ -191,7 +191,7 @@ class HomeService
             $query->where('country_id', $countryId);
         }
 
-        $query->whereBetween('price', [1000, 10000])
+        $query->whereBetween('price', [2, 10000])
             ->where('status', ProductStatus::ACTIVE)
             ->orderBy('price', 'asc')
             ->limit(4);
