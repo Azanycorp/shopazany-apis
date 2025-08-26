@@ -12,7 +12,7 @@ use App\Services\B2B\BuyerService;
 use App\Services\B2B\SellerService;
 use Illuminate\Http\Request;
 
-class B2BAccountController extends Controller
+class B2BAuthController extends Controller
 {
     protected \App\Services\AgriEcom\B2B\AuthService $service;
 

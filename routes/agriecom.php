@@ -1,8 +1,10 @@
 <?php
 
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\B2BSellerController;
+use App\Http\Controllers\Api\B2B\B2BAuthController;
 use App\Http\Controllers\Api\AgriEcom\AuthController;
 use App\Http\Controllers\Api\AgriEcom\SellerController;
-use Illuminate\Support\Facades\Route;
 
 Route::middleware('validate.header')
     ->prefix('agriecom')
@@ -29,19 +31,24 @@ Route::middleware('validate.header')
         });
 
         Route::prefix('auth/b2b')
-                ->controller(B2BAccountController::class)
-                ->group(function (): void {
-                    Route::post('/login', 'login');
-                    Route::post('/login/verify', 'loginVerify');
-                    Route::post('/seller/signup', 'signup');
-                    Route::post('/forgot-password', 'forgot');
-                    Route::post('/reset-password', 'reset');
-                    Route::post('/resend', 'resendCode');
-                    Route::post('/logout', 'logout');
-                    Route::post('/verify', 'verify');
+            ->controller(B2BAuthController::class)
+            ->group(function (): void {
+                Route::post('/login', 'login');
+                Route::post('/login/verify', 'loginVerify');
+                Route::post('/seller/signup', 'signup');
+                Route::post('/forgot-password', 'forgot');
+                Route::post('/reset-password', 'reset');
+                Route::post('/resend', 'resendCode');
+                Route::post('/logout', 'logout');
+                Route::post('/verify', 'verify');
 
-                    // Buyer Onboarding
-                    Route::post('/buyer/signup', 'buyerOnboarding');
-                });
+                // Buyer Onboarding
+                Route::post('/buyer/signup', 'buyerOnboarding');
+            });
+
+
+        Route::controller(B2BSellerController::class)->prefix('seller')->group(function (): void {
+            // dashboard
+            Route::get('/dashboard', 'dashboard');
+        });
     });
-
