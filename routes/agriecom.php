@@ -17,7 +17,7 @@ Route::middleware('validate.header')
             });
 
         // Buisness Info
-        Route::post('/business-information', 'createBusinessInformation');
+        Route::post('/business-information', [SellerController::class, 'createBusinessInformation']);
 
         Route::group(['middleware' => ['auth:api', 'auth.check', 'agriecom_seller.auth']], function (): void {
             Route::controller(SellerController::class)
