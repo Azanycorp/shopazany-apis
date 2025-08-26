@@ -25,6 +25,8 @@ Route::middleware('validate.header')
                     Route::post('/buyer/signup', 'buyerOnboarding');
                 });
 
+                
+
             Route::prefix('b2b')->controller(B2BController::class)
                 ->group(function (): void {
                     Route::post('/business/information', 'businessInformation');

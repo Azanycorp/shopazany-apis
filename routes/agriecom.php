@@ -27,5 +27,21 @@ Route::middleware('validate.header')
                     });
                 });
         });
+
+        Route::prefix('auth/b2b')
+                ->controller(B2BAccountController::class)
+                ->group(function (): void {
+                    Route::post('/login', 'login');
+                    Route::post('/login/verify', 'loginVerify');
+                    Route::post('/seller/signup', 'signup');
+                    Route::post('/forgot-password', 'forgot');
+                    Route::post('/reset-password', 'reset');
+                    Route::post('/resend', 'resendCode');
+                    Route::post('/logout', 'logout');
+                    Route::post('/verify', 'verify');
+
+                    // Buyer Onboarding
+                    Route::post('/buyer/signup', 'buyerOnboarding');
+                });
     });
 
