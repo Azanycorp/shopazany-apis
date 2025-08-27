@@ -2,30 +2,25 @@
 
 namespace App\Http\Controllers\Api\B2B;
 
-use App\Http\Controllers\Controller;
-use App\Http\Requests\B2B\BusinessInformationRequest;
-use App\Http\Requests\B2B\BuyerOnboardingRequest;
-use App\Http\Requests\B2B\SignupRequest;
-use App\Http\Requests\LoginRequest;
-use App\Services\AgriEcom\B2B\AuthService;
-use App\Services\B2B\BuyerService;
-use App\Services\B2B\SellerService;
 use Illuminate\Http\Request;
+use App\Services\B2B\BuyerService;
+use App\Http\Requests\LoginRequest;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\B2B\SignupRequest;
+use App\Services\AgriEcom\B2B\AuthService;
+use App\Services\B2B\SellerService;
+use App\Http\Requests\B2B\BuyerOnboardingRequest;
+use App\Http\Requests\B2B\BusinessInformationRequest;
 
 class B2BAuthController extends Controller
 {
-    protected \App\Services\AgriEcom\B2B\AuthService $service;
 
-    protected \App\Services\B2B\SellerService $sellerService;
-
-    protected \App\Services\B2B\BuyerService $buyerService;
-
-    public function __construct(AuthService $service, SellerService $sellerService, BuyerService $buyerService)
-    {
-        $this->service = $service;
-        $this->sellerService = $sellerService;
-        $this->buyerService = $buyerService;
-    }
+    public function __construct(
+        protected AuthService $service,
+        protected SellerService $sellerService,
+        protected BuyerService $buyerService
+    ) {}
+    
 
     public function login(LoginRequest $request)
     {

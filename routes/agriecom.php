@@ -30,7 +30,7 @@ Route::middleware('validate.header')
                 });
         });
 
-        Route::prefix('auth/b2b')
+        Route::prefix('auth')
             ->controller(B2BAuthController::class)
             ->group(function (): void {
                 Route::post('/login', 'login');
