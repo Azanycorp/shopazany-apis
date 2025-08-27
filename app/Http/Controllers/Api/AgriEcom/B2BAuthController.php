@@ -20,7 +20,6 @@ class B2BAuthController extends Controller
         protected SellerService $sellerService,
         protected BuyerService $buyerService
     ) {}
-    
 
     public function login(LoginRequest $request)
     {
