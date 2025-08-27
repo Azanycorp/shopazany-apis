@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api\B2B;
+namespace App\Http\Controllers\Api\AgriEcom;
 
 use Illuminate\Http\Request;
 use App\Services\B2B\BuyerService;

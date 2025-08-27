@@ -1,10 +1,10 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\B2BSellerController;
-use App\Http\Controllers\Api\B2B\B2BAuthController;
+use App\Http\Controllers\Api\AgriEcom\B2BSellerController;
 use App\Http\Controllers\Api\AgriEcom\AuthController;
 use App\Http\Controllers\Api\AgriEcom\SellerController;
+use App\Http\Controllers\Api\AgriEcom\B2BAuthController;
 
 Route::middleware('validate.header')
     ->prefix('agriecom')
@@ -30,9 +30,9 @@ Route::middleware('validate.header')
                 });
         });
 
-        Route::prefix('auth')
-            ->controller(B2BAuthController::class)
-            ->group(function (): void {
+        Route::prefix('b2b')->group(function () {
+
+            Route::controller(B2BAuthController::class)->prefix('auth')->group(function () {
                 Route::post('/login', 'login');
                 Route::post('/login/verify', 'loginVerify');
                 Route::post('/seller/signup', 'signup');
@@ -47,8 +47,17 @@ Route::middleware('validate.header')
             });
 
 
-        Route::controller(B2BSellerController::class)->prefix('seller')->group(function (): void {
-            // dashboard
-            Route::get('/dashboard', 'dashboard');
+            Route::group(['middleware' => ['auth:api', 'auth.check', 'b2b_agriecom_seller.auth']], function () {
+                Route::controller(B2BSellerController::class)->prefix('seller')->group(function () {
+                    // dashboard
+                    Route::get('/dashboard', 'dashboard');
+
+                    // profile
+                    Route::get('/profile', 'profile');
+                    Route::post('/edit-account', 'editAccount');
+                    Route::patch('/change-password', 'changePassword');
+                    Route::post('/edit-company', 'editCompany');
+                });
+            });
         });
     });

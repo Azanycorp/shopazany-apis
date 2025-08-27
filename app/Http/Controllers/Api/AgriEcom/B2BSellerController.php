@@ -1,12 +1,8 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\Api\AgriEcom;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\B2B\AddProductRequest;
-use App\Http\Requests\B2B\SellerShippingRequest;
-use App\Http\Requests\B2B\UpdateProductRequest;
-use App\Http\Requests\B2B\WithdrawalMethodRequest;
 use App\Http\Requests\ChangePasswordRequest;
 use App\Services\B2B\SellerService;
 use Illuminate\Http\Request;
