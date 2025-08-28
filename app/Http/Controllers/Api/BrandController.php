@@ -27,21 +27,20 @@ class BrandController extends Controller
     {
         $request->validate([
             'name' => ['required', 'string'],
+            'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
         ]);
-        $path = null;
+
         if ($request->hasFile('image')) {
-            $file = $request->file('image');
-            $filename = time().rand(10, 1000).'.'.$file->extension();
-            $file->move(public_path('brands'), $filename, 'public');
-            $path = config('services.baseurl').'brands/'.$filename;
+            $file = uploadFunction($request->file('image'), 'brands');
         }
+
         Brand::create([
             'name' => $request->name,
             'slug' => Str::slug($request->name),
-            'image' => $path,
+            'image' => $file['url'] ?? null,
         ]);
 
-        return $this->success(null, 'Created successfully');
+        return $this->success(null, 'Created successfully', 201);
     }
 
     /**
