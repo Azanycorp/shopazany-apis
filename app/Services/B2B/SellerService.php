@@ -109,6 +109,10 @@ class SellerService extends Controller
     {
         $currentUserId = userAuthId();
 
+        if ($currentUserId != $request->user_id) {
+            return $this->error(null, 'Unauthorized action.', 401);
+        }
+
         $user = User::find($currentUserId);
 
         $image = $request->hasFile('logo') ?
@@ -145,6 +149,12 @@ class SellerService extends Controller
 
     public function editCompany($request)
     {
+        $currentUserId = userAuthId();
+
+        if ($currentUserId != $request->user_id) {
+            return $this->error(null, 'Unauthorized action.', 401);
+        }
+
         $user = User::with('businessInformation')->findOrFail($request->user_id);
 
         if ($request->hasFile('logo')) {
@@ -952,13 +962,9 @@ class SellerService extends Controller
 
         $payouts = WithdrawalRequest::where('user_id', $currentUserId)->get();
 
-        $wallet = UserWallet::where('seller_id', $currentUserId)->first();
-
-        if (! $wallet) {
-            UserWallet::create([
-                'seller_id' => $currentUserId,
-            ]);
-        }
+        $wallet = UserWallet::firstOrCreate(
+            ['seller_id' => $currentUserId]
+        );
 
         $data = [
             'total_sales' => $orderStats,
@@ -1164,7 +1170,7 @@ class SellerService extends Controller
     public function deleteMethod($id)
     {
         $method = PaymentMethod::findOrFail($id);
-        
+
         $method->delete();
 
         return $this->success(null, 'Withdrawal details deleted successfully', 200);
