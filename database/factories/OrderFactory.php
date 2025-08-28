@@ -23,7 +23,6 @@ class OrderFactory extends Factory
             'user_id' => User::factory(),
             'status' => OrderStatus::DELIVERED,
             'country_id' => fake()->numberBetween(1, 5),
-            'product_quantity' => fake()->numberBetween(1, 5),
             'order_no' => Str::random(20),
             'shipping_address' => fake()->address,
             'order_date' => fake()->date,
