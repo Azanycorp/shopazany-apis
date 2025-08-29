@@ -57,6 +57,16 @@ Route::middleware('validate.header')
                     Route::post('/edit-account', 'editAccount');
                     Route::patch('/change-password', 'changePassword');
                     Route::post('/edit-company', 'editCompany');
+
+                    // Shipping
+                    Route::prefix('shipping')->group(function () {
+                        Route::post('/', 'addShipping');
+                        Route::get('/{user_id}', 'getAllShipping');
+                        Route::get('/details/{user_id}/{shipping_id}', 'getShippingById');
+                        Route::patch('/update/{shipping_id}', 'updateShipping');
+                        Route::patch('/default/{user_id}/{shipping_id}', 'setDefault');
+                        Route::delete('/delete/{user_id}/{shipping_id}', 'deleteShipping');
+                    });
                 });
             });
         });
