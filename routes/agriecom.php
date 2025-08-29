@@ -67,6 +67,16 @@ Route::middleware('validate.header')
                         Route::patch('/default/{user_id}/{shipping_id}', 'setDefault');
                         Route::delete('/delete/{user_id}/{shipping_id}', 'deleteShipping');
                     });
+
+                    // payment method
+                    Route::prefix('withdrawal-method')->group(function (): void {
+                        Route::get('/', 'allWithdrawalMethods');
+                        Route::post('/add', 'addWithdrawalMethod');
+                        Route::get('/details/{id}', 'getWithdrawalMethod');
+                        Route::post('/update/{id}', 'updateWithdrawalMethod');
+                        Route::post('/make-default', 'makeDefaultAccount');
+                        Route::delete('/delete/{id}', 'deleteWithdrawalMethod');
+                    });
                 });
             });
         });
