@@ -51,6 +51,9 @@ Route::middleware('validate.header')
                 Route::controller(B2BSellerController::class)->prefix('seller')->group(function () {
                     // dashboard
                     Route::get('/dashboard', 'dashboard');
+                    Route::get('/withdrawals', 'withdrawalHistory');
+                    Route::post('/withdrawal-request', 'makeWithdrawalRequest');
+                    Route::get('/earning-report', 'getEarningReport');
 
                     // profile
                     Route::get('/profile', 'profile');
