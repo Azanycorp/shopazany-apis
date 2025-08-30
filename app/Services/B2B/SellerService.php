@@ -990,13 +990,11 @@ class SellerService extends Controller
     public function getWithdrawalHistory()
     {
         $currentUserId = userAuthId();
-        $wallet = UserWallet::where('seller_id', $currentUserId)->first();
 
-        if (! $wallet) {
-            UserWallet::create([
-                'seller_id' => $currentUserId,
-            ]);
-        }
+       $wallet = UserWallet::firstOrCreate(
+            ['seller_id' => $currentUserId]
+        );
+
         $payouts = WithdrawalRequest::where('user_id', $currentUserId)->get();
 
         return $this->success($payouts, 'payouts details');
@@ -1013,11 +1011,10 @@ class SellerService extends Controller
         if (! $user) {
             return $this->error(null, 'User not found', 404);
         }
-        $wallet = UserWallet::where('seller_id', $currentUserId)->first();
-
-        if (! $wallet) {
-            return $this->error(null, 'User wallet not found', 404);
-        }
+        
+        $wallet = UserWallet::firstOrCreate(
+            ['seller_id' => $currentUserId]
+        );
 
         if ($request->amount > $wallet->master_wallet) {
             return $this->error(null, 'Insufficient balance', 422);

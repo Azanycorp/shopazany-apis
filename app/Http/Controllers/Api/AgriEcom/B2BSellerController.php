@@ -40,7 +40,21 @@ class B2BSellerController extends Controller
     {
         return $this->service->getDashboardDetails();
     }
+    
+    public function getEarningReport()
+    {
+        return $this->service->getEarningReport();
+    }
 
+    public function withdrawalHistory()
+    {
+        return $this->service->getWithdrawalHistory();
+    }
+
+    public function makeWithdrawalRequest(Request $request)
+    {
+        return $this->service->withdrawalRequest($request);
+    }
     public function addShipping(SellerShippingRequest $request)
     {
         return $this->service->addShipping($request);
