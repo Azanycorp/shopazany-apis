@@ -7,6 +7,7 @@ use App\Services\B2B\SellerService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ChangePasswordRequest;
 use App\Http\Requests\B2B\SellerShippingRequest;
+use App\Http\Requests\B2B\WithdrawalMethodRequest;
 
 class B2BSellerController extends Controller
 {
@@ -39,7 +40,21 @@ class B2BSellerController extends Controller
     {
         return $this->service->getDashboardDetails();
     }
+    
+    public function getEarningReport()
+    {
+        return $this->service->getEarningReport();
+    }
 
+    public function withdrawalHistory()
+    {
+        return $this->service->getWithdrawalHistory();
+    }
+
+    public function makeWithdrawalRequest(Request $request)
+    {
+        return $this->service->withdrawalRequest($request);
+    }
     public function addShipping(SellerShippingRequest $request)
     {
         return $this->service->addShipping($request);
@@ -68,5 +83,36 @@ class B2BSellerController extends Controller
     public function setDefault($user_id, $shipping_id)
     {
         return $this->service->setDefault($user_id, $shipping_id);
+    }
+
+    // Seller Wihdrawal method
+    public function allWithdrawalMethods()
+    {
+        return $this->service->getAllMethod();
+    }
+
+    public function addWithdrawalMethod(WithdrawalMethodRequest $request)
+    {
+        return $this->service->addNewMethod($request);
+    }
+
+    public function getWithdrawalMethod($id)
+    {
+        return $this->service->getSingleMethod($id);
+    }
+
+    public function makeDefaultAccount(Request $request)
+    {
+        return $this->service->makeAccounDefaultt($request);
+    }
+
+    public function updateWithdrawalMethod(WithdrawalMethodRequest $request, $id)
+    {
+        return $this->service->updateMethod($request, $id);
+    }
+
+    public function deleteWithdrawalMethod($id)
+    {
+        return $this->service->deleteMethod($id);
     }
 }

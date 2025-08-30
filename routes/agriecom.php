@@ -51,6 +51,9 @@ Route::middleware('validate.header')
                 Route::controller(B2BSellerController::class)->prefix('seller')->group(function () {
                     // dashboard
                     Route::get('/dashboard', 'dashboard');
+                    Route::get('/withdrawals', 'withdrawalHistory');
+                    Route::post('/withdrawal-request', 'makeWithdrawalRequest');
+                    Route::get('/earning-report', 'getEarningReport');
 
                     // profile
                     Route::get('/profile', 'profile');
@@ -66,6 +69,16 @@ Route::middleware('validate.header')
                         Route::patch('/update/{shipping_id}', 'updateShipping');
                         Route::patch('/default/{user_id}/{shipping_id}', 'setDefault');
                         Route::delete('/delete/{user_id}/{shipping_id}', 'deleteShipping');
+                    });
+
+                    // payment method
+                    Route::prefix('withdrawal-method')->group(function (): void {
+                        Route::get('/', 'allWithdrawalMethods');
+                        Route::post('/add', 'addWithdrawalMethod');
+                        Route::get('/details/{id}', 'getWithdrawalMethod');
+                        Route::post('/update/{id}', 'updateWithdrawalMethod');
+                        Route::post('/make-default', 'makeDefaultAccount');
+                        Route::delete('/delete/{id}', 'deleteWithdrawalMethod');
                     });
                 });
             });
