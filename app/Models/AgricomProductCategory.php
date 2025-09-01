@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\AgricomProductSubCategory;
 
 class AgricomProductCategory extends Model
 {
@@ -18,6 +19,6 @@ class AgricomProductCategory extends Model
 
     public function subcategory()
     {
-        return $this->hasMany(B2bProductSubCategory::class, 'category_id');
+        return $this->hasMany(AgricomProductSubCategory::class, 'category_id');
     }
 }
