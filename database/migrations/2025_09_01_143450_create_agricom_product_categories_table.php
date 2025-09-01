@@ -13,6 +13,13 @@ return new class extends Migration
     {
         Schema::create('agricom_product_categories', function (Blueprint $table) {
             $table->id();
+            $table->string('name');
+            $table->string('slug');
+            $table->string('type')->nullable();
+            $table->string('image')->nullable();
+            $table->integer('featured')->default(0);
+            $table->string('meta_title')->nullable();
+            $table->text('meta_description')->nullable();
             $table->timestamps();
         });
     }

@@ -9,6 +9,7 @@ class AgricomProductCategory extends Model
     protected $fillable = [
         'name',
         'slug',
+        'type',
         'image',
         'featured',
         'meta_title',
