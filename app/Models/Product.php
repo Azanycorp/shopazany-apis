@@ -44,6 +44,8 @@ class Product extends Model
         'country_id',
         'is_featured',
         'status',
+        'type',
+        'condition',
     ];
 
     public function user(): BelongsTo

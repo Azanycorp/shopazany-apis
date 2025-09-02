@@ -25,9 +25,18 @@ Route::middleware('validate.header')
             Route::prefix('/seller')
                 ->controller(SellerController::class)
                 ->group(function () {
-                    Route::get('/', function () {
-                        return "";
-                    });
+                    Route::prefix('/product')
+                        ->group(function () {
+                            Route::post('/create', 'createProduct');
+                            Route::post('/edit/{product_id}/{user_id}', 'updateProduct')
+                                ->middleware('ensure.user');
+                            Route::get('/{user_id}', 'getProduct')
+                                ->middleware('ensure.user');
+                            Route::get('/top-selling/{user_id}', 'topSelling')
+                                ->middleware('ensure.user');
+                            Route::delete('/delete/{product_id}/{user_id}', 'deleteProduct')
+                                ->middleware('ensure.user');
+                        });
                 });
         });
 
