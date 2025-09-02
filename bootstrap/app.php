@@ -1,26 +1,27 @@
 <?php
 
-use App\Http\Middleware\AgriEcomSeller;
+use App\Http\Middleware\B2BBuyer;
 use App\Http\Middleware\AuthCheck;
 use App\Http\Middleware\AuthGates;
-use App\Http\Middleware\B2BBuyer;
 use App\Http\Middleware\B2BSeller;
-use App\Http\Middleware\BlockUserAfterFailedAttempts;
 use App\Http\Middleware\BurstGuard;
-use App\Http\Middleware\BuyerAuthMiddleware;
-use App\Http\Middleware\CheckUserCountry;
-use App\Http\Middleware\CheckWalletBalance;
-use App\Http\Middleware\EnsureUserIsOwner;
-use App\Http\Middleware\SellerAuthMiddleware;
-use App\Http\Middleware\SuperAdminCheck;
-use App\Http\Middleware\TransactionReplayShield;
-use App\Http\Middleware\ValidateHeader;
-use Illuminate\Foundation\Application;
-use Illuminate\Foundation\Configuration\Exceptions;
-use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Foundation\Application;
+use App\Http\Middleware\AgriEcomSeller;
+use App\Http\Middleware\ValidateHeader;
+use App\Http\Middleware\SuperAdminCheck;
+use App\Http\Middleware\CheckUserCountry;
+use App\Http\Middleware\B2BAgriEcomSeller;
+use App\Http\Middleware\EnsureUserIsOwner;
+use App\Http\Middleware\CheckWalletBalance;
+use App\Http\Middleware\BuyerAuthMiddleware;
+use App\Http\Middleware\SellerAuthMiddleware;
+use App\Http\Middleware\TransactionReplayShield;
+use Illuminate\Foundation\Configuration\Exceptions;
+use Illuminate\Foundation\Configuration\Middleware;
 use Spatie\ResponseCache\Middlewares\CacheResponse;
+use App\Http\Middleware\BlockUserAfterFailedAttempts;
 use Spatie\ResponseCache\Middlewares\DoNotCacheResponse;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -57,7 +58,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'role.super_admin' => SuperAdminCheck::class,
             'tx.replay' => TransactionReplayShield::class,
             'burst.guard' => BurstGuard::class,
-            'agriecom_seller.auth' => AgriEcomSeller::class
+            'agriecom_seller.auth' => AgriEcomSeller::class,
+            'b2b_agriecom_seller.auth' => B2BAgriEcomSeller::class
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

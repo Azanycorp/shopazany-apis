@@ -46,6 +46,9 @@ class UserObserver implements ShouldHandleEventsAfterCommit
             UserType::B2B_SELLER => UserWallet::updateOrCreate(
                 ['seller_id' => $user->id]
             ),
+            UserType::B2B_AGRIECOM_SELLER => UserWallet::updateOrCreate(
+                ['seller_id' => $user->id]
+            ),
             UserType::CUSTOMER => Wallet::updateOrCreate(
                 ['user_id' => $user->id]
             ),
