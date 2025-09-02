@@ -2,45 +2,47 @@
 
 namespace App\Services\B2B;
 
+use App\Models\Rfq;
+use App\Models\User;
+use App\Enum\UserType;
+use App\Trait\Payment;
+use App\Models\B2bOrder;
 use App\Enum\MailingEnum;
 use App\Enum\OrderStatus;
 use App\Enum\PaymentType;
-use App\Enum\TransactionStatus;
-use App\Enum\UserType;
-use App\Enum\WithdrawalStatus;
-use App\Http\Controllers\Controller;
-use App\Http\Resources\B2BOrderResource;
-use App\Http\Resources\B2BProductResource;
-use App\Http\Resources\B2BSellerProfileResource;
-use App\Http\Resources\B2BSellerShippingAddressResource;
-use App\Imports\B2BProductImport;
-use App\Imports\ProductImport;
-use App\Mail\B2BDeliveredOrderMail;
-use App\Mail\B2BOrderEmail;
-use App\Mail\B2BSHippedOrderMail;
-use App\Models\B2bOrder;
-use App\Models\B2bOrderFeedback;
-use App\Models\B2bOrderRating;
+use App\Enum\ProductType;
 use App\Models\B2BProduct;
-use App\Models\B2BSellerShippingAddress;
-use App\Models\PaymentMethod;
-use App\Models\Rfq;
 use App\Models\RfqMessage;
-use App\Models\User;
 use App\Models\UserWallet;
-use App\Models\WithdrawalRequest;
-use App\Repositories\B2BProductRepository;
-use App\Repositories\B2BSellerShippingRepository;
-use App\Services\TransactionService;
+use App\Enum\ProductStatus;
+use App\Mail\B2BOrderEmail;
 use App\Trait\HttpResponse;
-use App\Trait\Payment;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use App\Models\PaymentMethod;
+use App\Enum\WithdrawalStatus;
+use App\Imports\ProductImport;
+use App\Models\B2bOrderRating;
+use Illuminate\Support\Carbon;
+use App\Enum\TransactionStatus;
+use App\Models\B2bOrderFeedback;
+use App\Imports\B2BProductImport;
+use App\Mail\B2BSHippedOrderMail;
+use App\Models\WithdrawalRequest;
+use Illuminate\Support\Facades\DB;
+use App\Mail\B2BDeliveredOrderMail;
+use App\Http\Controllers\Controller;
+use App\Services\TransactionService;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Storage;
+use App\Http\Resources\B2BOrderResource;
+use App\Models\B2BSellerShippingAddress;
+use App\Http\Resources\B2BProductResource;
+use App\Repositories\B2BProductRepository;
+use App\Http\Resources\B2BSellerProfileResource;
+use App\Repositories\B2BSellerShippingRepository;
+use App\Http\Resources\B2BSellerShippingAddressResource;
 
 class SellerService extends Controller
 {
@@ -213,6 +215,71 @@ class SellerService extends Controller
             Excel::import(new B2BProductImport($seller), $request->file('file'));
 
             return $this->success(null, 'Imported successfully');
+        } catch (\Exception $e) {
+            return $this->error(null, $e->getMessage(), 500);
+        }
+    }
+
+    public function addAgricomProduct($request)
+    {
+        $currentUserId = userAuthId();
+
+        if ($currentUserId != $request->user_id) {
+            return $this->error(null, 'Unauthorized action.', 401);
+        }
+
+        $user = User::find($currentUserId);
+
+        if (! $user) {
+            return $this->error(null, 'User details not found.', 404);
+        }
+
+        try {
+
+            $parts = explode('@', $user->email);
+            $name = $parts[0];
+
+            $res = folderNames('b2bproduct', $name, 'front_image');
+
+            $slug = Str::slug($request->name);
+
+            if (B2BProduct::where('slug', $slug)->exists()) {
+                $slug = $slug . '-' . uniqid();
+            }
+
+            if ($request->hasFile('front_image')) {
+                $url = uploadImage($request, 'front_image', $res->frontImage);
+            }
+
+            $data = [
+                'user_id' => $request->user_id,
+                'name' => $request->name,
+                'slug' => $slug,
+                'category_id' => $request->category_id,
+                'sub_category_id' => $request->sub_category_id,
+                'keywords' => $request->keywords,
+                'description' => $request->description,
+                'front_image' => $url['url'] ?? null,
+                'public_id' => $url['public_id'] ?? null,
+                'minimum_order_quantity' => $request->minimum_order_quantity,
+                'unit_price' => $request->unit,
+                'quantity' => $request->quantity,
+                'availability_quantity' => $request->quantity,
+                'default_currency' => $user->default_currency,
+                'fob_price' => $request->fob_price,
+                'status' => ProductStatus::ACTIVE,
+                'type' => ProductType::AgriEcom,
+                'country_id' => is_int($user->country) ? $user->country : 160,
+            ];
+
+            $product = $this->b2bProductRepository->create($data);
+
+            if ($request->hasFile('images')) {
+                $folder = folderNames('product', $name, null, 'images');
+                uploadMultipleB2BProductImage($request, 'images', $folder->folder, $product);
+            }
+
+            return $this->success(null, 'Product added successfully', 201);
         } catch (\Exception $e) {
             return $this->error(null, $e->getMessage(), 500);
         }
@@ -991,7 +1058,7 @@ class SellerService extends Controller
     {
         $currentUserId = userAuthId();
 
-       $wallet = UserWallet::firstOrCreate(
+        $wallet = UserWallet::firstOrCreate(
             ['seller_id' => $currentUserId]
         );
 
@@ -1011,7 +1078,7 @@ class SellerService extends Controller
         if (! $user) {
             return $this->error(null, 'User not found', 404);
         }
-        
+
         $wallet = UserWallet::firstOrCreate(
             ['seller_id' => $currentUserId]
         );
