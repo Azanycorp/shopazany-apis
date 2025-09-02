@@ -4,7 +4,7 @@ namespace App\Services\AgriEcom;
 
 class SellerService
 {
-    public function createBusinessInformation($request)
+    public function createProduct($request)
     {
         return "";
     }
