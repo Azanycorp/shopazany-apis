@@ -227,7 +227,7 @@ class SellerService extends Controller
         if ($currentUserId != $request->user_id) {
             return $this->error(null, 'Unauthorized action.', 401);
         }
-        
+
         $user = User::find($currentUserId);
 
         if (! $user) {
@@ -311,6 +311,7 @@ class SellerService extends Controller
         if ($currentUserId != $user_id) {
             return $this->error(null, 'Unauthorized action.', 401);
         }
+        
         $prod = $this->b2bProductRepository->find($product_id);
 
         return $this->success(new B2BProductResource($prod), 'Product details');

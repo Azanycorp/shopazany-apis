@@ -56,6 +56,7 @@ class B2BSellerController extends Controller
     {
         return $this->service->withdrawalRequest($request);
     }
+
     public function addShipping(SellerShippingRequest $request)
     {
         return $this->service->addShipping($request);
@@ -126,7 +127,7 @@ class B2BSellerController extends Controller
     {
         return $this->service->exportSellerProduct($request, $userId);
     }
-    
+
     public function addProduct(AddProductRequest $request)
     {
         return $this->service->addProduct($request);
@@ -151,6 +152,7 @@ class B2BSellerController extends Controller
     {
         return $this->service->deleteProduct($user_id, $product_id);
     }
+    
     public function getAnalytics(int $user_id)
     {
         return $this->service->getAnalytics($user_id);
