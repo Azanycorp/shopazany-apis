@@ -220,71 +220,6 @@ class SellerService extends Controller
         }
     }
 
-    public function addAgricomProduct($request)
-    {
-        $currentUserId = userAuthId();
-
-        if ($currentUserId != $request->user_id) {
-            return $this->error(null, 'Unauthorized action.', 401);
-        }
-
-        $user = User::find($currentUserId);
-
-        if (! $user) {
-            return $this->error(null, 'User details not found.', 404);
-        }
-
-        try {
-
-            $parts = explode('@', $user->email);
-            $name = $parts[0];
-
-            $res = folderNames('b2bproduct', $name, 'front_image');
-
-            $slug = Str::slug($request->name);
-
-            if (B2BProduct::where('slug', $slug)->exists()) {
-                $slug = $slug . '-' . uniqid();
-            }
-
-            if ($request->hasFile('front_image')) {
-                $url = uploadImage($request, 'front_image', $res->frontImage);
-            }
-
-            $data = [
-                'user_id' => $request->user_id,
-                'name' => $request->name,
-                'slug' => $slug,
-                'category_id' => $request->category_id,
-                'sub_category_id' => $request->sub_category_id,
-                'keywords' => $request->keywords,
-                'description' => $request->description,
-                'front_image' => $url['url'] ?? null,
-                'public_id' => $url['public_id'] ?? null,
-                'minimum_order_quantity' => $request->minimum_order_quantity,
-                'unit_price' => $request->unit,
-                'quantity' => $request->quantity,
-                'availability_quantity' => $request->quantity,
-                'default_currency' => $user->default_currency,
-                'fob_price' => $request->fob_price,
-                'status' => ProductStatus::ACTIVE,
-                'type' => ProductType::AgriEcom,
-                'country_id' => is_int($user->country) ? $user->country : 160,
-            ];
-
-            $product = $this->b2bProductRepository->create($data);
-
-            if ($request->hasFile('images')) {
-                $folder = folderNames('product', $name, null, 'images');
-                uploadMultipleB2BProductImage($request, 'images', $folder->folder, $product);
-            }
-
-            return $this->success(null, 'Product added successfully', 201);
-        } catch (\Exception $e) {
-            return $this->error(null, $e->getMessage(), 500);
-        }
-    }
-
     public function addProduct($request)
     {
         $currentUserId = userAuthId();
@@ -329,10 +264,11 @@ class SellerService extends Controller
                 'minimum_order_quantity' => $request->minimum_order_quantity,
                 'unit_price' => $request->unit,
                 'quantity' => $request->quantity,
+                'type' => $request->type,
                 'availability_quantity' => $request->quantity,
                 'default_currency' => $user->default_currency,
                 'fob_price' => $request->fob_price,
-                'status' => 'active',
+                'status' => ProductStatus::ACTIVE,
                 'country_id' => is_int($user->country) ? $user->country : 160,
             ];
 
