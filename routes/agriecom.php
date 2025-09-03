@@ -36,6 +36,22 @@ Route::middleware('validate.header')
                                 ->middleware('ensure.user');
                             Route::delete('/delete/{product_id}/{user_id}', 'deleteProduct')
                                 ->middleware('ensure.user');
+                            Route::get('/template', 'getTemplate');
+                            Route::post('/import', 'productImport');
+                            Route::get('/export/{user_id}/{type}', 'export');
+
+                            // Product Attributes
+                            Route::prefix('attribute')->group(function (): void {
+                                Route::post('/create', 'createAttribute');
+                                Route::get('/{user_id}', 'getAttribute')
+                                    ->middleware('ensure.user');
+                                Route::get('/{id}/{user_id}', 'getSingleAttribute')
+                                    ->middleware('ensure.user');
+                                Route::patch('/edit/{id}/{user_id}', 'updateAttribute')
+                                    ->middleware('ensure.user');
+                                Route::delete('/delete/{id}/{user_id}', 'deleteAttribute')
+                                    ->middleware('ensure.user');
+                            });
                         });
                 });
         });
