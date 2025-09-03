@@ -1,10 +1,11 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\AgriEcom\B2BSellerController;
+use App\Http\Controllers\Api\AgriEcom\B2BBuyerController;
 use App\Http\Controllers\Api\AgriEcom\AuthController;
 use App\Http\Controllers\Api\AgriEcom\SellerController;
 use App\Http\Controllers\Api\AgriEcom\B2BAuthController;
+use App\Http\Controllers\Api\AgriEcom\B2BSellerController;
 
 Route::middleware('validate.header')
     ->prefix('agriecom')
@@ -93,6 +94,22 @@ Route::middleware('validate.header')
                         Route::delete('/delete/{id}', 'deleteWithdrawalMethod');
                     });
                 });
+            });
+
+            // Buyer
+            Route::group(['middleware' => ['auth:api', 'auth.check', 'b2b_agriecom_seller.auth']], function () {
+  Route::controller(B2BBuyerController::class)->prefix('buyer')->group(
+                    function () {
+
+                        // profile
+                        Route::get('/profile', 'profile');
+                        Route::post('/edit-account', 'editAccount');
+                        Route::patch('/change-password', 'changePassword');
+                        Route::post('/change-2fa', 'change2Fa');
+                        Route::get('/company-info', 'companyInfo');
+                        Route::post('/edit-company', 'editCompany');
+                    }
+                );
             });
         });
     });
