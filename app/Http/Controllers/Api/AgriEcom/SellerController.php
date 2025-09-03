@@ -7,6 +7,8 @@ use App\Services\AgriEcom\SellerService;
 use App\Services\B2B\SellerService as B2BSellerService;
 use App\Services\User\SellerService as B2CSellerService;
 use Illuminate\Http\Request;
+use App\Http\Requests\AddAttributeRequest;
+use App\Http\Requests\ProductImportRequest;
 
 class SellerController extends Controller
 {
@@ -50,5 +52,51 @@ class SellerController extends Controller
     public function topSelling($userId)
     {
         return $this->b2cSellerService->topSelling($userId);
+    }
+
+    public function getTemplate()
+    {
+        return $this->b2cSellerService->getTemplate();
+    }
+
+    public function productImport(ProductImportRequest $request)
+    {
+        return $this->b2cSellerService->productImport($request);
+    }
+
+    public function export($userId, $type)
+    {
+        return $this->b2cSellerService->export($userId, $type);
+    }
+
+    public function createAttribute(AddAttributeRequest $request)
+    {
+        return $this->b2cSellerService->createAttribute($request);
+    }
+
+    public function getAttribute($userId)
+    {
+        return $this->b2cSellerService->getAttribute($userId);
+    }
+
+    public function getSingleAttribute($id, $userId)
+    {
+        return $this->b2cSellerService->getSingleAttribute($id, $userId);
+    }
+
+    public function updateAttribute(Request $request, $id, $userId)
+    {
+        $request->validate([
+            'name' => ['required', 'string'],
+            'values' => ['required', 'array'],
+            'use_for_variation' => ['required', 'boolean'],
+        ]);
+
+        return $this->b2cSellerService->updateAttribute($request, $id, $userId);
+    }
+
+    public function deleteAttribute($id, $userId)
+    {
+        return $this->b2cSellerService->deleteAttribute($id, $userId);
     }
 }
