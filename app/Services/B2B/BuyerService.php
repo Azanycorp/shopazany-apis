@@ -902,7 +902,6 @@ class BuyerService
         $auth = userAuth();
 
         $user = User::with('b2bCompany')
-            ->where('type', UserType::B2B_BUYER)
             ->where('id', $auth->id)
             ->first();
 
@@ -966,9 +965,8 @@ class BuyerService
     public function change2FA($data)
     {
         $authUser = userAuth();
-        $user = User::where('type', UserType::B2B_BUYER)
-        ->where('id', $authUser->id)
-        ->firstOrFail();
+        
+        $user = User::where('id', $authUser->id)->firstOrFail();
 
         $user->update([
             'two_factor_enabled' => $data->two_factor_enabled,

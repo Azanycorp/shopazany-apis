@@ -25,7 +25,7 @@ class B2BAgriEcomBuyer
             return $this->error(null, 'Unauthorized action.', 401);
         }
 
-        if ($user && $user->type !== UserType::B2B_BUYER) {
+        if ($user && $user->type !== UserType::B2B_AGRIECOM_BUYER) {
             return $this->error(null, 'Unauthorized action.', 401);
         }
 

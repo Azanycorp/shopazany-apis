@@ -11,6 +11,7 @@ use Illuminate\Foundation\Application;
 use App\Http\Middleware\AgriEcomSeller;
 use App\Http\Middleware\ValidateHeader;
 use App\Http\Middleware\SuperAdminCheck;
+use App\Http\Middleware\B2BAgriEcomBuyer;
 use App\Http\Middleware\CheckUserCountry;
 use App\Http\Middleware\B2BAgriEcomSeller;
 use App\Http\Middleware\EnsureUserIsOwner;

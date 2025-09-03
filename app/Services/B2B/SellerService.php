@@ -227,7 +227,7 @@ class SellerService extends Controller
         if ($currentUserId != $request->user_id) {
             return $this->error(null, 'Unauthorized action.', 401);
         }
-
+        
         $user = User::find($currentUserId);
 
         if (! $user) {
