@@ -71,6 +71,18 @@ Route::middleware('validate.header')
                         Route::delete('/delete/{user_id}/{shipping_id}', 'deleteShipping');
                     });
 
+                    // Product
+                    Route::prefix('product')->group(function (): void {
+                        Route::post('/add', 'addProduct');
+                        Route::get('/analytic/{user_id}', 'getAnalytics');
+                        Route::get('/details/{product_id}/{user_id}', 'getProductById');
+                        Route::post('/update', 'updateProduct');
+                        Route::delete('/delete/{user_id}/{product_id}', 'deleteProduct');
+                        Route::post('import', 'productImport');
+                        Route::post('export/{user_id}/{type}', 'export');
+                        Route::get('/{user_id}', 'getAllProduct');
+                    });
+
                     // payment method
                     Route::prefix('withdrawal-method')->group(function (): void {
                         Route::get('/', 'allWithdrawalMethods');

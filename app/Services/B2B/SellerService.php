@@ -264,7 +264,7 @@ class SellerService extends Controller
                 'minimum_order_quantity' => $request->minimum_order_quantity,
                 'unit_price' => $request->unit,
                 'quantity' => $request->quantity,
-                'type' => $request->type,
+                'type' => $request->type ?? null,
                 'availability_quantity' => $request->quantity,
                 'default_currency' => $user->default_currency,
                 'fob_price' => $request->fob_price,

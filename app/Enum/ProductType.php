@@ -4,8 +4,8 @@ namespace App\Enum;
 
 enum ProductType: string
 {
-    const AgriEcom = 'Agricom';
+    case AgriEcom = 'agriEcom';
 
-    const B2B = 'b2b';
+    case B2B = 'b2b';
 
 }

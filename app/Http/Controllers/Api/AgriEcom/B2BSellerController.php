@@ -117,9 +117,42 @@ class B2BSellerController extends Controller
         return $this->service->deleteMethod($id);
     }
 
-    public function addProduct(AddProductRequest $request)
+    public function productImport(Request $request)
     {
-        return $this->service->addAgricomProduct($request);
+        return $this->service->b2bproductImport($request);
     }
 
+    public function export(Request $request, $userId)
+    {
+        return $this->service->exportSellerProduct($request, $userId);
+    }
+    
+    public function addProduct(AddProductRequest $request)
+    {
+        return $this->service->addProduct($request);
+    }
+
+    public function getAllProduct(Request $request)
+    {
+        return $this->service->getAllProduct($request);
+    }
+
+    public function updateProduct(Request $request)
+    {
+        return $this->service->updateProduct($request);
+    }
+
+    public function getProductById(int $product_id, $user_id)
+    {
+        return $this->service->getProductById($product_id, $user_id);
+    }
+
+    public function deleteProduct(int $user_id, $product_id)
+    {
+        return $this->service->deleteProduct($user_id, $product_id);
+    }
+    public function getAnalytics(int $user_id)
+    {
+        return $this->service->getAnalytics($user_id);
+    }
 }
