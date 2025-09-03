@@ -97,10 +97,8 @@ Route::middleware('validate.header')
             });
 
             // Buyer
-            Route::group(['middleware' => ['auth:api', 'auth.check', 'b2b_agriecom_seller.auth']], function () {
-  Route::controller(B2BBuyerController::class)->prefix('buyer')->group(
-                    function () {
-
+            Route::group(['middleware' => ['auth:api', 'auth.check', 'b2b_agriecom_buyer.auth']], function () {
+                Route::controller(B2BBuyerController::class)->prefix('buyer')->group(function () {
                         // profile
                         Route::get('/profile', 'profile');
                         Route::post('/edit-account', 'editAccount');

@@ -59,7 +59,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'tx.replay' => TransactionReplayShield::class,
             'burst.guard' => BurstGuard::class,
             'agriecom_seller.auth' => AgriEcomSeller::class,
-            'b2b_agriecom_seller.auth' => B2BAgriEcomSeller::class
+            'b2b_agriecom_seller.auth' => B2BAgriEcomSeller::class,
+            'b2b_agriecom_buyer.auth' => B2BAgriEcomBuyer::class
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
