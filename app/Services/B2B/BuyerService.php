@@ -965,7 +965,7 @@ class BuyerService
     public function change2FA($data)
     {
         $authUser = userAuth();
-        
+
         $user = User::where('id', $authUser->id)->firstOrFail();
 
         $user->update([
@@ -1030,7 +1030,7 @@ class BuyerService
     {
         $currentUserId = userAuthId();
 
-        $addresses = BuyerShippingAddress::with(['state', 'country'])->where('user_id', $currentUserId)->get();
+        $addresses = BuyerShippingAddress::with(['state', 'country'])->where('user_id', $currentUserId)->latest()->get();
 
         return $this->success(B2BBuyerShippingAddressResource::collection($addresses), 'All address');
     }
