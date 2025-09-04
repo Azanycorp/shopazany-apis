@@ -73,7 +73,7 @@ class SellerService extends Controller
         }
     }
 
-    public function createProduct($request)
+    public function createProduct($request, ?string $type = null)
     {
         $currentUser = userAuth();
 
@@ -98,7 +98,7 @@ class SellerService extends Controller
         DB::beginTransaction();
         try {
             $url = $this->uploadFrontImage($request, $folderPath);
-            $product = $this->createProductRecord($request, $user, $slug, $url);
+            $product = $this->createProductRecord($request, $user, $slug, $url, $type);
             $this->uploadAdditionalImages($request, $name, $product);
             $this->createProductVariations($request, $product, $name);
 
