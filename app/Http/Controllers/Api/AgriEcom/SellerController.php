@@ -2,20 +2,23 @@
 
 namespace App\Http\Controllers\Api\AgriEcom;
 
-use App\Http\Controllers\Controller;
-use App\Services\AgriEcom\SellerService;
-use App\Services\B2B\SellerService as B2BSellerService;
-use App\Services\User\SellerService as B2CSellerService;
 use Illuminate\Http\Request;
+use App\Services\User\UserService;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\WithdrawalRequest;
+use App\Services\AgriEcom\SellerService;
 use App\Http\Requests\AddAttributeRequest;
 use App\Http\Requests\ProductImportRequest;
+use App\Services\B2B\SellerService as B2BSellerService;
+use App\Services\User\SellerService as B2CSellerService;
 
 class SellerController extends Controller
 {
     public function __construct(
         protected SellerService $sellerService,
         protected B2BSellerService $b2bSellerService,
-        protected B2CSellerService $b2cSellerService
+        protected B2CSellerService $b2cSellerService,
+        protected UserService $userService
     )
     {}
 
@@ -98,5 +101,37 @@ class SellerController extends Controller
     public function deleteAttribute($id, $userId)
     {
         return $this->b2cSellerService->deleteAttribute($id, $userId);
+    }
+
+    public function addMethod(Request $request)
+    {
+        $request->validate([
+            'user_id' => ['required', 'integer', 'exists:users,id'],
+            'type' => ['required', 'in:bank_transfer'],
+            'platform' => ['required', 'in:paystack,authorize'],
+            'is_default' => ['required', 'boolean'],
+        ]);
+
+        return $this->userService->addPaymentMethod($request);
+    }
+
+    public function withdrawalMethod($userId)
+    {
+        return $this->userService->getPaymentMethod($userId);
+    }
+
+    public function withdrawalRequest(WithdrawalRequest $request)
+    {
+        return $this->userService->withdraw($request);
+    }
+
+    public function withdrawalHistory($userId)
+    {
+        return $this->userService->withdrawalHistory($userId);
+    }
+
+    public function profile($userId)
+    {
+        return $this->sellerService->profile($userId);
     }
 }

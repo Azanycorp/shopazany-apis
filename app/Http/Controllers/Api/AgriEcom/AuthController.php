@@ -13,10 +13,6 @@ class AuthController extends Controller
         protected AuthService $authService
     )
     {}
-    public function login(Request $request)
-    {
-        return $this->authService->login($request);
-    }
 
     public function register(RegisterRequest $request)
     {

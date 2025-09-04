@@ -14,10 +14,6 @@ use App\Trait\HttpResponse;
 class AuthService
 {
     use HttpResponse;
-    public function login($request)
-    {
-        // Implement login logic
-    }
 
     public function register($request)
     {
