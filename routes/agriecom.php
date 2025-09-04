@@ -53,6 +53,20 @@ Route::middleware('validate.header')
                                     ->middleware('ensure.user');
                             });
                         });
+
+                    // Withdrawal
+                    Route::prefix('withdrawal')->group(function (): void {
+                        Route::post('/', 'addMethod');
+                        Route::get('/history/{user_id}', 'withdrawalHistory');
+                        Route::get('/method/{user_id}', 'withdrawalMethod');
+                        Route::post('/request', 'withdrawalRequest')
+                            ->middleware(['tx.replay', 'burst.guard']);
+                    });
+
+                    // Profile
+                    Route::prefix('profile')->group(function (): void {
+                        Route::get('/{user_id}', 'profile');
+                    });
                 });
         });
 
