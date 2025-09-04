@@ -40,4 +40,10 @@ class B2BBuyerController extends Controller
     {
         return $this->buyerService->editCompany($request);
     }
+      // Shipping Address
+
+    public function addShippingAddress(B2BBuyerShippingAddressRequest $request)
+    {
+        return $this->buyerService->addShippingAddress($request);
+    }
 }
