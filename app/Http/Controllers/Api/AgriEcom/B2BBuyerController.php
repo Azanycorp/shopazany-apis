@@ -72,10 +72,20 @@ class B2BBuyerController extends Controller
         return $this->buyerService->setDefaultAddress($id);
     }
 
-     // Dasbaord
+    // Dasbaord
     public function dashboard()
     {
         return $this->buyerService->getDashboardDetails();
     }
 
+    // Orders
+    public function allOrders()
+    {
+        return $this->buyerService->allOrders();
+    }
+
+    public function getOrderDetails($id)
+    {
+        return $this->buyerService->orderDetails($id);
+    }
 }
