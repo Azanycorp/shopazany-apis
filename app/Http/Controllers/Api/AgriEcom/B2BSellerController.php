@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\AgriEcom;
 use Illuminate\Http\Request;
 use App\Services\B2B\SellerService;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\B2B\AddProductRequest;
 use App\Http\Requests\ChangePasswordRequest;
 use App\Http\Requests\B2B\SellerShippingRequest;
 use App\Http\Requests\B2B\WithdrawalMethodRequest;
@@ -40,7 +41,7 @@ class B2BSellerController extends Controller
     {
         return $this->service->getDashboardDetails();
     }
-    
+
     public function getEarningReport()
     {
         return $this->service->getEarningReport();
@@ -55,6 +56,7 @@ class B2BSellerController extends Controller
     {
         return $this->service->withdrawalRequest($request);
     }
+
     public function addShipping(SellerShippingRequest $request)
     {
         return $this->service->addShipping($request);
@@ -114,5 +116,45 @@ class B2BSellerController extends Controller
     public function deleteWithdrawalMethod($id)
     {
         return $this->service->deleteMethod($id);
+    }
+
+    public function productImport(Request $request)
+    {
+        return $this->service->b2bproductImport($request);
+    }
+
+    public function export(Request $request, $userId)
+    {
+        return $this->service->exportSellerProduct($request, $userId);
+    }
+
+    public function addProduct(AddProductRequest $request)
+    {
+        return $this->service->addProduct($request);
+    }
+
+    public function getAllProduct(Request $request)
+    {
+        return $this->service->getAllProduct($request);
+    }
+
+    public function updateProduct(Request $request)
+    {
+        return $this->service->updateProduct($request);
+    }
+
+    public function getProductById(int $product_id, $user_id)
+    {
+        return $this->service->getProductById($product_id, $user_id);
+    }
+
+    public function deleteProduct(int $user_id, $product_id)
+    {
+        return $this->service->deleteProduct($user_id, $product_id);
+    }
+    
+    public function getAnalytics(int $user_id)
+    {
+        return $this->service->getAnalytics($user_id);
     }
 }

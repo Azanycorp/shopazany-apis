@@ -49,7 +49,7 @@ class AuthService
                 $this->handleReferrers($request->referrer_code, $user);
             }
 
-            $description = "User with email: {$request->email} signed up as b2b seller";
+            $description = "User with email: {$request->email} signed up as b2b agriEcomm seller";
             $response = $this->success(null, 'Created successfully', 201);
             $action = UserLog::CREATED;
 

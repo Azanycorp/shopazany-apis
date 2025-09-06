@@ -2,45 +2,47 @@
 
 namespace App\Services\B2B;
 
+use App\Models\Rfq;
+use App\Models\User;
+use App\Enum\UserType;
+use App\Trait\Payment;
+use App\Models\B2bOrder;
 use App\Enum\MailingEnum;
 use App\Enum\OrderStatus;
 use App\Enum\PaymentType;
-use App\Enum\TransactionStatus;
-use App\Enum\UserType;
-use App\Enum\WithdrawalStatus;
-use App\Http\Controllers\Controller;
-use App\Http\Resources\B2BOrderResource;
-use App\Http\Resources\B2BProductResource;
-use App\Http\Resources\B2BSellerProfileResource;
-use App\Http\Resources\B2BSellerShippingAddressResource;
-use App\Imports\B2BProductImport;
-use App\Imports\ProductImport;
-use App\Mail\B2BDeliveredOrderMail;
-use App\Mail\B2BOrderEmail;
-use App\Mail\B2BSHippedOrderMail;
-use App\Models\B2bOrder;
-use App\Models\B2bOrderFeedback;
-use App\Models\B2bOrderRating;
+use App\Enum\ProductType;
 use App\Models\B2BProduct;
-use App\Models\B2BSellerShippingAddress;
-use App\Models\PaymentMethod;
-use App\Models\Rfq;
 use App\Models\RfqMessage;
-use App\Models\User;
 use App\Models\UserWallet;
-use App\Models\WithdrawalRequest;
-use App\Repositories\B2BProductRepository;
-use App\Repositories\B2BSellerShippingRepository;
-use App\Services\TransactionService;
+use App\Enum\ProductStatus;
+use App\Mail\B2BOrderEmail;
 use App\Trait\HttpResponse;
-use App\Trait\Payment;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use App\Models\PaymentMethod;
+use App\Enum\WithdrawalStatus;
+use App\Imports\ProductImport;
+use App\Models\B2bOrderRating;
+use Illuminate\Support\Carbon;
+use App\Enum\TransactionStatus;
+use App\Models\B2bOrderFeedback;
+use App\Imports\B2BProductImport;
+use App\Mail\B2BSHippedOrderMail;
+use App\Models\WithdrawalRequest;
+use Illuminate\Support\Facades\DB;
+use App\Mail\B2BDeliveredOrderMail;
+use App\Http\Controllers\Controller;
+use App\Services\TransactionService;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Storage;
+use App\Http\Resources\B2BOrderResource;
+use App\Models\B2BSellerShippingAddress;
+use App\Http\Resources\B2BProductResource;
+use App\Repositories\B2BProductRepository;
+use App\Http\Resources\B2BSellerProfileResource;
+use App\Repositories\B2BSellerShippingRepository;
+use App\Http\Resources\B2BSellerShippingAddressResource;
 
 class SellerService extends Controller
 {
@@ -262,10 +264,11 @@ class SellerService extends Controller
                 'minimum_order_quantity' => $request->minimum_order_quantity,
                 'unit_price' => $request->unit,
                 'quantity' => $request->quantity,
+                'type' => $request->type ?? null,
                 'availability_quantity' => $request->quantity,
                 'default_currency' => $user->default_currency,
                 'fob_price' => $request->fob_price,
-                'status' => 'active',
+                'status' => ProductStatus::ACTIVE,
                 'country_id' => is_int($user->country) ? $user->country : 160,
             ];
 
@@ -308,6 +311,7 @@ class SellerService extends Controller
         if ($currentUserId != $user_id) {
             return $this->error(null, 'Unauthorized action.', 401);
         }
+        
         $prod = $this->b2bProductRepository->find($product_id);
 
         return $this->success(new B2BProductResource($prod), 'Product details');
@@ -991,7 +995,7 @@ class SellerService extends Controller
     {
         $currentUserId = userAuthId();
 
-       $wallet = UserWallet::firstOrCreate(
+        $wallet = UserWallet::firstOrCreate(
             ['seller_id' => $currentUserId]
         );
 
@@ -1011,7 +1015,7 @@ class SellerService extends Controller
         if (! $user) {
             return $this->error(null, 'User not found', 404);
         }
-        
+
         $wallet = UserWallet::firstOrCreate(
             ['seller_id' => $currentUserId]
         );
