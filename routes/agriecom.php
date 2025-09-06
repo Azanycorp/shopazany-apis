@@ -128,11 +128,7 @@ Route::middleware('validate.header')
             // Buyer
             Route::group(['middleware' => ['auth:api', 'auth.check', 'b2b_agriecom_buyer.auth']], function () {
                 Route::controller(B2BBuyerController::class)->prefix('buyer')->group(function () {
-                    Route::get('dashboard', 'dashboard');
-                    Route::get('rfq-details/{id}', 'getRfqDetails');
-                    Route::get('orders', 'allOrders');
-                    Route::get('order-details/{id}', 'getOrderDetails');
-
+                   
 
                     // profile
                     Route::get('/profile', 'profile');
