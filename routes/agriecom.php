@@ -86,6 +86,10 @@ Route::middleware('validate.header')
                 Route::post('/buyer/signup', 'buyerOnboarding');
             });
 
+            Route::controller(B2BBuyerController::class)->prefix('buyer')->group(function () {
+                Route::get('/products', 'getProducts');
+                Route::get('/product/{slug}', 'getProductDetail');
+            });
 
             Route::group(['middleware' => ['auth:api', 'auth.check', 'b2b_agriecom_seller.auth']], function () {
                 Route::controller(B2BSellerController::class)
