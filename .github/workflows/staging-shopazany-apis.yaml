@@ -2,7 +2,7 @@ name: Build and Push Docker images to ECR
 
 on:
   push:
-    branches:  ["staging"]  # Trigger on push to the staging branch
+    branches:  ["stagings"]  # Trigger on push to the staging branch
 
 
 jobs:
