@@ -11,6 +11,7 @@ use Illuminate\Foundation\Application;
 use App\Http\Middleware\AgriEcomSeller;
 use App\Http\Middleware\ValidateHeader;
 use App\Http\Middleware\SuperAdminCheck;
+use App\Http\Middleware\B2BAgriEcomBuyer;
 use App\Http\Middleware\CheckUserCountry;
 use App\Http\Middleware\B2BAgriEcomSeller;
 use App\Http\Middleware\EnsureUserIsOwner;
@@ -59,7 +60,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'tx.replay' => TransactionReplayShield::class,
             'burst.guard' => BurstGuard::class,
             'agriecom_seller.auth' => AgriEcomSeller::class,
-            'b2b_agriecom_seller.auth' => B2BAgriEcomSeller::class
+            'b2b_agriecom_seller.auth' => B2BAgriEcomSeller::class,
+            'b2b_agriecom_buyer.auth' => B2BAgriEcomBuyer::class
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

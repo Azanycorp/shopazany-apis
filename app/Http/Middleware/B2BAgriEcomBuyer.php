@@ -2,13 +2,13 @@
 
 namespace App\Http\Middleware;
 
-use Closure;
 use App\Enum\UserType;
 use App\Trait\HttpResponse;
+use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class B2BAgriEcomSeller
+class B2BAgriEcomBuyer
 {
     use HttpResponse;
 
@@ -25,7 +25,7 @@ class B2BAgriEcomSeller
             return $this->error(null, 'Unauthorized action.', 401);
         }
 
-        if ($user && $user->type !== UserType::B2B_AGRIECOM_SELLER) {
+        if ($user && $user->type !== UserType::B2B_AGRIECOM_BUYER) {
             return $this->error(null, 'Unauthorized action.', 401);
         }
 
