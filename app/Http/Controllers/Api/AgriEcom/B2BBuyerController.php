@@ -40,6 +40,17 @@ class B2BBuyerController extends Controller
     {
         return $this->buyerService->editCompany($request);
     }
+
+     public function getProducts()
+    {
+        return $this->buyerService->getAgriEcomProducts();
+    }
+
+    public function getProductDetail($slug)
+    {
+        return $this->buyerService->getProductDetail($slug);
+    }
+
     // Shipping Address
 
     public function addShippingAddress(B2BBuyerShippingAddressRequest $request)

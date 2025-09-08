@@ -2,55 +2,56 @@
 
 namespace App\Services\B2B;
 
-use App\Enum\BannerType;
-use App\Enum\OrderStatus;
-use App\Enum\ProductStatus;
-use App\Enum\RefundRequestStatus;
-use App\Enum\RfqStatus;
-use App\Enum\UserStatus;
+use Carbon\Carbon;
+use App\Models\Rfq;
+use App\Models\Blog;
+use App\Models\User;
 use App\Enum\UserType;
-use App\Http\Resources\B2BBannerResource;
-use App\Http\Resources\B2BBestSellingProductResource;
-use App\Http\Resources\B2BBuyerShippingAddressResource;
-use App\Http\Resources\B2BCategoryResource;
-use App\Http\Resources\B2BOrderResource;
-use App\Http\Resources\B2BProductResource;
-use App\Http\Resources\B2BQuoteResource;
-use App\Http\Resources\B2BWishListResource;
-use App\Http\Resources\BlogResource;
-use App\Http\Resources\BuyerResource;
-use App\Http\Resources\ClientLogoResource;
-use App\Http\Resources\CustomerResource;
-use App\Http\Resources\PaymentResource;
-use App\Http\Resources\SliderResource;
-use App\Http\Resources\SocialLinkResource;
+use App\Models\Banner;
+use App\Enum\RfqStatus;
+use App\Models\Payment;
+use App\Enum\BannerType;
+use App\Enum\UserStatus;
+use App\Models\B2bOrder;
+use App\Models\B2bQuote;
+use App\Enum\OrderStatus;
+use App\Enum\ProductType;
 use App\Models\B2bBanner;
 use App\Models\B2bCompany;
-use App\Models\B2bOrder;
-use App\Models\B2bProdctLike;
-use App\Models\B2bProdctReview;
 use App\Models\B2BProduct;
-use App\Models\B2bProductCategory;
-use App\Models\B2bQuote;
-use App\Models\B2BRequestRefund;
-use App\Models\B2bWishList;
-use App\Models\Banner;
-use App\Models\Blog;
-use App\Models\BuyerShippingAddress;
 use App\Models\ClientLogo;
 use App\Models\PageBanner;
-use App\Models\Payment;
-use App\Models\Rfq;
 use App\Models\RfqMessage;
+use App\Enum\ProductStatus;
+use App\Models\B2bWishList;
 use App\Models\SliderImage;
-use App\Models\SocialSetting;
-use App\Models\User;
 use App\Trait\HttpResponse;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use App\Models\B2bProdctLike;
+use App\Models\SocialSetting;
+use App\Models\B2bProdctReview;
+use App\Models\B2BRequestRefund;
+use App\Enum\RefundRequestStatus;
+use App\Models\B2bProductCategory;
+use Illuminate\Support\Facades\DB;
+use App\Http\Resources\BlogResource;
+use App\Models\BuyerShippingAddress;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use App\Http\Resources\BuyerResource;
+use App\Http\Resources\SliderResource;
+use App\Http\Resources\PaymentResource;
+use App\Http\Resources\B2BOrderResource;
+use App\Http\Resources\B2BQuoteResource;
+use App\Http\Resources\CustomerResource;
+use App\Http\Resources\B2BBannerResource;
+use App\Http\Resources\B2BProductResource;
+use App\Http\Resources\ClientLogoResource;
+use App\Http\Resources\SocialLinkResource;
+use App\Http\Resources\B2BCategoryResource;
+use App\Http\Resources\B2BWishListResource;
+use App\Http\Resources\B2BBestSellingProductResource;
+use App\Http\Resources\B2BBuyerShippingAddressResource;
 
 class BuyerService
 {
@@ -278,6 +279,25 @@ class BuyerService
             ->get();
 
         return $this->success($banners, 'home-banners');
+    }
+
+    public function getAgriEcomProducts()
+    {
+        $products = B2BProduct::with([
+            'category',
+            'user',
+            'b2bLikes',
+            'b2bProductReview.user',
+            'subCategory',
+            'country',
+            'b2bProductImages',
+        ])
+            ->whereStatus(ProductStatus::ACTIVE)
+            ->where('type', ProductType::AgriEcom)
+            ->latest()
+            ->get();
+
+        return $this->success(B2BProductResource::collection($products), 'Products');
     }
 
     public function getProducts()
