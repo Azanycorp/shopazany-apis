@@ -87,6 +87,8 @@ Route::middleware('validate.header')
             });
 
             Route::controller(B2BBuyerController::class)->prefix('buyer')->group(function () {
+
+                Route::get('/search-products', 'searchProduct');
                 Route::get('/products', 'getProducts');
                 Route::get('/product/{slug}', 'getProductDetail');
             });

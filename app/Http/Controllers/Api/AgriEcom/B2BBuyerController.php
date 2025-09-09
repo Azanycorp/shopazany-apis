@@ -41,11 +41,16 @@ class B2BBuyerController extends Controller
         return $this->buyerService->editCompany($request);
     }
 
-     public function getProducts()
+    public function getProducts()
     {
         return $this->buyerService->getAgriEcomProducts();
     }
 
+    public function searchProduct()
+    {
+        return $this->buyerService->searchProduct();
+    }
+    
     public function getProductDetail($slug)
     {
         return $this->buyerService->getProductDetail($slug);
