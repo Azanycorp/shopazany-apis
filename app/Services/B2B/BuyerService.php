@@ -300,6 +300,31 @@ class BuyerService
         return $this->success(B2BProductResource::collection($products), 'Products');
     }
 
+    public function searchAgriEcomProducts()
+    {
+        $searchQuery = request()->input('search');
+
+        $type = request()->input('type');
+
+        $products = B2BProduct::with([
+            'country',
+            'b2bProductReview.user',
+            'b2bLikes',
+            'b2bProductImages',
+            'category',
+            'subCategory',
+            'user',
+        ])
+            ->where('type', $type)
+            ->where(function ($query) use ($searchQuery) {
+                $query->where('name', 'LIKE', '%' . $searchQuery . '%')
+                    ->orWhere('unit_price', 'LIKE', '%' . $searchQuery . '%');
+            })
+            ->get();
+
+        return $this->success(B2BProductResource::collection($products), 'Products filtered');
+    }
+
     public function getProducts()
     {
         $products = B2BProduct::with([
