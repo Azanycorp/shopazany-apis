@@ -87,7 +87,6 @@ Route::middleware('validate.header')
             });
 
             Route::controller(B2BBuyerController::class)->prefix('buyer')->group(function () {
-
                 Route::get('/featured-products', 'featuredProduct');
                 Route::get('/search-products', 'searchProduct');
                 Route::get('/products', 'getProducts');
