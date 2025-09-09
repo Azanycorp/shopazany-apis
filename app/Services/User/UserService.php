@@ -66,9 +66,7 @@ class UserService extends Controller
             'public_id' => $image['public_id'] ?? $user->public_id,
         ]);
 
-        return $this->success([
-            'user_id' => $user->id,
-        ], 'Updated successfully');
+        return $this->success(['user_id' => $user->id], 'Updated successfully');
     }
 
     public function bankAccount($request)
