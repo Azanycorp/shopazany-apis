@@ -11,6 +11,7 @@ use App\Http\Requests\AddAttributeRequest;
 use App\Http\Requests\ProductImportRequest;
 use App\Services\B2B\SellerService as B2BSellerService;
 use App\Services\User\SellerService as B2CSellerService;
+use App\Http\Requests\B2B\BusinessInformationRequest;
 
 class SellerController extends Controller
 {
@@ -22,7 +23,7 @@ class SellerController extends Controller
     )
     {}
 
-    public function createBusinessInformation(Request $request)
+    public function createBusinessInformation(BusinessInformationRequest $request)
     {
         return $this->b2bSellerService->businessInformation($request);
     }
