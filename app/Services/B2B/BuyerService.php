@@ -304,8 +304,6 @@ class BuyerService
     {
         $searchQuery = request()->input('search');
 
-        $type = request()->input('type');
-
         $products = B2BProduct::with([
             'country',
             'b2bProductReview.user',
@@ -315,7 +313,7 @@ class BuyerService
             'subCategory',
             'user',
         ])
-            ->where('type', $type)
+            ->where('type', ProductType::AgriEcom)
             ->where(function ($query) use ($searchQuery) {
                 $query->where('name', 'LIKE', '%' . $searchQuery . '%')
                     ->orWhere('unit_price', 'LIKE', '%' . $searchQuery . '%');
@@ -404,11 +402,14 @@ class BuyerService
         return $this->success(B2BBestSellingProductResource::collection($bestSellingProducts), 'Best selling products');
     }
 
+
     public function featuredProduct()
     {
         $countryId = request()->query('country_id');
 
-        $query = B2BProduct::with([
+        $type = request()->query('type');
+
+        $featuredProducts = B2BProduct::with([
             'shopCountry',
             'orders',
             'b2bProductReview.user',
@@ -419,16 +420,15 @@ class BuyerService
             'country',
             'b2bProductImages',
         ])
-            ->where('status', ProductStatus::ACTIVE);
-
-        if ($countryId) {
-            $query->where('country_id', $countryId);
-        }
-
-        $featuredProducts = $query->limit(8)->get();
+            ->where('status', ProductStatus::ACTIVE)
+            ->when($countryId, fn($q) => $q->where('country_id', $countryId))
+            ->when($type, fn($q) => $q->where('type', $type))
+            ->limit(8)
+            ->get();
 
         return $this->success(B2BProductResource::collection($featuredProducts), 'Featured products');
     }
+
 
     public function searchProduct()
     {
