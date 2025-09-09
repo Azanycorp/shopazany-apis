@@ -65,6 +65,7 @@ Route::middleware('validate.header')
 
                     // Profile
                     Route::prefix('profile')->group(function (): void {
+                        Route::post('/edit', 'editProfile');
                         Route::get('/{user_id}', 'profile');
                     });
                 });
