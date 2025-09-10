@@ -136,6 +136,7 @@ Route::middleware('validate.header')
                 Route::controller(B2BBuyerController::class)->prefix('buyer')->group(function () {
                     Route::post('/add-to-wish', 'addTowishList');
                     Route::post('/like-product', 'likeProduct');
+                    Route::get('/wish-list', 'wishList');
                     Route::delete('/wish/remove-item/{id}', 'removeItem');
 
                     Route::get('dashboard', 'dashboard');
