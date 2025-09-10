@@ -134,6 +134,7 @@ Route::middleware('validate.header')
             // Buyer
             Route::group(['middleware' => ['auth:api', 'auth.check', 'b2b_agriecom_buyer.auth']], function () {
                 Route::controller(B2BBuyerController::class)->prefix('buyer')->group(function () {
+                    Route::post('/add-to-wish', 'addTowishList');
 
                     Route::get('dashboard', 'dashboard');
                     Route::get('rfq-details/{id}', 'getRfqDetails');
