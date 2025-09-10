@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Api\AgriEcom;
 
-use App\Http\Controllers\Controller;
-use App\Http\Requests\B2BBuyerShippingAddressRequest;
-use App\Http\Requests\ChangePasswordRequest;
-use App\Services\B2B\BuyerService;
 use Illuminate\Http\Request;
+use App\Services\B2B\BuyerService;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\WishListRequest;
+use App\Http\Requests\LikeProductRequest;
+use App\Http\Requests\ChangePasswordRequest;
+use App\Http\Requests\B2BBuyerShippingAddressRequest;
 
 class B2BBuyerController extends Controller
 {
@@ -62,11 +64,11 @@ class B2BBuyerController extends Controller
     }
 
     // Wish list
-    public function addTowishList(Request $request)
+    public function addTowishList(WishListRequest $request)
     {
         return $this->buyerService->addToWishList($request);
     }
-    
+
     public function wishList()
     {
         return $this->buyerService->myWishList();
@@ -77,9 +79,13 @@ class B2BBuyerController extends Controller
         return $this->buyerService->removeItem($id);
     }
 
+    public function likeProduct(LikeProductRequest $request)
+    {
+        return $this->buyerService->likeProduct($request);
+    }
+
 
     // Shipping Address
-
     public function addShippingAddress(B2BBuyerShippingAddressRequest $request)
     {
         return $this->buyerService->addShippingAddress($request);
