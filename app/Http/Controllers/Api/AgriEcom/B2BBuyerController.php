@@ -50,7 +50,7 @@ class B2BBuyerController extends Controller
     {
         return $this->buyerService->searchAgriEcomProducts();
     }
-    
+
     public function featuredProduct()
     {
         return $this->buyerService->featuredProduct();
@@ -60,6 +60,23 @@ class B2BBuyerController extends Controller
     {
         return $this->buyerService->getProductDetail($slug);
     }
+
+    // Wish list
+    public function addTowishList(Request $request)
+    {
+        return $this->buyerService->addToWishList($request);
+    }
+    
+    public function wishList()
+    {
+        return $this->buyerService->myWishList();
+    }
+
+    public function removeItem($id)
+    {
+        return $this->buyerService->removeItem($id);
+    }
+
 
     // Shipping Address
 
