@@ -135,4 +135,21 @@ class SellerController extends Controller
     {
         return $this->sellerService->profile($userId);
     }
+
+    public function editProfile(Request $request)
+    {
+        $request->validate([
+            'user_id' => ['nullable', 'integer', 'exists:users,id'],
+            'first_name' => ['nullable', 'string'],
+            'last_name' => ['nullable', 'string'],
+            'middlename' => ['nullable', 'string'],
+            'email' => ['nullable', 'email'],
+            'date_of_birth' => ['nullable', 'date'],
+            'bio' => ['nullable', 'string'],
+            'gender' => ['nullable', 'string'],
+            'image' => ['nullable', 'image'],
+        ]);
+
+        return $this->sellerService->editProfile($request);
+    }
 }
