@@ -55,7 +55,11 @@ class HomeService
                 'products.country_id'
             )
             ->when($countryId, fn($q) => $q->where('orders.country_id', $countryId))
-            ->when($type, fn($q) => $q->where('products.type', $type))
+            ->when($type, function ($q) use ($type) {
+                $q->where('products.type', $type);
+            }, function ($q) {
+                $q->where('products.type', '!=', 'agriecom');
+            })
             ->orderBy('total_orders', 'DESC')
             ->take(10);
 
@@ -90,7 +94,11 @@ class HomeService
                 },
             ])
             ->where('status', ProductStatus::ACTIVE)
-            ->when($type, fn($q) => $q->where('type', $type))
+            ->when($type, function ($q) use ($type) {
+                $q->where('type', $type);
+            }, function ($q) {
+                $q->where('type', '!=', 'agriecom');
+            })
             ->when($countryId, fn($q) => $q->where('country_id', $countryId))
             ->paginate(25);
 
@@ -120,7 +128,11 @@ class HomeService
             ])
             ->where('is_featured', true)
             ->where('status', ProductStatus::ACTIVE)
-            ->when($type, fn($q) => $q->where('type', $type))
+            ->when($type, function ($q) use ($type) {
+                $q->where('type', $type);
+            }, function ($q) {
+                $q->where('type', '!=', 'agriecom');
+            })
             ->when($countryId, fn($q) => $q->where('country_id', $countryId))
             ->limit(8)
             ->get();
@@ -150,7 +162,11 @@ class HomeService
                 },
             ])
             ->where('status', ProductStatus::ACTIVE)
-            ->when($type, fn($q) => $q->where('type', $type))
+            ->when($type, function ($q) use ($type) {
+                $q->where('type', $type);
+            }, function ($q) {
+                $q->where('type', '!=', 'agriecom');
+            })
             ->when($countryId, fn($q) => $q->where('country_id', $countryId))
             ->latest()
             ->limit(10)
@@ -180,7 +196,11 @@ class HomeService
                     $query->select('id', 'product_id', 'variation', 'sku', 'price', 'stock', 'image');
                 },
             ])
-            ->when($type, fn($q) => $q->where('type', $type))
+            ->when($type, function ($q) use ($type) {
+                $q->where('type', $type);
+            }, function ($q) {
+                $q->where('type', '!=', 'agriecom');
+            })
             ->when($countryId, fn($q) => $q->where('country_id', $countryId));
 
         $query->whereBetween('price', [2, 10000])
