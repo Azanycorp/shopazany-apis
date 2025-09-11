@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\WishListRequest;
 use App\Http\Requests\LikeProductRequest;
 use App\Http\Requests\ChangePasswordRequest;
+use App\Http\Requests\SendFromWishListRequest;
 use App\Http\Requests\B2BBuyerShippingAddressRequest;
 
 class B2BBuyerController extends Controller
@@ -106,6 +107,10 @@ class B2BBuyerController extends Controller
         return $this->buyerService->sendRfq($request);
     }
 
+    public function sendFromWishList(SendFromWishListRequest $request)
+    {
+        return $this->buyerService->sendFromWishList($request);
+    }
     // Shipping Address
     public function addShippingAddress(B2BBuyerShippingAddressRequest $request)
     {
