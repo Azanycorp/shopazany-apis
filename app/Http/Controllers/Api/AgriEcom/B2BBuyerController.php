@@ -84,6 +84,10 @@ class B2BBuyerController extends Controller
         return $this->buyerService->likeProduct($request);
     }
 
+    public function requestQuote(Request $request)
+    {
+        return $this->buyerService->sendQuote($request);
+    }
 
     // Shipping Address
     public function addShippingAddress(B2BBuyerShippingAddressRequest $request)

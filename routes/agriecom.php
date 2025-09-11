@@ -139,6 +139,7 @@ Route::middleware('validate.header')
                     Route::post('/like-product', 'likeProduct');
                     Route::get('/wish-list', 'wishList');
                     Route::delete('/wish/remove-item/{id}', 'removeItem');
+                    Route::post('add-quote', 'requestQuote');
 
                     Route::get('dashboard', 'dashboard');
                     Route::get('rfq-details/{id}', 'getRfqDetails');
