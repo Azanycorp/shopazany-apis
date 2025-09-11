@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\AgriEcom;
 
 use Illuminate\Http\Request;
 use App\Services\B2B\BuyerService;
+use App\Http\Requests\QuoteRequest;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\WishListRequest;
 use App\Http\Requests\LikeProductRequest;
@@ -89,10 +90,20 @@ class B2BBuyerController extends Controller
     {
         return $this->buyerService->allQuotes();
     }
-    
-    public function requestQuote(Request $request)
+
+    public function requestQuote(LikeProductRequest $request)
     {
         return $this->buyerService->sendQuote($request);
+    }
+
+    public function sendAllQuotes()
+    {
+        return $this->buyerService->sendMutipleQuotes();
+    }
+
+    public function sendSingleQuote(QuoteRequest $request)
+    {
+        return $this->buyerService->sendRfq($request);
     }
 
     // Shipping Address

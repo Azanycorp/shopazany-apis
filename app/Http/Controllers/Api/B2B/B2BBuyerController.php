@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\B2B;
 
 use Illuminate\Http\Request;
 use App\Services\B2B\BuyerService;
+use App\Http\Requests\QuoteRequest;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\WishListRequest;
 use App\Http\Requests\LikeProductRequest;
@@ -24,7 +25,7 @@ class B2BBuyerController extends Controller
         return $this->buyerService->requestRefund($request);
     }
 
-    public function requestQuote(Request $request)
+    public function requestQuote(LikeProductRequest $request)
     {
         return $this->buyerService->sendQuote($request);
     }
@@ -40,7 +41,7 @@ class B2BBuyerController extends Controller
         return $this->buyerService->sendMutipleQuotes();
     }
 
-    public function sendSingleQuote(Request $request)
+    public function sendSingleQuote(QuoteRequest $request)
     {
         return $this->buyerService->sendRfq($request);
     }
