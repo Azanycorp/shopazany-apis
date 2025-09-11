@@ -47,12 +47,12 @@ class B2BBuyerController extends Controller
 
     public function getProducts()
     {
-        return $this->buyerService->getAgriEcomProducts();
+        return $this->buyerService->getProducts();
     }
 
     public function searchProduct()
     {
-        return $this->buyerService->searchAgriEcomProducts();
+        return $this->buyerService->searchProduct();
     }
 
     public function featuredProduct()
