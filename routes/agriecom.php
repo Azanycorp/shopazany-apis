@@ -140,6 +140,9 @@ Route::middleware('validate.header')
                     Route::get('/wish-list', 'wishList');
                     Route::delete('/wish/remove-item/{id}', 'removeItem');
                     Route::post('add-quote', 'requestQuote');
+                    Route::post('/wish/send-quote', 'sendFromWishList');
+                    Route::post('send-rfq', 'sendSingleQuote');
+                    Route::get('quotes', 'allQuotes');
 
                     Route::get('dashboard', 'dashboard');
                     Route::get('rfq-details/{id}', 'getRfqDetails');

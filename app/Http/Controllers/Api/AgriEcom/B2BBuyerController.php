@@ -84,6 +84,12 @@ class B2BBuyerController extends Controller
         return $this->buyerService->likeProduct($request);
     }
 
+    // Quotes
+    public function allQuotes()
+    {
+        return $this->buyerService->allQuotes();
+    }
+    
     public function requestQuote(Request $request)
     {
         return $this->buyerService->sendQuote($request);
