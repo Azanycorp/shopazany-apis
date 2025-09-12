@@ -322,13 +322,8 @@ class BuyerService
             ->take(10)
             ->get();
 
-        return $this->success(
-            B2BCategoryResource::collection($categories),
-            'Categories'
-        );
+        return $this->success(B2BCategoryResource::collection($categories), 'Categories');
     }
-
-
 
     public function allBlogs()
     {
@@ -359,13 +354,8 @@ class BuyerService
             }])
             ->get();
 
-        return $this->success(
-            B2BCategoryResource::collection($categories),
-            'Product Categories'
-        );
+        return $this->success(B2BCategoryResource::collection($categories), 'Product Categories');
     }
-
-
 
     public function bestSelling()
     {
@@ -462,8 +452,7 @@ class BuyerService
             'country',
             'b2bProductImages',
             'b2bProductReview.user' => function ($query): void {
-                $query->select('id', 'first_name', 'last_name')
-                    ->where('type', UserType::B2B_BUYER);
+                $query->select('id', 'first_name', 'last_name');
             },
         ])
             ->where('slug', $slug)
