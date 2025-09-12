@@ -32,17 +32,20 @@ class HomeService
         $countryId = request()->query('country_id');
         $type = request()->query('type');
 
-        $query = Product::with('shopCountry')->select(
-            'products.id',
-            'products.name',
-            'products.slug',
-            'products.image',
-            'products.price',
-            'products.description',
-            'products.category_id',
-            'products.country_id',
-            DB::raw('COUNT(orders.id) as total_orders'))
-            ->leftJoin('orders', 'orders.product_id', '=', 'products.id')
+        $query = Product::with('shopCountry')
+            ->select(
+                'products.id',
+                'products.name',
+                'products.slug',
+                'products.image',
+                'products.price',
+                'products.description',
+                'products.category_id',
+                'products.country_id',
+                DB::raw('COUNT(order_items.id) as total_orders')
+            )
+            ->leftJoin('order_items', 'order_items.product_id', '=', 'products.id')
+            ->leftJoin('orders', 'orders.id', '=', 'order_items.order_id')
             ->where('orders.status', OrderStatus::DELIVERED)
             ->groupBy(
                 'products.id',
@@ -55,11 +58,11 @@ class HomeService
                 'products.country_id'
             )
             ->when($countryId, fn($q) => $q->where('orders.country_id', $countryId))
-            ->when($type, function ($q) use ($type) {
-                $q->where('products.type', $type);
-            }, function ($q) {
-                $q->where('products.type', '!=', 'agriecom');
-            })
+            ->when(
+                $type,
+                fn($q) => $q->where('products.type', $type),
+                fn($q) => $q->where('products.type', '!=', 'agriecom')
+            )
             ->orderBy('total_orders', 'DESC')
             ->take(10);
 

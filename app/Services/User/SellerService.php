@@ -77,7 +77,7 @@ class SellerService extends Controller
     {
         $currentUser = userAuth();
 
-        if ($currentUser->id != $request->user_id || $currentUser->type != UserType::SELLER) {
+        if ($currentUser->id != $request->user_id || !in_array($currentUser->type, [UserType::SELLER, UserType::AGRIECOM_SELLER])) {
             return $this->error(null, 'Unauthorized action.', 401);
         }
 
@@ -527,8 +527,8 @@ class SellerService extends Controller
         }
 
         $orders = Order::whereHas('products', function ($query) use ($userId): void {
-            $query->where('user_id', $userId);
-        })
+                $query->where('user_id', $userId);
+            })
             ->with(['user', 'products.shopCountry'])
             ->orderBy('created_at', 'desc')
             ->take(8)
