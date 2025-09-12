@@ -304,17 +304,31 @@ class BuyerService
 
     public function categories()
     {
-        $categories = B2bProductCategory::with(['subcategory', 'products', 'products.b2bProductReview', 'products.b2bLikes'])
-            ->withCount('products') // Count products in the category
-            ->with(['products' => function ($query): void {
-                $query->withCount('b2bProductReview'); // Count reviews for each product
-            }])
+        $type = request()->query('type');
+
+        $categories = B2bProductCategory::with(['subcategory'])
+            ->withCount('products')
+            ->with([
+                'products' => function ($query) {
+                    $query->withCount('b2bProductReview');
+                },
+                'products.b2bProductReview',
+                'products.b2bLikes'
+            ])
+            ->when($type, function ($q) use ($type) {
+                $q->where('type', $type);
+            })
             ->where('featured', 1)
             ->take(10)
             ->get();
 
-        return $this->success(B2BCategoryResource::collection($categories), 'Categories');
+        return $this->success(
+            B2BCategoryResource::collection($categories),
+            'Categories'
+        );
     }
+
+
 
     public function allBlogs()
     {
@@ -332,16 +346,26 @@ class BuyerService
 
     public function getCategoryProducts()
     {
-        $categories = B2BProductCategory::select('id', 'name', 'slug', 'image')
-            ->with(['products.b2bProductReview', 'products.b2bLikes', 'subcategory'])
+        $type = request()->query('type');
+
+        $categories = B2BProductCategory::select('id', 'type', 'name', 'slug', 'image')
+            ->when($type, function ($q) use ($type) {
+                $q->where('type', $type); // filter categories only
+            })
+            ->with(['subcategory'])
             ->withCount('products')
-            ->with(['products' => function ($query): void {
-                $query->withCount('b2bProductReview'); // Count reviews for each product
+            ->with(['products' => function ($query) {
+                $query->withCount('b2bProductReview'); // no type filter on products
             }])
             ->get();
 
-        return $this->success(B2BCategoryResource::collection($categories), 'Categories products');
+        return $this->success(
+            B2BCategoryResource::collection($categories),
+            'Product Categories'
+        );
     }
+
+
 
     public function bestSelling()
     {
