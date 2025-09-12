@@ -61,8 +61,9 @@ class BuyerService
     public function allCustomers()
     {
         $query = trim(request()->input('search'));
+        $type = request()->query('type');
 
-        $users = User::where('type', UserType::B2B_BUYER)
+        $users = User::where('type', $type ?? UserType::B2B_BUYER)
             ->where(function ($queryBuilder) use ($query): void {
                 $queryBuilder->where('first_name', 'LIKE', '%' . $query . '%')
                     ->orWhere('last_name', 'LIKE', '%' . $query . '%')
@@ -84,7 +85,6 @@ class BuyerService
             'wishlist.product',
             'payments.order',
         ])
-            ->where('type', UserType::B2B_BUYER)
             ->where('id', $id)
             ->firstOrFail();
 
