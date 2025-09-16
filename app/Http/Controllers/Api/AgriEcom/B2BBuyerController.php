@@ -2,11 +2,15 @@
 
 namespace App\Http\Controllers\Api\AgriEcom;
 
-use App\Http\Controllers\Controller;
-use App\Http\Requests\B2BBuyerShippingAddressRequest;
-use App\Http\Requests\ChangePasswordRequest;
-use App\Services\B2B\BuyerService;
 use Illuminate\Http\Request;
+use App\Services\B2B\BuyerService;
+use App\Http\Requests\QuoteRequest;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\WishListRequest;
+use App\Http\Requests\LikeProductRequest;
+use App\Http\Requests\ChangePasswordRequest;
+use App\Http\Requests\SendFromWishListRequest;
+use App\Http\Requests\B2BBuyerShippingAddressRequest;
 
 class B2BBuyerController extends Controller
 {
@@ -41,9 +45,19 @@ class B2BBuyerController extends Controller
         return $this->buyerService->editCompany($request);
     }
 
-     public function getProducts()
+    public function getProducts()
     {
-        return $this->buyerService->getAgriEcomProducts();
+        return $this->buyerService->getProducts();
+    }
+
+    public function searchProduct()
+    {
+        return $this->buyerService->searchProduct();
+    }
+
+    public function featuredProduct()
+    {
+        return $this->buyerService->featuredProduct();
     }
 
     public function getProductDetail($slug)
@@ -51,8 +65,53 @@ class B2BBuyerController extends Controller
         return $this->buyerService->getProductDetail($slug);
     }
 
-    // Shipping Address
+    // Wish list
+    public function addTowishList(WishListRequest $request)
+    {
+        return $this->buyerService->addToWishList($request);
+    }
 
+    public function wishList()
+    {
+        return $this->buyerService->myWishList();
+    }
+
+    public function removeItem($id)
+    {
+        return $this->buyerService->removeItem($id);
+    }
+
+    public function likeProduct(LikeProductRequest $request)
+    {
+        return $this->buyerService->likeProduct($request);
+    }
+
+    // Quotes
+    public function allQuotes()
+    {
+        return $this->buyerService->allQuotes();
+    }
+
+    public function requestQuote(LikeProductRequest $request)
+    {
+        return $this->buyerService->sendQuote($request);
+    }
+
+    public function sendAllQuotes()
+    {
+        return $this->buyerService->sendMutipleQuotes();
+    }
+
+    public function sendSingleQuote(QuoteRequest $request)
+    {
+        return $this->buyerService->sendRfq($request);
+    }
+
+    public function sendFromWishList(SendFromWishListRequest $request)
+    {
+        return $this->buyerService->sendFromWishList($request);
+    }
+    // Shipping Address
     public function addShippingAddress(B2BBuyerShippingAddressRequest $request)
     {
         return $this->buyerService->addShippingAddress($request);
