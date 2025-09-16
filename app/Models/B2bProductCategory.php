@@ -11,6 +11,7 @@ class B2bProductCategory extends Model
 
     protected $fillable = [
         'name',
+        'type',
         'slug',
         'image',
         'featured',
