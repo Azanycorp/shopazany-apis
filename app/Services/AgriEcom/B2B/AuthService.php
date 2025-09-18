@@ -28,6 +28,7 @@ class AuthService
 
         try {
             $code = generateVerificationCode();
+
             $user = User::create([
                 'email' => $request->email,
                 'type' => UserType::B2B_AGRIECOM_SELLER,
@@ -37,6 +38,7 @@ class AuthService
                 'info_source' => $request->info_source ?? null,
                 'password' => bcrypt($request->password),
             ]);
+
             if ($request->referrer_code) {
                 $affiliate = User::with('wallet')
                     ->where(['referrer_code' => $request->referrer_code, 'is_affiliate_member' => 1])
