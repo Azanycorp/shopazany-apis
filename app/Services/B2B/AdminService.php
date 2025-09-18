@@ -33,7 +33,6 @@ use App\Models\WithdrawalRequest;
 use Illuminate\Support\Facades\DB;
 use App\Http\Resources\BlogResource;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
 use App\Http\Resources\AdminUserResource;
 use App\Http\Resources\B2BSellerResource;
 use App\Http\Resources\B2BProductResource;
@@ -57,13 +56,10 @@ class AdminService
     public function dashboard()
     {
         $users = User::all();
-
         $orders = B2bOrder::orderStats();
-
         $rfqs = Rfq::with(['buyer', 'seller'])->latest()->get();
-
         $completion_request = B2bOrder::where('status', OrderStatus::SHIPPED)->take(3)->get();
-        
+
         $data = [
             'buyers' => $users->where('type', UserType::B2B_BUYER)->count(),
             'sellers' => $users->where('type', UserType::B2B_SELLER)->count(),
@@ -83,9 +79,7 @@ class AdminService
     public function getAllRfq()
     {
         $rfqs = Rfq::with(['buyer', 'seller'])->latest()->get();
-
         $active_rfqs = Rfq::where('status', OrderStatus::COMPLETED)->count();
-
         $users = User::all();
 
         $data = [
@@ -179,7 +173,6 @@ class AdminService
             return $this->success(null, 'Order cancelled successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
-
             return $this->error(null, 'Failed to cancel order: ' . $e->getMessage(), 500);
         }
     }
@@ -269,11 +262,7 @@ class AdminService
             'password' => bcrypt($request->passowrd),
         ]);
 
-        $data = [
-            'user_id' => $user->id,
-        ];
-
-        return $this->success($data, 'Updated successfully');
+        return $this->success(['user_id' => $user->id], 'Updated successfully');
     }
 
     public function banSeller($id)
@@ -401,8 +390,6 @@ class AdminService
         if (! $user) {
             return $this->error(null, 'No user found.', 404);
         }
-
-
 
         if ($prod->user_id != $user_id) {
             return $this->error(null, 'Unauthorized action.', 401);
@@ -558,7 +545,6 @@ class AdminService
     public function removeBuyer($id)
     {
         $user = User::findOrFail($id);
-
         $user->delete();
 
         return $this->success(null, 'User removed successfully');
@@ -586,7 +572,6 @@ class AdminService
     public function approveBuyer($id)
     {
         $user = User::findOrFail($id);
-
         $user->is_admin_approve = ! $user->is_admin_approve;
         $user->status = $user->is_admin_approve ? UserStatus::ACTIVE : UserStatus::BLOCKED;
 
@@ -600,7 +585,6 @@ class AdminService
     public function banBuyer($id)
     {
         $user = User::findOrFail($id);
-
         $user->status = UserStatus::BLOCKED;
         $user->is_admin_approve = 0;
 

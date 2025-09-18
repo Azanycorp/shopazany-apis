@@ -327,14 +327,20 @@ class BuyerService
 
     public function allBlogs()
     {
-        $blogs = Blog::with('user')->where('type', BannerType::B2B)->latest()->get();
+        $blogs = Blog::with('user')
+            ->where('type', BannerType::B2B)
+            ->latest()
+            ->get();
 
         return $this->success(BlogResource::collection($blogs), 'Blogs');
     }
 
     public function singleBlog($slug)
     {
-        $blog = Blog::with('user')->where('type', BannerType::B2B)->where('slug', $slug)->firstOrFail();
+        $blog = Blog::with('user')
+            ->where('type', BannerType::B2B)
+            ->where('slug', $slug)
+            ->firstOrFail();
 
         return $this->success(new BlogResource($blog), 'Blog details');
     }
@@ -360,10 +366,10 @@ class BuyerService
     public function bestSelling()
     {
         $bestSellingProducts = B2bOrder::with([
-            'product:id,name,front_image,unit_price,slug,default_currency',
-            'product.b2bProductReview:id,product_id,rating',
-            'b2bProductReview',
-        ])
+                'product:id,name,front_image,unit_price,slug,default_currency',
+                'product.b2bProductReview:id,product_id,rating',
+                'b2bProductReview',
+            ])
             ->select(
                 'id',
                 'product_id',
@@ -381,20 +387,19 @@ class BuyerService
     public function featuredProduct()
     {
         $countryId = request()->query('country_id');
-
         $type = request()->query('type');
 
         $featuredProducts = B2BProduct::with([
-            'shopCountry',
-            'orders',
-            'b2bProductReview.user',
-            'category',
-            'user',
-            'b2bLikes',
-            'subCategory',
-            'country',
-            'b2bProductImages',
-        ])
+              'shopCountry',
+              'orders',
+              'b2bProductReview.user',
+              'category',
+              'user',
+              'b2bLikes',
+              'subCategory',
+              'country',
+              'b2bProductImages',
+          ])
             ->where('status', ProductStatus::ACTIVE)
             ->when($countryId, fn($q) => $q->where('country_id', $countryId))
             ->when($type, fn($q) => $q->where('type', $type))
@@ -410,14 +415,14 @@ class BuyerService
         $type = request()->input('type');
 
         $products = B2BProduct::with([
-            'country',
-            'b2bProductReview.user',
-            'b2bLikes',
-            'b2bProductImages',
-            'category',
-            'subCategory',
-            'user',
-        ])
+              'country',
+              'b2bProductReview.user',
+              'b2bLikes',
+              'b2bProductImages',
+              'category',
+              'subCategory',
+              'user',
+          ])
             ->when($type, fn($q) => $q->where('type', $type)) // ✅ apply type if provided
             ->where(function ($query) use ($searchQuery) {
                 $query->where('name', 'LIKE', '%' . $searchQuery . '%')
@@ -446,41 +451,41 @@ class BuyerService
     public function getProductDetail($slug)
     {
         $product = B2BProduct::with([
-            'category',
-            'user',
-            'b2bLikes',
-            'country',
-            'b2bProductImages',
-            'b2bProductReview.user' => function ($query): void {
-                $query->select('id', 'first_name', 'last_name');
-            },
-        ])
+              'category',
+              'user',
+              'b2bLikes',
+              'country',
+              'b2bProductImages',
+              'b2bProductReview.user' => function ($query): void {
+                  $query->select('id', 'first_name', 'last_name');
+              },
+          ])
             ->where('slug', $slug)
             ->firstOrFail();
 
         $quote_count = B2bQuote::where('product_id', $product->id)->count();
 
         $moreFromSeller = B2BProduct::with([
-            'category',
-            'user',
-            'b2bLikes',
-            'subCategory',
-            'country',
-            'b2bProductImages',
-            'b2bProductReview.user',
-        ])
+                'category',
+                'user',
+                'b2bLikes',
+                'subCategory',
+                'country',
+                'b2bProductImages',
+                'b2bProductReview.user',
+            ])
             ->where('user_id', $product->user_id)
             ->get();
 
         $relatedProducts = B2BProduct::with([
-            'category',
-            'user',
-            'b2bLikes',
-            'subCategory',
-            'country',
-            'b2bProductImages',
-            'b2bProductReview.user',
-        ])
+                'category',
+                'user',
+                'b2bLikes',
+                'subCategory',
+                'country',
+                'b2bProductImages',
+                'b2bProductReview.user',
+            ])
             ->where('category_id', $product->category_id)
             ->get();
 
@@ -599,7 +604,6 @@ class BuyerService
     public function removeQuote($id)
     {
         $quote = B2bQuote::findOrFail($id);
-
         $quote->delete();
 
         return $this->success(null, 'Item removed successfully');
@@ -608,7 +612,6 @@ class BuyerService
     public function sendQuote($request)
     {
         $userId = userAuthId();
-
         $product = B2BProduct::findOrFail($request->product_id);
 
         if ($product->availability_quantity < 1) {
