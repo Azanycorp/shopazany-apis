@@ -574,6 +574,8 @@ class BuyerService
     {
         $quote = B2bQuote::findOrFail($request->rfq_id);
 
+        $type = request()->query('type');
+        
         try {
             $product = B2BProduct::findOrFail($quote->product_id);
 
@@ -589,6 +591,7 @@ class BuyerService
                 'buyer_id' => $quote->buyer_id,
                 'seller_id' => $quote->seller_id,
                 'quote_no' => strtoupper(Str::random(10) . userAuthId()),
+                'type' => $type ?? null,
                 'product_id' => $quote->product_id,
                 'product_quantity' => $quote->qty,
                 'total_amount' => $amount,
