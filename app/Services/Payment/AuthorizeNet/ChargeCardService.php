@@ -119,6 +119,7 @@ class ChargeCardService implements PaymentStrategy
     {
         $rfqId = $paymentDetails['rfq_id'];
         $centerId = $paymentDetails['centre_id'];
+        $type = $paymentDetails['type'];
         $shipping_address_id = $paymentDetails['shipping_address_id'];
         $shipping_agent_id = $paymentDetails['shipping_agent_id'];
         $billing_address = $paymentDetails['billTo'];
@@ -168,6 +169,7 @@ class ChargeCardService implements PaymentStrategy
             'payment_method' => 'authorize-net',
             'payment_status' => OrderStatus::PAID,
             'status' => OrderStatus::PENDING,
+            'type' => $type ?? null,
         ]);
 
         $orderedItems = [

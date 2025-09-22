@@ -127,7 +127,7 @@ class PaystackService
                 SubscriptionService::creditAffiliate($referrer, $formattedAmount, $currency);
             });
         } catch (\Exception $e) {
-            Log::error('Error in handleRecurringCharge: '.$e->getMessage());
+            Log::error('Error in handleRecurringCharge: ' . $e->getMessage());
         }
     }
 
@@ -252,7 +252,7 @@ class PaystackService
                 ))->run();
             });
         } catch (\Exception $e) {
-            Log::error('Error in handlePaymentSuccess: '.$e->getMessage().' in '.$e->getFile().' on line '.$e->getLine());
+            Log::error('Error in handlePaymentSuccess: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine());
             throw $e;
         }
     }
@@ -267,6 +267,7 @@ class PaystackService
 
                 $userId = $metadata['user_id'] ?? null;
                 $rfqId = $metadata['rfq_id'] ?? null;
+                $type = $metadata['type'] ?? null;
                 $centerId = $metadata['center_id'] ?? null;
                 $shipping_address_id = $metadata['shipping_address_id'] ?? null;
                 $shipping_agent_id = $metadata['shipping_agent_id'] ?? null;
@@ -344,6 +345,7 @@ class PaystackService
                     'payment_method' => $method,
                     'payment_status' => OrderStatus::PAID,
                     'status' => OrderStatus::PENDING,
+                    'type' => $type,
                 ]);
 
                 $wallet = UserWallet::firstOrCreate(
@@ -362,7 +364,7 @@ class PaystackService
                     'image' => $product->front_image,
                     'quantity' => $rfq->product_quantity,
                     'price' => $seller_amount,
-                    'buyer_name' => $user->first_name.' '.$user->last_name,
+                    'buyer_name' => $user->first_name . ' ' . $user->last_name,
                     'order_number' => $orderNo,
                     'currency' => $user->default_currency,
                 ];
@@ -385,7 +387,7 @@ class PaystackService
                 ))->run();
             });
         } catch (\Exception $e) {
-            Log::error('Error in handlePaymentSuccess: '.$e->getMessage().' in '.$e->getFile().' on line '.$e->getLine());
+            Log::error('Error in handlePaymentSuccess: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine());
             throw $e;
         }
     }
@@ -420,7 +422,7 @@ class PaystackService
             DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error processing transfer success: '.$e->getMessage());
+            Log::error('Error processing transfer success: ' . $e->getMessage());
             throw $e;
         }
     }
@@ -462,7 +464,7 @@ class PaystackService
             DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error processing transfer success: '.$e->getMessage());
+            Log::error('Error processing transfer success: ' . $e->getMessage());
             throw $e;
         }
     }
@@ -504,7 +506,7 @@ class PaystackService
             DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error processing transfer success: '.$e->getMessage());
+            Log::error('Error processing transfer success: ' . $e->getMessage());
             throw $e;
         }
     }
@@ -515,7 +517,7 @@ class PaystackService
         $token = config('paystack.secretKey');
         $headers = [
             'Accept' => 'application/json',
-            'Authorization' => 'Bearer '.$token,
+            'Authorization' => 'Bearer ' . $token,
         ];
         $data = (new PostCurl($url, $headers, $fields))->execute();
         self::logTransfer($data, $method);
@@ -524,7 +526,7 @@ class PaystackService
     private static function orderNo(): string
     {
         do {
-            $uniqueOrderNumber = 'ORD-'.now()->timestamp.'-'.Str::random(8);
+            $uniqueOrderNumber = 'ORD-' . now()->timestamp . '-' . Str::random(8);
         } while (Order::where('order_no', $uniqueOrderNumber)->exists());
 
         return $uniqueOrderNumber;
@@ -532,12 +534,12 @@ class PaystackService
 
     private static function sendSellerOrderEmail($seller, $order, string $orderNo, string $totalAmount): void
     {
-        defer(fn () => send_email($seller->email, new SellerOrderMail($seller, $order, $orderNo, $totalAmount)));
+        defer(fn() => send_email($seller->email, new SellerOrderMail($seller, $order, $orderNo, $totalAmount)));
     }
 
     private static function sendOrderConfirmationEmail($user, $orderedItems, string $orderNo, string $totalAmount): void
     {
-        defer(fn () => send_email($user->email, new CustomerOrderMail($user, $orderedItems, $orderNo, $totalAmount)));
+        defer(fn() => send_email($user->email, new CustomerOrderMail($user, $orderedItems, $orderNo, $totalAmount)));
     }
 
     private static function logTransfer(array $data, $method): void
