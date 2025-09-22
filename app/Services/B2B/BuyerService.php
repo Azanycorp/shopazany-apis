@@ -351,12 +351,12 @@ class BuyerService
 
         $categories = B2BProductCategory::select('id', 'type', 'name', 'slug', 'image')
             ->when($type, function ($q) use ($type) {
-                $q->where('type', $type); // filter categories only
+                $q->where('type', $type);
             })
             ->with(['subcategory'])
             ->withCount('products')
             ->with(['products' => function ($query) {
-                $query->withCount('b2bProductReview'); // no type filter on products
+                $query->withCount('b2bProductReview'); 
             }])
             ->get();
 
@@ -365,8 +365,10 @@ class BuyerService
 
     public function bestSelling()
     {
+        $type = request()->input('type');
+
         $bestSellingProducts = B2bOrder::with([
-            'product:id,name,front_image,unit_price,slug,default_currency',
+            'product:id,name,front_image,unit_price,slug,default_currency,type',
             'product.b2bProductReview:id,product_id,rating',
             'b2bProductReview',
         ])
@@ -376,6 +378,11 @@ class BuyerService
                 DB::raw('SUM(product_quantity) as total_sold')
             )
             ->where('status', OrderStatus::DELIVERED)
+            ->when($type, function ($query, $type) {
+                $query->whereHas('product', function ($q) use ($type) {
+                    $q->where('type', $type);
+                });
+            })
             ->groupBy('product_id', 'id')
             ->orderByDesc('total_sold')
             ->limit(10)
@@ -383,6 +390,7 @@ class BuyerService
 
         return $this->success(B2BBestSellingProductResource::collection($bestSellingProducts), 'Best selling products');
     }
+
 
     public function featuredProduct()
     {
@@ -575,7 +583,7 @@ class BuyerService
         $quote = B2bQuote::findOrFail($request->rfq_id);
 
         $type = request()->query('type');
-        
+
         try {
             $product = B2BProduct::findOrFail($quote->product_id);
 
