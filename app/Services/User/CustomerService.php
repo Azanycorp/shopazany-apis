@@ -564,20 +564,24 @@ class CustomerService
     public function getCustomers()
     {
         $user = userAuth();
-
-        $params = [
-            'email' => $user->email,
-        ];
-
         $url = config('services.reward_service.url').'/service/customer/orders';
-        $response = $this->auth->request('get', $url, $params);
 
-        $services = $response->json();
+        try {
+            $response = $this->auth->request(
+                'get',
+                $url,
+                ['email' => $user->email]
+            );
 
-        if (! isset($services['data'])) {
-            return $services;
+            $services = $response->json();
+
+            if (! isset($services['data'])) {
+                return $services;
+            }
+
+            return $services['data']['orders'] ?? [];
+        } catch (\Exception $e) {
+            return $this->error(null, "Something went wrong. Please try again later. {$e->getMessage()}", 500);
         }
-
-        return $services['data']['orders'];
     }
 }
