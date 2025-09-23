@@ -152,4 +152,28 @@ class SellerController extends Controller
 
         return $this->sellerService->editProfile($request);
     }
+
+    public function getAllOrders($userId)
+    {
+        return $this->b2cSellerService->getAllOrders($userId);
+    }
+
+    public function getOrderDetail($userId, $id)
+    {
+        return $this->b2cSellerService->getOrderDetail($userId, $id);
+    }
+
+    public function updateOrderStatus($userId, $id, Request $request)
+    {
+        $request->validate([
+            'status' => ['required', 'string'],
+        ]);
+
+        return $this->b2cSellerService->updateOrderStatus($userId, $id, $request);
+    }
+
+    public function getOrderSummary($userId)
+    {
+        return $this->b2cSellerService->getOrderSummary($userId);
+    }
 }

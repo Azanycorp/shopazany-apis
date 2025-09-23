@@ -78,6 +78,15 @@ Route::middleware('validate.header')
                         Route::post('/edit', 'editProfile');
                         Route::get('/{user_id}', 'profile');
                     });
+
+                    // Orders Routes
+                    Route::prefix('orders/{user_id}')->group(function (): void {
+                        Route::get('/', 'getAllOrders')
+                            ->middleware('ensure.user');
+                        Route::get('/summary', 'getOrderSummary');
+                        Route::get('/{id}', 'getOrderDetail');
+                        Route::patch('/update-status/{id}', 'updateOrderStatus');
+                    });
                 });
         });
 
