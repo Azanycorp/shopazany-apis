@@ -356,7 +356,7 @@ class BuyerService
             ->with(['subcategory'])
             ->withCount('products')
             ->with(['products' => function ($query) {
-                $query->withCount('b2bProductReview'); 
+                $query->withCount('b2bProductReview');
             }])
             ->get();
 
@@ -807,7 +807,7 @@ class BuyerService
     public function addReview($request)
     {
         $userId = userAuthId();
-
+        $type = request()->query('type');
         $review = B2bProdctReview::updateOrCreate(
             [
                 'buyer_id' => $userId,
@@ -817,6 +817,7 @@ class BuyerService
                 'rating' => $request->rating,
                 'title' => $request->title,
                 'note' => $request->note,
+                'type' => $type,
             ]
         );
 
