@@ -2,7 +2,7 @@ name: Build and Push Docker images to ECR
 
 on:
   push:
-    branches:  ["stagings"]  # Trigger on push to the staging branch
+    branches:   [""]  # Trigger on push to the deploy branch
 
 jobs:
   build-and-push:
@@ -19,7 +19,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v3
         with:
           role-to-assume: arn:aws:iam::547130927936:role/shopazany-apis-github.oidc  # IAM role ARN
-          aws-region: us-east-1  # AWS region
+          aws-region: us-east-1  #  AWS region (e.g., us-east-1)
 
       - name: Login to Amazon ECR
         id: login-ecr
@@ -27,12 +27,12 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t 547130927936.dkr.ecr.us-east-1.amazonaws.com/staging/shopazany-apis:latest .
+          docker build -t 547130927936.dkr.ecr.us-east-1.amazonaws.com/prod/shopazany-apis:latest .
 
       - name: Tag Docker image
         run: |
-          docker tag 547130927936.dkr.ecr.us-east-1.amazonaws.com/staging/shopazany-apis:latest 547130927936.dkr.ecr.us-east-1.amazonaws.com/staging/shopazany-apis:latest
+          docker tag 547130927936.dkr.ecr.us-east-1.amazonaws.com/prod/shopazany-apis:latest 547130927936.dkr.ecr.us-east-1.amazonaws.com/prod/shopazany-apis:latest
 
       - name: Push Docker image to ECR
         run: |
-          docker push 547130927936.dkr.ecr.us-east-1.amazonaws.com/staging/shopazany-apis:latest
+          docker push 547130927936.dkr.ecr.us-east-1.amazonaws.com/prod/shopazany-apis:latest
