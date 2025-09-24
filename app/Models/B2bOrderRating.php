@@ -12,7 +12,6 @@ class B2bOrderRating extends Model
         'seller_id',
         'order_no',
         'rating',
-        'type',
         'description',
     ];
 
