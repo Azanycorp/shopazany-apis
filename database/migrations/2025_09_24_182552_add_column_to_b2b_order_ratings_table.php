@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('b2b_order_ratings', function (Blueprint $table) {
-            //
+            $table->string('type')->after('rating')->nullable();
         });
     }
 
@@ -22,7 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('b2b_order_ratings', function (Blueprint $table) {
-            //
+            $table->dropColumn('type');
         });
     }
 };
