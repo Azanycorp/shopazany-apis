@@ -430,7 +430,7 @@ class BuyerService
             'subCategory',
             'user',
         ])
-            ->when($type, fn($q) => $q->where('type', $type)) 
+            ->when($type, fn($q) => $q->where('type', $type))
             ->where(function ($query) use ($searchQuery) {
                 $query->where('name', 'LIKE', '%' . $searchQuery . '%')
                     ->orWhere('unit_price', 'LIKE', '%' . $searchQuery . '%');
