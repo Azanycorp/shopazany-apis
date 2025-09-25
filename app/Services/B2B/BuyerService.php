@@ -249,7 +249,9 @@ class BuyerService
 
     public function getSocialLinks()
     {
-        $links = SocialSetting::latest()->get();
+        $type = request()->query('type');
+        $links = SocialSetting::when($type, fn($q) => $q->where('type', $type))
+            ->latest()->get();
 
         return $this->success(SocialLinkResource::collection($links), 'Social links');
     }

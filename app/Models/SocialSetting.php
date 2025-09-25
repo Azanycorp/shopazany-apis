@@ -10,5 +10,6 @@ class SocialSetting extends Model
         'name',
         'icon',
         'url',
+        'type'
     ];
 }
