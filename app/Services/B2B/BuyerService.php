@@ -250,6 +250,7 @@ class BuyerService
     public function getSocialLinks()
     {
         $type = request()->query('type');
+        
         $links = SocialSetting::when($type, fn($q) => $q->where('type', $type))
             ->latest()->get();
 
