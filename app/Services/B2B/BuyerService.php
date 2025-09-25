@@ -95,8 +95,7 @@ class BuyerService
 
     public function banCustomer($request)
     {
-        $user = User::where('type', UserType::B2B_BUYER)
-            ->where('id', $request->user_id)
+        $user = User::where('id', $request->user_id)
             ->firstOrFail();
 
         $user->status = UserStatus::BLOCKED;
@@ -431,7 +430,7 @@ class BuyerService
             'subCategory',
             'user',
         ])
-            ->when($type, fn($q) => $q->where('type', $type)) // ✅ apply type if provided
+            ->when($type, fn($q) => $q->where('type', $type)) 
             ->where(function ($query) use ($searchQuery) {
                 $query->where('name', 'LIKE', '%' . $searchQuery . '%')
                     ->orWhere('unit_price', 'LIKE', '%' . $searchQuery . '%');
