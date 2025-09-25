@@ -364,16 +364,7 @@ class SellerService extends Controller
             return $this->error(null, 'Order not found', 404);
         }
 
-        $validStatuses = [
-            OrderStatus::PENDING,
-            OrderStatus::CONFIRMED,
-            OrderStatus::PROCESSING,
-            OrderStatus::SHIPPED,
-            OrderStatus::DELIVERED,
-            OrderStatus::CANCELLED,
-        ];
-
-        if (! in_array($request->status, $validStatuses)) {
+        if (! in_array($request->status, OrderStatus::all(), true)) {
             return $this->error(null, 'Invalid status', 400);
         }
 
