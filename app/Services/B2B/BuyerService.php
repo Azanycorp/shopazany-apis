@@ -250,7 +250,7 @@ class BuyerService
     public function getSocialLinks()
     {
         $type = request()->query('type');
-        
+
         $links = SocialSetting::when($type, fn($q) => $q->where('type', $type))
             ->latest()->get();
 
@@ -329,8 +329,9 @@ class BuyerService
 
     public function allBlogs()
     {
-        $blogs = Blog::with('user')
-            ->where('type', BannerType::B2B)
+        $blogs = Blog::with('user')->when($type, function ($q) use ($type) {
+                $q->where('type', $type);
+            })
             ->latest()
             ->get();
 
