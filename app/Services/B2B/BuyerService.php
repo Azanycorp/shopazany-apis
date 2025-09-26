@@ -329,9 +329,11 @@ class BuyerService
 
     public function allBlogs()
     {
+        $type = request()->query('type');
+
         $blogs = Blog::with('user')->when($type, function ($q) use ($type) {
-                $q->where('type', $type);
-            })
+            $q->where('type', $type);
+        })
             ->latest()
             ->get();
 
@@ -340,9 +342,7 @@ class BuyerService
 
     public function singleBlog($slug)
     {
-        $blog = Blog::with('user')
-            ->where('type', BannerType::B2B)
-            ->where('slug', $slug)
+        $blog = Blog::with('user')->where('slug', $slug)
             ->firstOrFail();
 
         return $this->success(new BlogResource($blog), 'Blog details');
