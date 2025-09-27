@@ -28,7 +28,7 @@ class UserObserver implements ShouldHandleEventsAfterCommit
         ];
         mailSend($type, $user, $subject, $mail_class, $data);
 
-        if (in_array($user->type, [UserType::CUSTOMER, UserType::SELLER])) {
+        if (in_array($user->type, [UserType::CUSTOMER, UserType::SELLER, UserType::AGRIECOM_SELLER])) {
             $actionSlug = Action::whereIn('name', ['Create account', 'Create an account', 'Create user'])
                 ->orWhere('slug', 'create_an_account')
                 ->value('slug');
@@ -46,10 +46,16 @@ class UserObserver implements ShouldHandleEventsAfterCommit
             UserType::B2B_SELLER => UserWallet::updateOrCreate(
                 ['seller_id' => $user->id]
             ),
+            UserType::B2B_AGRIECOM_SELLER => UserWallet::updateOrCreate(
+                ['seller_id' => $user->id]
+            ),
             UserType::CUSTOMER => Wallet::updateOrCreate(
                 ['user_id' => $user->id]
             ),
             UserType::SELLER => Wallet::updateOrCreate(
+                ['user_id' => $user->id]
+            ),
+            UserType::AGRIECOM_SELLER => Wallet::updateOrCreate(
                 ['user_id' => $user->id]
             ),
             default => null,

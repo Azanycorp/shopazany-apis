@@ -73,11 +73,11 @@ class SellerService extends Controller
         }
     }
 
-    public function createProduct($request)
+    public function createProduct($request, ?string $type = null)
     {
         $currentUser = userAuth();
 
-        if ($currentUser->id != $request->user_id || $currentUser->type != UserType::SELLER) {
+        if ($currentUser->id != $request->user_id || !in_array($currentUser->type, [UserType::SELLER, UserType::AGRIECOM_SELLER])) {
             return $this->error(null, 'Unauthorized action.', 401);
         }
 
@@ -98,7 +98,7 @@ class SellerService extends Controller
         DB::beginTransaction();
         try {
             $url = $this->uploadFrontImage($request, $folderPath);
-            $product = $this->createProductRecord($request, $user, $slug, $url);
+            $product = $this->createProductRecord($request, $user, $slug, $url, $type);
             $this->uploadAdditionalImages($request, $name, $product);
             $this->createProductVariations($request, $product, $name);
 
@@ -364,16 +364,7 @@ class SellerService extends Controller
             return $this->error(null, 'Order not found', 404);
         }
 
-        $validStatuses = [
-            OrderStatus::PENDING,
-            OrderStatus::CONFIRMED,
-            OrderStatus::PROCESSING,
-            OrderStatus::SHIPPED,
-            OrderStatus::DELIVERED,
-            OrderStatus::CANCELLED,
-        ];
-
-        if (! in_array($request->status, $validStatuses)) {
+        if (! in_array($request->status, OrderStatus::all(), true)) {
             return $this->error(null, 'Invalid status', 400);
         }
 
@@ -399,6 +390,7 @@ class SellerService extends Controller
             ->unique();
 
         $newOrderStatus = $this->determineOrderStatus($remainingStatuses);
+
         $order->update(['status' => $newOrderStatus]);
 
         $msg = getOrderStatusMessage($request->status);
@@ -527,8 +519,8 @@ class SellerService extends Controller
         }
 
         $orders = Order::whereHas('products', function ($query) use ($userId): void {
-            $query->where('user_id', $userId);
-        })
+                $query->where('user_id', $userId);
+            })
             ->with(['user', 'products.shopCountry'])
             ->orderBy('created_at', 'desc')
             ->take(8)

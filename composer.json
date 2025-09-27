@@ -15,9 +15,9 @@
         "authorizenet/authorizenet": "^2.0",
         "imagekit/imagekit": "^4.0",
         "jenssegers/agent": "^2.6",
-        "laravel/framework": "^12.20",
-        "laravel/sanctum": "^4.1",
-        "laravel/socialite": "^5.20",
+        "laravel/framework": "^12.28.1",
+        "laravel/sanctum": "^4.2",
+        "laravel/socialite": "^5.23",
         "laravel/tinker": "^2.10",
         "league/flysystem-aws-s3-v3": "^3.0",
         "maatwebsite/excel": "^3.1",
@@ -27,14 +27,14 @@
         "unicodeveloper/laravel-paystack": "dev-master"
     },
     "require-dev": {
-        "driftingly/rector-laravel": "^2.0",
+        "driftingly/rector-laravel": "^2.0.7",
         "fakerphp/faker": "^1.23",
         "laravel/pint": "^1.13",
         "laravel/sail": "^1.26",
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.0",
         "phpunit/phpunit": "^11.0.1",
-        "rector/rector": "^2.0"
+        "rector/rector": "^2.1.6"
     },
     "autoload": {
         "psr-4": {

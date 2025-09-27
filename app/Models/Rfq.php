@@ -20,6 +20,7 @@ class Rfq extends Model
         'total_amount',
         'payment_status',
         'status',
+        'type',
         'delivery_date',
         'shipped_date',
     ];

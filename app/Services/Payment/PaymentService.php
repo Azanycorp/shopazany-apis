@@ -70,7 +70,7 @@ class PaymentService
             return $this->error(null, 'Unauthorized action.', 401);
         }
 
-        if (! preg_match('/^[A-Za-z0-9]{10,30}$/', $ref)) {
+        if ($ref === null || ! preg_match('/^[A-Za-z0-9]{10,30}$/', $ref)) {
             return $this->error(null, 400, 'Invalid payment reference.');
         }
 
