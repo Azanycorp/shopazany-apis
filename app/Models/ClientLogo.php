@@ -6,5 +6,5 @@ use Illuminate\Database\Eloquent\Model;
 
 class ClientLogo extends Model
 {
-    protected $fillable = ['name', 'logo'];
+    protected $fillable = ['name', 'logo','type'];
 }
