@@ -390,6 +390,7 @@ class SellerService extends Controller
             ->unique();
 
         $newOrderStatus = $this->determineOrderStatus($remainingStatuses);
+
         $order->update(['status' => $newOrderStatus]);
 
         $msg = getOrderStatusMessage($request->status);
