@@ -181,12 +181,15 @@ class AdminService
     // Admin section
     public function allSellers()
     {
+        $type = request()->query('type');
+
         $sellers = User::withCount('b2bProducts')
+            ->when($type, fn($q) => $q->where('type', $type))
             ->where('type', UserType::B2B_SELLER)
             ->latest()
             ->get();
 
-        $sellersCounts = User::where('type', UserType::B2B_SELLER)
+        $sellersCounts = User::where('type', $type ?? UserType::B2B_SELLER)
             ->selectRaw('
                 COUNT(*) as total,
                 SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as active,
