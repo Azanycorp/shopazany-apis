@@ -462,7 +462,9 @@ class AdminService
 
     public function allBuyers()
     {
-        $buyerStats = User::where('type', UserType::B2B_BUYER)
+        $type = request()->query('type');
+
+        $buyerStats = User::when($type, fn($q) => $q->where('type', $type))->where('type', UserType::B2B_BUYER)
             ->selectRaw('
                 COUNT(*) as total_buyers,
                 SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as active_buyers,
@@ -474,7 +476,7 @@ class AdminService
             ->first();
 
         $buyers = User::with('b2bCompany')
-            ->where('type', UserType::B2B_BUYER)
+            ->when($type, fn($q) => $q->where('type', $type))
             ->latest()
             ->get();
 
@@ -492,7 +494,6 @@ class AdminService
     {
         $user = User::select('id', 'first_name', 'last_name', 'email', 'image')
             ->with('b2bCompany')
-            ->where('type', UserType::B2B_BUYER)
             ->where('id', $id)
             ->firstOrFail();
 
