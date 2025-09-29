@@ -214,8 +214,7 @@ class AdminService
 
     public function approveSeller($id)
     {
-        $user = User::where('type', UserType::B2B_SELLER)
-            ->where('id', $id)
+        $user = User::where('id', $id)
             ->firstOrFail();
 
         $user->is_admin_approve = ! $user->is_admin_approve;
@@ -229,8 +228,7 @@ class AdminService
 
     public function viewSeller($id): array
     {
-        $user = User::where('type', UserType::B2B_SELLER)
-            ->where('id', $id)
+        $user = User::where('id', $id)
             ->firstOrFail();
 
         $search = request()->search;
@@ -270,8 +268,7 @@ class AdminService
 
     public function banSeller($id)
     {
-        $user = User::where('type', UserType::B2B_SELLER)
-            ->where('id', $id)
+        $user = User::where('id', $id)
             ->firstOrFail();
 
         $user->status = UserStatus::BLOCKED;
@@ -283,8 +280,7 @@ class AdminService
 
     public function removeSeller($id)
     {
-        $user = User::where('type', UserType::B2B_SELLER)
-            ->where('id', $id)
+        $user = User::where('id', $id)
             ->firstOrFail();
 
         $user->delete();
@@ -294,7 +290,8 @@ class AdminService
 
     public function bulkRemove($request)
     {
-        $users = User::where('type', UserType::B2B_SELLER)
+        $type = request()->query('type');
+        $users = User::where('type', $type ?? UserType::B2B_SELLER)
             ->whereIn('id', $request->user_ids)
             ->get();
 
