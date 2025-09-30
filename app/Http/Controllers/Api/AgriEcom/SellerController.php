@@ -2,16 +2,16 @@
 
 namespace App\Http\Controllers\Api\AgriEcom;
 
-use Illuminate\Http\Request;
-use App\Services\User\UserService;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\AddAttributeRequest;
+use App\Http\Requests\B2B\BusinessInformationRequest;
+use App\Http\Requests\ProductImportRequest;
 use App\Http\Requests\WithdrawalRequest;
 use App\Services\AgriEcom\SellerService;
-use App\Http\Requests\AddAttributeRequest;
-use App\Http\Requests\ProductImportRequest;
 use App\Services\B2B\SellerService as B2BSellerService;
 use App\Services\User\SellerService as B2CSellerService;
-use App\Http\Requests\B2B\BusinessInformationRequest;
+use App\Services\User\UserService;
+use Illuminate\Http\Request;
 
 class SellerController extends Controller
 {
@@ -20,8 +20,7 @@ class SellerController extends Controller
         protected B2BSellerService $b2bSellerService,
         protected B2CSellerService $b2cSellerService,
         protected UserService $userService
-    )
-    {}
+    ) {}
 
     public function createBusinessInformation(BusinessInformationRequest $request)
     {
@@ -30,7 +29,7 @@ class SellerController extends Controller
 
     public function createProduct(Request $request)
     {
-        return $this->b2cSellerService->createProduct($request, "agriecom");
+        return $this->b2cSellerService->createProduct($request, 'agriecom');
     }
 
     public function updateProduct(Request $request, $id, $userId)

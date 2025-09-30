@@ -106,7 +106,7 @@ class UserService extends Controller
 
         if (
             ! $auth || $auth->type === UserType::CUSTOMER ||
-            (! $auth->is_affiliate_member && !in_array($auth->type, [UserType::SELLER, UserType::AGRIECOM_SELLER])) ||
+            (! $auth->is_affiliate_member && ! in_array($auth->type, [UserType::SELLER, UserType::AGRIECOM_SELLER])) ||
             $auth->id !== $request->user_id
         ) {
             return $this->error(null, 'Unauthorized action.', 401);
@@ -316,7 +316,7 @@ class UserService extends Controller
             return $this->error(null, 'Unauthorized action.', 401);
         }
 
-        if ($auth->id !== $request->user_id || (! $auth->is_affiliate_member && !in_array($auth->type, [UserType::SELLER, UserType::B2B_SELLER, UserType::AGRIECOM_SELLER, UserType::B2B_AGRIECOM_SELLER]))) {
+        if ($auth->id !== $request->user_id || (! $auth->is_affiliate_member && ! in_array($auth->type, [UserType::SELLER, UserType::B2B_SELLER, UserType::AGRIECOM_SELLER, UserType::B2B_AGRIECOM_SELLER]))) {
             return $this->error(null, 'Unauthorized action.', 401);
         }
 

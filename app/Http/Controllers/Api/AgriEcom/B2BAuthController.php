@@ -2,19 +2,18 @@
 
 namespace App\Http\Controllers\Api\AgriEcom;
 
-use Illuminate\Http\Request;
-use App\Services\B2B\BuyerService;
-use App\Http\Requests\LoginRequest;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\B2B\SignupRequest;
-use App\Services\AgriEcom\B2B\AuthService;
-use App\Services\B2B\SellerService;
-use App\Http\Requests\B2B\BuyerOnboardingRequest;
 use App\Http\Requests\B2B\BusinessInformationRequest;
+use App\Http\Requests\B2B\BuyerOnboardingRequest;
+use App\Http\Requests\B2B\SignupRequest;
+use App\Http\Requests\LoginRequest;
+use App\Services\AgriEcom\B2B\AuthService;
+use App\Services\B2B\BuyerService;
+use App\Services\B2B\SellerService;
+use Illuminate\Http\Request;
 
 class B2BAuthController extends Controller
 {
-
     public function __construct(
         protected AuthService $service,
         protected SellerService $sellerService,
