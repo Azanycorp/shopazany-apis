@@ -10,8 +10,7 @@ class SuperAdminAuthController extends Controller
 {
     public function __construct(
         protected SuperAdminAuthService $superAdminAuthService,
-    )
-    {}
+    ) {}
 
     public function login(Request $request)
     {

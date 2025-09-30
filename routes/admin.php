@@ -541,7 +541,7 @@ Route::middleware('validate.header')
                                 Route::patch('/dispatch/{id}', 'dispatchBatch');
                             });
                         });
-                        //Affiliate
+                        // Affiliate
                         Route::prefix('affiliate')
                             ->controller(AdminAffiliateController::class)
                             ->group(function (): void {

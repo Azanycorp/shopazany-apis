@@ -119,6 +119,7 @@ trait SignUp
             'used_by' => $usedBy,
             'status' => $coupon->status,
         ]);
+
         return null;
     }
 

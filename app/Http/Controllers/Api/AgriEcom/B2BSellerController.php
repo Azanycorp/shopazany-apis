@@ -2,17 +2,16 @@
 
 namespace App\Http\Controllers\Api\AgriEcom;
 
-use Illuminate\Http\Request;
-use App\Services\B2B\SellerService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\B2B\AddProductRequest;
-use App\Http\Requests\ChangePasswordRequest;
 use App\Http\Requests\B2B\SellerShippingRequest;
 use App\Http\Requests\B2B\WithdrawalMethodRequest;
+use App\Http\Requests\ChangePasswordRequest;
+use App\Services\B2B\SellerService;
+use Illuminate\Http\Request;
 
 class B2BSellerController extends Controller
 {
-
     public function __construct(
         protected SellerService $service
     ) {}
@@ -152,7 +151,7 @@ class B2BSellerController extends Controller
     {
         return $this->service->deleteProduct($user_id, $product_id);
     }
-    
+
     public function getAnalytics(int $user_id)
     {
         return $this->service->getAnalytics($user_id);

@@ -1,12 +1,12 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\AgriEcom\B2BBuyerController;
 use App\Http\Controllers\Api\AgriEcom\AuthController;
-use App\Http\Controllers\Api\AgriEcom\SellerController;
 use App\Http\Controllers\Api\AgriEcom\B2BAuthController;
+use App\Http\Controllers\Api\AgriEcom\B2BBuyerController;
 use App\Http\Controllers\Api\AgriEcom\B2BSellerController;
+use App\Http\Controllers\Api\AgriEcom\SellerController;
 use App\Http\Controllers\Api\CartController;
+use Illuminate\Support\Facades\Route;
 
 Route::middleware('validate.header')
     ->prefix('agriecom')
