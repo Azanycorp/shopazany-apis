@@ -267,6 +267,7 @@ class PaystackService
 
                 $userId = $metadata['user_id'] ?? null;
                 $rfqId = $metadata['rfq_id'] ?? null;
+                $type = $metadata['type'] ?? null;
                 $centerId = $metadata['center_id'] ?? null;
                 $shipping_address_id = $metadata['shipping_address_id'] ?? null;
                 $shipping_agent_id = $metadata['shipping_agent_id'] ?? null;
@@ -344,6 +345,7 @@ class PaystackService
                     'payment_method' => $method,
                     'payment_status' => OrderStatus::PAID,
                     'status' => OrderStatus::PENDING,
+                    'type' => $type,
                 ]);
 
                 $wallet = UserWallet::firstOrCreate(

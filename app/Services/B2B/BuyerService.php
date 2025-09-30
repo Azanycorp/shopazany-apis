@@ -94,8 +94,7 @@ class BuyerService
 
     public function banCustomer($request)
     {
-        $user = User::where('type', UserType::B2B_BUYER)
-            ->where('id', $request->user_id)
+        $user = User::where('id', $request->user_id)
             ->firstOrFail();
 
         $user->status = UserStatus::BLOCKED;
@@ -249,7 +248,10 @@ class BuyerService
 
     public function getSocialLinks()
     {
-        $links = SocialSetting::latest()->get();
+        $type = request()->query('type');
+
+        $links = SocialSetting::when($type, fn ($q) => $q->where('type', $type))
+            ->latest()->get();
 
         return $this->success(SocialLinkResource::collection($links), 'Social links');
     }
@@ -350,12 +352,12 @@ class BuyerService
 
         $categories = B2BProductCategory::select('id', 'type', 'name', 'slug', 'image')
             ->when($type, function ($q) use ($type) {
-                $q->where('type', $type); // filter categories only
+                $q->where('type', $type);
             })
             ->with(['subcategory'])
             ->withCount('products')
             ->with(['products' => function ($query) {
-                $query->withCount('b2bProductReview'); // no type filter on products
+                $query->withCount('b2bProductReview');
             }])
             ->get();
 
@@ -364,8 +366,10 @@ class BuyerService
 
     public function bestSelling()
     {
+        $type = request()->input('type');
+
         $bestSellingProducts = B2bOrder::with([
-            'product:id,name,front_image,unit_price,slug,default_currency',
+            'product:id,name,front_image,unit_price,slug,default_currency,type',
             'product.b2bProductReview:id,product_id,rating',
             'b2bProductReview',
         ])
@@ -375,6 +379,11 @@ class BuyerService
                 DB::raw('SUM(product_quantity) as total_sold')
             )
             ->where('status', OrderStatus::DELIVERED)
+            ->when($type, function ($query, $type) {
+                $query->whereHas('product', function ($q) use ($type) {
+                    $q->where('type', $type);
+                });
+            })
             ->groupBy('product_id', 'id')
             ->orderByDesc('total_sold')
             ->limit(10)
@@ -422,7 +431,7 @@ class BuyerService
             'subCategory',
             'user',
         ])
-            ->when($type, fn ($q) => $q->where('type', $type)) // ✅ apply type if provided
+            ->when($type, fn ($q) => $q->where('type', $type))
             ->where(function ($query) use ($searchQuery) {
                 $query->where('name', 'LIKE', '%'.$searchQuery.'%')
                     ->orWhere('unit_price', 'LIKE', '%'.$searchQuery.'%');
@@ -517,6 +526,8 @@ class BuyerService
     {
         $userId = userAuthId();
 
+        $type = request()->query('type');
+
         $quotes = B2bQuote::where('buyer_id', $userId)->latest()->get();
 
         if ($quotes->isEmpty()) {
@@ -544,6 +555,7 @@ class BuyerService
                     'buyer_id' => $quote->buyer_id,
                     'seller_id' => $quote->seller_id,
                     'quote_no' => strtoupper(Str::random(10).$userId),
+                    'type' => $type ?? null,
                     'product_id' => $quote->product_id,
                     'product_quantity' => $quote->qty,
                     'total_amount' => $unit_price * $quote->qty,
@@ -569,6 +581,8 @@ class BuyerService
     {
         $quote = B2bQuote::findOrFail($request->rfq_id);
 
+        $type = request()->query('type');
+
         try {
             $product = B2BProduct::findOrFail($quote->product_id);
 
@@ -584,6 +598,7 @@ class BuyerService
                 'buyer_id' => $quote->buyer_id,
                 'seller_id' => $quote->seller_id,
                 'quote_no' => strtoupper(Str::random(10).userAuthId()),
+                'type' => $type ?? null,
                 'product_id' => $quote->product_id,
                 'product_quantity' => $quote->qty,
                 'total_amount' => $amount,
@@ -791,7 +806,7 @@ class BuyerService
     public function addReview($request)
     {
         $userId = userAuthId();
-
+        $type = request()->query('type');
         $review = B2bProdctReview::updateOrCreate(
             [
                 'buyer_id' => $userId,
@@ -801,6 +816,7 @@ class BuyerService
                 'rating' => $request->rating,
                 'title' => $request->title,
                 'note' => $request->note,
+                'type' => $type,
             ]
         );
 
