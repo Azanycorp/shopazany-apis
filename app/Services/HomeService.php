@@ -2,26 +2,26 @@
 
 namespace App\Services;
 
-use App\Models\Cart;
-use App\Models\Deal;
-use App\Models\User;
-use App\Models\Brand;
-use App\Models\Action;
-use App\Models\Banner;
-use App\Models\Product;
-use App\Models\Category;
-use App\Models\Wishlist;
-use App\Enum\OrderStatus;
 use App\Enum\BannerStatus;
-use App\Enum\ProductStatus;
-use App\Trait\HttpResponse;
+use App\Enum\OrderStatus;
 use App\Enum\ProductReviewStatus;
-use Illuminate\Support\Facades\DB;
+use App\Enum\ProductStatus;
 use App\Http\Resources\ReviewResource;
 use App\Http\Resources\SellerDetailResource;
 use App\Http\Resources\SellerProductResource;
 use App\Http\Resources\SingleProductResource;
+use App\Models\Action;
+use App\Models\Banner;
+use App\Models\Brand;
+use App\Models\Cart;
+use App\Models\Category;
+use App\Models\Deal;
+use App\Models\Product;
+use App\Models\User;
+use App\Models\Wishlist;
+use App\Trait\HttpResponse;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
 
 class HomeService
 {
@@ -57,11 +57,11 @@ class HomeService
                 'products.category_id',
                 'products.country_id'
             )
-            ->when($countryId, fn($q) => $q->where('orders.country_id', $countryId))
+            ->when($countryId, fn ($q) => $q->where('orders.country_id', $countryId))
             ->when(
                 $type,
-                fn($q) => $q->where('products.type', $type),
-                fn($q) => $q->where('products.type', '!=', 'agriecom')
+                fn ($q) => $q->where('products.type', $type),
+                fn ($q) => $q->where('products.type', '!=', 'agriecom')
             )
             ->orderBy('total_orders', 'DESC')
             ->take(10);
@@ -82,27 +82,27 @@ class HomeService
         $type = request()->query('type');
 
         $allProducts = Product::with([
-                'shopCountry',
-                'productimages',
-                'category',
-                'subCategory',
-                'brand',
-                'color',
-                'unit',
-                'size',
-                'orders',
-                'productReviews',
-                'productVariations' => function ($query): void {
-                    $query->select('id', 'product_id', 'variation', 'sku', 'price', 'stock', 'image');
-                },
-            ])
+            'shopCountry',
+            'productimages',
+            'category',
+            'subCategory',
+            'brand',
+            'color',
+            'unit',
+            'size',
+            'orders',
+            'productReviews',
+            'productVariations' => function ($query): void {
+                $query->select('id', 'product_id', 'variation', 'sku', 'price', 'stock', 'image');
+            },
+        ])
             ->where('status', ProductStatus::ACTIVE)
             ->when($type, function ($q) use ($type) {
                 $q->where('type', $type);
             }, function ($q) {
                 $q->where('type', '!=', 'agriecom');
             })
-            ->when($countryId, fn($q) => $q->where('country_id', $countryId))
+            ->when($countryId, fn ($q) => $q->where('country_id', $countryId))
             ->paginate(25);
 
         $data = SellerProductResource::collection($allProducts);
@@ -116,19 +116,19 @@ class HomeService
         $type = request()->query('type');
 
         $featuredProducts = Product::with([
-                'category',
-                'subCategory',
-                'shopCountry',
-                'brand',
-                'color',
-                'unit',
-                'size',
-                'orders',
-                'productReviews',
-                'productVariations' => function ($query): void {
-                    $query->select('id', 'product_id', 'variation', 'sku', 'price', 'stock', 'image');
-                },
-            ])
+            'category',
+            'subCategory',
+            'shopCountry',
+            'brand',
+            'color',
+            'unit',
+            'size',
+            'orders',
+            'productReviews',
+            'productVariations' => function ($query): void {
+                $query->select('id', 'product_id', 'variation', 'sku', 'price', 'stock', 'image');
+            },
+        ])
             ->where('is_featured', true)
             ->where('status', ProductStatus::ACTIVE)
             ->when($type, function ($q) use ($type) {
@@ -136,7 +136,7 @@ class HomeService
             }, function ($q) {
                 $q->where('type', '!=', 'agriecom');
             })
-            ->when($countryId, fn($q) => $q->where('country_id', $countryId))
+            ->when($countryId, fn ($q) => $q->where('country_id', $countryId))
             ->limit(8)
             ->get();
 
@@ -151,26 +151,26 @@ class HomeService
         $type = request()->query('type');
 
         $topProducts = Product::with([
-                'category',
-                'subCategory',
-                'shopCountry',
-                'brand',
-                'color',
-                'unit',
-                'size',
-                'orders',
-                'productReviews',
-                'productVariations' => function ($query): void {
-                    $query->select('id', 'product_id', 'variation', 'sku', 'price', 'stock', 'image');
-                },
-            ])
+            'category',
+            'subCategory',
+            'shopCountry',
+            'brand',
+            'color',
+            'unit',
+            'size',
+            'orders',
+            'productReviews',
+            'productVariations' => function ($query): void {
+                $query->select('id', 'product_id', 'variation', 'sku', 'price', 'stock', 'image');
+            },
+        ])
             ->where('status', ProductStatus::ACTIVE)
             ->when($type, function ($q) use ($type) {
                 $q->where('type', $type);
             }, function ($q) {
                 $q->where('type', '!=', 'agriecom');
             })
-            ->when($countryId, fn($q) => $q->where('country_id', $countryId))
+            ->when($countryId, fn ($q) => $q->where('country_id', $countryId))
             ->latest()
             ->limit(10)
             ->get();
@@ -186,25 +186,25 @@ class HomeService
         $type = request()->query('type');
 
         $query = Product::with([
-                'category',
-                'subCategory',
-                'shopCountry',
-                'brand',
-                'color',
-                'unit',
-                'size',
-                'orders',
-                'productReviews',
-                'productVariations' => function ($query): void {
-                    $query->select('id', 'product_id', 'variation', 'sku', 'price', 'stock', 'image');
-                },
-            ])
+            'category',
+            'subCategory',
+            'shopCountry',
+            'brand',
+            'color',
+            'unit',
+            'size',
+            'orders',
+            'productReviews',
+            'productVariations' => function ($query): void {
+                $query->select('id', 'product_id', 'variation', 'sku', 'price', 'stock', 'image');
+            },
+        ])
             ->when($type, function ($q) use ($type) {
                 $q->where('type', $type);
             }, function ($q) {
                 $q->where('type', '!=', 'agriecom');
             })
-            ->when($countryId, fn($q) => $q->where('country_id', $countryId));
+            ->when($countryId, fn ($q) => $q->where('country_id', $countryId));
 
         $query->whereBetween('price', [2, 10000])
             ->where('status', ProductStatus::ACTIVE)

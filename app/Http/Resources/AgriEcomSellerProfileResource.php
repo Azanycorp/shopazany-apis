@@ -39,11 +39,11 @@ class AgriEcomSellerProfileResource extends JsonResource
             'is_affiliate_member' => (bool) $this->is_affiliate_member,
             'two_factor_enabled' => (bool) $this->two_factor_enabled,
             'status' => (string) $this->status,
-            'wallet' => $this->whenLoaded('wallet', fn() => new WalletResource($this->wallet)),
+            'wallet' => $this->whenLoaded('wallet', fn () => new WalletResource($this->wallet)),
             'no_of_referrals' => $this->referrals_count,
-            'bank_account' => $this->whenLoaded('bankAccount', fn() => new BankAccountResource($this->bankAccount)),
-            'business_info' => $this->whenLoaded('userbusinessinfo', fn() => new BusinessInfoResource($this->userbusinessinfo)),
-            'shipping_address' => $this->whenLoaded('userShippingAddress', fn() => ShippingAddressResource::collection($this->userShippingAddress)),
+            'bank_account' => $this->whenLoaded('bankAccount', fn () => new BankAccountResource($this->bankAccount)),
+            'business_info' => $this->whenLoaded('userbusinessinfo', fn () => new BusinessInfoResource($this->userbusinessinfo)),
+            'shipping_address' => $this->whenLoaded('userShippingAddress', fn () => ShippingAddressResource::collection($this->userShippingAddress)),
             'subscribed' => $this->is_subscribed,
             'user_subscription_plan' => (object) [
                 'id' => (int) $this->subscription_plan?->id,
@@ -56,7 +56,7 @@ class AgriEcomSellerProfileResource extends JsonResource
             ],
             'rewards' => getRewards($this->country),
             'user_rewards' => userRewards($this->id),
-            'products' => $this->whenLoaded('products', fn() => SellerProductResource::collection($this->products)),
+            'products' => $this->whenLoaded('products', fn () => SellerProductResource::collection($this->products)),
         ];
     }
 }

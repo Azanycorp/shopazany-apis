@@ -2,19 +2,18 @@
 
 namespace App\Http\Controllers\Api\AgriEcom;
 
-use Illuminate\Http\Request;
-use App\Services\B2B\BuyerService;
-use App\Http\Requests\QuoteRequest;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\WishListRequest;
-use App\Http\Requests\LikeProductRequest;
-use App\Http\Requests\ChangePasswordRequest;
-use App\Http\Requests\SendFromWishListRequest;
 use App\Http\Requests\B2BBuyerShippingAddressRequest;
+use App\Http\Requests\ChangePasswordRequest;
+use App\Http\Requests\LikeProductRequest;
+use App\Http\Requests\QuoteRequest;
+use App\Http\Requests\SendFromWishListRequest;
+use App\Http\Requests\WishListRequest;
+use App\Services\B2B\BuyerService;
+use Illuminate\Http\Request;
 
 class B2BBuyerController extends Controller
 {
-
     public function __construct(
         protected BuyerService $buyerService
     ) {}
@@ -111,6 +110,7 @@ class B2BBuyerController extends Controller
     {
         return $this->buyerService->sendFromWishList($request);
     }
+
     // Shipping Address
     public function addShippingAddress(B2BBuyerShippingAddressRequest $request)
     {

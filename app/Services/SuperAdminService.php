@@ -2,38 +2,39 @@
 
 namespace App\Services;
 
-use App\Models\Admin;
-use App\Models\Order;
-use App\Trait\SignUp;
-use App\Enum\PlanStatus;
-use App\Models\B2bOrder;
+use App\Enum\CentreStatus;
 use App\Enum\MailingEnum;
 use App\Enum\OrderStatus;
-use App\Models\Shippment;
-use App\Enum\CentreStatus;
-use App\Trait\HttpResponse;
-use App\Models\PickupStation;
-use App\Models\ShippmentBatch;
+use App\Enum\PlanStatus;
 use App\Enum\ShippmentCategory;
-use App\Models\CollationCenter;
-use App\Models\AdminNotification;
-use Illuminate\Support\Facades\DB;
-use App\Http\Resources\HubResource;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use App\Http\Resources\BatchResource;
-use App\Trait\SuperAdminNotification;
-use App\Mail\AccountVerificationEmail;
-use App\Http\Resources\AdminUserResource;
-use App\Http\Resources\ShippmentResource;
-use App\Http\Resources\SearchB2BOrderResource;
-use App\Http\Resources\CollationCentreResource;
 use App\Http\Resources\AdminNotificationResource;
+use App\Http\Resources\AdminUserResource;
+use App\Http\Resources\BatchResource;
+use App\Http\Resources\CollationCentreResource;
+use App\Http\Resources\HubResource;
+use App\Http\Resources\SearchB2BOrderResource;
 use App\Http\Resources\ShipmentB2COrderResource;
+use App\Http\Resources\ShippmentResource;
+use App\Mail\AccountVerificationEmail;
+use App\Models\Admin;
+use App\Models\AdminNotification;
+use App\Models\B2bOrder;
+use App\Models\CollationCenter;
+use App\Models\Order;
+use App\Models\PickupStation;
+use App\Models\Shippment;
+use App\Models\ShippmentBatch;
+use App\Trait\HttpResponse;
+use App\Trait\SignUp;
+use App\Trait\SuperAdminNotification;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class SuperAdminService
 {
-    use HttpResponse, SuperAdminNotification, SignUp;
+    use HttpResponse, SignUp, SuperAdminNotification;
+
     public function getDashboardDetails()
     {
         $centers = CollationCenter::with('country')->latest()->get();
@@ -87,8 +88,8 @@ class SuperAdminService
             })
             ->when(request()->search, function ($q, $search) {
                 $q->where(function ($query) use ($search) {
-                    $query->where('city', 'like', '%' . $search . '%')
-                        ->orWhere('location', 'like', '%' . $search . '%');
+                    $query->where('city', 'like', '%'.$search.'%')
+                        ->orWhere('location', 'like', '%'.$search.'%');
                 });
             });
 
@@ -107,7 +108,7 @@ class SuperAdminService
 
         $data = [
             'total_centers' => $center_counts->total_centers ?? 0,
-            'active_centers' =>  $center_counts->active ?? 0,
+            'active_centers' => $center_counts->active ?? 0,
             'inactive_centers' => $center_counts->in_active ?? 0,
             'under_maintenance' => $center_counts->maintenance ?? 0,
             'daily_processing' => $center_counts->processing ?? 0,
@@ -128,7 +129,7 @@ class SuperAdminService
             'status' => PlanStatus::ACTIVE,
         ]);
 
-        $this->createNotification('New Collation Centre Added', 'New collation centre created ' . $centre->name);
+        $this->createNotification('New Collation Centre Added', 'New collation centre created '.$centre->name);
 
         return $this->success($centre, 'Centre added successfully', 201);
     }
@@ -151,7 +152,7 @@ class SuperAdminService
             OrderStatus::SHIPPED,
             OrderStatus::DELIVERED,
             OrderStatus::READY_FOR_PICKUP,
-            OrderStatus::IN_TRANSIT
+            OrderStatus::IN_TRANSIT,
         ])
             ->where('collation_id', $centre->id)
             ->first();
@@ -159,12 +160,12 @@ class SuperAdminService
         $batches = ShippmentBatch::where('collation_id', $centre->id)->latest()->get();
 
         $data = [
-            'current_batches'    => $order_counts->total_orders ?? 0,
-            'total_processed'    => $order_counts->delivered ?? 0,
-            'daily_throughout'   => $order_counts->ready_for_pickup ?? 0,
-            'awaiting_dispatch'  => $order_counts->in_transit ?? 0,
-            'center'             => new CollationCentreResource($centre),
-            'batches'   => BatchResource::collection($batches)
+            'current_batches' => $order_counts->total_orders ?? 0,
+            'total_processed' => $order_counts->delivered ?? 0,
+            'daily_throughout' => $order_counts->ready_for_pickup ?? 0,
+            'awaiting_dispatch' => $order_counts->in_transit ?? 0,
+            'center' => new CollationCentreResource($centre),
+            'batches' => BatchResource::collection($batches),
         ];
 
         return $this->success($data, 'Centre details');
@@ -232,7 +233,7 @@ class SuperAdminService
             'status' => PlanStatus::ACTIVE,
         ]);
 
-        $this->createNotification('New Hub Added', 'New hub created ' . $hub->name);
+        $this->createNotification('New Hub Added', 'New hub created '.$hub->name);
 
         return $this->success($hub, 'Hub added successfully', 201);
     }
@@ -251,7 +252,7 @@ class SuperAdminService
             OrderStatus::SHIPPED,
             OrderStatus::DELIVERED,
             OrderStatus::READY_FOR_PICKUP,
-            OrderStatus::IN_TRANSIT
+            OrderStatus::IN_TRANSIT,
         ])
             ->where('hub_id', $hub->id)
             ->first();
@@ -259,12 +260,12 @@ class SuperAdminService
         $shippments = Shippment::where('hub_id', $hub->id)->latest()->get();
 
         $data = [
-            'current_items'      => $order_counts->total_orders ?? 0,
-            'total_processed'    => $order_counts->delivered ?? 0,
-            'ready_for_pickup'   => $order_counts->ready_for_pickup ?? 0,
-            'awaiting_dispatch'  => $order_counts->in_transit ?? 0,
-            'hub'                => new HubResource($hub),
-            'shippments'   => ShippmentResource::collection($shippments)
+            'current_items' => $order_counts->total_orders ?? 0,
+            'total_processed' => $order_counts->delivered ?? 0,
+            'ready_for_pickup' => $order_counts->ready_for_pickup ?? 0,
+            'awaiting_dispatch' => $order_counts->in_transit ?? 0,
+            'hub' => new HubResource($hub),
+            'shippments' => ShippmentResource::collection($shippments),
         ];
 
         return $this->success($data, 'Hub details');
@@ -340,7 +341,7 @@ class SuperAdminService
 
             $data = $this->logB2CShipment($request, $order, $hub, $loggedItems, $orderNumber);
 
-            $this->createNotification('New Shippment created', 'New Shippment created at ' . $hub->name . 'Pickup station/hub ' . 'by ' . Auth::user()->fullName);
+            $this->createNotification('New Shippment created', 'New Shippment created at '.$hub->name.'Pickup station/hub '.'by '.Auth::user()->fullName);
 
             return $this->success(new ShippmentResource($data['shipment']), 'Item Logged successfully.');
         }
@@ -351,10 +352,11 @@ class SuperAdminService
 
         $b2bData = $this->logB2BShipment($request, $b2bOrder, $hub, $loggedItems, $orderNumber);
 
-        $this->createNotification('New Shippment created', 'New Shippment created at ' . $hub->name . 'Pickup station/hub ' . 'by ' . Auth::user()->fullName);
+        $this->createNotification('New Shippment created', 'New Shippment created at '.$hub->name.'Pickup station/hub '.'by '.Auth::user()->fullName);
 
         return $this->success(new ShippmentResource($b2bData['shipment']), 'Item Logged successfully.');
     }
+
     public function adminProfile()
     {
         $authUser = userAuth();
@@ -377,7 +379,7 @@ class SuperAdminService
             'phone_number' => $request->phone_number,
         ]);
 
-        $this->createNotification('Admin Profile Updated', 'Admin profile updated for ' . $user->fullName);
+        $this->createNotification('Admin Profile Updated', 'Admin profile updated for '.$user->fullName);
 
         $data = new AdminUserResource($user);
 
@@ -393,7 +395,7 @@ class SuperAdminService
             'two_factor_enabled' => $request->two_factor_enabled,
         ]);
 
-        $this->createNotification('Two Factor Authentication Updated', 'Two factor authentication updated for ' . $user->fullName);
+        $this->createNotification('Two Factor Authentication Updated', 'Two factor authentication updated for '.$user->fullName);
 
         return $this->success(null, 'Settings updated');
     }
@@ -457,10 +459,11 @@ class SuperAdminService
             'verification_code' => null,
             'verification_code_expire_at' => null,
         ]);
-        return $this->success(null, "Code Verified");
+
+        return $this->success(null, 'Code Verified');
     }
 
-    //AdminNotification
+    // AdminNotification
     public function getNotifications()
     {
         $notifications = AdminNotification::latest()->get();
@@ -474,7 +477,7 @@ class SuperAdminService
     {
         $notification = AdminNotification::find($id);
 
-        if (!$notification) {
+        if (! $notification) {
             return $this->error(null, 'Notification not found', 404);
         }
 
@@ -496,7 +499,7 @@ class SuperAdminService
         return $this->success(null, 'Notification marked as read');
     }
 
-    //Shippments
+    // Shippments
     public function allShipments()
     {
         $order_counts = Shippment::selectRaw('
@@ -507,16 +510,16 @@ class SuperAdminService
         ', [
             OrderStatus::CANCELLED,
             OrderStatus::DELIVERED,
-            OrderStatus::IN_TRANSIT
+            OrderStatus::IN_TRANSIT,
         ])->first();
 
         $shippments = Shippment::latest()->paginate(25);
 
         $data = [
-            'total_shippments'  => $order_counts->total_orders ?? 0,
-            'in_transit'  => $order_counts->in_transit ?? 0,
-            'completed'    => $order_counts->delivered ?? 0,
-            'failed'   => $order_counts->cancelled ?? 0,
+            'total_shippments' => $order_counts->total_orders ?? 0,
+            'in_transit' => $order_counts->in_transit ?? 0,
+            'completed' => $order_counts->delivered ?? 0,
+            'failed' => $order_counts->cancelled ?? 0,
         ];
 
         return $this->withPagination(ShippmentResource::collection($shippments), 'Shippment Data', 200, $data);
@@ -544,7 +547,7 @@ class SuperAdminService
 
             $shippment->activities()->create([
                 'comment' => $request->activity,
-                'note' => $request->note
+                'note' => $request->note,
             ]);
         });
 
@@ -567,7 +570,7 @@ class SuperAdminService
 
             $shippment->activities()->create([
                 'comment' => $request->activity,
-                'note' => $request->activity
+                'note' => $request->activity,
             ]);
         });
 
@@ -587,7 +590,7 @@ class SuperAdminService
 
             $shippment->activities()->create([
                 'comment' => $request->activity,
-                'note' => $request->note
+                'note' => $request->note,
             ]);
         });
 
@@ -608,7 +611,7 @@ class SuperAdminService
 
             $shippment->activities()->create([
                 'comment' => $request->activity,
-                'note' => $request->activity
+                'note' => $request->activity,
             ]);
         });
 
@@ -634,7 +637,7 @@ class SuperAdminService
 
             $shippment->activities()->create([
                 'comment' => $request->activity,
-                'note' => $request->note
+                'note' => $request->note,
             ]);
         });
 
@@ -661,19 +664,19 @@ class SuperAdminService
 
             $shippment->activities()->create([
                 'comment' => $request->activity,
-                'note' => $request->note
+                'note' => $request->note,
             ]);
         });
 
         return $this->success(new ShippmentResource($shippment), 'shipment transfered');
     }
 
-    //Batch management
+    // Batch management
     public function createBatch($request)
     {
         $centre = CollationCenter::find($request->collation_id);
 
-        if (!$centre) {
+        if (! $centre) {
             return $this->error(null, 'Centre not found', 404);
         }
 
@@ -683,21 +686,21 @@ class SuperAdminService
                 'collation_id' => $centre->id,
                 'type' => ShippmentCategory::INCOMING,
                 'batch_id' => generateBatchId(),
-                "origin_hub" => $request->origin_hub,
-                "destination_hub" => $request->destination_hub,
-                "items" => $request->items_count,
-                "weight" => $request->weight,
-                "priority" => $request->priority,
-                "shippment_ids" => $request->shipment_ids ?? null,
-                "note" => $request->note
+                'origin_hub' => $request->origin_hub,
+                'destination_hub' => $request->destination_hub,
+                'items' => $request->items_count,
+                'weight' => $request->weight,
+                'priority' => $request->priority,
+                'shippment_ids' => $request->shipment_ids ?? null,
+                'note' => $request->note,
             ]);
 
             $batch->activities()->create([
                 'comment' => $request->note,
-                'note' => $request->note
+                'note' => $request->note,
             ]);
 
-            $this->createNotification('New Shipment batch created', 'New Shipment batch created at ' . $centre->name . 'centre ' . 'by ' . Auth::user()->fullName);
+            $this->createNotification('New Shipment batch created', 'New Shipment batch created at '.$centre->name.'centre '.'by '.Auth::user()->fullName);
         });
 
         return $this->success(null, 'Batch created successfully');
@@ -707,7 +710,7 @@ class SuperAdminService
     {
         $batch = ShippmentBatch::find($id);
 
-        if (!$batch) {
+        if (! $batch) {
             return $this->error(null, 'Batch not found', 404);
         }
 
@@ -720,10 +723,10 @@ class SuperAdminService
 
             $batch->activities()->create([
                 'comment' => $request->note,
-                'note' => $request->note
+                'note' => $request->note,
             ]);
 
-            $this->createNotification('Shippment batch Processed', 'Shippment batch processed ' . 'by ' . Auth::user()->fullName);
+            $this->createNotification('Shippment batch Processed', 'Shippment batch processed '.'by '.Auth::user()->fullName);
         });
 
         return $this->success(null, 'Batch Processed');
@@ -747,7 +750,7 @@ class SuperAdminService
 
             $batch->activities()->create([
                 'comment' => $request->note,
-                'note' => $request->note
+                'note' => $request->note,
             ]);
         });
 
