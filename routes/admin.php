@@ -75,11 +75,13 @@ Route::middleware('validate.header')
                         Route::delete('/delete/{id}', 'deleteBanner');
                     });
 
-                Route::prefix('promo')->controller(BannerPromoController::class)->group(function (): void {
-                    Route::post('/add', 'addPromo');
-                    Route::get('/', 'promos');
-                    Route::delete('/delete/{id}', 'deletePromo');
-                });
+                Route::prefix('promo')
+                    ->controller(BannerPromoController::class)
+                    ->group(function (): void {
+                        Route::post('/add', 'addPromo');
+                        Route::get('/', 'promos');
+                        Route::delete('/delete/{id}', 'deletePromo');
+                    });
 
                 Route::prefix('dashboard')->controller(DashboardController::class)->group(function (): void {
                     Route::get('/analytic', 'dashboardAnalytics');
@@ -273,6 +275,25 @@ Route::middleware('validate.header')
                             Route::post('/update-password', 'updateAdminPassword');
                             Route::post('/enable-2fa', 'enable2FA');
                         });
+                    });
+
+                Route::prefix('blog')
+                    ->controller(BlogController::class)
+                    ->group(function (): void {
+                        Route::prefix('category')
+                            ->group(function (): void {
+                                Route::get('/', 'getBlogCategories');
+                                Route::post('/create', 'addBlogCategory');
+                                Route::get('/details/{id}', 'getBlogCategory');
+                                Route::post('/update/{id}', 'updateBlogCategory');
+                                Route::delete('/delete/{id}', 'deleteBlogCategory');
+                            });
+
+                        Route::get('/', 'getBlogs');
+                        Route::post('/create', 'addBlog');
+                        Route::get('/details/{id}', 'getBlog');
+                        Route::post('/update/{id}', 'updateBlog');
+                        Route::delete('/delete/{id}', 'deleteBlog');
                     });
 
                 // b2b admin

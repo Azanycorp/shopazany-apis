@@ -243,7 +243,7 @@ class BuyerService
     {
         $type = request()->query('type');
 
-        $clients = ClientLogo::when($type, fn($q) => $q->where('type', $type))->latest()->get();
+        $clients = ClientLogo::when($type, fn ($q) => $q->where('type', $type))->latest()->get();
 
         return $this->success(ClientLogoResource::collection($clients), 'Client Brands');
     }
