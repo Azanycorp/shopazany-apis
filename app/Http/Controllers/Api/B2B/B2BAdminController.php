@@ -2,20 +2,20 @@
 
 namespace App\Http\Controllers\Api\B2B;
 
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\BlogRequest;
+use App\Http\Requests\Admin\ClientLogoRequest;
+use App\Http\Requests\Admin\NewBannerRequest;
+use App\Http\Requests\Admin\SubscriptionPlanRequest;
+use App\Http\Requests\Admin\UpdateBlogRequest;
+use App\Http\Requests\AdminUserRequest;
+use App\Http\Requests\ChangeAdminPasswordRequest;
+use App\Http\Requests\ShippingAgentRequest;
+use App\Http\Requests\SocialLinkRequest;
+use App\Services\B2B\AdminService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use App\Services\B2B\AdminService;
-use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
-use App\Http\Requests\AdminUserRequest;
-use App\Http\Requests\Admin\BlogRequest;
-use App\Http\Requests\SocialLinkRequest;
-use App\Http\Requests\ShippingAgentRequest;
-use App\Http\Requests\Admin\NewBannerRequest;
-use App\Http\Requests\Admin\ClientLogoRequest;
-use App\Http\Requests\Admin\UpdateBlogRequest;
-use App\Http\Requests\ChangeAdminPasswordRequest;
-use App\Http\Requests\Admin\SubscriptionPlanRequest;
 
 class B2BAdminController extends Controller
 {
@@ -253,7 +253,6 @@ class B2BAdminController extends Controller
         return $this->adminService->deleteLink($id);
     }
 
-
     // Admin Users
     public function adminUsers()
     {
@@ -329,5 +328,4 @@ class B2BAdminController extends Controller
     {
         return $this->adminService->deleteShippingAgent($id);
     }
-
 }

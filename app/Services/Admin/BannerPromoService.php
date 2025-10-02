@@ -223,7 +223,7 @@ class BannerPromoService
     {
         $deal = Deal::find($id);
 
-        if (!$deal) {
+        if (! $deal) {
             return $this->error(null, 'Deal not found', 404);
         }
 
@@ -234,7 +234,7 @@ class BannerPromoService
     {
         $deal = Deal::find($id);
 
-        if (!$deal) {
+        if (! $deal) {
             return $this->error(null, 'Deal not found', 404);
         }
 
@@ -262,7 +262,7 @@ class BannerPromoService
     {
         $deal = Deal::find($id);
 
-        if (!$deal) {
+        if (! $deal) {
             return $this->error(null, 'Deal not found', 404);
         }
 

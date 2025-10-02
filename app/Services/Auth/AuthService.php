@@ -2,20 +2,20 @@
 
 namespace App\Services\Auth;
 
-use App\Models\User;
-use App\Enum\UserLog;
-use App\Trait\SignUp;
-use App\Enum\UserType;
-use App\Models\Action;
-use App\Enum\UserStatus;
 use App\Enum\MailingEnum;
-use App\Trait\HttpResponse;
-use Illuminate\Support\Str;
-use App\Mail\UserWelcomeMail;
-use App\Mail\SignUpVerifyMail;
-use Illuminate\Support\Facades\DB;
+use App\Enum\UserLog;
+use App\Enum\UserStatus;
+use App\Enum\UserType;
 use App\Http\Controllers\Controller;
+use App\Mail\SignUpVerifyMail;
+use App\Mail\UserWelcomeMail;
+use App\Models\Action;
+use App\Models\User;
+use App\Trait\HttpResponse;
+use App\Trait\SignUp;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
 
 class AuthService extends Controller
 {

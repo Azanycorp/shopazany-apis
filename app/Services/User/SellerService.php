@@ -77,7 +77,7 @@ class SellerService extends Controller
     {
         $currentUser = userAuth();
 
-        if ($currentUser->id != $request->user_id || !in_array($currentUser->type, [UserType::SELLER, UserType::AGRIECOM_SELLER])) {
+        if ($currentUser->id != $request->user_id || ! in_array($currentUser->type, [UserType::SELLER, UserType::AGRIECOM_SELLER])) {
             return $this->error(null, 'Unauthorized action.', 401);
         }
 
@@ -108,7 +108,7 @@ class SellerService extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return $this->error(null, 'Failed to create product: ' . $e->getMessage(), 500);
+            return $this->error(null, 'Failed to create product: '.$e->getMessage(), 500);
         }
     }
 
@@ -334,10 +334,10 @@ class SellerService extends Controller
             $query->where('user_id', $userId);
         })
             ->with([
-            'user.userShippingAddress',
-            'products.shopCountry',
-            'products.productVariations.product',
-        ])
+                'user.userShippingAddress',
+                'products.shopCountry',
+                'products.productVariations.product',
+            ])
             ->where('id', $id)
             ->first();
 
@@ -480,14 +480,14 @@ class SellerService extends Controller
                 SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as cancelled_count,
                 SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as completed_sales
             ', [
-            OrderStatus::PENDING,
-            OrderStatus::CONFIRMED,
-            OrderStatus::PROCESSING,
-            OrderStatus::SHIPPED,
-            OrderStatus::DELIVERED,
-            OrderStatus::CANCELLED,
-            OrderStatus::DELIVERED,
-        ])
+                OrderStatus::PENDING,
+                OrderStatus::CONFIRMED,
+                OrderStatus::PROCESSING,
+                OrderStatus::SHIPPED,
+                OrderStatus::DELIVERED,
+                OrderStatus::CANCELLED,
+                OrderStatus::DELIVERED,
+            ])
             ->first();
 
         $topRateds = Product::topRated($userId)->limit(5)->get();
@@ -519,8 +519,8 @@ class SellerService extends Controller
         }
 
         $orders = Order::whereHas('products', function ($query) use ($userId): void {
-                $query->where('user_id', $userId);
-            })
+            $query->where('user_id', $userId);
+        })
             ->with(['user', 'products.shopCountry'])
             ->orderBy('created_at', 'desc')
             ->take(8)
@@ -572,8 +572,8 @@ class SellerService extends Controller
             ->pluck('name')
             ->toArray();
 
-        if (!empty($existing)) {
-            return $this->error(null, 'Attribute(s) already exist: ' . implode(', ', $existing), 400);
+        if (! empty($existing)) {
+            return $this->error(null, 'Attribute(s) already exist: '.implode(', ', $existing), 400);
         }
 
         foreach ($request['attributes'] as $attribute) {
@@ -590,8 +590,8 @@ class SellerService extends Controller
     public function getAttribute($userId)
     {
         $user = User::with(['productAttributes' => function ($query): void {
-                $query->select('id', 'user_id', 'name', 'value', 'use_for_variation');
-            }])
+            $query->select('id', 'user_id', 'name', 'value', 'use_for_variation');
+        }])
             ->find($userId);
 
         if (! $user) {
@@ -604,8 +604,8 @@ class SellerService extends Controller
     public function getSingleAttribute($attributeId, $userId)
     {
         $user = User::with(['productAttributes' => function ($query): void {
-                $query->select('id', 'user_id', 'name', 'value', 'use_for_variation');
-            }])
+            $query->select('id', 'user_id', 'name', 'value', 'use_for_variation');
+        }])
             ->find($userId);
 
         if (! $user) {

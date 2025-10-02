@@ -2,47 +2,45 @@
 
 namespace App\Services\B2B;
 
-use App\Models\Rfq;
-use App\Models\User;
-use App\Enum\UserType;
-use App\Trait\Payment;
-use App\Models\B2bOrder;
 use App\Enum\MailingEnum;
 use App\Enum\OrderStatus;
 use App\Enum\PaymentType;
-use App\Enum\ProductType;
-use App\Models\B2BProduct;
-use App\Models\RfqMessage;
-use App\Models\UserWallet;
 use App\Enum\ProductStatus;
-use App\Mail\B2BOrderEmail;
-use App\Trait\HttpResponse;
-use Illuminate\Support\Str;
-use App\Models\PaymentMethod;
-use App\Enum\WithdrawalStatus;
-use App\Imports\ProductImport;
-use App\Models\B2bOrderRating;
-use Illuminate\Support\Carbon;
 use App\Enum\TransactionStatus;
-use App\Models\B2bOrderFeedback;
-use App\Imports\B2BProductImport;
-use App\Mail\B2BSHippedOrderMail;
-use App\Models\WithdrawalRequest;
-use Illuminate\Support\Facades\DB;
-use App\Mail\B2BDeliveredOrderMail;
+use App\Enum\UserType;
+use App\Enum\WithdrawalStatus;
 use App\Http\Controllers\Controller;
-use App\Services\TransactionService;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Maatwebsite\Excel\Facades\Excel;
-use Illuminate\Support\Facades\Storage;
 use App\Http\Resources\B2BOrderResource;
-use App\Models\B2BSellerShippingAddress;
 use App\Http\Resources\B2BProductResource;
-use App\Repositories\B2BProductRepository;
 use App\Http\Resources\B2BSellerProfileResource;
-use App\Repositories\B2BSellerShippingRepository;
 use App\Http\Resources\B2BSellerShippingAddressResource;
+use App\Imports\B2BProductImport;
+use App\Imports\ProductImport;
+use App\Mail\B2BDeliveredOrderMail;
+use App\Mail\B2BOrderEmail;
+use App\Mail\B2BSHippedOrderMail;
+use App\Models\B2bOrder;
+use App\Models\B2bOrderFeedback;
+use App\Models\B2bOrderRating;
+use App\Models\B2BProduct;
+use App\Models\B2BSellerShippingAddress;
+use App\Models\PaymentMethod;
+use App\Models\Rfq;
+use App\Models\RfqMessage;
+use App\Models\User;
+use App\Models\UserWallet;
+use App\Models\WithdrawalRequest;
+use App\Repositories\B2BProductRepository;
+use App\Repositories\B2BSellerShippingRepository;
+use App\Services\TransactionService;
+use App\Trait\HttpResponse;
+use App\Trait\Payment;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
+use Maatwebsite\Excel\Facades\Excel;
 
 class SellerService extends Controller
 {
@@ -244,7 +242,7 @@ class SellerService extends Controller
             $slug = Str::slug($request->name);
 
             if (B2BProduct::where('slug', $slug)->exists()) {
-                $slug = $slug . '-' . uniqid();
+                $slug = $slug.'-'.uniqid();
             }
 
             if ($request->hasFile('front_image')) {
@@ -311,7 +309,7 @@ class SellerService extends Controller
         if ($currentUserId != $user_id) {
             return $this->error(null, 'Unauthorized action.', 401);
         }
-        
+
         $prod = $this->b2bProductRepository->find($product_id);
 
         return $this->success(new B2BProductResource($prod), 'Product details');
@@ -342,7 +340,7 @@ class SellerService extends Controller
             $slug = Str::slug($request->name);
 
             if (B2BProduct::where('slug', $slug)->exists()) {
-                $slug = $slug . '-' . uniqid();
+                $slug = $slug.'-'.uniqid();
             }
         } else {
             $slug = $prod->slug;
@@ -684,7 +682,7 @@ class SellerService extends Controller
         $orders = B2bOrder::where('seller_id', userAuthId())->when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
             $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
                 $subQuery->where('seller_id', userAuthId())
-                    ->where('order_no', 'LIKE', '%' . $searchQuery . '%');
+                    ->where('order_no', 'LIKE', '%'.$searchQuery.'%');
             });
         })->latest()->get();
 
@@ -734,7 +732,7 @@ class SellerService extends Controller
         $orderedItems = [
             'quantity' => $order->product_quantity,
             'price' => $order->total_amount,
-            'buyer_name' => $user->first_name . ' ' . $user->last_name,
+            'buyer_name' => $user->first_name.' '.$user->last_name,
             'order_number' => $order->order_no,
         ];
 
@@ -826,7 +824,7 @@ class SellerService extends Controller
                 'seller_id' => $rfq->seller_id,
                 'product_id' => $rfq->product_id,
                 'product_quantity' => $rfq->product_quantity,
-                'order_no' => 'ORD-' . now()->timestamp . '-' . Str::random(8),
+                'order_no' => 'ORD-'.now()->timestamp.'-'.Str::random(8),
                 'product_data' => $product,
                 'total_amount' => $total_amount,
                 'payment_method' => PaymentType::OFFLINE,
@@ -839,7 +837,7 @@ class SellerService extends Controller
                 'image' => $product->front_image,
                 'quantity' => $rfq->product_quantity,
                 'price' => $total_amount,
-                'buyer_name' => $buyer->first_name . ' ' . $buyer->last_name,
+                'buyer_name' => $buyer->first_name.' '.$buyer->last_name,
                 'order_number' => $order->order_no,
                 'currency' => $buyer->default_currency ?? userAuth()->default_currency,
             ];
@@ -1057,7 +1055,7 @@ class SellerService extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return $this->error(null, 'An error occurred while processing your request :' . $e->getMessage(), 500);
+            return $this->error(null, 'An error occurred while processing your request :'.$e->getMessage(), 500);
         }
     }
 

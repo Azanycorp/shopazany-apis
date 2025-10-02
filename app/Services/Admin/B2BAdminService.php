@@ -2,28 +2,27 @@
 
 namespace App\Services\Admin;
 
-use App\Models\Size;
-use App\Models\Unit;
-use App\Models\User;
-use App\Models\Admin;
-use App\Models\Brand;
-use App\Models\Color;
-use App\Models\State;
-use App\Models\Country;
-use App\Enum\BannerType;
 use App\Enum\BannerStatus;
-use App\Models\ShopCountry;
-use App\Models\SliderImage;
-use App\Trait\HttpResponse;
-use App\Models\B2bProductCategory;
-use Illuminate\Support\Facades\App;
-use App\Http\Resources\StateResource;
-use Illuminate\Support\Facades\Cache;
-use App\Http\Resources\SliderResource;
-use App\Http\Resources\CountryResource;
+use App\Enum\BannerType;
 use App\Http\Resources\AdminUserResource;
 use App\Http\Resources\B2BCategoryResource;
+use App\Http\Resources\CountryResource;
 use App\Http\Resources\ShopCountryResource;
+use App\Http\Resources\SliderResource;
+use App\Http\Resources\StateResource;
+use App\Models\Admin;
+use App\Models\B2bProductCategory;
+use App\Models\Brand;
+use App\Models\Color;
+use App\Models\Country;
+use App\Models\ShopCountry;
+use App\Models\Size;
+use App\Models\SliderImage;
+use App\Models\State;
+use App\Models\Unit;
+use App\Models\User;
+use App\Trait\HttpResponse;
+use Illuminate\Support\Facades\Cache;
 
 class B2BAdminService
 {
@@ -40,10 +39,10 @@ class B2BAdminService
                 'image' => $url['url'] ?? null,
                 'public_id' => $url['public_id'] ?? null,
                 'type' => BannerType::B2B,
-                'link' => $request->link
+                'link' => $request->link,
             ]);
 
-            return $this->success(null, "Created successfully");
+            return $this->success(null, 'Created successfully');
         } catch (\Exception $e) {
             return $this->error(null, $e->getMessage(), 500);
         }
@@ -61,10 +60,10 @@ class B2BAdminService
             $slider->update([
                 'image' => $url['url'] ?? $slider->image,
                 'public_id' => $url['public_id'] ?? $slider->public_id,
-                'link' => $request->link
+                'link' => $request->link,
             ]);
 
-            return $this->success(null, "Details Updated successfully");
+            return $this->success(null, 'Details Updated successfully');
         } catch (\Exception $e) {
             return $this->error(null, $e->getMessage(), 500);
         }
@@ -75,14 +74,15 @@ class B2BAdminService
         $slider = SliderImage::where('type', BannerType::B2B)->findOrFail($id);
         $data = new SliderResource($slider);
 
-        return $this->success($data, "Slider details");
+        return $this->success($data, 'Slider details');
     }
+
     public function deleteSlider($id)
     {
         $slider = SliderImage::where('type', BannerType::B2B)->findOrFail($id);
         $slider->delete();
 
-        return $this->success(null, "details deleted");
+        return $this->success(null, 'details deleted');
     }
 
     public function sliders()
@@ -90,7 +90,7 @@ class B2BAdminService
         $sliders = SliderImage::where('type', BannerType::B2B)->latest()->take(5)->get();
         $data = SliderResource::collection($sliders);
 
-        return $this->success($data, "Sliders");
+        return $this->success($data, 'Sliders');
     }
 
     public function categories()
@@ -101,7 +101,7 @@ class B2BAdminService
 
         $data = B2BCategoryResource::collection($categories);
 
-        return $this->success($data, "Categories");
+        return $this->success($data, 'Categories');
     }
 
     public function country()
@@ -112,7 +112,7 @@ class B2BAdminService
 
         $data = CountryResource::collection($country);
 
-        return $this->success($data, "All Country");
+        return $this->success($data, 'All Country');
     }
 
     public function states($id)
@@ -121,7 +121,7 @@ class B2BAdminService
 
         $data = StateResource::collection($states);
 
-        return $this->success($data, "States");
+        return $this->success($data, 'States');
     }
 
     public function brands()
@@ -130,7 +130,7 @@ class B2BAdminService
             ->where('status', BannerStatus::ACTIVE)
             ->get();
 
-        return $this->success($brands, "All brands");
+        return $this->success($brands, 'All brands');
     }
 
     public function colors()
@@ -139,7 +139,7 @@ class B2BAdminService
             ->where('status', BannerStatus::ACTIVE)
             ->get();
 
-        return $this->success($colors, "All colors");
+        return $this->success($colors, 'All colors');
     }
 
     public function units()
@@ -148,7 +148,7 @@ class B2BAdminService
             ->where('status', BannerStatus::ACTIVE)
             ->get();
 
-        return $this->success($units, "All units");
+        return $this->success($units, 'All units');
     }
 
     public function sizes()
@@ -157,7 +157,7 @@ class B2BAdminService
             ->where('status', BannerStatus::ACTIVE)
             ->get();
 
-        return $this->success($sizes, "All sizes");
+        return $this->success($sizes, 'All sizes');
     }
 
     public function shopByCountry($request)
@@ -165,7 +165,7 @@ class B2BAdminService
         $country = Country::find($request->country_id);
 
         if (! $country) {
-            return $this->error(null, "Not found", 404);
+            return $this->error(null, 'Not found', 404);
         }
 
         if ($request->file('flag')) {
@@ -179,7 +179,7 @@ class B2BAdminService
             'currency' => $request->currency,
         ]);
 
-        return $this->success(null, "Added successfully");
+        return $this->success(null, 'Added successfully');
     }
 
     public function getShopByCountry()
@@ -187,7 +187,7 @@ class B2BAdminService
         $shopByCountries = ShopCountry::orderBy('name', 'asc')->get();
         $data = ShopCountryResource::collection($shopByCountries);
 
-        return $this->success($data, "List");
+        return $this->success($data, 'List');
     }
 
     public function referralGenerate()
@@ -199,18 +199,18 @@ class B2BAdminService
             ->get();
 
         foreach ($users as $user) {
-            if (!$user->referrer_code) {
+            if (! $user->referrer_code) {
                 $user->referrer_code = generate_referral_code();
             }
 
-            if (!$user->referral_link) {
+            if (! $user->referral_link) {
                 $user->referrer_link = generate_referrer_link($user->referrer_code);
             }
 
             $user->save();
         }
 
-        return $this->success(null, "Generated successfully");
+        return $this->success(null, 'Generated successfully');
     }
 
     public function adminProfile()

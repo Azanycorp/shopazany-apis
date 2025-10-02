@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Models\BatchActivity;
 use Illuminate\Database\Eloquent\Model;
 
 class ShippmentBatch extends Model

@@ -13,13 +13,13 @@ class SellerService
     public function profile($userId)
     {
         $user = User::with([
-                'wallet',
-                'bankAccount',
-                'userbusinessinfo',
-                'userSubscriptions',
-                'userShippingAddress',
-                'products',
-            ])
+            'wallet',
+            'bankAccount',
+            'userbusinessinfo',
+            'userSubscriptions',
+            'userShippingAddress',
+            'products',
+        ])
             ->withCount('referrals')
             ->findOrFail($userId)
             ->append(['is_subscribed', 'subscription_plan']);
@@ -33,7 +33,7 @@ class SellerService
     {
         $user = User::find($request->user_id);
 
-        if (!$user) {
+        if (! $user) {
             return $this->error(null, 'User not found', 404);
         }
 

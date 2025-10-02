@@ -40,7 +40,7 @@ class B2BBannerPromoService
     public function banners()
     {
         $banners = Banner::where('type', BannerType::B2B)->latest()->get();
-       
+
         $data = B2BBannerResource::collection($banners);
 
         return $this->success($data, 'Banners');

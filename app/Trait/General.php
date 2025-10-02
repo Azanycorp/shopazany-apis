@@ -45,6 +45,7 @@ trait General
                 $status
             );
         }
+
         return null;
     }
 }

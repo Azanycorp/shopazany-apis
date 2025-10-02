@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers\Api\B2B;
 
-use Illuminate\Http\Request;
-use App\Services\B2B\BuyerService;
-use App\Http\Requests\QuoteRequest;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\WishListRequest;
-use App\Http\Requests\LikeProductRequest;
-use App\Http\Requests\ChangePasswordRequest;
 use App\Http\Requests\B2BBuyerShippingAddressRequest;
+use App\Http\Requests\ChangePasswordRequest;
+use App\Http\Requests\LikeProductRequest;
+use App\Http\Requests\QuoteRequest;
+use App\Http\Requests\WishListRequest;
+use App\Services\B2B\BuyerService;
+use Illuminate\Http\Request;
 
 class B2BBuyerController extends Controller
 {
