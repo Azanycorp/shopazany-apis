@@ -241,7 +241,9 @@ class BuyerService
 
     public function getClientLogos()
     {
-        $clients = ClientLogo::latest()->get();
+        $type = request()->query('type');
+
+        $clients = ClientLogo::when($type, fn($q) => $q->where('type', $type))->latest()->get();
 
         return $this->success(ClientLogoResource::collection($clients), 'Client Brands');
     }
@@ -328,8 +330,11 @@ class BuyerService
 
     public function allBlogs()
     {
-        $blogs = Blog::with('user')
-            ->where('type', BannerType::B2B)
+        $type = request()->query('type');
+
+        $blogs = Blog::with('user')->when($type, function ($q) use ($type) {
+            $q->where('type', $type);
+        })
             ->latest()
             ->get();
 
@@ -338,9 +343,7 @@ class BuyerService
 
     public function singleBlog($slug)
     {
-        $blog = Blog::with('user')
-            ->where('type', BannerType::B2B)
-            ->where('slug', $slug)
+        $blog = Blog::with('user')->where('slug', $slug)
             ->firstOrFail();
 
         return $this->success(new BlogResource($blog), 'Blog details');

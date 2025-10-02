@@ -182,12 +182,15 @@ class AdminService
     // Admin section
     public function allSellers()
     {
+        $type = request()->query('type');
+
         $sellers = User::withCount('b2bProducts')
+            ->when($type, fn($q) => $q->where('type', $type))
             ->where('type', UserType::B2B_SELLER)
             ->latest()
             ->get();
 
-        $sellersCounts = User::where('type', UserType::B2B_SELLER)
+        $sellersCounts = User::where('type', $type ?? UserType::B2B_SELLER)
             ->selectRaw('
                 COUNT(*) as total,
                 SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as active,
@@ -212,8 +215,7 @@ class AdminService
 
     public function approveSeller($id)
     {
-        $user = User::where('type', UserType::B2B_SELLER)
-            ->where('id', $id)
+        $user = User::where('id', $id)
             ->firstOrFail();
 
         $user->is_admin_approve = ! $user->is_admin_approve;
@@ -227,8 +229,7 @@ class AdminService
 
     public function viewSeller($id): array
     {
-        $user = User::where('type', UserType::B2B_SELLER)
-            ->where('id', $id)
+        $user = User::where('id', $id)
             ->firstOrFail();
 
         $search = request()->search;
@@ -268,8 +269,7 @@ class AdminService
 
     public function banSeller($id)
     {
-        $user = User::where('type', UserType::B2B_SELLER)
-            ->where('id', $id)
+        $user = User::where('id', $id)
             ->firstOrFail();
 
         $user->status = UserStatus::BLOCKED;
@@ -281,8 +281,7 @@ class AdminService
 
     public function removeSeller($id)
     {
-        $user = User::where('type', UserType::B2B_SELLER)
-            ->where('id', $id)
+        $user = User::where('id', $id)
             ->firstOrFail();
 
         $user->delete();
@@ -292,7 +291,8 @@ class AdminService
 
     public function bulkRemove($request)
     {
-        $users = User::where('type', UserType::B2B_SELLER)
+        $type = request()->query('type');
+        $users = User::where('type', $type ?? UserType::B2B_SELLER)
             ->whereIn('id', $request->user_ids)
             ->get();
 
@@ -463,7 +463,9 @@ class AdminService
 
     public function allBuyers()
     {
-        $buyerStats = User::where('type', UserType::B2B_BUYER)
+        $type = request()->query('type');
+
+        $buyerStats = User::when($type, fn($q) => $q->where('type', $type))->where('type', UserType::B2B_BUYER)
             ->selectRaw('
                 COUNT(*) as total_buyers,
                 SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as active_buyers,
@@ -475,7 +477,7 @@ class AdminService
             ->first();
 
         $buyers = User::with('b2bCompany')
-            ->where('type', UserType::B2B_BUYER)
+            ->when($type, fn($q) => $q->where('type', $type))
             ->latest()
             ->get();
 
@@ -493,7 +495,6 @@ class AdminService
     {
         $user = User::select('id', 'first_name', 'last_name', 'email', 'image')
             ->with('b2bCompany')
-            ->where('type', UserType::B2B_BUYER)
             ->where('id', $id)
             ->firstOrFail();
 
