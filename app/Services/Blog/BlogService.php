@@ -100,9 +100,15 @@ class BlogService
             $metaImageUrl = uploadFunction($request->file('meta_image'), 'blog');
         }
 
+        $slug = Str::slug($request->title);
+
+        if (B2CBlog::where('slug', $slug)->exists()) {
+            $slug = $slug.'-'.uniqid();
+        }
+
         B2CBlog::query()->create([
             'title' => $request->title,
-            'slug' => $request->slug,
+            'slug' => $slug,
             'b2_c_blog_category_id' => $request->blog_category_id,
             'short_description' => $request->short_description,
             'description' => $request->description,
@@ -111,7 +117,7 @@ class BlogService
             'meta_description' => $request->meta_description,
             'meta_keywords' => $request->meta_keywords,
             'meta_image' => $metaImageUrl['url'] ?? null,
-            'status' => $request->status,
+            'status' => 'published',
             'created_by' => auth()->id(),
         ]);
 
@@ -145,9 +151,15 @@ class BlogService
             $metaImageUrl = uploadFunction($request->file('meta_image'), 'blog');
         }
 
+        $slug = Str::slug($request->title);
+
+        if (B2CBlog::where('slug', $slug)->exists()) {
+            $slug = $slug.'-'.uniqid();
+        }
+
         $blog->update([
             'title' => $request->title,
-            'slug' => $request->slug,
+            'slug' => $slug,
             'b2_c_blog_category_id' => $request->blog_category_id,
             'short_description' => $request->short_description,
             'description' => $request->description,
@@ -156,8 +168,7 @@ class BlogService
             'meta_description' => $request->meta_description,
             'meta_keywords' => $request->meta_keywords,
             'meta_image' => $metaImageUrl['url'] ?? null,
-            'status' => $request->status,
-            'created_by' => auth()->id(),
+            'status' => 'published',
         ]);
 
         return $this->success(new B2CBlogResource($blog), 'Blog updated successfully');
