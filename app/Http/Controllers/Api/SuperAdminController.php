@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Api;
 
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AddUserRequest;
 use App\Services\Admin\SuperAdminService;
+use Illuminate\Http\Request;
 
 class SuperAdminController extends Controller
 {
@@ -57,7 +57,7 @@ class SuperAdminController extends Controller
 
     public function verifyCode(Request $request)
     {
-        $request->validate(['code'  => 'required|string']);
+        $request->validate(['code' => 'required|string']);
 
         return $this->superAdminService->verifyCode($request);
     }
@@ -72,5 +72,4 @@ class SuperAdminController extends Controller
 
         return $this->superAdminService->changePassword($request);
     }
-
 }

@@ -107,7 +107,7 @@ class SignUpTest extends TestCase
 
         $response = $this->postJson('/api/connect/signup?referrer=REF1234', $payload, $headers);
 
-        $response->assertStatus(200)
+        $response->assertStatus(201)
             ->assertJson(['message' => 'Created successfully']);
 
         $this->assertDatabaseHas('users', [

@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Api\B2B;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\B2BBuyerShippingAddressRequest;
 use App\Http\Requests\ChangePasswordRequest;
+use App\Http\Requests\LikeProductRequest;
+use App\Http\Requests\QuoteRequest;
+use App\Http\Requests\WishListRequest;
 use App\Services\B2B\BuyerService;
 use Illuminate\Http\Request;
 
@@ -22,7 +25,7 @@ class B2BBuyerController extends Controller
         return $this->buyerService->requestRefund($request);
     }
 
-    public function requestQuote(Request $request)
+    public function requestQuote(LikeProductRequest $request)
     {
         return $this->buyerService->sendQuote($request);
     }
@@ -38,7 +41,7 @@ class B2BBuyerController extends Controller
         return $this->buyerService->sendMutipleQuotes();
     }
 
-    public function sendSingleQuote(Request $request)
+    public function sendSingleQuote(QuoteRequest $request)
     {
         return $this->buyerService->sendRfq($request);
     }
@@ -87,7 +90,7 @@ class B2BBuyerController extends Controller
     }
 
     // Wish list
-    public function addTowishList(Request $request)
+    public function addTowishList(WishListRequest $request)
     {
         return $this->buyerService->addToWishList($request);
     }
@@ -114,7 +117,7 @@ class B2BBuyerController extends Controller
     }
 
     // Product Review
-    public function likeProduct(Request $request)
+    public function likeProduct(LikeProductRequest $request)
     {
         return $this->buyerService->likeProduct($request);
     }

@@ -22,7 +22,7 @@ trait Product
         uploadMultipleProductImage($request, 'images', $folder->folder, $product);
     }
 
-    public function createProductRecord($request, $user, $slug, array $url)
+    public function createProductRecord($request, $user, $slug, array $url, ?string $type = null)
     {
         $price = $this->calculateFinalPrice(
             $request->product_price,
@@ -52,6 +52,8 @@ trait Product
             'added_by' => $user->type,
             'country_id' => $user->country ?? 160,
             'default_currency' => $user->default_currency,
+            'condition' => $request->condition,
+            'type' => $type,
         ]);
     }
 

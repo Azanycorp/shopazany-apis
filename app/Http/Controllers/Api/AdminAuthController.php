@@ -11,8 +11,7 @@ class AdminAuthController extends Controller
 {
     public function __construct(
         protected AuthService $service
-    )
-    {}
+    ) {}
 
     public function login(AdminLoginRequest $request)
     {

@@ -13,6 +13,7 @@ class B2bProdctReview extends Model
         'rating',
         'title',
         'note',
+        'type',
     ];
 
     public function user(): BelongsTo

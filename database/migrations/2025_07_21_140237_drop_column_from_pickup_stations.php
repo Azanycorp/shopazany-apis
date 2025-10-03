@@ -22,7 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('pickup_stations', function (Blueprint $table) {
-              $table->unsignedBigInteger('collation_center_id');
+            $table->unsignedBigInteger('collation_center_id');
         });
     }
 };

@@ -156,8 +156,8 @@ class CustomerService
             return $this->error(null, 'User not found', 404);
         }
 
-        $image = $request->hasFile('image') ? 
-            uploadUserImage($request, 'image', $user) : 
+        $image = $request->hasFile('image') ?
+            uploadUserImage($request, 'image', $user) :
             ['url' => $user->image, 'public_id' => $user->public_id];
 
         $user->update([

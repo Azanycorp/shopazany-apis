@@ -60,19 +60,20 @@ class BuyerService
     public function allCustomers()
     {
         $query = trim(request()->input('search'));
+        $type = request()->query('type');
 
-        $users = User::where('type', UserType::B2B_BUYER)
+        $users = User::where('type', $type ?? UserType::B2B_BUYER)
             ->where(function ($queryBuilder) use ($query): void {
-                $queryBuilder->where('first_name', 'LIKE', '%' . $query . '%')
-                    ->orWhere('last_name', 'LIKE', '%' . $query . '%')
-                    ->orWhere('middlename', 'LIKE', '%' . $query . '%')
-                    ->orWhere('email', 'LIKE', '%' . $query . '%');
+                $queryBuilder->where('first_name', 'LIKE', '%'.$query.'%')
+                    ->orWhere('last_name', 'LIKE', '%'.$query.'%')
+                    ->orWhere('middlename', 'LIKE', '%'.$query.'%')
+                    ->orWhere('email', 'LIKE', '%'.$query.'%');
             })
             ->paginate(25);
 
         $data = CustomerResource::collection($users);
 
-        return $this->withPagination($data, "All Buyers");
+        return $this->withPagination($data, 'All Buyers');
     }
 
     public function viewCustomer($id)
@@ -83,7 +84,6 @@ class BuyerService
             'wishlist.product',
             'payments.order',
         ])
-            ->where('type', UserType::B2B_BUYER)
             ->where('id', $id)
             ->firstOrFail();
 
@@ -94,8 +94,7 @@ class BuyerService
 
     public function banCustomer($request)
     {
-        $user = User::where('type', UserType::B2B_BUYER)
-            ->where('id', $request->user_id)
+        $user = User::where('id', $request->user_id)
             ->firstOrFail();
 
         $user->status = UserStatus::BLOCKED;
@@ -242,14 +241,19 @@ class BuyerService
 
     public function getClientLogos()
     {
-        $clients = ClientLogo::latest()->get();
+        $type = request()->query('type');
+
+        $clients = ClientLogo::when($type, fn ($q) => $q->where('type', $type))->latest()->get();
 
         return $this->success(ClientLogoResource::collection($clients), 'Client Brands');
     }
 
     public function getSocialLinks()
     {
-        $links = SocialSetting::latest()->get();
+        $type = request()->query('type');
+
+        $links = SocialSetting::when($type, fn ($q) => $q->where('type', $type))
+            ->latest()->get();
 
         return $this->success(SocialLinkResource::collection($links), 'Social links');
     }
@@ -282,6 +286,8 @@ class BuyerService
 
     public function getProducts()
     {
+        $type = request()->query('type');
+
         $products = B2BProduct::with([
             'category',
             'user',
@@ -292,6 +298,8 @@ class BuyerService
             'b2bProductImages',
         ])
             ->whereStatus(ProductStatus::ACTIVE)
+            ->when($type, fn ($q) => $q->where('type', $type))
+            ->latest()
             ->get();
 
         return $this->success(B2BProductResource::collection($products), 'Products');
@@ -299,11 +307,20 @@ class BuyerService
 
     public function categories()
     {
-        $categories = B2bProductCategory::with(['subcategory', 'products', 'products.b2bProductReview', 'products.b2bLikes'])
-            ->withCount('products') // Count products in the category
-            ->with(['products' => function ($query): void {
-                $query->withCount('b2bProductReview'); // Count reviews for each product
-            }])
+        $type = request()->query('type');
+
+        $categories = B2bProductCategory::with(['subcategory'])
+            ->withCount('products')
+            ->with([
+                'products' => function ($query) {
+                    $query->withCount('b2bProductReview');
+                },
+                'products.b2bProductReview',
+                'products.b2bLikes',
+            ])
+            ->when($type, function ($q) use ($type) {
+                $q->where('type', $type);
+            })
             ->where('featured', 1)
             ->take(10)
             ->get();
@@ -313,35 +330,49 @@ class BuyerService
 
     public function allBlogs()
     {
-        $blogs = Blog::with('user')->where('type', BannerType::B2B)->latest()->get();
+        $type = request()->query('type');
+
+        $blogs = Blog::with('user')->when($type, function ($q) use ($type) {
+            $q->where('type', $type);
+        })
+            ->latest()
+            ->get();
 
         return $this->success(BlogResource::collection($blogs), 'Blogs');
     }
 
     public function singleBlog($slug)
     {
-        $blog = Blog::with('user')->where('type', BannerType::B2B)->where('slug', $slug)->firstOrFail();
+        $blog = Blog::with('user')->where('slug', $slug)
+            ->firstOrFail();
 
         return $this->success(new BlogResource($blog), 'Blog details');
     }
 
     public function getCategoryProducts()
     {
-        $categories = B2BProductCategory::select('id', 'name', 'slug', 'image')
-            ->with(['products.b2bProductReview', 'products.b2bLikes', 'subcategory'])
+        $type = request()->query('type');
+
+        $categories = B2BProductCategory::select('id', 'type', 'name', 'slug', 'image')
+            ->when($type, function ($q) use ($type) {
+                $q->where('type', $type);
+            })
+            ->with(['subcategory'])
             ->withCount('products')
-            ->with(['products' => function ($query): void {
-                $query->withCount('b2bProductReview'); // Count reviews for each product
+            ->with(['products' => function ($query) {
+                $query->withCount('b2bProductReview');
             }])
             ->get();
 
-        return $this->success(B2BCategoryResource::collection($categories), 'Categories products');
+        return $this->success(B2BCategoryResource::collection($categories), 'Product Categories');
     }
 
     public function bestSelling()
     {
+        $type = request()->input('type');
+
         $bestSellingProducts = B2bOrder::with([
-            'product:id,name,front_image,unit_price,slug,default_currency',
+            'product:id,name,front_image,unit_price,slug,default_currency,type',
             'product.b2bProductReview:id,product_id,rating',
             'b2bProductReview',
         ])
@@ -351,6 +382,11 @@ class BuyerService
                 DB::raw('SUM(product_quantity) as total_sold')
             )
             ->where('status', OrderStatus::DELIVERED)
+            ->when($type, function ($query, $type) {
+                $query->whereHas('product', function ($q) use ($type) {
+                    $q->where('type', $type);
+                });
+            })
             ->groupBy('product_id', 'id')
             ->orderByDesc('total_sold')
             ->limit(10)
@@ -362,8 +398,9 @@ class BuyerService
     public function featuredProduct()
     {
         $countryId = request()->query('country_id');
+        $type = request()->query('type');
 
-        $query = B2BProduct::with([
+        $featuredProducts = B2BProduct::with([
             'shopCountry',
             'orders',
             'b2bProductReview.user',
@@ -374,13 +411,11 @@ class BuyerService
             'country',
             'b2bProductImages',
         ])
-            ->where('status', ProductStatus::ACTIVE);
-
-        if ($countryId) {
-            $query->where('country_id', $countryId);
-        }
-
-        $featuredProducts = $query->limit(8)->get();
+            ->where('status', ProductStatus::ACTIVE)
+            ->when($countryId, fn ($q) => $q->where('country_id', $countryId))
+            ->when($type, fn ($q) => $q->where('type', $type))
+            ->limit(8)
+            ->get();
 
         return $this->success(B2BProductResource::collection($featuredProducts), 'Featured products');
     }
@@ -388,6 +423,7 @@ class BuyerService
     public function searchProduct()
     {
         $searchQuery = request()->input('search');
+        $type = request()->input('type');
 
         $products = B2BProduct::with([
             'country',
@@ -398,8 +434,11 @@ class BuyerService
             'subCategory',
             'user',
         ])
-            ->where('name', 'LIKE', '%' . $searchQuery . '%')
-            ->orWhere('unit_price', 'LIKE', '%' . $searchQuery . '%')
+            ->when($type, fn ($q) => $q->where('type', $type))
+            ->where(function ($query) use ($searchQuery) {
+                $query->where('name', 'LIKE', '%'.$searchQuery.'%')
+                    ->orWhere('unit_price', 'LIKE', '%'.$searchQuery.'%');
+            })
             ->get();
 
         return $this->success(B2BProductResource::collection($products), 'Products filtered');
@@ -428,8 +467,7 @@ class BuyerService
             'country',
             'b2bProductImages',
             'b2bProductReview.user' => function ($query): void {
-                $query->select('id', 'first_name', 'last_name')
-                    ->where('type', UserType::B2B_BUYER);
+                $query->select('id', 'first_name', 'last_name');
             },
         ])
             ->where('slug', $slug)
@@ -491,6 +529,8 @@ class BuyerService
     {
         $userId = userAuthId();
 
+        $type = request()->query('type');
+
         $quotes = B2bQuote::where('buyer_id', $userId)->latest()->get();
 
         if ($quotes->isEmpty()) {
@@ -517,7 +557,8 @@ class BuyerService
                 Rfq::create([
                     'buyer_id' => $quote->buyer_id,
                     'seller_id' => $quote->seller_id,
-                    'quote_no' => strtoupper(Str::random(10) . $userId),
+                    'quote_no' => strtoupper(Str::random(10).$userId),
+                    'type' => $type ?? null,
                     'product_id' => $quote->product_id,
                     'product_quantity' => $quote->qty,
                     'total_amount' => $unit_price * $quote->qty,
@@ -535,13 +576,15 @@ class BuyerService
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return $this->error(null, 'transaction failed, please try again: ' . $e->getMessage(), 500);
+            return $this->error(null, 'transaction failed, please try again: '.$e->getMessage(), 500);
         }
     }
 
     public function sendRfq($request)
     {
         $quote = B2bQuote::findOrFail($request->rfq_id);
+
+        $type = request()->query('type');
 
         try {
             $product = B2BProduct::findOrFail($quote->product_id);
@@ -557,7 +600,8 @@ class BuyerService
             Rfq::create([
                 'buyer_id' => $quote->buyer_id,
                 'seller_id' => $quote->seller_id,
-                'quote_no' => strtoupper(Str::random(10) . userAuthId()),
+                'quote_no' => strtoupper(Str::random(10).userAuthId()),
+                'type' => $type ?? null,
                 'product_id' => $quote->product_id,
                 'product_quantity' => $quote->qty,
                 'total_amount' => $amount,
@@ -569,14 +613,13 @@ class BuyerService
 
             return $this->success(null, 'rfq sent successfully');
         } catch (\Exception $e) {
-            return $this->error(null, 'transaction failed, please try again: ' . $e->getMessage(), 500);
+            return $this->error(null, 'transaction failed, please try again: '.$e->getMessage(), 500);
         }
     }
 
     public function removeQuote($id)
     {
         $quote = B2bQuote::findOrFail($id);
-
         $quote->delete();
 
         return $this->success(null, 'Item removed successfully');
@@ -585,7 +628,6 @@ class BuyerService
     public function sendQuote($request)
     {
         $userId = userAuthId();
-
         $product = B2BProduct::findOrFail($request->product_id);
 
         if ($product->availability_quantity < 1) {
@@ -605,7 +647,7 @@ class BuyerService
         }
 
         if ($request->qty > $product->availability_quantity) {
-            return $this->error(null, 'Your peferred quantity is greater than the availability quantity : ' . $product->availability_quantity, 422);
+            return $this->error(null, 'Your peferred quantity is greater than the availability quantity : '.$product->availability_quantity, 422);
         }
 
         $quote = B2bQuote::create([
@@ -685,7 +727,7 @@ class BuyerService
         $orders = B2bOrder::with('seller')->where('buyer_id', userAuthId())->when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
             $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
                 $subQuery->where('buyer_id', userAuthId())
-                    ->where('order_no', 'LIKE', '%' . $searchQuery . '%');
+                    ->where('order_no', 'LIKE', '%'.$searchQuery.'%');
             });
         })->get();
 
@@ -743,7 +785,7 @@ class BuyerService
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return $this->error(null, 'Failed to send review request: ' . $e->getMessage(), 500);
+            return $this->error(null, 'Failed to send review request: '.$e->getMessage(), 500);
         }
     }
 
@@ -767,7 +809,7 @@ class BuyerService
     public function addReview($request)
     {
         $userId = userAuthId();
-
+        $type = request()->query('type');
         $review = B2bProdctReview::updateOrCreate(
             [
                 'buyer_id' => $userId,
@@ -777,6 +819,7 @@ class BuyerService
                 'rating' => $request->rating,
                 'title' => $request->title,
                 'note' => $request->note,
+                'type' => $type,
             ]
         );
 
@@ -871,7 +914,7 @@ class BuyerService
         }
 
         if ($request->qty > $product->availability_quantity) {
-            return $this->error(null, 'Your peferred quantity is greater than the availability quantity : ' . $product->availability_quantity, 422);
+            return $this->error(null, 'Your peferred quantity is greater than the availability quantity : '.$product->availability_quantity, 422);
         }
 
         try {
@@ -880,7 +923,7 @@ class BuyerService
             Rfq::create([
                 'buyer_id' => $quote->user_id,
                 'seller_id' => $product->user_id,
-                'quote_no' => strtoupper(Str::random(10) . Auth::user()->id),
+                'quote_no' => strtoupper(Str::random(10).Auth::user()->id),
                 'product_id' => $product->id,
                 'product_quantity' => $request->qty,
                 'total_amount' => $amount,
@@ -892,7 +935,7 @@ class BuyerService
 
             return $this->success(null, 'rfq sent successfully');
         } catch (\Exception $e) {
-            return $this->error(null, 'transaction failed, please try again: ' . $e->getMessage(), 500);
+            return $this->error(null, 'transaction failed, please try again: '.$e->getMessage(), 500);
         }
     }
 
@@ -902,7 +945,6 @@ class BuyerService
         $auth = userAuth();
 
         $user = User::with('b2bCompany')
-            ->where('type', UserType::B2B_BUYER)
             ->where('id', $auth->id)
             ->first();
 
@@ -925,8 +967,8 @@ class BuyerService
 
         if (
             ! empty($request->email) && User::where('email', $request->email)
-            ->where('id', '!=', $user->id)
-            ->exists()
+                ->where('id', '!=', $user->id)
+                ->exists()
         ) {
             return $this->error(null, 'Email already exists.');
         }
@@ -966,9 +1008,8 @@ class BuyerService
     public function change2FA($data)
     {
         $authUser = userAuth();
-        $user = User::where('type', UserType::B2B_BUYER)
-        ->where('id', $authUser->id)
-        ->firstOrFail();
+
+        $user = User::where('id', $authUser->id)->firstOrFail();
 
         $user->update([
             'two_factor_enabled' => $data->two_factor_enabled,
@@ -1032,7 +1073,7 @@ class BuyerService
     {
         $currentUserId = userAuthId();
 
-        $addresses = BuyerShippingAddress::with(['state', 'country'])->where('user_id', $currentUserId)->get();
+        $addresses = BuyerShippingAddress::with(['state', 'country'])->where('user_id', $currentUserId)->latest()->get();
 
         return $this->success(B2BBuyerShippingAddressResource::collection($addresses), 'All address');
     }

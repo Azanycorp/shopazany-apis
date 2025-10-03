@@ -31,7 +31,7 @@ class ProductCategoryService
                 'featured' => 1,
             ]);
 
-            return $this->success(null, 'Created successfully');
+            return $this->success(null, 'Created successfully', 201);
         } catch (\Exception $e) {
             return $this->error(null, $e->getMessage(), 500);
         }
@@ -40,10 +40,12 @@ class ProductCategoryService
     public function updateCategory($request, $id)
     {
         $category = B2BProductCategory::findOrFail($id);
+
         try {
             if ($request->file('image')) {
                 $url = uploadImage($request, 'image', 'category');
             }
+
             $category->update([
                 'name' => $request->name,
                 'slug' => Str::slug($request->name),
@@ -59,6 +61,7 @@ class ProductCategoryService
     public function categories()
     {
         $categories = B2BProductCategory::where('featured', 1)
+            ->latest()
             ->take(10)
             ->get();
 
@@ -72,7 +75,7 @@ class ProductCategoryService
         $categories = B2BProductCategory::with(['products', 'subcategory'])
             ->withCount(['products', 'subcategory'])
             ->when($search, function ($query, string $search): void {
-                $query->where('name', 'like', '%' . $search . '%');
+                $query->where('name', 'like', '%'.$search.'%');
             })
             ->latest()
             ->get();
@@ -93,6 +96,7 @@ class ProductCategoryService
             if ($request->file('image')) {
                 $url = uploadImage($request, 'image', 'subcategory');
             }
+
             $category->subcategory()->create([
                 'name' => $request->name,
                 'slug' => Str::slug($request->name),
@@ -140,19 +144,20 @@ class ProductCategoryService
 
         $totalActive = $categories->where('status', CategoryStatus::ACTIVE)->count();
 
-        $subCategoryActiveCount = B2BProductSubCategory::where('status', CategoryStatus::ACTIVE)->count();
-
-        $productActiveCount = B2BProduct::where('status', CategoryStatus::ACTIVE)->count();
-
-        $productInactiveCount = B2BProduct::where('status', CategoryStatus::INACTIVE)->count();
+        $productCounts = B2BProduct::selectRaw('
+                COUNT(*) as total,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as active_count,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as inactive_count
+            ', [CategoryStatus::ACTIVE, CategoryStatus::INACTIVE])
+            ->first();
 
         $data = [
             'total_count' => $categories->count(),
             'total_active' => $totalActive,
             'sub_category_count' => $categories->sum('subcategory_count'),
-            'sub_category_active_count' => $subCategoryActiveCount,
-            'product_count' => $productActiveCount,
-            'product_inactive_count' => $productInactiveCount,
+            'sub_category_active_count' => $totalActive,
+            'product_count' => $productCounts->active_count ?? 0,
+            'product_inactive_count' => $productCounts->inactive_count ?? 0,
         ];
 
         return $this->success($data, 'Category analytics');
@@ -165,8 +170,9 @@ class ProductCategoryService
         $subcats = B2BProductSubCategory::with(['products', 'category'])
             ->withCount('products')
             ->when($search, function ($query, string $search): void {
-                $query->where('name', 'like', '%' . $search . '%');
+                $query->where('name', 'like', '%'.$search.'%');
             })
+            ->latest()
             ->get();
 
         return $this->success(AdminB2BSubCategoryResource::collection($subcats), 'Sub categories');

@@ -13,6 +13,6 @@ class ShippmentActivity extends Model
     ];
 
     protected $hidden = [
-        'updated_at'
+        'updated_at',
     ];
 }

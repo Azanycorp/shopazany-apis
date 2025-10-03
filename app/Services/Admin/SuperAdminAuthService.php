@@ -41,7 +41,7 @@ class SuperAdminAuthService
                     'last_name' => $user->last_name,
                     'email' => $user->email,
                     'status' => $user->status,
-                ]
+                ],
             ]);
         }
 
@@ -75,7 +75,7 @@ class SuperAdminAuthService
         ];
         mailSend($type, $user, $subject, $mail_class, $data);
 
-        return $this->success(null, "We have sent a verification code to your email");
+        return $this->success(null, 'We have sent a verification code to your email');
     }
 
     public function verifyEmail($request)

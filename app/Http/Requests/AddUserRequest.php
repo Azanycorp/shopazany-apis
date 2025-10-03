@@ -26,7 +26,7 @@ class AddUserRequest extends FormRequest
             'last_name' => ['required', 'string', 'max:100'],
             'email' => ['required', 'email'],
             'phone_number' => ['required', 'string'],
-            'modules' => ['required', 'array']
+            'modules' => ['required', 'array'],
         ];
     }
 }

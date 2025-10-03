@@ -3,9 +3,8 @@
 namespace Database\Seeders;
 
 use App\Models\Order;
-use App\Models\Wallet;
 use App\Models\Product;
-use Illuminate\Support\Str;
+use App\Models\Wallet;
 use Illuminate\Database\Seeder;
 
 class OrderSeeder extends Seeder

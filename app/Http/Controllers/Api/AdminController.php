@@ -2,19 +2,19 @@
 
 namespace App\Http\Controllers\Api;
 
-use Illuminate\Http\Request;
-use App\Http\Requests\BatchRequest;
-use App\Services\SuperAdminService;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\CollationCentreRequest;
+use App\Http\Requests\Admin\HubOrderFinderRequest;
 use App\Http\Requests\Admin\HubRequest;
+use App\Http\Requests\BatchRequest;
+use App\Http\Requests\ChangeAdminPasswordRequest;
+use App\Http\Requests\DispatchBatchRequest;
 use App\Http\Requests\ProcessBatchRequest;
+use App\Http\Requests\TransferShippmentRequest;
 use App\Http\Requests\UpdateShippmentRequest;
 use App\Http\Requests\VerificationCodeRequest;
-use App\Http\Requests\TransferShippmentRequest;
-use App\Http\Requests\ChangeAdminPasswordRequest;
-use App\Http\Requests\Admin\HubOrderFinderRequest;
-use App\Http\Requests\Admin\CollationCentreRequest;
-use App\Http\Requests\DispatchBatchRequest;
+use App\Services\SuperAdminService;
+use Illuminate\Http\Request;
 
 class AdminController extends Controller
 {
@@ -23,7 +23,6 @@ class AdminController extends Controller
     public function __construct(
         private SuperAdminService $superAdminService
     ) {}
-
 
     public function deliveryOverview()
     {
@@ -133,7 +132,7 @@ class AdminController extends Controller
         return $this->superAdminService->markRead($id);
     }
 
-    //Shippments
+    // Shippments
     public function allShipments()
     {
         return $this->superAdminService->allShipments();

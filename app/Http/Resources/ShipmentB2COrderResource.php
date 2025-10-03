@@ -41,7 +41,7 @@ class ShipmentB2COrderResource extends JsonResource
                 'business_name' => optional($this->products->first())->user->company_name,
                 'contact' => optional($this->products->first())->user->phone,
                 'location' => optional($this->products->first())->user->address,
-            ])
+            ]),
         ];
     }
 }
