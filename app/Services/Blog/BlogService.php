@@ -3,6 +3,8 @@
 namespace App\Services\Blog;
 
 use App\Http\Resources\B2CBlogResource;
+use App\Models\B2CBlog;
+use App\Models\B2CBlogCategory;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Str;
 
@@ -118,7 +120,7 @@ class BlogService
             'meta_keywords' => $request->meta_keywords,
             'meta_image' => $metaImageUrl['url'] ?? null,
             'status' => 'published',
-            'created_by' => auth()->id(),
+            'created_by' => userAuthId(),
         ]);
 
         return $this->success(null, 'Blog created successfully', 201);
@@ -185,5 +187,26 @@ class BlogService
         $blog->delete();
 
         return $this->success(null, 'Blog deleted successfully');
+    }
+
+    public function getAllBlogs()
+    {
+        $blogs = B2CBlog::with('blogCategory')->latest()->paginate(25);
+        $data = B2CBlogResource::collection($blogs->items());
+
+        return $this->withPagination($data, 'Blogs fetched successfully');
+    }
+
+    public function getBlogDetail($slug)
+    {
+        $blog = B2CBlog::with('blogCategory')
+            ->where('slug', $slug)
+            ->first();
+
+        if (! $blog) {
+            return $this->error(null, 'Blog not found!', 404);
+        }
+
+        return $this->success(new B2CBlogResource($blog), 'Blog fetched successfully');
     }
 }
