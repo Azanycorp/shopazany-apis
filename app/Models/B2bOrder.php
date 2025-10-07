@@ -26,6 +26,7 @@ class B2bOrder extends Model
         'payment_method',
         'payment_status',
         'status',
+        'type',
         'delivery_date',
         'shipped_date',
         'centre_id',

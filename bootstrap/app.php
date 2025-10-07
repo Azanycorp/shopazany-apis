@@ -3,6 +3,8 @@
 use App\Http\Middleware\AgriEcomSeller;
 use App\Http\Middleware\AuthCheck;
 use App\Http\Middleware\AuthGates;
+use App\Http\Middleware\B2BAgriEcomBuyer;
+use App\Http\Middleware\B2BAgriEcomSeller;
 use App\Http\Middleware\B2BBuyer;
 use App\Http\Middleware\B2BSeller;
 use App\Http\Middleware\BlockUserAfterFailedAttempts;
@@ -57,7 +59,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'role.super_admin' => SuperAdminCheck::class,
             'tx.replay' => TransactionReplayShield::class,
             'burst.guard' => BurstGuard::class,
-            'agriecom_seller.auth' => AgriEcomSeller::class
+            'agriecom_seller.auth' => AgriEcomSeller::class,
+            'b2b_agriecom_seller.auth' => B2BAgriEcomSeller::class,
+            'b2b_agriecom_buyer.auth' => B2BAgriEcomBuyer::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

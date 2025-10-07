@@ -5,6 +5,7 @@ namespace App\Services\B2B;
 use App\Enum\MailingEnum;
 use App\Enum\OrderStatus;
 use App\Enum\PaymentType;
+use App\Enum\ProductStatus;
 use App\Enum\TransactionStatus;
 use App\Enum\UserType;
 use App\Enum\WithdrawalStatus;
@@ -38,7 +39,6 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -109,6 +109,10 @@ class SellerService extends Controller
     {
         $currentUserId = userAuthId();
 
+        if ($currentUserId != $request->user_id) {
+            return $this->error(null, 'Unauthorized action.', 401);
+        }
+
         $user = User::find($currentUserId);
 
         $image = $request->hasFile('logo') ?
@@ -145,6 +149,12 @@ class SellerService extends Controller
 
     public function editCompany($request)
     {
+        $currentUserId = userAuthId();
+
+        if ($currentUserId != $request->user_id) {
+            return $this->error(null, 'Unauthorized action.', 401);
+        }
+
         $user = User::with('businessInformation')->findOrFail($request->user_id);
 
         if ($request->hasFile('logo')) {
@@ -232,7 +242,7 @@ class SellerService extends Controller
             $slug = Str::slug($request->name);
 
             if (B2BProduct::where('slug', $slug)->exists()) {
-                $slug = $slug . '-' . uniqid();
+                $slug = $slug.'-'.uniqid();
             }
 
             if ($request->hasFile('front_image')) {
@@ -252,10 +262,11 @@ class SellerService extends Controller
                 'minimum_order_quantity' => $request->minimum_order_quantity,
                 'unit_price' => $request->unit,
                 'quantity' => $request->quantity,
+                'type' => $request->type ?? null,
                 'availability_quantity' => $request->quantity,
                 'default_currency' => $user->default_currency,
                 'fob_price' => $request->fob_price,
-                'status' => 'active',
+                'status' => ProductStatus::ACTIVE,
                 'country_id' => is_int($user->country) ? $user->country : 160,
             ];
 
@@ -298,6 +309,7 @@ class SellerService extends Controller
         if ($currentUserId != $user_id) {
             return $this->error(null, 'Unauthorized action.', 401);
         }
+
         $prod = $this->b2bProductRepository->find($product_id);
 
         return $this->success(new B2BProductResource($prod), 'Product details');
@@ -328,7 +340,7 @@ class SellerService extends Controller
             $slug = Str::slug($request->name);
 
             if (B2BProduct::where('slug', $slug)->exists()) {
-                $slug = $slug . '-' . uniqid();
+                $slug = $slug.'-'.uniqid();
             }
         } else {
             $slug = $prod->slug;
@@ -670,7 +682,7 @@ class SellerService extends Controller
         $orders = B2bOrder::where('seller_id', userAuthId())->when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
             $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
                 $subQuery->where('seller_id', userAuthId())
-                    ->where('order_no', 'LIKE', '%' . $searchQuery . '%');
+                    ->where('order_no', 'LIKE', '%'.$searchQuery.'%');
             });
         })->latest()->get();
 
@@ -720,7 +732,7 @@ class SellerService extends Controller
         $orderedItems = [
             'quantity' => $order->product_quantity,
             'price' => $order->total_amount,
-            'buyer_name' => $user->first_name . ' ' . $user->last_name,
+            'buyer_name' => $user->first_name.' '.$user->last_name,
             'order_number' => $order->order_no,
         ];
 
@@ -812,7 +824,7 @@ class SellerService extends Controller
                 'seller_id' => $rfq->seller_id,
                 'product_id' => $rfq->product_id,
                 'product_quantity' => $rfq->product_quantity,
-                'order_no' => 'ORD-' . now()->timestamp . '-' . Str::random(8),
+                'order_no' => 'ORD-'.now()->timestamp.'-'.Str::random(8),
                 'product_data' => $product,
                 'total_amount' => $total_amount,
                 'payment_method' => PaymentType::OFFLINE,
@@ -825,7 +837,7 @@ class SellerService extends Controller
                 'image' => $product->front_image,
                 'quantity' => $rfq->product_quantity,
                 'price' => $total_amount,
-                'buyer_name' => $buyer->first_name . ' ' . $buyer->last_name,
+                'buyer_name' => $buyer->first_name.' '.$buyer->last_name,
                 'order_number' => $order->order_no,
                 'currency' => $buyer->default_currency ?? userAuth()->default_currency,
             ];
@@ -952,13 +964,9 @@ class SellerService extends Controller
 
         $payouts = WithdrawalRequest::where('user_id', $currentUserId)->get();
 
-        $wallet = UserWallet::where('seller_id', $currentUserId)->first();
-
-        if (! $wallet) {
-            UserWallet::create([
-                'seller_id' => $currentUserId,
-            ]);
-        }
+        $wallet = UserWallet::firstOrCreate(
+            ['seller_id' => $currentUserId]
+        );
 
         $data = [
             'total_sales' => $orderStats,
@@ -984,13 +992,11 @@ class SellerService extends Controller
     public function getWithdrawalHistory()
     {
         $currentUserId = userAuthId();
-        $wallet = UserWallet::where('seller_id', $currentUserId)->first();
 
-        if (! $wallet) {
-            UserWallet::create([
-                'seller_id' => $currentUserId,
-            ]);
-        }
+        $wallet = UserWallet::firstOrCreate(
+            ['seller_id' => $currentUserId]
+        );
+
         $payouts = WithdrawalRequest::where('user_id', $currentUserId)->get();
 
         return $this->success($payouts, 'payouts details');
@@ -1007,11 +1013,10 @@ class SellerService extends Controller
         if (! $user) {
             return $this->error(null, 'User not found', 404);
         }
-        $wallet = UserWallet::where('seller_id', $currentUserId)->first();
 
-        if (! $wallet) {
-            return $this->error(null, 'User wallet not found', 404);
-        }
+        $wallet = UserWallet::firstOrCreate(
+            ['seller_id' => $currentUserId]
+        );
 
         if ($request->amount > $wallet->master_wallet) {
             return $this->error(null, 'Insufficient balance', 422);
@@ -1050,7 +1055,7 @@ class SellerService extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return $this->error(null, 'An error occurred while processing your request :' . $e->getMessage(), 500);
+            return $this->error(null, 'An error occurred while processing your request :'.$e->getMessage(), 500);
         }
     }
 
@@ -1164,7 +1169,7 @@ class SellerService extends Controller
     public function deleteMethod($id)
     {
         $method = PaymentMethod::findOrFail($id);
-        
+
         $method->delete();
 
         return $this->success(null, 'Withdrawal details deleted successfully', 200);

@@ -1,7 +1,11 @@
 <?php
 
 use App\Http\Controllers\Api\AgriEcom\AuthController;
+use App\Http\Controllers\Api\AgriEcom\B2BAuthController;
+use App\Http\Controllers\Api\AgriEcom\B2BBuyerController;
+use App\Http\Controllers\Api\AgriEcom\B2BSellerController;
 use App\Http\Controllers\Api\AgriEcom\SellerController;
+use App\Http\Controllers\Api\CartController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('validate.header')
@@ -17,15 +21,170 @@ Route::middleware('validate.header')
             });
 
         // Buisness Info
-        Route::post('/business-information', [SellerController::class, 'createBusinessInformation']);
+        Route::post('/business/information', [SellerController::class, 'createBusinessInformation']);
+
+        Route::prefix('cart')->controller(CartController::class)->group(function (): void {
+            Route::get('/{user_id}', 'getCartItems');
+            Route::post('/add', 'addToCart');
+            Route::delete('/{user_id}/clear', 'clearCart');
+            Route::delete('/{user_id}/remove/{cart_id}', 'removeCartItem');
+            Route::patch('/update-cart', 'updateCart');
+        });
 
         Route::group(['middleware' => ['auth:api', 'auth.check', 'agriecom_seller.auth']], function (): void {
-            Route::controller(SellerController::class)
+            Route::prefix('/seller')
+                ->controller(SellerController::class)
                 ->group(function () {
-                    Route::get('/', function () {
-                        return "";
+                    Route::prefix('/product')
+                        ->group(function () {
+                            Route::post('/create', 'createProduct');
+                            Route::post('/edit/{product_id}/{user_id}', 'updateProduct')
+                                ->middleware('ensure.user');
+                            Route::get('/{user_id}', 'getProduct')
+                                ->middleware('ensure.user');
+                            Route::get('/top-selling/{user_id}', 'topSelling')
+                                ->middleware('ensure.user');
+                            Route::delete('/delete/{product_id}/{user_id}', 'deleteProduct')
+                                ->middleware('ensure.user');
+                            Route::get('/template', 'getTemplate');
+                            Route::post('/import', 'productImport');
+                            Route::get('/export/{user_id}/{type}', 'export');
+
+                            // Product Attributes
+                            Route::prefix('attribute')->group(function (): void {
+                                Route::post('/create', 'createAttribute');
+                                Route::get('/{user_id}', 'getAttribute')
+                                    ->middleware('ensure.user');
+                                Route::get('/{id}/{user_id}', 'getSingleAttribute')
+                                    ->middleware('ensure.user');
+                                Route::patch('/edit/{id}/{user_id}', 'updateAttribute')
+                                    ->middleware('ensure.user');
+                                Route::delete('/delete/{id}/{user_id}', 'deleteAttribute')
+                                    ->middleware('ensure.user');
+                            });
+                        });
+
+                    // Withdrawal
+                    Route::prefix('withdrawal')->group(function (): void {
+                        Route::post('/', 'addMethod');
+                        Route::get('/history/{user_id}', 'withdrawalHistory');
+                        Route::get('/method/{user_id}', 'withdrawalMethod');
+                        Route::post('/request', 'withdrawalRequest')
+                            ->middleware(['tx.replay', 'burst.guard']);
+                    });
+
+                    // Profile
+                    Route::prefix('profile')->group(function (): void {
+                        Route::post('/edit', 'editProfile');
+                        Route::get('/{user_id}', 'profile');
+                    });
+
+                    // Orders Routes
+                    Route::prefix('orders/{user_id}')->group(function (): void {
+                        Route::get('/', 'getAllOrders')
+                            ->middleware('ensure.user');
+                        Route::get('/summary', 'getOrderSummary');
+                        Route::get('/{id}', 'getOrderDetail');
+                        Route::patch('/update-status/{id}', 'updateOrderStatus');
                     });
                 });
         });
-    });
 
+        Route::prefix('b2b')->group(function () {
+            Route::controller(B2BAuthController::class)->prefix('auth')->group(function () {
+                Route::post('/login', 'login');
+                Route::post('/login/verify', 'loginVerify');
+                Route::post('/seller/signup', 'signup');
+                Route::post('/forgot-password', 'forgot');
+                Route::post('/reset-password', 'reset');
+                Route::post('/resend', 'resendCode');
+                Route::post('/logout', 'logout');
+                Route::post('/verify', 'verify');
+
+                // Buyer Onboarding
+                Route::post('/buyer/signup', 'buyerOnboarding');
+            });
+
+            Route::controller(B2BBuyerController::class)->prefix('buyer')->group(function () {
+                Route::get('/featured-products', 'featuredProduct');
+                Route::get('/search-products', 'searchProduct');
+                Route::get('/products', 'getProducts');
+                Route::get('/product/{slug}', 'getProductDetail');
+            });
+
+            Route::group(['middleware' => ['auth:api', 'auth.check', 'b2b_agriecom_seller.auth']], function () {
+                Route::controller(B2BSellerController::class)
+                    ->prefix('seller')
+                    ->group(function () {
+                        // dashboard
+                        Route::get('/dashboard', 'dashboard');
+                        Route::get('/withdrawals', 'withdrawalHistory');
+                        Route::post('/withdrawal-request', 'makeWithdrawalRequest');
+                        Route::get('/earning-report', 'getEarningReport');
+
+                        // profile
+                        Route::get('/profile', 'profile');
+                        Route::post('/edit-account', 'editAccount');
+                        Route::patch('/change-password', 'changePassword');
+                        Route::post('/edit-company', 'editCompany');
+
+                        // Shipping
+                        Route::prefix('shipping')->group(function () {
+                            Route::post('/', 'addShipping');
+                            Route::get('/{user_id}', 'getAllShipping');
+                            Route::get('/details/{user_id}/{shipping_id}', 'getShippingById');
+                            Route::patch('/update/{shipping_id}', 'updateShipping');
+                            Route::patch('/default/{user_id}/{shipping_id}', 'setDefault');
+                            Route::delete('/delete/{user_id}/{shipping_id}', 'deleteShipping');
+                        });
+
+                        // payment method
+                        Route::prefix('withdrawal-method')->group(function (): void {
+                            Route::get('/', 'allWithdrawalMethods');
+                            Route::post('/add', 'addWithdrawalMethod');
+                            Route::get('/details/{id}', 'getWithdrawalMethod');
+                            Route::post('/update/{id}', 'updateWithdrawalMethod');
+                            Route::post('/make-default', 'makeDefaultAccount');
+                            Route::delete('/delete/{id}', 'deleteWithdrawalMethod');
+                        });
+                    });
+            });
+
+            // Buyer
+            Route::group(['middleware' => ['auth:api', 'auth.check', 'b2b_agriecom_buyer.auth']], function () {
+                Route::controller(B2BBuyerController::class)->prefix('buyer')->group(function () {
+                    Route::post('/add-to-wish', 'addTowishList');
+                    Route::post('/like-product', 'likeProduct');
+                    Route::get('/wish-list', 'wishList');
+                    Route::delete('/wish/remove-item/{id}', 'removeItem');
+                    Route::post('add-quote', 'requestQuote');
+                    Route::post('/wish/send-quote', 'sendFromWishList');
+                    Route::post('send-rfq', 'sendSingleQuote');
+                    Route::get('quotes', 'allQuotes');
+
+                    Route::get('dashboard', 'dashboard');
+                    Route::get('rfq-details/{id}', 'getRfqDetails');
+                    Route::get('orders', 'allOrders');
+                    Route::get('order-details/{id}', 'getOrderDetails');
+
+                    // profile
+                    Route::get('/profile', 'profile');
+                    Route::post('/edit-account', 'editAccount');
+                    Route::patch('/change-password', 'changePassword');
+                    Route::post('/change-2fa', 'change2Fa');
+                    Route::get('/company-info', 'companyInfo');
+                    Route::post('/edit-company', 'editCompany');
+
+                    // Shipping address
+                    Route::prefix('shipping-address')->group(function (): void {
+                        Route::get('/', 'allShippingAddress');
+                        Route::post('/add', 'addShippingAddress');
+                        Route::get('/details/{id}', 'getShippingAddress');
+                        Route::post('/update/{id}', 'updateShippingAddress');
+                        Route::post('/make-default/{id}', 'setDefaultAddress');
+                        Route::delete('/delete/{id}', 'deleteShippingAddress');
+                    });
+                });
+            });
+        });
+    });

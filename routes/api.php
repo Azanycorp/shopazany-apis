@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\ApiController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\B2BSellerController;
+use App\Http\Controllers\Api\BlogController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\CustomerController;
@@ -89,6 +90,13 @@ Route::middleware('validate.header')
                 Route::get('/deal/{slug}', 'getDealDetail');
                 Route::get('/flash/deals', 'flashDeals');
                 Route::get('/flash/deal/{slug}', 'singleFlashDeal');
+
+                Route::prefix('blog')
+                    ->controller(BlogController::class)
+                    ->group(function (): void {
+                        Route::get('/', 'getAllBlogs');
+                        Route::get('/details/{slug}', 'getBlogDetail');
+                    });
 
                 Route::prefix('seller')->group(function (): void {
                     Route::get('/{uuid}', 'sellerInfo');

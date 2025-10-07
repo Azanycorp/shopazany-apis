@@ -2,12 +2,12 @@
 
 namespace App\Models;
 
-use Laravel\Sanctum\HasApiTokens;
-use Illuminate\Notifications\Notifiable;
 use App\Notifications\ResetPasswordNotification;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 class Admin extends Authenticatable
 {
@@ -38,6 +38,7 @@ class Admin extends Authenticatable
             return "{$this->first_name} {$this->last_name}";
         });
     }
+
     protected function casts(): array
     {
         return [
@@ -49,7 +50,7 @@ class Admin extends Authenticatable
     {
         $email = $this->email;
 
-        $url = config('services.reset_password_url') . '?token=' . $token . '&email=' . $email;
+        $url = config('services.reset_password_url').'?token='.$token.'&email='.$email;
 
         $this->notify(new ResetPasswordNotification($url));
     }

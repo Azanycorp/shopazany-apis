@@ -35,6 +35,7 @@ class B2BProduct extends Model
         'status',
         'logo',
         'country_id',
+        'type',
     ];
 
     protected function casts(): array

@@ -145,6 +145,7 @@ trait Transfer
         if (! $request) {
             return false;
         }
+
         return intval($request->amount * 100) === $amount;
     }
 }

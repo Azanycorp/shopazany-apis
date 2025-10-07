@@ -2,31 +2,50 @@
 
 namespace App\Enum;
 
-enum OrderStatus: string
+final class OrderStatus
 {
-    const CONFIRMED = 'confirmed';
+    public const CONFIRMED = 'confirmed';
 
-    const CANCELLED = 'cancelled';
+    public const CANCELLED = 'cancelled';
 
-    const DELIVERED = 'delivered';
+    public const DELIVERED = 'delivered';
 
-    const COMPLETED = 'completed';
+    public const COMPLETED = 'completed';
 
-    const PENDING = 'pending';
+    public const PENDING = 'pending';
 
-    const PROCESSING = 'processing';
+    public const PROCESSING = 'processing';
 
-    const INPROGRESS = 'in-progress';
+    public const INPROGRESS = 'in-progress';
 
-    const REVIEW = 'review';
+    public const REVIEW = 'review';
 
-    const SHIPPED = 'shipped';
+    public const SHIPPED = 'shipped';
 
-    const PAID = 'paid';
+    public const PAID = 'paid';
 
-    const READY_FOR_PICKUP = 'ready_for_pickup';
+    public const READY_FOR_PICKUP = 'ready_for_pickup';
 
-    const IN_TRANSIT = 'in_transit';
+    public const IN_TRANSIT = 'in_transit';
 
-    const DISPATCHED = 'dispatched';
+    public const DISPATCHED = 'dispatched';
+
+    public static function all(): array
+    {
+        return [
+            self::CONFIRMED,
+            self::CANCELLED,
+            self::DELIVERED,
+            self::COMPLETED,
+            self::PENDING,
+            self::PROCESSING,
+            self::INPROGRESS,
+            self::REVIEW,
+            self::SHIPPED,
+            self::PAID,
+            self::READY_FOR_PICKUP,
+            self::IN_TRANSIT,
+            self::DISPATCHED,
+        ];
+    }
 }

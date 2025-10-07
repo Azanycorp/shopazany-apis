@@ -7,7 +7,6 @@ use App\Http\Resources\SellerProductResource;
 use App\Models\Admin;
 use App\Models\Product;
 use App\Trait\HttpResponse;
-use Illuminate\Support\Facades\App;
 use Illuminate\Support\Str;
 
 class ProductService
