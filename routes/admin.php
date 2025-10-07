@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\B2B\B2BAdminSellerController;
 use App\Http\Controllers\Api\B2B\B2BBannerPromoController;
 use App\Http\Controllers\Api\B2B\ProductCategoryController;
 use App\Http\Controllers\Api\BannerPromoController;
+use App\Http\Controllers\Api\BlogController;
 use App\Http\Controllers\Api\BrandController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ColorController;

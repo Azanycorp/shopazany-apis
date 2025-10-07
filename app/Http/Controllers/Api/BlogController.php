@@ -95,4 +95,14 @@ class BlogController extends Controller
     {
         return $this->blogService->deleteBlog($id);
     }
+
+    public function getAllBlogs()
+    {
+        return $this->blogService->getAllBlogs();
+    }
+
+    public function getBlogDetail($slug)
+    {
+        return $this->blogService->getBlogDetail($slug);
+    }
 }
