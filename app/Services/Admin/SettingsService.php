@@ -239,6 +239,7 @@ class SettingsService
     public function addPlan($request)
     {
         $currencyCode = $this->currencyCode($request);
+
         SubscriptionPlan::create([
             'title' => $request->title,
             'cost' => $request->cost,
@@ -249,7 +250,7 @@ class SettingsService
             'tagline' => $request->tagline,
             'designation' => $request->designation,
             'details' => $request->details,
-            'type' => PlanType::B2C,
+            'type' => $request->type ?? PlanType::B2C,
             'status' => PlanStatus::ACTIVE,
         ]);
 
@@ -258,7 +259,8 @@ class SettingsService
 
     public function getPlanById($id)
     {
-        $plan = SubscriptionPlan::where('type', PlanType::B2C)->findOrFail($id);
+        $type = request()->query('type', PlanType::B2C);
+        $plan = SubscriptionPlan::where('type', $type)->findOrFail($id);
         $data = new SubscriptionPlanResource($plan);
 
         return $this->success($data, 'Subscription plan detail');
@@ -266,9 +268,12 @@ class SettingsService
 
     public function getPlanByCountry($countryId)
     {
+        $type = request()->query('type', PlanType::B2C);
+
         $plan = SubscriptionPlan::where('country_id', $countryId)
-            ->where('type', PlanType::B2C)
+            ->where('type', $type)
             ->get();
+
         $data = SubscriptionPlanResource::collection($plan);
 
         return $this->success($data, 'Subscription plan');
@@ -276,7 +281,11 @@ class SettingsService
 
     public function updatePlan($request, $id)
     {
-        $plan = SubscriptionPlan::where('type', PlanType::B2C)->findOrFail($id);
+        $type = request()->query('type', PlanType::B2C);
+
+        $plan = SubscriptionPlan::where('type', $type)
+            ->findOrFail($id);
+
         $plan->update([
             'title' => $request->title,
             'cost' => $request->cost,
@@ -294,7 +303,10 @@ class SettingsService
 
     public function deletePlan($id)
     {
-        $plan = SubscriptionPlan::where('type', PlanType::B2C)->findOrFail($id);
+        $type = request()->query('type', PlanType::B2C);
+        $plan = SubscriptionPlan::where('type', $type)
+            ->findOrFail($id);
+
         $plan->delete();
 
         return $this->success(null, 'Plan deleted successfully');
