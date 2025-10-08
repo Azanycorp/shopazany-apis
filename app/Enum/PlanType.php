@@ -8,5 +8,5 @@ enum PlanType: string
 
     const B2C = 'b2c';
 
-    const AGRIECOM = 'agriecom';
+    const AGRIECOM_B2C = 'agriecom_b2c';
 }
