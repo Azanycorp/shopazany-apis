@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enum\PaymentType;
+use App\Enum\PlanType;
 use App\Http\Resources\SubscriptionHistoryResource;
 use App\Http\Resources\SubscriptionPlanResource;
 use App\Models\SubscriptionPlan;
@@ -20,11 +21,12 @@ class SubscriptionService
 
     public function getPlanByCountry($countryId)
     {
-        $type = request()->query('type', 'b2c');
+        $type = request()->query('type', PlanType::B2C);
 
         $plan = SubscriptionPlan::where('country_id', $countryId)
             ->where('type', $type)
             ->get();
+
         $data = SubscriptionPlanResource::collection($plan);
 
         return $this->success($data, 'Subscription plans');
