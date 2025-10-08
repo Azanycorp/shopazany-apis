@@ -7,4 +7,6 @@ enum PlanType: string
     const B2B = 'b2b';
 
     const B2C = 'b2c';
+
+    const AGRIECOM = 'agriecom';
 }
