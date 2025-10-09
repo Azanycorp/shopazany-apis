@@ -87,7 +87,7 @@ class BlogService
     {
         $blogs = B2CBlog::with('blogCategory')->latest()->paginate(25);
 
-        $data = B2CBlogResource::collection($blogs->items());
+        $data = B2CBlogResource::collection($blogs);
 
         return $this->withPagination($data, 'Blogs fetched successfully');
     }
