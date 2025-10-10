@@ -113,7 +113,7 @@ class PaymentDetailsService
             },
         ])->findOrFail($request->user_id);
 
-        if (! in_array($user->type, [UserType::SELLER, UserType::B2B_SELLER])) {
+        if (! in_array($user->type, [UserType::SELLER, UserType::B2B_SELLER, UserType::AGRIECOM_SELLER])) {
             return ['error' => 'You are not allowed to subscribe to a plan'];
         }
 
@@ -158,7 +158,7 @@ class PaymentDetailsService
             },
         ])->findOrFail($request->user_id);
 
-        if (! in_array($user->type, [UserType::SELLER, UserType::B2B_SELLER])) {
+        if (! in_array($user->type, [UserType::SELLER, UserType::B2B_SELLER, UserType::AGRIECOM_SELLER])) {
             return ['error' => 'You are not allowed to subscribe to a plan'];
         }
 
