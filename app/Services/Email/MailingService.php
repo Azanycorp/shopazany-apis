@@ -4,6 +4,7 @@ namespace App\Services\Email;
 
 use App\Enum\MailingEnum;
 use App\Models\Mailing;
+use Illuminate\Mail\Mailable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -30,6 +31,13 @@ class MailingService
 
                     $payload = $email->payload ?? [];
                     $mailableInstance = new $email->mailable(...array_values($payload));
+
+                    if (! $mailableInstance instanceof Mailable) {
+                        Log::error("Mailable class {$email->mailable} is not an instance of Mailable.");
+                        $email->update(['status' => MailingEnum::FAILED]);
+
+                        continue;
+                    }
 
                     Mail::to($email->email)->send($mailableInstance);
 
