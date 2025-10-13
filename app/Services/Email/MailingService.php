@@ -4,7 +4,6 @@ namespace App\Services\Email;
 
 use App\Enum\MailingEnum;
 use App\Models\Mailing;
-use Illuminate\Mail\Mailable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -24,20 +23,27 @@ class MailingService
                 try {
                     if (! class_exists($email->mailable)) {
                         Log::error("Mailable class {$email->mailable} not found.");
-                        $email->update(['status' => MailingEnum::FAILED]);
+                        $email->update([
+                            'status' => MailingEnum::FAILED,
+                            'error_response' => 'Mailable class not found',
+                        ]);
 
                         continue;
                     }
 
                     $payload = $email->payload ?? [];
-                    $mailableInstance = new $email->mailable(...array_values($payload));
 
-                    if (! $mailableInstance instanceof Mailable) {
-                        Log::error("Mailable class {$email->mailable} is not an instance of Mailable.");
-                        $email->update(['status' => MailingEnum::FAILED]);
+                    if (empty($payload)) {
+                        Log::error("Payload for mailable class {$email->mailable} is empty.");
+                        $email->update([
+                            'status' => MailingEnum::FAILED,
+                            'error_response' => 'Payload is empty',
+                        ]);
 
                         continue;
                     }
+
+                    $mailableInstance = new $email->mailable(...array_values($payload));
 
                     Mail::to($email->email)->send($mailableInstance);
 
