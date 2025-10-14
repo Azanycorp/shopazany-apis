@@ -7,6 +7,7 @@ use App\Enum\UserLog;
 use App\Enum\UserStatus;
 use App\Enum\UserType;
 use App\Http\Controllers\Controller;
+use App\Mail\LoginVerifyMail;
 use App\Mail\SignUpVerifyMail;
 use App\Mail\UserWelcomeMail;
 use App\Models\Action;
@@ -99,16 +100,63 @@ class AuthService extends Controller
 
         try {
 
-            $code = generateVerificationCode();
-
             $user->update([
                 'email_verified_at' => null,
-                'verification_code' => $code,
+                'verification_code' => generateVerificationCode(),
             ]);
 
             $type = MailingEnum::RESEND_CODE;
             $subject = 'Resend code';
             $mail_class = SignUpVerifyMail::class;
+            $data = [
+                'user' => $user,
+            ];
+            mailSend($type, $user, $subject, $mail_class, $data);
+
+            $description = "User with email address {$request->email} has requested a code to be resent.";
+            $action = UserLog::CODE_RESENT;
+            $response = $this->success(null, 'Code resent successfully');
+
+            logUserAction($request, $action, $description, $response, $user);
+
+            return $response;
+        } catch (\Exception $e) {
+            $description = "An error occured during the request email: {$request->email}";
+            $action = UserLog::FAILED;
+            $response = $this->error(null, $e->getMessage(), 500);
+
+            logUserAction($request, $action, $description, $response, $user);
+
+            return $response;
+        }
+    }
+
+    public function loginResendCode($request)
+    {
+        $user = User::getUserEmail($request->email);
+
+        if (! $user) {
+            return $this->error(null, 'User not found', 404);
+        }
+
+        if (! $user->two_factor_enabled) {
+            return $this->error(null, 'Two factor authentication is not enabled', 400);
+        }
+
+        if ($user->login_code_expires_at > now()) {
+            return $this->error(null, 'Please wait a few minutes before requesting a new code.', 400);
+        }
+
+        try {
+
+            $user->update([
+                'login_code' => generateVerificationCode(),
+                'login_code_expires_at' => now()->addMinutes(10),
+            ]);
+
+            $type = MailingEnum::LOGIN_OTP;
+            $subject = 'Login OTP';
+            $mail_class = LoginVerifyMail::class;
             $data = [
                 'user' => $user,
             ];
