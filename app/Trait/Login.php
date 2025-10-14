@@ -51,12 +51,9 @@ trait Login
             return $this->error(null, 'Please wait a few minutes before requesting a new code.', 400);
         }
 
-        $code = generateVerificationCode();
-        $time = now()->addMinutes(10);
-
         $user->update([
-            'login_code' => $code,
-            'login_code_expires_at' => $time,
+            'login_code' => generateVerificationCode(),
+            'login_code_expires_at' => now()->addMinutes(10),
         ]);
 
         $type = MailingEnum::LOGIN_OTP;
@@ -81,10 +78,9 @@ trait Login
     protected function logUserIn($user, $request)
     {
         $user->tokens()->delete();
-        $token = $user->createToken('API Token of '.$user->email);
+        $token = $user->createToken("API Token of {$user->email}");
 
         $description = "User with email {$request->email} logged in";
-        $action = UserLog::LOGGED_IN;
         $response = $this->success([
             'user_id' => $user->id,
             'user_type' => $user->type,
@@ -95,7 +91,7 @@ trait Login
             'expires_at' => $token->accessToken->expires_at,
         ], 'Login successful.');
 
-        logUserAction($request, $action, $description, $response, $user);
+        logUserAction($request, UserLog::LOGGED_IN, $description, $response, $user);
 
         return $response;
     }
@@ -103,10 +99,9 @@ trait Login
     protected function handleInvalidCredentials($request)
     {
         $description = "Credentials do not match {$request->email}";
-        $action = UserLog::LOGIN_ATTEMPT;
         $response = $this->error(null, 'Credentials do not match', 401);
 
-        logUserAction($request, $action, $description, $response);
+        logUserAction($request, UserLog::LOGIN_ATTEMPT, $description, $response);
 
         return $response;
     }
