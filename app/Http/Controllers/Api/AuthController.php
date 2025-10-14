@@ -47,6 +47,15 @@ class AuthController extends Controller
         return $this->authService->resendCode($request);
     }
 
+    public function loginResendCode(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email|exists:users,email',
+        ]);
+
+        return $this->authService->loginResendCode($request);
+    }
+
     public function forgot(Request $request)
     {
         $request->validate([
