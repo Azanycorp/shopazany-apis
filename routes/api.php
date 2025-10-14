@@ -32,6 +32,8 @@ Route::middleware('validate.header')
                     Route::post('/reset/password', 'reset');
                     Route::post('/signup/resend', 'resendCode')
                         ->middleware('throttle:6,1');
+                    Route::post('/login/resend', 'loginResendCode')
+                        ->middleware('throttle:6,1');
                     Route::post('/logout', 'logout');
                     Route::post('/verify/email', 'verify');
                     Route::post('/seller/signup', 'sellerSignup')
