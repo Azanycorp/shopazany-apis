@@ -66,7 +66,11 @@ trait Login
         mailSend($type, $user, $subject, $mail_class);
 
         $description = "Attempt to login by {$request->email}";
-        $response = $this->success(null, 'Code has been sent to your email address.');
+        $response = $this->success([
+            'user_id' => $user->id,
+            'user_type' => $user->type,
+            'two_factor_enabled' => $user->two_factor_enabled,
+        ], 'Code has been sent to your email address.');
         $action = UserLog::LOGIN_ATTEMPT;
 
         logUserAction($request, $action, $description, $response, $user);
@@ -86,7 +90,7 @@ trait Login
             'user_type' => $user->type,
             'has_signed_up' => true,
             'is_affiliate_member' => $user->is_affiliate_member,
-            'two_factor_enabled' => $user->two_factor_enabled == 1,
+            'two_factor_enabled' => $user->two_factor_enabled,
             'token' => $token->plainTextToken,
             'expires_at' => $token->accessToken->expires_at,
         ], 'Login successful.');
