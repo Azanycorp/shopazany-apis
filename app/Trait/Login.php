@@ -59,8 +59,10 @@ trait Login
         $type = MailingEnum::LOGIN_OTP;
         $subject = 'Login OTP';
         $mail_class = LoginVerifyMail::class;
-
-        mailSend($type, $user, $subject, $mail_class);
+        $data = [
+            'user' => $user,
+        ];
+        mailSend($type, $user, $subject, $mail_class, $data);
 
         $description = "Attempt to login by {$request->email}";
         $response = $this->success([
