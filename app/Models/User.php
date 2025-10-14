@@ -88,6 +88,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'is_affiliate_member' => 'boolean',
             'referrer_link' => 'array',
+            'two_factor_enabled' => 'boolean',
         ];
     }
 
