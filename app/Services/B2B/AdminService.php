@@ -106,14 +106,14 @@ class AdminService
         $international_orders = B2bOrder::when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
             $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
                 $subQuery->where('country_id', '!=', 160)
-                    ->where('order_no', 'LIKE', '%'.$searchQuery.'%');
+                    ->where('order_no', 'LIKE', '%' . $searchQuery . '%');
             });
         })->get();
 
         $local_orders = B2bOrder::with(['buyer', 'seller'])->when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
             $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
                 $subQuery->where('country_id', 160)
-                    ->where('order_no', 'LIKE', '%'.$searchQuery.'%');
+                    ->where('order_no', 'LIKE', '%' . $searchQuery . '%');
             });
         })->get();
 
@@ -174,7 +174,7 @@ class AdminService
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return $this->error(null, 'Failed to cancel order: '.$e->getMessage(), 500);
+            return $this->error(null, 'Failed to cancel order: ' . $e->getMessage(), 500);
         }
     }
 
@@ -185,7 +185,7 @@ class AdminService
         $type = request()->query('type');
 
         $sellers = User::withCount('b2bProducts')
-            ->when($type, fn ($q) => $q->where('type', $type))
+            ->when($type, fn($q) => $q->where('type', $type))
             ->where('type', UserType::B2B_SELLER)
             ->latest()
             ->get();
@@ -238,9 +238,9 @@ class AdminService
             ->where('user_id', $id);
 
         if (! empty($search)) {
-            $query->where('name', 'like', '%'.$search.'%')
+            $query->where('name', 'like', '%' . $search . '%')
                 ->orWhereHas('category', function ($q) use ($search): void {
-                    $q->where('name', 'like', '%'.$search.'%');
+                    $q->where('name', 'like', '%' . $search . '%');
                 });
         }
 
@@ -326,7 +326,7 @@ class AdminService
         $slug = Str::slug($request->name);
 
         if (B2BProduct::where('slug', $slug)->exists()) {
-            $slug = $slug.'-'.uniqid();
+            $slug = $slug . '-' . uniqid();
         }
 
         if ($request->hasFile('front_image')) {
@@ -405,7 +405,7 @@ class AdminService
             $slug = Str::slug($request->name);
 
             if (B2BProduct::where('slug', $slug)->exists()) {
-                $slug = $slug.'-'.uniqid();
+                $slug = $slug . '-' . uniqid();
             }
         } else {
             $slug = $prod->slug;
@@ -465,7 +465,7 @@ class AdminService
     {
         $type = request()->query('type');
 
-        $buyerStats = User::when($type, fn ($q) => $q->where('type', $type))->where('type', UserType::B2B_BUYER)
+        $buyerStats = User::when($type, fn($q) => $q->where('type', $type))->where('type', UserType::B2B_BUYER)
             ->selectRaw('
                 COUNT(*) as total_buyers,
                 SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as active_buyers,
@@ -477,7 +477,7 @@ class AdminService
             ->first();
 
         $buyers = User::with('b2bCompany')
-            ->when($type, fn ($q) => $q->where('type', $type))
+            ->when($type, fn($q) => $q->where('type', $type))
             ->latest()
             ->get();
 
@@ -697,7 +697,10 @@ class AdminService
 
     public function getPageBanners()
     {
-        $banners = PageBanner::select('id', 'page', 'section', 'type', 'banner_url')->where('type', BannerType::B2B)->latest()->get();
+        $type = request()->query('type');
+        
+        $banners = PageBanner::select('id', 'page', 'section', 'type', 'banner_url')
+            ->when($type, fn($q) => $q->where('type', $type))->latest()->get();
 
         return $this->success($banners, 'Banners');
     }
@@ -714,7 +717,6 @@ class AdminService
         $banner->update([
             'page' => $request->page ?? $banner->page,
             'section' => $request->section ?? $banner->section,
-            'type' => BannerType::B2B,
             'banner_url' => $banner_url['url'] ?? $banner->banner_url,
         ]);
 
@@ -723,6 +725,8 @@ class AdminService
 
     public function addPageBanner($request)
     {
+        $type = request()->query('type');
+
         $banner_url = $request->hasFile('banner_url') ?
             uploadImage($request, 'banner_url', 'home-banner') :
             ['url' => null];
@@ -730,7 +734,7 @@ class AdminService
         PageBanner::create([
             'page' => $request->page,
             'section' => $request->section,
-            'type' => BannerType::B2B,
+            'type' =>  $type,
             'banner_url' => $banner_url['url'],
         ]);
 
@@ -739,9 +743,7 @@ class AdminService
 
     public function getPageBanner($id)
     {
-        $banner = PageBanner::select('id', 'page', 'section', 'type', 'banner_url')
-            ->where('type', BannerType::B2B)
-            ->where('id', $id)->firstOrFail();
+        $banner = PageBanner::select('id', 'page', 'section', 'type', 'banner_url')->where('id', $id)->firstOrFail();
 
         return $this->success($banner, 'Banner details');
     }
