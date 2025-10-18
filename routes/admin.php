@@ -475,8 +475,7 @@ Route::middleware('validate.header')
                         });
 
                     // Rfq
-                    Route::middleware('cacheResponse:300')
-                        ->prefix('rfqs')
+                    Route::prefix('rfqs')
                         ->controller(B2BAdminController::class)
                         ->group(function (): void {
                             Route::get('/', 'allRfq');
