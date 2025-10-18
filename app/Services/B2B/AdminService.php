@@ -291,9 +291,7 @@ class AdminService
 
     public function bulkRemove($request)
     {
-        $type = request()->query('type');
-        $users = User::where('type', $type ?? UserType::B2B_SELLER)
-            ->whereIn('id', $request->user_ids)
+        $users = User::whereIn('id', $request->user_ids)
             ->get();
 
         if ($users->isEmpty()) {
@@ -698,7 +696,7 @@ class AdminService
     public function getPageBanners()
     {
         $type = request()->query('type');
-        
+
         $banners = PageBanner::select('id', 'page', 'section', 'type', 'banner_url')
             ->when($type, fn($q) => $q->where('type', $type))->latest()->get();
 
@@ -775,11 +773,14 @@ class AdminService
     // seller Product request
     public function allProducts()
     {
+        $type = request()->query('type');
+
         $products = B2BProduct::with(['user' => function ($query): void {
             $query->select('id', 'first_name', 'last_name')
                 ->where('type', UserType::B2B_SELLER);
         }])
             ->whereStatus(OrderStatus::PENDING)
+            ->when($type, fn($q) => $q->where('type', $type))
             ->latest()
             ->get();
 
@@ -824,7 +825,8 @@ class AdminService
     // Subscription Plans
     public function b2bSubscriptionPlans()
     {
-        $plans = SubscriptionPlan::where('type', PlanType::B2B)->latest()->get();
+        $type = request()->query('type');
+        $plans = SubscriptionPlan::when($type, fn($q) => $q->where('type', $type))->latest()->get();
 
         return $this->success(SubscriptionPlanResource::collection($plans), 'All B2B Plans');
     }
@@ -843,7 +845,7 @@ class AdminService
             'designation' => $request->designation,
             'tagline' => $request->tagline,
             'details' => $request->details,
-            'type' => PlanType::B2B,
+            'type' => $request->type,
             'status' => PlanStatus::ACTIVE,
         ]);
 
@@ -852,7 +854,7 @@ class AdminService
 
     public function viewSubscriptionPlan($id)
     {
-        $plan = SubscriptionPlan::where('type', PlanType::B2B)->find($id);
+        $plan = SubscriptionPlan::find($id);
         if (! $plan) {
             return $this->error(null, 'Plan not found', 404);
         }
@@ -864,7 +866,7 @@ class AdminService
 
     public function editSubscriptionPlan($request, $id)
     {
-        $plan = SubscriptionPlan::where('type', PlanType::B2B)->find($id);
+        $plan = SubscriptionPlan::find($id);
 
         if (! $plan) {
             return $this->error(null, 'Plan not found', 404);
@@ -892,7 +894,7 @@ class AdminService
     {
         $plan = SubscriptionPlan::findOrFail($id);
 
-        if ($plan->type !== PlanType::B2B) {
+        if (! in_array($plan->type, [PlanType::B2B, PlanType::AGRIECOM_B2B], true)) {
             return $this->error(null, 'Invalid plan type', 400);
         }
 
@@ -908,11 +910,13 @@ class AdminService
     // Blog Section
     public function allBlogs()
     {
+        $type = request()->query('type');
+
         $currentUserId = userAuthId();
 
         $blogs = Blog::with('user')
             ->where('admin_id', $currentUserId)
-            ->where('type', BannerType::B2B)
+            ->when($type, fn($q) => $q->where('type', $type))
             ->latest()
             ->get();
 
@@ -923,11 +927,10 @@ class AdminService
     {
         $currentUserId = userAuthId();
         $url = uploadImage($request, 'image', 'blog');
-
         $plan = Blog::create([
             'admin_id' => $currentUserId,
             'title' => $request->title,
-            'type' => BannerType::B2B,
+            'type' => $request->type,
             'slug' => Str::slug($request->title),
             'description' => $request->description,
             'image' => $url['url'],
