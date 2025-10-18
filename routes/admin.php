@@ -301,6 +301,7 @@ Route::middleware('validate.header')
                 Route::prefix('b2b')->group(function (): void {
                     Route::controller(B2BAdminController::class)->group(function (): void {
                         Route::get('/dashboard', 'dashboard');
+                        Route::get('/agri-ecom-dashboard', 'agriEComDashboard');
                         Route::get('/profile', 'adminProfile');
                         Route::post('/update-profile', 'updateAdminProfile');
                         Route::post('/update-password', 'updateAdminPassword');
@@ -479,12 +480,12 @@ Route::middleware('validate.header')
                         ->controller(B2BAdminController::class)
                         ->group(function (): void {
                             Route::get('/', 'allRfq');
+                            Route::get('/agri-ecom', 'getAgriecomRfq');
                             Route::get('/details/{id}', 'rfqDetails');
                         });
 
                     // Orders
-                    Route::middleware('cacheResponse:300')
-                        ->prefix('orders')
+                    Route::prefix('orders')
                         ->controller(B2BAdminController::class)
                         ->group(function (): void {
                             Route::get('/', 'allOrders');
