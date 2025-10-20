@@ -7,6 +7,7 @@ use App\Enum\AdminType;
 use App\Enum\BannerType;
 use App\Enum\MailingEnum;
 use App\Enum\OrderStatus;
+use App\Enum\OrderType;
 use App\Enum\PlanStatus;
 use App\Enum\PlanType;
 use App\Enum\ProductStatus;
@@ -53,22 +54,36 @@ class AdminService
     ) {}
 
     // dashboard
-    public function dashboard()
+
+    public function agriEComDashboard()
     {
-        $users = User::all();
-        $orders = B2bOrder::orderStats();
-        $rfqs = Rfq::with(['buyer', 'seller'])->latest()->get();
-        $completion_request = B2bOrder::where('status', OrderStatus::SHIPPED)->take(3)->get();
+        $buyersCount = User::where('type', UserType::B2B_AGRIECOM_BUYER)->count();
+
+        $sellersCount = User::where('type', UserType::B2B_AGRIECOM_SELLER)->count();
+
+        $orders = B2bOrder::orderStats(OrderType::AGRIECOM);
+
+        $rfqs = Rfq::with(['buyer', 'seller'])
+            ->where('type', OrderType::AGRIECOM)
+            ->latest()
+            ->take(5)
+            ->get();
+
+        $completion_request = B2bOrder::where('status', OrderStatus::SHIPPED)
+            ->where('type', OrderType::AGRIECOM)
+            ->latest()
+            ->take(3)
+            ->get();
 
         $data = [
-            'buyers' => $users->where('type', UserType::B2B_BUYER)->count(),
-            'sellers' => $users->where('type', UserType::B2B_SELLER)->count(),
-            'ongoing_deals' => $orders->total_pending,
-            'all_time_orders_count' => $orders->total_orders,
-            'all_time_orders_amount' => $orders->total_order_delivered_amount,
-            'ongoing' => $orders->total_pending,
-            'last_seven_days' => $orders->total_order_count_week,
-            'last_thirty_days' => $orders->total_order_amount_month,
+            'buyers' => $buyersCount,
+            'sellers' => $sellersCount,
+            'ongoing_deals' => $orders->total_pending ?? 0,
+            'all_time_orders_count' => $orders->total_orders ?? 0,
+            'all_time_orders_amount' => $orders->total_order_delivered_amount ?? 0,
+            'ongoing' => $orders->total_pending ?? 0,
+            'last_seven_days' => $orders->total_order_count_week ?? 0,
+            'last_thirty_days' => $orders->total_order_amount_month ?? 0,
             'recent_rfqs' => $rfqs,
             'completion_request' => $completion_request,
         ];
@@ -76,15 +91,67 @@ class AdminService
         return $this->success($data, 'Dashboard details');
     }
 
-    public function getAllRfq()
+    public function dashboard()
     {
-        $rfqs = Rfq::with(['buyer', 'seller'])->latest()->get();
-        $active_rfqs = Rfq::where('status', OrderStatus::COMPLETED)->count();
-        $users = User::all();
+        $buyers_count = User::where('type', UserType::B2B_BUYER)->count();
+        $sellers_count = User::where('type', UserType::B2B_SELLER)->count();
+
+        $orders = B2bOrder::orderStats();
+
+        $rfqs = Rfq::with(['buyer', 'seller'])
+            ->latest()
+            ->take(5)
+            ->get();
+
+        $completionRequests = B2bOrder::where('status', OrderStatus::SHIPPED)
+            ->latest()
+            ->take(3)
+            ->get();
 
         $data = [
-            'buyers' => $users->where('type', UserType::B2B_BUYER)->count(),
-            'sellers' => $users->where('type', UserType::B2B_SELLER)->count(),
+            'buyers' => $buyers_count,
+            'sellers' => $sellers_count,
+            'ongoing_deals' => $orders->total_pending ?? 0,
+            'all_time_orders_count' => $orders->total_orders ?? 0,
+            'all_time_orders_amount' => $orders->total_order_delivered_amount ?? 0,
+            'ongoing' => $orders->total_pending ?? 0,
+            'last_seven_days' => $orders->total_order_count_week ?? 0,
+            'last_thirty_days' => $orders->total_order_amount_month ?? 0,
+            'recent_rfqs' => $rfqs,
+            'completion_request' => $completionRequests,
+        ];
+
+        return $this->success($data, 'Dashboard details');
+    }
+
+    public function getAgriecomRfq()
+    {
+        $rfqs = Rfq::with(['buyer', 'seller'])->where('type', OrderType::AGRIECOM)->latest()->get();
+        $active_rfqs = Rfq::where('status', OrderStatus::COMPLETED)->where('type', OrderType::AGRIECOM)->count();
+        $buyers_count = User::where('type', UserType::B2B_AGRIECOM_BUYER)->count();
+        $sellers_count = User::where('type', UserType::B2B_AGRIECOM_SELLER)->count();
+
+        $data = [
+            'buyers' => $buyers_count,
+            'sellers' => $sellers_count,
+            'active_rfqs' => $active_rfqs,
+            'recent_rfqs' => $rfqs,
+        ];
+
+        return $this->success($data, 'rfqs');
+    }
+
+    public function getAllRfq()
+    {
+        $buyers_count = User::where('type', UserType::B2B_BUYER)->count();
+        $sellers_count = User::where('type', UserType::B2B_SELLER)->count();
+
+        $rfqs = Rfq::with(['buyer', 'seller'])->latest()->get();
+        $active_rfqs = Rfq::where('status', OrderStatus::COMPLETED)->count();
+
+        $data = [
+            'buyers' => $buyers_count,
+            'sellers' => $sellers_count,
             'active_rfqs' => $active_rfqs,
             'recent_rfqs' => $rfqs,
         ];
@@ -101,21 +168,27 @@ class AdminService
 
     public function getAllOrders()
     {
-        $searchQuery = request()->input('search');
-        $orders = B2bOrder::orderStats();
-        $international_orders = B2bOrder::when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
-            $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
-                $subQuery->where('country_id', '!=', 160)
-                    ->where('order_no', 'LIKE', '%' . $searchQuery . '%');
-            });
-        })->get();
+        $type = request()->query('type');
 
-        $local_orders = B2bOrder::with(['buyer', 'seller'])->when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
-            $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
-                $subQuery->where('country_id', 160)
-                    ->where('order_no', 'LIKE', '%' . $searchQuery . '%');
-            });
-        })->get();
+        $search = request()->input('search');
+
+        $orders = B2bOrder::orderStats($type);
+
+        // International orders (country_id != 160)
+        $international_orders = B2bOrder::with(['buyer', 'seller'])
+            ->where('type', $type)
+            ->where('country_id', '!=', 160)
+            ->when($search, fn ($q) => $q->where('order_no', 'LIKE', "%{$search}%"))
+            ->latest()
+            ->get();
+
+        // Local orders (country_id = 160)
+        $local_orders = B2bOrder::with(['buyer', 'seller'])
+            ->where('type', $type)
+            ->where('country_id', 160)
+            ->when($search, fn ($q) => $q->where('order_no', 'LIKE', "%{$search}%"))
+            ->latest()
+            ->get();
 
         $data = [
             'all_orders' => $orders->total_orders,
@@ -125,10 +198,9 @@ class AdminService
             'delivered_orders' => $orders->total_delivered,
             'local_orders' => $local_orders,
             'international_orders' => $international_orders,
-
         ];
 
-        return $this->success($data, 'orders');
+        return $this->success($data, 'Orders fetched successfully.');
     }
 
     public function getOrderDetails($id)
@@ -174,7 +246,7 @@ class AdminService
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return $this->error(null, 'Failed to cancel order: ' . $e->getMessage(), 500);
+            return $this->error(null, 'Failed to cancel order: '.$e->getMessage(), 500);
         }
     }
 
@@ -182,15 +254,14 @@ class AdminService
     // Admin section
     public function allSellers()
     {
-        $type = request()->query('type');
+        $type = request()->query('type', UserType::B2B_SELLER);
 
         $sellers = User::withCount('b2bProducts')
-            ->when($type, fn($q) => $q->where('type', $type))
-            ->where('type', UserType::B2B_SELLER)
+            ->where('type', $type)
             ->latest()
             ->get();
 
-        $sellersCounts = User::where('type', $type ?? UserType::B2B_SELLER)
+        $sellersCounts = User::where('type', $type)
             ->selectRaw('
                 COUNT(*) as total,
                 SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as active,
@@ -204,9 +275,9 @@ class AdminService
             ->first();
 
         $data = [
-            'sellers_count' => $sellersCounts->total,
-            'active' => $sellersCounts->active,
-            'inactive' => $sellersCounts->inactive,
+            'sellers_count' => $sellersCounts->total ?? 0,
+            'active' => $sellersCounts->active ?? 0,
+            'inactive' => $sellersCounts->inactive ?? 0,
             'sellers' => $sellers,
         ];
 
@@ -215,40 +286,42 @@ class AdminService
 
     public function approveSeller($id)
     {
-        $user = User::where('id', $id)
-            ->firstOrFail();
+        $user = User::findOrFail($id);
 
-        $user->is_admin_approve = ! $user->is_admin_approve;
-        $user->status = $user->is_admin_approve ? UserStatus::ACTIVE : UserStatus::BLOCKED;
-        $user->save();
+        $user->update([
+            'is_admin_approve' => ! $user->is_admin_approve,
+            'status' => ! $user->is_admin_approve ? UserStatus::ACTIVE : UserStatus::BLOCKED,
+        ]);
 
-        $status = $user->is_admin_approve ? 'Approved successfully' : 'Disapproved successfully';
+        $status = $user->is_admin_approve ? 'Approved successfully' : 'Blocked successfully';
 
         return $this->success(null, $status);
     }
 
-    public function viewSeller($id): array
+    public function viewSeller($id)
     {
         $user = User::where('id', $id)
             ->firstOrFail();
 
         $search = request()->search;
+
         $data = new B2BSellerResource($user);
+
         $query = B2BProduct::with(['b2bProductImages', 'category', 'country', 'user', 'subCategory'])
             ->where('user_id', $id);
 
         if (! empty($search)) {
-            $query->where('name', 'like', '%' . $search . '%')
+            $query->where('name', 'like', '%'.$search.'%')
                 ->orWhereHas('category', function ($q) use ($search): void {
-                    $q->where('name', 'like', '%' . $search . '%');
+                    $q->where('name', 'like', '%'.$search.'%');
                 });
         }
 
         return [
-            'status' => 'true',
+            'status' => true,
             'message' => 'Seller details',
             'data' => $data,
-            'products' => $query->latest('id')->get(),
+            'products' => $query->latest()->get(),
         ];
     }
 
@@ -272,9 +345,14 @@ class AdminService
         $user = User::where('id', $id)
             ->firstOrFail();
 
-        $user->status = UserStatus::BLOCKED;
-        $user->is_admin_approve = 0;
-        $user->save();
+        if ($user->is_admin_approve == 0) {
+            return $this->error(null, 'User Already blocked', 400);
+        }
+
+        $user->update([
+            'status' => UserStatus::BLOCKED,
+            'is_admin_approve' => 0,
+        ]);
 
         return $this->success(null, 'User has been blocked successfully');
     }
@@ -291,9 +369,7 @@ class AdminService
 
     public function bulkRemove($request)
     {
-        $type = request()->query('type');
-        $users = User::where('type', $type ?? UserType::B2B_SELLER)
-            ->whereIn('id', $request->user_ids)
+        $users = User::whereIn('id', $request->user_ids)
             ->get();
 
         if ($users->isEmpty()) {
@@ -326,7 +402,7 @@ class AdminService
         $slug = Str::slug($request->name);
 
         if (B2BProduct::where('slug', $slug)->exists()) {
-            $slug = $slug . '-' . uniqid();
+            $slug = $slug.'-'.uniqid();
         }
 
         if ($request->hasFile('front_image')) {
@@ -405,7 +481,7 @@ class AdminService
             $slug = Str::slug($request->name);
 
             if (B2BProduct::where('slug', $slug)->exists()) {
-                $slug = $slug . '-' . uniqid();
+                $slug = $slug.'-'.uniqid();
             }
         } else {
             $slug = $prod->slug;
@@ -463,9 +539,9 @@ class AdminService
 
     public function allBuyers()
     {
-        $type = request()->query('type');
+        $type = request()->query('type', UserType::B2B_BUYER);
 
-        $buyerStats = User::when($type, fn($q) => $q->where('type', $type))->where('type', UserType::B2B_BUYER)
+        $buyerStats = User::where('type', $type)
             ->selectRaw('
                 COUNT(*) as total_buyers,
                 SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as active_buyers,
@@ -477,7 +553,7 @@ class AdminService
             ->first();
 
         $buyers = User::with('b2bCompany')
-            ->when($type, fn($q) => $q->where('type', $type))
+            ->when($type, fn ($q) => $q->where('type', $type))
             ->latest()
             ->get();
 
@@ -698,9 +774,9 @@ class AdminService
     public function getPageBanners()
     {
         $type = request()->query('type');
-        
+
         $banners = PageBanner::select('id', 'page', 'section', 'type', 'banner_url')
-            ->when($type, fn($q) => $q->where('type', $type))->latest()->get();
+            ->when($type, fn ($q) => $q->where('type', $type))->latest()->get();
 
         return $this->success($banners, 'Banners');
     }
@@ -734,7 +810,7 @@ class AdminService
         PageBanner::create([
             'page' => $request->page,
             'section' => $request->section,
-            'type' =>  $type,
+            'type' => $type,
             'banner_url' => $banner_url['url'],
         ]);
 
@@ -775,11 +851,14 @@ class AdminService
     // seller Product request
     public function allProducts()
     {
+        $type = request()->query('type');
+
         $products = B2BProduct::with(['user' => function ($query): void {
             $query->select('id', 'first_name', 'last_name')
                 ->where('type', UserType::B2B_SELLER);
         }])
             ->whereStatus(OrderStatus::PENDING)
+            ->when($type, fn ($q) => $q->where('type', $type))
             ->latest()
             ->get();
 
@@ -824,7 +903,8 @@ class AdminService
     // Subscription Plans
     public function b2bSubscriptionPlans()
     {
-        $plans = SubscriptionPlan::where('type', PlanType::B2B)->latest()->get();
+        $type = request()->query('type');
+        $plans = SubscriptionPlan::when($type, fn ($q) => $q->where('type', $type))->latest()->get();
 
         return $this->success(SubscriptionPlanResource::collection($plans), 'All B2B Plans');
     }
@@ -843,7 +923,7 @@ class AdminService
             'designation' => $request->designation,
             'tagline' => $request->tagline,
             'details' => $request->details,
-            'type' => PlanType::B2B,
+            'type' => $request->type,
             'status' => PlanStatus::ACTIVE,
         ]);
 
@@ -852,7 +932,7 @@ class AdminService
 
     public function viewSubscriptionPlan($id)
     {
-        $plan = SubscriptionPlan::where('type', PlanType::B2B)->find($id);
+        $plan = SubscriptionPlan::find($id);
         if (! $plan) {
             return $this->error(null, 'Plan not found', 404);
         }
@@ -864,7 +944,7 @@ class AdminService
 
     public function editSubscriptionPlan($request, $id)
     {
-        $plan = SubscriptionPlan::where('type', PlanType::B2B)->find($id);
+        $plan = SubscriptionPlan::find($id);
 
         if (! $plan) {
             return $this->error(null, 'Plan not found', 404);
@@ -892,7 +972,7 @@ class AdminService
     {
         $plan = SubscriptionPlan::findOrFail($id);
 
-        if ($plan->type !== PlanType::B2B) {
+        if (! in_array($plan->type, [PlanType::B2B, PlanType::AGRIECOM_B2B], true)) {
             return $this->error(null, 'Invalid plan type', 400);
         }
 
@@ -908,11 +988,13 @@ class AdminService
     // Blog Section
     public function allBlogs()
     {
+        $type = request()->query('type');
+
         $currentUserId = userAuthId();
 
         $blogs = Blog::with('user')
             ->where('admin_id', $currentUserId)
-            ->where('type', BannerType::B2B)
+            ->when($type, fn ($q) => $q->where('type', $type))
             ->latest()
             ->get();
 
@@ -922,12 +1004,13 @@ class AdminService
     public function addBlog($request)
     {
         $currentUserId = userAuthId();
+
         $url = uploadImage($request, 'image', 'blog');
 
         $plan = Blog::create([
             'admin_id' => $currentUserId,
             'title' => $request->title,
-            'type' => BannerType::B2B,
+            'type' => $request->type,
             'slug' => Str::slug($request->title),
             'description' => $request->description,
             'image' => $url['url'],
@@ -946,9 +1029,7 @@ class AdminService
 
     public function updateBlog($request, $id)
     {
-        $blog = Blog::where('id', $id)
-            ->where('type', BannerType::B2B)
-            ->firstOrFail();
+        $blog = Blog::where('id', $id)->firstOrFail();
 
         $url = $request->file('image') ?
             uploadImage($request, 'image', 'blog') :
