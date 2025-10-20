@@ -304,7 +304,9 @@ class AdminService
             ->firstOrFail();
 
         $search = request()->search;
+
         $data = new B2BSellerResource($user);
+
         $query = B2BProduct::with(['b2bProductImages', 'category', 'country', 'user', 'subCategory'])
             ->where('user_id', $id);
 
@@ -344,7 +346,9 @@ class AdminService
             ->firstOrFail();
 
         $user->status = UserStatus::BLOCKED;
+
         $user->is_admin_approve = 0;
+        
         $user->save();
 
         return $this->success(null, 'User has been blocked successfully');
