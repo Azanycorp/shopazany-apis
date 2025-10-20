@@ -286,19 +286,19 @@ class AdminService
 
     public function approveSeller($id)
     {
-        $user = User::where('id', $id)
-            ->firstOrFail();
+        $user = User::findOrFail($id);
 
-        $user->is_admin_approve = ! $user->is_admin_approve;
-        $user->status = $user->is_admin_approve ? UserStatus::ACTIVE : UserStatus::BLOCKED;
-        $user->save();
+        $user->update([
+            'is_admin_approve' => ! $user->is_admin_approve,
+            'status' => ! $user->is_admin_approve ? UserStatus::ACTIVE : UserStatus::BLOCKED,
+        ]);
 
-        $status = $user->is_admin_approve ? 'Approved successfully' : 'Disapproved successfully';
+        $status = $user->is_admin_approve ? 'Approved successfully' : 'Blocked successfully';
 
         return $this->success(null, $status);
     }
 
-    public function viewSeller($id): array
+    public function viewSeller($id)
     {
         $user = User::where('id', $id)
             ->firstOrFail();
@@ -318,10 +318,10 @@ class AdminService
         }
 
         return [
-            'status' => 'true',
+            'status' => true,
             'message' => 'Seller details',
             'data' => $data,
-            'products' => $query->latest('id')->get(),
+            'products' => $query->latest()->get(),
         ];
     }
 
@@ -345,11 +345,14 @@ class AdminService
         $user = User::where('id', $id)
             ->firstOrFail();
 
-        $user->status = UserStatus::BLOCKED;
+        if ($user->is_admin_approve == 0) {
+            return $this->error(null, 'User Already blocked', 400);
+        }
 
-        $user->is_admin_approve = 0;
-        
-        $user->save();
+        $user->update([
+            'status' => UserStatus::BLOCKED,
+            'is_admin_approve' => 0,
+        ]);
 
         return $this->success(null, 'User has been blocked successfully');
     }
@@ -1001,7 +1004,9 @@ class AdminService
     public function addBlog($request)
     {
         $currentUserId = userAuthId();
+
         $url = uploadImage($request, 'image', 'blog');
+
         $plan = Blog::create([
             'admin_id' => $currentUserId,
             'title' => $request->title,
@@ -1024,9 +1029,7 @@ class AdminService
 
     public function updateBlog($request, $id)
     {
-        $blog = Blog::where('id', $id)
-            ->where('type', BannerType::B2B)
-            ->firstOrFail();
+        $blog = Blog::where('id', $id)->firstOrFail();
 
         $url = $request->file('image') ?
             uploadImage($request, 'image', 'blog') :
