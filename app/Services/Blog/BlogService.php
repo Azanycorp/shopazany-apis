@@ -2,6 +2,7 @@
 
 namespace App\Services\Blog;
 
+use App\Enum\BannerType;
 use App\Http\Resources\B2CBlogResource;
 use App\Models\B2CBlog;
 use App\Models\B2CBlogCategory;
@@ -14,7 +15,14 @@ class BlogService
 
     public function getBlogCategories()
     {
-        $categories = B2CBlogCategory::select('id', 'name', 'slug')
+        $type = request()->query('type', BannerType::B2C);
+
+        if (! in_array($type, [BannerType::B2C, BannerType::B2B, BannerType::AGRIECOM_B2C])) {
+            return $this->error(null, "Invalid type {$type}", 400);
+        }
+
+        $categories = B2CBlogCategory::select('id', 'name', 'slug', 'type')
+            ->where('type', $type)
             ->latest()
             ->get();
 
@@ -32,6 +40,7 @@ class BlogService
         B2CBlogCategory::query()->create([
             'name' => $request->name,
             'slug' => $slug,
+            'type' => $request->type,
         ]);
 
         return $this->success(null, 'Blog category created successfully', 201);
@@ -39,7 +48,7 @@ class BlogService
 
     public function getBlogCategory($id)
     {
-        $category = B2CBlogCategory::select('id', 'name', 'slug')->find($id);
+        $category = B2CBlogCategory::select('id', 'name', 'slug', 'type')->find($id);
 
         if (! $category) {
             return $this->error(null, 'Blog category not found', 404);
@@ -85,7 +94,16 @@ class BlogService
 
     public function getBlogs()
     {
-        $blogs = B2CBlog::with('blogCategory')->latest()->paginate(25);
+        $type = request()->query('type', BannerType::B2C);
+
+        if (! in_array($type, [BannerType::B2C, BannerType::B2B, BannerType::AGRIECOM_B2C])) {
+            return $this->error(null, "Invalid type {$type}", 400);
+        }
+
+        $blogs = B2CBlog::with('blogCategory')
+            ->where('type', $type)
+            ->latest()
+            ->paginate(25);
 
         $data = B2CBlogResource::collection($blogs);
 
@@ -120,6 +138,7 @@ class BlogService
             'meta_keywords' => $request->meta_keywords,
             'meta_image' => $metaImageUrl['url'] ?? null,
             'status' => 'published',
+            'type' => $request->type,
             'created_by' => userAuthId(),
         ]);
 

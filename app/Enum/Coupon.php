@@ -5,12 +5,12 @@ namespace App\Enum;
 enum Coupon: string
 {
     // Type
-    const ONE_TIME = 'one-time';
+    case ONE_TIME = 'one-time';
 
-    const MULTI_USE = 'multi-use';
+    case MULTI_USE = 'multi-use';
 
     // Status
-    const ACTIVE = 'active';
+    case ACTIVE = 'active';
 
-    const INACTIVE = 'in-active';
+    case INACTIVE = 'in-active';
 }

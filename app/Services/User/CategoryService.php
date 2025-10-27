@@ -2,6 +2,7 @@
 
 namespace App\Services\User;
 
+use App\Enum\BannerType;
 use App\Enum\CategoryStatus;
 use App\Http\Resources\AdminCategoryResource;
 use App\Http\Resources\AdminSubCategoryResource;
@@ -20,7 +21,7 @@ class CategoryService
     public function createCategory($request)
     {
         try {
-            if ($request->file('image')) {
+            if ($request->hasFile('image')) {
                 $folder = folderName('category');
                 $url = uploadFunction($request->file('image'), $folder);
             }
@@ -35,10 +36,11 @@ class CategoryService
                 'slug' => $slug,
                 'image' => $url['url'] ?? null,
                 'public_id' => $url['public_id'] ?? null,
-                'featured' => 1,
+                'featured' => $request->boolean('featured'),
+                'type' => $request->type,
             ]);
 
-            return $this->success(null, 'Created successfully');
+            return $this->success(null, 'Created successfully', 201);
         } catch (\Exception $e) {
             return $this->error(null, $e->getMessage(), 500);
         }
@@ -47,6 +49,7 @@ class CategoryService
     public function categories()
     {
         $categories = Category::where('featured', 1)
+            ->orWhere('featured', true)
             ->get();
 
         $data = CategoryResource::collection($categories);
@@ -56,10 +59,17 @@ class CategoryService
 
     public function adminCategories()
     {
+        $type = request()->query('type', BannerType::B2C);
+
+        if (! in_array($type, [BannerType::B2C, BannerType::B2B, BannerType::AGRIECOM_B2C])) {
+            return $this->error(null, "Invalid type {$type}", 400);
+        }
+
         $search = request()->query('search');
 
         $categories = Category::with(['products', 'subcategory'])
             ->withCount(['products', 'subcategory'])
+            ->where('type', $type)
             ->when($search, function ($query, string $search): void {
                 $query->where('name', 'like', '%'.$search.'%');
             })
@@ -89,6 +99,7 @@ class CategoryService
                 'slug' => Str::slug($request->name),
                 'image' => $url['url'] ?? null,
                 'public_id' => $url['public_id'] ?? null,
+                'type' => $request->type,
             ]);
 
             return $this->success(null, 'Created successfully');
@@ -99,8 +110,15 @@ class CategoryService
 
     public function getSubcategory($id)
     {
+        $type = request()->query('type', BannerType::B2C);
+
+        if (! in_array($type, [BannerType::B2C, BannerType::B2B, BannerType::AGRIECOM_B2C])) {
+            return $this->error(null, "Invalid type {$type}", 400);
+        }
+
         $subcats = SubCategory::with(['products', 'category'])
             ->where('category_id', $id)
+            ->where('type', $type)
             ->get();
 
         $data = SubCategoryResource::collection($subcats);
@@ -149,9 +167,16 @@ class CategoryService
 
     public function getAdminSubcategory()
     {
+        $type = request()->query('type', BannerType::B2C);
+
+        if (! in_array($type, [BannerType::B2C, BannerType::B2B, BannerType::AGRIECOM_B2C])) {
+            return $this->error(null, "Invalid type {$type}", 400);
+        }
+
         $search = request()->query('search');
 
         $subcats = SubCategory::with(['product', 'category'])
+            ->where('type', $type)
             ->withCount(['product', 'category'])
             ->when($search, function ($query, string $search): void {
                 $query->where('name', 'like', '%'.$search.'%');
