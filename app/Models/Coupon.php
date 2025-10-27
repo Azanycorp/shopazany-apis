@@ -17,6 +17,7 @@ class Coupon extends Model
         'expire_at',
         'status',
         'total_used',
+        'platform',
     ];
 
     protected function casts(): array

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Enum\BannerType;
 use Illuminate\Foundation\Http\FormRequest;
 
 class CategoryRequest extends FormRequest
@@ -24,6 +25,14 @@ class CategoryRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:100'],
             'image' => ['nullable', 'image', 'mimes:png,jpg,jpeg'],
+            'type' => ['required', 'string', 'in:'.BannerType::B2C.','.BannerType::B2B.','.BannerType::AGRIECOM_B2C],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'type.in' => 'The type must be one of: '.BannerType::B2C.','.BannerType::B2B.','.BannerType::AGRIECOM_B2C,
         ];
     }
 }
