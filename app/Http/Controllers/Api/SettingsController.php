@@ -95,6 +95,10 @@ class SettingsController extends Controller
 
     public function updatePlan(Request $request, $id)
     {
+        $request->validate([
+            'type' => ['required', 'in:b2c,b2b,agriecom_b2c'],
+        ]);
+
         return $this->service->updatePlan($request, $id);
     }
 

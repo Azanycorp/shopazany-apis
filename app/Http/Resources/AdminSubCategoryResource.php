@@ -21,6 +21,7 @@ class AdminSubCategoryResource extends JsonResource
             'image' => (string) $this->image,
             'product_count' => (int) $this->product_count,
             'category_count' => (int) $this->category_count,
+            'type' => (string) $this->type,
             'status' => (string) $this->status,
         ];
     }

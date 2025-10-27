@@ -260,6 +260,11 @@ class SettingsService
     public function getPlanById($id)
     {
         $type = request()->query('type', PlanType::B2C);
+
+        if (! in_array($type, [PlanType::B2C, PlanType::B2B, PlanType::AGRIECOM_B2C])) {
+            return $this->error(null, "Invalid type {$type}", 400);
+        }
+
         $plan = SubscriptionPlan::where('type', $type)->findOrFail($id);
         $data = new SubscriptionPlanResource($plan);
 
@@ -269,6 +274,10 @@ class SettingsService
     public function getPlanByCountry($countryId)
     {
         $type = request()->query('type', PlanType::B2C);
+
+        if (! in_array($type, [PlanType::B2C, PlanType::B2B, PlanType::AGRIECOM_B2C])) {
+            return $this->error(null, "Invalid type {$type}", 400);
+        }
 
         $plan = SubscriptionPlan::where('country_id', $countryId)
             ->where('type', $type)
@@ -281,9 +290,7 @@ class SettingsService
 
     public function updatePlan($request, $id)
     {
-        $type = request()->query('type', PlanType::B2C);
-
-        $plan = SubscriptionPlan::where('type', $type)
+        $plan = SubscriptionPlan::where('type', $request->type)
             ->findOrFail($id);
 
         $plan->update([
@@ -291,6 +298,7 @@ class SettingsService
             'cost' => $request->cost,
             'country_id' => $request->country_id,
             'period' => $request->period,
+            'type' => $request->type,
             'tier' => $request->tier,
             'tagline' => $request->tagline,
             'designation' => $request->designation,
@@ -304,6 +312,11 @@ class SettingsService
     public function deletePlan($id)
     {
         $type = request()->query('type', PlanType::B2C);
+
+        if (! in_array($type, [PlanType::B2C, PlanType::B2B, PlanType::AGRIECOM_B2C])) {
+            return $this->error(null, "Invalid type {$type}", 400);
+        }
+
         $plan = SubscriptionPlan::where('type', $type)
             ->findOrFail($id);
 

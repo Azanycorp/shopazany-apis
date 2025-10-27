@@ -3,6 +3,7 @@
 namespace App\Services\Admin;
 
 use App\Enum\BannerStatus;
+use App\Enum\BannerType;
 use App\Enum\CouponType;
 use App\Http\Resources\BannerResource;
 use App\Http\Resources\PromoResource;
@@ -40,6 +41,7 @@ class BannerPromoService
             'start_date' => $request->start_date,
             'end_date' => $request->end_date,
             'products' => $prods,
+            'type' => $request->type ?? BannerType::B2C,
             'status' => BannerStatus::ACTIVE,
         ]);
 
@@ -48,7 +50,16 @@ class BannerPromoService
 
     public function banners()
     {
-        $banners = Banner::with('deal')->get();
+        $type = request()->query('type', BannerType::B2C);
+
+        if (! in_array($type, [BannerType::B2C, BannerType::B2B, BannerType::AGRIECOM_B2C])) {
+            return $this->error(null, "Invalid type {$type}", 400);
+        }
+
+        $banners = Banner::with('deal')
+            ->where('type', $type)
+            ->get();
+
         $data = BannerResource::collection($banners);
 
         return $this->success($data, 'Banners');
@@ -205,6 +216,7 @@ class BannerPromoService
             'image' => $image['url'],
             'public_id' => $image['public_id'],
             'position' => $request->position,
+            'type' => $request->type,
         ]);
 
         return $this->success($deal, 'Deal added successfully');
@@ -212,7 +224,14 @@ class BannerPromoService
 
     public function deals()
     {
-        $deals = Deal::select('id', 'title', 'slug', 'image', 'position')
+        $type = request()->query('type', BannerType::B2C);
+
+        if (! in_array($type, [BannerType::B2C, BannerType::B2B, BannerType::AGRIECOM_B2C])) {
+            return $this->error(null, "Invalid type {$type}", 400);
+        }
+
+        $deals = Deal::select('id', 'title', 'slug', 'image', 'position', 'type')
+            ->where('type', $type)
             ->latest()
             ->get();
 
