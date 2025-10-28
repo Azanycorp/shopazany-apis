@@ -145,13 +145,26 @@ class CategoryService
 
     public function categoryAnalytic()
     {
+        $type = request()->query('type', BannerType::B2C);
+
+        if (! in_array($type, [BannerType::B2C, BannerType::B2B, BannerType::AGRIECOM_B2C])) {
+            return $this->error(null, "Invalid type {$type}", 400);
+        }
+
         $categories = Category::withCount(['subcategory', 'products'])
+            ->where('type', $type)
             ->get();
 
         $totalActive = $categories->where('status', CategoryStatus::ACTIVE)->count();
-        $subCategoryActiveCount = Subcategory::where('status', CategoryStatus::ACTIVE)->count();
-        $productActiveCount = Product::where('status', CategoryStatus::ACTIVE)->count();
-        $productInactiveCount = Product::where('status', CategoryStatus::INACTIVE)->count();
+        $subCategoryActiveCount = Subcategory::where('status', CategoryStatus::ACTIVE)
+            ->where('type', $type)
+            ->count();
+        $productActiveCount = Product::where('status', CategoryStatus::ACTIVE)
+            ->where('type', $type)
+            ->count();
+        $productInactiveCount = Product::where('status', CategoryStatus::INACTIVE)
+            ->where('type', $type)
+            ->count();
 
         $data = [
             'total_count' => $categories->count(),
