@@ -9,6 +9,7 @@ class B2CBlogCategory extends Model
     protected $fillable = [
         'name',
         'slug',
+        'type',
     ];
 
     public function blogs()

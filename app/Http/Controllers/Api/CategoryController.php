@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Gate;
 
 class CategoryController extends Controller
 {
-    const MESSAGE = '403 Forbidden';
+    public const MESSAGE = '403 Forbidden';
 
     public function __construct(
         protected CategoryService $service

@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Gate;
 
 class BannerPromoController extends Controller
 {
-    const MESSAGE = '403 Forbidden';
+    public const MESSAGE = '403 Forbidden';
 
     public function __construct(
         protected BannerPromoService $service
@@ -82,6 +82,9 @@ class BannerPromoController extends Controller
             'title' => 'required|string',
             'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'position' => 'required|string|in:top,bottom',
+            'type' => 'required|string|in:b2c,b2b,agriecom_b2c',
+        ], [
+            'type.in' => 'Invalid type',
         ]);
 
         return $this->service->addDeal($request);

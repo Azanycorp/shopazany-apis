@@ -20,13 +20,16 @@ class AdminCouponController extends Controller
                 Coupon::ONE_TIME,
             ]),
             ],
-            'numbers' => 'required|integer|min:1|max:10000',
+            'numbers' => ['required', 'integer', 'min:1', 'max:10000'],
+            'platform' => ['required', 'string', 'in:b2c,b2b,agriecom_b2c'],
+        ], [
+            'platform.in' => 'The platform must be one of: b2c, b2b, agriecom_b2c.',
         ]);
 
         return $this->couponService->createCoupon($request);
     }
 
-    public function getCoupon(): array
+    public function getCoupon()
     {
         return $this->couponService->getCoupon();
     }

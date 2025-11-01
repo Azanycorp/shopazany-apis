@@ -21,6 +21,7 @@ class BlogController extends Controller
     {
         $request->validate([
             'name' => 'required|string',
+            'type' => 'required|string|in:b2c,b2b,agriecom_b2c',
         ]);
 
         return $this->blogService->addBlogCategory($request);
@@ -62,6 +63,7 @@ class BlogController extends Controller
             'meta_description' => 'nullable|string',
             'meta_keywords' => 'nullable|string',
             'meta_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'type' => 'required|string|in:b2c,b2b,agriecom_b2c',
         ]);
 
         return $this->blogService->addBlog($request);

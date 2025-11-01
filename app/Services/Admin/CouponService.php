@@ -2,6 +2,7 @@
 
 namespace App\Services\Admin;
 
+use App\Enum\BannerType;
 use App\Enum\Coupon as EnumCoupon;
 use App\Models\Coupon;
 use App\Trait\HttpResponse;
@@ -13,9 +14,9 @@ class CouponService
 
     public function createCoupon($request)
     {
-        if ($request->type === EnumCoupon::MULTI_USE) {
+        if ($request->type === EnumCoupon::MULTI_USE->value) {
             $this->createMultiUseCoupon($request);
-        } else {
+        } elseif ($request->type === EnumCoupon::ONE_TIME->value) {
             $this->createOneTimeCoupon($request);
         }
 
@@ -28,18 +29,17 @@ class CouponService
             $code = strtoupper(Str::random(8));
         } while (Coupon::where('code', $code)->exists());
 
-        $link = app()->environment('production')
-            ? config('services.seller_baseurl').'?coupon='.$code
-            : config('services.staging_seller_baseurl').'?coupon='.$code;
+        $link = generate_coupon_links($request->platform, $code);
 
         Coupon::create([
             'name' => 'Signup coupon',
             'code' => $code,
             'link' => $link,
-            'type' => EnumCoupon::MULTI_USE,
+            'type' => EnumCoupon::MULTI_USE->value,
             'max_use' => $request->numbers,
             'expire_at' => now()->addDays(30),
-            'status' => EnumCoupon::ACTIVE,
+            'platform' => $request->platform,
+            'status' => EnumCoupon::ACTIVE->value,
         ]);
     }
 
@@ -50,11 +50,7 @@ class CouponService
                 $code = strtoupper(Str::random(8));
             } while (Coupon::where('code', $code)->exists());
 
-            if (app()->environment('production')) {
-                $link = config('services.seller_baseurl').'?coupon='.$code;
-            } else {
-                $link = config('services.staging_seller_baseurl').'?coupon='.$code;
-            }
+            $link = generate_coupon_links($request->platform, $code);
 
             $coupon = Coupon::create([
                 'name' => 'Signup coupon',
@@ -62,6 +58,7 @@ class CouponService
                 'link' => $link,
                 'type' => EnumCoupon::ONE_TIME,
                 'expire_at' => now()->addDays(30),
+                'platform' => $request->platform,
                 'status' => EnumCoupon::ACTIVE,
             ]);
 
@@ -69,23 +66,19 @@ class CouponService
         }
     }
 
-    public function getCoupon(): array
+    public function getCoupon()
     {
-        $coupons = Coupon::select('id', 'name', 'code', 'link', 'used', 'max_use', 'total_used', 'type', 'expire_at', 'status')
-            ->orderBy('created_at', 'desc')
+        $platform = request()->query('platform', BannerType::B2C);
+
+        if (! in_array($platform, [BannerType::B2C, BannerType::B2B, BannerType::AGRIECOM_B2C])) {
+            return $this->error(null, "Invalid type {$platform}", 400);
+        }
+
+        $coupons = Coupon::select('id', 'name', 'code', 'link', 'used', 'max_use', 'total_used', 'type', 'expire_at', 'status', 'platform')
+            ->where('platform', $platform)
+            ->latest()
             ->paginate(25);
 
-        return [
-            'status' => 'true',
-            'message' => 'All products',
-            'data' => $coupons,
-            'pagination' => [
-                'current_page' => $coupons->currentPage(),
-                'last_page' => $coupons->lastPage(),
-                'per_page' => $coupons->perPage(),
-                'prev_page_url' => $coupons->previousPageUrl(),
-                'next_page_url' => $coupons->nextPageUrl(),
-            ],
-        ];
+        return $this->withPagination($coupons, 'All coupons');
     }
 }

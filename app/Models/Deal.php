@@ -12,6 +12,7 @@ class Deal extends Model
         'image',
         'public_id',
         'position',
+        'type',
     ];
 
     protected $hidden = [

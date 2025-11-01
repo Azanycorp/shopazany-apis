@@ -63,6 +63,7 @@ class ProductService
             'public_id' => $url['public_id'],
             'added_by' => $admin->first_name.' '.$admin->last_name,
             'country_id' => 160,
+            'type' => $request->type ?? 'b2c',
             'status' => ProductStatus::ACTIVE,
         ]);
 

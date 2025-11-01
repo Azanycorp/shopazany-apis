@@ -18,7 +18,7 @@ use Illuminate\Http\Request;
 
 class AdminController extends Controller
 {
-    const MESSAGE = '403 Forbidden';
+    public const MESSAGE = '403 Forbidden';
 
     public function __construct(
         private SuperAdminService $superAdminService

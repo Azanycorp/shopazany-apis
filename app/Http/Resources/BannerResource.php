@@ -22,6 +22,7 @@ class BannerResource extends JsonResource
             'start_date' => (string) $this->start_date,
             'end_date' => (string) $this->end_date,
             'products' => $this->products,
+            'type' => (string) $this->type,
             'status' => (string) $this->status,
         ];
     }

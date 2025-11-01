@@ -17,7 +17,15 @@ class Category extends Model
         'featured',
         'meta_title',
         'meta_description',
+        'type',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'featured' => 'boolean',
+        ];
+    }
 
     public function subcategory()
     {

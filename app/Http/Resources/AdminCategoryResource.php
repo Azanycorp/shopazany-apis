@@ -22,6 +22,7 @@ class AdminCategoryResource extends JsonResource
             'is_featured' => $this->featured,
             'product_count' => (int) $this->products_count,
             'sub_category_count' => (int) $this->subcategory_count,
+            'type' => (string) $this->type,
             'status' => (string) $this->status,
         ];
     }

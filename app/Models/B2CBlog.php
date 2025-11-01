@@ -19,6 +19,7 @@ class B2CBlog extends Model
         'meta_image',
         'status',
         'created_by',
+        'type',
     ];
 
     public function blogCategory()
