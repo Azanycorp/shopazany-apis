@@ -131,11 +131,6 @@ class HomeService
         ])
             ->where('is_featured', 1)
             ->where('status', ProductStatus::ACTIVE)
-            ->when($type, function ($q) use ($type) {
-                $q->where('type', $type);
-            }, function ($q) {
-                $q->where('type', '!=', 'agriecom');
-            })
             ->when($countryId, fn ($q) => $q->where('country_id', $countryId))
             ->limit(8)
             ->get();
