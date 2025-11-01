@@ -735,3 +735,21 @@ if (! function_exists('amountToPoint')) {
         return round($points);
     }
 }
+
+if (! function_exists('getEstimatedDelivery')) {
+    function getEstimatedDelivery($country): string
+    {
+        if (! $country) {
+            return '14 - 21 days';
+        }
+
+        $africanCountries = config('regions.african_countries');
+
+        return in_array(
+            strtolower($country?->name),
+            array_map('strtolower', $africanCountries)
+        )
+            ? '3 - 7 days'
+            : '14 - 21 days';
+    }
+}
