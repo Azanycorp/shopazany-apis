@@ -41,6 +41,7 @@ class CustomerOrderDetailResource extends JsonResource
             'order_time' => Carbon::parse($this->created_at)->format('h:i A'),
             'payment_status' => strtolower($this->payment_status) === 'success' ? 'paid' : 'not-paid',
             'payment_method' => $this->payment_method,
+            'estimated_delivery' => getEstimatedDelivery($this->user?->userCountry),
             'status' => $this->status,
         ];
     }
