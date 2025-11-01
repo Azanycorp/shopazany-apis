@@ -129,7 +129,7 @@ class HomeService
                 $query->select('id', 'product_id', 'variation', 'sku', 'price', 'stock', 'image');
             },
         ])
-            ->where('is_featured', true)
+            ->where('is_featured', 1)
             ->where('status', ProductStatus::ACTIVE)
             ->when($type, function ($q) use ($type) {
                 $q->where('type', $type);
