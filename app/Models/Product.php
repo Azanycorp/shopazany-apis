@@ -48,12 +48,12 @@ class Product extends Model
         'condition',
     ];
 
-    // protected function casts(): array
-    // {
-    //     return [
-    //         'is_featured' => 'boolean',
-    //     ];
-    // }
+    protected function casts(): array
+    {
+        return [
+            'is_featured' => 'boolean',
+        ];
+    }
 
     public function user(): BelongsTo
     {
