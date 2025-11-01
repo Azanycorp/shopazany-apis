@@ -159,7 +159,7 @@ class CustomerService
         ];
     }
 
-    public function getOrderDetail($orderNo)
+    public function getOrderDetail($orderNo, $summary)
     {
         $order = Order::with([
             'user.userShippingAddress',
@@ -174,7 +174,11 @@ class CustomerService
             return $this->error('Order not found', 404);
         }
 
+        $userCurrency = $order->user?->default_currency ?? 'USD';
+        $getSummary = $summary->handle($order, $userCurrency);
+
         $data = new CustomerOrderDetailResource($order);
+        $data->additional(['summary' => $getSummary]);
 
         return $this->success($data, 'Order detail');
     }

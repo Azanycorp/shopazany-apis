@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Actions\CalculateOrderSummaryAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CustomerSupportRequest;
 use App\Http\Requests\OrderRateRequest;
@@ -35,9 +36,9 @@ class CustomerController extends Controller
         return $this->service->getOrders($userId);
     }
 
-    public function getOrderDetail($orderNo)
+    public function getOrderDetail($orderNo, CalculateOrderSummaryAction $summary)
     {
-        return $this->service->getOrderDetail($orderNo);
+        return $this->service->getOrderDetail($orderNo, $summary);
     }
 
     public function rateOrder(OrderRateRequest $request)
