@@ -64,6 +64,8 @@ class User extends Authenticatable
         'company_size',
         'website',
         'pending_referrer_code',
+        'biometric_enabled',
+        'biometric_token',
     ];
 
     /**
@@ -89,6 +91,7 @@ class User extends Authenticatable
             'is_affiliate_member' => 'boolean',
             'referrer_link' => 'array',
             'two_factor_enabled' => 'boolean',
+            'biometric_enabled' => 'boolean',
         ];
     }
 

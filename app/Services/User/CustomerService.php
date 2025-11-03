@@ -113,9 +113,13 @@ class CustomerService
             return $this->error(null, 'User not found', 404);
         }
 
-        $orders = Order::with(['user', 'products.shopCountry'])
+        $orders = Order::with([
+            'user',
+            'products.shopCountry',
+            'products.productVariations.product',
+        ])
             ->where('user_id', $userId)
-            ->orderBy('created_at', 'desc')
+            ->latest()
             ->take(7)
             ->get();
 
@@ -127,6 +131,7 @@ class CustomerService
     public function getOrders($userId)
     {
         $currentUser = userAuth();
+        $status = request()->query('status');
 
         if ($currentUser->id != $userId || $currentUser->type != UserType::CUSTOMER) {
             return $this->error(null, 'Unauthorized action.', 401);
@@ -138,8 +143,13 @@ class CustomerService
             return $this->error(null, 'User not found', 404);
         }
 
-        $orders = Order::with(['user', 'products.shopCountry'])
+        $orders = Order::with([
+            'user',
+            'products.shopCountry',
+            'products.productVariations.product',
+        ])
             ->where('user_id', $userId)
+            ->when($status, fn ($query) => $query->where('status', $status))
             ->orderBy('created_at', 'desc')
             ->paginate(25);
 
