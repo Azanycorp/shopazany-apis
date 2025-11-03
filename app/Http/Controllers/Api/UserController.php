@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\AffiliateSettingsRequest;
 use App\Http\Requests\BankAccountRequest;
 use App\Http\Requests\KycRequest;
+use App\Http\Requests\SetupBiometricRequest;
 use App\Http\Requests\WithdrawalRequest;
 use App\Services\User\UserService;
 use Illuminate\Http\Request;
@@ -123,5 +124,10 @@ class UserController extends Controller
     public function withdrawalHistory($userId)
     {
         return $this->service->withdrawalHistory($userId);
+    }
+
+    public function setupBiometric(SetupBiometricRequest $request)
+    {
+        return $this->service->setupBiometric($request);
     }
 }

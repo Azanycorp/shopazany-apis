@@ -18,6 +18,7 @@ use App\Trait\HttpResponse;
 use App\Trait\Payment;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class UserService extends Controller
 {
@@ -504,5 +505,21 @@ class UserService extends Controller
                 'next_page_url' => $page < ceil($total / $perPage) ? request()->url().'?page='.($page + 1).'&per_page='.$perPage : null,
             ],
         ]);
+    }
+
+    public function setupBiometric($request)
+    {
+        $user = User::find($request->user_id);
+
+        if (! $user) {
+            return $this->error(null, 'User not found', 404);
+        }
+
+        $user->update([
+            'biometric_enabled' => $request->boolean('enable'),
+            'biometric_token' => $request->boolean('enable') ? Hash::make($request->token) : null,
+        ]);
+
+        return $this->success(null, 'Biometric setup successfully');
     }
 }
