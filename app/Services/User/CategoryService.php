@@ -48,7 +48,14 @@ class CategoryService
 
     public function categories()
     {
-        $categories = Category::where('featured', 1)
+        $type = request()->query('type', BannerType::B2C);
+
+        if (! in_array($type, [BannerType::B2C, BannerType::B2B, BannerType::AGRIECOM_B2C])) {
+            return $this->error(null, "Invalid type {$type}", 400);
+        }
+
+        $categories = Category::where('type', $type)
+            ->where('featured', 1)
             ->orWhere('featured', true)
             ->get();
 
