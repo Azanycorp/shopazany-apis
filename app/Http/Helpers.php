@@ -736,8 +736,8 @@ if (! function_exists('amountToPoint')) {
     }
 }
 
-if (! function_exists('getEstimatedDelivery')) {
-    function getEstimatedDelivery($country): string
+if (! function_exists('getExpectedDelivery')) {
+    function getExpectedDelivery($country): string
     {
         if (! $country) {
             return '14 - 21 days';

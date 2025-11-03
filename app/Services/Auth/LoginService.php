@@ -7,6 +7,7 @@ use App\Enum\UserStatus;
 use App\Models\User;
 use App\Trait\Login;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class LoginService
 {
@@ -47,5 +48,20 @@ class LoginService
         }
 
         return app(self::class)->handleInvalidCredentials($request);
+    }
+
+    public static function biometricLogin($request)
+    {
+        $user = User::find($request->user_id);
+
+        if (! $user) {
+            return app(self::class)->handleBiometricsIssue($request, 'User not found!', 404);
+        }
+
+        if (! $user->biometric_enabled || ! Hash::check($request->token, $user->biometric_token)) {
+            return app(self::class)->handleBiometricsIssue($request, 'Invalid biometric credentials.', 401);
+        }
+
+        return app(self::class)->logUserIn($user, $request);
     }
 }

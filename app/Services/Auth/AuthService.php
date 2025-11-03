@@ -27,6 +27,11 @@ class AuthService extends Controller
         return LoginService::AuthLogin($request);
     }
 
+    public function biometricLogin($request)
+    {
+        return LoginService::biometricLogin($request);
+    }
+
     public function loginVerify($request)
     {
         $user = User::where('email', $request->email)
