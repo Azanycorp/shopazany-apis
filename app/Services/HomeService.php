@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enum\BannerStatus;
+use App\Enum\BannerType;
 use App\Enum\OrderStatus;
 use App\Enum\ProductReviewStatus;
 use App\Enum\ProductStatus;
@@ -535,8 +536,15 @@ class HomeService
 
     public function getDeals()
     {
+        $type = request()->query('type', BannerType::B2C);
+
+        if (! in_array($type, [BannerType::B2C, BannerType::B2B, BannerType::AGRIECOM_B2C])) {
+            return $this->error(null, "Invalid type {$type}", 400);
+        }
+
         $deals = Deal::with('banners')
             ->select('id', 'title', 'slug', 'image', 'position')
+            ->where('type', $type)
             ->latest()
             ->get();
 
