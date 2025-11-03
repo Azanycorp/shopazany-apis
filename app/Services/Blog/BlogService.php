@@ -210,7 +210,17 @@ class BlogService
 
     public function getAllBlogs()
     {
-        $blogs = B2CBlog::with('blogCategory')->latest()->paginate(25);
+        $type = request()->query('type', BannerType::B2C);
+
+        if (! in_array($type, [BannerType::B2C, BannerType::B2B, BannerType::AGRIECOM_B2C])) {
+            return $this->error(null, "Invalid type {$type}", 400);
+        }
+
+        $blogs = B2CBlog::with('blogCategory')
+            ->where('type', $type)
+            ->latest()
+            ->paginate(25);
+
         $data = B2CBlogResource::collection($blogs);
 
         return $this->withPagination($data, 'Blogs fetched successfully');
