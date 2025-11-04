@@ -102,9 +102,7 @@ class AdminService
             return $this->error(null, "Invalid type {$type}", 400);
         }
 
-        $categories = Category::where('type', $type)
-            ->where('featured', 1)
-            ->whereStatus(CategoryStatus::ACTIVE)
+        $categories = Category::whereStatus(CategoryStatus::ACTIVE)
             ->get();
 
         $data = CategoryResource::collection($categories);
