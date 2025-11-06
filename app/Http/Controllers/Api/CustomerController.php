@@ -125,4 +125,21 @@ class CustomerController extends Controller
     {
         return $this->service->getCustomers();
     }
+
+    public function shipping(Request $request)
+    {
+        $request->validate([
+            'user_id' => ['required', 'integer', 'exists:users,id'],
+            'street_address' => ['required', 'string'],
+            'first_name' => ['required', 'string'],
+            'last_name' => ['required', 'string'],
+            'email' => ['required', 'email'],
+            'phone' => ['required', 'string'],
+            'state' => ['required', 'string'],
+            'city' => ['required', 'string'],
+            'zip' => ['required', 'string'],
+        ]);
+
+        return $this->service->shipping($request);
+    }
 }
