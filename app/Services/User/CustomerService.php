@@ -14,6 +14,7 @@ use App\Models\CustomerSupport;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
+use App\Models\UserShippingAddress;
 use App\Models\Wishlist;
 use App\Services\Auth\Auth;
 use App\Trait\General;
@@ -597,5 +598,35 @@ class CustomerService
         } catch (\Exception $e) {
             return $this->error(null, "Something went wrong. Please try again later. {$e->getMessage()}", 500);
         }
+    }
+
+    public function shipping($request)
+    {
+        $user = User::find($request->user_id);
+
+        if (! $user) {
+            return $this->error(null, 'User not found!', 404);
+        }
+
+        $addr = UserShippingAddress::updateOrCreate(
+            [
+                'user_id' => $user->id,
+                'street_address' => $request->street_address,
+            ],
+            [
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'email' => $request->email,
+                'phone' => $request->phone,
+                'state' => $request->state,
+                'city' => $request->city,
+                'zip' => $request->zip,
+            ]
+        );
+
+        $msg = $addr->wasRecentlyCreated ? 'Shipping address created successfully.' : 'Shipping address updated successfully.';
+        $code = $addr->wasRecentlyCreated ? 201 : 200;
+
+        return $this->success(null, $msg, $code);
     }
 }
