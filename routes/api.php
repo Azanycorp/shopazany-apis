@@ -235,6 +235,8 @@ Route::middleware('validate.header')
                         });
                     });
 
+                    Route::post('/shipping', 'shipping');
+
                     // Support Route
                     Route::post('/support', 'support');
 
