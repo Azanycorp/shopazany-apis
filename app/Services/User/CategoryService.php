@@ -54,8 +54,8 @@ class CategoryService
             return $this->error(null, "Invalid type {$type}", 400);
         }
 
-        $categories = Category::where('featured', 1)
-            ->orWhere('featured', true)
+        $categories = Category::where('featured', true)
+            ->where('type', $type)
             ->get();
 
         $data = CategoryResource::collection($categories);
