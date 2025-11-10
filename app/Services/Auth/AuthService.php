@@ -190,7 +190,7 @@ class AuthService extends Controller
         $request->validated($request->all());
         $user = null;
 
-        $currencyCode = $this->currencyCode($request);
+        $currencyCode = currencyCodeByCountryId($request->country_id);
         $coupon = $request->query('coupon');
         $coupon = $this->normalizeCoupon($coupon);
         $referrer = $request->query('referrer');
@@ -468,7 +468,8 @@ class AuthService extends Controller
 
     private function userTrigger($user, $request, array $referrer_links, $referrer_code, string $code)
     {
-        $currencyCode = $this->currencyCode($request);
+        $currencyCode = currencyCodeByCountryId($request->country_id);
+
         if ($user) {
             $emailVerified = $user->email_verified_at;
 
@@ -495,7 +496,6 @@ class AuthService extends Controller
             if (is_null($emailVerified)) {
                 $user->update(['email_verified_at' => null, 'verification_code' => $code]);
 
-                // Send email to user to verify account
                 $type = MailingEnum::SIGN_UP_OTP;
                 $subject = 'Verify Account';
                 $mail_class = SignUpVerifyMail::class;
@@ -505,30 +505,29 @@ class AuthService extends Controller
                 mailSend($type, $user, $subject, $mail_class, $data);
             }
 
-        } else {
-            $user = User::create([
-                'first_name' => $request->first_name,
-                'last_name' => $request->last_name,
-                'email' => $request->email,
-                'type' => UserType::SELLER,
-                'default_currency' => $currencyCode,
-                'email_verified_at' => null,
-                'verification_code' => $code,
-                'country' => $request->country_id,
-                'state_id' => $request->state_id,
-                'is_verified' => 0,
-                'is_affiliate_member' => 1,
-                'password' => bcrypt($request->password),
-            ]);
-
-            $description = "User with email {$request->email} signed up as an affiliate";
-            $action = UserLog::CREATED;
-            $response = $this->success(null, 'Created successfully');
-            logUserAction($request, $action, $description, $response, $user);
-
             return $user;
         }
 
-        return null;
+        $user = User::create([
+            'first_name' => $request->first_name,
+            'last_name' => $request->last_name,
+            'email' => $request->email,
+            'type' => UserType::SELLER,
+            'default_currency' => $currencyCode,
+            'email_verified_at' => null,
+            'verification_code' => $code,
+            'country' => $request->country_id,
+            'state_id' => $request->state_id,
+            'is_verified' => 0,
+            'is_affiliate_member' => 1,
+            'password' => bcrypt($request->password),
+        ]);
+
+        $description = "User with email {$request->email} signed up as an affiliate";
+        $action = UserLog::CREATED;
+        $response = $this->success(null, 'Created successfully', 201);
+        logUserAction($request, $action, $description, $response, $user);
+
+        return $user;
     }
 }
