@@ -4,7 +4,6 @@ namespace App\Trait;
 
 use App\Enum\Coupon as EnumCoupon;
 use App\Enum\UserType;
-use App\Models\Country;
 use App\Models\Coupon;
 use App\Models\User;
 
@@ -13,7 +12,7 @@ trait SignUp
     protected function createUser($request)
     {
         $code = generateVerificationCode();
-        $currencyCode = $this->currencyCode($request);
+        $currencyCode = currencyCodeByCountryId($request->country_id);
 
         return User::create([
             'first_name' => $request->first_name,
@@ -121,26 +120,5 @@ trait SignUp
         ]);
 
         return null;
-    }
-
-    protected function currencyCode($request): string
-    {
-        $currencyCode = 'USD';
-
-        if ($request->country_id) {
-            $country = Country::findOrFail($request->country_id);
-            $currencyCode = getCurrencyCode($country->sortname);
-
-            $supportedCurrencies = [
-                'NGN', 'GHS', 'KES', 'ZAR', 'XOF',
-                'USD', 'CAD', 'GBP', 'EUR',
-            ];
-
-            if (in_array($currencyCode, $supportedCurrencies)) {
-                return $currencyCode;
-            }
-        }
-
-        return $currencyCode;
     }
 }

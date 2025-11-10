@@ -629,13 +629,22 @@ if (! function_exists('mailSend')) {
 if (! function_exists('currencyCodeByCountryId')) {
     function currencyCodeByCountryId($countryId): string
     {
-        $currencyCode = 'NGN';
-        if ($countryId) {
-            $country = Country::findOrFail($countryId);
-            $currencyCode = getCurrencyCode($country->sortname);
+        if (! $countryId) {
+            return 'USD';
         }
 
-        return $currencyCode;
+        $country = Country::find($countryId);
+        $sortname = $country->sortname ?? 'US';
+        $currencyCode = getCurrencyCode($sortname);
+
+        $supportedCurrencies = [
+            'NGN', 'GHS', 'KES', 'ZAR', 'XOF',
+            'USD', 'CAD', 'GBP', 'EUR',
+        ];
+
+        return in_array($currencyCode, $supportedCurrencies, true)
+            ? $currencyCode
+            : 'USD';
     }
 }
 
