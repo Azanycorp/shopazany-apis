@@ -22,7 +22,7 @@ class ProductOrderResource extends JsonResource
             'id' => (int) $this->id,
             'name' => (string) $this->name,
             'description' => (string) $this->description,
-            'price' => (float) $this->pivot->price,
+            'price' => currencyConvert($productCurrency, $this->pivot->price, $userCurrency),
             'quantity' => (int) $this->pivot->product_quantity,
             'sub_total' => currencyConvert($productCurrency, $this->pivot->sub_total, $userCurrency),
             'original_currency' => (string) $productCurrency,
