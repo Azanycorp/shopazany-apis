@@ -12,13 +12,13 @@ class CartResource extends JsonResource
         $defaultCurrency = userAuth()->default_currency;
 
         $pricePerItem = $this->calculatePrice();
-        $totalPrice = $pricePerItem * $this->quantity;
+        $price = $pricePerItem * $this->quantity;
 
         $currency = $this->variation
             ? $this->variation?->product?->shopCountry?->currency
             : $this->product?->shopCountry?->currency;
 
-        $totalPrice = currencyConvert($currency, $totalPrice, $defaultCurrency);
+        $totalPrice = currencyConvert($currency, $price, $defaultCurrency);
 
         return [
             'id' => (int) $this->id,
@@ -32,7 +32,7 @@ class CartResource extends JsonResource
 
     private function calculatePrice()
     {
-        return $this->variation ? $this->variation->price : optional($this->product)->price;
+        return $this->variation ? $this->variation->price : optional($this->product)->discounted_price;
     }
 
     private function transformProduct($defaultCurrency): array
@@ -42,12 +42,6 @@ class CartResource extends JsonResource
             'name' => optional($this->product)->name,
             'slug' => optional($this->product)->slug,
             'description' => optional($this->product)->description,
-            // 'category' => [
-            //     'category_id' => optional($this->product)->category_id,
-            //     'category_name' => optional($this->product->category)->name,
-            //     'sub_category_id' => optional($this->product)->sub_category_id,
-            //     'sub_category_name' => optional($this->product->subCategory)->name,
-            // ],
             'product_price' => $this->convertProductPrice($defaultCurrency),
             'discount_price' => $this->convertDiscountPrice($defaultCurrency),
             'price' => $this->convertPrice($defaultCurrency),
