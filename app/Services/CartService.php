@@ -111,14 +111,14 @@ class CartService
         $defaultCurrency = userAuth()->default_currency;
 
         $totalLocalPrice = $localItems->sum(function ($item) use ($defaultCurrency): float {
-            $price = ($item->variation?->price ?? $item->product?->price) * $item->quantity;
+            $price = ($item->variation?->price ?? $item->product?->discounted_price) * $item->quantity;
             $currency = $item->variation ? $item->variation?->product?->shopCountry?->currency : $item->product?->shopCountry?->currency;
 
             return currencyConvert($currency, $price, $defaultCurrency);
         });
 
         $totalInternationalPrice = $internationalItems->sum(function ($item) use ($defaultCurrency): float {
-            $price = ($item->variation?->price ?? $item->product?->price) * $item->quantity;
+            $price = ($item->variation?->price ?? $item->product?->discounted_price) * $item->quantity;
             $currency = $item->variation ? $item->variation?->product?->shopCountry?->currency : $item->product?->shopCountry?->currency;
 
             return currencyConvert($currency, $price, $defaultCurrency);
