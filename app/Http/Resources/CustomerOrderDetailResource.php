@@ -15,59 +15,18 @@ class CustomerOrderDetailResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $user = $request->user();
-        $userCurrency = $user?->default_currency ?? 'USD';
-
-        $totalConvertedAmount = 0;
-
-        $products = $this->products->map(function ($product) use ($userCurrency, &$totalConvertedAmount): array {
-            $productCurrency = optional($product->shopCountry)->currency ?? 'USD';
-
-            $convertedSubTotal = currencyConvert(
-                $productCurrency,
-                $product->pivot->sub_total,
-                $userCurrency
-            );
-
-            $totalConvertedAmount += $convertedSubTotal;
-            $selectedVariation = $product->productVariations->firstWhere('id', $product->pivot->variation_id);
-
-            return [
-                'id' => (int) $product->id,
-                'name' => (string) $product->name,
-                'description' => (string) $product->description,
-                'price' => (float) $product->pivot->price,
-                'quantity' => (int) $product->pivot->product_quantity,
-                'sub_total' => $convertedSubTotal,
-                'original_currency' => (string) $productCurrency,
-                'image' => (string) $product->image,
-                'status' => (string) $product->pivot->status,
-                'variation' => $selectedVariation ? [
-                    'id' => $selectedVariation->id,
-                    'variation' => $selectedVariation->variation,
-                    'sku' => $selectedVariation->sku,
-                    'price' => currencyConvert(
-                        optional(value: $selectedVariation->product->shopCountry)->currency,
-                        $selectedVariation->price,
-                        $userCurrency
-                    ),
-                    'image' => $selectedVariation->image,
-                    'stock' => (int) $selectedVariation->stock,
-                ] : null,
-            ];
-        })->toArray();
-
         return [
             'id' => (int) $this->id,
             'order_no' => (string) $this->order_no,
-            'total_amount' => $totalConvertedAmount,
+            'total_amount' => $this->additional['summary']['total'] ?? 0,
             'customer' => (object) [
                 'id' => $this->user?->id,
                 'name' => trim("{$this->user?->first_name} {$this->user?->last_name}"),
                 'email' => $this->user?->email,
                 'phone' => $this->user?->phone,
             ],
-            'products' => $products,
+            'products' => ProductOrderResource::collection($this->products),
+            'summary' => $this->additional['summary'] ?? [],
             'shipping_address' => (object) [
                 'name' => $this->user?->userShippingAddress()->first()?->first_name.' '.$this->user?->userShippingAddress()->first()?->last_name,
                 'phone' => $this->user?->userShippingAddress()->first()?->phone,
@@ -77,17 +36,12 @@ class CustomerOrderDetailResource extends JsonResource
                 'state' => $this->user?->userShippingAddress()->first()?->state,
                 'zip' => $this->user?->userShippingAddress()->first()?->zip,
             ],
-            'activities' => $this->orderActivities->map(function ($activity): array {
-                return [
-                    'message' => $activity->message,
-                    'status' => $activity->status,
-                    'date' => Carbon::parse($activity->date)->format('d M Y h:i A'),
-                ];
-            }),
+            'activities' => OrderActivityResource::collection($this->orderActivities),
             'order_date' => Carbon::parse($this->created_at)->format('d M Y'),
             'order_time' => Carbon::parse($this->created_at)->format('h:i A'),
             'payment_status' => strtolower($this->payment_status) === 'success' ? 'paid' : 'not-paid',
             'payment_method' => $this->payment_method,
+            'expected_delivery' => getExpectedDelivery($this->user?->userCountry),
             'status' => $this->status,
         ];
     }

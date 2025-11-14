@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AffiliateSignupRequest;
+use App\Http\Requests\BiometricLoginRequest;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\ResetPasswordRequest;
 use App\Http\Requests\SellerSignUpRequest;
@@ -21,6 +22,11 @@ class AuthController extends Controller
     public function login(LoginRequest $request)
     {
         return $this->authService->login($request);
+    }
+
+    public function biometricLogin(BiometricLoginRequest $request)
+    {
+        return $this->authService->biometricLogin($request);
     }
 
     public function loginVerify(VerifyRequest $request)

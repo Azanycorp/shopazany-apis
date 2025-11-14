@@ -41,6 +41,7 @@ class SellerDetailResource extends JsonResource
                     'price' => (string) $product?->price,
                     'total_reviews' => $product?->product_reviews_count,
                     'item_sold' => $product?->item_sold,
+                    'currency' => $product->shopCountry?->currency,
                 ];
             })->toArray() : [],
         ];

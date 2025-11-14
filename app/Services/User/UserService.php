@@ -18,6 +18,7 @@ use App\Trait\HttpResponse;
 use App\Trait\Payment;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class UserService extends Controller
 {
@@ -54,6 +55,10 @@ class UserService extends Controller
             $image = uploadUserImage($request, 'image', $user);
         }
 
+        if ($request->filled('country_id')) {
+            $currencyCode = currencyCodeByCountryId($request->country_id);
+        }
+
         $user->update([
             'first_name' => $request->first_name ?? $user->first_name,
             'last_name' => $request->last_name ?? $user->last_name,
@@ -62,6 +67,9 @@ class UserService extends Controller
             'address' => $request->address ?? $user->address,
             'phone' => $request->phone_number ?? $user->phone,
             'date_of_birth' => $request->date_of_birth ?? $user->date_of_birth,
+            'country' => $request->country_id ?? $user->country,
+            'state_id' => $request->state_id ?? $user->state_id,
+            'default_currency' => $currencyCode ?? $user->default_currency,
             'image' => $image['url'] ?? $user->image,
             'public_id' => $image['public_id'] ?? $user->public_id,
         ]);
@@ -504,5 +512,21 @@ class UserService extends Controller
                 'next_page_url' => $page < ceil($total / $perPage) ? request()->url().'?page='.($page + 1).'&per_page='.$perPage : null,
             ],
         ]);
+    }
+
+    public function setupBiometric($request)
+    {
+        $user = User::find($request->user_id);
+
+        if (! $user) {
+            return $this->error(null, 'User not found', 404);
+        }
+
+        $user->update([
+            'biometric_enabled' => $request->boolean('enable'),
+            'biometric_token' => $request->boolean('enable') ? Hash::make($request->token) : null,
+        ]);
+
+        return $this->success(null, 'Biometric setup successfully');
     }
 }

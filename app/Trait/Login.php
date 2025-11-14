@@ -89,6 +89,7 @@ trait Login
             'has_signed_up' => true,
             'is_affiliate_member' => $user->is_affiliate_member,
             'two_factor_enabled' => $user->two_factor_enabled,
+            'is_biometric_enabled' => $user->biometric_enabled,
             'token' => $token->plainTextToken,
             'expires_at' => $token->accessToken->expires_at,
         ], 'Login successful.');
@@ -102,8 +103,15 @@ trait Login
     {
         $description = "Credentials do not match {$request->email}";
         $response = $this->error(null, 'Credentials do not match', 401);
-
         logUserAction($request, UserLog::LOGIN_ATTEMPT, $description, $response);
+
+        return $response;
+    }
+
+    protected function handleBiometricsIssue($request, $message, $code = 400)
+    {
+        $response = $this->error(null, $message, $code);
+        logUserAction($request, UserLog::LOGIN_ATTEMPT, $message, $response);
 
         return $response;
     }

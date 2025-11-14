@@ -31,6 +31,8 @@ class CustomerOrderResource extends JsonResource
             'order_date' => (string) $this->order_date,
             'total_amount' => $totalAmountForSeller,
             'payment_method' => (string) $this->payment_method,
+            'products' => ProductOrderResource::collection($this->products),
+            'expected_delivery' => getExpectedDelivery($this->user?->userCountry),
             'status' => (string) $this->status,
         ];
     }

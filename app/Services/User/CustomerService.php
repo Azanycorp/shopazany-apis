@@ -14,6 +14,7 @@ use App\Models\CustomerSupport;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
+use App\Models\UserShippingAddress;
 use App\Models\Wishlist;
 use App\Services\Auth\Auth;
 use App\Trait\General;
@@ -113,9 +114,13 @@ class CustomerService
             return $this->error(null, 'User not found', 404);
         }
 
-        $orders = Order::with(['user', 'products.shopCountry'])
+        $orders = Order::with([
+            'user',
+            'products.shopCountry',
+            'products.productVariations.product',
+        ])
             ->where('user_id', $userId)
-            ->orderBy('created_at', 'desc')
+            ->latest()
             ->take(7)
             ->get();
 
@@ -127,6 +132,7 @@ class CustomerService
     public function getOrders($userId)
     {
         $currentUser = userAuth();
+        $status = request()->query('status');
 
         if ($currentUser->id != $userId || $currentUser->type != UserType::CUSTOMER) {
             return $this->error(null, 'Unauthorized action.', 401);
@@ -138,8 +144,13 @@ class CustomerService
             return $this->error(null, 'User not found', 404);
         }
 
-        $orders = Order::with(['user', 'products.shopCountry'])
+        $orders = Order::with([
+            'user',
+            'products.shopCountry',
+            'products.productVariations.product',
+        ])
             ->where('user_id', $userId)
+            ->when($status, fn ($query) => $query->where('status', $status))
             ->orderBy('created_at', 'desc')
             ->paginate(25);
 
@@ -159,7 +170,7 @@ class CustomerService
         ];
     }
 
-    public function getOrderDetail($orderNo)
+    public function getOrderDetail($orderNo, $summary)
     {
         $order = Order::with([
             'user.userShippingAddress',
@@ -174,7 +185,11 @@ class CustomerService
             return $this->error('Order not found', 404);
         }
 
+        $userCurrency = $order->user?->default_currency ?? 'USD';
+        $getSummary = $summary->handle($order, $userCurrency);
+
         $data = new CustomerOrderDetailResource($order);
+        $data->additional(['summary' => $getSummary]);
 
         return $this->success($data, 'Order detail');
     }
@@ -583,5 +598,35 @@ class CustomerService
         } catch (\Exception $e) {
             return $this->error(null, "Something went wrong. Please try again later. {$e->getMessage()}", 500);
         }
+    }
+
+    public function shipping($request)
+    {
+        $user = User::find($request->user_id);
+
+        if (! $user) {
+            return $this->error(null, 'User not found!', 404);
+        }
+
+        $addr = UserShippingAddress::updateOrCreate(
+            [
+                'user_id' => $user->id,
+                'street_address' => $request->street_address,
+            ],
+            [
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'email' => $request->email,
+                'phone' => $request->phone,
+                'state' => $request->state,
+                'city' => $request->city,
+                'zip' => $request->zip,
+            ]
+        );
+
+        $msg = $addr->wasRecentlyCreated ? 'Shipping address created successfully.' : 'Shipping address updated successfully.';
+        $code = $addr->wasRecentlyCreated ? 201 : 200;
+
+        return $this->success(null, $msg, $code);
     }
 }

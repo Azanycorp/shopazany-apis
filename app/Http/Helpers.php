@@ -22,7 +22,6 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Session;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 if (! function_exists('total_amount')) {
@@ -319,129 +318,6 @@ if (! function_exists('uploadUserImage')) {
     }
 }
 
-// ////// Deprecated upload functions ////////////
-if (! function_exists('uploadSingleProductImageOld')) {
-    function uploadSingleProductImageOld($request, $file, $frontImage, $product)
-    {
-        if ($request->hasFile($file)) {
-            if (! empty($product->image)) {
-                $image = getRelativePath($product->image);
-
-                if (Storage::disk('s3')->exists($image)) {
-                    Storage::disk('s3')->delete($image);
-                }
-            }
-            $fileSize = $request->file($file)->getSize();
-            if ($fileSize > 3000000) {
-                return json_encode(['status' => false, 'message' => 'file size is larger than 3MB.', 'status_code' => 422]);
-            }
-            $path = $request->file($file)->store($frontImage, 's3');
-
-            return Storage::disk('s3')->url($path);
-        }
-
-        return $product->image;
-    }
-}
-
-if (! function_exists('uploadImageOld')) {
-    function uploadImageOld($request, $file, $folder, $country = null, $banner = null)
-    {
-        $url = null;
-
-        if (! is_null($country)) {
-            $url = $country->image;
-        }
-
-        if (! is_null($banner)) {
-            $url = $banner->image;
-        }
-
-        if ($request->hasFile($file)) {
-            $fileSize = $request->file($file)->getSize();
-
-            if ($fileSize > 3000000) {
-                return json_encode([
-                    'status' => false,
-                    'message' => 'File size is larger than 3MB.',
-                    'status_code' => 422,
-                ]);
-            }
-
-            $existingImage = $country?->image ? getRelativePath($country->image) : null;
-            $existingBanner = $banner?->image ? getRelativePath($banner->image) : null;
-
-            if ($existingImage && Storage::disk('s3')->exists($existingImage)) {
-                Storage::disk('s3')->delete($existingImage);
-            }
-
-            if ($existingBanner && Storage::disk('s3')->exists($existingBanner)) {
-                Storage::disk('s3')->delete($existingBanner);
-            }
-
-            $path = $request->file($file)->store($folder, 's3');
-            $url = Storage::disk('s3')->url($path);
-        }
-
-        return $url;
-    }
-}
-
-if (! function_exists('uploadMultipleProductImageOld')) {
-    function uploadMultipleProductImageOld($request, $file, $folder, $product): void
-    {
-        if ($request->hasFile($file)) {
-            $product->productimages()->delete();
-
-            foreach ($request->file($file) as $image) {
-                $path = $image->store($folder, 's3');
-                $url = Storage::disk('s3')->url($path);
-
-                $product->productimages()->create([
-                    'image' => $url,
-                ]);
-            }
-        }
-    }
-}
-
-if (! function_exists('uploadUserImageOld')) {
-    function uploadUserImageOld($request, $file, $user)
-    {
-        $folder = null;
-
-        $parts = explode('@', $user->email);
-        $name = $parts[0];
-
-        if (App::environment('production')) {
-            $folder = "/prod/profile/{$name}";
-        } elseif (App::environment(['staging', 'local'])) {
-            $folder = "/stag/profile/{$name}";
-        }
-
-        if ($request->hasFile($file)) {
-            if (! empty($user->image)) {
-                $image = getRelativePath($user->image);
-
-                if (Storage::disk('s3')->exists($image)) {
-                    Storage::disk('s3')->delete($image);
-                }
-            }
-            $fileSize = $request->file($file)->getSize();
-            if ($fileSize > 3000000) {
-                return json_encode(['status' => false, 'message' => 'file size is larger than 3MB.', 'status_code' => 422]);
-            }
-            $path = $request->file($file)->store($folder, 's3');
-
-            return Storage::disk('s3')->url($path);
-        }
-
-        return $user->image;
-    }
-}
-
-// ////// Ends here /////////
-
 if (! function_exists('generateTransactionReference')) {
     function generateTransactionReference(): string
     {
@@ -524,6 +400,34 @@ if (! function_exists('generate_referrer_links')) {
             'name' => $key,
             'link' => $url.'?referrer='.$referrer_code,
         ], array_keys($selectedBaseUrls), $selectedBaseUrls);
+    }
+}
+
+if (! function_exists('generate_coupon_links')) {
+    function generate_coupon_links(string $platform, string $code): string
+    {
+        $environment = app()->environment();
+
+        $baseUrls = [
+            'production' => [
+                'b2c' => config('services.frontend.seller_baseurl'),
+                'b2b' => config('services.frontend.b2b_baseurl'),
+                'agriecom' => config('services.frontend.agriecom_baseurl'),
+            ],
+            'staging' => [
+                'b2c' => config('services.frontend.staging_seller_baseurl'),
+                'b2b' => config('services.frontend.b2b_staging_baseurl'),
+                'agriecom' => config('services.frontend.agricom_staging_baseurl'),
+            ],
+        ];
+
+        $selectedBaseUrls = in_array($environment, ['local', 'staging'])
+            ? $baseUrls['staging']
+            : ($baseUrls[$environment] ?? $baseUrls['staging']);
+
+        $url = $selectedBaseUrls[$platform] ?? '';
+
+        return $url ? $url.'?coupon='.$code : '';
     }
 }
 
@@ -725,13 +629,22 @@ if (! function_exists('mailSend')) {
 if (! function_exists('currencyCodeByCountryId')) {
     function currencyCodeByCountryId($countryId): string
     {
-        $currencyCode = 'NGN';
-        if ($countryId) {
-            $country = Country::findOrFail($countryId);
-            $currencyCode = getCurrencyCode($country->sortname);
+        if (! $countryId) {
+            return 'USD';
         }
 
-        return $currencyCode;
+        $country = Country::find($countryId);
+        $sortname = $country->sortname ?? 'US';
+        $currencyCode = getCurrencyCode($sortname);
+
+        $supportedCurrencies = [
+            'NGN', 'GHS', 'KES', 'ZAR', 'XOF',
+            'USD', 'CAD', 'GBP', 'EUR',
+        ];
+
+        return in_array($currencyCode, $supportedCurrencies, true)
+            ? $currencyCode
+            : 'USD';
     }
 }
 
@@ -829,5 +742,23 @@ if (! function_exists('amountToPoint')) {
         $points = ($usdValue * $usdSetting->point) / $usdSetting->value;
 
         return round($points);
+    }
+}
+
+if (! function_exists('getExpectedDelivery')) {
+    function getExpectedDelivery($country): string
+    {
+        if (! $country) {
+            return '14 - 21 days';
+        }
+
+        $africanCountries = config('regions.african_countries');
+
+        return in_array(
+            strtolower($country?->name),
+            array_map('strtolower', $africanCountries)
+        )
+            ? '3 - 7 days'
+            : '14 - 21 days';
     }
 }

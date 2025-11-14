@@ -12,14 +12,11 @@ use Illuminate\Support\Facades\Gate;
 
 class ProductCategoryController extends Controller
 {
-    const MESSAGE = '403 Forbidden';
+    public const MESSAGE = '403 Forbidden';
 
-    protected \App\Services\B2B\ProductCategoryService $service;
-
-    public function __construct(ProductCategoryService $categoryService)
-    {
-        $this->service = $categoryService;
-    }
+    public function __construct(
+        protected ProductCategoryService $service
+    ) {}
 
     public function createCategory(CategoryRequest $request)
     {

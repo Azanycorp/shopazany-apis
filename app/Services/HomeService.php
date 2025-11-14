@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enum\BannerStatus;
+use App\Enum\BannerType;
 use App\Enum\OrderStatus;
 use App\Enum\ProductReviewStatus;
 use App\Enum\ProductStatus;
@@ -288,23 +289,24 @@ class HomeService
     {
         $countryId = request()->query('country_id', 231);
 
-        $category = Category::with(['products' => function ($query) use ($countryId): void {
-            $query->where('status', ProductStatus::ACTIVE)
-                ->when($countryId, function ($query) use ($countryId): void {
-                    $query->where('country_id', $countryId);
-                })
-                ->select('id', 'name', 'slug', 'price', 'image', 'category_id', 'discount_price', 'default_currency')
-                ->withCount('productReviews as total_reviews')
-                ->withAvg('productReviews as average_rating', 'rating');
-        }])->where('slug', $slug)
-            ->select('id', 'name', 'slug', 'image')
-            ->firstOrFail();
+        $category = Category::select('id', 'name', 'slug', 'image')
+            ->where('slug', $slug)
+            ->first();
 
-        $products = $category->products->map(function ($product) {
-            $product->average_rating = $product->average_rating ? round($product->average_rating, 1) : 0;
+        if (! $category) {
+            return $this->error(null, 'Category not found', 404);
+        }
 
-            return $product;
-        });
+        $products = Product::where('category_id', $category->id)
+            ->where('status', ProductStatus::ACTIVE)
+            ->when($countryId, fn ($q) => $q->where('country_id', $countryId))
+            ->select('id', 'name', 'slug', 'price', 'image', 'category_id', 'discount_price', 'default_currency')
+            ->withCount('productReviews as total_reviews')
+            ->withAvg('productReviews as average_rating', 'rating')
+            ->get()
+            ->map(fn ($product) => tap($product, function ($p) {
+                $p->average_rating = $p->average_rating ? round($p->average_rating, 1) : 0;
+            }));
 
         return $this->success($products, 'Products by category');
     }
@@ -535,8 +537,15 @@ class HomeService
 
     public function getDeals()
     {
+        $type = request()->query('type', BannerType::B2C);
+
+        if (! in_array($type, [BannerType::B2C, BannerType::B2B, BannerType::AGRIECOM_B2C])) {
+            return $this->error(null, "Invalid type {$type}", 400);
+        }
+
         $deals = Deal::with('banners')
             ->select('id', 'title', 'slug', 'image', 'position')
+            ->where('type', $type)
             ->latest()
             ->get();
 

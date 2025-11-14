@@ -2,6 +2,7 @@
 
 namespace App\Services\Admin;
 
+use App\Enum\BannerType;
 use App\Enum\CategoryStatus;
 use App\Http\Resources\AdminUserResource;
 use App\Http\Resources\CategoryResource;
@@ -95,7 +96,14 @@ class AdminService
 
     public function categories()
     {
-        $categories = Category::where('featured', 1)
+        $type = request()->query('type', BannerType::B2C);
+
+        if (! in_array($type, [BannerType::B2C, BannerType::B2B, BannerType::AGRIECOM_B2C])) {
+            return $this->error(null, "Invalid type {$type}", 400);
+        }
+
+        $categories = Category::where('featured', true)
+            ->where('type', $type)
             ->whereStatus(CategoryStatus::ACTIVE)
             ->get();
 

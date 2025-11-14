@@ -38,6 +38,7 @@ class ProfileResource extends JsonResource
             'type' => (string) $this->type,
             'is_affiliate_member' => (bool) $this->is_affiliate_member,
             'two_factor_enabled' => (bool) $this->two_factor_enabled,
+            'is_biometric_enabled' => (bool) $this->biometric_enabled,
             'status' => (string) $this->status,
             'wallet' => (object) [
                 'available_balance' => optional($this->wallet)->balance,

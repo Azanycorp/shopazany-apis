@@ -116,6 +116,10 @@ Route::middleware('validate.header')
             ->withoutMiddleware('validate.header');
 
         Route::group(['middleware' => ['auth:api', 'auth.check'], 'prefix' => 'user'], function (): void {
+            // Biometric Login
+            Route::post('/biometric-login', [AuthController::class, 'biometricLogin'])
+                ->middleware('throttle:6,1');
+
             // Product
             Route::post('product-review', [HomeController::class, 'productReview']);
             Route::post('/product/save-for-later', [HomeController::class, 'saveForLater']);
@@ -184,6 +188,7 @@ Route::middleware('validate.header')
                     Route::get('/referral/management/{user_id}', 'referralManagement');
                 });
 
+                Route::post('/biometric/setup', 'setupBiometric');
                 Route::post('/update-profile/{user_id}', 'updateProfile');
                 Route::post('/settings/{user_id}', 'changeSettings');
             });
@@ -229,6 +234,8 @@ Route::middleware('validate.header')
                             Route::get('/', 'getCustomers');
                         });
                     });
+
+                    Route::post('/shipping', 'shipping');
 
                     // Support Route
                     Route::post('/support', 'support');
