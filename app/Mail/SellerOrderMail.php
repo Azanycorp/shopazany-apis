@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -12,24 +13,14 @@ class SellerOrderMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    protected $user;
-
-    protected $items;
-
-    protected $orderNo;
-
-    protected $totalAmount;
-
     /**
      * Create a new message instance.
      */
-    public function __construct($user, $items, $orderNo, $totalAmount)
-    {
-        $this->user = $user;
-        $this->items = $items;
-        $this->orderNo = $orderNo;
-        $this->totalAmount = $totalAmount;
-    }
+    public function __construct(
+        protected User $user,
+        protected array $items,
+        protected string $orderNo,
+        protected float $totalAmount) {}
 
     /**
      * Get the message envelope.
