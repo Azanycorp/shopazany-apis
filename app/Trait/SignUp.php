@@ -9,7 +9,7 @@ use App\Models\User;
 
 trait SignUp
 {
-    protected function createUser($request)
+    protected function createUser($request): User
     {
         $code = generateVerificationCode();
         $currencyCode = currencyCodeByCountryId($request->country_id);

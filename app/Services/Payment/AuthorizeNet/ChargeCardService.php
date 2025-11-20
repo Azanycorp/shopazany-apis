@@ -492,7 +492,7 @@ class ChargeCardService implements PaymentStrategy
 
         Cart::where('user_id', $user->id)->delete();
 
-        if ($product) {
+        if ($product->user) {
             $this->sendSellerOrderEmail($product->user, $orderedItems, $orderNo, $amount);
         }
         $this->sendOrderConfirmationEmail($user, $orderedItems, $orderNo, $amount);
@@ -505,12 +505,14 @@ class ChargeCardService implements PaymentStrategy
             $user
         ))->run();
 
-        return $this->success(null, $tresponse->getMessages()[0]->getDescription());
+        return $this->success(['order_no' => $orderNo], $tresponse->getMessages()[0]->getDescription());
     }
 
     private function handleErrorResponse($tresponse, $response, $user)
     {
-        $msg = $tresponse != null ? 'Payment failed: '.$tresponse->getErrors()[0]->getErrorText() : 'Payment failed: '.$response->getMessages()->getMessage()[0]->getText();
+        $msg = $tresponse != null ?
+            "Payment failed: {$tresponse->getErrors()[0]->getErrorText()}" :
+            "Payment failed: {$response->getMessages()->getMessage()[0]->getText()}";
 
         (new UserLogAction(
             request(),
@@ -525,11 +527,11 @@ class ChargeCardService implements PaymentStrategy
 
     private function sendSellerOrderEmail($seller, $order, $orderNo, $totalAmount): void
     {
-        defer(fn () => send_email($seller->email, new SellerOrderMail($seller, $order, $orderNo, $totalAmount)));
+        send_email($seller->email, new SellerOrderMail($seller, $order, $orderNo, $totalAmount));
     }
 
     private function sendOrderConfirmationEmail($user, $orderedItems, $orderNo, $totalAmount): void
     {
-        defer(fn () => send_email($user->email, new CustomerOrderMail($user, $orderedItems, $orderNo, $totalAmount)));
+        send_email($user->email, new CustomerOrderMail($user, $orderedItems, $orderNo, $totalAmount));
     }
 }
