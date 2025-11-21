@@ -46,7 +46,7 @@ use App\Models\SliderImage;
 use App\Models\SocialSetting;
 use App\Models\User;
 use App\Trait\HttpResponse;
-use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
 
 class BuyerService

@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Contracts\B2BRepositoryInterface;
 use App\Models\B2BProduct;
+use Illuminate\Database\Eloquent\Builder;
 
 class B2BProductRepository implements B2BRepositoryInterface
 {
@@ -22,7 +23,7 @@ class B2BProductRepository implements B2BRepositoryInterface
 
         if ($search !== null && $search !== '' && $search !== '0') {
             $query->where('name', 'like', '%'.$search.'%')
-                ->orWhereHas('category', function (\Illuminate\Contracts\Database\Query\Builder $q) use ($search): void {
+                ->orWhereHas('category', function (Builder $q) use ($search): void {
                     $q->where('name', 'like', '%'.$search.'%');
                 });
         }

@@ -40,7 +40,7 @@ use App\Repositories\B2BProductRepository;
 use App\Repositories\B2BSellerShippingRepository;
 use App\Trait\HttpResponse;
 use App\Trait\SignUp;
-use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
 
 class AdminService

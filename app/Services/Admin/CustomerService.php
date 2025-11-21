@@ -9,6 +9,7 @@ use App\Http\Resources\PaymentResource;
 use App\Models\Payment;
 use App\Models\User;
 use App\Trait\HttpResponse;
+use Illuminate\Database\Eloquent\Builder;
 
 class CustomerService
 {
@@ -22,7 +23,7 @@ class CustomerService
 
         $users = User::with(['userCountry', 'state', 'wallet', 'wishlist.product', 'payments.order'])
             ->where('type', UserType::CUSTOMER)
-            ->where(function (\Illuminate\Contracts\Database\Query\Builder $queryBuilder) use ($query): void {
+            ->where(function (Builder $queryBuilder) use ($query): void {
                 $queryBuilder->where('first_name', 'LIKE', '%'.$query.'%')
                     ->orWhere('last_name', 'LIKE', '%'.$query.'%')
                     ->orWhere('middlename', 'LIKE', '%'.$query.'%')

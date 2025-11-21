@@ -27,6 +27,7 @@ use App\Models\ShippmentBatch;
 use App\Trait\HttpResponse;
 use App\Trait\SignUp;
 use App\Trait\SuperAdminNotification;
+use Illuminate\Database\Eloquent\Builder;
 
 class SuperAdminService
 {
@@ -79,14 +80,14 @@ class SuperAdminService
         return $this->success($details, 'delivery overview');
     }
 
-    public function allCollationCentres(\Illuminate\Http\Request $request)
+    public function allCollationCentres($request)
     {
         $query = CollationCenter::with('country')
             ->when($request->status, function ($q, $status) {
                 $q->where('status', $status);
             })
             ->when($request->search, function ($q, $search) {
-                $q->where(function (\Illuminate\Contracts\Database\Query\Builder $query) use ($search) {
+                $q->where(function (Builder $query) use ($search) {
                     $query->where('city', 'like', '%'.$search.'%')
                         ->orWhere('location', 'like', '%'.$search.'%');
                 });

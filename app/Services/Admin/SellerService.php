@@ -9,7 +9,7 @@ use App\Http\Resources\SellerResource;
 use App\Models\Order;
 use App\Models\User;
 use App\Trait\HttpResponse;
-use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Eloquent\Builder;
 
 class SellerService
 {
@@ -24,7 +24,7 @@ class SellerService
 
         $users = User::with(['products', 'b2bProducts', 'bankAccount', 'wallet'])
             ->where('type', UserType::SELLER)
-            ->when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
+            ->when($searchQuery, function (Builder $queryBuilder) use ($searchQuery): void {
                 $queryBuilder->where(function (Builder $subQuery) use ($searchQuery): void {
                     $subQuery->where('first_name', 'LIKE', '%'.$searchQuery.'%')
                         ->orWhere('last_name', 'LIKE', '%'.$searchQuery.'%')
