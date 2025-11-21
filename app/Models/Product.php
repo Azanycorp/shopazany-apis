@@ -55,6 +55,18 @@ class Product extends Model
     }
 
     /**
+     * Create a new Eloquent model instance.
+     *
+     * @param  array<string, mixed>  $attributes
+     */
+    public function __construct(
+        array $attributes,
+        private readonly \Illuminate\Auth\AuthManager $authManager,
+    ) {
+        parent::__construct($attributes);
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\User, $this>
      */
     public function user(): BelongsTo
