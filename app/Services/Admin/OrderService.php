@@ -6,6 +6,7 @@ use App\Enum\OrderStatus;
 use App\Http\Resources\AdminOrderResource;
 use App\Models\Order;
 use App\Trait\HttpResponse;
+use Illuminate\Database\Query\Builder;
 
 class OrderService
 {
@@ -54,7 +55,7 @@ class OrderService
         return $this->success($data, 'Analytics');
     }
 
-    public function localOrder(\Illuminate\Http\Request $request): array
+    public function localOrder($request): array
     {
         $search = $request->input('search');
 
@@ -65,11 +66,11 @@ class OrderService
         ])
             ->where('country_id', 160)
             ->when($search, function ($query, $search): void {
-                $query->where(function (\Illuminate\Contracts\Database\Query\Builder $query) use ($search): void {
-                    $query->whereHas('user', function (\Illuminate\Contracts\Database\Query\Builder $query) use ($search): void {
+                $query->where(function (Builder $query) use ($search): void {
+                    $query->whereHas('user', function (Builder $query) use ($search): void {
                         $query->where('first_name', 'like', "%{$search}%")
                             ->orWhere('last_name', 'like', "%{$search}%");
-                    })->orWhereHas('products.user', function (\Illuminate\Contracts\Database\Query\Builder $query) use ($search): void {
+                    })->orWhereHas('products.user', function (Builder $query) use ($search): void {
                         $query->where('first_name', 'like', "%{$search}%")
                             ->orWhere('last_name', 'like', "%{$search}%");
                     })->orWhere('order_no', 'like', "%{$search}%");
@@ -106,7 +107,7 @@ class OrderService
         ];
     }
 
-    public function intOrder(\Illuminate\Http\Request $request): array
+    public function intOrder($request): array
     {
         $search = $request->input('search');
 
@@ -117,11 +118,11 @@ class OrderService
         ])
             ->where('country_id', '!=', 160)
             ->when($search, function ($query, $search): void {
-                $query->where(function (\Illuminate\Contracts\Database\Query\Builder $query) use ($search): void {
-                    $query->whereHas('user', function (\Illuminate\Contracts\Database\Query\Builder $query) use ($search): void {
+                $query->where(function (Builder $query) use ($search): void {
+                    $query->whereHas('user', function (Builder $query) use ($search): void {
                         $query->where('first_name', 'like', "%{$search}%")
                             ->orWhere('last_name', 'like', "%{$search}%");
-                    })->orWhereHas('products.user', function (\Illuminate\Contracts\Database\Query\Builder $query) use ($search): void {
+                    })->orWhereHas('products.user', function (Builder $query) use ($search): void {
                         $query->where('first_name', 'like', "%{$search}%")
                             ->orWhere('last_name', 'like', "%{$search}%");
                     })->orWhere('order_no', 'like', "%{$search}%");

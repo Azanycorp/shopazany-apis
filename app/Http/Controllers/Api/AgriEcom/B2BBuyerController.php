@@ -44,19 +44,19 @@ class B2BBuyerController extends Controller
         return $this->buyerService->editCompany($request);
     }
 
-    public function getProducts()
+    public function getProducts(Request $request)
     {
-        return $this->buyerService->getProducts();
+        return $this->buyerService->getProducts($request);
     }
 
-    public function searchProduct()
+    public function searchProduct(Request $request)
     {
-        return $this->buyerService->searchProduct();
+        return $this->buyerService->searchProduct($request);
     }
 
-    public function featuredProduct()
+    public function featuredProduct(Request $request)
     {
-        return $this->buyerService->featuredProduct();
+        return $this->buyerService->featuredProduct($request);
     }
 
     public function getProductDetail($slug)
@@ -75,7 +75,7 @@ class B2BBuyerController extends Controller
         return $this->buyerService->myWishList();
     }
 
-    public function removeItem($id)
+    public function removeItem(int $id)
     {
         return $this->buyerService->removeItem($id);
     }
@@ -96,9 +96,9 @@ class B2BBuyerController extends Controller
         return $this->buyerService->sendQuote($request);
     }
 
-    public function sendAllQuotes()
+    public function sendAllQuotes(Request $request)
     {
-        return $this->buyerService->sendMutipleQuotes();
+        return $this->buyerService->sendMutipleQuotes($request);
     }
 
     public function sendSingleQuote(QuoteRequest $request)
@@ -122,22 +122,22 @@ class B2BBuyerController extends Controller
         return $this->buyerService->getAllShippingAddress();
     }
 
-    public function getShippingAddress($id)
+    public function getShippingAddress(int $id)
     {
         return $this->buyerService->getShippingAddress($id);
     }
 
-    public function updateShippingAddress(Request $request, $id)
+    public function updateShippingAddress(Request $request, int $id)
     {
         return $this->buyerService->updateShippingAddress($request, $id);
     }
 
-    public function deleteShippingAddress($id)
+    public function deleteShippingAddress(int $id)
     {
         return $this->buyerService->deleteShippingAddress($id);
     }
 
-    public function setDefaultAddress($id)
+    public function setDefaultAddress(int $id)
     {
         return $this->buyerService->setDefaultAddress($id);
     }
@@ -149,12 +149,12 @@ class B2BBuyerController extends Controller
     }
 
     // Orders
-    public function allOrders()
+    public function allOrders(Request $request)
     {
-        return $this->buyerService->allOrders();
+        return $this->buyerService->allOrders($request);
     }
 
-    public function getOrderDetails($id)
+    public function getOrderDetails(int $id)
     {
         return $this->buyerService->orderDetails($id);
     }

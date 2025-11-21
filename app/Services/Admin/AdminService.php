@@ -93,7 +93,7 @@ class AdminService
         return $this->success(null, 'Deleted successfully');
     }
 
-    public function categories(\Illuminate\Http\Request $request)
+    public function categories($request)
     {
         $type = $request->query('type', BannerType::B2C);
 

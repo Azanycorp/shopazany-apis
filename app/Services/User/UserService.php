@@ -16,15 +16,25 @@ use App\Models\WithdrawalRequest;
 use App\Services\TransactionService;
 use App\Trait\HttpResponse;
 use App\Trait\Payment;
+use Illuminate\Auth\AuthManager;
+use Illuminate\Contracts\Config\Repository;
+use Illuminate\Contracts\Hashing\Hasher;
+use Illuminate\Contracts\Routing\ResponseFactory;
+use Illuminate\Database\DatabaseManager;
+use Illuminate\Hashing\BcryptHasher;
 
 class UserService extends Controller
 {
     use HttpResponse, Payment;
 
-    public function __construct(private readonly \Illuminate\Auth\AuthManager $authManager, private readonly \Illuminate\Foundation\Application $application, private readonly \Illuminate\Filesystem\FilesystemManager $filesystemManager, private readonly \Illuminate\Routing\UrlGenerator $urlGenerator, private readonly \Illuminate\Database\DatabaseManager $databaseManager, private readonly \Illuminate\Contracts\Hashing\Hasher $hasher, private readonly \Illuminate\Contracts\Config\Repository $repository, private readonly \Illuminate\Contracts\Routing\ResponseFactory $responseFactory, private readonly \Illuminate\Hashing\BcryptHasher $bcryptHasher)
-    {
-        parent::__construct($authManager, $application, $filesystemManager, $urlGenerator);
-    }
+    public function __construct(
+        private readonly AuthManager $authManager,
+        private readonly DatabaseManager $databaseManager,
+        private readonly Hasher $hasher,
+        private readonly Repository $repository,
+        private readonly ResponseFactory $responseFactory,
+        private readonly BcryptHasher $bcryptHasher
+    ) {}
 
     public function profile()
     {
@@ -247,7 +257,7 @@ class UserService extends Controller
         return $this->success($data, 'Dashboard analytics');
     }
 
-    public function transactionHistory($userId, \Illuminate\Http\Request $request)
+    public function transactionHistory($request, $userId)
     {
         $currentUserId = $this->authManager->id();
 
@@ -406,7 +416,7 @@ class UserService extends Controller
         return $this->success(null, 'Settings changed successfully');
     }
 
-    public function referralManagement($userId, \Illuminate\Http\Request $request)
+    public function referralManagement($request, $userId)
     {
         $currentUserId = $this->authManager->id();
 
@@ -458,7 +468,7 @@ class UserService extends Controller
         return $this->success($data, 'Referral management');
     }
 
-    public function withdrawalHistory($userId, \Illuminate\Http\Request $request)
+    public function withdrawalHistory($request, $userId)
     {
         $currentUserId = $this->authManager->id();
 

@@ -46,7 +46,7 @@ class CategoryService
         }
     }
 
-    public function categories(\Illuminate\Http\Request $request)
+    public function categories($request)
     {
         $type = $request->query('type', BannerType::B2C);
 
@@ -63,7 +63,7 @@ class CategoryService
         return $this->success($data, 'Categories');
     }
 
-    public function adminCategories(\Illuminate\Http\Request $request)
+    public function adminCategories($request)
     {
         $type = $request->query('type', BannerType::B2C);
 
@@ -114,7 +114,7 @@ class CategoryService
         }
     }
 
-    public function getSubcategory($id, \Illuminate\Http\Request $request)
+    public function getSubcategory($id, $request)
     {
         $type = $request->query('type', BannerType::B2C);
 
@@ -149,7 +149,7 @@ class CategoryService
         return $this->success(null, 'Category updated successfully');
     }
 
-    public function categoryAnalytic(\Illuminate\Http\Request $request)
+    public function categoryAnalytic($request)
     {
         $type = $request->query('type', BannerType::B2C);
 
@@ -184,7 +184,7 @@ class CategoryService
         return $this->success($data, 'Category analytics');
     }
 
-    public function getAdminSubcategory(\Illuminate\Http\Request $request)
+    public function getAdminSubcategory($request)
     {
         $type = $request->query('type', BannerType::B2C);
 

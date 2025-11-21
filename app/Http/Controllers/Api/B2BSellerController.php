@@ -13,12 +13,9 @@ use Illuminate\Http\Request;
 
 class B2BSellerController extends Controller
 {
-    protected \App\Services\B2B\SellerService $service;
-
-    public function __construct(SellerService $service)
-    {
-        $this->service = $service;
-    }
+    public function __construct(
+        protected SellerService $service
+    ) {}
 
     public function productImport(Request $request)
     {
@@ -60,9 +57,9 @@ class B2BSellerController extends Controller
         return $this->service->getAllProduct($request);
     }
 
-    public function getProductById(int $product_id, $user_id)
+    public function getProductById(int $productId, int $userId)
     {
-        return $this->service->getProductById($product_id, $user_id);
+        return $this->service->getProductById($productId, $userId);
     }
 
     public function updateProduct(UpdateProductRequest $request)
@@ -70,14 +67,14 @@ class B2BSellerController extends Controller
         return $this->service->updateProduct($request);
     }
 
-    public function deleteProduct(int $user_id, $product_id)
+    public function deleteProduct(int $userId, int $productId)
     {
-        return $this->service->deleteProduct($user_id, $product_id);
+        return $this->service->deleteProduct($userId, $productId);
     }
 
-    public function getAnalytics($user_id)
+    public function getAnalytics($userId)
     {
-        return $this->service->getAnalytics($user_id);
+        return $this->service->getAnalytics($userId);
     }
 
     public function addShipping(SellerShippingRequest $request)
@@ -85,34 +82,34 @@ class B2BSellerController extends Controller
         return $this->service->addShipping($request);
     }
 
-    public function getAllShipping($user_id)
+    public function getAllShipping($userId)
     {
-        return $this->service->getAllShipping($user_id);
+        return $this->service->getAllShipping($userId);
     }
 
-    public function getShippingById($user_id, $shipping_id)
+    public function getShippingById(int $userId, int $shippingId)
     {
-        return $this->service->getShippingById($user_id, $shipping_id);
+        return $this->service->getShippingById($userId, $shippingId);
     }
 
-    public function updateShipping(SellerShippingRequest $request, $shipping_id)
+    public function updateShipping(SellerShippingRequest $request, int $shippingId)
     {
-        return $this->service->updateShipping($request, $shipping_id);
+        return $this->service->updateShipping($request, $shippingId);
     }
 
-    public function deleteShipping($user_id, $shipping_id)
+    public function deleteShipping(int $userId, int $shippingId)
     {
-        return $this->service->deleteShipping($user_id, $shipping_id);
+        return $this->service->deleteShipping($userId, $shippingId);
     }
 
-    public function setDefault($user_id, $shipping_id)
+    public function setDefault(int $userId, int $shippingId)
     {
-        return $this->service->setDefault($user_id, $shipping_id);
+        return $this->service->setDefault($userId, $shippingId);
     }
 
-    public function getComplaints($user_id)
+    public function getComplaints($userId, Request $request)
     {
-        return $this->service->getComplaints($user_id);
+        return $this->service->getComplaints($userId, $request);
     }
 
     public function getTemplate()
@@ -147,9 +144,9 @@ class B2BSellerController extends Controller
     }
 
     // RFQS
-    public function allRfq()
+    public function allRfq(Request $request)
     {
-        return $this->service->getAllRfq();
+        return $this->service->getAllRfq($request);
     }
 
     public function rfqDetails($id)

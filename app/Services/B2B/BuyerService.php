@@ -46,16 +46,22 @@ use App\Models\SliderImage;
 use App\Models\SocialSetting;
 use App\Models\User;
 use App\Trait\HttpResponse;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Str;
 
 class BuyerService
 {
     use HttpResponse;
 
-    public function __construct(private readonly \Illuminate\Database\DatabaseManager $databaseManager, private readonly \Illuminate\Auth\AuthManager $authManager, private readonly \Illuminate\Contracts\Hashing\Hasher $hasher, private readonly \Illuminate\Hashing\BcryptHasher $bcryptHasher) {}
+    public function __construct(
+        private readonly \Illuminate\Database\DatabaseManager $databaseManager,
+        private readonly \Illuminate\Auth\AuthManager $authManager,
+        private readonly \Illuminate\Contracts\Hashing\Hasher $hasher,
+        private readonly \Illuminate\Hashing\BcryptHasher $bcryptHasher
+    ) {}
 
     // Admin section
-    public function allCustomers(\Illuminate\Http\Request $request)
+    public function allCustomers($request)
     {
         $query = trim($request->input('search'));
         $type = $request->query('type');
@@ -119,7 +125,7 @@ class BuyerService
         return $this->success(null, 'User(s) have been removed successfully');
     }
 
-    public function filter(\Illuminate\Http\Request $request): array
+    public function filter($request): array
     {
         $query = trim($request->query('approved'));
 
@@ -237,7 +243,7 @@ class BuyerService
         return $this->success($data, 'banners');
     }
 
-    public function getClientLogos(\Illuminate\Http\Request $request)
+    public function getClientLogos($request)
     {
         $type = $request->query('type');
 
@@ -246,7 +252,7 @@ class BuyerService
         return $this->success(ClientLogoResource::collection($clients), 'Client Brands');
     }
 
-    public function getSocialLinks(\Illuminate\Http\Request $request)
+    public function getSocialLinks($request)
     {
         $type = $request->query('type');
 
@@ -282,7 +288,7 @@ class BuyerService
         return $this->success($banners, 'home-banners');
     }
 
-    public function getProducts(\Illuminate\Http\Request $request)
+    public function getProducts($request)
     {
         $type = $request->query('type');
 
@@ -303,7 +309,7 @@ class BuyerService
         return $this->success(B2BProductResource::collection($products), 'Products');
     }
 
-    public function categories(\Illuminate\Http\Request $request)
+    public function categories($request)
     {
         $type = $request->query('type');
 
@@ -326,7 +332,7 @@ class BuyerService
         return $this->success(B2BCategoryResource::collection($categories), 'Categories');
     }
 
-    public function allBlogs(\Illuminate\Http\Request $request)
+    public function allBlogs($request)
     {
         $type = $request->query('type');
 
@@ -347,7 +353,7 @@ class BuyerService
         return $this->success(new BlogResource($blog), 'Blog details');
     }
 
-    public function getCategoryProducts(\Illuminate\Http\Request $request)
+    public function getCategoryProducts($request)
     {
         $type = $request->query('type');
 
@@ -365,7 +371,7 @@ class BuyerService
         return $this->success(B2BCategoryResource::collection($categories), 'Product Categories');
     }
 
-    public function bestSelling(\Illuminate\Http\Request $request)
+    public function bestSelling($request)
     {
         $type = $request->input('type');
 
@@ -381,7 +387,7 @@ class BuyerService
             )
             ->where('status', OrderStatus::DELIVERED)
             ->when($type, function ($query, $type) {
-                $query->whereHas('product', function (\Illuminate\Contracts\Database\Query\Builder $q) use ($type) {
+                $query->whereHas('product', function (Builder $q) use ($type) {
                     $q->where('type', $type);
                 });
             })
@@ -393,7 +399,7 @@ class BuyerService
         return $this->success(B2BBestSellingProductResource::collection($bestSellingProducts), 'Best selling products');
     }
 
-    public function featuredProduct(\Illuminate\Http\Request $request)
+    public function featuredProduct($request)
     {
         $countryId = $request->query('country_id');
         $type = $request->query('type');
@@ -418,7 +424,7 @@ class BuyerService
         return $this->success(B2BProductResource::collection($featuredProducts), 'Featured products');
     }
 
-    public function searchProduct(\Illuminate\Http\Request $request)
+    public function searchProduct($request)
     {
         $searchQuery = $request->input('search');
         $type = $request->input('type');
@@ -433,7 +439,7 @@ class BuyerService
             'user',
         ])
             ->when($type, fn ($q) => $q->where('type', $type))
-            ->where(function (\Illuminate\Contracts\Database\Query\Builder $query) use ($searchQuery) {
+            ->where(function (Builder $query) use ($searchQuery) {
                 $query->where('name', 'LIKE', '%'.$searchQuery.'%')
                     ->orWhere('unit_price', 'LIKE', '%'.$searchQuery.'%');
             })
@@ -523,7 +529,7 @@ class BuyerService
         return $this->success(B2BQuoteResource::collection($quotes), 'quotes lists');
     }
 
-    public function sendMutipleQuotes(\Illuminate\Http\Request $request)
+    public function sendMutipleQuotes($request)
     {
         $userId = userAuthId();
 
@@ -578,7 +584,7 @@ class BuyerService
         }
     }
 
-    public function sendRfq($request, \Illuminate\Http\Request $request)
+    public function sendRfq($request)
     {
         $quote = B2bQuote::findOrFail($request->rfq_id);
 
@@ -718,12 +724,12 @@ class BuyerService
         return $this->success($rfqs, 'rfqs lists');
     }
 
-    public function allOrders(\Illuminate\Http\Request $request)
+    public function allOrders($request)
     {
         $searchQuery = $request->input('search');
 
         $orders = B2bOrder::with('seller')->where('buyer_id', userAuthId())->when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
-            $queryBuilder->where(function (\Illuminate\Contracts\Database\Query\Builder $subQuery) use ($searchQuery): void {
+            $queryBuilder->where(function (Builder $subQuery) use ($searchQuery): void {
                 $subQuery->where('buyer_id', userAuthId())
                     ->where('order_no', 'LIKE', '%'.$searchQuery.'%');
             });
@@ -804,7 +810,7 @@ class BuyerService
     }
 
     // send review request to vendor
-    public function addReview($request, \Illuminate\Http\Request $request)
+    public function addReview($request)
     {
         $userId = userAuthId();
         $type = $request->query('type');

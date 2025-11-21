@@ -66,7 +66,7 @@ class CouponService
         }
     }
 
-    public function getCoupon(\Illuminate\Http\Request $request)
+    public function getCoupon($request)
     {
         $platform = $request->query('platform', BannerType::B2C);
 

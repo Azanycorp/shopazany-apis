@@ -11,13 +11,22 @@ use App\Mail\ChangePasswordMail;
 use App\Models\Admin;
 use App\Trait\HttpResponse;
 use App\Trait\SuperAdminNotification;
+use Illuminate\Contracts\Auth\Guard;
+use Illuminate\Contracts\Console\Kernel;
+use Illuminate\Contracts\Routing\ResponseFactory;
+use Illuminate\Hashing\BcryptHasher;
 use Illuminate\Support\Str;
 
 class SuperAdminService
 {
     use HttpResponse, SuperAdminNotification;
 
-    public function __construct(private readonly \Illuminate\Contracts\Console\Kernel $kernel, private readonly \Illuminate\Contracts\Routing\ResponseFactory $responseFactory, private readonly \Illuminate\Contracts\Auth\Guard $guard, private readonly \Illuminate\Hashing\BcryptHasher $bcryptHasher) {}
+    public function __construct(
+        private readonly Kernel $kernel,
+        private readonly ResponseFactory $responseFactory,
+        private readonly Guard $guard,
+        private readonly BcryptHasher $bcryptHasher
+    ) {}
 
     public function clearCache()
     {
@@ -36,7 +45,7 @@ class SuperAdminService
         ]);
     }
 
-    public function seedRun(\Illuminate\Http\Request $request)
+    public function seedRun($request)
     {
         $seederClass = Str::studly($request->input('seeder_class'));
 

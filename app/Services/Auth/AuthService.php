@@ -361,7 +361,7 @@ class AuthService extends Controller
             : $this->responseFactory->json(['message' => __($status)], 500);
     }
 
-    public function logout(\Illuminate\Http\Request $request)
+    public function logout($request)
     {
 
         $user = $request->user();

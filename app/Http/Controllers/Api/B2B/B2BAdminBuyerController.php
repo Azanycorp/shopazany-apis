@@ -13,38 +13,37 @@ class B2BAdminBuyerController extends Controller
         private AdminService $buyerService
     ) {}
 
-    public function allBuyers()
+    public function allBuyers(Request $request)
     {
-
-        return $this->buyerService->allBuyers();
+        return $this->buyerService->allBuyers($request);
     }
 
-    public function viewBuyer($id)
+    public function viewBuyer(int $id)
     {
         return $this->buyerService->viewBuyer($id);
     }
 
-    public function editBuyer(EditBuyerRequest $request, $id)
+    public function editBuyer(EditBuyerRequest $request, int $id)
     {
         return $this->buyerService->editBuyer($request, $id);
     }
 
-    public function editBuyerCompany(Request $request, $id)
+    public function editBuyerCompany(Request $request, int $id)
     {
         return $this->buyerService->editBuyerCompany($request, $id);
     }
 
-    public function banBuyer($id)
+    public function banBuyer(int $id)
     {
         return $this->buyerService->banBuyer($id);
     }
 
-    public function removeBuyer($id)
+    public function removeBuyer(int $id)
     {
         return $this->buyerService->removeBuyer($id);
     }
 
-    public function approveBuyer($id)
+    public function approveBuyer(int $id)
     {
         return $this->buyerService->approveBuyer($id);
     }

@@ -26,11 +26,11 @@ class BannerPromoController extends Controller
         return $this->service->addBanner($request);
     }
 
-    public function banners()
+    public function banners(Request $request)
     {
         abort_if($this->gate->denies('banner_promo'), Response::HTTP_FORBIDDEN, self::MESSAGE);
 
-        return $this->service->banners();
+        return $this->service->banners($request);
     }
 
     public function getOneBanner($id)
@@ -91,11 +91,11 @@ class BannerPromoController extends Controller
         return $this->service->addDeal($request);
     }
 
-    public function deals()
+    public function deals(Request $request)
     {
         abort_if($this->gate->denies('banner_promo'), Response::HTTP_FORBIDDEN, self::MESSAGE);
 
-        return $this->service->deals();
+        return $this->service->deals($request);
     }
 
     public function getOneDeal($id)

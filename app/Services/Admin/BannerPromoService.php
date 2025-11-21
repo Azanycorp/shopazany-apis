@@ -48,7 +48,7 @@ class BannerPromoService
         return $this->success(null, 'Added successfully', 201);
     }
 
-    public function banners(\Illuminate\Http\Request $request)
+    public function banners($request)
     {
         $type = $request->query('type', BannerType::B2C);
 
@@ -222,7 +222,7 @@ class BannerPromoService
         return $this->success($deal, 'Deal added successfully');
     }
 
-    public function deals(\Illuminate\Http\Request $request)
+    public function deals($request)
     {
         $type = $request->query('type', BannerType::B2C);
 

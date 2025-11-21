@@ -168,7 +168,7 @@ class AdminService
         return $this->success($order, 'Rfq details');
     }
 
-    public function getAllOrders(\Illuminate\Http\Request $request)
+    public function getAllOrders($request)
     {
         $searchQuery = $request->input('search');
         $orders = B2bOrder::orderStats();
@@ -248,7 +248,7 @@ class AdminService
 
     // Sellers
     // Admin section
-    public function allSellers(\Illuminate\Http\Request $request)
+    public function allSellers($request)
     {
         $type = $request->query('type');
 
@@ -294,7 +294,7 @@ class AdminService
         return $this->success(null, $status);
     }
 
-    public function viewSeller($id, \Illuminate\Http\Request $request): array
+    public function viewSeller($request, $id): array
     {
         $user = User::where('id', $id)
             ->firstOrFail();
@@ -534,7 +534,7 @@ class AdminService
         return $this->success(null, 'Product Deleted successfully');
     }
 
-    public function allBuyers(\Illuminate\Http\Request $request)
+    public function allBuyers($request)
     {
         $type = $request->query('type');
 
