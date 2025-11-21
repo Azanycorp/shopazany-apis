@@ -1071,7 +1071,16 @@ class SellerService extends Controller
             return $this->error(null, 'Unauthorized action.', 401);
         }
 
-        if ($auth->id !== $request->user_id || (! $auth->is_affiliate_member && $auth->type !== UserType::B2B_SELLER)) {
+        // if ($auth->id !== $request->user_id || (! $auth->is_affiliate_member && $auth->type !== UserType::B2B_SELLER)) {
+        //     return $this->error(null, 'Unauthorized action.gg', 401);
+        // }
+        if (
+            $auth->id !== $request->user_id ||
+            (
+                ! $auth->is_affiliate_member &&
+                ! in_array($auth->type, [UserType::B2B_SELLER, UserType::B2B_AGRIECOM_SELLER])
+            )
+        ) {
             return $this->error(null, 'Unauthorized action.', 401);
         }
 

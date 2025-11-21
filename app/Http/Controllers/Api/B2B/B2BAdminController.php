@@ -32,10 +32,20 @@ class B2BAdminController extends Controller
         return $this->adminService->dashboard();
     }
 
+    public function agriEComDashboard()
+    {
+        return $this->adminService->agriEComDashboard();
+    }
+
     // RFQS
     public function allRfq()
     {
         return $this->adminService->getAllRfq();
+    }
+
+    public function getAgriecomRfq()
+    {
+        return $this->adminService->getAgriecomRfq();
     }
 
     public function rfqDetails($id)

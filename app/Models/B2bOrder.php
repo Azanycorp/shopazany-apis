@@ -6,6 +6,7 @@ use App\Trait\ClearsResponseCache;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 
 class B2bOrder extends Model
 {
@@ -89,9 +90,9 @@ class B2bOrder extends Model
         return $this->hasMany(B2bProdctReview::class, 'product_id');
     }
 
-    public static function orderStats()
+    public static function orderStats($type = null)
     {
-        return (new \Illuminate\Database\DatabaseManager)->select("SELECT
+        return DB::selectOne("SELECT
                 (SELECT ROUND(COUNT(`id`), 2) FROM `b2b_orders`) AS total_orders,
                 (SELECT ROUND(COUNT(`id`), 2) FROM `b2b_orders` WHERE `status`='delivered' ) AS total_delivered,
                 (SELECT ROUND(COUNT(`id`), 2) FROM `b2b_orders` WHERE `status`='cancelled' ) AS total_cancelled,
@@ -100,18 +101,17 @@ class B2bOrder extends Model
 
 
                 (SELECT ROUND(SUM(`total_amount`), 2)
-                    FROM `b2b_orders` WHERE status='delivered'
+                    FROM `b2b_orders` WHERE status='delivered' AND `type` = ?
                 ) AS total_order_delivered_amount,
-
 
                 (SELECT ROUND(SUM(`total_amount`), 2)
                     FROM `b2b_orders`
-                    WHERE (YEARWEEK(`created_at`) = YEARWEEK(CURDATE()))
+                    WHERE (YEARWEEK(`created_at`) = YEARWEEK(CURDATE())) AND `type` = ?
                 ) AS total_order_amount_week,
 
                 (SELECT ROUND(COUNT(`id`), 2)
                     FROM `b2b_orders`
-                    WHERE (YEARWEEK(`created_at`) = YEARWEEK(CURDATE()))
+                    WHERE (YEARWEEK(`created_at`) = YEARWEEK(CURDATE())) AND `type` = ?
                 ) AS total_order_count_week,
 
                 (SELECT
@@ -120,6 +120,7 @@ class B2bOrder extends Model
                     WHERE MONTH(created_at) = MONTH(NOW()) AND YEAR(created_at) = YEAR(NOW())
                 ) AS total_order_amount_month
 
-            ")[0];
+            "
+        )[0];
     }
 }
