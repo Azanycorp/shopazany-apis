@@ -185,7 +185,6 @@ class B2BAdminController extends Controller
         return $this->adminService->deleteSubscriptionPlan($id);
     }
 
-    // Blog Section
     public function getBlogs(Request $request)
     {
         return $this->adminService->allBlogs($request);
