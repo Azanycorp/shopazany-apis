@@ -10,6 +10,7 @@ use App\Exports\B2BProductExport;
 use App\Exports\ProductExport;
 use App\Models\User;
 use App\Trait\HttpResponse;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -17,7 +18,11 @@ abstract class Controller
 {
     use HttpResponse;
 
-    public function __construct(private readonly \Illuminate\Auth\AuthManager $authManager, private readonly \Illuminate\Foundation\Application $application, private readonly \Illuminate\Filesystem\FilesystemManager $filesystemManager, private readonly \Illuminate\Routing\UrlGenerator $urlGenerator) {}
+    public function __construct(
+        private readonly \Illuminate\Foundation\Application $application,
+        private readonly \Illuminate\Filesystem\FilesystemManager $filesystemManager,
+        private readonly \Illuminate\Routing\UrlGenerator $urlGenerator,
+    ) {}
 
     public function generateUniqueReferrerCode()
     {
@@ -44,7 +49,7 @@ abstract class Controller
 
     protected function userAuth()
     {
-        return $this->authManager->user();
+        return Auth::user();
     }
 
     public function logUserAction($request, $action, $description, $response, $user = null): void
