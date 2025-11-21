@@ -617,7 +617,7 @@ class PaystackService
             'image' => $image,
             'quantity' => $item['product_quantity'],
             'price' => $item['total_amount'],
-            'currency' => $user->default_currency,
+            'currency' => $product->shopCountry?->currency,
         ];
     }
 }
