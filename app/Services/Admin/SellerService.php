@@ -9,6 +9,7 @@ use App\Http\Resources\SellerResource;
 use App\Models\Order;
 use App\Models\User;
 use App\Trait\HttpResponse;
+use Illuminate\Database\Query\Builder;
 
 class SellerService
 {
@@ -16,7 +17,7 @@ class SellerService
 
     public function __construct(private readonly \Illuminate\Hashing\BcryptHasher $bcryptHasher) {}
 
-    public function allSellers(\Illuminate\Http\Request $request): array
+    public function allSellers($request): array
     {
         $searchQuery = $request->input('search');
         $approvedQuery = $request->query('approved');
@@ -24,7 +25,7 @@ class SellerService
         $users = User::with(['products', 'b2bProducts', 'bankAccount', 'wallet'])
             ->where('type', UserType::SELLER)
             ->when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
-                $queryBuilder->where(function (\Illuminate\Contracts\Database\Query\Builder $subQuery) use ($searchQuery): void {
+                $queryBuilder->where(function (Builder $subQuery) use ($searchQuery): void {
                     $subQuery->where('first_name', 'LIKE', '%'.$searchQuery.'%')
                         ->orWhere('last_name', 'LIKE', '%'.$searchQuery.'%')
                         ->orWhere('middlename', 'LIKE', '%'.$searchQuery.'%')
@@ -143,7 +144,7 @@ class SellerService
 
     public function paymentHistory($id)
     {
-        $orders = Order::whereHas('products', function (\Illuminate\Contracts\Database\Query\Builder $query) use ($id): void {
+        $orders = Order::whereHas('products', function (Builder $query) use ($id): void {
             $query->where('user_id', $id);
         })
             ->with('payments')

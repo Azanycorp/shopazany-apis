@@ -68,7 +68,7 @@ class ProductCategoryService
         return $this->success(B2BCategoryResource::collection($categories), 'Categories');
     }
 
-    public function adminCategories(\Illuminate\Http\Request $request)
+    public function adminCategories($request)
     {
         $search = $request->query('search');
 
@@ -163,7 +163,7 @@ class ProductCategoryService
         return $this->success($data, 'Category analytics');
     }
 
-    public function getAdminSubcategory(\Illuminate\Http\Request $request)
+    public function getAdminSubcategory($request)
     {
         $search = $request->query('search');
 

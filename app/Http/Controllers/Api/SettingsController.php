@@ -83,14 +83,14 @@ class SettingsController extends Controller
         return $this->service->addPlan($request);
     }
 
-    public function getPlanById($id)
+    public function getPlanById(Request $request, $id)
     {
-        return $this->service->getPlanById($id);
+        return $this->service->getPlanById($request, $id);
     }
 
-    public function getPlanByCountry($countryId)
+    public function getPlanByCountry(Request $request, $countryId)
     {
-        return $this->service->getPlanByCountry($countryId);
+        return $this->service->getPlanByCountry($request, $countryId);
     }
 
     public function updatePlan(Request $request, $id)
@@ -102,9 +102,9 @@ class SettingsController extends Controller
         return $this->service->updatePlan($request, $id);
     }
 
-    public function deletePlan($id)
+    public function deletePlan(Request $request, $id)
     {
-        return $this->service->deletePlan($id);
+        return $this->service->deletePlan($request, $id);
     }
 
     public function addUser(AddAdminUserRequest $request)
@@ -112,9 +112,9 @@ class SettingsController extends Controller
         return $this->service->addUser($request);
     }
 
-    public function allUsers(): array
+    public function allUsers(Request $request): array
     {
-        return $this->service->allUsers();
+        return $this->service->allUsers($request);
     }
 
     public function updateUser(Request $request, $id)

@@ -238,7 +238,7 @@ class SettingsService
 
     public function addPlan($request)
     {
-        $currencyCode = $this->currencyCode($request);
+        $currencyCode = currencyCodeByCountryId($request->country_id);
 
         SubscriptionPlan::create([
             'title' => $request->title,
@@ -257,7 +257,7 @@ class SettingsService
         return $this->success(null, 'Plan added successfully', 201);
     }
 
-    public function getPlanById($id, \Illuminate\Http\Request $request)
+    public function getPlanById($request, $id)
     {
         $type = $request->query('type', PlanType::B2C);
 
@@ -271,7 +271,7 @@ class SettingsService
         return $this->success($data, 'Subscription plan detail');
     }
 
-    public function getPlanByCountry($countryId, \Illuminate\Http\Request $request)
+    public function getPlanByCountry($request, $countryId)
     {
         $type = $request->query('type', PlanType::B2C);
 
@@ -309,7 +309,7 @@ class SettingsService
         return $this->success(null, 'Plan updated successfully');
     }
 
-    public function deletePlan($id, \Illuminate\Http\Request $request)
+    public function deletePlan($request, $id)
     {
         $type = $request->query('type', PlanType::B2C);
 
@@ -354,7 +354,7 @@ class SettingsService
         }
     }
 
-    public function allUsers(\Illuminate\Http\Request $request): array
+    public function allUsers($request): array
     {
         $search = trim($request->input('search'));
 

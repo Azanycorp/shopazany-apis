@@ -18,6 +18,7 @@ use App\Models\User;
 use App\Trait\General;
 use App\Trait\HttpResponse;
 use App\Trait\Product as TraitProduct;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -25,10 +26,12 @@ class SellerService extends Controller
 {
     use General, HttpResponse, TraitProduct;
 
-    public function __construct(private readonly \Illuminate\Auth\AuthManager $authManager, private readonly \Illuminate\Foundation\Application $application, private readonly \Illuminate\Filesystem\FilesystemManager $filesystemManager, private readonly \Illuminate\Routing\UrlGenerator $urlGenerator, private readonly \Illuminate\Database\DatabaseManager $databaseManager, private readonly \Illuminate\Contracts\Routing\ResponseFactory $responseFactory)
-    {
-        parent::__construct($authManager, $application, $filesystemManager, $urlGenerator);
-    }
+    public function __construct(
+        private readonly \Illuminate\Auth\AuthManager $authManager,
+        private readonly \Illuminate\Foundation\Application $application,
+        private readonly \Illuminate\Database\DatabaseManager $databaseManager,
+        private readonly \Illuminate\Contracts\Routing\ResponseFactory $responseFactory
+    ) {}
 
     public function businessInfo($request)
     {
@@ -56,7 +59,7 @@ class SellerService extends Controller
 
             $url = ['url' => null];
             if ($request->hasFile('file')) {
-                $url = $this->storeFile($request->file('file'), $folder);
+                $url = $this->storeFile($request->file('file'), $folder, $request);
             }
 
             $user->update($request->only(['first_name', 'last_name']));
@@ -178,7 +181,7 @@ class SellerService extends Controller
         return $this->success(null, 'Updated successfully');
     }
 
-    public function getProduct($userId, \Illuminate\Http\Request $request)
+    public function getProduct($request, $userId)
     {
         $user = User::with(['products'])->find($userId);
 
@@ -277,7 +280,7 @@ class SellerService extends Controller
         return $this->success(null, 'Deleted successfully');
     }
 
-    public function getAllOrders($id, \Illuminate\Http\Request $request): array
+    public function getAllOrders($request, $id): array
     {
         $status = $request->query('status');
 
@@ -290,7 +293,7 @@ class SellerService extends Controller
             OrderStatus::CANCELLED,
         ];
 
-        $orders = Order::whereHas('products', function (\Illuminate\Contracts\Database\Query\Builder $query) use ($id): void {
+        $orders = Order::whereHas('products', function (Builder $query) use ($id): void {
             $query->where('user_id', $id);
         })
             ->with(['user', 'products.shopCountry'])
@@ -332,7 +335,7 @@ class SellerService extends Controller
             return $this->error(null, 'Unauthorized action.', 401);
         }
 
-        $order = Order::whereHas('products', function (\Illuminate\Contracts\Database\Query\Builder $query) use ($userId): void {
+        $order = Order::whereHas('products', function (Builder $query) use ($userId): void {
             $query->where('user_id', $userId);
         })
             ->with([
@@ -466,11 +469,11 @@ class SellerService extends Controller
         }
 
         $totalProducts = Product::where('user_id', $userId)->count();
-        $totalOrders = Order::whereHas('products', function (\Illuminate\Contracts\Database\Query\Builder $query) use ($userId): void {
+        $totalOrders = Order::whereHas('products', function (Builder $query) use ($userId): void {
             $query->where('user_id', $userId);
         })->count();
 
-        $orderCounts = Order::whereHas('products', function (\Illuminate\Contracts\Database\Query\Builder $query) use ($userId): void {
+        $orderCounts = Order::whereHas('products', function (Builder $query) use ($userId): void {
             $query->where('user_id', $userId);
         })
             ->selectRaw('
@@ -492,8 +495,14 @@ class SellerService extends Controller
             ])
             ->first();
 
-        $topRateds = Product::topRated($userId)->limit(5)->get();
-        $mostFavorites = Product::mostFavorite($userId)->limit(5)->get();
+        $topRateds = Product::where('products.user_id', $userId)
+            ->topRated()
+            ->limit(5)
+            ->get();
+        $mostFavorites = Product::where('products.user_id', $userId)
+            ->mostFavorite()
+            ->limit(5)
+            ->get();
 
         $data = [
             'total_products' => $totalProducts,
@@ -520,7 +529,7 @@ class SellerService extends Controller
             return $this->error(null, 'Unauthorized action.', 401);
         }
 
-        $orders = Order::whereHas('products', function (\Illuminate\Contracts\Database\Query\Builder $query) use ($userId): void {
+        $orders = Order::whereHas('products', function (Builder $query) use ($userId): void {
             $query->where('user_id', $userId);
         })
             ->with(['user', 'products.shopCountry'])

@@ -9,10 +9,11 @@ use Illuminate\Http\Response;
 
 class OrderController extends Controller
 {
-    const MESSAGE = '403 Forbidden';
+    private const MESSAGE = '403 Forbidden';
 
     public function __construct(
-        protected OrderService $service, private readonly \Illuminate\Contracts\Auth\Access\Gate $gate
+        protected OrderService $service,
+        private readonly \Illuminate\Contracts\Auth\Access\Gate $gate
     ) {}
 
     public function orderAnalytics()
@@ -22,18 +23,18 @@ class OrderController extends Controller
         return $this->service->orderAnalytics();
     }
 
-    public function localOrder(): array
+    public function localOrder(Request $request): array
     {
         abort_if($this->gate->denies('order_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
 
-        return $this->service->localOrder();
+        return $this->service->localOrder($request);
     }
 
-    public function intOrder(): array
+    public function intOrder(Request $request): array
     {
         abort_if($this->gate->denies('order_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
 
-        return $this->service->intOrder();
+        return $this->service->intOrder($request);
     }
 
     public function orderDetail($id): array

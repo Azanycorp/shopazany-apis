@@ -25,11 +25,11 @@ class AdminProductController extends Controller
         return $this->service->addProduct($request);
     }
 
-    public function getProducts(): array
+    public function getProducts(Request $request): array
     {
         abort_if($this->gate->denies('product_list'), Response::HTTP_FORBIDDEN, self::MESSAGE);
 
-        return $this->service->getProducts();
+        return $this->service->getProducts($request);
     }
 
     public function getOneProduct($slug)

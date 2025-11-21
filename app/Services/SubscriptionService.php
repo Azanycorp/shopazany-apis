@@ -20,7 +20,7 @@ class SubscriptionService
 
     public function __construct(private readonly \Illuminate\Auth\AuthManager $authManager) {}
 
-    public function getPlanByCountry($countryId, \Illuminate\Http\Request $request)
+    public function getPlanByCountry($request, $countryId)
     {
         $type = $request->query('type', PlanType::B2C);
 
