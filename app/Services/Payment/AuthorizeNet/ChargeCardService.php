@@ -416,6 +416,7 @@ class ChargeCardService implements PaymentStrategy
                         'image' => $product->image,
                         'quantity' => $item['quantity'],
                         'price' => $convertedPrice,
+                        'currency' => $product->shopCountry?->currency,
                     ];
 
                     $variation->decrement('stock', $item['quantity']);
@@ -441,6 +442,7 @@ class ChargeCardService implements PaymentStrategy
                         'image' => $product->image,
                         'quantity' => $item['quantity'],
                         'price' => $convertedPrice,
+                        'currency' => $product->shopCountry?->currency,
                     ];
 
                     $product->decrement('current_stock_quantity', $item['quantity']);

@@ -205,11 +205,11 @@
         @endforeach
 
         @php
-            $currency = $items[0]['currency'] ?? 'USD';
-            $symbol = match($currency) {
+            $itemCurrency = $items[0]['currency'] ?? 'USD';
+            $symbol = match($itemCurrency) {
                 'USD' => '$',
                 'NGN' => '₦',
-                default => $currency,
+                default => $itemCurrency,
             };
         @endphp
         <div class="total">
