@@ -8,6 +8,7 @@ use App\Notifications\WithdrawalNotification;
 use App\Services\PayoutService;
 use App\Trait\Transfer;
 use Illuminate\Console\Command;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Log;
 
 class WithdrawRequestPayout extends Command
@@ -46,7 +47,7 @@ class WithdrawRequestPayout extends Command
         User::with(['withdrawalRequests' => function ($query): void {
             $query->where('status', WithdrawalStatus::PENDING)->limit(1);
         }, 'paymentMethods'])
-            ->whereHas('withdrawalRequests', function (\Illuminate\Contracts\Database\Query\Builder $query): void {
+            ->whereHas('withdrawalRequests', function (Builder $query): void {
                 $query->where('status', WithdrawalStatus::PENDING);
             })
             ->chunk(100, function ($users): void {

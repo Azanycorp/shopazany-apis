@@ -18,6 +18,7 @@ use App\Models\SubscriptionPlan;
 use App\Models\TermsService;
 use App\Trait\HttpResponse;
 use App\Trait\SignUp;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
 
 class SettingsService
@@ -359,7 +360,7 @@ class SettingsService
         $search = trim($request->input('search'));
 
         $users = Admin::with(['permissions', 'roles.permissions'])
-            ->where(function (\Illuminate\Contracts\Database\Query\Builder $query) use ($search): void {
+            ->where(function (Builder $query) use ($search): void {
                 $query->where('first_name', 'LIKE', '%'.$search.'%')
                     ->orWhere('last_name', 'LIKE', '%'.$search.'%')
                     ->orWhere('email', 'LIKE', '%'.$search.'%');

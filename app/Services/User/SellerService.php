@@ -18,7 +18,7 @@ use App\Models\User;
 use App\Trait\General;
 use App\Trait\HttpResponse;
 use App\Trait\Product as TraitProduct;
-use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 
