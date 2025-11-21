@@ -10,9 +10,9 @@ class FileUploader
 {
     protected $providers = [];
 
-    public function __construct()
+    public function __construct(\Illuminate\Contracts\Config\Repository $repository, private readonly \Illuminate\Log\Writer $writer)
     {
-        foreach (config('fileservices.providers') as $providerConfig) {
+        foreach ($repository->get('fileservices.providers') as $providerConfig) {
             $providerName = $providerConfig['name'];
             $retries = $providerConfig['retries'];
 
@@ -53,10 +53,10 @@ class FileUploader
                     return $provider['instance']->upload($file, $folder);
                 } catch (\Throwable $e) {
                     $attempts++;
-                    logger()->warning("Upload failed on {$provider['name']} attempt {$attempts}/{$provider['retries']}: ".$e->getMessage());
+                    $this->writer->warning("Upload failed on {$provider['name']} attempt {$attempts}/{$provider['retries']}: ".$e->getMessage());
                 }
             }
-            logger()->info("All retries exhausted for {$provider['name']}, moving to next provider.");
+            $this->writer->info("All retries exhausted for {$provider['name']}, moving to next provider.");
         }
 
         throw new \Exception('All providers failed after retries.');
@@ -71,14 +71,14 @@ class FileUploader
         foreach ($this->providers as $provider) {
             try {
                 $provider['instance']->delete($publicId);
-                logger()->info("Deleted file from {$provider['name']} using ID: {$publicId}");
+                $this->writer->info("Deleted file from {$provider['name']} using ID: {$publicId}");
 
                 return;
             } catch (\Throwable $e) {
-                logger()->warning("Delete failed on {$provider['name']}: ".$e->getMessage());
+                $this->writer->warning("Delete failed on {$provider['name']}: ".$e->getMessage());
             }
         }
 
-        logger()->error("Failed to delete file: {$publicId} on all providers.");
+        $this->writer->error("Failed to delete file: {$publicId} on all providers.");
     }
 }

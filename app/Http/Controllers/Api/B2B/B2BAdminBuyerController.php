@@ -52,8 +52,8 @@ class B2BAdminBuyerController extends Controller
     public function bulkRemoveBuyer(Request $request)
     {
         $request->validate([
-            'user_ids' => 'required|array',
-            'user_ids.*' => 'exists:users,id',
+            'user_ids' => ['required', 'array'],
+            'user_ids.*' => ['required', 'exists:users,id'],
         ]);
 
         return $this->buyerService->bulkRemove($request);

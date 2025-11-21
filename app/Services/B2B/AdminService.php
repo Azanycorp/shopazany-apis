@@ -39,8 +39,6 @@ use App\Repositories\B2BProductRepository;
 use App\Repositories\B2BSellerShippingRepository;
 use App\Trait\HttpResponse;
 use App\Trait\SignUp;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 class AdminService
@@ -49,7 +47,10 @@ class AdminService
 
     public function __construct(
         protected B2BProductRepository $b2bProductRepository,
-        protected B2BSellerShippingRepository $b2bSellerShippingRepository
+        protected B2BSellerShippingRepository $b2bSellerShippingRepository,
+        private readonly \Illuminate\Database\DatabaseManager $databaseManager,
+        private readonly \Illuminate\Contracts\Hashing\Hasher $hasher,
+        private readonly \Illuminate\Hashing\BcryptHasher $bcryptHasher
     ) {}
 
     // dashboard
@@ -99,9 +100,9 @@ class AdminService
         return $this->success($order, 'Rfq details');
     }
 
-    public function getAllOrders()
+    public function getAllOrders(\Illuminate\Http\Request $request)
     {
-        $searchQuery = request()->input('search');
+        $searchQuery = $request->input('search');
         $orders = B2bOrder::orderStats();
         $international_orders = B2bOrder::when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
             $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
@@ -111,7 +112,7 @@ class AdminService
         })->get();
 
         $local_orders = B2bOrder::with(['buyer', 'seller'])->when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
-            $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
+            $queryBuilder->where(function (\Illuminate\Contracts\Database\Query\Builder $subQuery) use ($searchQuery): void {
                 $subQuery->where('country_id', 160)
                     ->where('order_no', 'LIKE', '%'.$searchQuery.'%');
             });
@@ -151,7 +152,7 @@ class AdminService
 
     public function cancelOrder($id)
     {
-        DB::beginTransaction();
+        $this->databaseManager->beginTransaction();
 
         try {
             $order = B2bOrder::findOrFail($id);
@@ -168,11 +169,11 @@ class AdminService
             $product->sold -= $order->product_quantity;
             $product->save();
 
-            DB::commit();
+            $this->databaseManager->commit();
 
             return $this->success(null, 'Order cancelled successfully.');
         } catch (\Exception $e) {
-            DB::rollBack();
+            $this->databaseManager->rollBack();
 
             return $this->error(null, 'Failed to cancel order: '.$e->getMessage(), 500);
         }
@@ -180,9 +181,9 @@ class AdminService
 
     // Sellers
     // Admin section
-    public function allSellers()
+    public function allSellers(\Illuminate\Http\Request $request)
     {
-        $type = request()->query('type');
+        $type = $request->query('type');
 
         $sellers = User::withCount('b2bProducts')
             ->when($type, fn ($q) => $q->where('type', $type))
@@ -227,19 +228,19 @@ class AdminService
         return $this->success(null, $status);
     }
 
-    public function viewSeller($id): array
+    public function viewSeller($id, \Illuminate\Http\Request $request): array
     {
         $user = User::where('id', $id)
             ->firstOrFail();
 
-        $search = request()->search;
+        $search = $request->search;
         $data = new B2BSellerResource($user);
         $query = B2BProduct::with(['b2bProductImages', 'category', 'country', 'user', 'subCategory'])
             ->where('user_id', $id);
 
-        if (! empty($search)) {
+        if (filled($search)) {
             $query->where('name', 'like', '%'.$search.'%')
-                ->orWhereHas('category', function ($q) use ($search): void {
+                ->orWhereHas('category', function (\Illuminate\Contracts\Database\Query\Builder $q) use ($search): void {
                     $q->where('name', 'like', '%'.$search.'%');
                 });
         }
@@ -261,7 +262,7 @@ class AdminService
             'last_name' => $request->last_name,
             'email' => $request->email_address,
             'phone' => $request->phone_number,
-            'password' => bcrypt($request->passowrd),
+            'password' => $this->bcryptHasher->make($request->passowrd),
         ]);
 
         return $this->success(['user_id' => $user->id], 'Updated successfully');
@@ -289,9 +290,9 @@ class AdminService
         return $this->success(null, 'User removed successfully');
     }
 
-    public function bulkRemove($request)
+    public function bulkRemove($request, \Illuminate\Http\Request $request)
     {
-        $type = request()->query('type');
+        $type = $request->query('type');
         $users = User::where('type', $type ?? UserType::B2B_SELLER)
             ->whereIn('id', $request->user_ids)
             ->get();
@@ -461,9 +462,9 @@ class AdminService
         return $this->success(null, 'Product Deleted successfully');
     }
 
-    public function allBuyers()
+    public function allBuyers(\Illuminate\Http\Request $request)
     {
-        $type = request()->query('type');
+        $type = $request->query('type');
 
         $buyerStats = User::when($type, fn ($q) => $q->where('type', $type))->where('type', UserType::B2B_BUYER)
             ->selectRaw('
@@ -505,7 +506,7 @@ class AdminService
     {
         $user = User::findOrFail($id);
 
-        if (! empty($request->email) && User::where('email', $request->email)->where('id', '!=', $id)->exists()) {
+        if (filled($request->email) && User::where('email', $request->email)->where('id', '!=', $id)->exists()) {
             return $this->error(null, 'Email already exists.');
         }
 
@@ -650,12 +651,12 @@ class AdminService
             ->where('id', $authUser->id)
             ->firstOrFail();
 
-        if (! Hash::check($request->old_password, $user->password)) {
+        if (! $this->hasher->check($request->old_password, $user->password)) {
             return $this->error('Old password is incorrect.', 400);
         }
 
         $user->update([
-            'password' => bcrypt($request->password),
+            'password' => $this->bcryptHasher->make($request->password),
         ]);
 
         return $this->success(null, 'Password updated');
@@ -1030,18 +1031,18 @@ class AdminService
     }
 
     // Admin User Management
-    public function adminUsers()
+    public function adminUsers(\Illuminate\Http\Request $request)
     {
         $authUser = userAuth();
 
-        $searchQuery = request()->input('search');
+        $searchQuery = $request->input('search');
 
         $admins = Admin::with('permissions:id,name')
             ->select('id', 'first_name', 'last_name', 'email', 'created_at')
             ->where('type', AdminType::B2B)
             ->whereNot('id', $authUser->id)
             ->when($searchQuery, function ($queryBuilder) use ($searchQuery) {
-                $queryBuilder->where(function ($subQuery) use ($searchQuery) {
+                $queryBuilder->where(function (\Illuminate\Contracts\Database\Query\Builder $subQuery) use ($searchQuery) {
                     $subQuery->where('first_name', 'LIKE', "%{$searchQuery}%")
                         ->orWhere('email', 'LIKE', "%{$searchQuery}%");
                 });
@@ -1054,7 +1055,7 @@ class AdminService
 
     public function addAdmin($request)
     {
-        DB::beginTransaction();
+        $this->databaseManager->beginTransaction();
         try {
             $password = Str::random(5);
 
@@ -1065,7 +1066,7 @@ class AdminService
                 'type' => AdminType::B2B,
                 'status' => AdminStatus::ACTIVE,
                 'phone_number' => $request->phone_number,
-                'password' => bcrypt($password),
+                'password' => $this->bcryptHasher->make($password),
             ]);
 
             $admin->permissions()->sync($request->permissions);
@@ -1076,7 +1077,7 @@ class AdminService
                 'password' => $password,
             ];
 
-            DB::commit();
+            $this->databaseManager->commit();
 
             $type = MailingEnum::ADMIN_ACCOUNT;
             $subject = 'Admin Account Creation email';
@@ -1086,7 +1087,7 @@ class AdminService
 
             return $this->success($admin, 'Admin user added successfully', 201);
         } catch (\Throwable $th) {
-            DB::rollBack();
+            $this->databaseManager->rollBack();
             throw $th;
         }
     }
@@ -1124,7 +1125,7 @@ class AdminService
 
         $admin = Admin::where('type', AdminType::B2B)->where('id', $currentUserId)->firstOrFail();
 
-        if (Hash::check($request->password, $admin->password)) {
+        if ($this->hasher->check($request->password, $admin->password)) {
             return $this->success(null, 'Password matched');
         }
 

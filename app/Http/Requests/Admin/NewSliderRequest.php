@@ -22,8 +22,8 @@ class NewSliderRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'image' => 'required|image',
-            'link' => 'required|url',
+            'image' => ['required', 'image'],
+            'link' => ['required', 'url'],
         ];
     }
 }

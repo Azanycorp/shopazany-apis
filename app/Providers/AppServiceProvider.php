@@ -12,7 +12,6 @@ use App\Repositories\B2BSellerShippingRepository;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
@@ -22,6 +21,16 @@ use Laravel\Sanctum\Sanctum;
 
 class AppServiceProvider extends ServiceProvider
 {
+    /**
+     * Create a new service provider instance.
+     *
+     * @param  \Illuminate\Contracts\Foundation\Application  $app
+     */
+    public function __construct($app, private readonly \Illuminate\Database\DatabaseManager $databaseManager, private readonly \Illuminate\Routing\UrlGenerator $urlGenerator)
+    {
+        parent::__construct($app);
+    }
+
     /**
      * Register any application services.
      */
@@ -66,9 +75,7 @@ class AppServiceProvider extends ServiceProvider
      */
     private function configureCommands(): void
     {
-        DB::prohibitDestructiveCommands(
-            $this->app->isProduction(),
-        );
+        $this->databaseManager->prohibitDestructiveCommands($this->app->isProduction());
     }
 
     /**
@@ -86,6 +93,6 @@ class AppServiceProvider extends ServiceProvider
      */
     private function configureUrl(): void
     {
-        URL::formatScheme('https');
+        $this->urlGenerator->formatScheme('https');
     }
 }

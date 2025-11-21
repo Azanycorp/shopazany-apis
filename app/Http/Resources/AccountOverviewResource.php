@@ -2,9 +2,9 @@
 
 namespace App\Http\Resources;
 
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Date;
 
 class AccountOverviewResource extends JsonResource
 {
@@ -23,7 +23,7 @@ class AccountOverviewResource extends JsonResource
             'middlename' => (string) $this->middlename,
             'email' => (string) $this->email,
             'phone' => (string) $this->phone,
-            'date_created' => Carbon::parse($this->created_at)->format('d M Y'),
+            'date_created' => Date::parse($this->created_at)->format('d M Y'),
         ];
     }
 }

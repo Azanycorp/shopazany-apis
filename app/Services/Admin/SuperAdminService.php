@@ -11,52 +11,53 @@ use App\Mail\ChangePasswordMail;
 use App\Models\Admin;
 use App\Trait\HttpResponse;
 use App\Trait\SuperAdminNotification;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Str;
 
 class SuperAdminService
 {
     use HttpResponse, SuperAdminNotification;
 
+    public function __construct(private readonly \Illuminate\Contracts\Console\Kernel $kernel, private readonly \Illuminate\Contracts\Routing\ResponseFactory $responseFactory, private readonly \Illuminate\Contracts\Auth\Guard $guard, private readonly \Illuminate\Hashing\BcryptHasher $bcryptHasher) {}
+
     public function clearCache()
     {
-        Artisan::call('optimize:clear');
+        $this->kernel->call('optimize:clear');
 
-        return response()->json(['message' => 'cached files cleared!']);
+        return $this->responseFactory->json(['message' => 'cached files cleared!']);
     }
 
     public function runMigration()
     {
-        Artisan::call('migrate', ['--force' => true]);
+        $this->kernel->call('migrate', ['--force' => true]);
 
-        return response()->json([
+        return $this->responseFactory->json([
             'message' => 'Migration completed successfully.',
-            'output' => Artisan::output(),
+            'output' => $this->kernel->output(),
         ]);
     }
 
-    public function seedRun()
+    public function seedRun(\Illuminate\Http\Request $request)
     {
-        $seederClass = Str::studly(request()->input('seeder_class'));
+        $seederClass = Str::studly($request->input('seeder_class'));
 
         if (! class_exists("Database\\Seeders\\{$seederClass}")) {
-            return response()->json([
+            return $this->responseFactory->json([
                 'error' => "Seeder class '{$seederClass}' not found in Database\\Seeders namespace.",
             ], 404);
         }
 
         try {
-            Artisan::call('db:seed', [
+            $this->kernel->call('db:seed', [
                 '--class' => $seederClass,
                 '--force' => true,
             ]);
 
-            return response()->json([
+            return $this->responseFactory->json([
                 'message' => "{$seederClass} executed successfully.",
-                'output' => Artisan::output(),
+                'output' => $this->kernel->output(),
             ]);
         } catch (\Exception $e) {
-            return response()->json([
+            return $this->responseFactory->json([
                 'error' => 'Seeder failed to run.',
                 'details' => $e->getMessage(),
             ], 400);
@@ -65,7 +66,7 @@ class SuperAdminService
 
     public function getProfiles()
     {
-        $users = Admin::where('type', AdminType::SUPER_ADMIN)->whereNot('id', auth()->user()->id)->latest()->get();
+        $users = Admin::where('type', AdminType::SUPER_ADMIN)->whereNot('id', $this->guard->user()->id)->latest()->get();
 
         $data = SuperAdminProfileResource::collection($users);
 
@@ -97,7 +98,7 @@ class SuperAdminService
             $request->validated()
                 + [
                     'type' => AdminType::SUPER_ADMIN,
-                    'password' => bcrypt($password),
+                    'password' => $this->bcryptHasher->make($password),
                     'status' => AdminStatus::ACTIVE,
                 ]
         );
@@ -175,7 +176,7 @@ class SuperAdminService
             return $this->error(null, 'You must verify the code first', 403);
         }
 
-        $user->update(['password' => bcrypt($request->password)]);
+        $user->update(['password' => $this->bcryptHasher->make($request->password)]);
 
         return $this->success(null, 'Password changed successfully');
     }

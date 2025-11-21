@@ -8,11 +8,12 @@ use App\Models\Product;
 use App\Models\ProductVariation;
 use App\Trait\HttpResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 class CartService
 {
     use HttpResponse;
+
+    public function __construct(private readonly \Illuminate\Auth\AuthManager $authManager, private readonly \Illuminate\Session\SessionManager $sessionManager) {}
 
     public function addToCart($request)
     {
@@ -22,8 +23,8 @@ class CartService
             return $this->error(null, 'Unauthorized action.', 401);
         }
 
-        session(['cart_id' => session_id()]);
-        $sessionId = session('cart_id');
+        $this->sessionManager->put(['cart_id' => session_id()]);
+        $sessionId = $this->sessionManager->get('cart_id');
         $quantity = $request->quantity;
 
         if ($quantity <= 0) {
@@ -85,7 +86,7 @@ class CartService
             return $this->error(null, 'Unauthorized action.', 401);
         }
 
-        $sessionId = session('cart_id');
+        $sessionId = $this->sessionManager->get('cart_id');
 
         $cartItemsQuery = Cart::with([
             'product.user',
@@ -98,7 +99,7 @@ class CartService
             'variation.product.shopCountry',
         ]);
 
-        if (Auth::check()) {
+        if ($this->authManager->check()) {
             $cartItemsQuery->where('user_id', $userId);
         } else {
             $cartItemsQuery->where('session_id', $sessionId);
@@ -155,15 +156,15 @@ class CartService
             return $this->error(null, 'Unauthorized action.', 401);
         }
 
-        $sessionId = session('cart_id');
+        $sessionId = $this->sessionManager->get('cart_id');
 
-        if (Auth::check()) {
+        if ($this->authManager->check()) {
             Cart::where('user_id', $userId)->delete();
         } else {
             Cart::where('session_id', $sessionId)->delete();
         }
 
-        session()->forget('cart_id');
+        $this->sessionManager->forget('cart_id');
 
         return $this->success(null, 'Items cleared from cart');
     }

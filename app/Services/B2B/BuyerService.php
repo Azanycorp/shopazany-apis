@@ -46,21 +46,19 @@ use App\Models\SliderImage;
 use App\Models\SocialSetting;
 use App\Models\User;
 use App\Trait\HttpResponse;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 class BuyerService
 {
     use HttpResponse;
 
+    public function __construct(private readonly \Illuminate\Database\DatabaseManager $databaseManager, private readonly \Illuminate\Auth\AuthManager $authManager, private readonly \Illuminate\Contracts\Hashing\Hasher $hasher, private readonly \Illuminate\Hashing\BcryptHasher $bcryptHasher) {}
+
     // Admin section
-    public function allCustomers()
+    public function allCustomers(\Illuminate\Http\Request $request)
     {
-        $query = trim(request()->input('search'));
-        $type = request()->query('type');
+        $query = trim($request->input('search'));
+        $type = $request->query('type');
 
         $users = User::where('type', $type ?? UserType::B2B_BUYER)
             ->where(function ($queryBuilder) use ($query): void {
@@ -107,7 +105,7 @@ class BuyerService
 
     public function removeCustomer($request)
     {
-        DB::transaction(function () use ($request): void {
+        $this->databaseManager->transaction(function () use ($request): void {
             User::whereIn('id', $request->user_ids)
                 ->update([
                     'status' => UserStatus::DELETED,
@@ -121,9 +119,9 @@ class BuyerService
         return $this->success(null, 'User(s) have been removed successfully');
     }
 
-    public function filter(): array
+    public function filter(\Illuminate\Http\Request $request): array
     {
-        $query = trim(request()->query('approved'));
+        $query = trim($request->query('approved'));
 
         $users = User::where('type', UserType::CUSTOMER)
             ->when($query !== null, function ($queryBuilder) use ($query): void {
@@ -154,7 +152,7 @@ class BuyerService
             'last_name' => $request->last_name,
             'middlename' => $request->middlename,
             'email' => $request->email,
-            'password' => bcrypt('12345678'),
+            'password' => $this->bcryptHasher->make('12345678'),
             'phone' => $request->phone,
             'date_of_birth' => $request->date_of_birth,
             'type' => UserType::CUSTOMER,
@@ -239,18 +237,18 @@ class BuyerService
         return $this->success($data, 'banners');
     }
 
-    public function getClientLogos()
+    public function getClientLogos(\Illuminate\Http\Request $request)
     {
-        $type = request()->query('type');
+        $type = $request->query('type');
 
         $clients = ClientLogo::when($type, fn ($q) => $q->where('type', $type))->latest()->get();
 
         return $this->success(ClientLogoResource::collection($clients), 'Client Brands');
     }
 
-    public function getSocialLinks()
+    public function getSocialLinks(\Illuminate\Http\Request $request)
     {
-        $type = request()->query('type');
+        $type = $request->query('type');
 
         $links = SocialSetting::when($type, fn ($q) => $q->where('type', $type))
             ->latest()->get();
@@ -284,9 +282,9 @@ class BuyerService
         return $this->success($banners, 'home-banners');
     }
 
-    public function getProducts()
+    public function getProducts(\Illuminate\Http\Request $request)
     {
-        $type = request()->query('type');
+        $type = $request->query('type');
 
         $products = B2BProduct::with([
             'category',
@@ -305,9 +303,9 @@ class BuyerService
         return $this->success(B2BProductResource::collection($products), 'Products');
     }
 
-    public function categories()
+    public function categories(\Illuminate\Http\Request $request)
     {
-        $type = request()->query('type');
+        $type = $request->query('type');
 
         $categories = B2bProductCategory::with(['subcategory'])
             ->withCount('products')
@@ -328,9 +326,9 @@ class BuyerService
         return $this->success(B2BCategoryResource::collection($categories), 'Categories');
     }
 
-    public function allBlogs()
+    public function allBlogs(\Illuminate\Http\Request $request)
     {
-        $type = request()->query('type');
+        $type = $request->query('type');
 
         $blogs = Blog::with('user')->when($type, function ($q) use ($type) {
             $q->where('type', $type);
@@ -349,9 +347,9 @@ class BuyerService
         return $this->success(new BlogResource($blog), 'Blog details');
     }
 
-    public function getCategoryProducts()
+    public function getCategoryProducts(\Illuminate\Http\Request $request)
     {
-        $type = request()->query('type');
+        $type = $request->query('type');
 
         $categories = B2BProductCategory::select('id', 'type', 'name', 'slug', 'image')
             ->when($type, function ($q) use ($type) {
@@ -367,9 +365,9 @@ class BuyerService
         return $this->success(B2BCategoryResource::collection($categories), 'Product Categories');
     }
 
-    public function bestSelling()
+    public function bestSelling(\Illuminate\Http\Request $request)
     {
-        $type = request()->input('type');
+        $type = $request->input('type');
 
         $bestSellingProducts = B2bOrder::with([
             'product:id,name,front_image,unit_price,slug,default_currency,type',
@@ -379,11 +377,11 @@ class BuyerService
             ->select(
                 'id',
                 'product_id',
-                DB::raw('SUM(product_quantity) as total_sold')
+                $this->databaseManager->raw('SUM(product_quantity) as total_sold')
             )
             ->where('status', OrderStatus::DELIVERED)
             ->when($type, function ($query, $type) {
-                $query->whereHas('product', function ($q) use ($type) {
+                $query->whereHas('product', function (\Illuminate\Contracts\Database\Query\Builder $q) use ($type) {
                     $q->where('type', $type);
                 });
             })
@@ -395,10 +393,10 @@ class BuyerService
         return $this->success(B2BBestSellingProductResource::collection($bestSellingProducts), 'Best selling products');
     }
 
-    public function featuredProduct()
+    public function featuredProduct(\Illuminate\Http\Request $request)
     {
-        $countryId = request()->query('country_id');
-        $type = request()->query('type');
+        $countryId = $request->query('country_id');
+        $type = $request->query('type');
 
         $featuredProducts = B2BProduct::with([
             'shopCountry',
@@ -420,10 +418,10 @@ class BuyerService
         return $this->success(B2BProductResource::collection($featuredProducts), 'Featured products');
     }
 
-    public function searchProduct()
+    public function searchProduct(\Illuminate\Http\Request $request)
     {
-        $searchQuery = request()->input('search');
-        $type = request()->input('type');
+        $searchQuery = $request->input('search');
+        $type = $request->input('type');
 
         $products = B2BProduct::with([
             'country',
@@ -435,7 +433,7 @@ class BuyerService
             'user',
         ])
             ->when($type, fn ($q) => $q->where('type', $type))
-            ->where(function ($query) use ($searchQuery) {
+            ->where(function (\Illuminate\Contracts\Database\Query\Builder $query) use ($searchQuery) {
                 $query->where('name', 'LIKE', '%'.$searchQuery.'%')
                     ->orWhere('unit_price', 'LIKE', '%'.$searchQuery.'%');
             })
@@ -525,11 +523,11 @@ class BuyerService
         return $this->success(B2BQuoteResource::collection($quotes), 'quotes lists');
     }
 
-    public function sendMutipleQuotes()
+    public function sendMutipleQuotes(\Illuminate\Http\Request $request)
     {
         $userId = userAuthId();
 
-        $type = request()->query('type');
+        $type = $request->query('type');
 
         $quotes = B2bQuote::where('buyer_id', $userId)->latest()->get();
 
@@ -537,14 +535,14 @@ class BuyerService
             return $this->error(null, 'No record found to send', 404);
         }
 
-        DB::beginTransaction();
+        $this->databaseManager->beginTransaction();
 
         try {
             foreach ($quotes as $quote) {
-                if (empty($quote->product_data['unit_price'])) {
+                if (blank($quote->product_data['unit_price'])) {
                     continue;
                 }
-                if (empty($quote->qty)) {
+                if (blank($quote->qty)) {
                     continue;
                 }
                 $product = B2BProduct::findOrFail($quote->product_id);
@@ -570,21 +568,21 @@ class BuyerService
             }
 
             B2bQuote::where('buyer_id', $userId)->delete();
-            DB::commit();
+            $this->databaseManager->commit();
 
             return $this->success(null, 'RFQ sent successfully');
         } catch (\Exception $e) {
-            DB::rollBack();
+            $this->databaseManager->rollBack();
 
             return $this->error(null, 'transaction failed, please try again: '.$e->getMessage(), 500);
         }
     }
 
-    public function sendRfq($request)
+    public function sendRfq($request, \Illuminate\Http\Request $request)
     {
         $quote = B2bQuote::findOrFail($request->rfq_id);
 
-        $type = request()->query('type');
+        $type = $request->query('type');
 
         try {
             $product = B2BProduct::findOrFail($quote->product_id);
@@ -686,13 +684,13 @@ class BuyerService
 
         $seven_days_partners = B2bOrder::where(['seller_id' => $currentUserId, 'status' => OrderStatus::DELIVERED])
             ->distinct('buyer_id')
-            ->where('created_at', '<=', Carbon::today()->subDays(7))
+            ->where('created_at', '<=', \Illuminate\Support\Facades\Date::today()->subDays(7))
             ->count('buyer_id');
 
         $seven_days_orderStats = B2bOrder::where([
             'seller_id' => $currentUserId,
             'status' => OrderStatus::DELIVERED,
-        ])->where('created_at', '<=', Carbon::today()->subDays(7))->sum('total_amount');
+        ])->where('created_at', '<=', \Illuminate\Support\Facades\Date::today()->subDays(7))->sum('total_amount');
 
         $data = [
             'total_purchase' => $orderStats,
@@ -720,12 +718,12 @@ class BuyerService
         return $this->success($rfqs, 'rfqs lists');
     }
 
-    public function allOrders()
+    public function allOrders(\Illuminate\Http\Request $request)
     {
-        $searchQuery = request()->input('search');
+        $searchQuery = $request->input('search');
 
         $orders = B2bOrder::with('seller')->where('buyer_id', userAuthId())->when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
-            $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
+            $queryBuilder->where(function (\Illuminate\Contracts\Database\Query\Builder $subQuery) use ($searchQuery): void {
                 $subQuery->where('buyer_id', userAuthId())
                     ->where('order_no', 'LIKE', '%'.$searchQuery.'%');
             });
@@ -766,7 +764,7 @@ class BuyerService
             return $this->error(null, 'No record found', 404);
         }
 
-        DB::beginTransaction();
+        $this->databaseManager->beginTransaction();
 
         try {
 
@@ -779,11 +777,11 @@ class BuyerService
             ]);
 
             $rfq->update(['status' => 'review']);
-            DB::commit();
+            $this->databaseManager->commit();
 
             return $this->success($rfq, 'Review sent successfully with details.');
         } catch (\Exception $e) {
-            DB::rollBack();
+            $this->databaseManager->rollBack();
 
             return $this->error(null, 'Failed to send review request: '.$e->getMessage(), 500);
         }
@@ -806,10 +804,10 @@ class BuyerService
     }
 
     // send review request to vendor
-    public function addReview($request)
+    public function addReview($request, \Illuminate\Http\Request $request)
     {
         $userId = userAuthId();
-        $type = request()->query('type');
+        $type = $request->query('type');
         $review = B2bProdctReview::updateOrCreate(
             [
                 'buyer_id' => $userId,
@@ -923,7 +921,7 @@ class BuyerService
             Rfq::create([
                 'buyer_id' => $quote->user_id,
                 'seller_id' => $product->user_id,
-                'quote_no' => strtoupper(Str::random(10).Auth::user()->id),
+                'quote_no' => strtoupper(Str::random(10).$this->authManager->user()->id),
                 'product_id' => $product->id,
                 'product_quantity' => $request->qty,
                 'total_amount' => $amount,
@@ -957,7 +955,7 @@ class BuyerService
 
     public function editAccount($request)
     {
-        $auth = Auth::user();
+        $auth = $this->authManager->user();
 
         $user = User::find($auth->id);
 
@@ -966,7 +964,7 @@ class BuyerService
         }
 
         if (
-            ! empty($request->email) && User::where('email', $request->email)
+            filled($request->email) && User::where('email', $request->email)
                 ->where('id', '!=', $user->id)
                 ->exists()
         ) {
@@ -994,9 +992,9 @@ class BuyerService
     {
         $user = $request->user();
 
-        if (Hash::check($request->old_password, $user->password)) {
+        if ($this->hasher->check($request->old_password, $user->password)) {
             $user->update([
-                'password' => bcrypt($request->new_password),
+                'password' => $this->bcryptHasher->make($request->new_password),
             ]);
 
             return $this->success(null, 'Password Successfully Updated');
@@ -1020,7 +1018,7 @@ class BuyerService
 
     public function editCompany($request)
     {
-        $auth = Auth::user();
+        $auth = $this->authManager->user();
 
         $company = B2bCompany::where('user_id', $auth->id)->first();
 

@@ -6,7 +6,6 @@ use App\Trait\ClearsResponseCache;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Facades\DB;
 
 class B2bOrder extends Model
 {
@@ -33,26 +32,41 @@ class B2bOrder extends Model
         'country_id',
     ];
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\B2BProduct, $this>
+     */
     public function product(): BelongsTo
     {
         return $this->belongsTo(B2BProduct::class);
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\User, $this>
+     */
     public function seller(): BelongsTo
     {
         return $this->belongsTo(User::class, 'seller_id', 'id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\CollationCenter, $this>
+     */
     public function collationCentre(): BelongsTo
     {
         return $this->belongsTo(CollationCenter::class, 'centre_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Country, $this>
+     */
     public function country(): BelongsTo
     {
         return $this->belongsTo(Country::class);
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\User, $this>
+     */
     public function buyer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'buyer_id', 'id');
@@ -67,6 +81,9 @@ class B2bOrder extends Model
         ];
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\B2bProdctReview, $this>
+     */
     public function b2bProductReview(): HasMany
     {
         return $this->hasMany(B2bProdctReview::class, 'product_id');
@@ -74,8 +91,7 @@ class B2bOrder extends Model
 
     public static function orderStats()
     {
-        return DB::select(
-            "SELECT
+        return (new \Illuminate\Database\DatabaseManager)->select("SELECT
                 (SELECT ROUND(COUNT(`id`), 2) FROM `b2b_orders`) AS total_orders,
                 (SELECT ROUND(COUNT(`id`), 2) FROM `b2b_orders` WHERE `status`='delivered' ) AS total_delivered,
                 (SELECT ROUND(COUNT(`id`), 2) FROM `b2b_orders` WHERE `status`='cancelled' ) AS total_cancelled,
@@ -104,7 +120,6 @@ class B2bOrder extends Model
                     WHERE MONTH(created_at) = MONTH(NOW()) AND YEAR(created_at) = YEAR(NOW())
                 ) AS total_order_amount_month
 
-            "
-        )[0];
+            ")[0];
     }
 }

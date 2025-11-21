@@ -8,15 +8,16 @@ use App\Enum\MailingEnum;
 use App\Mail\AccountVerificationEmail;
 use App\Models\Admin;
 use App\Trait\HttpResponse;
-use Illuminate\Support\Facades\Auth;
 
 class SuperAdminAuthService
 {
     use HttpResponse;
 
+    public function __construct(private readonly \Illuminate\Auth\AuthManager $authManager, private readonly \Illuminate\Hashing\BcryptHasher $bcryptHasher) {}
+
     public function login($request)
     {
-        if (Auth::guard('admin')->attempt($request->only(['email', 'password']))) {
+        if ($this->authManager->guard('admin')->attempt($request->only(['email', 'password']))) {
             $user = Admin::where('email', $request->email)->first();
 
             if ($user->status === LoginStatus::INACTIVE) {
@@ -116,7 +117,7 @@ class SuperAdminAuthService
         }
 
         $user->update([
-            'password' => bcrypt($request->password),
+            'password' => $this->bcryptHasher->make($request->password),
         ]);
 
         return $this->success(null, 'Password reset successfully');

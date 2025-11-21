@@ -6,12 +6,14 @@ use ImageKit\ImageKit;
 
 class ImageKitUploader
 {
+    public function __construct(private readonly \Illuminate\Contracts\Config\Repository $repository) {}
+
     public function upload($file, $folder): array
     {
         $imageKit = new ImageKit(
-            config('services.imagekit.public_key'),
-            config('services.imagekit.private_key'),
-            config('services.imagekit.endpoint_key')
+            $this->repository->get('services.imagekit.public_key'),
+            $this->repository->get('services.imagekit.private_key'),
+            $this->repository->get('services.imagekit.endpoint_key')
         );
 
         $uploadFile = fopen($file->getRealPath(), 'r');
@@ -35,9 +37,9 @@ class ImageKitUploader
     public function delete($publicId): void
     {
         $imageKit = new ImageKit(
-            config('services.imagekit.public_key'),
-            config('services.imagekit.private_key'),
-            config('services.imagekit.endpoint_key')
+            $this->repository->get('services.imagekit.public_key'),
+            $this->repository->get('services.imagekit.private_key'),
+            $this->repository->get('services.imagekit.endpoint_key')
         );
 
         $result = $imageKit->deleteFile($publicId);

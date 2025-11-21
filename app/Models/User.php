@@ -79,6 +79,16 @@ class User extends Authenticatable
     ];
 
     /**
+     * Create a new Eloquent model instance.
+     *
+     * @param  array<string, mixed>  $attributes
+     */
+    public function __construct(array $attributes, private readonly \Illuminate\Contracts\Config\Repository $repository)
+    {
+        parent::__construct($attributes);
+    }
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
@@ -108,7 +118,7 @@ class User extends Authenticatable
     {
         $email = $this->email;
 
-        $url = config('services.reset_password_url').'?token='.$token.'&email='.$email;
+        $url = $this->repository->get('services.reset_password_url').'?token='.$token.'&email='.$email;
 
         $this->notify(new ResetPasswordNotification($url));
     }
@@ -177,9 +187,10 @@ class User extends Authenticatable
         );
     }
 
-    public function scopeFilterReferrals($query, $searchQuery, $statusFilter)
+    #[\Illuminate\Database\Eloquent\Attributes\Scope]
+    protected function filterReferrals($query, $searchQuery, $statusFilter)
     {
-        if (! empty($searchQuery)) {
+        if (filled($searchQuery)) {
             $query->where(function ($q) use ($searchQuery): void {
                 $q->where('first_name', 'LIKE', "%$searchQuery%")
                     ->orWhere('last_name', 'LIKE', "%$searchQuery%")
@@ -187,7 +198,7 @@ class User extends Authenticatable
             });
         }
 
-        if (! empty($statusFilter)) {
+        if (filled($statusFilter)) {
             $query->where('status', $statusFilter);
         }
 

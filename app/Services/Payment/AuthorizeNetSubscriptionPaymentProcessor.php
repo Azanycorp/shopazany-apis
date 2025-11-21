@@ -18,13 +18,15 @@ class AuthorizeNetSubscriptionPaymentProcessor implements PaymentStrategy
 {
     use HttpResponse;
 
+    public function __construct(private readonly \Illuminate\Contracts\Config\Repository $repository) {}
+
     public function processPayment(array $paymentDetails): array
     {
         $user = userAuth();
 
         $merchantAuthentication = new AnetAPI\MerchantAuthenticationType;
-        $merchantAuthentication->setName(config('services.authorizenet.api_login_id'));
-        $merchantAuthentication->setTransactionKey(config('services.authorizenet.transaction_key'));
+        $merchantAuthentication->setName($this->repository->get('services.authorizenet.api_login_id'));
+        $merchantAuthentication->setTransactionKey($this->repository->get('services.authorizenet.transaction_key'));
 
         $creditCard = new AnetAPI\CreditCardType;
         $creditCard->setCardNumber($paymentDetails['card_number']);
@@ -80,7 +82,7 @@ class AuthorizeNetSubscriptionPaymentProcessor implements PaymentStrategy
         return $controller->executeWithApiResponse(\net\authorize\api\constants\ANetEnvironment::SANDBOX);
     }
 
-    private function handleSuccessResponse($response, $tresponse, $user, array $paymentDetails, \net\authorize\api\contract\v1\PaymentType $payment): array
+    private function handleSuccessResponse($response, $tresponse, $user, array $paymentDetails, \net\authorize\api\contract\v1\PaymentType $payment, \Illuminate\Http\Request $request): array
     {
         // $subUser = User::findOrFail($user->id);
         $referrer = User::with(['wallet'])->find($paymentDetails['referrer_id']);
@@ -103,7 +105,7 @@ class AuthorizeNetSubscriptionPaymentProcessor implements PaymentStrategy
             'reference' => generateRefCode(),
             'channel' => 'card',
             'currency' => $paymentDetails['currency'],
-            'ip_address' => request()->ip(),
+            'ip_address' => $request->ip(),
             'paid_at' => now(),
             'createdAt' => now(),
             'transaction_date' => now(),
@@ -129,7 +131,7 @@ class AuthorizeNetSubscriptionPaymentProcessor implements PaymentStrategy
         SubscriptionService::creditAffiliate($referrer, $paymentDetails['amount'], $paymentDetails['currency']);
 
         (new UserLogAction(
-            request(),
+            $request,
             UserLog::SUBSCRIPTION_PAYMENT,
             'Payment successful',
             json_encode($response),
@@ -143,12 +145,12 @@ class AuthorizeNetSubscriptionPaymentProcessor implements PaymentStrategy
         ];
     }
 
-    private function handleErrorResponse($tresponse, $response, $user): array
+    private function handleErrorResponse($tresponse, $response, $user, \Illuminate\Http\Request $request): array
     {
         $msg = $tresponse != null ? 'Payment failed: '.$tresponse->getErrors()[0]->getErrorText() : 'Payment failed: '.$response->getMessages()->getMessage()[0]->getText();
 
         (new UserLogAction(
-            request(),
+            $request,
             UserLog::PAYMENT,
             $msg,
             json_encode($response),
