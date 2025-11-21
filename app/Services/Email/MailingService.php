@@ -4,15 +4,15 @@ namespace App\Services\Email;
 
 use App\Enum\MailingEnum;
 use App\Models\Mailing;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class MailingService
 {
-    public function __construct(private readonly \Illuminate\Database\DatabaseManager $databaseManager, private readonly \Illuminate\Mail\Mailer $mailer) {}
-
     public function sendEmails(int $batchSize = 15): void
     {
-        $this->databaseManager->transaction(function () use ($batchSize): void {
+        DB::transaction(function () use ($batchSize): void {
             $emails = Mailing::where('status', MailingEnum::PENDING)
                 ->where('attempts', '<', 3)
                 ->limit($batchSize)
@@ -45,7 +45,7 @@ class MailingService
 
                     $mailableInstance = new $email->mailable(...array_values($payload));
 
-                    $this->mailer->to($email->email)->send($mailableInstance);
+                    Mail::to($email->email)->send($mailableInstance);
 
                     $email->update(['status' => MailingEnum::SENT]);
                 } catch (\Exception $e) {
