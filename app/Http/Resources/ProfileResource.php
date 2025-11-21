@@ -45,7 +45,7 @@ class ProfileResource extends JsonResource
                 'total_income' => 0,
                 'total_withdrawal' => 0,
                 'total_points' => $this->wallet?->reward_point,
-                'points_cleared' => $this->wallet?->reward_point_cleared,
+                'points_cleared' => $this->wallet?->points_cleared,
             ],
             'no_of_referrals' => $this->referrals_count,
             'bank_account' => (object) [
