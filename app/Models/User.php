@@ -8,6 +8,7 @@ use App\Enum\SubscriptionType;
 use App\Notifications\ResetPasswordNotification;
 use App\Trait\ClearsResponseCache;
 use App\Trait\UserRelationship;
+use Illuminate\Contracts\Config\Repository;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -79,16 +80,6 @@ class User extends Authenticatable
     ];
 
     /**
-     * Create a new Eloquent model instance.
-     *
-     * @param  array<string, mixed>  $attributes
-     */
-    public function __construct(array $attributes, private readonly \Illuminate\Contracts\Config\Repository $repository)
-    {
-        parent::__construct($attributes);
-    }
-
-    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
@@ -118,7 +109,8 @@ class User extends Authenticatable
     {
         $email = $this->email;
 
-        $url = $this->repository->get('services.reset_password_url').'?token='.$token.'&email='.$email;
+        $repository = app(Repository::class);
+        $url = $repository->get('services.reset_password_url').'?token='.$token.'&email='.$email;
 
         $this->notify(new ResetPasswordNotification($url));
     }
