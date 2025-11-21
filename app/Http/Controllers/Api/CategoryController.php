@@ -26,16 +26,16 @@ class CategoryController extends Controller
         return $this->service->createCategory($request);
     }
 
-    public function categories()
+    public function categories(Request $request)
     {
-        return $this->service->categories();
+        return $this->service->categories($request);
     }
 
-    public function adminCategories()
+    public function adminCategories(Request $request)
     {
         abort_if($this->gate->denies('categories'), Response::HTTP_FORBIDDEN, self::MESSAGE);
 
-        return $this->service->adminCategories();
+        return $this->service->adminCategories($request);
     }
 
     public function createSubCategory(SubCategoryRequest $request)
@@ -45,10 +45,10 @@ class CategoryController extends Controller
         return $this->service->createSubCategory($request);
     }
 
-    public function getSubcategory($id)
+    public function getSubcategory($id, Request $request)
     {
         // abort_if($this->gate->denies('sub_category'), Response::HTTP_FORBIDDEN, self::MESSAGE);
-        return $this->service->getSubcategory($id);
+        return $this->service->getSubcategory($id, $request);
     }
 
     public function featuredStatus(Request $request, $id)
@@ -58,18 +58,18 @@ class CategoryController extends Controller
         return $this->service->featuredStatus($request, $id);
     }
 
-    public function categoryAnalytic()
+    public function categoryAnalytic(Request $request)
     {
         abort_if($this->gate->denies('categories'), Response::HTTP_FORBIDDEN, self::MESSAGE);
 
-        return $this->service->categoryAnalytic();
+        return $this->service->categoryAnalytic($request);
     }
 
-    public function getAdminSubcategory()
+    public function getAdminSubcategory(Request $request)
     {
         abort_if($this->gate->denies('sub_category'), Response::HTTP_FORBIDDEN, self::MESSAGE);
 
-        return $this->service->getAdminSubcategory();
+        return $this->service->getAdminSubcategory($request);
     }
 
     public function subStatus(Request $request, $id)

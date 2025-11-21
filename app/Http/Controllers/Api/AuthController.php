@@ -76,9 +76,9 @@ class AuthController extends Controller
         return $this->authService->reset($request);
     }
 
-    public function logout()
+    public function logout(Request $request)
     {
-        return $this->authService->logout();
+        return $this->authService->logout($request);
     }
 
     public function affiliateSignup(AffiliateSignupRequest $request)

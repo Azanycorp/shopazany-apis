@@ -129,7 +129,7 @@ class CustomerService
         return $this->success($data, 'Recent Orders');
     }
 
-    public function getOrders($userId, \Illuminate\Http\Request $request)
+    public function getOrders($userId, $request)
     {
         $currentUser = userAuth();
         $status = $request->query('status');
@@ -453,7 +453,7 @@ class CustomerService
         return $services;
     }
 
-    public function getServices(\Illuminate\Http\Request $request)
+    public function getServices($request)
     {
         $url = $this->repository->get('services.reward_service.url').'/service';
         $params = $request->only(['search']);

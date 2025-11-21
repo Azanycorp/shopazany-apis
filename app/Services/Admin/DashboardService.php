@@ -16,7 +16,7 @@ class DashboardService
 
     public function __construct(private readonly \Illuminate\Database\DatabaseManager $databaseManager) {}
 
-    public function dashboardAnalytics(\Illuminate\Http\Request $request)
+    public function dashboardAnalytics($request)
     {
         $period = $request->query('period', 'last_7_days');
 

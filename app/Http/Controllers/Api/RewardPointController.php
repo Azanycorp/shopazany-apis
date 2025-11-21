@@ -10,7 +10,7 @@ use Illuminate\Http\Response;
 
 class RewardPointController extends Controller
 {
-    const MESSAGE = '403 Forbidden';
+    private const MESSAGE = '403 Forbidden';
 
     public function __construct(
         protected RewardPointService $service, private readonly \Illuminate\Contracts\Auth\Access\Gate $gate

@@ -29,7 +29,7 @@ class HomeService
 
     public function __construct(private readonly \Illuminate\Database\DatabaseManager $databaseManager) {}
 
-    public function bestSelling(\Illuminate\Http\Request $request)
+    public function bestSelling($request)
     {
         $countryId = $request->query('country_id');
         $type = $request->query('type');
@@ -78,7 +78,7 @@ class HomeService
         return $this->success($products, 'Best selling products');
     }
 
-    public function allProducts(\Illuminate\Http\Request $request)
+    public function allProducts($request)
     {
         $countryId = $request->query('country_id');
         $type = $request->query('type');
@@ -112,7 +112,7 @@ class HomeService
         return $this->withPagination($data, 'All products');
     }
 
-    public function featuredProduct(\Illuminate\Http\Request $request)
+    public function featuredProduct($request)
     {
         $countryId = $request->query('country_id');
         $type = $request->query('type');
@@ -147,7 +147,7 @@ class HomeService
         return $this->success($data, 'Featured products');
     }
 
-    public function topProducts(\Illuminate\Http\Request $request)
+    public function topProducts($request)
     {
         $countryId = $request->query('country_id');
         $type = $request->query('type');
@@ -182,7 +182,7 @@ class HomeService
         return $this->success($data, 'Top products');
     }
 
-    public function pocketFriendly(\Illuminate\Http\Request $request)
+    public function pocketFriendly($request)
     {
         $countryId = $request->query('country_id');
         $type = $request->query('type');
@@ -261,7 +261,7 @@ class HomeService
         return $this->success($brands, 'Top brands');
     }
 
-    public function topSellers(\Illuminate\Http\Request $request)
+    public function topSellers($request)
     {
         $countryId = $request->input('country_id');
 
@@ -286,7 +286,7 @@ class HomeService
         return $this->success($topSellers, 'Top sellers');
     }
 
-    public function categorySlug($slug, \Illuminate\Http\Request $request)
+    public function categorySlug($request, $slug)
     {
         $countryId = $request->query('country_id', 231);
 
@@ -312,7 +312,7 @@ class HomeService
         return $this->success($products, 'Products by category');
     }
 
-    public function recommendedProducts(\Illuminate\Http\Request $request)
+    public function recommendedProducts($request)
     {
         $countryId = $request->query('country_id', 231);
 
@@ -381,7 +381,7 @@ class HomeService
         return $this->success(null, 'Product saved for later');
     }
 
-    public function sellerInfo($uuid, \Illuminate\Http\Request $request)
+    public function sellerInfo($request, $uuid)
     {
         $search = $request->input('search');
 
@@ -412,7 +412,7 @@ class HomeService
         return $this->success($data, 'Seller details');
     }
 
-    public function sellerCategory($uuid, \Illuminate\Http\Request $request)
+    public function sellerCategory($request, $uuid)
     {
         $search = $request->input('search');
 
@@ -447,7 +447,7 @@ class HomeService
         return $this->success($categories, 'Seller categories');
     }
 
-    public function sellerReviews($uuid, \Illuminate\Http\Request $request)
+    public function sellerReviews($request, $uuid)
     {
         $search = $request->input('search');
         $perPage = $request->input('per_page', 4);
@@ -536,7 +536,7 @@ class HomeService
         return $this->error(null, 'Item not found in wishlist', 404);
     }
 
-    public function getDeals(\Illuminate\Http\Request $request)
+    public function getDeals($request)
     {
         $type = $request->query('type', BannerType::B2C);
 

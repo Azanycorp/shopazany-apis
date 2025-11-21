@@ -12,7 +12,7 @@ class GoogleAuthController extends Controller
 {
     protected $frontendBaseUrl;
 
-    public function __construct(\Illuminate\Contracts\Config\Repository $repository, \Illuminate\Contracts\Config\Repository $repository, private readonly \Illuminate\Hashing\BcryptHasher $bcryptHasher, private readonly \Illuminate\Routing\Redirector $redirector)
+    public function __construct(\Illuminate\Contracts\Config\Repository $repository, private readonly \Illuminate\Hashing\BcryptHasher $bcryptHasher, private readonly \Illuminate\Routing\Redirector $redirector)
     {
         if (app()->environment('production')) {
             $this->frontendBaseUrl = $repository->get('services.frontend_baseurl');

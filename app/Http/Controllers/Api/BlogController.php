@@ -12,9 +12,9 @@ class BlogController extends Controller
         protected BlogService $blogService
     ) {}
 
-    public function getBlogCategories()
+    public function getBlogCategories(Request $request)
     {
-        return $this->blogService->getBlogCategories();
+        return $this->blogService->getBlogCategories($request);
     }
 
     public function addBlogCategory(Request $request)
@@ -46,9 +46,9 @@ class BlogController extends Controller
         return $this->blogService->deleteBlogCategory($id);
     }
 
-    public function getBlogs()
+    public function getBlogs(Request $request)
     {
-        return $this->blogService->getBlogs();
+        return $this->blogService->getBlogs($request);
     }
 
     public function addBlog(Request $request)
@@ -96,9 +96,9 @@ class BlogController extends Controller
         return $this->blogService->deleteBlog($id);
     }
 
-    public function getAllBlogs()
+    public function getAllBlogs(Request $request)
     {
-        return $this->blogService->getAllBlogs();
+        return $this->blogService->getAllBlogs($request);
     }
 
     public function getBlogDetail($slug)

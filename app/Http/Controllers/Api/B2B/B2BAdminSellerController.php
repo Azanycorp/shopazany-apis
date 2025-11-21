@@ -18,34 +18,34 @@ class B2BAdminSellerController extends Controller
         private readonly Gate $gate,
     ) {}
 
-    public function allSellers()
+    public function allSellers(Request $request)
     {
         // abort_if($this->gate->denies('seller_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
-        return $this->service->allSellers();
+        return $this->service->allSellers($request);
     }
 
-    public function approveSeller($id)
+    public function approveSeller(int $id)
     {
         abort_if($this->gate->denies('seller_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
 
         return $this->service->approveSeller($id);
     }
 
-    public function viewSeller($id)
+    public function viewSeller(Request $request, int $id)
     {
         abort_if($this->gate->denies('seller_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
 
-        return $this->service->viewSeller($id);
+        return $this->service->viewSeller($request, $id);
     }
 
-    public function banSeller($id)
+    public function banSeller(int $id)
     {
         abort_if($this->gate->denies('seller_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
 
         return $this->service->banSeller($id);
     }
 
-    public function removeSeller($id)
+    public function removeSeller(int $id)
     {
         abort_if($this->gate->denies('seller_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
 
@@ -70,24 +70,24 @@ class B2BAdminSellerController extends Controller
         return $this->service->addSellerProduct($request);
     }
 
-    public function viewSellerProduct($user_id, $product_id)
+    public function viewSellerProduct(int $userId, int $productId)
     {
         abort_if($this->gate->denies('seller_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
 
-        return $this->service->viewSellerProduct($user_id, $product_id);
+        return $this->service->viewSellerProduct($userId, $productId);
     }
 
-    public function editSellerProduct(Request $request, $user_id, $product_id)
+    public function editSellerProduct(Request $request, int $userId, int $productId)
     {
         abort_if($this->gate->denies('seller_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
 
-        return $this->service->editSellerProduct($request, $user_id, $product_id);
+        return $this->service->editSellerProduct($request, $userId, $productId);
     }
 
-    public function removeSellerProduct($user_id, $product_id)
+    public function removeSellerProduct(int $userId, int $productId)
     {
         abort_if($this->gate->denies('seller_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
 
-        return $this->service->removeSellerProduct($user_id, $product_id);
+        return $this->service->removeSellerProduct($userId, $productId);
     }
 }

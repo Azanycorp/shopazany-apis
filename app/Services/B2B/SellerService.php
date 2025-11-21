@@ -282,7 +282,7 @@ class SellerService extends Controller
         }
     }
 
-    public function getAllProduct($request, \Illuminate\Http\Request $request)
+    public function getAllProduct($request)
     {
         $currentUserId = userAuthId();
 
@@ -538,7 +538,7 @@ class SellerService extends Controller
         return $this->success(null, 'Address Set as default successfully');
     }
 
-    public function getComplaints($user_id, \Illuminate\Http\Request $request)
+    public function getComplaints($user_id, $request)
     {
         $currentUserId = userAuthId();
 
@@ -668,7 +668,7 @@ class SellerService extends Controller
     }
 
     // Rfq
-    public function getAllRfq(\Illuminate\Http\Request $request)
+    public function getAllRfq($request)
     {
         $searchQuery = $request->input('search');
         $orders_count = B2bOrder::where('seller_id', userAuthId())->count();

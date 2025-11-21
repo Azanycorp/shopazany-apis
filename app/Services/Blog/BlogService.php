@@ -13,7 +13,7 @@ class BlogService
 {
     use HttpResponse;
 
-    public function getBlogCategories(\Illuminate\Http\Request $request)
+    public function getBlogCategories($request)
     {
         $type = $request->query('type', BannerType::B2C);
 
@@ -92,7 +92,7 @@ class BlogService
         return $this->success(null, 'Blog category deleted successfully');
     }
 
-    public function getBlogs(\Illuminate\Http\Request $request)
+    public function getBlogs($request)
     {
         $type = $request->query('type', BannerType::B2C);
 
@@ -208,7 +208,7 @@ class BlogService
         return $this->success(null, 'Blog deleted successfully');
     }
 
-    public function getAllBlogs(\Illuminate\Http\Request $request)
+    public function getAllBlogs($request)
     {
         $type = $request->query('type', BannerType::B2C);
 

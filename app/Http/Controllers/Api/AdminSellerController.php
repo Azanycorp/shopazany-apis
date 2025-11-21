@@ -18,11 +18,11 @@ class AdminSellerController extends Controller
         private readonly Gate $gate
     ) {}
 
-    public function allSellers(): array
+    public function allSellers(Request $request): array
     {
         abort_if($this->gate->denies('seller_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
 
-        return $this->service->allSellers();
+        return $this->service->allSellers($request);
     }
 
     public function approveSeller(Request $request)

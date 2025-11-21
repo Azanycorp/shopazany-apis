@@ -26,7 +26,7 @@ class ProductCategoryController extends Controller
         return $this->service->createCategory($request);
     }
 
-    public function updateCategory(CategoryRequest $request, $id)
+    public function updateCategory(CategoryRequest $request, int $id)
     {
         abort_if($this->gate->denies('category_update'), Response::HTTP_FORBIDDEN, self::MESSAGE);
 
@@ -38,11 +38,11 @@ class ProductCategoryController extends Controller
         return $this->service->categories();
     }
 
-    public function adminCategories()
+    public function adminCategories(Request $request)
     {
         abort_if($this->gate->denies('categories'), Response::HTTP_FORBIDDEN, self::MESSAGE);
 
-        return $this->service->adminCategories();
+        return $this->service->adminCategories($request);
     }
 
     public function createSubCategory(SubCategoryRequest $request)
@@ -52,12 +52,12 @@ class ProductCategoryController extends Controller
         return $this->service->createSubCategory($request);
     }
 
-    public function getSubcategory($id)
+    public function getSubcategory(int $id)
     {
         return $this->service->getSubcategory($id);
     }
 
-    public function featuredStatus(Request $request, $id)
+    public function featuredStatus(Request $request, int $id)
     {
         abort_if($this->gate->denies('category_featured_status'), Response::HTTP_FORBIDDEN, self::MESSAGE);
 
@@ -69,24 +69,24 @@ class ProductCategoryController extends Controller
         return $this->service->categoryAnalytic();
     }
 
-    public function getAdminSubcategory()
+    public function getAdminSubcategory(Request $request)
     {
         abort_if($this->gate->denies('sub_category'), Response::HTTP_FORBIDDEN, self::MESSAGE);
 
-        return $this->service->getAdminSubcategory();
+        return $this->service->getAdminSubcategory($request);
     }
 
-    public function subStatus(Request $request, $id)
+    public function subStatus(Request $request, int $id)
     {
         return $this->service->subStatus($request, $id);
     }
 
-    public function deleteCategory($id)
+    public function deleteCategory(int $id)
     {
         return $this->service->deleteCategory($id);
     }
 
-    public function deleteSubCategory($id)
+    public function deleteSubCategory(int $id)
     {
         return $this->service->deleteSubCategory($id);
     }

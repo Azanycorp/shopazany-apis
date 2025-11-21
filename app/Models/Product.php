@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 
 class Product extends Model
 {
@@ -45,16 +46,6 @@ class Product extends Model
         'type',
         'condition',
     ];
-
-    /**
-     * Create a new Eloquent model instance.
-     *
-     * @param  array<string, mixed>  $attributes
-     */
-    public function __construct(array $attributes, private readonly \Illuminate\Auth\AuthManager $authManager, private readonly \Illuminate\Database\DatabaseManager $databaseManager)
-    {
-        parent::__construct($attributes);
-    }
 
     protected function casts(): array
     {
@@ -221,8 +212,7 @@ class Product extends Model
     }
 
     // Scopes
-    #[\Illuminate\Database\Eloquent\Attributes\Scope]
-    protected function topRated(Builder $query, $userId)
+    public function scopeTopRated(Builder $query, $userId)
     {
         return $query->select(
             'products.id',
@@ -230,22 +220,21 @@ class Product extends Model
             'products.price',
             'products.image',
             'products.user_id',
-            $this->databaseManager->raw('CAST(COALESCE(ROUND(AVG(product_reviews.rating), 1), 0) AS DECIMAL(2,1)) as average_rating')
+            DB::raw('CAST(COALESCE(ROUND(AVG(product_reviews.rating), 1), 0) AS DECIMAL(2,1)) as average_rating')
         )
             ->with('user:id,first_name,last_name,image')
             ->withCount('productReviews')
             ->where('products.user_id', $userId)
             ->leftJoin('product_reviews', 'products.id', '=', 'product_reviews.product_id')
             ->withCount(['orders as sold_count' => function ($query): void {
-                $query->select($this->databaseManager->raw('COUNT(*)'));
+                $query->select(DB::raw('COUNT(*)'));
             }])
             ->groupBy('products.id', 'products.name', 'products.price', 'products.image', 'products.user_id')
             ->orderByDesc('average_rating')
             ->orderByDesc('sold_count');
     }
 
-    #[\Illuminate\Database\Eloquent\Attributes\Scope]
-    protected function mostFavorite(Builder $query, $userId)
+    public function scopeMostFavorite(Builder $query, $userId)
     {
         return $query->select(
             'products.id',
@@ -253,17 +242,17 @@ class Product extends Model
             'products.price',
             'products.image',
             'products.user_id',
-            $this->databaseManager->raw('CAST(COALESCE(ROUND(AVG(product_reviews.rating), 1), 0) AS DECIMAL(2,1)) as average_rating')
+            DB::raw('CAST(COALESCE(ROUND(AVG(product_reviews.rating), 1), 0) AS DECIMAL(2,1)) as average_rating')
         )
             ->with('user:id,first_name,last_name,image')
             ->withCount('productReviews')
             ->where('products.user_id', $userId)
             ->leftJoin('product_reviews', 'products.id', '=', 'product_reviews.product_id')
             ->withCount(['orders as sold_count' => function ($query): void {
-                $query->select($this->databaseManager->raw('COUNT(*)'));
+                $query->select(DB::raw('COUNT(*)'));
             }])
             ->withCount(['wishlists as wishlist_count' => function ($query): void {
-                $query->select($this->databaseManager->raw('COUNT(*)'));
+                $query->select(DB::raw('COUNT(*)'));
             }])
             ->groupBy('products.id', 'products.name', 'products.price', 'products.image', 'products.user_id')
             ->orderByDesc('wishlist_count')
