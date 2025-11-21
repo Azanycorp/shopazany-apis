@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class Product extends Model
@@ -52,18 +53,6 @@ class Product extends Model
         return [
             'is_featured' => 'boolean',
         ];
-    }
-
-    /**
-     * Create a new Eloquent model instance.
-     *
-     * @param  array<string, mixed>  $attributes
-     */
-    public function __construct(
-        array $attributes,
-        private readonly \Illuminate\Auth\AuthManager $authManager,
-    ) {
-        parent::__construct($attributes);
     }
 
     /**
@@ -192,14 +181,16 @@ class Product extends Model
     // Attributes
     protected function isInWishlist(): Attribute
     {
+        $user = Auth::user();
+
         return Attribute::make(
-            get: function () {
-                if (! $this->authManager->guard('sanctum')->check()) {
+            get: function () use ($user) {
+                if (! $user) {
                     return false;
                 }
 
                 return Wishlist::where([
-                    ['user_id', $this->authManager->guard('sanctum')->id()],
+                    ['user_id', $user->id],
                     ['product_id', $this->id],
                 ])->exists();
             }
