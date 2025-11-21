@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 use Rector\Caching\ValueObject\Storage\FileCacheStorage;
 use Rector\Config\RectorConfig;
+use Rector\Transform\Rector\StaticCall\StaticCallToMethodCallRector;
 use Rector\ValueObject\PhpVersion;
 use RectorLaravel\Rector\Empty_\EmptyToBlankAndFilledFuncRector;
+use RectorLaravel\Rector\FuncCall\HelperFuncCallToFacadeClassRector;
 use RectorLaravel\Rector\FuncCall\RemoveDumpDataDeadCodeRector;
 use RectorLaravel\Rector\MethodCall\ResponseHelperCallToJsonResponseRector;
 use RectorLaravel\Set\LaravelLevelSetList;
@@ -34,6 +36,10 @@ return RectorConfig::configure()
     ])
     ->withConfiguredRule(RemoveDumpDataDeadCodeRector::class, [
         'dd', 'dump', 'var_dump',
+    ])
+    ->withSkip([
+        HelperFuncCallToFacadeClassRector::class => [__DIR__.'/app/Models/User.php'],
+        StaticCallToMethodCallRector::class => [__DIR__.'/app/Providers/AppServiceProvider.php'],
     ])
     ->withCache(__DIR__.'/storage/rector', FileCacheStorage::class)
     ->withPhpVersion(PhpVersion::PHP_84);
