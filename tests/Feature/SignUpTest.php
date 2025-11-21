@@ -40,6 +40,8 @@ class SignUpTest extends TestCase
             'email' => $email,
             'password' => $password,
             'password_confirmation' => $password,
+            'country_id' => 160,
+            'state_id' => 1,
             'terms' => true,
         ];
 
@@ -52,6 +54,8 @@ class SignUpTest extends TestCase
             'email' => $payload['email'],
             'first_name' => $payload['first_name'],
             'last_name' => $payload['last_name'],
+            'country_id' => $payload['country_id'],
+            'state_id' => $payload['state_id'],
             'is_verified' => 0,
         ]);
     }
@@ -71,6 +75,8 @@ class SignUpTest extends TestCase
             'email' => 'invalid-email',
             'password' => 'pass',
             'password_confirmation' => 'different-pass',
+            'country_id' => 0,
+            'state_id' => 1,
             'terms' => null,
         ];
 
@@ -102,6 +108,8 @@ class SignUpTest extends TestCase
             'email' => $email,
             'password' => $password,
             'password_confirmation' => $password,
+            'country_id' => 160,
+            'state_id' => 1,
             'terms' => true,
         ];
 
