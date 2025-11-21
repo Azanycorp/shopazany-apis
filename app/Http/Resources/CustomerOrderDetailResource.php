@@ -2,9 +2,9 @@
 
 namespace App\Http\Resources;
 
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Date;
 
 class CustomerOrderDetailResource extends JsonResource
 {
@@ -37,8 +37,8 @@ class CustomerOrderDetailResource extends JsonResource
                 'zip' => $this->user?->userShippingAddress()->first()?->zip,
             ],
             'activities' => OrderActivityResource::collection($this->orderActivities),
-            'order_date' => Carbon::parse($this->created_at)->format('d M Y'),
-            'order_time' => Carbon::parse($this->created_at)->format('h:i A'),
+            'order_date' => Date::parse($this->created_at)->format('d M Y'),
+            'order_time' => Date::parse($this->created_at)->format('h:i A'),
             'payment_status' => strtolower($this->payment_status) === 'success' ? 'paid' : 'not-paid',
             'payment_method' => $this->payment_method,
             'expected_delivery' => getExpectedDelivery($this->user?->userCountry),

@@ -27,8 +27,8 @@ class CustomerResource extends JsonResource
             'address' => (object) [
                 'address' => (string) $this->address,
                 'city' => (string) $this->city,
-                'country' => (string) optional($this->userCountry)->name,
-                'state' => (string) optional($this->state)->name,
+                'country' => (string) $this->userCountry?->name,
+                'state' => (string) $this->state?->name,
             ],
             'is_approved' => $this->is_admin_approve,
             'status' => (string) $this->status,

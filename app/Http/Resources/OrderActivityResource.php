@@ -4,7 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Date;
 
 class OrderActivityResource extends JsonResource
 {
@@ -18,7 +18,7 @@ class OrderActivityResource extends JsonResource
         return [
             'message' => $this->message,
             'status' => $this->status,
-            'date' => Carbon::parse($this->date)->format('d M Y h:i A'),
+            'date' => Date::parse($this->date)->format('d M Y h:i A'),
         ];
     }
 }

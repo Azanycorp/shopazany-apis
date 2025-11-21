@@ -29,8 +29,8 @@ class AuthController extends Controller
     public function verify(Request $request)
     {
         $request->validate([
-            'email' => 'required|email|exists:users,email',
-            'code' => 'required|string',
+            'email' => ['required', 'email', 'exists:users,email'],
+            'code' => ['required', 'string'],
         ]);
 
         return $this->authService->verify($request);
@@ -39,7 +39,7 @@ class AuthController extends Controller
     public function resendCode(Request $request)
     {
         $request->validate([
-            'email' => 'required|email|exists:users,email',
+            'email' => ['required', 'email', 'exists:users,email'],
         ]);
 
         return $this->authService->resendCode($request);

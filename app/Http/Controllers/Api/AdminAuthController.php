@@ -30,9 +30,9 @@ class AdminAuthController extends Controller
     public function reset(Request $request)
     {
         $request->validate([
-            'email' => 'required|email',
-            'password' => 'required|confirmed|min:8',
-            'token' => 'required|string',
+            'email' => ['required', 'email'],
+            'password' => ['required', 'confirmed', 'min:8'],
+            'token' => ['required', 'string'],
         ]);
 
         return $this->service->reset($request);

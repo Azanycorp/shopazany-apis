@@ -5,8 +5,8 @@ namespace App\Imports;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\SubCategory;
-use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
 use Maatwebsite\Excel\Concerns\ToCollection;
@@ -52,8 +52,8 @@ class ProductImport implements SkipsEmptyRows, ToCollection, WithBatchInserts, W
                 'status' => 'pending',
                 'added_by' => $this->seller?->type,
                 'country_id' => $this->seller?->country,
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
+                'created_at' => Date::now(),
+                'updated_at' => Date::now(),
             ]);
         }
     }

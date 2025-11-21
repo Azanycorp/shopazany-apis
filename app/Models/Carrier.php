@@ -21,7 +21,8 @@ class Carrier extends Model
         return $this->hasMany(CarrierRangePrice::class);
     }
 
-    public function scopeActive($query)
+    #[\Illuminate\Database\Eloquent\Attributes\Scope]
+    protected function active($query)
     {
         return $query->where('status', 1);
     }

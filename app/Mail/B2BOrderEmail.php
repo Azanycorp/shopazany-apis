@@ -15,14 +15,14 @@ class B2BOrderEmail extends Mailable
     /**
      * Create a new message instance.
      */
-    public function __construct($orderedItems)
+    public function __construct($orderedItems, private readonly \Illuminate\Contracts\Config\Repository $repository)
     {
         $this->orderedItems = $orderedItems;
     }
 
     public function build()
     {
-        return $this->subject('Order Confirmation Mail from'.config('app.name'))
+        return $this->subject('Order Confirmation Mail from'.$this->repository->get('app.name'))
             ->view(
                 'mail.b2b-order-mail',
                 [

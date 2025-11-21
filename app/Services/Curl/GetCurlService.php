@@ -12,15 +12,15 @@ class GetCurlService
 
     private static $secret_key;
 
-    public function __construct($refrence)
+    public function __construct($refrence, \Illuminate\Contracts\Config\Repository $repository, \Illuminate\Contracts\Config\Repository $repository, \Illuminate\Contracts\Config\Repository $repository, \Illuminate\Contracts\Config\Repository $repository)
     {
         $this->refrence = $refrence;
-        $this->baseUrl = config('paystack.paymentUrl');
+        $this->baseUrl = $repository->get('paystack.paymentUrl');
 
-        if (config('services.paystack.mode') == 'live') {
-            self::$secret_key = config('services.paystack.live_sk');
+        if ($repository->get('services.paystack.mode') == 'live') {
+            self::$secret_key = $repository->get('services.paystack.live_sk');
         } else {
-            self::$secret_key = config('services.paystack.test_sk');
+            self::$secret_key = $repository->get('services.paystack.test_sk');
         }
     }
 

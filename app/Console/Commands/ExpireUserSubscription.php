@@ -4,7 +4,6 @@ namespace App\Console\Commands;
 
 use App\Enum\SubscriptionType;
 use App\Models\UserSubcription;
-use Carbon\Carbon;
 use Illuminate\Console\Command;
 
 class ExpireUserSubscription extends Command
@@ -28,13 +27,13 @@ class ExpireUserSubscription extends Command
      */
     public function handle(): void
     {
-        UserSubcription::where('plan_end', '<=', Carbon::now()->subDays(30))
+        UserSubcription::where('plan_end', '<=', \Illuminate\Support\Facades\Date::now()->subDays(30))
             ->whereNull('expired_at')
             ->chunk(100, function ($subscriptions): void {
                 foreach ($subscriptions as $subscription) {
                     $subscription->update([
                         'status' => SubscriptionType::EXPIRED,
-                        'expired_at' => Carbon::now(),
+                        'expired_at' => \Illuminate\Support\Facades\Date::now(),
                     ]);
                     $this->info("Expired subscription for user: {$subscription->user_id}");
                 }

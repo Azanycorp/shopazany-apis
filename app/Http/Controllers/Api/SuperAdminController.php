@@ -57,7 +57,7 @@ class SuperAdminController extends Controller
 
     public function verifyCode(Request $request)
     {
-        $request->validate(['code' => 'required|string']);
+        $request->validate(['code' => ['required', 'string']]);
 
         return $this->superAdminService->verifyCode($request);
     }

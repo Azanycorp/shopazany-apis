@@ -14,13 +14,15 @@ class CustomerService
 {
     use HttpResponse;
 
-    public function allCustomers(): array
+    public function __construct(private readonly \Illuminate\Hashing\BcryptHasher $bcryptHasher) {}
+
+    public function allCustomers(\Illuminate\Http\Request $request): array
     {
-        $query = trim(request()->input('search'));
+        $query = trim($request->input('search'));
 
         $users = User::with(['userCountry', 'state', 'wallet', 'wishlist.product', 'payments.order'])
             ->where('type', UserType::CUSTOMER)
-            ->where(function ($queryBuilder) use ($query): void {
+            ->where(function (\Illuminate\Contracts\Database\Query\Builder $queryBuilder) use ($query): void {
                 $queryBuilder->where('first_name', 'LIKE', '%'.$query.'%')
                     ->orWhere('last_name', 'LIKE', '%'.$query.'%')
                     ->orWhere('middlename', 'LIKE', '%'.$query.'%')
@@ -94,9 +96,9 @@ class CustomerService
         return $this->success(null, 'User(s) have been removed successfully');
     }
 
-    public function filter(): array
+    public function filter($request): array
     {
-        $query = trim(request()->query('approved'));
+        $query = trim($request->query('approved'));
 
         $users = User::where('type', UserType::CUSTOMER)
             ->when($query !== null, function ($queryBuilder) use ($query): void {
@@ -127,7 +129,7 @@ class CustomerService
             'last_name' => $request->last_name,
             'middlename' => $request->middlename,
             'email' => $request->email,
-            'password' => bcrypt('12345678'),
+            'password' => $this->bcryptHasher->make('12345678'),
             'phone' => $request->phone,
             'date_of_birth' => $request->date_of_birth,
             'type' => UserType::CUSTOMER,

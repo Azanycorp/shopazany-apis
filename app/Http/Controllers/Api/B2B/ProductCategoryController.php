@@ -6,28 +6,29 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\CategoryRequest;
 use App\Http\Requests\SubCategoryRequest;
 use App\Services\B2B\ProductCategoryService;
+use Illuminate\Contracts\Auth\Access\Gate;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Gate;
 
 class ProductCategoryController extends Controller
 {
     public const MESSAGE = '403 Forbidden';
 
     public function __construct(
-        protected ProductCategoryService $service
+        private readonly ProductCategoryService $service,
+        private readonly Gate $gate,
     ) {}
 
     public function createCategory(CategoryRequest $request)
     {
-        abort_if(Gate::denies('category_create'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+        abort_if($this->gate->denies('category_create'), Response::HTTP_FORBIDDEN, self::MESSAGE);
 
         return $this->service->createCategory($request);
     }
 
     public function updateCategory(CategoryRequest $request, $id)
     {
-        abort_if(Gate::denies('category_create'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+        abort_if($this->gate->denies('category_update'), Response::HTTP_FORBIDDEN, self::MESSAGE);
 
         return $this->service->updateCategory($request, $id);
     }
@@ -39,14 +40,14 @@ class ProductCategoryController extends Controller
 
     public function adminCategories()
     {
-        abort_if(Gate::denies('categories'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+        abort_if($this->gate->denies('categories'), Response::HTTP_FORBIDDEN, self::MESSAGE);
 
         return $this->service->adminCategories();
     }
 
     public function createSubCategory(SubCategoryRequest $request)
     {
-        abort_if(Gate::denies('sub_category_create'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+        abort_if($this->gate->denies('sub_category_create'), Response::HTTP_FORBIDDEN, self::MESSAGE);
 
         return $this->service->createSubCategory($request);
     }
@@ -58,7 +59,7 @@ class ProductCategoryController extends Controller
 
     public function featuredStatus(Request $request, $id)
     {
-        abort_if(Gate::denies('category_featured_status'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+        abort_if($this->gate->denies('category_featured_status'), Response::HTTP_FORBIDDEN, self::MESSAGE);
 
         return $this->service->featuredStatus($request, $id);
     }
@@ -70,7 +71,7 @@ class ProductCategoryController extends Controller
 
     public function getAdminSubcategory()
     {
-        abort_if(Gate::denies('sub_category'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+        abort_if($this->gate->denies('sub_category'), Response::HTTP_FORBIDDEN, self::MESSAGE);
 
         return $this->service->getAdminSubcategory();
     }

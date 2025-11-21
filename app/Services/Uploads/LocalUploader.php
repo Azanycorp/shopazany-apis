@@ -2,27 +2,27 @@
 
 namespace App\Services\Uploads;
 
-use Illuminate\Support\Facades\Storage;
-
 class LocalUploader
 {
+    public function __construct(private readonly \Illuminate\Filesystem\FilesystemManager $filesystemManager) {}
+
     public function upload($file, $folder): array
     {
-        $path = Storage::disk('public')->putFile($folder, $file);
+        $path = $this->filesystemManager->disk('public')->putFile($folder, $file);
 
         if (! $path) {
             throw new \Exception('Failed to upload to local disk.');
         }
 
         return [
-            'url' => Storage::disk('public')->url($path),
+            'url' => $this->filesystemManager->disk('public')->url($path),
             'public_id' => $path,
         ];
     }
 
     public function delete($publicId): void
     {
-        if (! Storage::disk('public')->delete($publicId)) {
+        if (! $this->filesystemManager->disk('public')->delete($publicId)) {
             throw new \Exception('Failed to delete from local disk.');
         }
     }

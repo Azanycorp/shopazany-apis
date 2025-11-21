@@ -7,7 +7,6 @@ use App\Models\Action;
 use App\Models\User;
 use App\Services\Auth\LoginService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
@@ -15,10 +14,22 @@ class LoginTest extends TestCase
 {
     use RefreshDatabase;
 
+    /**
+     * @param  non-empty-string  $name
+     *
+     * @internal This method is not covered by the backward compatibility promise for PHPUnit
+     *
+     * @final
+     */
+    public function __construct(string $name, private readonly \Illuminate\Mail\Mailer $mailer, private readonly \Illuminate\Auth\AuthManager $authManager, private readonly \Illuminate\Hashing\BcryptHasher $bcryptHasher)
+    {
+        parent::__construct($name);
+    }
+
     protected function setUp(): void
     {
         parent::setUp();
-        Mail::fake();
+        $this->mailer->fake();
 
         Action::factory()->create([
             'slug' => 'create_account',
@@ -29,14 +40,14 @@ class LoginTest extends TestCase
     public function test_successful_login(): void
     {
         $user = User::factory()->create([
-            'password' => bcrypt('password'),
+            'password' => $this->bcryptHasher->make('password'),
             'email_verified_at' => now(),
             'status' => 'active',
             'is_admin_approve' => true,
             'two_factor_enabled' => false,
         ]);
 
-        Auth::shouldReceive('attempt')
+        $this->authManager->shouldReceive('attempt')
             ->once()
             ->with(['email' => $user->email, 'password' => 'password'])
             ->andReturn(true);
@@ -57,12 +68,12 @@ class LoginTest extends TestCase
     public function test_login_with_unverified_account(): void
     {
         $user = User::factory()->create([
-            'password' => bcrypt('password'),
+            'password' => $this->bcryptHasher->make('password'),
             'email_verified_at' => null,
             'verification_code' => '123456',
         ]);
 
-        Auth::shouldReceive('attempt')
+        $this->authManager->shouldReceive('attempt')
             ->once()
             ->with(['email' => $user->email, 'password' => 'password'])
             ->andReturn(true);
@@ -83,14 +94,14 @@ class LoginTest extends TestCase
     public function test_login_with_two_factor_authentication(): void
     {
         $user = User::factory()->create([
-            'password' => bcrypt('password'),
+            'password' => $this->bcryptHasher->make('password'),
             'email_verified_at' => now(),
             'status' => 'active',
             'is_admin_approve' => true,
             'two_factor_enabled' => true,
         ]);
 
-        Auth::shouldReceive('attempt')
+        $this->authManager->shouldReceive('attempt')
             ->once()
             ->with(['email' => $user->email, 'password' => 'password'])
             ->andReturn(true);
@@ -112,7 +123,7 @@ class LoginTest extends TestCase
 
     public function test_invalid_credentials(): void
     {
-        Auth::shouldReceive('attempt')
+        $this->authManager->shouldReceive('attempt')
             ->once()
             ->with(['email' => 'invalid@example.com', 'password' => 'wrongpassword'])
             ->andReturn(false);

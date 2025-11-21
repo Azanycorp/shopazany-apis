@@ -13,15 +13,16 @@ use App\Services\Payment\HandlePaymentService;
 use App\Services\Payment\PaymentDetailsService;
 use App\Services\Payment\PaystackPaymentProcessor;
 use App\Trait\HttpResponse;
-use Illuminate\Support\Facades\Auth;
 
 class SubscriptionService
 {
     use HttpResponse;
 
-    public function getPlanByCountry($countryId)
+    public function __construct(private readonly \Illuminate\Auth\AuthManager $authManager) {}
+
+    public function getPlanByCountry($countryId, \Illuminate\Http\Request $request)
     {
-        $type = request()->query('type', PlanType::B2C);
+        $type = $request->query('type', PlanType::B2C);
 
         $plan = SubscriptionPlan::where('country_id', $countryId)
             ->where('type', $type)
@@ -57,7 +58,7 @@ class SubscriptionService
 
     public function subscriptionHistory($userId)
     {
-        $currentUserId = Auth::id();
+        $currentUserId = $this->authManager->id();
 
         if ($currentUserId != $userId) {
             return $this->error(null, 'Unauthorized action.', 401);

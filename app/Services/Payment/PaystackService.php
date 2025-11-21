@@ -34,8 +34,6 @@ use App\Models\WithdrawalRequest;
 use App\Notifications\WithdrawalNotification;
 use App\Services\Curl\PostCurl;
 use App\Services\SubscriptionService;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -44,7 +42,7 @@ class PaystackService
     public static function handleRecurringCharge($event, $status): void
     {
         try {
-            DB::transaction(function () use ($event, $status): void {
+            (new \Illuminate\Database\DatabaseManager)->transaction(function () use ($event, $status): void {
 
                 $paymentData = $event['data'];
                 $ref = $paymentData['reference'];
@@ -52,7 +50,7 @@ class PaystackService
                 $amount = $paymentData['amount'];
                 $formattedAmount = number_format($amount / 100, 2, '.', '');
                 $channel = $paymentData['channel'];
-                $paid_at = Carbon::parse($paymentData['paid_at']);
+                $paid_at = \Illuminate\Support\Facades\Date::parse($paymentData['paid_at']);
 
                 if (Payment::where('reference', $ref)->exists()) {
                     Log::info("Duplicate payment detected: {$ref}, skipping processing.");
@@ -131,10 +129,10 @@ class PaystackService
         }
     }
 
-    public static function handlePaymentSuccess($event, $status): void
+    public static function handlePaymentSuccess($event, $status, \Illuminate\Http\Request $request): void
     {
         try {
-            DB::transaction(function () use ($event, $status): void {
+            (new \Illuminate\Database\DatabaseManager)->transaction(function () use ($event, $status): void {
 
                 $paymentData = $event['data'];
                 $userId = $paymentData['metadata']['user_id'];
@@ -244,7 +242,7 @@ class PaystackService
                 self::sendSellerOrderEmail($product?->user, $orderedItems, $orderNo, $formattedAmount);
 
                 (new UserLogAction(
-                    request(),
+                    $request,
                     UserLog::PAYMENT,
                     'Payment successful',
                     json_encode($paymentData),
@@ -257,10 +255,10 @@ class PaystackService
         }
     }
 
-    public static function handleB2BPaymentSuccess($event, $status): void
+    public static function handleB2BPaymentSuccess($event, $status, \Illuminate\Http\Request $request): void
     {
         try {
-            DB::transaction(function () use ($event, $status): void {
+            (new \Illuminate\Database\DatabaseManager)->transaction(function () use ($event, $status): void {
                 $paymentData = $event['data'];
 
                 $metadata = $paymentData['metadata'] ?? [];
@@ -379,7 +377,7 @@ class PaystackService
                 mailSend($type, $user, $subject, $mail_class, $orderItemData);
 
                 (new UserLogAction(
-                    request(),
+                    $request,
                     UserLog::PAYMENT,
                     'Payment successful',
                     json_encode($paymentData),
@@ -407,7 +405,7 @@ class PaystackService
             return;
         }
 
-        DB::beginTransaction();
+        (new \Illuminate\Database\DatabaseManager)->beginTransaction();
         try {
             $withdrawal->update([
                 'status' => WithdrawalStatus::COMPLETED,
@@ -419,9 +417,9 @@ class PaystackService
 
             Log::info("Transfer successful for withdrawal ID {$withdrawal->id} - Reference: {$reference}");
 
-            DB::commit();
+            (new \Illuminate\Database\DatabaseManager)->commit();
         } catch (\Exception $e) {
-            DB::rollBack();
+            (new \Illuminate\Database\DatabaseManager)->rollBack();
             Log::error('Error processing transfer success: '.$e->getMessage());
             throw $e;
         }
@@ -442,7 +440,7 @@ class PaystackService
             return;
         }
 
-        DB::beginTransaction();
+        (new \Illuminate\Database\DatabaseManager)->beginTransaction();
         try {
             $withdrawal->update([
                 'status' => WithdrawalStatus::FAILED,
@@ -461,9 +459,9 @@ class PaystackService
 
             Log::info("Transfer failed for withdrawal ID {$withdrawal->id} - Reference: {$reference}");
 
-            DB::commit();
+            (new \Illuminate\Database\DatabaseManager)->commit();
         } catch (\Exception $e) {
-            DB::rollBack();
+            (new \Illuminate\Database\DatabaseManager)->rollBack();
             Log::error('Error processing transfer success: '.$e->getMessage());
             throw $e;
         }
@@ -484,7 +482,7 @@ class PaystackService
             return;
         }
 
-        DB::beginTransaction();
+        (new \Illuminate\Database\DatabaseManager)->beginTransaction();
         try {
             $withdrawal->update([
                 'status' => WithdrawalStatus::REVERSED,
@@ -503,9 +501,9 @@ class PaystackService
 
             Log::info("Transfer failed for withdrawal ID {$withdrawal->id} - Reference: {$reference}");
 
-            DB::commit();
+            (new \Illuminate\Database\DatabaseManager)->commit();
         } catch (\Exception $e) {
-            DB::rollBack();
+            (new \Illuminate\Database\DatabaseManager)->rollBack();
             Log::error('Error processing transfer success: '.$e->getMessage());
             throw $e;
         }

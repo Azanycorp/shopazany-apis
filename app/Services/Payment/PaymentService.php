@@ -11,8 +11,6 @@ use App\Services\Curl\GetCurlService;
 use App\Services\Payment\AuthorizeNet\ChargeCardService;
 use App\Trait\HttpResponse;
 use App\Trait\Transfer;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class PaymentService
@@ -20,7 +18,7 @@ class PaymentService
     use HttpResponse, Transfer;
 
     public function __construct(
-        protected ChargeCardService $chargeCardService
+        protected ChargeCardService $chargeCardService, private readonly \Illuminate\Auth\AuthManager $authManager, private readonly \Illuminate\Contracts\Cache\Repository $cacheManager, private readonly \Illuminate\Contracts\Config\Repository $repository, private readonly \Illuminate\Contracts\Routing\ResponseFactory $responseFactory
     ) {}
 
     public function processPayment($request)
@@ -44,7 +42,7 @@ class PaymentService
 
     public function webhook($request)
     {
-        $secretKey = config('paystack.secretKey');
+        $secretKey = $this->repository->get('paystack.secretKey');
         $signature = $request->header('x-paystack-signature');
         $payload = $request->getContent();
 
@@ -60,12 +58,12 @@ class PaymentService
 
         PaystackEventHandler::handle($event);
 
-        return response()->json(['status' => true], 200);
+        return $this->responseFactory->json(['status' => true], 200);
     }
 
     public function verifyPayment($userId, $ref)
     {
-        $currentUserId = Auth::id();
+        $currentUserId = $this->authManager->id();
         if ($currentUserId != $userId) {
             return $this->error(null, 'Unauthorized action.', 401);
         }
@@ -86,10 +84,10 @@ class PaymentService
 
         $transfers = data_get($payload, 'data.transfers', []);
 
-        if (empty($transfers)) {
+        if (blank($transfers)) {
             Log::warning('No transfers found in approval payload:', $payload);
 
-            return response()->json(['message' => 'Invalid transfer request'], 400);
+            return $this->responseFactory->json(['message' => 'Invalid transfer request'], 400);
         }
 
         foreach ($transfers as $transfer) {
@@ -100,11 +98,11 @@ class PaymentService
             ]);
 
             if (! $isValid) {
-                return response()->json(['message' => 'Invalid transfer request'], 400);
+                return $this->responseFactory->json(['message' => 'Invalid transfer request'], 400);
             }
         }
 
-        return response()->json(['message' => 'Transfer approved'], 200);
+        return $this->responseFactory->json(['message' => 'Transfer approved'], 200);
     }
 
     public function authorizeNetCard($request)
@@ -118,7 +116,7 @@ class PaymentService
 
     public function getPaymentMethod($countryId)
     {
-        $services = ModelPaymentService::whereHas('countries', function ($q) use ($countryId): void {
+        $services = ModelPaymentService::whereHas('countries', function (\Illuminate\Contracts\Database\Query\Builder $q) use ($countryId): void {
             $q->where('country_id', $countryId);
         })->with('countries')->get();
 
@@ -135,7 +133,7 @@ class PaymentService
 
     public function getBanks()
     {
-        $banks = Cache::remember('banks_list', 43200, function () {
+        $banks = $this->cacheManager->remember('banks_list', 43200, function () {
             $banks = Bank::select('id', 'name', 'slug', 'code')->get();
 
             if ($banks->isNotEmpty()) {
@@ -145,7 +143,7 @@ class PaymentService
             return null;
         });
 
-        if (empty($banks)) {
+        if (blank($banks)) {
             return $this->error('No banks found', 404);
         }
 
@@ -154,9 +152,9 @@ class PaymentService
 
     public function accountLookUp($request): array
     {
-        $url = config('services.paystack.bank_base_url').'/resolve?account_number='.$request->account_number.'&bank_code='.$request->bank_code;
+        $url = $this->repository->get('services.paystack.bank_base_url').'/resolve?account_number='.$request->account_number.'&bank_code='.$request->bank_code;
 
-        $token = config('services.paystack.test_sk');
+        $token = $this->repository->get('services.paystack.test_sk');
 
         $headers = [
             'Accept' => 'application/json',

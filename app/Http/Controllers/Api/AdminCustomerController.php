@@ -5,39 +5,37 @@ namespace App\Http\Controllers\Api;
 use App\Enum\UserStatus;
 use App\Http\Controllers\Controller;
 use App\Services\Admin\CustomerService;
+use Illuminate\Contracts\Auth\Access\Gate;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 
 class AdminCustomerController extends Controller
 {
-    protected \App\Services\Admin\CustomerService $service;
+    private const MESSAGE = '403 Forbidden';
 
-    const MESSAGE = '403 Forbidden';
+    public function __construct(
+        private readonly CustomerService $service,
+        private readonly Gate $gate
+    ) {}
 
-    public function __construct(CustomerService $service)
+    public function allCustomers(Request $request): array
     {
-        $this->service = $service;
-    }
+        abort_if($this->gate->denies('customer_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
 
-    public function allCustomers(): array
-    {
-        abort_if(Gate::denies('customer_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
-
-        return $this->service->allCustomers();
+        return $this->service->allCustomers($request);
     }
 
     public function viewCustomer($id)
     {
-        abort_if(Gate::denies('customer_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+        abort_if($this->gate->denies('customer_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
 
         return $this->service->viewCustomer($id);
     }
 
     public function banCustomer(Request $request)
     {
-        abort_if(Gate::denies('customer_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+        abort_if($this->gate->denies('customer_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
         $request->validate([
             'user_id' => ['required', 'integer', 'exists:users,id'],
         ]);
@@ -47,25 +45,25 @@ class AdminCustomerController extends Controller
 
     public function removeCustomer(Request $request)
     {
-        abort_if(Gate::denies('customer_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+        abort_if($this->gate->denies('customer_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
         $request->validate([
-            'user_ids' => 'required|array',
-            'user_ids.*' => 'exists:users,id',
+            'user_ids' => ['required', 'array'],
+            'user_ids.*' => ['exists:users,id'],
         ]);
 
         return $this->service->removeCustomer($request);
     }
 
-    public function filter(): array
+    public function filter(Request $request): array
     {
-        abort_if(Gate::denies('customer_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+        abort_if($this->gate->denies('customer_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
 
-        return $this->service->filter();
+        return $this->service->filter($request);
     }
 
     public function addCustomer(Request $request)
     {
-        abort_if(Gate::denies('customer_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+        abort_if($this->gate->denies('customer_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
         $request->validate([
             'status' => [Rule::in([
                 UserStatus::ACTIVE,
@@ -81,7 +79,7 @@ class AdminCustomerController extends Controller
 
     public function editCustomer(Request $request)
     {
-        abort_if(Gate::denies('customer_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+        abort_if($this->gate->denies('customer_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
         $request->validate([
             'status' => [Rule::in([
                 UserStatus::ACTIVE,
@@ -97,7 +95,7 @@ class AdminCustomerController extends Controller
 
     public function getPayment($id)
     {
-        abort_if(Gate::denies('customer_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+        abort_if($this->gate->denies('customer_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
 
         return $this->service->getPayment($id);
     }
