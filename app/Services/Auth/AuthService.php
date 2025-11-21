@@ -14,13 +14,14 @@ use App\Models\Action;
 use App\Models\User;
 use App\Trait\HttpResponse;
 use App\Trait\SignUp;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 
 class AuthService extends Controller
 {
     use HttpResponse, SignUp;
+
+    public function __construct(private readonly \Illuminate\Auth\Passwords\PasswordBrokerManager $passwordBrokerManager, private readonly \Illuminate\Database\DatabaseManager $databaseManager, private readonly \Illuminate\Hashing\BcryptHasher $bcryptHasher, private readonly \Illuminate\Contracts\Routing\ResponseFactory $responseFactory) {}
 
     public function login($request)
     {
@@ -220,7 +221,7 @@ class AuthService extends Controller
                 'email_verified_at' => null,
                 'verification_code' => $code,
                 'is_verified' => 0,
-                'password' => bcrypt($request->password),
+                'password' => $this->bcryptHasher->make($request->password),
             ]);
 
             if ($coupon) {
@@ -307,7 +308,7 @@ class AuthService extends Controller
             return $this->error('error', 'We can\'t find a user with that email address', 404);
         }
 
-        $status = Password::broker('users')->sendResetLink(
+        $status = $this->passwordBrokerManager->broker('users')->sendResetLink(
             $request->only('email')
         );
 
@@ -318,8 +319,8 @@ class AuthService extends Controller
         logUserAction($request, $action, $description, $response, $user);
 
         return $status === Password::RESET_LINK_SENT
-            ? response()->json(['message' => __($status)])
-            : response()->json(['message' => __($status)], 500);
+            ? $this->responseFactory->json(['message' => __($status)])
+            : $this->responseFactory->json(['message' => __($status)], 500);
     }
 
     public function reset($request)
@@ -330,16 +331,16 @@ class AuthService extends Controller
             return $this->error('error', 'We can\'t find a user with that email address', 404);
         }
 
-        $status = Password::broker('users')->reset(
+        $status = $this->passwordBrokerManager->broker('users')->reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),
             function ($user) use ($request): void {
                 $user->forceFill([
-                    'password' => bcrypt($request->password),
+                    'password' => $this->bcryptHasher->make($request->password),
                 ])->save();
             }
         );
 
-        if (! $user->is_verified && ! $user->is_admin_approve && empty($user->email_verified_at)) {
+        if (! $user->is_verified && ! $user->is_admin_approve && blank($user->email_verified_at)) {
             $user->update([
                 'is_verified' => 1,
                 'is_admin_approve' => 1,
@@ -356,14 +357,14 @@ class AuthService extends Controller
         logUserAction($request, $action, $description, $response, $user);
 
         return $status == Password::PASSWORD_RESET
-            ? response()->json(['message' => __($status)])
-            : response()->json(['message' => __($status)], 500);
+            ? $this->responseFactory->json(['message' => __($status)])
+            : $this->responseFactory->json(['message' => __($status)], 500);
     }
 
-    public function logout()
+    public function logout(\Illuminate\Http\Request $request)
     {
 
-        $user = request()->user();
+        $user = $request->user();
         $user->tokens()->where('id', $user->currentAccessToken()->id)->delete();
 
         $description = "User with email address {$user->email} logged out";
@@ -372,7 +373,7 @@ class AuthService extends Controller
             'message' => 'You have successfully logged out and your token has been deleted',
         ]);
 
-        logUserAction(request(), $action, $description, $response, $user);
+        logUserAction($request, $action, $description, $response, $user);
 
         return $response;
     }
@@ -403,7 +404,7 @@ class AuthService extends Controller
                 }
             }
 
-            DB::transaction(function () use ($request, $user): void {
+            $this->databaseManager->transaction(function () use ($request, $user): void {
                 $referrer_code = $this->determineReferrerCode($request);
 
                 $referrer_links = generate_referrer_links($referrer_code);
@@ -460,7 +461,7 @@ class AuthService extends Controller
             throw new \Exception('You are not a valid referrer');
         }
 
-        $points = optional(Action::where('slug', 'create_account')->first())->points ?? 0;
+        $points = Action::where('slug', 'create_account')->first()?->points ?? 0;
         $referrer->wallet()->increment('reward_point', $points);
         $referrer->referrer()->attach($data);
         $referrer->save();
@@ -484,7 +485,7 @@ class AuthService extends Controller
                 'referrer_link' => $referrer_links,
                 'is_verified' => 1,
                 'is_affiliate_member' => 1,
-                'password' => bcrypt($request->password),
+                'password' => $this->bcryptHasher->make($request->password),
             ]);
 
             $description = "User with email {$request->email} signed up as an affiliate";
@@ -520,7 +521,7 @@ class AuthService extends Controller
             'state_id' => $request->state_id,
             'is_verified' => 0,
             'is_affiliate_member' => 1,
-            'password' => bcrypt($request->password),
+            'password' => $this->bcryptHasher->make($request->password),
         ]);
 
         $description = "User with email {$request->email} signed up as an affiliate";

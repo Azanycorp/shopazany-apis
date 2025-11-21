@@ -46,9 +46,9 @@ class CategoryService
         }
     }
 
-    public function categories()
+    public function categories(\Illuminate\Http\Request $request)
     {
-        $type = request()->query('type', BannerType::B2C);
+        $type = $request->query('type', BannerType::B2C);
 
         if (! in_array($type, [BannerType::B2C, BannerType::B2B, BannerType::AGRIECOM_B2C])) {
             return $this->error(null, "Invalid type {$type}", 400);
@@ -63,15 +63,15 @@ class CategoryService
         return $this->success($data, 'Categories');
     }
 
-    public function adminCategories()
+    public function adminCategories(\Illuminate\Http\Request $request)
     {
-        $type = request()->query('type', BannerType::B2C);
+        $type = $request->query('type', BannerType::B2C);
 
         if (! in_array($type, [BannerType::B2C, BannerType::B2B, BannerType::AGRIECOM_B2C])) {
             return $this->error(null, "Invalid type {$type}", 400);
         }
 
-        $search = request()->query('search');
+        $search = $request->query('search');
 
         $categories = Category::with(['products', 'subcategory'])
             ->withCount(['products', 'subcategory'])
@@ -114,9 +114,9 @@ class CategoryService
         }
     }
 
-    public function getSubcategory($id)
+    public function getSubcategory($id, \Illuminate\Http\Request $request)
     {
-        $type = request()->query('type', BannerType::B2C);
+        $type = $request->query('type', BannerType::B2C);
 
         if (! in_array($type, [BannerType::B2C, BannerType::B2B, BannerType::AGRIECOM_B2C])) {
             return $this->error(null, "Invalid type {$type}", 400);
@@ -149,9 +149,9 @@ class CategoryService
         return $this->success(null, 'Category updated successfully');
     }
 
-    public function categoryAnalytic()
+    public function categoryAnalytic(\Illuminate\Http\Request $request)
     {
-        $type = request()->query('type', BannerType::B2C);
+        $type = $request->query('type', BannerType::B2C);
 
         if (! in_array($type, [BannerType::B2C, BannerType::B2B, BannerType::AGRIECOM_B2C])) {
             return $this->error(null, "Invalid type {$type}", 400);
@@ -184,15 +184,15 @@ class CategoryService
         return $this->success($data, 'Category analytics');
     }
 
-    public function getAdminSubcategory()
+    public function getAdminSubcategory(\Illuminate\Http\Request $request)
     {
-        $type = request()->query('type', BannerType::B2C);
+        $type = $request->query('type', BannerType::B2C);
 
         if (! in_array($type, [BannerType::B2C, BannerType::B2B, BannerType::AGRIECOM_B2C])) {
             return $this->error(null, "Invalid type {$type}", 400);
         }
 
-        $search = request()->query('search');
+        $search = $request->query('search');
 
         $subcats = SubCategory::with(['product', 'category'])
             ->where('type', $type)

@@ -8,6 +8,7 @@ use App\Enum\SubscriptionType;
 use App\Notifications\ResetPasswordNotification;
 use App\Trait\ClearsResponseCache;
 use App\Trait\UserRelationship;
+use Illuminate\Contracts\Config\Repository;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -108,7 +109,8 @@ class User extends Authenticatable
     {
         $email = $this->email;
 
-        $url = config('services.reset_password_url').'?token='.$token.'&email='.$email;
+        $repository = app(Repository::class);
+        $url = $repository->get('services.reset_password_url').'?token='.$token.'&email='.$email;
 
         $this->notify(new ResetPasswordNotification($url));
     }
@@ -177,9 +179,10 @@ class User extends Authenticatable
         );
     }
 
-    public function scopeFilterReferrals($query, $searchQuery, $statusFilter)
+    #[\Illuminate\Database\Eloquent\Attributes\Scope]
+    protected function filterReferrals($query, $searchQuery, $statusFilter)
     {
-        if (! empty($searchQuery)) {
+        if (filled($searchQuery)) {
             $query->where(function ($q) use ($searchQuery): void {
                 $q->where('first_name', 'LIKE', "%$searchQuery%")
                     ->orWhere('last_name', 'LIKE', "%$searchQuery%")
@@ -187,7 +190,7 @@ class User extends Authenticatable
             });
         }
 
-        if (! empty($statusFilter)) {
+        if (filled($statusFilter)) {
             $query->where('status', $statusFilter);
         }
 

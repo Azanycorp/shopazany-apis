@@ -6,12 +6,12 @@ use App\Enum\UserStatus;
 use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
 use Symfony\Component\HttpFoundation\Response;
 
 class BlockUserAfterFailedAttempts
 {
+    public function __construct(private readonly \Illuminate\Auth\AuthManager $authManager, private readonly \Illuminate\Contracts\Cache\Repository $cacheManager, private readonly \Illuminate\Contracts\Routing\ResponseFactory $responseFactory) {}
+
     /**
      * Handle an incoming request.
      *
@@ -24,27 +24,27 @@ class BlockUserAfterFailedAttempts
 
         $user = User::where('email', $email)->first();
         if ($user && $user->status === UserStatus::BLOCKED) {
-            return response()->json(['message' => 'Your account has been blocked due to too many failed attempts.'], 403);
+            return $this->responseFactory->json(['message' => 'Your account has been blocked due to too many failed attempts.'], 403);
         }
 
-        if (! Auth::attempt($request->only('email', 'password'))) {
-            $attempts = Cache::get($key, 0) + 1;
-            Cache::put($key, $attempts, now()->addMinutes(30));
+        if (! $this->authManager->attempt($request->only('email', 'password'))) {
+            $attempts = $this->cacheManager->get($key, 0) + 1;
+            $this->cacheManager->put($key, $attempts, now()->addMinutes(30));
 
             if ($attempts >= 5) {
                 if ($user) {
                     $user->status = UserStatus::BLOCKED;
                     $user->save();
                 }
-                Cache::forget($key);
+                $this->cacheManager->forget($key);
 
-                return response()->json(['message' => 'Your account has been blocked due to too many failed attempts.'], 403);
+                return $this->responseFactory->json(['message' => 'Your account has been blocked due to too many failed attempts.'], 403);
             }
 
-            return response()->json(['message' => 'Invalid credentials.'], 401);
+            return $this->responseFactory->json(['message' => 'Invalid credentials.'], 401);
         }
 
-        Cache::forget($key);
+        $this->cacheManager->forget($key);
 
         return $next($request);
     }

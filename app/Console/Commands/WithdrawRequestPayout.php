@@ -8,7 +8,6 @@ use App\Notifications\WithdrawalNotification;
 use App\Services\PayoutService;
 use App\Trait\Transfer;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class WithdrawRequestPayout extends Command
@@ -30,6 +29,14 @@ class WithdrawRequestPayout extends Command
     protected $description = 'Payout system for withdrawal requests';
 
     /**
+     * Create a new console command instance.
+     */
+    public function __construct(private readonly \Illuminate\Database\DatabaseManager $databaseManager)
+    {
+        parent::__construct();
+    }
+
+    /**
      * Execute the console command.
      */
     public function handle(): void
@@ -39,7 +46,7 @@ class WithdrawRequestPayout extends Command
         User::with(['withdrawalRequests' => function ($query): void {
             $query->where('status', WithdrawalStatus::PENDING)->limit(1);
         }, 'paymentMethods'])
-            ->whereHas('withdrawalRequests', function ($query): void {
+            ->whereHas('withdrawalRequests', function (\Illuminate\Contracts\Database\Query\Builder $query): void {
                 $query->where('status', WithdrawalStatus::PENDING);
             })
             ->chunk(100, function ($users): void {
@@ -105,7 +112,7 @@ class WithdrawRequestPayout extends Command
     private function runPayount(int $attempt, int $maxRetries, $request, $user, $withdrawalAmount, array $data): void
     {
         while ($attempt < $maxRetries) {
-            DB::beginTransaction();
+            $this->databaseManager->beginTransaction();
             try {
                 $res = $this->executePayout($data, $request, $user);
 
@@ -123,11 +130,11 @@ class WithdrawRequestPayout extends Command
 
                 $this->info("Payout processed for user {$user->id}, withdrawal ID {$request->id} - Amount: {$withdrawalAmount}");
 
-                DB::commit();
+                $this->databaseManager->commit();
 
                 return;
             } catch (\Exception $e) {
-                DB::rollBack();
+                $this->databaseManager->rollBack();
                 $attempt++;
 
                 $this->handlePayoutFailure($request, $user, $e, ++$attempt, $maxRetries);
@@ -151,7 +158,7 @@ class WithdrawRequestPayout extends Command
             $user->notify(new WithdrawalNotification($request, 'failed'));
         } else {
             $this->warn("Retrying payout for user {$user->id}, withdrawal ID {$request->id} (Attempt {$attempt}/{$maxRetries})...");
-            sleep(5);
+            \Illuminate\Support\Sleep::sleep(5);
         }
     }
 

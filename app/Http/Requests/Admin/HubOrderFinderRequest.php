@@ -22,8 +22,8 @@ class HubOrderFinderRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'order_number' => 'required|string|max:255',
-            'pickup_id' => 'required|integer|exists:pickup_stations,id',
+            'order_number' => ['required', 'string', 'max:255'],
+            'pickup_id' => ['required', 'integer', 'exists:pickup_stations,id'],
         ];
     }
 }

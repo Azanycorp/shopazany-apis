@@ -10,9 +10,9 @@ class CurrencyConversionService
 
     protected string $url;
 
-    public function __construct()
+    public function __construct(\Illuminate\Contracts\Config\Repository $repository)
     {
-        $this->appId = config('currency.api_key');
+        $this->appId = $repository->get('currency.api_key');
         $this->url = 'https://openexchangerates.org/api/latest.json?app_id='.$this->appId;
     }
 

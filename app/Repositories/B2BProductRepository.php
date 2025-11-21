@@ -22,12 +22,12 @@ class B2BProductRepository implements B2BRepositoryInterface
 
         if ($search !== null && $search !== '' && $search !== '0') {
             $query->where('name', 'like', '%'.$search.'%')
-                ->orWhereHas('category', function ($q) use ($search): void {
+                ->orWhereHas('category', function (\Illuminate\Contracts\Database\Query\Builder $q) use ($search): void {
                     $q->where('name', 'like', '%'.$search.'%');
                 });
         }
 
-        return $query->orderByDesc('created_at')->get();
+        return $query->latest()->get();
     }
 
     public function create(array $data)

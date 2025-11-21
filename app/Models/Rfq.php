@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Facades\DB;
 
 class Rfq extends Model
 {
@@ -32,11 +31,17 @@ class Rfq extends Model
         ];
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\User, $this>
+     */
     public function seller(): BelongsTo
     {
         return $this->belongsTo(User::class, 'seller_id', 'id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\User, $this>
+     */
     public function buyer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'buyer_id', 'id');
@@ -49,8 +54,7 @@ class Rfq extends Model
 
     public static function stats()
     {
-        return DB::select(
-            "SELECT
+        return (new \Illuminate\Database\DatabaseManager)->select("SELECT
                 (SELECT ROUND(SUM(`total_amount`), 2) FROM `rfqs` WHERE `status`='confirmed') AS total_sales,
               -- Today
 
@@ -87,7 +91,6 @@ class Rfq extends Model
                     YEAR(created_at) = YEAR(NOW())
                 ) AS total_sales_this_year
 
-                 "
-        )[0];
+                 ")[0];
     }
 }

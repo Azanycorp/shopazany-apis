@@ -3,41 +3,43 @@
 declare(strict_types=1);
 
 use Rector\Caching\ValueObject\Storage\FileCacheStorage;
-use Rector\CodeQuality\Rector\FuncCall\CompactToVariablesRector;
 use Rector\Config\RectorConfig;
-use Rector\Set\ValueObject\SetList;
+use Rector\Transform\Rector\StaticCall\StaticCallToMethodCallRector;
 use Rector\ValueObject\PhpVersion;
+use RectorLaravel\Rector\Empty_\EmptyToBlankAndFilledFuncRector;
+use RectorLaravel\Rector\FuncCall\HelperFuncCallToFacadeClassRector;
+use RectorLaravel\Rector\FuncCall\RemoveDumpDataDeadCodeRector;
+use RectorLaravel\Rector\MethodCall\ResponseHelperCallToJsonResponseRector;
 use RectorLaravel\Set\LaravelLevelSetList;
+use RectorLaravel\Set\LaravelSetList;
+use RectorLaravel\Set\LaravelSetProvider;
 
-return static function (RectorConfig $rectorConfig): void {
-    // Paths to analyze
-    $rectorConfig->paths([
+return RectorConfig::configure()
+    ->withPaths([
         __DIR__.'/app',
-        __DIR__.'/config',
-        __DIR__.'/database',
-        __DIR__.'/resources',
         __DIR__.'/routes',
         __DIR__.'/tests',
-    ]);
-
-    // Skip specific rules
-    $rectorConfig->skip([
-        CompactToVariablesRector::class,
-    ]);
-
-    // Enable caching for Rector
-    $rectorConfig->cacheDirectory(__DIR__.'/storage/rector');
-    $rectorConfig->cacheClass(FileCacheStorage::class);
-
-    // Apply sets for Laravel and general code quality
-    $rectorConfig->sets([
-        LaravelLevelSetList::UP_TO_LARAVEL_110,
-        SetList::CODE_QUALITY,
-        SetList::EARLY_RETURN,
-        SetList::TYPE_DECLARATION,
-        SetList::DEAD_CODE,
-    ]);
-
-    // Define PHP version for Rector
-    $rectorConfig->phpVersion(PhpVersion::PHP_83);
-};
+    ])
+    ->withSetProviders(LaravelSetProvider::class)
+    ->withComposerBased(laravel: true)
+    ->withRules([
+        ResponseHelperCallToJsonResponseRector::class,
+        EmptyToBlankAndFilledFuncRector::class,
+    ])
+    ->withSets([
+        LaravelLevelSetList::UP_TO_LARAVEL_120,
+        LaravelSetList::LARAVEL_CODE_QUALITY,
+        LaravelSetList::LARAVEL_TYPE_DECLARATIONS,
+        LaravelSetList::LARAVEL_COLLECTION,
+        LaravelSetList::LARAVEL_STATIC_TO_INJECTION,
+        LaravelSetList::LARAVEL_TESTING,
+    ])
+    ->withConfiguredRule(RemoveDumpDataDeadCodeRector::class, [
+        'dd', 'dump', 'var_dump',
+    ])
+    ->withSkip([
+        HelperFuncCallToFacadeClassRector::class,
+        StaticCallToMethodCallRector::class,
+    ])
+    ->withCache(__DIR__.'/rector', FileCacheStorage::class)
+    ->withPhpVersion(PhpVersion::PHP_84);

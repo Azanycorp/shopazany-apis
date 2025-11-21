@@ -22,8 +22,8 @@ class VerifyRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => 'required|email|exists:users,email',
-            'code' => 'required|string',
+            'email' => ['required', 'email', 'exists:users,email'],
+            'code' => ['required', 'string'],
         ];
     }
 }

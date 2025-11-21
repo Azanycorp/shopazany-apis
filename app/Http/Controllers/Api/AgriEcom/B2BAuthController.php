@@ -33,8 +33,8 @@ class B2BAuthController extends Controller
     public function verify(Request $request)
     {
         $request->validate([
-            'email' => 'required|email|exists:users,email',
-            'code' => 'required|string',
+            'email' => ['required', 'email', 'exists:users,email'],
+            'code' => ['required', 'string'],
         ]);
 
         return $this->service->verify($request);
@@ -43,7 +43,7 @@ class B2BAuthController extends Controller
     public function resendCode(Request $request)
     {
         $request->validate([
-            'email' => 'required|email|exists:users,email',
+            'email' => ['required', 'email', 'exists:users,email'],
         ]);
 
         return $this->service->resendCode($request);

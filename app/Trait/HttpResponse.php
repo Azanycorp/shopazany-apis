@@ -6,7 +6,7 @@ trait HttpResponse
 {
     protected function success($data, $message = null, $code = 200)
     {
-        return response()->json([
+        return new \Illuminate\Http\JsonResponse([
             'status' => true,
             'message' => $message,
             'data' => $data,
@@ -15,7 +15,7 @@ trait HttpResponse
 
     protected function error($data, $message = null, $code = 400)
     {
-        return response()->json([
+        return new \Illuminate\Http\JsonResponse([
             'status' => false,
             'message' => $message,
             'data' => $data,
@@ -24,7 +24,7 @@ trait HttpResponse
 
     protected function withPagination($collection, ?string $message = null, $code = 200, ?array $extraMeta = [])
     {
-        return response()->json([
+        return new \Illuminate\Http\JsonResponse([
             'status' => true,
             'message' => $message,
             'data' => $collection->items(),

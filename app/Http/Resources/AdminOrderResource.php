@@ -24,22 +24,22 @@ class AdminOrderResource extends JsonResource
             'status' => (string) $this->status,
             'products' => $this->products ? $this->products->map(function ($product): array {
                 return [
-                    'name' => $product?->name,
-                    'category' => $product?->category?->name,
-                    'image' => $product?->image,
+                    'name' => $product->name,
+                    'category' => $product->category?->name,
+                    'image' => $product->image,
                     'quantity' => $product->pivot->product_quantity,
                     'price' => $product->pivot->price,
                     'sub_total' => $product->pivot->sub_total,
                 ];
             })->toArray() : [],
             'seller' => $this->products->isNotEmpty() ? (object) [
-                'name' => optional($this->products->first()->user)->first_name.' '.optional($this->products->first()->user)->last_name,
-                'location' => optional($this->products->first()->user)->address,
+                'name' => "{$this->products->first()->user?->first_name} {$this->products->first()->user?->last_name}",
+                'location' => $this->products->first()->user?->address,
             ] : null,
             'customer' => (object) [
-                'name' => optional($this->user)->first_name.' '.optional($this->user)->last_name,
-                'phone' => optional($this->user)->phone,
-                'email' => optional($this->user)->email,
+                'name' => "{$this->user?->first_name} {$this->user?->last_name}",
+                'phone' => $this->user?->phone,
+                'email' => $this->user?->email,
             ],
         ];
     }

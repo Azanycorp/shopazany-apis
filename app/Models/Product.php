@@ -9,8 +9,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 
 class Product extends Model
 {
@@ -48,6 +46,16 @@ class Product extends Model
         'condition',
     ];
 
+    /**
+     * Create a new Eloquent model instance.
+     *
+     * @param  array<string, mixed>  $attributes
+     */
+    public function __construct(array $attributes, private readonly \Illuminate\Auth\AuthManager $authManager, private readonly \Illuminate\Database\DatabaseManager $databaseManager)
+    {
+        parent::__construct($attributes);
+    }
+
     protected function casts(): array
     {
         return [
@@ -55,36 +63,57 @@ class Product extends Model
         ];
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Admin, $this>
+     */
     public function admin(): BelongsTo
     {
         return $this->belongsTo(Admin::class, 'admin_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Category, $this>
+     */
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class, 'category_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\SubCategory, $this>
+     */
     public function subCategory(): BelongsTo
     {
         return $this->belongsTo(SubCategory::class, 'sub_category_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\ProductImage, $this>
+     */
     public function productimages(): HasMany
     {
         return $this->hasMany(ProductImage::class, 'product_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Country, $this>
+     */
     public function country(): BelongsTo
     {
         return $this->belongsTo(Country::class, 'country_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\ShopCountry, $this>
+     */
     public function shopCountry(): BelongsTo
     {
         return $this->belongsTo(ShopCountry::class, 'country_id', 'country_id');
@@ -101,36 +130,57 @@ class Product extends Model
             ->withPivot('product_quantity', 'price', 'sub_total', 'status');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Size, $this>
+     */
     public function size(): BelongsTo
     {
         return $this->belongsTo(Size::class, 'size_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Brand, $this>
+     */
     public function brand(): BelongsTo
     {
         return $this->belongsTo(Brand::class, 'brand_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Color, $this>
+     */
     public function color(): BelongsTo
     {
         return $this->belongsTo(Color::class, 'color_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Unit, $this>
+     */
     public function unit(): BelongsTo
     {
         return $this->belongsTo(Unit::class, 'unit_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Cart, $this>
+     */
     public function carts(): HasMany
     {
         return $this->hasMany(Cart::class, 'product_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\ProductReview, $this>
+     */
     public function productReviews(): HasMany
     {
         return $this->hasMany(ProductReview::class, 'product_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\ProductVariation, $this>
+     */
     public function productVariations(): HasMany
     {
         return $this->hasMany(ProductVariation::class, 'product_id');
@@ -141,19 +191,19 @@ class Product extends Model
     {
         return Attribute::make(
             get: function () {
-                if (! Auth::guard('sanctum')->check()) {
+                if (! $this->authManager->guard('sanctum')->check()) {
                     return false;
                 }
 
                 return Wishlist::where([
-                    ['user_id', Auth::guard('sanctum')->id()],
+                    ['user_id', $this->authManager->guard('sanctum')->id()],
                     ['product_id', $this->id],
                 ])->exists();
             }
         );
     }
 
-    public function discountedPrice(): Attribute
+    protected function discountedPrice(): Attribute
     {
         return Attribute::get(function () {
             $discountType = $this->discount_type;
@@ -171,7 +221,8 @@ class Product extends Model
     }
 
     // Scopes
-    public function scopeTopRated(Builder $query, $userId)
+    #[\Illuminate\Database\Eloquent\Attributes\Scope]
+    protected function topRated(Builder $query, $userId)
     {
         return $query->select(
             'products.id',
@@ -179,21 +230,22 @@ class Product extends Model
             'products.price',
             'products.image',
             'products.user_id',
-            DB::raw('CAST(COALESCE(ROUND(AVG(product_reviews.rating), 1), 0) AS DECIMAL(2,1)) as average_rating')
+            $this->databaseManager->raw('CAST(COALESCE(ROUND(AVG(product_reviews.rating), 1), 0) AS DECIMAL(2,1)) as average_rating')
         )
             ->with('user:id,first_name,last_name,image')
             ->withCount('productReviews')
             ->where('products.user_id', $userId)
             ->leftJoin('product_reviews', 'products.id', '=', 'product_reviews.product_id')
             ->withCount(['orders as sold_count' => function ($query): void {
-                $query->select(DB::raw('COUNT(*)'));
+                $query->select($this->databaseManager->raw('COUNT(*)'));
             }])
             ->groupBy('products.id', 'products.name', 'products.price', 'products.image', 'products.user_id')
             ->orderByDesc('average_rating')
             ->orderByDesc('sold_count');
     }
 
-    public function scopeMostFavorite(Builder $query, $userId)
+    #[\Illuminate\Database\Eloquent\Attributes\Scope]
+    protected function mostFavorite(Builder $query, $userId)
     {
         return $query->select(
             'products.id',
@@ -201,17 +253,17 @@ class Product extends Model
             'products.price',
             'products.image',
             'products.user_id',
-            DB::raw('CAST(COALESCE(ROUND(AVG(product_reviews.rating), 1), 0) AS DECIMAL(2,1)) as average_rating')
+            $this->databaseManager->raw('CAST(COALESCE(ROUND(AVG(product_reviews.rating), 1), 0) AS DECIMAL(2,1)) as average_rating')
         )
             ->with('user:id,first_name,last_name,image')
             ->withCount('productReviews')
             ->where('products.user_id', $userId)
             ->leftJoin('product_reviews', 'products.id', '=', 'product_reviews.product_id')
             ->withCount(['orders as sold_count' => function ($query): void {
-                $query->select(DB::raw('COUNT(*)'));
+                $query->select($this->databaseManager->raw('COUNT(*)'));
             }])
             ->withCount(['wishlists as wishlist_count' => function ($query): void {
-                $query->select(DB::raw('COUNT(*)'));
+                $query->select($this->databaseManager->raw('COUNT(*)'));
             }])
             ->groupBy('products.id', 'products.name', 'products.price', 'products.image', 'products.user_id')
             ->orderByDesc('wishlist_count')

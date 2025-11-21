@@ -68,9 +68,9 @@ class ProductCategoryService
         return $this->success(B2BCategoryResource::collection($categories), 'Categories');
     }
 
-    public function adminCategories()
+    public function adminCategories(\Illuminate\Http\Request $request)
     {
-        $search = request()->query('search');
+        $search = $request->query('search');
 
         $categories = B2BProductCategory::with(['products', 'subcategory'])
             ->withCount(['products', 'subcategory'])
@@ -163,9 +163,9 @@ class ProductCategoryService
         return $this->success($data, 'Category analytics');
     }
 
-    public function getAdminSubcategory()
+    public function getAdminSubcategory(\Illuminate\Http\Request $request)
     {
-        $search = request()->query('search');
+        $search = $request->query('search');
 
         $subcats = B2BProductSubCategory::with(['products', 'category'])
             ->withCount('products')

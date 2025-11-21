@@ -7,7 +7,6 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\App;
 
 class UserWelcomeMail extends Mailable
 {
@@ -22,7 +21,7 @@ class UserWelcomeMail extends Mailable
     /**
      * Create a new message instance.
      */
-    public function __construct($user)
+    public function __construct($user, private readonly \Illuminate\Foundation\Application $application)
     {
         $this->user = $user;
         $urls = $this->getUrls();
@@ -67,7 +66,7 @@ class UserWelcomeMail extends Mailable
 
     protected function getUrls(): array
     {
-        if (App::environment('production')) {
+        if ($this->application->environment('production')) {
             return [
                 'baseUrl' => 'https://shopazany.com/en',
                 'loginUrl' => 'https://shopazany.com/en/login',

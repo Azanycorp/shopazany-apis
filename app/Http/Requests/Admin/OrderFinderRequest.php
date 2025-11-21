@@ -22,8 +22,8 @@ class OrderFinderRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'order_number' => 'required|string|max:255',
-            'collation_id' => 'required|integer|exists:collation_centers,id',
+            'order_number' => ['required', 'string', 'max:255'],
+            'collation_id' => ['required', 'integer', 'exists:collation_centers,id'],
         ];
     }
 }

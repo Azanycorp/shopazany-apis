@@ -19,7 +19,7 @@ trait Transfer
         User::with(['withdrawalRequests' => function ($query): void {
             $query->where('status', WithdrawalStatus::PENDING);
         }, 'paymentMethods'])
-            ->whereHas('withdrawalRequests', function ($query): void {
+            ->whereHas('withdrawalRequests', function (\Illuminate\Contracts\Database\Query\Builder $query): void {
                 $query->where('status', WithdrawalStatus::PENDING);
             })
             ->chunk(100, function ($users) use (&$requests): void {

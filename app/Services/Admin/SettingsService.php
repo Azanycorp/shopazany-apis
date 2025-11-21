@@ -18,18 +18,18 @@ use App\Models\SubscriptionPlan;
 use App\Models\TermsService;
 use App\Trait\HttpResponse;
 use App\Trait\SignUp;
-use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class SettingsService
 {
     use HttpResponse, SignUp;
 
+    public function __construct(private readonly \Illuminate\Foundation\Application $application, private readonly \Illuminate\Database\DatabaseManager $databaseManager, private readonly \Illuminate\Hashing\BcryptHasher $bcryptHasher) {}
+
     public function addSeo($request)
     {
         $folder = '/stag/seo';
-        if (App::environment('production')) {
+        if ($this->application->environment('production')) {
             $folder = '/prod/seo';
         }
 
@@ -135,7 +135,7 @@ class SettingsService
     public function addAboutUs($request)
     {
         $folder = '/stag/settings/about';
-        if (App::environment('production')) {
+        if ($this->application->environment('production')) {
             $folder = '/prod/settings/about';
         }
         $imageOne = uploadImage($request, 'image_one', $folder);
@@ -257,9 +257,9 @@ class SettingsService
         return $this->success(null, 'Plan added successfully', 201);
     }
 
-    public function getPlanById($id)
+    public function getPlanById($id, \Illuminate\Http\Request $request)
     {
-        $type = request()->query('type', PlanType::B2C);
+        $type = $request->query('type', PlanType::B2C);
 
         if (! in_array($type, [PlanType::B2C, PlanType::B2B, PlanType::AGRIECOM_B2C])) {
             return $this->error(null, "Invalid type {$type}", 400);
@@ -271,9 +271,9 @@ class SettingsService
         return $this->success($data, 'Subscription plan detail');
     }
 
-    public function getPlanByCountry($countryId)
+    public function getPlanByCountry($countryId, \Illuminate\Http\Request $request)
     {
-        $type = request()->query('type', PlanType::B2C);
+        $type = $request->query('type', PlanType::B2C);
 
         if (! in_array($type, [PlanType::B2C, PlanType::B2B, PlanType::AGRIECOM_B2C])) {
             return $this->error(null, "Invalid type {$type}", 400);
@@ -309,9 +309,9 @@ class SettingsService
         return $this->success(null, 'Plan updated successfully');
     }
 
-    public function deletePlan($id)
+    public function deletePlan($id, \Illuminate\Http\Request $request)
     {
-        $type = request()->query('type', PlanType::B2C);
+        $type = $request->query('type', PlanType::B2C);
 
         if (! in_array($type, [PlanType::B2C, PlanType::B2B, PlanType::AGRIECOM_B2C])) {
             return $this->error(null, "Invalid type {$type}", 400);
@@ -330,7 +330,7 @@ class SettingsService
         try {
             $password = generateRandomString();
 
-            DB::beginTransaction();
+            $this->databaseManager->beginTransaction();
 
             $admin = Admin::create([
                 'first_name' => $request->first_name,
@@ -338,28 +338,28 @@ class SettingsService
                 'email' => $request->email,
                 'phone_number' => $request->phone_number,
                 'type' => AdminType::B2C,
-                'password' => bcrypt($password),
+                'password' => $this->bcryptHasher->make($password),
                 'status' => UserStatus::ACTIVE,
             ]);
             $admin->permissions()->sync($request->permissions);
-            DB::commit();
+            $this->databaseManager->commit();
 
             defer(fn () => send_email($request->email, new AdminUserMail($admin, $password)));
 
             return $this->success(null, 'Created successfully', 201);
         } catch (\Throwable $th) {
-            DB::rollBack();
+            $this->databaseManager->rollBack();
 
             throw $th;
         }
     }
 
-    public function allUsers(): array
+    public function allUsers(\Illuminate\Http\Request $request): array
     {
-        $search = trim(request()->input('search'));
+        $search = trim($request->input('search'));
 
         $users = Admin::with(['permissions', 'roles.permissions'])
-            ->where(function ($query) use ($search): void {
+            ->where(function (\Illuminate\Contracts\Database\Query\Builder $query) use ($search): void {
                 $query->where('first_name', 'LIKE', '%'.$search.'%')
                     ->orWhere('last_name', 'LIKE', '%'.$search.'%')
                     ->orWhere('email', 'LIKE', '%'.$search.'%');
@@ -385,7 +385,7 @@ class SettingsService
     public function updateUser($request, $id)
     {
         try {
-            DB::beginTransaction();
+            $this->databaseManager->beginTransaction();
 
             $admin = Admin::findOrFail($id);
 
@@ -399,11 +399,11 @@ class SettingsService
             $admin->roles()->sync($request->role_id);
             $admin->permissions()->sync($request->permissions);
 
-            DB::commit();
+            $this->databaseManager->commit();
 
             return $this->success(null, 'Updated successfully');
         } catch (\Throwable $th) {
-            DB::rollBack();
+            $this->databaseManager->rollBack();
             throw $th;
         }
     }

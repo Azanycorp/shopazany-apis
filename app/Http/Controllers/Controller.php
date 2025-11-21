@@ -10,15 +10,14 @@ use App\Exports\B2BProductExport;
 use App\Exports\ProductExport;
 use App\Models\User;
 use App\Trait\HttpResponse;
-use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 
 abstract class Controller
 {
     use HttpResponse;
+
+    public function __construct(private readonly \Illuminate\Auth\AuthManager $authManager, private readonly \Illuminate\Foundation\Application $application, private readonly \Illuminate\Filesystem\FilesystemManager $filesystemManager, private readonly \Illuminate\Routing\UrlGenerator $urlGenerator) {}
 
     public function generateUniqueReferrerCode()
     {
@@ -45,7 +44,7 @@ abstract class Controller
 
     protected function userAuth()
     {
-        return Auth::user();
+        return $this->authManager->user();
     }
 
     public function logUserAction($request, $action, $description, $response, $user = null): void
@@ -55,16 +54,16 @@ abstract class Controller
 
     protected function getStorageFolder(string $email): string
     {
-        if (App::environment('production')) {
+        if ($this->application->environment('production')) {
             return "/prod/document/{$email}";
         }
 
         return "/stag/document/{$email}";
     }
 
-    protected function storeFile($file, string $folder): string
+    protected function storeFile($file, string $folder, \Illuminate\Http\Request $request): string
     {
-        return uploadImage(request(), $file, $folder);
+        return uploadImage($request, $file, $folder);
     }
 
     protected function exportB2bProduct(string $userId, $data)
@@ -72,12 +71,12 @@ abstract class Controller
         $fileName = 'products_'.time().'.xlsx';
         $path = 'public';
 
-        if (App::environment('production')) {
+        if ($this->application->environment('production')) {
             $folderPath = 'prod/exports/user_'.$userId.'/';
             $fileName = $folderPath.'products_'.time().'.xlsx';
             $path = 's3';
 
-        } elseif (App::environment('staging')) {
+        } elseif ($this->application->environment('staging')) {
             $folderPath = 'stag/exports/user_'.$userId.'/';
             $fileName = $folderPath.'products_'.time().'.xlsx';
             $path = 's3';
@@ -85,7 +84,7 @@ abstract class Controller
 
         Excel::store(new B2BProductExport($userId, $data), $fileName, $path);
 
-        $fileUrl = ($path === 's3') ? Storage::disk('s3')->url($fileName) : asset('storage/'.$fileName);
+        $fileUrl = ($path === 's3') ? $this->filesystemManager->disk('s3')->url($fileName) : $this->urlGenerator->asset('storage/'.$fileName);
 
         return $this->success(['file_url' => $fileUrl], 'Product export successful.');
     }
@@ -95,12 +94,12 @@ abstract class Controller
         $fileName = 'products_'.time().'.xlsx';
         $path = 'public';
 
-        if (App::environment('production')) {
+        if ($this->application->environment('production')) {
             $folderPath = 'prod/exports/user_'.$userId.'/';
             $fileName = $folderPath.'products_'.time().'.xlsx';
             $path = 's3';
 
-        } elseif (App::environment('staging')) {
+        } elseif ($this->application->environment('staging')) {
             $folderPath = 'stag/exports/user_'.$userId.'/';
             $fileName = $folderPath.'products_'.time().'.xlsx';
             $path = 's3';
@@ -108,7 +107,7 @@ abstract class Controller
 
         Excel::store(new ProductExport($userId), $fileName, $path);
 
-        $fileUrl = ($path === 's3') ? Storage::disk('s3')->url($fileName) : asset('storage/'.$fileName);
+        $fileUrl = ($path === 's3') ? $this->filesystemManager->disk('s3')->url($fileName) : $this->urlGenerator->asset('storage/'.$fileName);
 
         return $this->success(['file_url' => $fileUrl], 'Product export successful.');
     }
@@ -214,12 +213,12 @@ abstract class Controller
         $fileName = 'products_'.time().'.xlsx';
         $path = 'public';
 
-        if (App::environment('production')) {
+        if ($this->application->environment('production')) {
             $folderPath = 'prod/exports/user_'.$userId.'/';
             $fileName = $folderPath.'products_'.time().'.xlsx';
             $path = 's3';
 
-        } elseif (App::environment('staging')) {
+        } elseif ($this->application->environment('staging')) {
             $folderPath = 'stag/exports/user_'.$userId.'/';
             $fileName = $folderPath.'products_'.time().'.xlsx';
             $path = 's3';
@@ -227,7 +226,7 @@ abstract class Controller
 
         $data = null;
         Excel::store(new B2BProductExport($userId, $data), $fileName, $path);
-        $fileUrl = ($path === 's3') ? Storage::disk('s3')->url($fileName) : asset('storage/'.$fileName);
+        $fileUrl = ($path === 's3') ? $this->filesystemManager->disk('s3')->url($fileName) : $this->urlGenerator->asset('storage/'.$fileName);
 
         return $this->success(['file_url' => $fileUrl], 'Product export successful.');
     }

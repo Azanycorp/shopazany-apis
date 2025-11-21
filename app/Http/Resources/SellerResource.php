@@ -31,21 +31,20 @@ class SellerResource extends JsonResource
             'is_approved' => $this->is_admin_approve,
             'status' => (string) $this->status,
             'products' => (object) [
-                'account_name' => optional($this->bankAccount)->account_name,
-                'bank_name' => optional($this->bankAccount)->bank_name,
-                'account_number' => optional($this->bankAccount)->account_number,
+                'account_name' => $this->bankAccount?->account_name,
+                'bank_name' => $this->bankAccount?->bank_name,
+                'account_number' => $this->bankAccount?->account_number,
             ],
             'bank_account' => (object) [
-                'account_name' => optional($this->bankAccount)->account_name,
-                'bank_name' => optional($this->bankAccount)->bank_name,
-                'account_number' => optional($this->bankAccount)->account_number,
+                'account_name' => $this->bankAccount?->account_name,
+                'bank_name' => $this->bankAccount?->bank_name,
+                'account_number' => $this->bankAccount?->account_number,
             ],
             'wallet' => (object) [
-                'available_balance' => optional($this->wallet)->balance,
+                'available_balance' => $this->wallet?->balance,
                 'total_income' => 0,
                 'total_withdrawal' => 0,
             ],
-
         ];
     }
 }
