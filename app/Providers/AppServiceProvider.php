@@ -22,16 +22,6 @@ use Laravel\Sanctum\Sanctum;
 class AppServiceProvider extends ServiceProvider
 {
     /**
-     * Create a new service provider instance.
-     *
-     * @param  \Illuminate\Contracts\Foundation\Application  $app
-     */
-    public function __construct($app, private readonly \Illuminate\Database\DatabaseManager $databaseManager, private readonly \Illuminate\Routing\UrlGenerator $urlGenerator)
-    {
-        parent::__construct($app);
-    }
-
-    /**
      * Register any application services.
      */
     public function register(): void
@@ -75,7 +65,8 @@ class AppServiceProvider extends ServiceProvider
      */
     private function configureCommands(): void
     {
-        $this->databaseManager->prohibitDestructiveCommands($this->app->isProduction());
+        $databaseManager = $this->app->make(\Illuminate\Database\DatabaseManager::class);
+        $databaseManager->prohibitDestructiveCommands($this->app->isProduction());
     }
 
     /**
@@ -93,6 +84,7 @@ class AppServiceProvider extends ServiceProvider
      */
     private function configureUrl(): void
     {
-        $this->urlGenerator->formatScheme('https');
+        $urlGenerator = $this->app->make(\Illuminate\Routing\UrlGenerator::class);
+        $urlGenerator->formatScheme('https');
     }
 }
