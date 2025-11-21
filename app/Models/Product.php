@@ -212,7 +212,8 @@ class Product extends Model
     }
 
     // Scopes
-    public function scopeTopRated(Builder $query, $userId)
+    #[\Illuminate\Database\Eloquent\Attributes\Scope]
+    protected function topRated(Builder $query)
     {
         return $query->select(
             'products.id',
@@ -224,7 +225,6 @@ class Product extends Model
         )
             ->with('user:id,first_name,last_name,image')
             ->withCount('productReviews')
-            ->where('products.user_id', $userId)
             ->leftJoin('product_reviews', 'products.id', '=', 'product_reviews.product_id')
             ->withCount(['orders as sold_count' => function ($query): void {
                 $query->select(DB::raw('COUNT(*)'));
@@ -234,7 +234,8 @@ class Product extends Model
             ->orderByDesc('sold_count');
     }
 
-    public function scopeMostFavorite(Builder $query, $userId)
+    #[\Illuminate\Database\Eloquent\Attributes\Scope]
+    protected function mostFavorite(Builder $query)
     {
         return $query->select(
             'products.id',
@@ -246,7 +247,6 @@ class Product extends Model
         )
             ->with('user:id,first_name,last_name,image')
             ->withCount('productReviews')
-            ->where('products.user_id', $userId)
             ->leftJoin('product_reviews', 'products.id', '=', 'product_reviews.product_id')
             ->withCount(['orders as sold_count' => function ($query): void {
                 $query->select(DB::raw('COUNT(*)'));

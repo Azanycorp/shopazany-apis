@@ -1,8 +1,0 @@
-<?php
-
-declare(strict_types=1);
-
-return \Rector\Caching\ValueObject\CacheItem::__set_state([
-    'variableKey' => 'file_hash',
-    'data' => 'e49363cc8147f531815470a6a88849df',
-]);
