@@ -495,8 +495,14 @@ class SellerService extends Controller
             ])
             ->first();
 
-        $topRateds = Product::topRated($userId)->limit(5)->get();
-        $mostFavorites = Product::mostFavorite($userId)->limit(5)->get();
+        $topRateds = Product::where('products.user_id', $userId)
+            ->topRated()
+            ->limit(5)
+            ->get();
+        $mostFavorites = Product::where('products.user_id', $userId)
+            ->mostFavorite()
+            ->limit(5)
+            ->get();
 
         $data = [
             'total_products' => $totalProducts,
