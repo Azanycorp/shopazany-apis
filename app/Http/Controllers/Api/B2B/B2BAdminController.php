@@ -54,11 +54,11 @@ class B2BAdminController extends Controller
     }
 
     // Orders
-    public function allOrders()
+    public function allOrders(Request $request)
     {
         abort_if($this->gate->denies('order_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
 
-        return $this->adminService->getAllOrders();
+        return $this->adminService->getAllOrders($request);
     }
 
     public function markCompleted($id)
@@ -113,9 +113,9 @@ class B2BAdminController extends Controller
         return $this->adminService->UpdateConfigDetails($request);
     }
 
-    public function getAllBanners()
+    public function getAllBanners(Request $request)
     {
-        return $this->adminService->getPageBanners();
+        return $this->adminService->getPageBanners($request);
     }
 
     public function addNewBanner(NewBannerRequest $request)
@@ -139,9 +139,9 @@ class B2BAdminController extends Controller
     }
 
     // Seller Products Approval Request
-    public function allProducts()
+    public function allProducts(Request $request)
     {
-        return $this->adminService->allProducts();
+        return $this->adminService->allProducts($request);
     }
 
     public function viewProduct($id)
@@ -160,9 +160,9 @@ class B2BAdminController extends Controller
     }
 
     // Subscription plans
-    public function b2bSubscriptionPlans()
+    public function b2bSubscriptionPlans(Request $request)
     {
-        return $this->adminService->b2bSubscriptionPlans();
+        return $this->adminService->b2bSubscriptionPlans($request);
     }
 
     public function addSubscriptionPlan(SubscriptionPlanRequest $request)
@@ -186,9 +186,9 @@ class B2BAdminController extends Controller
     }
 
     // Blog Section
-    public function getBlogs()
+    public function getBlogs(Request $request)
     {
-        return $this->adminService->allBlogs();
+        return $this->adminService->allBlogs($request);
     }
 
     public function addBlog(BlogRequest $request)
@@ -265,11 +265,11 @@ class B2BAdminController extends Controller
     }
 
     // Admin Users
-    public function adminUsers()
+    public function adminUsers(Request $request)
     {
         abort_if($this->gate->denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
 
-        return $this->adminService->adminUsers();
+        return $this->adminService->adminUsers($request);
     }
 
     public function addAdmin(AdminUserRequest $request)

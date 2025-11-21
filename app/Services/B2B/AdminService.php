@@ -40,6 +40,7 @@ use App\Repositories\B2BProductRepository;
 use App\Repositories\B2BSellerShippingRepository;
 use App\Trait\HttpResponse;
 use App\Trait\SignUp;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Str;
 
 class AdminService
@@ -179,7 +180,7 @@ class AdminService
         })->get();
 
         $local_orders = B2bOrder::with(['buyer', 'seller'])->when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
-            $queryBuilder->where(function (\Illuminate\Contracts\Database\Query\Builder $subQuery) use ($searchQuery): void {
+            $queryBuilder->where(function (Builder $subQuery) use ($searchQuery): void {
                 $subQuery->where('country_id', 160)
                     ->where('order_no', 'LIKE', '%'.$searchQuery.'%');
             });
@@ -361,7 +362,7 @@ class AdminService
         return $this->success(null, 'User removed successfully');
     }
 
-    public function bulkRemove($request, \Illuminate\Http\Request $request)
+    public function bulkRemove($request)
     {
         $type = $request->query('type');
         $users = User::where('type', $type ?? UserType::B2B_SELLER)
@@ -767,9 +768,9 @@ class AdminService
         return $this->success(null, 'Details updated');
     }
 
-    public function getPageBanners()
+    public function getPageBanners($request)
     {
-        $type = request()->query('type');
+        $type = $request->query('type');
 
         $banners = PageBanner::select('id', 'page', 'section', 'type', 'banner_url')
             ->when($type, fn ($q) => $q->where('type', $type))->latest()->get();
@@ -797,7 +798,7 @@ class AdminService
 
     public function addPageBanner($request)
     {
-        $type = request()->query('type');
+        $type = $request->query('type');
 
         $banner_url = $request->hasFile('banner_url') ?
             uploadImage($request, 'banner_url', 'home-banner') :
@@ -845,9 +846,9 @@ class AdminService
     }
 
     // seller Product request
-    public function allProducts()
+    public function allProducts($request)
     {
-        $type = request()->query('type');
+        $type = $request->query('type');
 
         $products = B2BProduct::with(['user' => function ($query): void {
             $query->select('id', 'first_name', 'last_name')
@@ -897,9 +898,9 @@ class AdminService
     }
 
     // Subscription Plans
-    public function b2bSubscriptionPlans()
+    public function b2bSubscriptionPlans($request)
     {
-        $type = request()->query('type');
+        $type = $request->query('type');
         $plans = SubscriptionPlan::when($type, fn ($q) => $q->where('type', $type))->latest()->get();
 
         return $this->success(SubscriptionPlanResource::collection($plans), 'All B2B Plans');
@@ -907,7 +908,7 @@ class AdminService
 
     public function addSubscriptionPlan($request)
     {
-        $currencyCode = $this->currencyCode($request);
+        $currencyCode = currencyCodeByCountryId($request->country_id);
 
         $plan = SubscriptionPlan::create([
             'title' => $request->title,
@@ -946,7 +947,7 @@ class AdminService
             return $this->error(null, 'Plan not found', 404);
         }
 
-        $currencyCode = $this->currencyCode($request);
+        $currencyCode = currencyCodeByCountryId($request->country_id);
 
         $plan->update([
             'title' => $request->title,
@@ -982,9 +983,9 @@ class AdminService
     }
 
     // Blog Section
-    public function allBlogs()
+    public function allBlogs($request)
     {
-        $type = request()->query('type');
+        $type = $request->query('type');
 
         $currentUserId = userAuthId();
 
@@ -1109,7 +1110,7 @@ class AdminService
     }
 
     // Admin User Management
-    public function adminUsers(\Illuminate\Http\Request $request)
+    public function adminUsers($request)
     {
         $authUser = userAuth();
 
@@ -1120,7 +1121,7 @@ class AdminService
             ->where('type', AdminType::B2B)
             ->whereNot('id', $authUser->id)
             ->when($searchQuery, function ($queryBuilder) use ($searchQuery) {
-                $queryBuilder->where(function (\Illuminate\Contracts\Database\Query\Builder $subQuery) use ($searchQuery) {
+                $queryBuilder->where(function (Builder $subQuery) use ($searchQuery) {
                     $subQuery->where('first_name', 'LIKE', "%{$searchQuery}%")
                         ->orWhere('email', 'LIKE', "%{$searchQuery}%");
                 });

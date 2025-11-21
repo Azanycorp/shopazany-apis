@@ -19,11 +19,11 @@ class AdminCustomerController extends Controller
         private readonly Gate $gate
     ) {}
 
-    public function allCustomers(): array
+    public function allCustomers(Request $request): array
     {
         abort_if($this->gate->denies('customer_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
 
-        return $this->service->allCustomers();
+        return $this->service->allCustomers($request);
     }
 
     public function viewCustomer($id)
@@ -54,11 +54,11 @@ class AdminCustomerController extends Controller
         return $this->service->removeCustomer($request);
     }
 
-    public function filter(): array
+    public function filter(Request $request): array
     {
         abort_if($this->gate->denies('customer_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
 
-        return $this->service->filter();
+        return $this->service->filter($request);
     }
 
     public function addCustomer(Request $request)

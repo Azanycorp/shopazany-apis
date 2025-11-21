@@ -96,7 +96,7 @@ class CustomerService
         return $this->success(null, 'User(s) have been removed successfully');
     }
 
-    public function filter(\Illuminate\Http\Request $request): array
+    public function filter($request): array
     {
         $query = trim($request->query('approved'));
 

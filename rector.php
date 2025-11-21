@@ -38,8 +38,8 @@ return RectorConfig::configure()
         'dd', 'dump', 'var_dump',
     ])
     ->withSkip([
-        HelperFuncCallToFacadeClassRector::class => [__DIR__.'/app/Models/User.php'],
-        StaticCallToMethodCallRector::class => [__DIR__.'/app/Providers/AppServiceProvider.php'],
+        HelperFuncCallToFacadeClassRector::class,
+        StaticCallToMethodCallRector::class,
     ])
-    ->withCache(__DIR__.'/storage/rector', FileCacheStorage::class)
+    ->withCache(__DIR__.'/rector', FileCacheStorage::class)
     ->withPhpVersion(PhpVersion::PHP_84);
