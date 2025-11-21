@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d9cbf558c801772d86357fdf749f0591",
+    "content-hash": "38e616272efe79cbb21b1b46bf00b4bb",
     "packages": [
         {
             "name": "authorizenet/authorizenet",
@@ -10512,7 +10512,7 @@
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
-        "php": "^8.4"
+        "php": "^8.3"
     },
     "platform-dev": {},
     "plugin-api-version": "2.6.0"

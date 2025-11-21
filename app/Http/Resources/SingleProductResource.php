@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use App\Enum\OrderStatus;
 use App\Models\Order;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -16,7 +17,7 @@ class SingleProductResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $item_sold = Order::whereHas('products', function (\Illuminate\Contracts\Database\Query\Builder $query): void {
+        $item_sold = Order::whereHas('products', function (Builder $query): void {
             $query->where('product_id', $this->id);
         })
             ->where('status', OrderStatus::DELIVERED)

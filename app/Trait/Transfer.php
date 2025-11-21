@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\WithdrawalRequest;
 use App\Notifications\WithdrawalNotification;
 use App\Services\PayoutService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -19,7 +20,7 @@ trait Transfer
         User::with(['withdrawalRequests' => function ($query): void {
             $query->where('status', WithdrawalStatus::PENDING);
         }, 'paymentMethods'])
-            ->whereHas('withdrawalRequests', function (\Illuminate\Contracts\Database\Query\Builder $query): void {
+            ->whereHas('withdrawalRequests', function (Builder $query): void {
                 $query->where('status', WithdrawalStatus::PENDING);
             })
             ->chunk(100, function ($users) use (&$requests): void {
