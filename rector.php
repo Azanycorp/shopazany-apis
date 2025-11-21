@@ -7,6 +7,7 @@ use Rector\Config\RectorConfig;
 use Rector\Transform\Rector\StaticCall\StaticCallToMethodCallRector;
 use Rector\ValueObject\PhpVersion;
 use RectorLaravel\Rector\Empty_\EmptyToBlankAndFilledFuncRector;
+use RectorLaravel\Rector\FuncCall\ArgumentFuncCallToMethodCallRector;
 use RectorLaravel\Rector\FuncCall\HelperFuncCallToFacadeClassRector;
 use RectorLaravel\Rector\FuncCall\RemoveDumpDataDeadCodeRector;
 use RectorLaravel\Rector\MethodCall\ResponseHelperCallToJsonResponseRector;
@@ -40,6 +41,7 @@ return RectorConfig::configure()
     ->withSkip([
         HelperFuncCallToFacadeClassRector::class,
         StaticCallToMethodCallRector::class,
+        ArgumentFuncCallToMethodCallRector::class,
     ])
     ->withCache(__DIR__.'/rector', FileCacheStorage::class)
     ->withPhpVersion(PhpVersion::PHP_84);

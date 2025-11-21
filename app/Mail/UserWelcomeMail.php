@@ -21,7 +21,7 @@ class UserWelcomeMail extends Mailable
     /**
      * Create a new message instance.
      */
-    public function __construct($user, private readonly \Illuminate\Foundation\Application $application)
+    public function __construct($user)
     {
         $this->user = $user;
         $urls = $this->getUrls();
@@ -66,7 +66,7 @@ class UserWelcomeMail extends Mailable
 
     protected function getUrls(): array
     {
-        if ($this->application->environment('production')) {
+        if (app()->environment('production')) {
             return [
                 'baseUrl' => 'https://shopazany.com/en',
                 'loginUrl' => 'https://shopazany.com/en/login',
