@@ -11,7 +11,7 @@
         }
     ],
     "require": {
-        "php": "^8.4",
+        "php": "^8.3",
         "authorizenet/authorizenet": "^2.0",
         "imagekit/imagekit": "^4.0",
         "jenssegers/agent": "^2.6",
