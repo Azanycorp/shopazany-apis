@@ -10,7 +10,7 @@ class FileUploader
 {
     protected $providers = [];
 
-    public function __construct(\Illuminate\Contracts\Config\Repository $repository, private readonly \Illuminate\Log\Writer $writer)
+    public function __construct(\Illuminate\Contracts\Config\Repository $repository)
     {
         foreach ($repository->get('fileservices.providers') as $providerConfig) {
             $providerName = $providerConfig['name'];
@@ -53,10 +53,10 @@ class FileUploader
                     return $provider['instance']->upload($file, $folder);
                 } catch (\Throwable $e) {
                     $attempts++;
-                    $this->writer->warning("Upload failed on {$provider['name']} attempt {$attempts}/{$provider['retries']}: ".$e->getMessage());
+                    logger()->warning("Upload failed on {$provider['name']} attempt {$attempts}/{$provider['retries']}: ".$e->getMessage());
                 }
             }
-            $this->writer->info("All retries exhausted for {$provider['name']}, moving to next provider.");
+            logger()->info("All retries exhausted for {$provider['name']}, moving to next provider.");
         }
 
         throw new \Exception('All providers failed after retries.');
@@ -71,14 +71,14 @@ class FileUploader
         foreach ($this->providers as $provider) {
             try {
                 $provider['instance']->delete($publicId);
-                $this->writer->info("Deleted file from {$provider['name']} using ID: {$publicId}");
+                logger()->info("Deleted file from {$provider['name']} using ID: {$publicId}");
 
                 return;
             } catch (\Throwable $e) {
-                $this->writer->warning("Delete failed on {$provider['name']}: ".$e->getMessage());
+                logger()->warning("Delete failed on {$provider['name']}: ".$e->getMessage());
             }
         }
 
-        $this->writer->error("Failed to delete file: {$publicId} on all providers.");
+        logger()->error("Failed to delete file: {$publicId} on all providers.");
     }
 }
