@@ -3,26 +3,25 @@
 namespace App\Services\Curl;
 
 use Exception;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class ChargeUserService
 {
-    protected $baseUrl;
+    protected string $baseUrl;
 
-    protected $subscription;
+    protected object $subscription;
 
     private static $secret_key;
 
-    public function __construct($subscription, \Illuminate\Contracts\Config\Repository $repository, \Illuminate\Contracts\Config\Repository $repository, \Illuminate\Contracts\Config\Repository $repository, \Illuminate\Contracts\Config\Repository $repository)
+    public function __construct($subscription)
     {
         $this->subscription = $subscription;
-        $this->baseUrl = $repository->get('paystack.paymentUrl');
+        $this->baseUrl = config('paystack.paymentUrl');
 
-        if ($repository->get('services.paystack.mode') == 'live') {
-            self::$secret_key = $repository->get('services.paystack.live_sk');
-        } else {
-            self::$secret_key = $repository->get('services.paystack.test_sk');
-        }
+        self::$secret_key = config('services.paystack.mode') === 'live'
+            ? config('services.paystack.live_sk')
+            : config('services.paystack.test_sk');
     }
 
     public function run()
@@ -31,45 +30,32 @@ class ChargeUserService
 
         try {
 
-            $fields = [
+            $payload = [
                 'authorization_code' => $this->subscription?->authorization_data?->authorization_code,
                 'email' => $this->subscription?->user?->email,
                 'amount' => $this->subscription?->subscriptionPlan?->cost * 100,
             ];
 
-            $fields_string = http_build_query($fields);
+            $response = Http::withToken(self::$secret_key)
+                ->timeout(30)
+                ->asForm()
+                ->post($url, $payload);
 
-            $ch = curl_init();
-
-            curl_setopt($ch, CURLOPT_URL, $url);
-            curl_setopt($ch, CURLOPT_POST, true);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $fields_string);
-            curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                'Authorization: Bearer '.self::$secret_key,
-                'Cache-Control: no-cache',
-            ]);
-
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-
-            $result = curl_exec($ch);
-            $err = curl_error($ch);
-
-            if ($err !== '' && $err !== '0') {
-                throw new Exception($err);
+            if ($response->failed()) {
+                throw new Exception($response->json('message', 'Unable to charge user.'));
             }
 
-            $response = json_decode($result);
+            $data = (object) $response->json();
 
-            if (! $response->status) {
-                throw new Exception($response->message);
+            if (! $data->status) {
+                throw new Exception($data->message);
             }
 
-            return $response;
-
+            return $data;
         } catch (Exception $e) {
             Log::info($e->getMessage());
-        }
 
-        return null;
+            return null;
+        }
     }
 }
