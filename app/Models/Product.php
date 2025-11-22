@@ -48,6 +48,13 @@ class Product extends Model
         'condition',
     ];
 
+    protected static function booted()
+    {
+        static::addGlobalScope('in_stock', function (Builder $builder) {
+            $builder->where('current_stock_quantity', '>', 0);
+        });
+    }
+
     protected function casts(): array
     {
         return [
