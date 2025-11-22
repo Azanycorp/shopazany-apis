@@ -11,6 +11,10 @@ use App\Services\Curl\GetCurlService;
 use App\Services\Payment\AuthorizeNet\ChargeCardService;
 use App\Trait\HttpResponse;
 use App\Trait\Transfer;
+use Illuminate\Auth\AuthManager;
+use Illuminate\Contracts\Cache\Repository;
+use Illuminate\Contracts\Config\Repository as ConfigRepository;
+use Illuminate\Contracts\Routing\ResponseFactory;
 use Illuminate\Support\Facades\Log;
 
 class PaymentService
@@ -19,10 +23,10 @@ class PaymentService
 
     public function __construct(
         protected ChargeCardService $chargeCardService,
-        private readonly \Illuminate\Auth\AuthManager $authManager,
-        private readonly \Illuminate\Contracts\Cache\Repository $cacheManager,
-        private readonly \Illuminate\Contracts\Config\Repository $repository,
-        private readonly \Illuminate\Contracts\Routing\ResponseFactory $responseFactory
+        private readonly AuthManager $authManager,
+        private readonly Repository $cacheManager,
+        private readonly ConfigRepository $repository,
+        private readonly ResponseFactory $responseFactory
     ) {}
 
     public function processPayment($request)

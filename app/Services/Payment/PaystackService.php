@@ -34,6 +34,7 @@ use App\Models\WithdrawalRequest;
 use App\Notifications\WithdrawalNotification;
 use App\Services\Curl\PostCurl;
 use App\Services\SubscriptionService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -242,6 +243,8 @@ class PaystackService
                 self::sendOrderConfirmationEmail($user, $orderedItems, $orderNo, $formattedAmount);
                 self::sendSellerOrderEmail($product?->user, $orderedItems, $orderNo, $formattedAmount);
 
+                $request = app(Request::class);
+
                 (new UserLogAction(
                     $request,
                     UserLog::PAYMENT,
@@ -376,6 +379,8 @@ class PaystackService
                 $subject = 'B2B Order Confirmation';
                 $mail_class = B2BOrderEmail::class;
                 mailSend($type, $user, $subject, $mail_class, $orderItemData);
+
+                $request = app(Request::class);
 
                 (new UserLogAction(
                     $request,
