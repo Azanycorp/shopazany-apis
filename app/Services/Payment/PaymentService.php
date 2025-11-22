@@ -18,7 +18,11 @@ class PaymentService
     use HttpResponse, Transfer;
 
     public function __construct(
-        protected ChargeCardService $chargeCardService, private readonly \Illuminate\Auth\AuthManager $authManager, private readonly \Illuminate\Contracts\Cache\Repository $cacheManager, private readonly \Illuminate\Contracts\Config\Repository $repository, private readonly \Illuminate\Contracts\Routing\ResponseFactory $responseFactory
+        protected ChargeCardService $chargeCardService,
+        private readonly \Illuminate\Auth\AuthManager $authManager,
+        private readonly \Illuminate\Contracts\Cache\Repository $cacheManager,
+        private readonly \Illuminate\Contracts\Config\Repository $repository,
+        private readonly \Illuminate\Contracts\Routing\ResponseFactory $responseFactory
     ) {}
 
     public function processPayment($request)
