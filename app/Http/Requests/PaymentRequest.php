@@ -28,7 +28,7 @@ class PaymentRequest extends FormRequest
             'email' => ['required', 'email', 'email:rfc,dns'],
             'amount' => ['required', 'integer'],
             'currency' => ['required', 'string', 'in:NGN,USD'],
-            'payment_redirect_url' => ['required', 'url'],
+            'payment_redirect_url' => ['required', 'string', 'url'],
         ];
     }
 }
