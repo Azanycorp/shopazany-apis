@@ -6,14 +6,20 @@ use App\Http\Resources\CartResource;
 use App\Models\Cart;
 use App\Models\Product;
 use App\Models\ProductVariation;
+use App\Trait\CartTrait;
 use App\Trait\HttpResponse;
+use Illuminate\Auth\AuthManager;
 use Illuminate\Http\Request;
+use Illuminate\Session\SessionManager;
 
 class CartService
 {
-    use HttpResponse;
+    use CartTrait, HttpResponse;
 
-    public function __construct(private readonly \Illuminate\Auth\AuthManager $authManager, private readonly \Illuminate\Session\SessionManager $sessionManager) {}
+    public function __construct(
+        private readonly AuthManager $authManager,
+        private readonly SessionManager $sessionManager
+    ) {}
 
     public function addToCart($request)
     {
@@ -46,6 +52,10 @@ class CartService
                 return $this->error(null, 'Selected variation not found.', 404);
             }
 
+            if ($variation->stock <= 0) {
+                return $this->error(null, 'Product is out of stock.', 400);
+            }
+
             if ($quantity > $variation->stock) {
                 return $this->error(null, "Only {$variation->stock} units available for this variation.", 400);
             }
@@ -60,6 +70,10 @@ class CartService
         }
 
         $product = Product::findOrFail($request->product_id);
+
+        if ($product->current_stock_quantity <= 0) {
+            return $this->error(null, 'Product is out of stock.', 400);
+        }
 
         if ($quantity > $product->minimum_order_quantity) {
             return $this->error(null, "You can only order a maximum of {$product->minimum_order_quantity} of this product.", 400);
@@ -111,25 +125,16 @@ class CartService
         $internationalItems = $cartItems->filter(fn ($cartItem): bool => $cartItem->product->country_id != 160);
         $defaultCurrency = userAuth()->default_currency;
 
-        $totalLocalPrice = $localItems->sum(function ($item) use ($defaultCurrency): float {
-            $price = ($item->variation?->price ?? $item->product?->discounted_price) * $item->quantity;
-            $currency = $item->variation ? $item->variation?->product?->shopCountry?->currency : $item->product?->shopCountry?->currency;
-
-            return currencyConvert($currency, $price, $defaultCurrency);
-        });
-
-        $totalInternationalPrice = $internationalItems->sum(function ($item) use ($defaultCurrency): float {
-            $price = ($item->variation?->price ?? $item->product?->discounted_price) * $item->quantity;
-            $currency = $item->variation ? $item->variation?->product?->shopCountry?->currency : $item->product?->shopCountry?->currency;
-
-            return currencyConvert($currency, $price, $defaultCurrency);
-        });
+        $totalLocalPrice = $this->getLocalPrice($localItems, $defaultCurrency);
+        $totalInternationalPrice = $this->getInternaltionalPrice($internationalItems, $defaultCurrency);
+        $totalDiscount = $this->getTotalDiscount($defaultCurrency);
 
         return $this->success([
             'local_items' => CartResource::collection($localItems),
             'international_items' => CartResource::collection($internationalItems),
             'total_local_price' => $totalLocalPrice,
             'total_international_price' => $totalInternationalPrice,
+            'total_discount_price' => $cartItems->sum($totalDiscount),
         ], 'Cart items');
     }
 
