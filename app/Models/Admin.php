@@ -32,16 +32,6 @@ class Admin extends Authenticatable
         'remember_token',
     ];
 
-    /**
-     * Create a new Eloquent model instance.
-     *
-     * @param  array<string, mixed>  $attributes
-     */
-    public function __construct(array $attributes, private readonly \Illuminate\Contracts\Config\Repository $repository)
-    {
-        parent::__construct($attributes);
-    }
-
     protected function fullName(): Attribute
     {
         return Attribute::make(get: function (): string {
@@ -60,7 +50,7 @@ class Admin extends Authenticatable
     {
         $email = $this->email;
 
-        $url = $this->repository->get('services.reset_password_url').'?token='.$token.'&email='.$email;
+        $url = config('services.reset_password_url').'?token='.$token.'&email='.$email;
 
         $this->notify(new ResetPasswordNotification($url));
     }
