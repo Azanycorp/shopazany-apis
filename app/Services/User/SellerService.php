@@ -19,6 +19,7 @@ use App\Trait\General;
 use App\Trait\HttpResponse;
 use App\Trait\Product as TraitProduct;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -100,20 +101,20 @@ class SellerService extends Controller
         $name = $parts[0];
         $folderPath = folderNames('product', $name, 'front_image');
 
-        $this->databaseManager->beginTransaction();
+        DB::beginTransaction();
         try {
             $url = $this->uploadFrontImage($request, $folderPath);
             $product = $this->createProductRecord($request, $user, $slug, $url, $type);
             $this->uploadAdditionalImages($request, $name, $product);
             $this->createProductVariations($request, $product, $name);
 
-            $this->databaseManager->commit();
+            DB::commit();
 
             return $this->success(null, 'Added successfully', 201);
         } catch (\Exception $e) {
-            $this->databaseManager->rollBack();
+            DB::rollBack();
 
-            return $this->error(null, 'Failed to create product: '.$e->getMessage(), 500);
+            return $this->error(null, 'Failed to create product: '.$e->getMessage(), 400);
         }
     }
 
