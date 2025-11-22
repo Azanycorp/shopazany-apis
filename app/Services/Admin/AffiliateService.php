@@ -6,17 +6,18 @@ use App\Enum\UserStatus;
 use App\Enum\WithdrawalStatus;
 use App\Models\User;
 use App\Trait\HttpResponse;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\Password;
 
 class AffiliateService
 {
     use HttpResponse;
 
+    public function __construct(private readonly \Illuminate\Auth\Passwords\PasswordBrokerManager $passwordBrokerManager, private readonly \Illuminate\Contracts\Routing\ResponseFactory $responseFactory) {}
+
     public function overview()
     {
-        $startDate = Carbon::now()->subDays(7)->startOfDay();
-        $endDate = Carbon::now()->endOfDay();
+        $startDate = \Illuminate\Support\Facades\Date::now()->subDays(7)->startOfDay();
+        $endDate = \Illuminate\Support\Facades\Date::now()->endOfDay();
 
         $activeAffiliates = User::where('is_affiliate_member', 1)
             ->where('status', UserStatus::ACTIVE)
@@ -72,7 +73,7 @@ class AffiliateService
             ->map(function ($users, $countryId): array {
                 return [
                     'country' => $countryId,
-                    'country_name' => optional($users->first()->userCountry)->name,
+                    'country_name' => $users->first()->userCountry?->name,
                     'referred' => $users->count(),
                     'percentage' => round(($users->count() / User::whereIn('id', function ($query): void {
                         $query->select('referee_id')->from('referral_relationships');
@@ -170,12 +171,12 @@ class AffiliateService
             return $this->error(null, 'User not found', 404);
         }
 
-        $status = Password::broker('users')->sendResetLink(
+        $status = $this->passwordBrokerManager->broker('users')->sendResetLink(
             $request->only('email')
         );
 
         return $status === Password::RESET_LINK_SENT
-            ? response()->json(['message' => __($status)])
-            : response()->json(['message' => __($status)], 500);
+            ? $this->responseFactory->json(['message' => __($status)])
+            : $this->responseFactory->json(['message' => __($status)], 500);
     }
 }

@@ -14,18 +14,10 @@ use Illuminate\Http\Request;
 
 class B2BAccountController extends Controller
 {
-    protected \App\Services\B2B\Auth\AuthService $service;
-
-    protected \App\Services\B2B\SellerService $sellerService;
-
-    protected \App\Services\B2B\BuyerService $buyerService;
-
-    public function __construct(AuthService $service, SellerService $sellerService, BuyerService $buyerService)
-    {
-        $this->service = $service;
-        $this->sellerService = $sellerService;
-        $this->buyerService = $buyerService;
-    }
+    public function __construct(
+        protected AuthService $service,
+        protected SellerService $sellerService,
+        protected BuyerService $buyerService) {}
 
     public function login(LoginRequest $request)
     {
@@ -40,8 +32,8 @@ class B2BAccountController extends Controller
     public function verify(Request $request)
     {
         $request->validate([
-            'email' => 'required|email|exists:users,email',
-            'code' => 'required|string',
+            'email' => ['required', 'email', 'exists:users,email'],
+            'code' => ['required', 'string'],
         ]);
 
         return $this->service->verify($request);
@@ -50,7 +42,7 @@ class B2BAccountController extends Controller
     public function resendCode(Request $request)
     {
         $request->validate([
-            'email' => 'required|email|exists:users,email',
+            'email' => ['required', 'email', 'exists:users,email'],
         ]);
 
         return $this->service->resendCode($request);

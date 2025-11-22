@@ -22,9 +22,9 @@ class SocialLinkRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|string|max:240',
-            'icon' => 'required|string',
-            'url' => 'required|url',
+            'name' => ['required', 'string', 'max:240'],
+            'icon' => ['required', 'string'],
+            'url' => ['required', 'url'],
         ];
     }
 }

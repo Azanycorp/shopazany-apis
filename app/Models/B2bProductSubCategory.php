@@ -23,6 +23,9 @@ class B2bProductSubCategory extends Model
         return $this->belongsTo(B2BProductCategory::class, 'category_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\B2BProduct, $this>
+     */
     public function products(): HasMany
     {
         return $this->hasMany(B2BProduct::class, 'sub_category_id');

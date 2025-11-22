@@ -32,22 +32,22 @@ class CartResource extends JsonResource
 
     private function calculatePrice()
     {
-        return $this->variation ? $this->variation->price : optional($this->product)->discounted_price;
+        return $this->variation ? $this->variation->price : $this->product?->discounted_price;
     }
 
     private function transformProduct($defaultCurrency): array
     {
         return [
-            'id' => optional($this->product)->id,
-            'name' => optional($this->product)->name,
-            'slug' => optional($this->product)->slug,
-            'description' => optional($this->product)->description,
+            'id' => $this->product?->id,
+            'name' => $this->product?->name,
+            'slug' => $this->product?->slug,
+            'description' => $this->product?->description,
             'product_price' => $this->convertProductPrice($defaultCurrency),
             'discount_price' => $this->convertDiscountPrice($defaultCurrency),
             'price' => $this->convertPrice($defaultCurrency),
-            'image' => optional($this->product)->image,
-            'brand' => optional($this->product->brand)->name,
-            'country_id' => (int) optional($this->product)->country_id,
+            'image' => $this->product?->image,
+            'brand' => $this->product?->brand?->name,
+            'country_id' => (int) $this->product?->country_id,
             'currency' => $this->product?->shopCountry?->currency,
         ];
     }
@@ -75,8 +75,8 @@ class CartResource extends JsonResource
     private function transformSeller(): array
     {
         return [
-            'first_name' => optional($this->product)->user?->first_name,
-            'last_name' => optional($this->product)->user?->last_name,
+            'first_name' => $this->product?->user?->first_name,
+            'last_name' => $this->product?->user?->last_name,
         ];
     }
 

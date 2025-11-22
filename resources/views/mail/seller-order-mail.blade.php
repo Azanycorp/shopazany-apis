@@ -183,82 +183,57 @@
             $subtotal = 0;
         @endphp
         @foreach ($items as $order)
+            @php
+                $symbol = match($user->default_currency) {
+                    'USD' => '$',
+                    'NGN' => '₦',
+                    default => $user->default_currency,
+                };
+                $price = currencyConvert($order['currency'], $order['price'], $user->default_currency);
+                $subtotal += $price * $order['quantity'];
+            @endphp
             <div class="product">
                 <img src="{{ $order['image'] }}" alt="{{ $order['product_name'] }}">
                 <div class="product-info">
                     <h3>{{ $order['product_name'] }}</h3>
                     <p class="price">
-                        @if($order['currency'] === 'USD')
-                            $
-                        @elseif($order['currency'] === 'NGN')
-                            ₦
-                        @else
-                            {{ $order['currency'] }}
-                        @endif
-                        {{ number_format($order['price']) }}
+                        {{ $symbol }}{{ number_format($price) }}
                     </p>
                     <p>QTY: {{ $order['quantity'] }}</p>
                 </div>
             </div>
-
-            @php
-                $subtotal += $order['price'] * $order['quantity'];
-            @endphp
         @endforeach
 
         @php
-            $currency = $items[0]['currency'] ?? 'USD';
+            $itemCurrency = $items[0]['currency'] ?? 'USD';
+            $symbol = match($itemCurrency) {
+                'USD' => '$',
+                'NGN' => '₦',
+                default => $itemCurrency,
+            };
         @endphp
         <div class="total">
             <span>Subtotal</span>
             <span>
-                @if($currency === 'USD')
-                    $
-                @elseif($currency === 'NGN')
-                    ₦
-                @else
-                    {{ $currency }}
-                @endif
-                {{ number_format($subtotal) }}
+                {{ $symbol }}{{ number_format($subtotal) }}
             </span>
         </div>
         <div class="total">
             <span>Tax</span>
             <span>
-                @if($currency === 'USD')
-                    $
-                @elseif($currency === 'NGN')
-                    ₦
-                @else
-                    {{ $currency }}
-                @endif
-                00.00
+                {{ $symbol }}00.00
             </span>
         </div>
         <div class="total">
             <span>Shipping</span>
             <span>
-                @if($currency === 'USD')
-                    $
-                @elseif($currency === 'NGN')
-                    ₦
-                @else
-                    {{ $currency }}
-                @endif
-                00.00
+                {{ $symbol }}00.00
             </span>
         </div>
         <div class="total">
             <span>Total</span>
             <span>
-                @if($currency === 'USD')
-                    $
-                @elseif($currency === 'NGN')
-                    ₦
-                @else
-                    {{ $currency }}
-                @endif
-                {{ number_format($totalAmount) }}
+                {{ $symbol }}{{ number_format($totalAmount) }}
             </span>
         </div>
     </div>

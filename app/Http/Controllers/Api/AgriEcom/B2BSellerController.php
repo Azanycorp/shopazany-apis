@@ -61,29 +61,29 @@ class B2BSellerController extends Controller
         return $this->service->addShipping($request);
     }
 
-    public function getAllShipping($user_id)
+    public function getAllShipping(int $userId)
     {
-        return $this->service->getAllShipping($user_id);
+        return $this->service->getAllShipping($userId);
     }
 
-    public function getShippingById($user_id, $shipping_id)
+    public function getShippingById(int $userId, int $shippingId)
     {
-        return $this->service->getShippingById($user_id, $shipping_id);
+        return $this->service->getShippingById($userId, $shippingId);
     }
 
-    public function updateShipping(SellerShippingRequest $request, $shipping_id)
+    public function updateShipping(SellerShippingRequest $request, int $shippingId)
     {
-        return $this->service->updateShipping($request, $shipping_id);
+        return $this->service->updateShipping($request, $shippingId);
     }
 
-    public function deleteShipping($user_id, $shipping_id)
+    public function deleteShipping(int $userId, int $shippingId)
     {
-        return $this->service->deleteShipping($user_id, $shipping_id);
+        return $this->service->deleteShipping($userId, $shippingId);
     }
 
-    public function setDefault($user_id, $shipping_id)
+    public function setDefault(int $userId, int $shippingId)
     {
-        return $this->service->setDefault($user_id, $shipping_id);
+        return $this->service->setDefault($userId, $shippingId);
     }
 
     // Seller Wihdrawal method
@@ -97,7 +97,7 @@ class B2BSellerController extends Controller
         return $this->service->addNewMethod($request);
     }
 
-    public function getWithdrawalMethod($id)
+    public function getWithdrawalMethod(int $id)
     {
         return $this->service->getSingleMethod($id);
     }
@@ -107,12 +107,12 @@ class B2BSellerController extends Controller
         return $this->service->makeAccounDefaultt($request);
     }
 
-    public function updateWithdrawalMethod(WithdrawalMethodRequest $request, $id)
+    public function updateWithdrawalMethod(WithdrawalMethodRequest $request, int $id)
     {
         return $this->service->updateMethod($request, $id);
     }
 
-    public function deleteWithdrawalMethod($id)
+    public function deleteWithdrawalMethod(int $id)
     {
         return $this->service->deleteMethod($id);
     }
@@ -122,7 +122,7 @@ class B2BSellerController extends Controller
         return $this->service->b2bproductImport($request);
     }
 
-    public function export(Request $request, $userId)
+    public function export(Request $request, int $userId)
     {
         return $this->service->exportSellerProduct($request, $userId);
     }
@@ -142,18 +142,18 @@ class B2BSellerController extends Controller
         return $this->service->updateProduct($request);
     }
 
-    public function getProductById(int $product_id, $user_id)
+    public function getProductById(int $productId, int $userId)
     {
-        return $this->service->getProductById($product_id, $user_id);
+        return $this->service->getProductById($productId, $userId);
     }
 
-    public function deleteProduct(int $user_id, $product_id)
+    public function deleteProduct(int $userId, int $productId)
     {
-        return $this->service->deleteProduct($user_id, $product_id);
+        return $this->service->deleteProduct($userId, $productId);
     }
 
-    public function getAnalytics(int $user_id)
+    public function getAnalytics(int $userId)
     {
-        return $this->service->getAnalytics($user_id);
+        return $this->service->getAnalytics($userId);
     }
 }

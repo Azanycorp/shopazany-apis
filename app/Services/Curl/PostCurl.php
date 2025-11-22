@@ -3,55 +3,40 @@
 namespace App\Services\Curl;
 
 use Exception;
+use Illuminate\Support\Facades\Http;
 
 class PostCurl
 {
-    protected string $url;
-
-    protected $headers = [];
-
-    protected array $fields;
-
-    public function __construct(string $url, array $headers = [], array $fields = [])
-    {
-        $this->url = $url;
-        foreach ($headers as $key => $value) {
-            $this->headers[] = "$key: $value";
-        }
-        $this->fields = $fields;
-    }
+    public function __construct(
+        protected string $url,
+        protected array $headers = [],
+        protected array $fields = []
+    ) {}
 
     public function execute()
     {
-        $fields_string = http_build_query($this->fields);
+        try {
+            $response = Http::withHeaders($this->headers)
+                ->timeout(60)
+                ->asForm()
+                ->post($this->url, $this->fields);
 
-        $ch = curl_init();
+            if ($response->failed()) {
+                throw new Exception(
+                    $response->json('message', 'API request failed.')
+                );
+            }
 
-        curl_setopt($ch, CURLOPT_URL, $this->url);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $fields_string);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $this->headers);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+            $result = $response->json();
 
-        $response = curl_exec($ch);
+            if (! isset($result['data'])) {
+                return $result;
+            }
 
-        if (curl_errno($ch) !== 0) {
-            $error_msg = curl_error($ch);
-            curl_close($ch);
-            throw new Exception("cURL error: $error_msg");
+            return $result['data'];
+
+        } catch (Exception $e) {
+            throw new Exception('HTTP error: '.$e->getMessage());
         }
-
-        $result = json_decode($response, true);
-
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new Exception('Invalid JSON response from API: '.json_last_error_msg());
-        }
-
-        if (! isset($result['data'])) {
-            return $result;
-        }
-
-        return $result['data'];
     }
 }

@@ -14,24 +14,24 @@ class HomeController extends Controller
         protected HomeService $service
     ) {}
 
-    public function bestSelling()
+    public function bestSelling(Request $request)
     {
-        return $this->service->bestSelling();
+        return $this->service->bestSelling($request);
     }
 
-    public function allProducts()
+    public function allProducts(Request $request)
     {
-        return $this->service->allProducts();
+        return $this->service->allProducts($request);
     }
 
-    public function featuredProduct()
+    public function featuredProduct(Request $request)
     {
-        return $this->service->featuredProduct();
+        return $this->service->featuredProduct($request);
     }
 
-    public function pocketFriendly()
+    public function pocketFriendly(Request $request)
     {
-        return $this->service->pocketFriendly();
+        return $this->service->pocketFriendly($request);
     }
 
     public function productSlug($slug)
@@ -44,19 +44,19 @@ class HomeController extends Controller
         return $this->service->topBrands();
     }
 
-    public function topSellers()
+    public function topSellers(Request $request)
     {
-        return $this->service->topSellers();
+        return $this->service->topSellers($request);
     }
 
-    public function categorySlug($slug)
+    public function categorySlug(Request $request, $slug)
     {
-        return $this->service->categorySlug($slug);
+        return $this->service->categorySlug($request, $slug);
     }
 
-    public function recommendedProducts()
+    public function recommendedProducts(Request $request)
     {
-        return $this->service->recommendedProducts();
+        return $this->service->recommendedProducts($request);
     }
 
     public function productReview(ProductReviewRequest $request)
@@ -74,19 +74,19 @@ class HomeController extends Controller
         return $this->service->saveForLater($request);
     }
 
-    public function sellerInfo($uuid)
+    public function sellerInfo(Request $request, $uuid)
     {
-        return $this->service->sellerInfo($uuid);
+        return $this->service->sellerInfo($request, $uuid);
     }
 
-    public function sellerCategory($uuid)
+    public function sellerCategory(Request $request, $uuid)
     {
-        return $this->service->sellerCategory($uuid);
+        return $this->service->sellerCategory($request, $uuid);
     }
 
-    public function sellerReviews($uuid)
+    public function sellerReviews(Request $request, $uuid)
     {
-        return $this->service->sellerReviews($uuid);
+        return $this->service->sellerReviews($request, $uuid);
     }
 
     public function moveToCart(MoveToCartRequest $request)
@@ -94,9 +94,9 @@ class HomeController extends Controller
         return $this->service->moveToCart($request);
     }
 
-    public function topProducts()
+    public function topProducts(Request $request)
     {
-        return $this->service->topProducts();
+        return $this->service->topProducts($request);
     }
 
     public function flashDeals()
@@ -109,9 +109,9 @@ class HomeController extends Controller
         return $this->service->singleFlashDeal($slug);
     }
 
-    public function getDeals()
+    public function getDeals(Request $request)
     {
-        return $this->service->getDeals();
+        return $this->service->getDeals($request);
     }
 
     public function getDealDetail($slug)

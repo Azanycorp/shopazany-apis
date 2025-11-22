@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -12,15 +13,10 @@ class AccountVerificationEmail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $user;
-
     /**
      * Create a new message instance.
      */
-    public function __construct($user)
-    {
-        $this->user = $user;
-    }
+    public function __construct(protected User $user) {}
 
     /**
      * Get the message envelope.

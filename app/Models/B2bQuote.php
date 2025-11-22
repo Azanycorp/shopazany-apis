@@ -41,6 +41,9 @@ class B2bQuote extends Model
         return $this->belongsTo(B2BProduct::class);
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\B2bProdctReview, $this>
+     */
     public function b2bProductReview(): HasMany
     {
         return $this->hasMany(B2bProdctReview::class, 'product_id');

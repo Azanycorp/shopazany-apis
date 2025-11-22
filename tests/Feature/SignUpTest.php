@@ -12,6 +12,18 @@ class SignUpTest extends TestCase
 {
     use RefreshDatabase, WithFaker;
 
+    /**
+     * @param  non-empty-string  $name
+     *
+     * @internal This method is not covered by the backward compatibility promise for PHPUnit
+     *
+     * @final
+     */
+    public function __construct(string $name, private readonly \Illuminate\Contracts\Config\Repository $repository)
+    {
+        parent::__construct($name);
+    }
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -28,18 +40,20 @@ class SignUpTest extends TestCase
     public function test_user_can_sign_up_successfully(): void
     {
         $headers = [
-            config('security.header_key', 'X-SHPAZY-AUTH') => config('security.header_value'),
+            $this->repository->get('security.header_key', 'X-SHPAZY-AUTH') => $this->repository->get('security.header_value'),
         ];
 
         $password = 'ValidPass123!@#';
         $email = 'test'.rand(00, 99).'@gmail.com';
 
         $payload = [
-            'first_name' => $this->faker->firstName,
-            'last_name' => $this->faker->lastName,
+            'first_name' => $this->faker->firstName(),
+            'last_name' => $this->faker->lastName(),
             'email' => $email,
             'password' => $password,
             'password_confirmation' => $password,
+            'country_id' => 160,
+            'state_id' => 1,
             'terms' => true,
         ];
 
@@ -52,6 +66,8 @@ class SignUpTest extends TestCase
             'email' => $payload['email'],
             'first_name' => $payload['first_name'],
             'last_name' => $payload['last_name'],
+            'country_id' => $payload['country_id'],
+            'state_id' => $payload['state_id'],
             'is_verified' => 0,
         ]);
     }
@@ -62,7 +78,7 @@ class SignUpTest extends TestCase
     public function test_user_signup_validation_errors(): void
     {
         $headers = [
-            config('security.header_key', 'X-SHPAZY-AUTH') => config('security.header_value'),
+            $this->repository->get('security.header_key', 'X-SHPAZY-AUTH') => $this->repository->get('security.header_value'),
         ];
 
         $payload = [
@@ -71,12 +87,14 @@ class SignUpTest extends TestCase
             'email' => 'invalid-email',
             'password' => 'pass',
             'password_confirmation' => 'different-pass',
+            'country_id' => 0,
+            'state_id' => 1,
             'terms' => null,
         ];
 
         $response = $this->postJson('/api/connect/signup', $payload, $headers);
 
-        $response->assertStatus(422)
+        $response->assertUnprocessable()
             ->assertJsonValidationErrors(['first_name', 'last_name', 'email', 'password', 'terms']);
     }
 
@@ -86,7 +104,7 @@ class SignUpTest extends TestCase
     public function test_user_signup_with_referral_code(): void
     {
         $headers = [
-            config('security.header_key', 'X-SHPAZY-AUTH') => config('security.header_value'),
+            $this->repository->get('security.header_key', 'X-SHPAZY-AUTH') => $this->repository->get('security.header_value'),
         ];
 
         User::factory()->create([
@@ -97,11 +115,13 @@ class SignUpTest extends TestCase
         $email = 'test'.rand(00, 99).'@gmail.com';
 
         $payload = [
-            'first_name' => $this->faker->firstName,
-            'last_name' => $this->faker->lastName,
+            'first_name' => $this->faker->firstName(),
+            'last_name' => $this->faker->lastName(),
             'email' => $email,
             'password' => $password,
             'password_confirmation' => $password,
+            'country_id' => 160,
+            'state_id' => 1,
             'terms' => true,
         ];
 

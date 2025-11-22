@@ -15,6 +15,8 @@ class AuthService
 {
     use HttpResponse;
 
+    public function __construct(private readonly \Illuminate\Hashing\BcryptHasher $bcryptHasher) {}
+
     public function register($request)
     {
         $code = generateVerificationCode();
@@ -25,7 +27,7 @@ class AuthService
             'email_verified_at' => null,
             'verification_code' => $code,
             'is_verified' => 0,
-            'password' => bcrypt($request->password),
+            'password' => $this->bcryptHasher->make($request->password),
         ]);
 
         $description = "User with email: {$request->email} signed up";

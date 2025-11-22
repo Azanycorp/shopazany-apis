@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Collection;
 
 class SearchB2BOrderResource extends JsonResource
 {
@@ -16,7 +17,7 @@ class SearchB2BOrderResource extends JsonResource
     {
         return [
             'product_quantity' => (string) $this->product_quantity,
-            'product' => collect($this->product_data)->only(['name', 'fob_price', 'front_image']),
+            'product' => (new Collection($this->product_data))->only(['name', 'fob_price', 'front_image']),
             'total_amount' => (string) $this->total_amount,
             'vendor' => (object) [
                 'business_name' => $this?->seller?->businessInformation?->business_name,

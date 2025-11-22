@@ -28,11 +28,17 @@ class Payment extends Model
         'type',
     ];
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Order, $this>
+     */
     public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class, 'id', 'payment_id');

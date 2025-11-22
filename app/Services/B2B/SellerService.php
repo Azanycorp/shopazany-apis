@@ -35,10 +35,6 @@ use App\Repositories\B2BSellerShippingRepository;
 use App\Services\TransactionService;
 use App\Trait\HttpResponse;
 use App\Trait\Payment;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -48,7 +44,10 @@ class SellerService extends Controller
 
     public function __construct(
         protected B2BProductRepository $b2bProductRepository,
-        protected B2BSellerShippingRepository $b2bSellerShippingRepository
+        protected B2BSellerShippingRepository $b2bSellerShippingRepository,
+        private readonly \Illuminate\Contracts\Hashing\Hasher $hasher,
+        private readonly \Illuminate\Auth\AuthManager $authManager,
+        private readonly \Illuminate\Database\DatabaseManager $databaseManager
     ) {}
 
     public function businessInformation($request)
@@ -136,9 +135,9 @@ class SellerService extends Controller
     {
         $user = $request->user();
 
-        if (Hash::check($request->old_password, $user->password)) {
+        if ($this->hasher->check($request->old_password, $user->password)) {
             $user->update([
-                'password' => Hash::make($request->password),
+                'password' => $this->hasher->make($request->password),
             ]);
 
             return $this->success(null, 'Password Successfully Updated');
@@ -178,7 +177,7 @@ class SellerService extends Controller
 
     public function exportSellerProduct($request, $userId)
     {
-        $currentUserId = Auth::id();
+        $currentUserId = $this->authManager->id();
 
         if ($currentUserId != $userId) {
             return $this->error(null, 'Unauthorized action.', 401);
@@ -293,7 +292,7 @@ class SellerService extends Controller
 
         $user = User::select('id')->findOrFail($request->user_id)->id;
 
-        $search = request()->input('search');
+        $search = $request->input('search');
 
         $products = $this->b2bProductRepository->all($user, $search);
 
@@ -539,7 +538,7 @@ class SellerService extends Controller
         return $this->success(null, 'Address Set as default successfully');
     }
 
-    public function getComplaints($user_id)
+    public function getComplaints($user_id, $request)
     {
         $currentUserId = userAuthId();
 
@@ -553,23 +552,23 @@ class SellerService extends Controller
             return $product->b2bRequestRefunds;
         });
 
-        if ($complaintNumber = request()->query('complaint_number')) {
+        if ($complaintNumber = $request->query('complaint_number')) {
             $refunds = $refunds->where('complaint_number', $complaintNumber);
         }
 
-        if ($type = request()->query('type')) {
+        if ($type = $request->query('type')) {
             $refunds = $refunds->where('type', $type);
         }
 
-        if ($status = request()->query('status')) {
+        if ($status = $request->query('status')) {
             $refunds = $refunds->where('status', $status);
         }
 
-        if ($fromDate = request()->query('from') && $toDate = request()->query('to')) {
+        if ($fromDate = $request->query('from') && $toDate = $request->query('to')) {
             $refunds = $refunds->whereBetween('created_at', [$fromDate, $toDate]);
         }
 
-        if ($orderNo = request()->query('order_number')) {
+        if ($orderNo = $request->query('order_number')) {
             return $refunds->where('order_number', $orderNo);
         }
 
@@ -669,9 +668,9 @@ class SellerService extends Controller
     }
 
     // Rfq
-    public function getAllRfq()
+    public function getAllRfq($request)
     {
-        $searchQuery = request()->input('search');
+        $searchQuery = $request->input('search');
         $orders_count = B2bOrder::where('seller_id', userAuthId())->count();
 
         $rfqs = Rfq::with('buyer')
@@ -808,7 +807,7 @@ class SellerService extends Controller
 
         $product = B2BProduct::select(['id', 'name', 'front_image', 'quantity', 'sold'])->findOrFail($rfq->product_id);
 
-        DB::beginTransaction();
+        $this->databaseManager->beginTransaction();
 
         try {
             $amount = $rfq->total_amount;
@@ -862,7 +861,7 @@ class SellerService extends Controller
                 'status' => OrderStatus::COMPLETED,
             ]);
 
-            DB::commit();
+            $this->databaseManager->commit();
 
             $type = MailingEnum::ORDER_EMAIL;
             $subject = 'B2B Order Confirmation';
@@ -948,7 +947,7 @@ class SellerService extends Controller
 
         $seven_days_partners = B2bOrder::where(['seller_id' => $currentUserId, 'status' => OrderStatus::DELIVERED])
             ->distinct('buyer_id')
-            ->where('created_at', '<=', Carbon::today()->subDays(7))
+            ->where('created_at', '<=', \Illuminate\Support\Facades\Date::today()->subDays(7))
             ->count('buyer_id');
 
         $orderStats = B2bOrder::where([
@@ -958,7 +957,7 @@ class SellerService extends Controller
         $seven_days_orderStats = B2bOrder::where([
             'seller_id' => $currentUserId,
             'status' => OrderStatus::DELIVERED,
-        ])->where('created_at', '<=', Carbon::today()->subDays(7))->sum('total_amount');
+        ])->where('created_at', '<=', \Illuminate\Support\Facades\Date::today()->subDays(7))->sum('total_amount');
 
         $rfqs = Rfq::with('buyer')->where('seller_id', $currentUserId)->get();
 
@@ -1034,7 +1033,7 @@ class SellerService extends Controller
 
         $newBalance = $wallet->master_wallet - $request->amount;
 
-        DB::beginTransaction();
+        $this->databaseManager->beginTransaction();
 
         try {
 
@@ -1049,11 +1048,11 @@ class SellerService extends Controller
 
             $wallet->update(['master_wallet' => $newBalance]);
             (new TransactionService($user, TransactionStatus::WITHDRAWAL, $request->amount))->logTransaction();
-            DB::commit();
+            $this->databaseManager->commit();
 
             return $this->success('Payout request submitted successfully', 200);
         } catch (\Exception $e) {
-            DB::rollBack();
+            $this->databaseManager->rollBack();
 
             return $this->error(null, 'An error occurred while processing your request :'.$e->getMessage(), 500);
         }
@@ -1062,7 +1061,7 @@ class SellerService extends Controller
     // Withdrawal method
     public function addNewMethod($request)
     {
-        $auth = Auth::user();
+        $auth = $this->authManager->user();
 
         if (! $auth) {
             return $this->error(null, 'Unauthorized action.', 401);

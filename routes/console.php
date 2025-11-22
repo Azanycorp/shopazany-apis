@@ -39,3 +39,6 @@ Schedule::everyTenMinutes()
     ->group(function (): void {
         Schedule::command('withdraw-request:process');
     });
+
+Schedule::command('products:fix-negative-stock')
+    ->daily();

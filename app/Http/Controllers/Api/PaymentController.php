@@ -22,9 +22,7 @@ class PaymentController extends Controller
     public function getShippingAgents()
     {
         $agents = ShippingAgent::latest()->get();
-
         $centres = CollationCenter::with('hubs')->latest()->get();
-
         $data = ShippingAgentResource::collection($agents);
 
         $details = [

@@ -36,9 +36,9 @@ class SellerController extends Controller
         return $this->service->deleteProduct($id, $userId);
     }
 
-    public function getProduct($userId)
+    public function getProduct(Request $request, $userId)
     {
-        return $this->service->getProduct($userId);
+        return $this->service->getProduct($request, $userId);
     }
 
     public function getSingleProduct($productId, $userId)
@@ -46,9 +46,9 @@ class SellerController extends Controller
         return $this->service->getSingleProduct($productId, $userId);
     }
 
-    public function getAllOrders($userId)
+    public function getAllOrders(Request $request, $userId)
     {
-        return $this->service->getAllOrders($userId);
+        return $this->service->getAllOrders($request, $userId);
     }
 
     public function getOrderDetail($userId, $id)

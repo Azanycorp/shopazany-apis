@@ -15,7 +15,7 @@ class ProductOrderResource extends JsonResource
     public function toArray(Request $request): array
     {
         $userCurrency = $request->user()?->default_currency ?? 'USD';
-        $productCurrency = optional($this->shopCountry)->currency ?? 'USD';
+        $productCurrency = $this->shopCountry?->currency ?? 'USD';
         $selectedVariation = $this->productVariations->firstWhere('id', $this->pivot->variation_id);
 
         return [
@@ -33,7 +33,7 @@ class ProductOrderResource extends JsonResource
                 'variation' => $selectedVariation->variation,
                 'sku' => $selectedVariation->sku,
                 'price' => currencyConvert(
-                    optional($selectedVariation->product->shopCountry)->currency,
+                    $selectedVariation->product->shopCountry?->currency,
                     $selectedVariation->price,
                     $userCurrency
                 ),

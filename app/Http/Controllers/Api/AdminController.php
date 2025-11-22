@@ -30,9 +30,9 @@ class AdminController extends Controller
     }
 
     // Collation Centers
-    public function allCollationCentres()
+    public function allCollationCentres(Request $request)
     {
-        return $this->superAdminService->allCollationCentres();
+        return $this->superAdminService->allCollationCentres($request);
     }
 
     public function addCollationCentre(CollationCentreRequest $request)

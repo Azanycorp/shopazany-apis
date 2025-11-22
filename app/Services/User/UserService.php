@@ -16,13 +16,25 @@ use App\Models\WithdrawalRequest;
 use App\Services\TransactionService;
 use App\Trait\HttpResponse;
 use App\Trait\Payment;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Auth\AuthManager;
+use Illuminate\Contracts\Config\Repository;
+use Illuminate\Contracts\Hashing\Hasher;
+use Illuminate\Contracts\Routing\ResponseFactory;
+use Illuminate\Database\DatabaseManager;
+use Illuminate\Hashing\BcryptHasher;
 
 class UserService extends Controller
 {
     use HttpResponse, Payment;
+
+    public function __construct(
+        private readonly AuthManager $authManager,
+        private readonly DatabaseManager $databaseManager,
+        private readonly Hasher $hasher,
+        private readonly Repository $repository,
+        private readonly ResponseFactory $responseFactory,
+        private readonly BcryptHasher $bcryptHasher
+    ) {}
 
     public function profile()
     {
@@ -39,7 +51,7 @@ class UserService extends Controller
 
     public function updateProfile($request, $userId)
     {
-        $currentUserId = Auth::id();
+        $currentUserId = $this->authManager->id();
 
         if ($currentUserId != $userId) {
             return $this->error(null, 'Unauthorized action.', 401);
@@ -110,7 +122,7 @@ class UserService extends Controller
 
     public function withdraw($request)
     {
-        $auth = Auth::user();
+        $auth = $this->authManager->user();
 
         if (
             ! $auth || $auth->type === UserType::CUSTOMER ||
@@ -142,7 +154,7 @@ class UserService extends Controller
             return $this->error(null, 'Insufficient balance for withdrawal', 400);
         }
 
-        DB::transaction(function () use ($wallet, $user, $request, $auth): void {
+        $this->databaseManager->transaction(function () use ($wallet, $user, $request, $auth): void {
             $newBalance = $wallet->balance - $request->amount;
 
             $userType = $auth->type === UserType::SELLER ? 'b2c_seller' : 'b2c_affiliate';
@@ -181,7 +193,7 @@ class UserService extends Controller
                 $path = 'kyc/'.$name;
                 $filename = time().rand(10, 1000).'.'.$file->extension();
                 $file->move(public_path($path), $filename, 'public');
-                $kycpath = config('services.baseurl').'/'.$path.'/'.$filename;
+                $kycpath = $this->repository->get('services.baseurl').'/'.$path.'/'.$filename;
             }
 
             $user->kyc()->create([
@@ -220,7 +232,7 @@ class UserService extends Controller
 
     public function dashboardAnalytic($id)
     {
-        $currentUserId = Auth::id();
+        $currentUserId = $this->authManager->id();
 
         if ($currentUserId != $id) {
             return $this->error(null, 'Unauthorized action.', 401);
@@ -239,23 +251,23 @@ class UserService extends Controller
         $data = [
             'current_balance' => $user?->wallet?->balance,
             'pending_withdrawals' => $pending,
-            'payment_method' => optional($user?->paymentMethods->where('is_default', 1)->first())->account_number,
+            'payment_method' => $user?->paymentMethods->where('is_default', 1)->first()?->account_number,
         ];
 
         return $this->success($data, 'Dashboard analytics');
     }
 
-    public function transactionHistory($userId)
+    public function transactionHistory($request, $userId)
     {
-        $currentUserId = Auth::id();
+        $currentUserId = $this->authManager->id();
 
         if ($currentUserId != $userId) {
             return $this->error(null, 'Unauthorized action.', 401);
         }
 
-        $status = request()->query('status');
-        $perPage = request()->query('per_page', 25);
-        $page = request()->query('page', 1);
+        $status = $request->query('status');
+        $perPage = $request->query('per_page', 25);
+        $page = $request->query('page', 1);
 
         $transactionQuery = Transaction::where('user_id', $userId);
         if ($status) {
@@ -292,12 +304,12 @@ class UserService extends Controller
             ];
         });
 
-        $mergedData = collect($transactions)->merge(collect($withdrawals))->sortByDesc('date')->values();
+        $mergedData = (new \Illuminate\Support\Collection($transactions))->merge(new \Illuminate\Support\Collection($withdrawals))->sortByDesc('date')->values();
 
         $total = $mergedData->count();
         $paginatedData = $mergedData->slice(($page - 1) * $perPage, $perPage)->values();
 
-        return response()->json([
+        return $this->responseFactory->json([
             'status' => 'true',
             'message' => 'Transaction history',
             'data' => $paginatedData,
@@ -306,15 +318,15 @@ class UserService extends Controller
                 'last_page' => ceil($total / $perPage),
                 'per_page' => (int) $perPage,
                 'total' => $total,
-                'prev_page_url' => $page > 1 ? request()->url().'?page='.($page - 1).'&per_page='.$perPage : null,
-                'next_page_url' => $page < ceil($total / $perPage) ? request()->url().'?page='.($page + 1).'&per_page='.$perPage : null,
+                'prev_page_url' => $page > 1 ? $request->url().'?page='.($page - 1).'&per_page='.$perPage : null,
+                'next_page_url' => $page < ceil($total / $perPage) ? $request->url().'?page='.($page + 1).'&per_page='.$perPage : null,
             ],
         ]);
     }
 
     public function addPaymentMethod($request)
     {
-        $auth = Auth::user();
+        $auth = $this->authManager->user();
 
         if (! $auth) {
             return $this->error(null, 'Unauthorized action.', 401);
@@ -362,7 +374,7 @@ class UserService extends Controller
 
     public function getPaymentMethod($userId)
     {
-        $currentUserId = Auth::id();
+        $currentUserId = $this->authManager->id();
 
         if ($currentUserId != $userId) {
             return $this->error(null, 'Unauthorized action.', 401);
@@ -378,7 +390,7 @@ class UserService extends Controller
 
     public function changeSettings($request, $userId)
     {
-        $currentUserId = Auth::id();
+        $currentUserId = $this->authManager->id();
 
         if ($currentUserId != $userId) {
             return $this->error(null, 'Unauthorized action.', 401);
@@ -393,7 +405,7 @@ class UserService extends Controller
         $password = $user->password;
 
         if ($request->password) {
-            $password = bcrypt($request->password);
+            $password = $this->bcryptHasher->make($request->password);
         }
 
         $user->update([
@@ -404,16 +416,16 @@ class UserService extends Controller
         return $this->success(null, 'Settings changed successfully');
     }
 
-    public function referralManagement($userId)
+    public function referralManagement($request, $userId)
     {
-        $currentUserId = Auth::id();
+        $currentUserId = $this->authManager->id();
 
         if ($currentUserId !== (int) $userId) {
             return $this->error(null, 'Unauthorized action.', 403);
         }
 
-        $searchQuery = request()->query('search');
-        $statusFilter = request()->query('status');
+        $searchQuery = $request->query('search');
+        $statusFilter = $request->query('status');
 
         $user = User::with(['referrals' => function ($query) use ($searchQuery, $statusFilter): void {
             $query->select(
@@ -456,9 +468,9 @@ class UserService extends Controller
         return $this->success($data, 'Referral management');
     }
 
-    public function withdrawalHistory($userId)
+    public function withdrawalHistory($request, $userId)
     {
-        $currentUserId = Auth::id();
+        $currentUserId = $this->authManager->id();
 
         if ($currentUserId != $userId) {
             return $this->error(null, 'Unauthorized action.', 401);
@@ -467,9 +479,9 @@ class UserService extends Controller
         $user = User::with(['wallet', 'withdrawalRequests'])
             ->findOrFail($userId);
 
-        $status = request()->query('status');
-        $perPage = request()->query('per_page', 25);
-        $page = request()->query('page', 1);
+        $status = $request->query('status');
+        $perPage = $request->query('per_page', 25);
+        $page = $request->query('page', 1);
 
         $withdrawalQuery = WithdrawalRequest::where('user_id', $userId);
 
@@ -499,7 +511,7 @@ class UserService extends Controller
             'transactions' => $paginatedData,
         ];
 
-        return response()->json([
+        return $this->responseFactory->json([
             'status' => 'true',
             'message' => 'Transaction history',
             'data' => $data,
@@ -508,8 +520,8 @@ class UserService extends Controller
                 'last_page' => ceil($total / $perPage),
                 'per_page' => (int) $perPage,
                 'total' => $total,
-                'prev_page_url' => $page > 1 ? request()->url().'?page='.($page - 1).'&per_page='.$perPage : null,
-                'next_page_url' => $page < ceil($total / $perPage) ? request()->url().'?page='.($page + 1).'&per_page='.$perPage : null,
+                'prev_page_url' => $page > 1 ? $request->url().'?page='.($page - 1).'&per_page='.$perPage : null,
+                'next_page_url' => $page < ceil($total / $perPage) ? $request->url().'?page='.($page + 1).'&per_page='.$perPage : null,
             ],
         ]);
     }
@@ -524,7 +536,7 @@ class UserService extends Controller
 
         $user->update([
             'biometric_enabled' => $request->boolean('enable'),
-            'biometric_token' => $request->boolean('enable') ? Hash::make($request->token) : null,
+            'biometric_token' => $request->boolean('enable') ? $this->hasher->make($request->token) : null,
         ]);
 
         return $this->success(null, 'Biometric setup successfully');

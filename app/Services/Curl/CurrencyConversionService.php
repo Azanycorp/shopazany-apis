@@ -3,6 +3,7 @@
 namespace App\Services\Curl;
 
 use Exception;
+use Illuminate\Support\Facades\Http;
 
 class CurrencyConversionService
 {
@@ -18,18 +19,18 @@ class CurrencyConversionService
 
     public function getRates()
     {
-        $ch = curl_init($this->url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        $response = Http::timeout(60)->get($this->url);
 
-        $json = curl_exec($ch);
-        curl_close($ch);
-
-        if (! $json) {
+        if ($response->failed()) {
             throw new Exception('Failed to fetch currency rates.');
         }
 
-        $oxr_latest = json_decode($json, true);
+        $json = $response->json();
 
-        return $oxr_latest['rates'];
+        if (! isset($json['rates'])) {
+            throw new Exception('Invalid response: rates not found.');
+        }
+
+        return $json['rates'];
     }
 }

@@ -4,11 +4,20 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\App;
 
 class Attribute extends Model
 {
     protected $table = 'attributes';
+
+    /**
+     * Create a new Eloquent model instance.
+     *
+     * @param  array<string, mixed>  $attributes
+     */
+    public function __construct(array $attributes, private readonly \Illuminate\Foundation\Application $application)
+    {
+        parent::__construct($attributes);
+    }
 
     use HasFactory;
 
@@ -16,7 +25,7 @@ class Attribute extends Model
 
     public function getTranslation($field = '', $lang = false)
     {
-        $lang = $lang === false ? App::getLocale() : $lang;
+        $lang = $lang === false ? $this->application->getLocale() : $lang;
         $attribute_translation = $this->attribute_translations->where('lang', $lang)->first();
 
         return $attribute_translation != null ? $attribute_translation->$field : $this->$field;

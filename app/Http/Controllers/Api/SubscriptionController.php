@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\SubscriptionPaymentRequest;
 use App\Services\SubscriptionService;
 use App\Trait\HttpResponse;
+use Illuminate\Http\Request;
 
 class SubscriptionController extends Controller
 {
@@ -15,9 +16,9 @@ class SubscriptionController extends Controller
         protected SubscriptionService $service
     ) {}
 
-    public function getPlanByCountry($countryId)
+    public function getPlanByCountry(Request $request, $countryId)
     {
-        return $this->service->getPlanByCountry($countryId);
+        return $this->service->getPlanByCountry($request, $countryId);
     }
 
     public function subscriptionPayment(SubscriptionPaymentRequest $request)

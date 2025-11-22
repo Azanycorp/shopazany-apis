@@ -59,7 +59,7 @@ trait Product
 
     public function createProductVariations($request, $product, $name): void
     {
-        $variations = collect($request->variation)->map(fn ($item): mixed => json_decode($item, true));
+        $variations = (new \Illuminate\Support\Collection($request->variation))->map(fn ($item): mixed => json_decode($item, true));
         $variationImages = $request->file('variation_image', []);
 
         foreach ($variations as $index => $variation) {
@@ -101,7 +101,7 @@ trait Product
     {
         $processedVariationIds = [];
 
-        $variations = collect($request->variation)->map(fn ($item): mixed => json_decode($item, true));
+        $variations = (new \Illuminate\Support\Collection($request->variation))->map(fn ($item): mixed => json_decode($item, true));
         $variationImages = $request->file('variation_image', []);
 
         foreach ($variations as $index => $variation) {

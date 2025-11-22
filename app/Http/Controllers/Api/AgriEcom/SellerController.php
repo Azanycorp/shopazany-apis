@@ -32,27 +32,27 @@ class SellerController extends Controller
         return $this->b2cSellerService->createProduct($request, 'agriecom');
     }
 
-    public function updateProduct(Request $request, $id, $userId)
+    public function updateProduct(Request $request, int $id, int $userId)
     {
         return $this->b2cSellerService->updateProduct($request, $id, $userId);
     }
 
-    public function deleteProduct($id, $userId)
+    public function deleteProduct(int $id, int $userId)
     {
         return $this->b2cSellerService->deleteProduct($id, $userId);
     }
 
-    public function getProduct($userId)
+    public function getProduct(Request $request, int $userId)
     {
-        return $this->b2cSellerService->getProduct($userId);
+        return $this->b2cSellerService->getProduct($request, $userId);
     }
 
-    public function getSingleProduct($productId, $userId)
+    public function getSingleProduct(int $productId, int $userId)
     {
         return $this->b2cSellerService->getSingleProduct($productId, $userId);
     }
 
-    public function topSelling($userId)
+    public function topSelling(int $userId)
     {
         return $this->b2cSellerService->topSelling($userId);
     }
@@ -67,7 +67,7 @@ class SellerController extends Controller
         return $this->b2cSellerService->productImport($request);
     }
 
-    public function export($userId, $type)
+    public function export(int $userId, string $type)
     {
         return $this->b2cSellerService->export($userId, $type);
     }
@@ -77,17 +77,17 @@ class SellerController extends Controller
         return $this->b2cSellerService->createAttribute($request);
     }
 
-    public function getAttribute($userId)
+    public function getAttribute(int $userId)
     {
         return $this->b2cSellerService->getAttribute($userId);
     }
 
-    public function getSingleAttribute($id, $userId)
+    public function getSingleAttribute(int $id, int $userId)
     {
         return $this->b2cSellerService->getSingleAttribute($id, $userId);
     }
 
-    public function updateAttribute(Request $request, $id, $userId)
+    public function updateAttribute(Request $request, int $id, int $userId)
     {
         $request->validate([
             'name' => ['required', 'string'],
@@ -98,7 +98,7 @@ class SellerController extends Controller
         return $this->b2cSellerService->updateAttribute($request, $id, $userId);
     }
 
-    public function deleteAttribute($id, $userId)
+    public function deleteAttribute(int $id, int $userId)
     {
         return $this->b2cSellerService->deleteAttribute($id, $userId);
     }
@@ -115,7 +115,7 @@ class SellerController extends Controller
         return $this->userService->addPaymentMethod($request);
     }
 
-    public function withdrawalMethod($userId)
+    public function withdrawalMethod(int $userId)
     {
         return $this->userService->getPaymentMethod($userId);
     }
@@ -125,12 +125,12 @@ class SellerController extends Controller
         return $this->userService->withdraw($request);
     }
 
-    public function withdrawalHistory($userId)
+    public function withdrawalHistory(Request $request, int $userId)
     {
-        return $this->userService->withdrawalHistory($userId);
+        return $this->userService->withdrawalHistory($request, $userId);
     }
 
-    public function profile($userId)
+    public function profile(int $userId)
     {
         return $this->sellerService->profile($userId);
     }
@@ -152,17 +152,17 @@ class SellerController extends Controller
         return $this->sellerService->editProfile($request);
     }
 
-    public function getAllOrders($userId)
+    public function getAllOrders(Request $request, int $userId)
     {
-        return $this->b2cSellerService->getAllOrders($userId);
+        return $this->b2cSellerService->getAllOrders($request, $userId);
     }
 
-    public function getOrderDetail($userId, $id)
+    public function getOrderDetail(int $userId, int $id)
     {
         return $this->b2cSellerService->getOrderDetail($userId, $id);
     }
 
-    public function updateOrderStatus($userId, $id, Request $request)
+    public function updateOrderStatus(int $userId, int $id, Request $request)
     {
         $request->validate([
             'status' => ['required', 'string'],
@@ -171,7 +171,7 @@ class SellerController extends Controller
         return $this->b2cSellerService->updateOrderStatus($userId, $id, $request);
     }
 
-    public function getOrderSummary($userId)
+    public function getOrderSummary(int $userId)
     {
         return $this->b2cSellerService->getOrderSummary($userId);
     }

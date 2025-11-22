@@ -22,11 +22,12 @@ use App\Models\State;
 use App\Models\Unit;
 use App\Models\User;
 use App\Trait\HttpResponse;
-use Illuminate\Support\Facades\Cache;
 
 class B2BAdminService
 {
     use HttpResponse;
+
+    public function __construct(private readonly \Illuminate\Contracts\Cache\Repository $cacheManager) {}
 
     public function addSlider($request)
     {
@@ -106,7 +107,7 @@ class B2BAdminService
 
     public function country()
     {
-        $country = Cache::rememberForever('country', function () {
+        $country = $this->cacheManager->rememberForever('country', function () {
             return Country::get();
         });
 

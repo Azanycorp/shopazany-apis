@@ -31,7 +31,7 @@ class SearchOrderResource extends JsonResource
         return [
             'id' => (int) $this->id,
             'order_no' => (string) $this->order_no,
-            'customer' => optional($this->user)->first_name.' '.optional($this->user)->last_name,
+            'customer' => "{$this->user?->first_name} {$this->user?->last_name}",
             'order_date' => (string) $this->order_date,
             'total_amount' => $totalAmountForSeller,
             'payment_method' => (string) $this->payment_method,

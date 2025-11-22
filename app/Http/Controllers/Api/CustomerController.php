@@ -31,9 +31,9 @@ class CustomerController extends Controller
         return $this->service->recentOrders($userId);
     }
 
-    public function getOrders(int $userId)
+    public function getOrders(int $userId, Request $request)
     {
-        return $this->service->getOrders($userId);
+        return $this->service->getOrders($userId, $request);
     }
 
     public function getOrderDetail($orderNo, CalculateOrderSummaryAction $summary)
@@ -101,9 +101,9 @@ class CustomerController extends Controller
         return $this->service->getServicesByCategory($slug);
     }
 
-    public function getServices()
+    public function getServices(Request $request)
     {
-        return $this->service->getServices();
+        return $this->service->getServices($request);
     }
 
     public function getCompanies()

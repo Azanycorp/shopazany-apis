@@ -21,9 +21,9 @@ class SellerProductResource extends JsonResource
             'description' => (string) $this->description,
             'category' => (object) [
                 'category_id' => (string) $this->category_id,
-                'category_name' => (string) optional($this->category)->name,
+                'category_name' => (string) $this->category?->name,
                 'sub_category_id' => (string) $this->sub_category_id,
-                'sub_category_name' => (string) optional($this->subCategory)->name,
+                'sub_category_name' => (string) $this->subCategory?->name,
             ],
             'brand_id' => (string) $this->brand_id,
             'color_id' => (string) $this->color_id,

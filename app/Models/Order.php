@@ -33,17 +33,26 @@ class Order extends Model
         ];
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id')->where('type', 'customer');
     }
 
     // Deprecated method - Do not use
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\User, $this>
+     */
     public function seller(): BelongsTo
     {
         return $this->belongsTo(User::class, 'seller_id')->where('type', 'seller');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Product, $this>
+     */
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class, 'product_id');
@@ -55,16 +64,25 @@ class Order extends Model
             ->withPivot('variation_id', 'product_quantity', 'price', 'sub_total', 'status');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\ShopCountry, $this>
+     */
     public function shopCountry(): BelongsTo
     {
         return $this->belongsTo(ShopCountry::class, 'country_id', 'country_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Payment, $this>
+     */
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class, 'id', 'payment_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\OrderActivity, $this>
+     */
     public function orderActivities(): HasMany
     {
         return $this->hasMany(OrderActivity::class, 'order_id');

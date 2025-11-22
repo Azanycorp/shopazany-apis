@@ -75,16 +75,16 @@ class ProductService
         return $this->success(null, 'Added successfully');
     }
 
-    public function getProducts(): array
+    public function getProducts(\Illuminate\Http\Request $request): array
     {
         $query = Product::query();
 
-        if (request()->filled('seller_id')) {
-            $query->where('user_id', request('seller_id'));
+        if ($request->filled('seller_id')) {
+            $query->where('user_id', $request->input('seller_id'));
         }
 
-        if (request()->filled('search')) {
-            $query->where('name', 'like', '%'.request('search').'%');
+        if ($request->filled('search')) {
+            $query->where('name', 'like', '%'.$request->input('search').'%');
         }
 
         $query->with([

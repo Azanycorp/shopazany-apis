@@ -19,11 +19,17 @@ class Country extends Model
         'is_allowed',
     ];
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Product, $this>
+     */
     public function products(): HasMany
     {
         return $this->hasMany(Product::class, 'country_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne<\App\Models\ShopCountry, $this>
+     */
     public function shopCountry(): HasOne
     {
         return $this->hasOne(ShopCountry::class, 'country_id');

@@ -6,10 +6,12 @@ use Illuminate\Support\Facades\Http;
 
 class Auth
 {
+    public function __construct(private readonly \Illuminate\Contracts\Config\Repository $repository) {}
+
     public function request(string $method, string $endpoint, ?array $data = [], ?string $token = null)
     {
         $client = Http::withHeaders([
-            config('security.auth_header_key') => config('security.auth_header_value'),
+            $this->repository->get('security.auth_header_key') => $this->repository->get('security.auth_header_value'),
         ]);
 
         if ($token) {

@@ -47,7 +47,7 @@ class AuthController extends Controller
     public function resendCode(Request $request)
     {
         $request->validate([
-            'email' => 'required|email|exists:users,email',
+            'email' => ['required', 'email', 'exists:users,email'],
         ]);
 
         return $this->authService->resendCode($request);
@@ -56,7 +56,7 @@ class AuthController extends Controller
     public function loginResendCode(Request $request)
     {
         $request->validate([
-            'email' => 'required|email|exists:users,email',
+            'email' => ['required', 'email', 'exists:users,email'],
         ]);
 
         return $this->authService->loginResendCode($request);
@@ -76,9 +76,9 @@ class AuthController extends Controller
         return $this->authService->reset($request);
     }
 
-    public function logout()
+    public function logout(Request $request)
     {
-        return $this->authService->logout();
+        return $this->authService->logout($request);
     }
 
     public function affiliateSignup(AffiliateSignupRequest $request)

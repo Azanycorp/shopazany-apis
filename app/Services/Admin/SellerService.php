@@ -9,20 +9,23 @@ use App\Http\Resources\SellerResource;
 use App\Models\Order;
 use App\Models\User;
 use App\Trait\HttpResponse;
+use Illuminate\Database\Eloquent\Builder;
 
 class SellerService
 {
     use HttpResponse;
 
-    public function allSellers(): array
+    public function __construct(private readonly \Illuminate\Hashing\BcryptHasher $bcryptHasher) {}
+
+    public function allSellers($request): array
     {
-        $searchQuery = request()->input('search');
-        $approvedQuery = request()->query('approved');
+        $searchQuery = $request->input('search');
+        $approvedQuery = $request->query('approved');
 
         $users = User::with(['products', 'b2bProducts', 'bankAccount', 'wallet'])
             ->where('type', UserType::SELLER)
-            ->when($searchQuery, function ($queryBuilder) use ($searchQuery): void {
-                $queryBuilder->where(function ($subQuery) use ($searchQuery): void {
+            ->when($searchQuery, function (Builder $queryBuilder) use ($searchQuery): void {
+                $queryBuilder->where(function (Builder $subQuery) use ($searchQuery): void {
                     $subQuery->where('first_name', 'LIKE', '%'.$searchQuery.'%')
                         ->orWhere('last_name', 'LIKE', '%'.$searchQuery.'%')
                         ->orWhere('middlename', 'LIKE', '%'.$searchQuery.'%')
@@ -100,7 +103,7 @@ class SellerService
             'last_name' => $request->last_name,
             'email' => $request->email_address,
             'phone' => $request->phone_number,
-            'password' => bcrypt($request->passowrd),
+            'password' => $this->bcryptHasher->make($request->passowrd),
         ]);
 
         $data = [
@@ -141,7 +144,7 @@ class SellerService
 
     public function paymentHistory($id)
     {
-        $orders = Order::whereHas('products', function ($query) use ($id): void {
+        $orders = Order::whereHas('products', function (Builder $query) use ($id): void {
             $query->where('user_id', $id);
         })
             ->with('payments')

@@ -38,9 +38,9 @@ class ApiController extends Controller
         return $this->adminService->deleteSlider($id);
     }
 
-    public function categories()
+    public function categories(Request $request)
     {
-        return $this->adminService->categories();
+        return $this->adminService->categories($request);
     }
 
     public function country()

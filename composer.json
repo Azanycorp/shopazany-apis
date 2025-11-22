@@ -11,11 +11,11 @@
         }
     ],
     "require": {
-        "php": "^8.2",
+        "php": "^8.3",
         "authorizenet/authorizenet": "^2.0",
         "imagekit/imagekit": "^4.0",
         "jenssegers/agent": "^2.6",
-        "laravel/framework": "^12.28.1",
+        "laravel/framework": "^12.39.0",
         "laravel/sanctum": "^4.2",
         "laravel/socialite": "^5.23",
         "laravel/tinker": "^2.10",
@@ -34,7 +34,7 @@
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.0",
         "phpunit/phpunit": "^11.0.1",
-        "rector/rector": "^2.1.6"
+        "rector/rector": "^2.2"
     },
     "autoload": {
         "psr-4": {
@@ -50,6 +50,7 @@
         }
     },
     "scripts": {
+        "rector-dry": "vendor/bin/rector process --dry-run",
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
             "@php artisan package:discover --ansi"

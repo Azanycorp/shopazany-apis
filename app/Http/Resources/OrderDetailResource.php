@@ -2,9 +2,9 @@
 
 namespace App\Http\Resources;
 
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Date;
 
 class OrderDetailResource extends JsonResource
 {
@@ -23,7 +23,7 @@ class OrderDetailResource extends JsonResource
         $totalConvertedAmount = 0;
 
         $products = $sellerProducts->map(function ($product) use ($userCurrency, &$totalConvertedAmount): array {
-            $productCurrency = optional($product->shopCountry)->currency ?? 'USD';
+            $productCurrency = $product->shopCountry?->currency ?? 'USD';
 
             $convertedSubTotal = currencyConvert(
                 $productCurrency,
@@ -49,7 +49,7 @@ class OrderDetailResource extends JsonResource
                     'variation' => $selectedVariation->variation,
                     'sku' => $selectedVariation->sku,
                     'price' => currencyConvert(
-                        optional(value: $selectedVariation->product->shopCountry)->currency,
+                        $selectedVariation->product->shopCountry?->currency,
                         $selectedVariation->price,
                         $userCurrency
                     ),
@@ -79,8 +79,8 @@ class OrderDetailResource extends JsonResource
                 'state' => $this->user?->userShippingAddress()->first()?->state,
                 'zip' => $this->user?->userShippingAddress()->first()?->zip,
             ],
-            'order_date' => Carbon::parse($this->created_at)->format('d M Y'),
-            'order_time' => Carbon::parse($this->created_at)->format('h:i A'),
+            'order_date' => Date::parse($this->created_at)->format('d M Y'),
+            'order_time' => Date::parse($this->created_at)->format('h:i A'),
             'payment_status' => strtolower($this->payment_status) === 'success' ? 'paid' : 'not-paid',
             'payment_method' => $this->payment_method,
             'status' => $this->status,

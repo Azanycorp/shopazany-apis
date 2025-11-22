@@ -9,6 +9,8 @@ use Symfony\Component\HttpFoundation\Response;
 
 class CheckUserCountry
 {
+    public function __construct(private readonly \Illuminate\Contracts\Routing\ResponseFactory $responseFactory) {}
+
     /**
      * Handle an incoming request.
      *
@@ -17,14 +19,14 @@ class CheckUserCountry
     public function handle(Request $request, Closure $next): Response
     {
         if (! $request->user()) {
-            return response()->json(['message' => 'Unauthorized'], 401);
+            return $this->responseFactory->json(['message' => 'Unauthorized'], 401);
         }
 
         $user = $request->user();
         $country = Country::where('id', $user->country)->first();
 
         if ($country && $country->is_allowed == 0) {
-            return response()->json(['message' => 'Access restricted due to country restrictions'], 403);
+            return $this->responseFactory->json(['message' => 'Access restricted due to country restrictions'], 403);
         }
 
         return $next($request);

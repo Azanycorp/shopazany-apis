@@ -5,12 +5,13 @@ namespace App\Http\Middleware;
 use App\Trait\HttpResponse;
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
 class EnsureUserIsOwner
 {
     use HttpResponse;
+
+    public function __construct(private readonly \Illuminate\Auth\AuthManager $authManager) {}
 
     /**
      * Handle an incoming request.
@@ -21,7 +22,7 @@ class EnsureUserIsOwner
     {
         $routeUserId = $request->route('user_id');
 
-        if (Auth::id() != $routeUserId) {
+        if ($this->authManager->id() != $routeUserId) {
             return $this->error(null, 'You are not authorized to access this resource', 403);
         }
 

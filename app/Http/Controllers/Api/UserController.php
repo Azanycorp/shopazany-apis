@@ -68,9 +68,9 @@ class UserController extends Controller
         return $this->service->dashboardAnalytic($id);
     }
 
-    public function transactionHistory($userId)
+    public function transactionHistory(Request $request, $userId)
     {
-        return $this->service->transactionHistory($userId);
+        return $this->service->transactionHistory($request, $userId);
     }
 
     public function addPaymentMethod(Request $request)
@@ -94,9 +94,9 @@ class UserController extends Controller
         return $this->service->changeSettings($request, $userId);
     }
 
-    public function referralManagement($userId)
+    public function referralManagement(Request $request, $userId)
     {
-        return $this->service->referralManagement($userId);
+        return $this->service->referralManagement($request, $userId);
     }
 
     public function addMethod(Request $request)
@@ -121,9 +121,9 @@ class UserController extends Controller
         return $this->service->withdraw($request);
     }
 
-    public function withdrawalHistory($userId)
+    public function withdrawalHistory(Request $request, $userId)
     {
-        return $this->service->withdrawalHistory($userId);
+        return $this->service->withdrawalHistory($request, $userId);
     }
 
     public function setupBiometric(SetupBiometricRequest $request)

@@ -15,8 +15,8 @@ class SuperAdminAuthController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'email' => 'required|email|exists:admins,email',
-            'password' => 'required|string',
+            'email' => ['required', 'email', 'exists:admins,email'],
+            'password' => ['required', 'string'],
         ]);
 
         return $this->superAdminAuthService->login($request);
@@ -34,8 +34,8 @@ class SuperAdminAuthController extends Controller
     public function verifyEmail(Request $request)
     {
         $request->validate([
-            'email' => 'required|email',
-            'code' => 'required|string',
+            'email' => ['required', 'email'],
+            'code' => ['required', 'string'],
         ]);
 
         return $this->superAdminAuthService->verifyEmail($request);
@@ -44,8 +44,8 @@ class SuperAdminAuthController extends Controller
     public function reset(Request $request)
     {
         $request->validate([
-            'email' => 'required|email',
-            'password' => 'required|confirmed|min:8',
+            'email' => ['required', 'email'],
+            'password' => ['required', 'confirmed', 'min:8'],
         ]);
 
         return $this->superAdminAuthService->reset($request);

@@ -22,11 +22,12 @@ use App\Models\State;
 use App\Models\Unit;
 use App\Models\User;
 use App\Trait\HttpResponse;
-use Illuminate\Support\Facades\Cache;
 
 class AdminService
 {
     use HttpResponse;
+
+    public function __construct(private readonly \Illuminate\Contracts\Cache\Repository $cacheManager) {}
 
     public function addSlider($request)
     {
@@ -41,8 +42,8 @@ class AdminService
                 'link' => $request->link,
             ]);
 
-            if (Cache::has('home_sliders')) {
-                Cache::forget('home_sliders');
+            if ($this->cacheManager->has('home_sliders')) {
+                $this->cacheManager->forget('home_sliders');
             }
 
             return $this->success(null, 'Created successfully', 201);
@@ -53,11 +54,9 @@ class AdminService
 
     public function slider()
     {
-        $sliders = Cache::rememberForever('home_sliders',
-            fn () => SliderImage::orderBy('created_at', 'desc')
-                ->take(5)
-                ->get()
-        );
+        $sliders = $this->cacheManager->rememberForever('home_sliders', fn () => SliderImage::orderBy('created_at', 'desc')
+            ->take(5)
+            ->get());
 
         $data = SliderResource::collection($sliders);
 
@@ -85,8 +84,8 @@ class AdminService
             return $this->error(null, 'Slider not found', 404);
         }
 
-        if (Cache::has('home_sliders')) {
-            Cache::forget('home_sliders');
+        if ($this->cacheManager->has('home_sliders')) {
+            $this->cacheManager->forget('home_sliders');
         }
 
         $slider->delete();
@@ -94,9 +93,9 @@ class AdminService
         return $this->success(null, 'Deleted successfully');
     }
 
-    public function categories()
+    public function categories($request)
     {
-        $type = request()->query('type', BannerType::B2C);
+        $type = $request->query('type', BannerType::B2C);
 
         if (! in_array($type, [BannerType::B2C, BannerType::B2B, BannerType::AGRIECOM_B2C])) {
             return $this->error(null, "Invalid type {$type}", 400);
@@ -114,7 +113,7 @@ class AdminService
 
     public function country()
     {
-        $country = Cache::rememberForever('country', fn () => Country::get());
+        $country = $this->cacheManager->rememberForever('country', fn () => Country::get());
 
         $data = CountryResource::collection($country);
 

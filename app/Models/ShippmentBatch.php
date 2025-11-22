@@ -33,9 +33,11 @@ class ShippmentBatch extends Model
         ];
     }
 
-    public function getShippmentsAttribute()
+    protected function shippments(): \Illuminate\Database\Eloquent\Casts\Attribute
     {
-        return Shippment::whereIn('id', $this->shippment_ids ?? [])->get();
+        return \Illuminate\Database\Eloquent\Casts\Attribute::make(get: function () {
+            return Shippment::whereIn('id', $this->shippment_ids ?? [])->get();
+        });
     }
 
     public function activities()

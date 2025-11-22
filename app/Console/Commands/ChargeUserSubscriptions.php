@@ -10,9 +10,7 @@ use App\Models\User;
 use App\Models\UserSubcription;
 use App\Services\Curl\ChargeUserService;
 use App\Services\SubscriptionService;
-use Carbon\Carbon;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class ChargeUserSubscriptions extends Command
@@ -32,11 +30,19 @@ class ChargeUserSubscriptions extends Command
     protected $description = 'Charge users for subscriptions that have expired or are due for renewal.';
 
     /**
+     * Create a new console command instance.
+     */
+    public function __construct(private readonly \Illuminate\Database\DatabaseManager $databaseManager)
+    {
+        parent::__construct();
+    }
+
+    /**
      * Execute the console command.
      */
     public function handle(): void
     {
-        UserSubcription::where('plan_end', '<=', Carbon::now()->subDays(30))
+        UserSubcription::where('plan_end', '<=', \Illuminate\Support\Facades\Date::now()->subDays(30))
             ->where('subscription_type', PaymentType::PAYSTACK)
             ->whereNotNull('authorization_data')
             ->whereNull('expired_at')
@@ -51,7 +57,7 @@ class ChargeUserSubscriptions extends Command
 
     private function chargeSubscription($subscription): void
     {
-        DB::beginTransaction();
+        $this->databaseManager->beginTransaction();
 
         try {
             $response = (new ChargeUserService($subscription))->run();
@@ -112,13 +118,13 @@ class ChargeUserSubscriptions extends Command
                 SubscriptionService::creditAffiliate($referrer, $amount, $user);
 
                 Log::info('Subscription charged successfully: '.$subscription->id);
-                DB::commit();
+                $this->databaseManager->commit();
             } else {
                 Log::error('Failed to charge subscription: '.$response['message']);
             }
 
         } catch (\Exception $e) {
-            DB::rollBack();
+            $this->databaseManager->rollBack();
             Log::error('Error charging subscription: '.$e->getMessage());
         }
     }

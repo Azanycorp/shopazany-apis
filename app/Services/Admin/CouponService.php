@@ -66,9 +66,9 @@ class CouponService
         }
     }
 
-    public function getCoupon()
+    public function getCoupon($request)
     {
-        $platform = request()->query('platform', BannerType::B2C);
+        $platform = $request->query('platform', BannerType::B2C);
 
         if (! in_array($platform, [BannerType::B2C, BannerType::B2B, BannerType::AGRIECOM_B2C])) {
             return $this->error(null, "Invalid type {$platform}", 400);

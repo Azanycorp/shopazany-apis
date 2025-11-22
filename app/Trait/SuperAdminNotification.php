@@ -20,7 +20,7 @@ trait SuperAdminNotification
     {
         $itemsCount = $order->products->sum(fn ($p) => (int) $p->pivot->product_quantity);
 
-        $seller = optional($order->products->first())->user;
+        $seller = $order->products->first()?->user;
 
         $vendor = $seller ? [
             'business_name' => $seller->company_name,
@@ -69,9 +69,9 @@ trait SuperAdminNotification
     {
         $itemsCount = (string) $b2bOrder->product_quantity;
 
-        $package = collect($b2bOrder->product_data ?? [])->only(['name', 'fob_price', 'front_image']);
+        $package = (new \Illuminate\Support\Collection($b2bOrder->product_data ?? []))->only(['name', 'fob_price', 'front_image']);
 
-        $businessInfo = optional($b2bOrder->seller)->businessInformation;
+        $businessInfo = $b2bOrder->seller?->businessInformation;
         $vendor = $businessInfo ? (object) [
             'business_name' => $businessInfo->business_name,
             'contact' => $businessInfo->business_phone,

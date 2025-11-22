@@ -3,11 +3,17 @@
 namespace App\Http\Middleware;
 
 use Closure;
+use Illuminate\Contracts\Config\Repository;
+use Illuminate\Contracts\Routing\ResponseFactory;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class ValidateHeader
 {
+    public function __construct(
+        private readonly Repository $repository,
+        private readonly ResponseFactory $responseFactory) {}
+
     /**
      * Handle an incoming request.
      *
@@ -15,17 +21,17 @@ class ValidateHeader
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $headerName = config('security.header_key', 'X-SHPAZY-AUTH');
-        $expectedValue = config('security.header_value');
+        $headerName = $this->repository->get('security.header_key', 'X-SHPAZY-AUTH');
+        $expectedValue = $this->repository->get('security.header_value');
 
         $receivedValue = $request->header($headerName);
 
         if (! $receivedValue) {
-            return response()->json(['error' => 'Unauthorized access. Missing required header.'], 401);
+            return $this->responseFactory->json(['error' => 'Unauthorized access. Missing required header.'], 401);
         }
 
         if ($receivedValue !== $expectedValue) {
-            return response()->json(['error' => 'Unauthorized access. Invalid header value.'], 401);
+            return $this->responseFactory->json(['error' => 'Unauthorized access. Invalid header value.'], 401);
         }
 
         return $next($request);

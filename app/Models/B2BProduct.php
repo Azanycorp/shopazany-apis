@@ -45,51 +45,81 @@ class B2BProduct extends Model
         ];
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\B2bProdctLike, $this>
+     */
     public function b2bLikes(): HasMany
     {
         return $this->hasMany(B2bProdctLike::class, 'product_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\B2bProdctReview, $this>
+     */
     public function b2bProductReview(): HasMany
     {
         return $this->hasMany(B2bProdctReview::class, 'product_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\B2BProductImage, $this>
+     */
     public function b2bProductImages(): HasMany
     {
         return $this->hasMany(B2BProductImage::class, 'b2b_product_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\ShopCountry, $this>
+     */
     public function shopCountry(): BelongsTo
     {
         return $this->belongsTo(ShopCountry::class, 'country_id', 'country_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\B2bProductCategory, $this>
+     */
     public function category(): BelongsTo
     {
         return $this->belongsTo(B2bProductCategory::class, 'category_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\B2bProductSubCategory, $this>
+     */
     public function subCategory(): BelongsTo
     {
         return $this->belongsTo(B2bProductSubCategory::class, 'category_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\B2bOrder, $this>
+     */
     public function orders(): HasMany
     {
         return $this->hasMany(B2bOrder::class, 'product_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Country, $this>
+     */
     public function country(): BelongsTo
     {
         return $this->belongsTo(Country::class);
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\B2BRequestRefund, $this>
+     */
     public function b2bRequestRefunds(): HasMany
     {
         return $this->hasMany(B2BRequestRefund::class, 'b2b_product_id');

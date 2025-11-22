@@ -18,11 +18,17 @@ class UserAction extends Model
         'status',
     ];
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Action, $this>
+     */
     public function action(): BelongsTo
     {
         return $this->belongsTo(Action::class, 'action_id');

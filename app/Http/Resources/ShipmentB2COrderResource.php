@@ -37,10 +37,10 @@ class ShipmentB2COrderResource extends JsonResource
                 'image' => $product->image,
             ])),
             'vendor' => $this->whenLoaded('products', fn () => [
-                'id' => optional($this->products->first())->user->id,
-                'business_name' => optional($this->products->first())->user->company_name,
-                'contact' => optional($this->products->first())->user->phone,
-                'location' => optional($this->products->first())->user->address,
+                'id' => $this->products->first()?->user->id,
+                'business_name' => $this->products->first()?->user->company_name,
+                'contact' => $this->products->first()?->user->phone,
+                'location' => $this->products->first()?->user->address,
             ]),
         ];
     }

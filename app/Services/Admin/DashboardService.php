@@ -9,34 +9,34 @@ use App\Models\Category;
 use App\Models\Order;
 use App\Models\User;
 use App\Trait\HttpResponse;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
 
 class DashboardService
 {
     use HttpResponse;
 
-    public function dashboardAnalytics()
+    public function __construct(private readonly \Illuminate\Database\DatabaseManager $databaseManager) {}
+
+    public function dashboardAnalytics($request)
     {
-        $period = request()->query('period', 'last_7_days');
+        $period = $request->query('period', 'last_7_days');
 
         switch ($period) {
             case 'this_week':
-                $startDate = Carbon::now()->startOfWeek();
+                $startDate = \Illuminate\Support\Facades\Date::now()->startOfWeek();
                 break;
             case 'this_month':
-                $startDate = Carbon::now()->startOfMonth();
+                $startDate = \Illuminate\Support\Facades\Date::now()->startOfMonth();
                 break;
             case 'this_year':
-                $startDate = Carbon::now()->startOfYear();
+                $startDate = \Illuminate\Support\Facades\Date::now()->startOfYear();
                 break;
             case 'last_7_days':
             default:
-                $startDate = Carbon::now()->subDays(7);
+                $startDate = \Illuminate\Support\Facades\Date::now()->subDays(7);
                 break;
         }
 
-        $endDate = Carbon::now();
+        $endDate = \Illuminate\Support\Facades\Date::now();
 
         $total_sales = Order::select('shop_countries.currency', 'orders.total_amount')
             ->join('shop_countries', 'orders.country_id', '=', 'shop_countries.country_id')
@@ -79,7 +79,7 @@ class DashboardService
     public function bestSellers()
     {
         $bestSellers = User::select([
-            DB::raw('CONCAT(users.first_name, " ", users.last_name) as seller_name'),
+            $this->databaseManager->raw('CONCAT(users.first_name, " ", users.last_name) as seller_name'),
             'users.default_currency',
         ])
             ->leftJoin('products', 'users.id', '=', 'products.user_id')
