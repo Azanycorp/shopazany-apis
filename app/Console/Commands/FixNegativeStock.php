@@ -27,7 +27,8 @@ class FixNegativeStock extends Command
      */
     public function handle()
     {
-        $updated = Product::where('current_stock_quantity', '<', 0)
+        $updated = Product::withoutGlobalScope('in_stock')
+            ->where('current_stock_quantity', '<', 0)
             ->update([
                 'current_stock_quantity' => 0,
                 'status' => ProductStatus::OUT_OF_STOCK,
