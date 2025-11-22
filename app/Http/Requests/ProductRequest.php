@@ -51,10 +51,10 @@ class ProductRequest extends FormRequest
     /**
      * Custom rule to validate discount value based on discount type.
      */
-    protected function discountRule(\Illuminate\Http\Request $request): \Closure
+    protected function discountRule(): \Closure
     {
         return function ($attribute, $value, $fail): void {
-            if ($request->input('discount_type') === 'percentage' && $value > 100) {
+            if ($this->discount_type === 'percentage' && $value > 100) {
                 $fail('The discount value cannot be more than 100 when the discount type is percentage.');
             }
         };
