@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Enum\ProductStatus;
 use App\Models\Product;
 use Illuminate\Console\Command;
 
@@ -27,7 +28,10 @@ class FixNegativeStock extends Command
     public function handle()
     {
         $updated = Product::where('current_stock_quantity', '<', 0)
-            ->update(['current_stock_quantity' => 0]);
+            ->update([
+                'current_stock_quantity' => 0,
+                'status' => ProductStatus::OUT_OF_STOCK,
+            ]);
 
         $this->info("$updated products updated successfully.");
     }
