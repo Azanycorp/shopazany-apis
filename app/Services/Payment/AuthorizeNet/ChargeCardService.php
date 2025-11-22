@@ -27,6 +27,8 @@ use App\Models\UserShippingAddress;
 use App\Models\UserWallet;
 use App\Models\Wallet;
 use App\Trait\HttpResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use net\authorize\api\contract\v1 as AnetAPI;
 use net\authorize\api\controller as AnetController;
@@ -37,7 +39,7 @@ class ChargeCardService implements PaymentStrategy
 
     protected string $orderNo;
 
-    public function __construct(private readonly \Illuminate\Auth\AuthManager $authManager, private readonly \Illuminate\Contracts\Config\Repository $repository)
+    public function __construct()
     {
         $this->orderNo = 'ORD-'.now()->timestamp.'-'.Str::random(8);
 
@@ -48,9 +50,10 @@ class ChargeCardService implements PaymentStrategy
 
     public function processPayment(array $paymentDetails)
     {
-        $user = $this->authManager->user();
+        $user = Auth::user();
         $orderNo = $this->orderNo;
         $orderNum = Str::random(8);
+        $requestClass = app(Request::class);
 
         $merchantAuthentication = $this->getMerchantAuthentication();
         $payment = $this->getPayment($paymentDetails);
@@ -68,15 +71,16 @@ class ChargeCardService implements PaymentStrategy
 
         $response = $this->executeTransaction($controller);
 
-        return $this->handleResponse($response, $user, $paymentDetails, $orderNo, $payment);
+        return $this->handleResponse($response, $user, $paymentDetails, $orderNo, $payment, $requestClass);
     }
 
     // B2B Payment section
     public function ProcessB2BPayment(array $paymentDetails)
     {
-        $user = $this->authManager->user();
+        $user = Auth::user();
         $orderNo = $this->orderNo;
         $orderNum = Str::random(8);
+        $requestClass = app(Request::class);
 
         $merchantAuthentication = $this->getMerchantAuthentication();
         $payment = $this->getPayment($paymentDetails);
@@ -92,29 +96,29 @@ class ChargeCardService implements PaymentStrategy
 
         $response = $this->executeTransaction($controller);
 
-        return $this->handleB2bResponse($response, $user, $paymentDetails, $orderNo, $payment);
+        return $this->handleB2bResponse($response, $user, $paymentDetails, $orderNo, $payment, $requestClass);
     }
 
-    private function handleB2bResponse($response, $user, array $paymentDetails, string $orderNo, \net\authorize\api\contract\v1\PaymentType $payment)
+    private function handleB2bResponse($response, $user, array $paymentDetails, string $orderNo, \net\authorize\api\contract\v1\PaymentType $payment, $request)
     {
         if ($response != null) {
             if ($response->getMessages()->getResultCode() == 'Ok') {
                 $tresponse = $response->getTransactionResponse();
 
                 if ($tresponse != null && $tresponse->getMessages() != null) {
-                    return $this->handleB2bSuccessResponse($response, $tresponse, $user, $paymentDetails, $orderNo, $payment);
+                    return $this->handleB2bSuccessResponse($response, $tresponse, $user, $paymentDetails, $orderNo, $payment, $request);
                 }
 
-                return $this->handleErrorResponse($tresponse, $response, $user);
+                return $this->handleErrorResponse($tresponse, $response, $user, $request);
             }
 
-            return $this->handleErrorResponse(null, $response, $user);
+            return $this->handleErrorResponse(null, $response, $user, $request);
         }
 
         return "No response returned \n";
     }
 
-    private function handleB2bSuccessResponse($response, $tresponse, $user, array $paymentDetails, $orderNo, $payment, \Illuminate\Http\Request $request)
+    private function handleB2bSuccessResponse($response, $tresponse, $user, array $paymentDetails, $orderNo, $payment, $request)
     {
         $rfqId = $paymentDetails['rfq_id'];
         $centerId = $paymentDetails['centre_id'];
@@ -217,8 +221,8 @@ class ChargeCardService implements PaymentStrategy
     private function getMerchantAuthentication(): \net\authorize\api\contract\v1\MerchantAuthenticationType
     {
         $merchantAuthentication = new AnetAPI\MerchantAuthenticationType;
-        $merchantAuthentication->setName($this->repository->get('services.authorizenet.api_login_id'));
-        $merchantAuthentication->setTransactionKey($this->repository->get('services.authorizenet.transaction_key'));
+        $merchantAuthentication->setName(config('services.authorizenet.api_login_id'));
+        $merchantAuthentication->setTransactionKey(config('services.authorizenet.transaction_key'));
 
         return $merchantAuthentication;
     }
@@ -318,26 +322,32 @@ class ChargeCardService implements PaymentStrategy
         return $controller->executeWithApiResponse(\net\authorize\api\constants\ANetEnvironment::SANDBOX);
     }
 
-    private function handleResponse($response, $user, array $paymentDetails, string $orderNo, \net\authorize\api\contract\v1\PaymentType $payment)
-    {
+    private function handleResponse(
+        $response,
+        User $user,
+        array $paymentDetails,
+        string $orderNo,
+        \net\authorize\api\contract\v1\PaymentType $payment,
+        Request $request
+    ) {
         if ($response != null) {
             if ($response->getMessages()->getResultCode() == 'Ok') {
                 $tresponse = $response->getTransactionResponse();
 
                 if ($tresponse != null && $tresponse->getMessages() != null) {
-                    return $this->handleSuccessResponse($response, $tresponse, $user, $paymentDetails, $orderNo, $payment);
+                    return $this->handleSuccessResponse($response, $tresponse, $user, $paymentDetails, $orderNo, $payment, $request);
                 }
 
-                return $this->handleErrorResponse($tresponse, $response, $user);
+                return $this->handleErrorResponse($tresponse, $response, $user, $request);
             }
 
-            return $this->handleErrorResponse(null, $response, $user);
+            return $this->handleErrorResponse(null, $response, $user, $request);
         }
 
         return "No response returned \n";
     }
 
-    private function handleSuccessResponse($response, $tresponse, $user, array $paymentDetails, $orderNo, $payment, \Illuminate\Http\Request $request)
+    private function handleSuccessResponse($response, $tresponse, $user, array $paymentDetails, $orderNo, $payment, $request)
     {
         $amount = $paymentDetails['amount'];
         $data = (object) [

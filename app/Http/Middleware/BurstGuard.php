@@ -12,11 +12,11 @@ class BurstGuard
 {
     public function __construct(
         private RateLimiter $limiter,
-        private int $maxPer5s,
-        private int $maxPer60s,
-        private int $banSeconds,
         private readonly \Illuminate\Contracts\Cache\Repository $cacheManager,
-        private readonly \Illuminate\Contracts\Routing\ResponseFactory $responseFactory
+        private readonly \Illuminate\Contracts\Routing\ResponseFactory $responseFactory,
+        private int $maxPer5s = 5,
+        private int $maxPer60s = 20,
+        private int $banSeconds = 300
     ) {}
 
     /**

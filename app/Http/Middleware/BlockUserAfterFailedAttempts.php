@@ -10,7 +10,11 @@ use Symfony\Component\HttpFoundation\Response;
 
 class BlockUserAfterFailedAttempts
 {
-    public function __construct(private readonly \Illuminate\Auth\AuthManager $authManager, private readonly \Illuminate\Contracts\Cache\Repository $cacheManager, private readonly \Illuminate\Contracts\Routing\ResponseFactory $responseFactory) {}
+    public function __construct(
+        private readonly \Illuminate\Auth\AuthManager $authManager,
+        private readonly \Illuminate\Contracts\Cache\Repository $cacheManager,
+        private readonly \Illuminate\Contracts\Routing\ResponseFactory $responseFactory,
+    ) {}
 
     /**
      * Handle an incoming request.

@@ -4,11 +4,12 @@ namespace App\Services\RewardPoint;
 
 use App\Enum\UserType;
 use App\Models\Action;
+use App\Models\User;
 use App\Models\UserAction;
 
 class RewardService
 {
-    public function rewardUser($user, $actionName, $status, $newUser = null)
+    public function rewardUser(User $user, string $actionName, string $status, ?User $newUser = null)
     {
         $action = Action::where('slug', $actionName)->first();
 
