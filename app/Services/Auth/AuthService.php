@@ -5,23 +5,30 @@ namespace App\Services\Auth;
 use App\Enum\MailingEnum;
 use App\Enum\UserLog;
 use App\Enum\UserStatus;
-use App\Enum\UserType;
 use App\Http\Controllers\Controller;
 use App\Mail\LoginVerifyMail;
 use App\Mail\SignUpVerifyMail;
-use App\Mail\UserWelcomeMail;
-use App\Models\Action;
 use App\Models\User;
+use App\Pipelines\Signup\Affiliate\CreateAffiliateUser;
+use App\Pipelines\Signup\Customer\CreateUser;
+use App\Pipelines\Signup\Customer\CreateWithAuthService;
+use App\Pipelines\Signup\Seller\CreateSeller;
+use App\Pipelines\Verify\Verify;
+use App\Pipelines\Verify\VerifyWithAuthService;
 use App\Trait\HttpResponse;
 use App\Trait\SignUp;
 use Illuminate\Support\Facades\Password;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Pipeline;
 
 class AuthService extends Controller
 {
     use HttpResponse, SignUp;
 
-    public function __construct(private readonly \Illuminate\Auth\Passwords\PasswordBrokerManager $passwordBrokerManager, private readonly \Illuminate\Database\DatabaseManager $databaseManager, private readonly \Illuminate\Hashing\BcryptHasher $bcryptHasher, private readonly \Illuminate\Contracts\Routing\ResponseFactory $responseFactory) {}
+    public function __construct(
+        private readonly \Illuminate\Auth\Passwords\PasswordBrokerManager $passwordBrokerManager,
+        private readonly \Illuminate\Hashing\BcryptHasher $bcryptHasher,
+        private readonly \Illuminate\Contracts\Routing\ResponseFactory $responseFactory
+    ) {}
 
     public function login($request)
     {
@@ -66,30 +73,6 @@ class AuthService extends Controller
         logUserAction($request, $action, $description, $response, $user);
 
         return $response;
-    }
-
-    public function signup($request)
-    {
-        $request->validated($request->all());
-        try {
-            $user = $this->createUser($request);
-
-            $description = "User with email: {$request->email} signed up";
-            $response = $this->success(null, 'Created successfully', 201);
-            $action = UserLog::CREATED;
-
-            logUserAction($request, $action, $description, $response, $user);
-
-            return $response;
-        } catch (\Exception $e) {
-            $description = "Sign up failed: {$request->email}";
-            $response = $this->error(null, $e->getMessage(), 500);
-            $action = UserLog::FAILED;
-
-            logUserAction($request, $action, $description, $response, $user);
-
-            return $response;
-        }
     }
 
     public function resendCode($request)
@@ -186,118 +169,56 @@ class AuthService extends Controller
         }
     }
 
+    public function signup($request)
+    {
+        $request->validated($request->all());
+        $request->merge(['type' => 'b2c_customer']);
+
+        return Pipeline::send($request)
+            ->withinTransaction()
+            ->through([
+                CreateWithAuthService::class,
+                CreateUser::class,
+            ])
+            ->thenReturn();
+    }
+
     public function sellerSignup($request)
     {
         $request->validated($request->all());
-        $user = null;
+        $request->merge(['type' => 'b2c_seller']);
 
-        $currencyCode = currencyCodeByCountryId($request->country_id);
-        $coupon = $request->query('coupon');
-        $coupon = $this->normalizeCoupon($coupon);
-        $referrer = $request->query('referrer');
+        return Pipeline::send($request)
+            ->withinTransaction()
+            ->through([
+                CreateWithAuthService::class,
+                CreateSeller::class,
+            ])
+            ->thenReturn();
+    }
 
-        if ($coupon) {
-            try {
-                $this->validateCoupon($coupon);
-            } catch (\Exception $e) {
-                return $this->error(null, $e->getMessage(), 400);
-            }
-        }
+    public function affiliateSignup($request)
+    {
+        $request->merge(['type' => 'b2c_seller']);
 
-        try {
-            $code = generateVerificationCode();
-
-            $user = User::create([
-                'first_name' => $request->first_name,
-                'last_name' => $request->last_name,
-                'middlename' => $request->other_name,
-                'company_name' => $request->business_name,
-                'email' => $request->email,
-                'address' => $request->address,
-                'country' => $request->country_id,
-                'state_id' => $request->state_id,
-                'type' => UserType::SELLER,
-                'default_currency' => $currencyCode,
-                'email_verified_at' => null,
-                'verification_code' => $code,
-                'is_verified' => 0,
-                'password' => $this->bcryptHasher->make($request->password),
-            ]);
-
-            if ($coupon) {
-                $this->assignCoupon($coupon, $user);
-            }
-
-            if ($referrer) {
-                $user->update(['pending_referrer_code' => $referrer]);
-            }
-
-            $description = "Seller with email address {$request->email} just signed up";
-            $action = UserLog::CREATED;
-            $response = $this->success(null, 'Created successfully');
-
-            logUserAction($request, $action, $description, $response, $user);
-
-            return $this->success(null, 'Created successfully');
-        } catch (\Exception $e) {
-            $description = "Sign up error for user with email {$request->email}";
-            $action = UserLog::FAILED;
-            $response = $this->error(null, $e->getMessage(), 500);
-
-            logUserAction($request, $action, $description, $response, $user);
-
-            return $response;
-        }
+        return Pipeline::send($request)
+            ->withinTransaction()
+            ->through([
+                CreateWithAuthService::class,
+                CreateAffiliateUser::class,
+            ])
+            ->thenReturn();
     }
 
     public function verify($request)
     {
-        $user = User::where('email', $request->email)
-            ->where('verification_code', $request->code)
-            ->first();
-
-        if (! $user) {
-            return $this->error(null, 'Invalid code', 404);
-        }
-
-        $user->update([
-            'is_verified' => 1,
-            'is_admin_approve' => 1,
-            'verification_code' => null,
-            'email_verified_at' => now(),
-            'status' => UserStatus::ACTIVE,
-        ]);
-
-        if ($user->pending_referrer_code !== null) {
-            $this->handleReferrers($user->pending_referrer_code, $user);
-            $user->update(['pending_referrer_code' => null]);
-        }
-
-        $type = MailingEnum::EMAIL_VERIFICATION;
-        $subject = 'Email verification';
-        $mail_class = UserWelcomeMail::class;
-        $data = [
-            'user' => $user,
-        ];
-        mailSend($type, $user, $subject, $mail_class, $data);
-
-        $user->tokens()->delete();
-        $token = $user->createToken('API Token of '.$user->email);
-
-        $description = "User with email address {$request->email} verified OTP";
-        $action = UserLog::CREATED;
-        $response = $this->success([
-            'user_id' => $user->id,
-            'user_type' => $user->type,
-            'has_signed_up' => true,
-            'is_affiliate_member' => $user->is_affiliate_member === 1,
-            'token' => $token->plainTextToken,
-            'expires_at' => $token->accessToken->expires_at,
-        ], 'Verified successfully');
-
-        logUserAction($request, $action, $description, $response, $user);
-
-        return $response;
+        return Pipeline::send($request)
+            ->withinTransaction()
+            ->through([
+                Verify::class,
+                VerifyWithAuthService::class,
+            ])
+            ->thenReturn();
     }
 
     public function forgot($request)
@@ -328,7 +249,7 @@ class AuthService extends Controller
         $user = User::where('email', $request->email)->first();
 
         if (! $user) {
-            return $this->error('error', 'We can\'t find a user with that email address', 404);
+            return $this->error(null, 'We can\'t find a user with that email address', 404);
         }
 
         $status = $this->passwordBrokerManager->broker('users')->reset(
@@ -363,7 +284,6 @@ class AuthService extends Controller
 
     public function logout($request)
     {
-
         $user = $request->user();
         $user->tokens()->where('id', $user->currentAccessToken()->id)->delete();
 
@@ -376,159 +296,5 @@ class AuthService extends Controller
         logUserAction($request, $action, $description, $response, $user);
 
         return $response;
-    }
-
-    public function affiliateSignup($request)
-    {
-        $user = null;
-
-        try {
-            $user = User::where('email', $request->email)->first();
-            $response = $this->handleExistingUser($user);
-
-            if ($response) {
-                return $response;
-            }
-
-            if ($request->referrer_code) {
-                $referrer = User::where('referrer_code', $request->referrer_code)->first();
-
-                if ($referrer && (! $referrer->email_verified_at || $referrer->is_verified != 1)) {
-                    $description = "User with referral code and email {$referrer->email} has not been verified";
-                    $action = UserLog::CREATED;
-                    $response = $this->error(null, 'User with referral code has not been verified', 400);
-
-                    logUserAction($request, $action, $description, $response, $user);
-
-                    return $response;
-                }
-            }
-
-            $this->databaseManager->transaction(function () use ($request, $user): void {
-                $referrer_code = $this->determineReferrerCode($request);
-
-                $referrer_links = generate_referrer_links($referrer_code);
-                $code = generateVerificationCode();
-
-                $data = $this->userTrigger($user, $request, $referrer_links, $referrer_code, $code);
-
-                if ($request->referrer_code) {
-                    $this->handleReferrer($request->referrer_code, $data);
-                }
-            });
-
-            return $this->success(null, 'Created successfully');
-        } catch (\Exception $e) {
-            $description = 'User creation failed';
-            $action = UserLog::FAILED;
-            $response = $this->error(null, $e->getMessage(), 500);
-
-            logUserAction($request, $action, $description, $response, $user);
-
-            return $response;
-        }
-    }
-
-    private function determineReferrerCode($request)
-    {
-        $initial_referrer_code = Str::random(10);
-        if (! $request->referrer_code) {
-            return $initial_referrer_code;
-        }
-        if (User::where('referrer_code', $request->referrer_code)->exists()) {
-            return $this->generateUniqueReferrerCode();
-        }
-
-        return $request->referrer_code;
-    }
-
-    private function handleExistingUser($user)
-    {
-        if ($user) {
-            return $this->getUserReferrer($user);
-        }
-
-        return null;
-    }
-
-    private function handleReferrer($referrer_code, $data): void
-    {
-        $referrer = User::with(['wallet', 'referrer'])
-            ->where('referrer_code', $referrer_code)
-            ->first();
-
-        if (! $referrer || ! $referrer->is_affiliate_member) {
-            throw new \Exception('You are not a valid referrer');
-        }
-
-        $points = Action::where('slug', 'create_account')->first()?->points ?? 0;
-        $referrer->wallet()->increment('reward_point', $points);
-        $referrer->referrer()->attach($data);
-        $referrer->save();
-    }
-
-    private function userTrigger($user, $request, array $referrer_links, $referrer_code, string $code)
-    {
-        $currencyCode = currencyCodeByCountryId($request->country_id);
-
-        if ($user) {
-            $emailVerified = $user->email_verified_at;
-
-            $user->update([
-                'first_name' => $request->first_name,
-                'last_name' => $request->last_name,
-                'country' => $request->country_id,
-                'state_id' => $request->state_id,
-                'default_currency' => $currencyCode,
-                'type' => UserType::SELLER,
-                'referrer_code' => $referrer_code,
-                'referrer_link' => $referrer_links,
-                'is_verified' => 1,
-                'is_affiliate_member' => 1,
-                'password' => $this->bcryptHasher->make($request->password),
-            ]);
-
-            $description = "User with email {$request->email} signed up as an affiliate";
-            $action = UserLog::CREATED;
-            $response = $this->success(null, 'Created successfully');
-
-            logUserAction($request, $action, $description, $response, $user);
-
-            if (is_null($emailVerified)) {
-                $user->update(['email_verified_at' => null, 'verification_code' => $code]);
-
-                $type = MailingEnum::SIGN_UP_OTP;
-                $subject = 'Verify Account';
-                $mail_class = SignUpVerifyMail::class;
-                $data = [
-                    'user' => $user,
-                ];
-                mailSend($type, $user, $subject, $mail_class, $data);
-            }
-
-            return $user;
-        }
-
-        $user = User::create([
-            'first_name' => $request->first_name,
-            'last_name' => $request->last_name,
-            'email' => $request->email,
-            'type' => UserType::SELLER,
-            'default_currency' => $currencyCode,
-            'email_verified_at' => null,
-            'verification_code' => $code,
-            'country' => $request->country_id,
-            'state_id' => $request->state_id,
-            'is_verified' => 0,
-            'is_affiliate_member' => 1,
-            'password' => $this->bcryptHasher->make($request->password),
-        ]);
-
-        $description = "User with email {$request->email} signed up as an affiliate";
-        $action = UserLog::CREATED;
-        $response = $this->success(null, 'Created successfully', 201);
-        logUserAction($request, $action, $description, $response, $user);
-
-        return $user;
     }
 }

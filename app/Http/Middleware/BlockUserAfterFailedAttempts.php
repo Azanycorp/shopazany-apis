@@ -11,45 +11,60 @@ use Symfony\Component\HttpFoundation\Response;
 class BlockUserAfterFailedAttempts
 {
     public function __construct(
-        private readonly \Illuminate\Auth\AuthManager $authManager,
         private readonly \Illuminate\Contracts\Cache\Repository $cacheManager,
         private readonly \Illuminate\Contracts\Routing\ResponseFactory $responseFactory,
     ) {}
 
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
-     */
     public function handle(Request $request, Closure $next): Response
     {
-        $email = $request->input('email');
-        $key = "failed_attempts_{$email}";
+        // Only monitor login POST requests
+        if ($request->is('login') && $request->method() === 'POST') {
 
-        $user = User::where('email', $email)->first();
-        if ($user && $user->status === UserStatus::BLOCKED) {
-            return $this->responseFactory->json(['message' => 'Your account has been blocked due to too many failed attempts.'], 403);
-        }
+            $email = $request->input('email');
+            $key = "failed_attempts_{$email}";
 
-        if (! $this->authManager->attempt($request->only('email', 'password'))) {
-            $attempts = $this->cacheManager->get($key, 0) + 1;
-            $this->cacheManager->put($key, $attempts, now()->addMinutes(30));
+            $user = User::where('email', $email)->first();
 
-            if ($attempts >= 5) {
-                if ($user) {
-                    $user->status = UserStatus::BLOCKED;
-                    $user->save();
-                }
-                $this->cacheManager->forget($key);
-
-                return $this->responseFactory->json(['message' => 'Your account has been blocked due to too many failed attempts.'], 403);
+            // Block user if already BLOCKED
+            if ($user && $user->status === UserStatus::BLOCKED) {
+                return $this->responseFactory->json([
+                    'message' => 'Your account has been blocked due to too many failed attempts.',
+                ], 403);
             }
 
-            return $this->responseFactory->json(['message' => 'Invalid credentials.'], 401);
+            // Let pipeline process the login first
+            $response = $next($request);
+
+            // If pipeline login FAILED (401)
+            if ($response->getStatusCode() === 401) {
+
+                $attempts = $this->cacheManager->get($key, 0) + 1;
+                $this->cacheManager->put($key, $attempts, now()->addMinutes(30));
+
+                // 3️⃣ Block after 5 failed attempts
+                if ($attempts >= 5) {
+                    if ($user) {
+                        $user->status = UserStatus::BLOCKED;
+                        $user->save();
+                    }
+
+                    $this->cacheManager->forget($key);
+
+                    return $this->responseFactory->json([
+                        'message' => 'Your account has been blocked due to too many failed attempts.',
+                    ], 403);
+                }
+
+                return $response; // Return the 401 from pipeline
+            }
+
+            // Login successful → reset attempts
+            $this->cacheManager->forget($key);
+
+            return $response;
         }
 
-        $this->cacheManager->forget($key);
-
+        // For non-login requests
         return $next($request);
     }
 }
