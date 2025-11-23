@@ -11,22 +11,22 @@ trait Login
 {
     use HttpResponse;
 
-    protected function isAccountUnverifiedOrInactive($user, $request): bool
+    protected function isAccountUnverifiedOrInactive($user): bool
     {
         return $user->email_verified_at === null && $user->verification_code !== null;
     }
 
-    protected function isAccountPending($user, $request): bool
+    protected function isAccountPending($user): bool
     {
         return $user->status === UserStatus::PENDING;
     }
 
-    protected function isAccountSuspended($user, $request): bool
+    protected function isAccountSuspended($user): bool
     {
         return $user->status === UserStatus::SUSPENDED;
     }
 
-    protected function isAccountBlocked($user, $request): bool
+    protected function isAccountBlocked($user): bool
     {
         return $user->status === UserStatus::BLOCKED;
     }
