@@ -93,15 +93,13 @@ class AuthService
 
     public function signup($request)
     {
-        // If you're using FormRequest, only call ->validated() with no params.
         $request->validated();
 
         $headerName = config('security.header_key');
         $headerValue = $request->header($headerName);
 
-        $payload = $this->buildExternalPayload($request);
+        $payload = $this->externalPayload($request);
 
-        // Register via external service
         $externalResponse = $this->httpService->register(
             $payload,
             [$headerName => $headerValue]
@@ -112,19 +110,15 @@ class AuthService
         }
 
         try {
-            // Create our user internally
             $user = $this->createLocalUser($request);
-
-            // If referral was supplied, process it
             if ($request->filled('referrer_code')) {
                 $refResponse = $this->handleReferral($request, $user);
 
                 if ($refResponse !== true) {
-                    return $refResponse; // handles affiliate not found
+                    return $refResponse;
                 }
             }
 
-            // SUCCESS
             $message = "User with email: {$request->email} signed up as b2b seller";
             $response = $this->success(null, 'Created successfully', 201);
 
@@ -132,8 +126,6 @@ class AuthService
 
             return $response;
         } catch (\Exception $e) {
-
-            // FAILED
             $message = "Sign up failed: {$request->email}";
             $response = $this->error(null, $e->getMessage(), 500);
 
@@ -143,7 +135,7 @@ class AuthService
         }
     }
 
-    protected function buildExternalPayload($request)
+    protected function externalPayload($request)
     {
         return [
             'first_name' => $request->first_name,
