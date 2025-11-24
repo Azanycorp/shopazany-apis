@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\Auth;
+namespace App\Services\B2B\Auth;
 
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
@@ -13,7 +13,7 @@ class HttpService
 
     public function __construct()
     {
-        $this->baseUrl = config('services.auth_service_url');
+        $this->baseUrl = config('services.auth_service.url');
         $this->timeout = 60;
     }
 

@@ -7,7 +7,6 @@ use App\Enum\UserLog;
 use App\Enum\UserStatus;
 use App\Enum\UserType;
 use App\Models\User;
-use App\Services\Auth\HttpService;
 use App\Services\Auth\LoginService;
 use App\Trait\HttpResponse;
 use App\Trait\SignUp;
@@ -106,7 +105,7 @@ class AuthService
         );
 
         if ($externalResponse->failed()) {
-            return $this->error(null, $externalResponse['message'], 400);
+            return $this->error(null, $externalResponse->json(), 400);
         }
 
         try {
