@@ -2,6 +2,7 @@
 
 namespace App\Services\Auth;
 
+use App\Enum\UserType;
 use App\Models\User;
 use App\Pipelines\Auth\CheckAccountStatus;
 use App\Pipelines\Auth\EnsureLocalUserExists;
@@ -45,6 +46,40 @@ class LoginService
         );
 
         return $auth->post(config('services.auth_service.url').'/login', $options);
+    }
+
+    public static function syncLocalUserToAuthService($user, string $password)
+    {
+        $auth = app(ServicesAuth::class);
+
+        try {
+            $options = new RequestOptions(
+                headers: [
+                    config('services.auth_service.key') => config('services.auth_service.value'),
+                ],
+                data: [
+                    'first_name' => $user->first_name,
+                    'last_name' => $user->last_name,
+                    'email' => $user->email,
+                    'type' => $user->type === UserType::CUSTOMER ? 'b2c_customer' : 'b2c_seller',
+                    'country_id' => $user->country,
+                    'state_id' => $user->state_id,
+                    'password' => $password,
+                    'signed_up_from' => 'azany_b2c',
+                    'email_verified_at' => now(),
+                    'is_verified' => true,
+                    'status' => 'active',
+                ]
+            );
+
+            return $auth->post(config('services.auth_service.url').'/register', $options);
+        } catch (\Exception $e) {
+            return [
+                'status' => false,
+                'message' => $e->getMessage(),
+                'data' => null,
+            ];
+        }
     }
 
     public static function biometricLogin($request)

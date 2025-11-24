@@ -31,7 +31,7 @@ class CreateWithAuthService
                     'type' => $request->type,
                     'country_id' => $request->country_id,
                     'state_id' => $request->state_id,
-                    'password' => bcrypt($request->password),
+                    'password' => $request->password,
                     'signed_up_from' => 'azany_b2c',
                 ]
             );
