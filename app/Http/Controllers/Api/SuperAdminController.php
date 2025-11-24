@@ -9,8 +9,6 @@ use Illuminate\Http\Request;
 
 class SuperAdminController extends Controller
 {
-    const MESSAGE = '403 Forbidden';
-
     public function __construct(
         protected SuperAdminService $superAdminService,
     ) {}
@@ -25,9 +23,9 @@ class SuperAdminController extends Controller
         return $this->superAdminService->runMigration();
     }
 
-    public function seedRun()
+    public function seedRun(Request $request)
     {
-        return $this->superAdminService->seedRun();
+        return $this->superAdminService->seedRun($request);
     }
 
     public function getProfiles()
@@ -57,7 +55,7 @@ class SuperAdminController extends Controller
 
     public function verifyCode(Request $request)
     {
-        $request->validate(['code' => 'required|string']);
+        $request->validate(['code' => ['required', 'string']]);
 
         return $this->superAdminService->verifyCode($request);
     }

@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -12,18 +13,13 @@ class AdminUserMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    protected $user;
-
-    protected $pass;
-
     /**
      * Create a new message instance.
      */
-    public function __construct($user, $pass)
-    {
-        $this->user = $user;
-        $this->pass = $pass;
-    }
+    public function __construct(
+        protected User $user,
+        protected string $pass
+    ) {}
 
     /**
      * Get the message envelope.

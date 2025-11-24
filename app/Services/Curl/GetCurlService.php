@@ -3,58 +3,44 @@
 namespace App\Services\Curl;
 
 use Exception;
+use Illuminate\Support\Facades\Http;
 
 class GetCurlService
 {
-    protected $baseUrl;
+    protected string $baseUrl;
 
-    protected $refrence;
+    protected string $reference;
 
     private static $secret_key;
 
-    public function __construct($refrence)
+    public function __construct($reference)
     {
-        $this->refrence = $refrence;
+        $this->reference = $reference;
         $this->baseUrl = config('paystack.paymentUrl');
 
-        if (config('services.paystack.mode') == 'live') {
-            self::$secret_key = config('services.paystack.live_sk');
-        } else {
-            self::$secret_key = config('services.paystack.test_sk');
-        }
+        self::$secret_key = config('services.paystack.mode') === 'live'
+            ? config('services.paystack.live_sk')
+            : config('services.paystack.test_sk');
     }
 
     public function run()
     {
-        $curl = curl_init();
+        $url = $this->baseUrl.'/transaction/verify/'.$this->reference;
 
-        curl_setopt_array($curl, [
-            CURLOPT_URL => $this->baseUrl.'/transaction/verify/'.$this->refrence,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING => '',
-            CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 30,
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => 'GET',
-            CURLOPT_HTTPHEADER => [
-                'Authorization: Bearer '.self::$secret_key,
-                'Cache-Control: no-cache',
-            ],
-        ]);
+        $response = Http::withToken(self::$secret_key)
+            ->timeout(60)
+            ->get($url);
 
-        $response = curl_exec($curl);
-        $err = curl_error($curl);
-        curl_close($curl);
-
-        if ($err !== '' && $err !== '0') {
-            throw new Exception($err);
+        if ($response->failed()) {
+            throw new Exception($response->json('message', 'Unable to verify transaction.'));
         }
 
-        $response = json_decode($response);
-        if (! $response->status) {
-            throw new Exception($response->message);
+        $data = (object) $response->json();
+
+        if (! $data->status) {
+            throw new Exception($data->message);
         }
 
-        return $response;
+        return $data;
     }
 }

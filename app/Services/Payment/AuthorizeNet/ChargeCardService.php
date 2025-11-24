@@ -27,6 +27,7 @@ use App\Models\UserShippingAddress;
 use App\Models\UserWallet;
 use App\Models\Wallet;
 use App\Trait\HttpResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use net\authorize\api\contract\v1 as AnetAPI;
@@ -52,6 +53,7 @@ class ChargeCardService implements PaymentStrategy
         $user = Auth::user();
         $orderNo = $this->orderNo;
         $orderNum = Str::random(8);
+        $requestClass = app(Request::class);
 
         $merchantAuthentication = $this->getMerchantAuthentication();
         $payment = $this->getPayment($paymentDetails);
@@ -69,7 +71,7 @@ class ChargeCardService implements PaymentStrategy
 
         $response = $this->executeTransaction($controller);
 
-        return $this->handleResponse($response, $user, $paymentDetails, $orderNo, $payment);
+        return $this->handleResponse($response, $user, $paymentDetails, $orderNo, $payment, $requestClass);
     }
 
     // B2B Payment section
@@ -78,6 +80,7 @@ class ChargeCardService implements PaymentStrategy
         $user = Auth::user();
         $orderNo = $this->orderNo;
         $orderNum = Str::random(8);
+        $requestClass = app(Request::class);
 
         $merchantAuthentication = $this->getMerchantAuthentication();
         $payment = $this->getPayment($paymentDetails);
@@ -93,29 +96,29 @@ class ChargeCardService implements PaymentStrategy
 
         $response = $this->executeTransaction($controller);
 
-        return $this->handleB2bResponse($response, $user, $paymentDetails, $orderNo, $payment);
+        return $this->handleB2bResponse($response, $user, $paymentDetails, $orderNo, $payment, $requestClass);
     }
 
-    private function handleB2bResponse($response, $user, array $paymentDetails, string $orderNo, \net\authorize\api\contract\v1\PaymentType $payment)
+    private function handleB2bResponse($response, $user, array $paymentDetails, string $orderNo, \net\authorize\api\contract\v1\PaymentType $payment, $request)
     {
         if ($response != null) {
             if ($response->getMessages()->getResultCode() == 'Ok') {
                 $tresponse = $response->getTransactionResponse();
 
                 if ($tresponse != null && $tresponse->getMessages() != null) {
-                    return $this->handleB2bSuccessResponse($response, $tresponse, $user, $paymentDetails, $orderNo, $payment);
+                    return $this->handleB2bSuccessResponse($response, $tresponse, $user, $paymentDetails, $orderNo, $payment, $request);
                 }
 
-                return $this->handleErrorResponse($tresponse, $response, $user);
+                return $this->handleErrorResponse($tresponse, $response, $user, $request);
             }
 
-            return $this->handleErrorResponse(null, $response, $user);
+            return $this->handleErrorResponse(null, $response, $user, $request);
         }
 
         return "No response returned \n";
     }
 
-    private function handleB2bSuccessResponse($response, $tresponse, $user, array $paymentDetails, $orderNo, $payment)
+    private function handleB2bSuccessResponse($response, $tresponse, $user, array $paymentDetails, $orderNo, $payment, $request)
     {
         $rfqId = $paymentDetails['rfq_id'];
         $centerId = $paymentDetails['centre_id'];
@@ -135,7 +138,7 @@ class ChargeCardService implements PaymentStrategy
             'reference' => generateRefCode(),
             'channel' => 'card',
             'currency' => 'USD',
-            'ip_address' => request()->ip(),
+            'ip_address' => $request->ip(),
             'paid_at' => now(),
             'createdAt' => now(),
             'transaction_date' => now(),
@@ -205,7 +208,7 @@ class ChargeCardService implements PaymentStrategy
         mailSend($type, $user, $subject, $mail_class, $orderItemData);
 
         (new UserLogAction(
-            request(),
+            $request,
             UserLog::PAYMENT,
             'Payment successful',
             json_encode($response),
@@ -319,26 +322,32 @@ class ChargeCardService implements PaymentStrategy
         return $controller->executeWithApiResponse(\net\authorize\api\constants\ANetEnvironment::SANDBOX);
     }
 
-    private function handleResponse($response, $user, array $paymentDetails, string $orderNo, \net\authorize\api\contract\v1\PaymentType $payment)
-    {
+    private function handleResponse(
+        $response,
+        User $user,
+        array $paymentDetails,
+        string $orderNo,
+        \net\authorize\api\contract\v1\PaymentType $payment,
+        Request $request
+    ) {
         if ($response != null) {
             if ($response->getMessages()->getResultCode() == 'Ok') {
                 $tresponse = $response->getTransactionResponse();
 
                 if ($tresponse != null && $tresponse->getMessages() != null) {
-                    return $this->handleSuccessResponse($response, $tresponse, $user, $paymentDetails, $orderNo, $payment);
+                    return $this->handleSuccessResponse($response, $tresponse, $user, $paymentDetails, $orderNo, $payment, $request);
                 }
 
-                return $this->handleErrorResponse($tresponse, $response, $user);
+                return $this->handleErrorResponse($tresponse, $response, $user, $request);
             }
 
-            return $this->handleErrorResponse(null, $response, $user);
+            return $this->handleErrorResponse(null, $response, $user, $request);
         }
 
         return "No response returned \n";
     }
 
-    private function handleSuccessResponse($response, $tresponse, $user, array $paymentDetails, $orderNo, $payment)
+    private function handleSuccessResponse($response, $tresponse, $user, array $paymentDetails, $orderNo, $payment, $request)
     {
         $amount = $paymentDetails['amount'];
         $data = (object) [
@@ -351,7 +360,7 @@ class ChargeCardService implements PaymentStrategy
             'reference' => generateRefCode(),
             'channel' => 'card',
             'currency' => 'USD',
-            'ip_address' => request()->ip(),
+            'ip_address' => $request->ip(),
             'paid_at' => now(),
             'createdAt' => now(),
             'transaction_date' => now(),
@@ -416,6 +425,7 @@ class ChargeCardService implements PaymentStrategy
                         'image' => $product->image,
                         'quantity' => $item['quantity'],
                         'price' => $convertedPrice,
+                        'currency' => $product->shopCountry?->currency,
                     ];
 
                     $variation->decrement('stock', $item['quantity']);
@@ -441,6 +451,7 @@ class ChargeCardService implements PaymentStrategy
                         'image' => $product->image,
                         'quantity' => $item['quantity'],
                         'price' => $convertedPrice,
+                        'currency' => $product->shopCountry?->currency,
                     ];
 
                     $product->decrement('current_stock_quantity', $item['quantity']);
@@ -463,7 +474,7 @@ class ChargeCardService implements PaymentStrategy
 
             } catch (\Exception $e) {
                 (new UserLogAction(
-                    request(),
+                    $request,
                     UserLog::PAYMENT,
                     "Order Processing Error for Item ID {$item['itemId']}: ".$e->getMessage(),
                     json_encode($paymentDetails),
@@ -492,28 +503,30 @@ class ChargeCardService implements PaymentStrategy
 
         Cart::where('user_id', $user->id)->delete();
 
-        if ($product) {
+        if ($product->user) {
             $this->sendSellerOrderEmail($product->user, $orderedItems, $orderNo, $amount);
         }
         $this->sendOrderConfirmationEmail($user, $orderedItems, $orderNo, $amount);
 
         (new UserLogAction(
-            request(),
+            $request,
             UserLog::PAYMENT,
             'Payment successful',
             json_encode($response),
             $user
         ))->run();
 
-        return $this->success(null, $tresponse->getMessages()[0]->getDescription());
+        return $this->success(['order_no' => $orderNo], $tresponse->getMessages()[0]->getDescription());
     }
 
-    private function handleErrorResponse($tresponse, $response, $user)
+    private function handleErrorResponse($tresponse, $response, $user, \Illuminate\Http\Request $request)
     {
-        $msg = $tresponse != null ? 'Payment failed: '.$tresponse->getErrors()[0]->getErrorText() : 'Payment failed: '.$response->getMessages()->getMessage()[0]->getText();
+        $msg = $tresponse != null ?
+            "Payment failed: {$tresponse->getErrors()[0]->getErrorText()}" :
+            "Payment failed: {$response->getMessages()->getMessage()[0]->getText()}";
 
         (new UserLogAction(
-            request(),
+            $request,
             UserLog::PAYMENT,
             $msg,
             json_encode($response),
@@ -525,11 +538,11 @@ class ChargeCardService implements PaymentStrategy
 
     private function sendSellerOrderEmail($seller, $order, $orderNo, $totalAmount): void
     {
-        defer(fn () => send_email($seller->email, new SellerOrderMail($seller, $order, $orderNo, $totalAmount)));
+        send_email($seller->email, new SellerOrderMail($seller, $order, $orderNo, $totalAmount));
     }
 
     private function sendOrderConfirmationEmail($user, $orderedItems, $orderNo, $totalAmount): void
     {
-        defer(fn () => send_email($user->email, new CustomerOrderMail($user, $orderedItems, $orderNo, $totalAmount)));
+        send_email($user->email, new CustomerOrderMail($user, $orderedItems, $orderNo, $totalAmount));
     }
 }

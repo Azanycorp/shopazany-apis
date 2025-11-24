@@ -12,16 +12,16 @@ class BlogController extends Controller
         protected BlogService $blogService
     ) {}
 
-    public function getBlogCategories()
+    public function getBlogCategories(Request $request)
     {
-        return $this->blogService->getBlogCategories();
+        return $this->blogService->getBlogCategories($request);
     }
 
     public function addBlogCategory(Request $request)
     {
         $request->validate([
-            'name' => 'required|string',
-            'type' => 'required|string|in:b2c,b2b,agriecom_b2c',
+            'name' => ['required', 'string'],
+            'type' => ['required', 'string', 'in:b2c,b2b,agriecom_b2c'],
         ]);
 
         return $this->blogService->addBlogCategory($request);
@@ -35,7 +35,7 @@ class BlogController extends Controller
     public function updateBlogCategory($id, Request $request)
     {
         $request->validate([
-            'name' => 'required|string',
+            'name' => ['required', 'string'],
         ]);
 
         return $this->blogService->updateBlogCategory($id, $request);
@@ -46,24 +46,24 @@ class BlogController extends Controller
         return $this->blogService->deleteBlogCategory($id);
     }
 
-    public function getBlogs()
+    public function getBlogs(Request $request)
     {
-        return $this->blogService->getBlogs();
+        return $this->blogService->getBlogs($request);
     }
 
     public function addBlog(Request $request)
     {
         $request->validate([
-            'title' => 'required|string',
-            'short_description' => 'required|string',
-            'description' => 'required|string',
-            'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'blog_category_id' => 'required|exists:b2_c_blog_categories,id',
-            'meta_title' => 'nullable|string',
-            'meta_description' => 'nullable|string',
-            'meta_keywords' => 'nullable|string',
-            'meta_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'type' => 'required|string|in:b2c,b2b,agriecom_b2c',
+            'title' => ['required', 'string'],
+            'short_description' => ['required', 'string'],
+            'description' => ['required', 'string'],
+            'image' => ['required', 'image', 'mimes:jpeg,png,jpg,gif,svg', 'max:2048'],
+            'blog_category_id' => ['required', 'exists:b2_c_blog_categories,id'],
+            'meta_title' => ['nullable', 'string'],
+            'meta_description' => ['nullable', 'string'],
+            'meta_keywords' => ['nullable', 'string'],
+            'meta_image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg', 'max:2048'],
+            'type' => ['required', 'string', 'in:b2c,b2b,agriecom_b2c'],
         ]);
 
         return $this->blogService->addBlog($request);
@@ -77,15 +77,15 @@ class BlogController extends Controller
     public function updateBlog($id, Request $request)
     {
         $request->validate([
-            'title' => 'required|string',
-            'short_description' => 'required|string',
-            'description' => 'required|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'blog_category_id' => 'required|exists:b2_c_blog_categories,id',
-            'meta_title' => 'nullable|string',
-            'meta_description' => 'nullable|string',
-            'meta_keywords' => 'nullable|string',
-            'meta_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'title' => ['required', 'string'],
+            'short_description' => ['required', 'string'],
+            'description' => ['required', 'string'],
+            'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg', 'max:2048'],
+            'blog_category_id' => ['required', 'exists:b2_c_blog_categories,id'],
+            'meta_title' => ['nullable', 'string'],
+            'meta_description' => ['nullable', 'string'],
+            'meta_keywords' => ['nullable', 'string'],
+            'meta_image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg', 'max:2048'],
         ]);
 
         return $this->blogService->updateBlog($id, $request);
@@ -96,9 +96,9 @@ class BlogController extends Controller
         return $this->blogService->deleteBlog($id);
     }
 
-    public function getAllBlogs()
+    public function getAllBlogs(Request $request)
     {
-        return $this->blogService->getAllBlogs();
+        return $this->blogService->getAllBlogs($request);
     }
 
     public function getBlogDetail($slug)

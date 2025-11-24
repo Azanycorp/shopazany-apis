@@ -10,11 +10,12 @@ use App\Models\User;
 use App\Services\Auth\LoginService;
 use App\Trait\HttpResponse;
 use App\Trait\SignUp;
-use Illuminate\Support\Facades\DB;
 
 class AuthService
 {
     use HttpResponse, SignUp;
+
+    public function __construct(private readonly \Illuminate\Database\DatabaseManager $databaseManager, private readonly \Illuminate\Hashing\BcryptHasher $bcryptHasher) {}
 
     public function login($request)
     {
@@ -35,7 +36,7 @@ class AuthService
                 'verification_code' => $code,
                 'is_verified' => 0,
                 'info_source' => $request->info_source ?? null,
-                'password' => bcrypt($request->password),
+                'password' => $this->bcryptHasher->make($request->password),
             ]);
             if ($request->referrer_code) {
                 $affiliate = User::with('wallet')
@@ -151,7 +152,7 @@ class AuthService
     public function buyerOnboarding($request)
     {
         $user = null;
-        DB::beginTransaction();
+        $this->databaseManager->beginTransaction();
 
         try {
             $code = generateVerificationCode();
@@ -172,7 +173,7 @@ class AuthService
                 'email_verified_at' => null,
                 'verification_code' => $code,
                 'is_verified' => 0,
-                'password' => bcrypt($request->password),
+                'password' => $this->bcryptHasher->make($request->password),
             ]);
 
             $user->b2bCompany()->create([
@@ -189,11 +190,11 @@ class AuthService
             $action = UserLog::CREATED;
 
             logUserAction($request, $action, $description, $response, $user);
-            DB::commit();
+            $this->databaseManager->commit();
 
             return $this->success($user, 'Created successfully');
         } catch (\Exception $e) {
-            DB::rollBack();
+            $this->databaseManager->rollBack();
 
             $description = "Sign up failed: {$request->email}";
             $response = $this->error(null, $e->getMessage(), 500);

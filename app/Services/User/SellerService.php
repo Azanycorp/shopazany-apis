@@ -18,8 +18,7 @@ use App\Models\User;
 use App\Trait\General;
 use App\Trait\HttpResponse;
 use App\Trait\Product as TraitProduct;
-use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
@@ -28,9 +27,16 @@ class SellerService extends Controller
 {
     use General, HttpResponse, TraitProduct;
 
+    public function __construct(
+        private readonly \Illuminate\Auth\AuthManager $authManager,
+        private readonly \Illuminate\Foundation\Application $application,
+        private readonly \Illuminate\Database\DatabaseManager $databaseManager,
+        private readonly \Illuminate\Contracts\Routing\ResponseFactory $responseFactory
+    ) {}
+
     public function businessInfo($request)
     {
-        $currentUserId = Auth::id();
+        $currentUserId = $this->authManager->id();
 
         if ($currentUserId != $request->user_id) {
             return $this->error(null, 'Unauthorized action.', 401);
@@ -54,7 +60,7 @@ class SellerService extends Controller
 
             $url = ['url' => null];
             if ($request->hasFile('file')) {
-                $url = $this->storeFile($request->file('file'), $folder);
+                $url = $this->storeFile($request->file('file'), $folder, $request);
             }
 
             $user->update($request->only(['first_name', 'last_name']));
@@ -108,7 +114,7 @@ class SellerService extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return $this->error(null, 'Failed to create product: '.$e->getMessage(), 500);
+            return $this->error(null, "Failed to create product: {$e->getMessage()}", 400);
         }
     }
 
@@ -140,9 +146,9 @@ class SellerService extends Controller
         $parts = explode('@', $user->email);
         $name = $parts[0];
 
-        if (App::environment('production')) {
+        if ($this->application->environment('production')) {
             $frontImage = "/prod/product/{$name}/front_image";
-        } elseif (App::environment(['staging', 'local'])) {
+        } elseif ($this->application->environment(['staging', 'local'])) {
             $frontImage = "/stag/product/{$name}/front_image";
         }
 
@@ -176,7 +182,7 @@ class SellerService extends Controller
         return $this->success(null, 'Updated successfully');
     }
 
-    public function getProduct($userId)
+    public function getProduct($request, $userId)
     {
         $user = User::with(['products'])->find($userId);
 
@@ -184,10 +190,10 @@ class SellerService extends Controller
             return $this->error(null, 'User not found', 404);
         }
 
-        $category = request('category');
-        $brand = request('brand');
-        $color = request('color');
-        $search = request('search');
+        $category = $request->input('category');
+        $brand = $request->input('brand');
+        $color = $request->input('color');
+        $search = $request->input('search');
 
         $query = $user->products()
             ->with([
@@ -275,9 +281,9 @@ class SellerService extends Controller
         return $this->success(null, 'Deleted successfully');
     }
 
-    public function getAllOrders($id): array
+    public function getAllOrders($request, $id): array
     {
-        $status = request()->query('status');
+        $status = $request->query('status');
 
         $validStatuses = [
             OrderStatus::PENDING,
@@ -288,13 +294,13 @@ class SellerService extends Controller
             OrderStatus::CANCELLED,
         ];
 
-        $orders = Order::whereHas('products', function ($query) use ($id): void {
+        $orders = Order::whereHas('products', function (Builder $query) use ($id): void {
             $query->where('user_id', $id);
         })
             ->with(['user', 'products.shopCountry'])
             ->when($status, function ($query) use ($status, $validStatuses) {
                 if (! in_array($status, $validStatuses)) {
-                    return response()->json([
+                    return $this->responseFactory->json([
                         'status' => false,
                         'message' => 'Invalid status',
                         'data' => null,
@@ -324,13 +330,13 @@ class SellerService extends Controller
 
     public function getOrderDetail($userId, $id)
     {
-        $currentUserId = Auth::id();
+        $currentUserId = $this->authManager->id();
 
         if ($currentUserId != $userId) {
             return $this->error(null, 'Unauthorized action.', 401);
         }
 
-        $order = Order::whereHas('products', function ($query) use ($userId): void {
+        $order = Order::whereHas('products', function (Builder $query) use ($userId): void {
             $query->where('user_id', $userId);
         })
             ->with([
@@ -352,7 +358,7 @@ class SellerService extends Controller
 
     public function updateOrderStatus($userId, $orderId, $request)
     {
-        $currentUserId = Auth::id();
+        $currentUserId = $this->authManager->id();
 
         if ($currentUserId != $userId) {
             return $this->error(null, 'Unauthorized action.', 401);
@@ -378,13 +384,13 @@ class SellerService extends Controller
         }
 
         foreach ($sellerProducts as $product) {
-            DB::table('order_items')
+            $this->databaseManager->table('order_items')
                 ->where('order_id', $orderId)
                 ->where('product_id', $product->id)
                 ->update(['status' => $request->status]);
         }
 
-        $remainingStatuses = DB::table('order_items')
+        $remainingStatuses = $this->databaseManager->table('order_items')
             ->where('order_id', $orderId)
             ->pluck('status')
             ->unique();
@@ -418,7 +424,7 @@ class SellerService extends Controller
 
     public function productImport($request)
     {
-        $currentUserId = Auth::id();
+        $currentUserId = $this->authManager->id();
 
         if ($currentUserId != $request->user_id) {
             return $this->error(null, 'Unauthorized action.', 401);
@@ -437,7 +443,7 @@ class SellerService extends Controller
 
     public function export($userId, $type)
     {
-        $currentUserId = Auth::id();
+        $currentUserId = $this->authManager->id();
 
         if ($currentUserId != $userId) {
             return $this->error(null, 'Unauthorized action.', 401);
@@ -457,18 +463,18 @@ class SellerService extends Controller
 
     public function dashboardAnalytics($userId)
     {
-        $currentUserId = Auth::id();
+        $currentUserId = $this->authManager->id();
 
         if ($currentUserId != $userId) {
             return $this->error(null, 'Unauthorized action.', 401);
         }
 
         $totalProducts = Product::where('user_id', $userId)->count();
-        $totalOrders = Order::whereHas('products', function ($query) use ($userId): void {
+        $totalOrders = Order::whereHas('products', function (Builder $query) use ($userId): void {
             $query->where('user_id', $userId);
         })->count();
 
-        $orderCounts = Order::whereHas('products', function ($query) use ($userId): void {
+        $orderCounts = Order::whereHas('products', function (Builder $query) use ($userId): void {
             $query->where('user_id', $userId);
         })
             ->selectRaw('
@@ -490,8 +496,14 @@ class SellerService extends Controller
             ])
             ->first();
 
-        $topRateds = Product::topRated($userId)->limit(5)->get();
-        $mostFavorites = Product::mostFavorite($userId)->limit(5)->get();
+        $topRateds = Product::where('products.user_id', $userId)
+            ->topRated()
+            ->limit(5)
+            ->get();
+        $mostFavorites = Product::where('products.user_id', $userId)
+            ->mostFavorite()
+            ->limit(5)
+            ->get();
 
         $data = [
             'total_products' => $totalProducts,
@@ -512,13 +524,13 @@ class SellerService extends Controller
 
     public function getOrderSummary($userId)
     {
-        $currentUserId = Auth::id();
+        $currentUserId = $this->authManager->id();
 
         if ($currentUserId != $userId) {
             return $this->error(null, 'Unauthorized action.', 401);
         }
 
-        $orders = Order::whereHas('products', function ($query) use ($userId): void {
+        $orders = Order::whereHas('products', function (Builder $query) use ($userId): void {
             $query->where('user_id', $userId);
         })
             ->with(['user', 'products.shopCountry'])
@@ -533,10 +545,10 @@ class SellerService extends Controller
 
     public function topSelling($userId)
     {
-        $topSellingProducts = DB::table('order_items')
+        $topSellingProducts = $this->databaseManager->table('order_items')
             ->join('products', 'order_items.product_id', '=', 'products.id')
             ->where('products.user_id', $userId)
-            ->select('order_items.product_id', DB::raw('SUM(order_items.product_quantity) as total_quantity'))
+            ->select('order_items.product_id', $this->databaseManager->raw('SUM(order_items.product_quantity) as total_quantity'))
             ->groupBy('order_items.product_id')
             ->orderBy('total_quantity', 'desc')
             ->limit(8)
@@ -565,14 +577,14 @@ class SellerService extends Controller
         $user = User::with('productAttributes')
             ->findOrFail($request->user_id);
 
-        $attributeNames = collect($request['attributes'])->pluck('name')->toArray();
+        $attributeNames = (new \Illuminate\Support\Collection($request['attributes']))->pluck('name')->toArray();
 
         $existing = $user->productAttributes()
             ->whereIn('name', $attributeNames)
             ->pluck('name')
             ->toArray();
 
-        if (! empty($existing)) {
+        if (filled($existing)) {
             return $this->error(null, 'Attribute(s) already exist: '.implode(', ', $existing), 400);
         }
 

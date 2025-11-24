@@ -48,9 +48,9 @@ class BannerPromoService
         return $this->success(null, 'Added successfully', 201);
     }
 
-    public function banners()
+    public function banners($request)
     {
-        $type = request()->query('type', BannerType::B2C);
+        $type = $request->query('type', BannerType::B2C);
 
         if (! in_array($type, [BannerType::B2C, BannerType::B2B, BannerType::AGRIECOM_B2C])) {
             return $this->error(null, "Invalid type {$type}", 400);
@@ -222,9 +222,9 @@ class BannerPromoService
         return $this->success($deal, 'Deal added successfully');
     }
 
-    public function deals()
+    public function deals($request)
     {
-        $type = request()->query('type', BannerType::B2C);
+        $type = $request->query('type', BannerType::B2C);
 
         if (! in_array($type, [BannerType::B2C, BannerType::B2B, BannerType::AGRIECOM_B2C])) {
             return $this->error(null, "Invalid type {$type}", 400);

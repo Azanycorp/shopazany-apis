@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use App\Enum\OrderStatus;
 use App\Models\Order;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -16,7 +17,7 @@ class SingleProductResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $item_sold = Order::whereHas('products', function ($query): void {
+        $item_sold = Order::whereHas('products', function (Builder $query): void {
             $query->where('product_id', $this->id);
         })
             ->where('status', OrderStatus::DELIVERED)
@@ -31,9 +32,9 @@ class SingleProductResource extends JsonResource
             'description' => (string) $this->description,
             'category' => (object) [
                 'category_id' => (int) $this->category_id,
-                'category_name' => (string) optional($this->category)->name,
+                'category_name' => (string) $this->category?->name,
                 'sub_category_id' => (int) $this->sub_category_id,
-                'sub_category_name' => (string) optional($this->subCategory)->name,
+                'sub_category_name' => (string) $this->subCategory?->name,
             ],
             'brand' => (string) $this->brand?->name,
             'color' => (string) $this->color?->name,
@@ -72,7 +73,7 @@ class SingleProductResource extends JsonResource
             'seller' => (object) [
                 'id' => $this->user?->id,
                 'uuid' => $this->user?->uuid,
-                'name' => $this->user?->first_name.' '.$this->user?->last_name,
+                'name' => "{$this->user?->first_name} {$this->user?->last_name}",
                 'flag' => $this->user?->userCountry?->shopCountry?->flag,
                 'country' => $this->user?->userCountry?->name,
             ],

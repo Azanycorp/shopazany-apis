@@ -27,13 +27,13 @@ use App\Models\ShippmentBatch;
 use App\Trait\HttpResponse;
 use App\Trait\SignUp;
 use App\Trait\SuperAdminNotification;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Database\Eloquent\Builder;
 
 class SuperAdminService
 {
     use HttpResponse, SignUp, SuperAdminNotification;
+
+    public function __construct(private readonly \Illuminate\Database\DatabaseManager $databaseManager, private readonly \Illuminate\Auth\AuthManager $authManager, private readonly \Illuminate\Contracts\Hashing\Hasher $hasher, private readonly \Illuminate\Hashing\BcryptHasher $bcryptHasher) {}
 
     public function getDashboardDetails()
     {
@@ -80,14 +80,14 @@ class SuperAdminService
         return $this->success($details, 'delivery overview');
     }
 
-    public function allCollationCentres()
+    public function allCollationCentres($request)
     {
         $query = CollationCenter::with('country')
-            ->when(request()->status, function ($q, $status) {
+            ->when($request->status, function ($q, $status) {
                 $q->where('status', $status);
             })
-            ->when(request()->search, function ($q, $search) {
-                $q->where(function ($query) use ($search) {
+            ->when($request->search, function ($q, $search) {
+                $q->where(function (Builder $query) use ($search) {
                     $query->where('city', 'like', '%'.$search.'%')
                         ->orWhere('location', 'like', '%'.$search.'%');
                 });
@@ -207,7 +207,7 @@ class SuperAdminService
 
         $total_hubs = PickupStation::count();
 
-        $statusCounts = PickupStation::select('status', DB::raw('count(*) as count'))
+        $statusCounts = PickupStation::select('status', $this->databaseManager->raw('count(*) as count'))
             ->groupBy('status')
             ->pluck('count', 'status');
 
@@ -329,7 +329,7 @@ class SuperAdminService
             return $this->error(null, 'This order has already been logged at this hub.', 422);
         }
 
-        $loggedItems = collect($request->items ?? [])
+        $loggedItems = (new \Illuminate\Support\Collection($request->items ?? []))
             ->map(fn ($it) => [
                 'item_id' => $it['item_id'] ?? null,
                 'item_condition' => $it['item_condition'] ?? null,
@@ -341,7 +341,7 @@ class SuperAdminService
 
             $data = $this->logB2CShipment($request, $order, $hub, $loggedItems, $orderNumber);
 
-            $this->createNotification('New Shippment created', 'New Shippment created at '.$hub->name.'Pickup station/hub '.'by '.Auth::user()->fullName);
+            $this->createNotification('New Shippment created', 'New Shippment created at '.$hub->name.'Pickup station/hub '.'by '.$this->authManager->user()->fullName);
 
             return $this->success(new ShippmentResource($data['shipment']), 'Item Logged successfully.');
         }
@@ -352,7 +352,7 @@ class SuperAdminService
 
         $b2bData = $this->logB2BShipment($request, $b2bOrder, $hub, $loggedItems, $orderNumber);
 
-        $this->createNotification('New Shippment created', 'New Shippment created at '.$hub->name.'Pickup station/hub '.'by '.Auth::user()->fullName);
+        $this->createNotification('New Shippment created', 'New Shippment created at '.$hub->name.'Pickup station/hub '.'by '.$this->authManager->user()->fullName);
 
         return $this->success(new ShippmentResource($b2bData['shipment']), 'Item Logged successfully.');
     }
@@ -405,12 +405,12 @@ class SuperAdminService
         $authUser = userAuth();
         $user = Admin::findOrFail($authUser->id);
 
-        if (! Hash::check($request->old_password, $user->password)) {
+        if (! $this->hasher->check($request->old_password, $user->password)) {
             return $this->error(null, 'Old password is incorrect.', 400);
         }
 
         $user->update([
-            'password' => bcrypt($request->password),
+            'password' => $this->bcryptHasher->make($request->password),
         ]);
 
         return $this->success(null, 'Password updated');
@@ -536,7 +536,7 @@ class SuperAdminService
     {
         $shippment = Shippment::findOrFail($id);
 
-        DB::transaction(function () use ($shippment, $request) {
+        $this->databaseManager->transaction(function () use ($shippment, $request) {
 
             $shippment->update([
                 'current_location' => $request->current_location,
@@ -558,7 +558,7 @@ class SuperAdminService
     {
         $shippment = Shippment::findOrFail($id);
 
-        DB::transaction(function () use ($shippment, $request) {
+        $this->databaseManager->transaction(function () use ($shippment, $request) {
 
             $shippment->update([
                 'status' => $request->status,
@@ -581,7 +581,7 @@ class SuperAdminService
     {
         $shippment = Shippment::findOrFail($id);
 
-        DB::transaction(function () use ($shippment, $request) {
+        $this->databaseManager->transaction(function () use ($shippment, $request) {
 
             $shippment->update([
                 'status' => $request->status,
@@ -601,7 +601,7 @@ class SuperAdminService
     {
         $shippment = Shippment::findOrFail($id);
 
-        DB::transaction(function () use ($shippment, $request) {
+        $this->databaseManager->transaction(function () use ($shippment, $request) {
 
             $shippment->update([
                 'status' => $request->status,
@@ -622,7 +622,7 @@ class SuperAdminService
     {
         $shippment = Shippment::findOrFail($id);
 
-        DB::transaction(function () use ($shippment, $request) {
+        $this->databaseManager->transaction(function () use ($shippment, $request) {
 
             $shippment->update([
                 'status' => $request->status,
@@ -652,7 +652,7 @@ class SuperAdminService
             return $this->error(null, 'shippment belongs to collation centre', 404);
         }
 
-        DB::transaction(function () use ($shippment, $request) {
+        $this->databaseManager->transaction(function () use ($shippment, $request) {
 
             $shippment->update([
                 'status' => $request->status,
@@ -680,7 +680,7 @@ class SuperAdminService
             return $this->error(null, 'Centre not found', 404);
         }
 
-        DB::transaction(function () use ($centre, $request) {
+        $this->databaseManager->transaction(function () use ($centre, $request) {
 
             $batch = ShippmentBatch::create([
                 'collation_id' => $centre->id,
@@ -700,7 +700,7 @@ class SuperAdminService
                 'note' => $request->note,
             ]);
 
-            $this->createNotification('New Shipment batch created', 'New Shipment batch created at '.$centre->name.'centre '.'by '.Auth::user()->fullName);
+            $this->createNotification('New Shipment batch created', 'New Shipment batch created at '.$centre->name.'centre '.'by '.$this->authManager->user()->fullName);
         });
 
         return $this->success(null, 'Batch created successfully');
@@ -714,7 +714,7 @@ class SuperAdminService
             return $this->error(null, 'Batch not found', 404);
         }
 
-        DB::transaction(function () use ($batch, $request) {
+        $this->databaseManager->transaction(function () use ($batch, $request) {
 
             $batch->update([
                 'shippment_ids' => $request->shipment_ids,
@@ -726,7 +726,7 @@ class SuperAdminService
                 'note' => $request->note,
             ]);
 
-            $this->createNotification('Shippment batch Processed', 'Shippment batch processed '.'by '.Auth::user()->fullName);
+            $this->createNotification('Shippment batch Processed', 'Shippment batch processed '.'by '.$this->authManager->user()->fullName);
         });
 
         return $this->success(null, 'Batch Processed');
@@ -736,7 +736,7 @@ class SuperAdminService
     {
         $batch = ShippmentBatch::findOrFail($id);
 
-        DB::transaction(function () use ($batch, $request) {
+        $this->databaseManager->transaction(function () use ($batch, $request) {
 
             $batch->update([
                 'status' => OrderStatus::DISPATCHED,

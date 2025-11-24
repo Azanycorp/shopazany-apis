@@ -26,7 +26,7 @@ class CustomerService
     use General, HttpResponse;
 
     public function __construct(
-        protected Auth $auth,
+        protected Auth $auth, private readonly \Illuminate\Contracts\Config\Repository $repository,
     ) {}
 
     public function dashboardAnalytics(int $userId)
@@ -129,10 +129,10 @@ class CustomerService
         return $this->success($data, 'Recent Orders');
     }
 
-    public function getOrders($userId)
+    public function getOrders($userId, $request)
     {
         $currentUser = userAuth();
-        $status = request()->query('status');
+        $status = $request->query('status');
 
         if ($currentUser->id != $userId || $currentUser->type != UserType::CUSTOMER) {
             return $this->error(null, 'Unauthorized action.', 401);
@@ -150,8 +150,7 @@ class CustomerService
             'products.productVariations.product',
         ])
             ->where('user_id', $userId)
-            ->when($status, fn ($query) => $query->where('status', $status))
-            ->orderBy('created_at', 'desc')
+            ->when($status, fn ($query) => $query->where('status', $status))->latest()
             ->paginate(25);
 
         $data = CustomerOrderResource::collection($orders);
@@ -421,7 +420,7 @@ class CustomerService
 
     public function getCategories()
     {
-        $url = config('services.reward_service.url').'/service/all-category';
+        $url = $this->repository->get('services.reward_service.url').'/service/all-category';
         $response = $this->auth->request('get', $url, []);
 
         return $response->json();
@@ -429,7 +428,7 @@ class CustomerService
 
     public function getServicesByCategory($slug)
     {
-        $url = config('services.reward_service.url')."/service/category/{$slug}";
+        $url = $this->repository->get('services.reward_service.url')."/service/category/{$slug}";
         $response = $this->auth->request('get', $url, []);
 
         $services = $response->json();
@@ -438,7 +437,7 @@ class CustomerService
             return $services;
         }
 
-        $services['data'] = collect($services['data'])->map(function (array $item) {
+        $services['data'] = (new \Illuminate\Support\Collection($services['data']))->map(function (array $item) {
             $price = (float) $item['price'];
             $currency = $item['currency'];
 
@@ -449,15 +448,15 @@ class CustomerService
             }
 
             return $item;
-        })->toArray();
+        })->all();
 
         return $services;
     }
 
-    public function getServices()
+    public function getServices($request)
     {
-        $url = config('services.reward_service.url').'/service';
-        $params = request()->only(['search']);
+        $url = $this->repository->get('services.reward_service.url').'/service';
+        $params = $request->only(['search']);
 
         $response = $this->auth->request('get', $url, $params);
 
@@ -467,7 +466,7 @@ class CustomerService
             return $services;
         }
 
-        $services['data'] = collect($services['data'])->map(function (array $item) {
+        $services['data'] = (new \Illuminate\Support\Collection($services['data']))->map(function (array $item) {
             $price = (float) $item['price'];
             $currency = $item['currency'];
 
@@ -478,14 +477,14 @@ class CustomerService
             }
 
             return $item;
-        })->toArray();
+        })->all();
 
         return $services;
     }
 
     public function getCompanies()
     {
-        $url = config('services.reward_service.url').'/service/company';
+        $url = $this->repository->get('services.reward_service.url').'/service/company';
         $response = $this->auth->request('get', $url, []);
 
         return $response->json();
@@ -493,7 +492,7 @@ class CustomerService
 
     public function getCompanyDetail($slug)
     {
-        $url = config('services.reward_service.url')."/service/company/detail/{$slug}";
+        $url = $this->repository->get('services.reward_service.url')."/service/company/detail/{$slug}";
         $response = $this->auth->request('get', $url, []);
 
         $services = $response->json();
@@ -502,7 +501,7 @@ class CustomerService
             return $services;
         }
 
-        $services['data']['additional_products'] = collect($services['data']['additional_products'])->map(function (array $item) {
+        $services['data']['additional_products'] = (new \Illuminate\Support\Collection($services['data']['additional_products']))->map(function (array $item) {
             $price = (float) $item['price'];
             $currency = $item['currency'];
 
@@ -513,7 +512,7 @@ class CustomerService
             }
 
             return $item;
-        })->toArray();
+        })->all();
 
         return $services;
     }
@@ -540,7 +539,7 @@ class CustomerService
 
         $price = pointConvert($request->point, $user->default_currency);
 
-        $url = config('services.reward_service.url').'/service/purchase';
+        $url = $this->repository->get('services.reward_service.url').'/service/purchase';
 
         $params = [
             'email' => $user->email,
@@ -579,7 +578,7 @@ class CustomerService
     public function getCustomers()
     {
         $user = userAuth();
-        $url = config('services.reward_service.url').'/service/customer/orders';
+        $url = $this->repository->get('services.reward_service.url').'/service/customer/orders';
 
         try {
             $response = $this->auth->request(

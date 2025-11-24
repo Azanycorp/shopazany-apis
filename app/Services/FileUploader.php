@@ -10,9 +10,9 @@ class FileUploader
 {
     protected $providers = [];
 
-    public function __construct()
+    public function __construct(\Illuminate\Contracts\Config\Repository $repository)
     {
-        foreach (config('fileservices.providers') as $providerConfig) {
+        foreach ($repository->get('fileservices.providers') as $providerConfig) {
             $providerName = $providerConfig['name'];
             $retries = $providerConfig['retries'];
 

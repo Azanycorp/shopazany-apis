@@ -4,11 +4,20 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\App;
 
 class CustomerProduct extends Model
 {
     protected $table = 'customer_products';
+
+    /**
+     * Create a new Eloquent model instance.
+     *
+     * @param  array<string, mixed>  $attributes
+     */
+    public function __construct(array $attributes, private readonly \Illuminate\Foundation\Application $application)
+    {
+        parent::__construct($attributes);
+    }
 
     use HasFactory;
 
@@ -16,13 +25,14 @@ class CustomerProduct extends Model
 
     public function getTranslation($field = '', $lang = false)
     {
-        $lang = $lang === false ? App::getLocale() : $lang;
+        $lang = $lang === false ? $this->application->getLocale() : $lang;
         $customer_product_translations = $this->customer_product_translations->where('lang', $lang)->first();
 
         return $customer_product_translations != null ? $customer_product_translations->$field : $this->$field;
     }
 
-    public function scopeIsActiveAndApproval($query)
+    #[\Illuminate\Database\Eloquent\Attributes\Scope]
+    protected function isActiveAndApproval($query)
     {
         return $query->where('status', '1')
             ->where('published', '1');

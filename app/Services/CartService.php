@@ -6,13 +6,20 @@ use App\Http\Resources\CartResource;
 use App\Models\Cart;
 use App\Models\Product;
 use App\Models\ProductVariation;
+use App\Trait\CartTrait;
 use App\Trait\HttpResponse;
+use Illuminate\Auth\AuthManager;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Session\SessionManager;
 
 class CartService
 {
-    use HttpResponse;
+    use CartTrait, HttpResponse;
+
+    public function __construct(
+        private readonly AuthManager $authManager,
+        private readonly SessionManager $sessionManager
+    ) {}
 
     public function addToCart($request)
     {
@@ -22,8 +29,8 @@ class CartService
             return $this->error(null, 'Unauthorized action.', 401);
         }
 
-        session(['cart_id' => session_id()]);
-        $sessionId = session('cart_id');
+        $this->sessionManager->put(['cart_id' => session_id()]);
+        $sessionId = $this->sessionManager->get('cart_id');
         $quantity = $request->quantity;
 
         if ($quantity <= 0) {
@@ -45,6 +52,10 @@ class CartService
                 return $this->error(null, 'Selected variation not found.', 404);
             }
 
+            if ($variation->stock <= 0) {
+                return $this->error(null, 'Product is out of stock.', 400);
+            }
+
             if ($quantity > $variation->stock) {
                 return $this->error(null, "Only {$variation->stock} units available for this variation.", 400);
             }
@@ -59,6 +70,10 @@ class CartService
         }
 
         $product = Product::findOrFail($request->product_id);
+
+        if ($product->current_stock_quantity <= 0) {
+            return $this->error(null, 'Product is out of stock.', 400);
+        }
 
         if ($quantity > $product->minimum_order_quantity) {
             return $this->error(null, "You can only order a maximum of {$product->minimum_order_quantity} of this product.", 400);
@@ -85,7 +100,7 @@ class CartService
             return $this->error(null, 'Unauthorized action.', 401);
         }
 
-        $sessionId = session('cart_id');
+        $sessionId = $this->sessionManager->get('cart_id');
 
         $cartItemsQuery = Cart::with([
             'product.user',
@@ -98,7 +113,7 @@ class CartService
             'variation.product.shopCountry',
         ]);
 
-        if (Auth::check()) {
+        if ($this->authManager->check()) {
             $cartItemsQuery->where('user_id', $userId);
         } else {
             $cartItemsQuery->where('session_id', $sessionId);
@@ -110,25 +125,16 @@ class CartService
         $internationalItems = $cartItems->filter(fn ($cartItem): bool => $cartItem->product->country_id != 160);
         $defaultCurrency = userAuth()->default_currency;
 
-        $totalLocalPrice = $localItems->sum(function ($item) use ($defaultCurrency): float {
-            $price = ($item->variation?->price ?? $item->product?->discounted_price) * $item->quantity;
-            $currency = $item->variation ? $item->variation?->product?->shopCountry?->currency : $item->product?->shopCountry?->currency;
-
-            return currencyConvert($currency, $price, $defaultCurrency);
-        });
-
-        $totalInternationalPrice = $internationalItems->sum(function ($item) use ($defaultCurrency): float {
-            $price = ($item->variation?->price ?? $item->product?->discounted_price) * $item->quantity;
-            $currency = $item->variation ? $item->variation?->product?->shopCountry?->currency : $item->product?->shopCountry?->currency;
-
-            return currencyConvert($currency, $price, $defaultCurrency);
-        });
+        $totalLocalPrice = $this->getLocalPrice($localItems, $defaultCurrency);
+        $totalInternationalPrice = $this->getInternaltionalPrice($internationalItems, $defaultCurrency);
+        $totalDiscount = $this->getTotalDiscount($defaultCurrency);
 
         return $this->success([
             'local_items' => CartResource::collection($localItems),
             'international_items' => CartResource::collection($internationalItems),
             'total_local_price' => $totalLocalPrice,
             'total_international_price' => $totalInternationalPrice,
+            'total_discount_price' => $cartItems->sum($totalDiscount),
         ], 'Cart items');
     }
 
@@ -155,15 +161,15 @@ class CartService
             return $this->error(null, 'Unauthorized action.', 401);
         }
 
-        $sessionId = session('cart_id');
+        $sessionId = $this->sessionManager->get('cart_id');
 
-        if (Auth::check()) {
+        if ($this->authManager->check()) {
             Cart::where('user_id', $userId)->delete();
         } else {
             Cart::where('session_id', $sessionId)->delete();
         }
 
-        session()->forget('cart_id');
+        $this->sessionManager->forget('cart_id');
 
         return $this->success(null, 'Items cleared from cart');
     }

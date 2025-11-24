@@ -16,6 +16,9 @@ class B2bProdctReview extends Model
         'type',
     ];
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'buyer_id');

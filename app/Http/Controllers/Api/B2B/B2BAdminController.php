@@ -13,16 +13,17 @@ use App\Http\Requests\ChangeAdminPasswordRequest;
 use App\Http\Requests\ShippingAgentRequest;
 use App\Http\Requests\SocialLinkRequest;
 use App\Services\B2B\AdminService;
+use Illuminate\Contracts\Auth\Access\Gate;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Gate;
 
 class B2BAdminController extends Controller
 {
-    const MESSAGE = '403 Forbidden';
+    private const MESSAGE = '403 Forbidden';
 
     public function __construct(
-        private AdminService $adminService
+        private readonly AdminService $adminService,
+        private readonly Gate $gate,
     ) {}
 
     // dashboard
@@ -55,27 +56,28 @@ class B2BAdminController extends Controller
     // Orders
     public function allOrders(Request $request)
     {
+        abort_if($this->gate->denies('order_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
 
-        return $this->adminService->getAllOrders();
+        return $this->adminService->getAllOrders($request);
     }
 
     public function markCompleted($id)
     {
-        abort_if(Gate::denies('mark_complete'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+        abort_if($this->gate->denies('mark_complete'), Response::HTTP_FORBIDDEN, self::MESSAGE);
 
         return $this->adminService->markCompleted($id);
     }
 
     public function cancelOrder($id)
     {
-        abort_if(Gate::denies('cancel_order'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+        abort_if($this->gate->denies('cancel_order'), Response::HTTP_FORBIDDEN, self::MESSAGE);
 
         return $this->adminService->cancelOrder($id);
     }
 
     public function orderDetails($id)
     {
-        abort_if(Gate::denies('order_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+        abort_if($this->gate->denies('order_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
 
         return $this->adminService->getOrderDetails($id);
     }
@@ -111,9 +113,9 @@ class B2BAdminController extends Controller
         return $this->adminService->UpdateConfigDetails($request);
     }
 
-    public function getAllBanners()
+    public function getAllBanners(Request $request)
     {
-        return $this->adminService->getPageBanners();
+        return $this->adminService->getPageBanners($request);
     }
 
     public function addNewBanner(NewBannerRequest $request)
@@ -137,9 +139,9 @@ class B2BAdminController extends Controller
     }
 
     // Seller Products Approval Request
-    public function allProducts()
+    public function allProducts(Request $request)
     {
-        return $this->adminService->allProducts();
+        return $this->adminService->allProducts($request);
     }
 
     public function viewProduct($id)
@@ -158,9 +160,9 @@ class B2BAdminController extends Controller
     }
 
     // Subscription plans
-    public function b2bSubscriptionPlans()
+    public function b2bSubscriptionPlans(Request $request)
     {
-        return $this->adminService->b2bSubscriptionPlans();
+        return $this->adminService->b2bSubscriptionPlans($request);
     }
 
     public function addSubscriptionPlan(SubscriptionPlanRequest $request)
@@ -183,10 +185,9 @@ class B2BAdminController extends Controller
         return $this->adminService->deleteSubscriptionPlan($id);
     }
 
-    // Blog Section
-    public function getBlogs()
+    public function getBlogs(Request $request)
     {
-        return $this->adminService->allBlogs();
+        return $this->adminService->allBlogs($request);
     }
 
     public function addBlog(BlogRequest $request)
@@ -263,51 +264,51 @@ class B2BAdminController extends Controller
     }
 
     // Admin Users
-    public function adminUsers()
+    public function adminUsers(Request $request)
     {
-        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+        abort_if($this->gate->denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
 
-        return $this->adminService->adminUsers();
+        return $this->adminService->adminUsers($request);
     }
 
     public function addAdmin(AdminUserRequest $request)
     {
-        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+        abort_if($this->gate->denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
 
         return $this->adminService->addAdmin($request);
     }
 
     public function viewAdminUser($id)
     {
-        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+        abort_if($this->gate->denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
 
         return $this->adminService->viewAdmin($id);
     }
 
     public function editAdminUser(Request $request, $id)
     {
-        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+        abort_if($this->gate->denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
 
         return $this->adminService->editAdmin($request, $id);
     }
 
     public function verifyPassword(Request $request)
     {
-        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+        abort_if($this->gate->denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
 
         return $this->adminService->verifyPassword($request);
     }
 
     public function revokeAccess($id)
     {
-        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+        abort_if($this->gate->denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
 
         return $this->adminService->revokeAccess($id);
     }
 
     public function removeAdmin($id)
     {
-        abort_if(Gate::denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+        abort_if($this->gate->denies('user_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
 
         return $this->adminService->removeAdmin($id);
     }

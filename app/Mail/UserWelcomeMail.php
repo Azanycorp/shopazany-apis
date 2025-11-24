@@ -7,7 +7,6 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\App;
 
 class UserWelcomeMail extends Mailable
 {
@@ -67,7 +66,7 @@ class UserWelcomeMail extends Mailable
 
     protected function getUrls(): array
     {
-        if (App::environment('production')) {
+        if (app()->environment('production')) {
             return [
                 'baseUrl' => 'https://shopazany.com/en',
                 'loginUrl' => 'https://shopazany.com/en/login',

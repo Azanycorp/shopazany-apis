@@ -13,9 +13,9 @@ class BlogService
 {
     use HttpResponse;
 
-    public function getBlogCategories()
+    public function getBlogCategories($request)
     {
-        $type = request()->query('type', BannerType::B2C);
+        $type = $request->query('type', BannerType::B2C);
 
         if (! in_array($type, [BannerType::B2C, BannerType::B2B, BannerType::AGRIECOM_B2C])) {
             return $this->error(null, "Invalid type {$type}", 400);
@@ -92,9 +92,9 @@ class BlogService
         return $this->success(null, 'Blog category deleted successfully');
     }
 
-    public function getBlogs()
+    public function getBlogs($request)
     {
-        $type = request()->query('type', BannerType::B2C);
+        $type = $request->query('type', BannerType::B2C);
 
         if (! in_array($type, [BannerType::B2C, BannerType::B2B, BannerType::AGRIECOM_B2C])) {
             return $this->error(null, "Invalid type {$type}", 400);
@@ -208,9 +208,9 @@ class BlogService
         return $this->success(null, 'Blog deleted successfully');
     }
 
-    public function getAllBlogs()
+    public function getAllBlogs($request)
     {
-        $type = request()->query('type', BannerType::B2C);
+        $type = $request->query('type', BannerType::B2C);
 
         if (! in_array($type, [BannerType::B2C, BannerType::B2B, BannerType::AGRIECOM_B2C])) {
             return $this->error(null, "Invalid type {$type}", 400);

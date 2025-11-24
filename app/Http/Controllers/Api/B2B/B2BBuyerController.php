@@ -13,12 +13,9 @@ use Illuminate\Http\Request;
 
 class B2BBuyerController extends Controller
 {
-    protected \App\Services\B2B\BuyerService $buyerService;
-
-    public function __construct(BuyerService $buyerService)
-    {
-        $this->buyerService = $buyerService;
-    }
+    public function __construct(
+        protected BuyerService $buyerService
+    ) {}
 
     public function requestRefund(Request $request)
     {
@@ -36,9 +33,9 @@ class B2BBuyerController extends Controller
         return $this->buyerService->allQuotes();
     }
 
-    public function sendAllQuotes()
+    public function sendAllQuotes(Request $request)
     {
-        return $this->buyerService->sendMutipleQuotes();
+        return $this->buyerService->sendMutipleQuotes($request);
     }
 
     public function sendSingleQuote(QuoteRequest $request)
@@ -46,7 +43,7 @@ class B2BBuyerController extends Controller
         return $this->buyerService->sendRfq($request);
     }
 
-    public function removeQuote($id)
+    public function removeQuote(int $id)
     {
         return $this->buyerService->removeQuote($id);
     }
@@ -58,9 +55,9 @@ class B2BBuyerController extends Controller
     }
 
     // Orders
-    public function allOrders()
+    public function allOrders(Request $request)
     {
-        return $this->buyerService->allOrders();
+        return $this->buyerService->allOrders($request);
     }
 
     public function getOrderDetails($id)

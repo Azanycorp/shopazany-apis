@@ -22,16 +22,17 @@ use App\Models\User;
 use App\Models\Wishlist;
 use App\Trait\HttpResponse;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\DB;
 
 class HomeService
 {
     use HttpResponse;
 
-    public function bestSelling()
+    public function __construct(private readonly \Illuminate\Database\DatabaseManager $databaseManager) {}
+
+    public function bestSelling($request)
     {
-        $countryId = request()->query('country_id');
-        $type = request()->query('type');
+        $countryId = $request->query('country_id');
+        $type = $request->query('type');
 
         $query = Product::with('shopCountry')
             ->select(
@@ -43,7 +44,7 @@ class HomeService
                 'products.description',
                 'products.category_id',
                 'products.country_id',
-                DB::raw('COUNT(order_items.id) as total_orders')
+                $this->databaseManager->raw('COUNT(order_items.id) as total_orders')
             )
             ->leftJoin('order_items', 'order_items.product_id', '=', 'products.id')
             ->leftJoin('orders', 'orders.id', '=', 'order_items.order_id')
@@ -77,10 +78,10 @@ class HomeService
         return $this->success($products, 'Best selling products');
     }
 
-    public function allProducts()
+    public function allProducts($request)
     {
-        $countryId = request()->query('country_id');
-        $type = request()->query('type');
+        $countryId = $request->query('country_id');
+        $type = $request->query('type');
 
         $allProducts = Product::with([
             'shopCountry',
@@ -111,10 +112,10 @@ class HomeService
         return $this->withPagination($data, 'All products');
     }
 
-    public function featuredProduct()
+    public function featuredProduct($request)
     {
-        $countryId = request()->query('country_id');
-        $type = request()->query('type');
+        $countryId = $request->query('country_id');
+        $type = $request->query('type');
 
         $featuredProducts = Product::with([
             'category',
@@ -146,10 +147,10 @@ class HomeService
         return $this->success($data, 'Featured products');
     }
 
-    public function topProducts()
+    public function topProducts($request)
     {
-        $countryId = request()->query('country_id');
-        $type = request()->query('type');
+        $countryId = $request->query('country_id');
+        $type = $request->query('type');
 
         $topProducts = Product::with([
             'category',
@@ -181,10 +182,10 @@ class HomeService
         return $this->success($data, 'Top products');
     }
 
-    public function pocketFriendly()
+    public function pocketFriendly($request)
     {
-        $countryId = request()->query('country_id');
-        $type = request()->query('type');
+        $countryId = $request->query('country_id');
+        $type = $request->query('type');
 
         $query = Product::with([
             'category',
@@ -260,12 +261,12 @@ class HomeService
         return $this->success($brands, 'Top brands');
     }
 
-    public function topSellers()
+    public function topSellers($request)
     {
-        $countryId = request()->input('country_id');
+        $countryId = $request->input('country_id');
 
         $topSellersQuery = User::select(
-            DB::raw('users.id as user_id, users.uuid, CONCAT(users.first_name, " ", users.last_name) as name, users.image as image, COUNT(order_items.id) as total_sales')
+            $this->databaseManager->raw('users.id as user_id, users.uuid, CONCAT(users.first_name, " ", users.last_name) as name, users.image as image, COUNT(order_items.id) as total_sales')
         )
             ->join('products', 'users.id', '=', 'products.user_id')
             ->join('order_items', 'products.id', '=', 'order_items.product_id')
@@ -285,9 +286,9 @@ class HomeService
         return $this->success($topSellers, 'Top sellers');
     }
 
-    public function categorySlug($slug)
+    public function categorySlug($request, $slug)
     {
-        $countryId = request()->query('country_id', 231);
+        $countryId = $request->query('country_id', 231);
 
         $category = Category::select('id', 'name', 'slug', 'image')
             ->where('slug', $slug)
@@ -311,9 +312,9 @@ class HomeService
         return $this->success($products, 'Products by category');
     }
 
-    public function recommendedProducts()
+    public function recommendedProducts($request)
     {
-        $countryId = request()->query('country_id', 231);
+        $countryId = $request->query('country_id', 231);
 
         $products = Product::where('status', ProductStatus::ACTIVE)
             ->when($countryId, function ($query) use ($countryId): void {
@@ -380,9 +381,9 @@ class HomeService
         return $this->success(null, 'Product saved for later');
     }
 
-    public function sellerInfo($uuid)
+    public function sellerInfo($request, $uuid)
     {
-        $search = request()->input('search');
+        $search = $request->input('search');
 
         $user = User::with([
             'products' => function ($query) use ($search): void {
@@ -411,9 +412,9 @@ class HomeService
         return $this->success($data, 'Seller details');
     }
 
-    public function sellerCategory($uuid)
+    public function sellerCategory($request, $uuid)
     {
-        $search = request()->input('search');
+        $search = $request->input('search');
 
         $user = User::where('uuid', $uuid)
             ->with([
@@ -446,11 +447,11 @@ class HomeService
         return $this->success($categories, 'Seller categories');
     }
 
-    public function sellerReviews($uuid)
+    public function sellerReviews($request, $uuid)
     {
-        $search = request()->input('search');
-        $perPage = request()->input('per_page', 4);
-        $currentPage = request()->input('page', 1);
+        $search = $request->input('search');
+        $perPage = $request->input('per_page', 4);
+        $currentPage = $request->input('page', 1);
 
         $user = User::where('uuid', $uuid)
             ->with(['products' => function ($query) use ($search): void {
@@ -487,7 +488,7 @@ class HomeService
             $reviews->count(),
             $perPage,
             $currentPage,
-            ['path' => request()->url(), 'query' => request()->query()]
+            ['path' => $request->url(), 'query' => $request->query()]
         );
 
         $reviewResources = ReviewResource::collection($paginatedReviews);
@@ -535,9 +536,9 @@ class HomeService
         return $this->error(null, 'Item not found in wishlist', 404);
     }
 
-    public function getDeals()
+    public function getDeals($request)
     {
-        $type = request()->query('type', BannerType::B2C);
+        $type = $request->query('type', BannerType::B2C);
 
         if (! in_array($type, [BannerType::B2C, BannerType::B2B, BannerType::AGRIECOM_B2C])) {
             return $this->error(null, "Invalid type {$type}", 400);

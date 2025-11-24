@@ -12,12 +12,12 @@ class GoogleAuthController extends Controller
 {
     protected $frontendBaseUrl;
 
-    public function __construct()
+    public function __construct(\Illuminate\Contracts\Config\Repository $repository, private readonly \Illuminate\Hashing\BcryptHasher $bcryptHasher, private readonly \Illuminate\Routing\Redirector $redirector)
     {
         if (app()->environment('production')) {
-            $this->frontendBaseUrl = config('services.frontend_baseurl');
+            $this->frontendBaseUrl = $repository->get('services.frontend_baseurl');
         } else {
-            $this->frontendBaseUrl = config('services.staging_frontend_baseurl');
+            $this->frontendBaseUrl = $repository->get('services.staging_frontend_baseurl');
         }
     }
 
@@ -41,7 +41,7 @@ class GoogleAuthController extends Controller
                     'first_name' => $firstName,
                     'last_name' => $lastName,
                     'email' => $googleUser->email,
-                    'password' => bcrypt('12345678'),
+                    'password' => $this->bcryptHasher->make('12345678'),
                     'type' => UserType::CUSTOMER,
                     'status' => UserStatus::ACTIVE,
                     'email_verified_at' => now(),
@@ -59,13 +59,13 @@ class GoogleAuthController extends Controller
             $user->tokens()->delete();
             $token = $user->createToken('token-name')->plainTextToken;
 
-            return redirect($this->frontendBaseUrl.'/auth/callback?'.http_build_query([
+            return $this->redirector->to($this->frontendBaseUrl.'/auth/callback?'.http_build_query([
                 'token' => $token,
                 'user' => $user,
             ]));
 
         } catch (\Exception $e) {
-            return redirect($this->frontendBaseUrl.'/auth/callback?'.http_build_query([
+            return $this->redirector->to($this->frontendBaseUrl.'/auth/callback?'.http_build_query([
                 'error' => 'Authentication failed! '.$e->getMessage(),
             ]));
         }

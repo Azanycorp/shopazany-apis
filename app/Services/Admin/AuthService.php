@@ -5,18 +5,19 @@ namespace App\Services\Admin;
 use App\Enum\LoginStatus;
 use App\Models\Admin;
 use App\Trait\HttpResponse;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Password;
 
 class AuthService
 {
     use HttpResponse;
 
+    public function __construct(private readonly \Illuminate\Auth\AuthManager $authManager, private readonly \Illuminate\Auth\Passwords\PasswordBrokerManager $passwordBrokerManager, private readonly \Illuminate\Contracts\Routing\ResponseFactory $responseFactory, private readonly \Illuminate\Hashing\BcryptHasher $bcryptHasher) {}
+
     public function login($request)
     {
         $request->validated();
 
-        if (Auth::guard('admin')->attempt($request->only(['email', 'password']))) {
+        if ($this->authManager->guard('admin')->attempt($request->only(['email', 'password']))) {
             $user = Admin::with('roles.permissions')->where('email', $request->email)->first();
 
             if ($user->status === LoginStatus::INACTIVE) {
@@ -58,13 +59,13 @@ class AuthService
             return $this->error('error', 'We can\'t find a user with that email address', 404);
         }
 
-        $status = Password::broker('admins')->sendResetLink(
+        $status = $this->passwordBrokerManager->broker('admins')->sendResetLink(
             $request->only('email')
         );
 
         return $status === Password::RESET_LINK_SENT
-            ? response()->json(['message' => __($status)])
-            : response()->json(['message' => __($status)], 500);
+            ? $this->responseFactory->json(['message' => __($status)])
+            : $this->responseFactory->json(['message' => __($status)], 500);
     }
 
     public function reset($request)
@@ -75,17 +76,17 @@ class AuthService
             return $this->error('error', 'We can\'t find a user with that email address', 404);
         }
 
-        $status = Password::broker('admins')->reset(
+        $status = $this->passwordBrokerManager->broker('admins')->reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),
             function ($user) use ($request): void {
                 $user->forceFill([
-                    'password' => bcrypt($request->password),
+                    'password' => $this->bcryptHasher->make($request->password),
                 ])->save();
             }
         );
 
         return $status == Password::PASSWORD_RESET
-            ? response()->json(['message' => __($status)])
-            : response()->json(['message' => __($status)], 500);
+            ? $this->responseFactory->json(['message' => __($status)])
+            : $this->responseFactory->json(['message' => __($status)], 500);
     }
 }

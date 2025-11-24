@@ -33,7 +33,7 @@ class MailingService
 
                     $payload = $email->payload ?? [];
 
-                    if (empty($payload)) {
+                    if (blank($payload)) {
                         Log::error("Payload for mailable class {$email->mailable} is empty.");
                         $email->update([
                             'status' => MailingEnum::FAILED,

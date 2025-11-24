@@ -27,17 +27,17 @@ class B2BBannerPromoController extends Controller
         return $this->b2BAdminService->addSlider($request);
     }
 
-    public function getSlider($id)
+    public function getSlider(int $id)
     {
         return $this->b2BAdminService->getSlider($id);
     }
 
-    public function updateSlider(NewSliderRequest $request, $id)
+    public function updateSlider(NewSliderRequest $request, int $id)
     {
         return $this->b2BAdminService->updateSlider($request, $id);
     }
 
-    public function deleteSlider($id)
+    public function deleteSlider(int $id)
     {
         return $this->b2BAdminService->deleteSlider($id);
     }
@@ -52,17 +52,17 @@ class B2BBannerPromoController extends Controller
         return $this->service->banners();
     }
 
-    public function getOneBanner($id)
+    public function getOneBanner(int $id)
     {
         return $this->service->getOneBanner($id);
     }
 
-    public function editBanner(AddB2BBannerRequest $request, $id)
+    public function editBanner(AddB2BBannerRequest $request, int $id)
     {
         return $this->service->editBanner($request, $id);
     }
 
-    public function deleteBanner($id)
+    public function deleteBanner(int $id)
     {
         return $this->service->deleteBanner($id);
     }

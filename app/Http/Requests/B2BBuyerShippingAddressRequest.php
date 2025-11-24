@@ -22,17 +22,17 @@ class B2BBuyerShippingAddressRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'user_id' => 'required|exists:users,id',
-            'address_name' => 'required',
-            'name' => 'required',
-            'surname' => 'required',
-            'email' => 'required|email',
-            'phone' => 'required',
-            'street' => 'required',
-            'city' => 'required',
-            'postal_code' => 'required',
-            'state_id' => 'required|exists:states,id',
-            'country_id' => 'required|exists:countries,id',
+            'user_id' => ['required', 'exists:users,id'],
+            'address_name' => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255'],
+            'surname' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email'],
+            'phone' => ['required', 'string', 'max:255'],
+            'street' => ['required', 'string', 'max:255'],
+            'city' => ['required', 'string', 'max:255'],
+            'postal_code' => ['required', 'string', 'max:255'],
+            'state_id' => ['required', 'exists:states,id'],
+            'country_id' => ['required', 'exists:countries,id'],
         ];
     }
 }

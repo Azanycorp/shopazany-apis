@@ -6,10 +6,13 @@ use App\Enum\OrderStatus;
 use App\Http\Resources\AdminOrderResource;
 use App\Models\Order;
 use App\Trait\HttpResponse;
+use Illuminate\Database\Eloquent\Builder;
 
 class OrderService
 {
     use HttpResponse;
+
+    public function __construct(private readonly \Illuminate\Contracts\Routing\UrlGenerator $urlGenerator) {}
 
     public function orderAnalytics()
     {
@@ -52,9 +55,9 @@ class OrderService
         return $this->success($data, 'Analytics');
     }
 
-    public function localOrder(): array
+    public function localOrder($request): array
     {
-        $search = request()->input('search');
+        $search = $request->input('search');
 
         $orders = Order::with([
             'user',
@@ -63,11 +66,11 @@ class OrderService
         ])
             ->where('country_id', 160)
             ->when($search, function ($query, $search): void {
-                $query->where(function ($query) use ($search): void {
-                    $query->whereHas('user', function ($query) use ($search): void {
+                $query->where(function (Builder $query) use ($search): void {
+                    $query->whereHas('user', function (Builder $query) use ($search): void {
                         $query->where('first_name', 'like', "%{$search}%")
                             ->orWhere('last_name', 'like', "%{$search}%");
-                    })->orWhereHas('products.user', function ($query) use ($search): void {
+                    })->orWhereHas('products.user', function (Builder $query) use ($search): void {
                         $query->where('first_name', 'like', "%{$search}%")
                             ->orWhere('last_name', 'like', "%{$search}%");
                     })->orWhere('order_no', 'like', "%{$search}%");
@@ -83,7 +86,7 @@ class OrderService
             })
             ->values();
 
-        $currentPage = request()->input('page', 1);
+        $currentPage = $request->input('page', 1);
         $perPage = 25;
 
         $paginatedOrders = $orders->slice(($currentPage - 1) * $perPage, $perPage);
@@ -98,15 +101,15 @@ class OrderService
                 'current_page' => $currentPage,
                 'last_page' => ceil($orders->count() / $perPage),
                 'per_page' => $perPage,
-                'prev_page_url' => $currentPage > 1 ? url()->current().'?page='.($currentPage - 1) : null,
-                'next_page_url' => $currentPage < ceil($orders->count() / $perPage) ? url()->current().'?page='.($currentPage + 1) : null,
+                'prev_page_url' => $currentPage > 1 ? $this->urlGenerator->current().'?page='.($currentPage - 1) : null,
+                'next_page_url' => $currentPage < ceil($orders->count() / $perPage) ? $this->urlGenerator->current().'?page='.($currentPage + 1) : null,
             ],
         ];
     }
 
-    public function intOrder(): array
+    public function intOrder($request): array
     {
-        $search = request()->input('search');
+        $search = $request->input('search');
 
         $orders = Order::with([
             'user',
@@ -115,11 +118,11 @@ class OrderService
         ])
             ->where('country_id', '!=', 160)
             ->when($search, function ($query, $search): void {
-                $query->where(function ($query) use ($search): void {
-                    $query->whereHas('user', function ($query) use ($search): void {
+                $query->where(function (Builder $query) use ($search): void {
+                    $query->whereHas('user', function (Builder $query) use ($search): void {
                         $query->where('first_name', 'like', "%{$search}%")
                             ->orWhere('last_name', 'like', "%{$search}%");
-                    })->orWhereHas('products.user', function ($query) use ($search): void {
+                    })->orWhereHas('products.user', function (Builder $query) use ($search): void {
                         $query->where('first_name', 'like', "%{$search}%")
                             ->orWhere('last_name', 'like', "%{$search}%");
                     })->orWhere('order_no', 'like', "%{$search}%");
@@ -135,7 +138,7 @@ class OrderService
             })
             ->values();
 
-        $currentPage = request()->input('page', 1);
+        $currentPage = $request->input('page', 1);
         $perPage = 25;
 
         $paginatedOrders = $orders->slice(($currentPage - 1) * $perPage, $perPage);
@@ -150,8 +153,8 @@ class OrderService
                 'current_page' => $currentPage,
                 'last_page' => ceil($orders->count() / $perPage),
                 'per_page' => $perPage,
-                'prev_page_url' => $currentPage > 1 ? url()->current().'?page='.($currentPage - 1) : null,
-                'next_page_url' => $currentPage < ceil($orders->count() / $perPage) ? url()->current().'?page='.($currentPage + 1) : null,
+                'prev_page_url' => $currentPage > 1 ? $this->urlGenerator->current().'?page='.($currentPage - 1) : null,
+                'next_page_url' => $currentPage < ceil($orders->count() / $perPage) ? $this->urlGenerator->current().'?page='.($currentPage + 1) : null,
             ],
         ];
     }
@@ -175,7 +178,7 @@ class OrderService
 
         $query->join('products', 'orders.product_id', '=', 'products.id');
 
-        if ($request->has('name') && ! empty($request->input('name'))) {
+        if ($request->has('name') && filled($request->input('name'))) {
             $productName = $request->input('name');
             $query->where('products.name', 'like', "%$productName%");
         }

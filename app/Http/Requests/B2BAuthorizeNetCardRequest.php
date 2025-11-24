@@ -22,21 +22,21 @@ class B2BAuthorizeNetCardRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'rfq_id' => 'required|numeric|exists:rfqs,id',
-            'shipping_address_id' => 'required|numeric|exists:buyer_shipping_addresses,id',
-            'shipping_agent_id' => 'nullable|numeric|exists:shipping_agents,id',
+            'rfq_id' => ['required', 'numeric', 'exists:rfqs,id'],
+            'shipping_address_id' => ['required', 'numeric', 'exists:buyer_shipping_addresses,id'],
+            'shipping_agent_id' => ['nullable', 'numeric', 'exists:shipping_agents,id'],
             'centre_id' => ['nullable', 'integer', 'exists:collation_centers,id'],
-            'amount' => 'required|numeric',
-            'payment.creditCard.cardNumber' => 'required|digits:16',
-            'payment.creditCard.expirationDate' => 'required|date_format:m/y',
-            'payment.creditCard.cardCode' => 'required|digits:3',
-            'billTo.firstName' => 'required|string',
-            'billTo.lastName' => 'required|string',
-            'billTo.address' => 'required|string',
-            'billTo.city' => 'required|string',
-            'billTo.state' => 'required|string',
-            'billTo.country' => 'required|string',
-            'customer.email' => 'required|email',
+            'amount' => ['required', 'numeric'],
+            'payment.creditCard.cardNumber' => ['required', 'digits:16'],
+            'payment.creditCard.expirationDate' => ['required', 'date_format:m/y'],
+            'payment.creditCard.cardCode' => ['required', 'digits:3'],
+            'billTo.firstName' => ['required', 'string'],
+            'billTo.lastName' => ['required', 'string'],
+            'billTo.address' => ['required', 'string'],
+            'billTo.city' => ['required', 'string'],
+            'billTo.state' => ['required', 'string'],
+            'billTo.country' => ['required', 'string'],
+            'customer.email' => ['required', 'email'],
         ];
     }
 }

@@ -48,6 +48,13 @@ class Product extends Model
         'condition',
     ];
 
+    protected static function booted()
+    {
+        static::addGlobalScope('in_stock', function (Builder $builder) {
+            $builder->where('current_stock_quantity', '>', 0);
+        });
+    }
+
     protected function casts(): array
     {
         return [
@@ -55,36 +62,57 @@ class Product extends Model
         ];
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Admin, $this>
+     */
     public function admin(): BelongsTo
     {
         return $this->belongsTo(Admin::class, 'admin_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Category, $this>
+     */
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class, 'category_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\SubCategory, $this>
+     */
     public function subCategory(): BelongsTo
     {
         return $this->belongsTo(SubCategory::class, 'sub_category_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\ProductImage, $this>
+     */
     public function productimages(): HasMany
     {
         return $this->hasMany(ProductImage::class, 'product_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Country, $this>
+     */
     public function country(): BelongsTo
     {
         return $this->belongsTo(Country::class, 'country_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\ShopCountry, $this>
+     */
     public function shopCountry(): BelongsTo
     {
         return $this->belongsTo(ShopCountry::class, 'country_id', 'country_id');
@@ -101,36 +129,57 @@ class Product extends Model
             ->withPivot('product_quantity', 'price', 'sub_total', 'status');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Size, $this>
+     */
     public function size(): BelongsTo
     {
         return $this->belongsTo(Size::class, 'size_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Brand, $this>
+     */
     public function brand(): BelongsTo
     {
         return $this->belongsTo(Brand::class, 'brand_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Color, $this>
+     */
     public function color(): BelongsTo
     {
         return $this->belongsTo(Color::class, 'color_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Unit, $this>
+     */
     public function unit(): BelongsTo
     {
         return $this->belongsTo(Unit::class, 'unit_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Cart, $this>
+     */
     public function carts(): HasMany
     {
         return $this->hasMany(Cart::class, 'product_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\ProductReview, $this>
+     */
     public function productReviews(): HasMany
     {
         return $this->hasMany(ProductReview::class, 'product_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\ProductVariation, $this>
+     */
     public function productVariations(): HasMany
     {
         return $this->hasMany(ProductVariation::class, 'product_id');
@@ -139,21 +188,23 @@ class Product extends Model
     // Attributes
     protected function isInWishlist(): Attribute
     {
+        $user = Auth::user();
+
         return Attribute::make(
-            get: function () {
-                if (! Auth::guard('sanctum')->check()) {
+            get: function () use ($user) {
+                if (! $user) {
                     return false;
                 }
 
                 return Wishlist::where([
-                    ['user_id', Auth::guard('sanctum')->id()],
+                    ['user_id', $user->id],
                     ['product_id', $this->id],
                 ])->exists();
             }
         );
     }
 
-    public function discountedPrice(): Attribute
+    protected function discountedPrice(): Attribute
     {
         return Attribute::get(function () {
             $discountType = $this->discount_type;
@@ -171,7 +222,8 @@ class Product extends Model
     }
 
     // Scopes
-    public function scopeTopRated(Builder $query, $userId)
+    #[\Illuminate\Database\Eloquent\Attributes\Scope]
+    protected function topRated(Builder $query)
     {
         return $query->select(
             'products.id',
@@ -183,7 +235,6 @@ class Product extends Model
         )
             ->with('user:id,first_name,last_name,image')
             ->withCount('productReviews')
-            ->where('products.user_id', $userId)
             ->leftJoin('product_reviews', 'products.id', '=', 'product_reviews.product_id')
             ->withCount(['orders as sold_count' => function ($query): void {
                 $query->select(DB::raw('COUNT(*)'));
@@ -193,7 +244,8 @@ class Product extends Model
             ->orderByDesc('sold_count');
     }
 
-    public function scopeMostFavorite(Builder $query, $userId)
+    #[\Illuminate\Database\Eloquent\Attributes\Scope]
+    protected function mostFavorite(Builder $query)
     {
         return $query->select(
             'products.id',
@@ -205,7 +257,6 @@ class Product extends Model
         )
             ->with('user:id,first_name,last_name,image')
             ->withCount('productReviews')
-            ->where('products.user_id', $userId)
             ->leftJoin('product_reviews', 'products.id', '=', 'product_reviews.product_id')
             ->withCount(['orders as sold_count' => function ($query): void {
                 $query->select(DB::raw('COUNT(*)'));

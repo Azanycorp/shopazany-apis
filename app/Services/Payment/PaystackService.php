@@ -34,7 +34,8 @@ use App\Models\WithdrawalRequest;
 use App\Notifications\WithdrawalNotification;
 use App\Services\Curl\PostCurl;
 use App\Services\SubscriptionService;
-use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -45,14 +46,13 @@ class PaystackService
     {
         try {
             DB::transaction(function () use ($event, $status): void {
-
                 $paymentData = $event['data'];
                 $ref = $paymentData['reference'];
                 $userId = $paymentData['metadata']['user_id'];
                 $amount = $paymentData['amount'];
                 $formattedAmount = number_format($amount / 100, 2, '.', '');
                 $channel = $paymentData['channel'];
-                $paid_at = Carbon::parse($paymentData['paid_at']);
+                $paid_at = Date::parse($paymentData['paid_at']);
 
                 if (Payment::where('reference', $ref)->exists()) {
                     Log::info("Duplicate payment detected: {$ref}, skipping processing.");
@@ -243,8 +243,10 @@ class PaystackService
                 self::sendOrderConfirmationEmail($user, $orderedItems, $orderNo, $formattedAmount);
                 self::sendSellerOrderEmail($product?->user, $orderedItems, $orderNo, $formattedAmount);
 
+                $request = app(Request::class);
+
                 (new UserLogAction(
-                    request(),
+                    $request,
                     UserLog::PAYMENT,
                     'Payment successful',
                     json_encode($paymentData),
@@ -378,8 +380,10 @@ class PaystackService
                 $mail_class = B2BOrderEmail::class;
                 mailSend($type, $user, $subject, $mail_class, $orderItemData);
 
+                $request = app(Request::class);
+
                 (new UserLogAction(
-                    request(),
+                    $request,
                     UserLog::PAYMENT,
                     'Payment successful',
                     json_encode($paymentData),
@@ -617,7 +621,7 @@ class PaystackService
             'image' => $image,
             'quantity' => $item['product_quantity'],
             'price' => $item['total_amount'],
-            'currency' => $user->default_currency,
+            'currency' => $product->shopCountry?->currency,
         ];
     }
 }

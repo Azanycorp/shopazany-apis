@@ -2,49 +2,40 @@
 
 namespace App\Services\Curl;
 
+use Illuminate\Support\Facades\Http;
+
 class CurlService
 {
-    protected string $url;
-
-    protected $headers = [];
-
-    protected array $fields;
-
-    public function __construct(string $url, array $headers = [], array $fields = [])
-    {
-        $this->url = $url;
-        foreach ($headers as $key => $value) {
-            $this->headers[] = "$key: $value";
-        }
-        $this->fields = $fields;
-    }
+    public function __construct(
+        protected string $url,
+        protected array $headers = [],
+        protected array $fields = []
+    ) {}
 
     public function execute()
     {
-        $url = 'https://api.paystack.co/transfer/bulk';
+        try {
+            $response = Http::withHeaders($this->headers)
+                ->timeout(30)
+                ->asForm()
+                ->post($this->url, $this->fields);
 
-        $fields_string = http_build_query($this->fields);
+            if ($response->failed()) {
+                return [
+                    'status' => false,
+                    'message' => $response->json('message', 'Request failed'),
+                    'data' => null,
+                ];
+            }
 
-        $ch = curl_init();
+            return $response->json();
 
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $fields_string);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $this->headers);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-
-        $response = curl_exec($ch);
-
-        if (curl_errno($ch) !== 0) {
+        } catch (\Exception $e) {
             return [
                 'status' => false,
-                'message' => curl_error($ch),
+                'message' => $e->getMessage(),
                 'data' => null,
             ];
         }
-
-        curl_close($ch);
-
-        return json_decode($response, true);
     }
 }

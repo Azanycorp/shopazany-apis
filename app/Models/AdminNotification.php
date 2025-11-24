@@ -8,7 +8,10 @@ class AdminNotification extends Model
 {
     protected $fillable = ['title', 'content', 'is_read'];
 
-    protected $casts = [
-        'is_read' => 'boolean',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'is_read' => 'boolean',
+        ];
+    }
 }

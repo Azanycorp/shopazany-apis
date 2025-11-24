@@ -12,6 +12,8 @@ class BurstGuard
 {
     public function __construct(
         private RateLimiter $limiter,
+        private readonly \Illuminate\Contracts\Cache\Repository $cacheManager,
+        private readonly \Illuminate\Contracts\Routing\ResponseFactory $responseFactory,
         private int $maxPer5s = 5,
         private int $maxPer60s = 20,
         private int $banSeconds = 300
@@ -30,7 +32,7 @@ class BurstGuard
 
         // Check existing bans (Cache-based)
         foreach ([$this->banKey($route, "ip:$ip"), $this->banKey($route, "uid:$uid")] as $banKey) {
-            if (Cache::has($banKey)) {
+            if ($this->cacheManager->has($banKey)) {
                 return $this->tooMany($this->banTtl($banKey));
             }
         }
@@ -39,7 +41,7 @@ class BurstGuard
         foreach (["ip:$ip", "uid:$uid"] as $dim) {
             if (! $this->withinBudget($route, $dim)) {
                 $banKey = $this->banKey($route, $dim);
-                Cache::put($banKey, now()->addSeconds($this->banSeconds)->timestamp, $this->banSeconds);
+                $this->cacheManager->put($banKey, now()->addSeconds($this->banSeconds)->timestamp, $this->banSeconds);
 
                 return $this->tooMany($this->banSeconds);
             }
@@ -74,14 +76,14 @@ class BurstGuard
 
     private function banTtl(string $banKey): int
     {
-        $ts = Cache::get($banKey);
+        $ts = $this->cacheManager->get($banKey);
 
         return $ts ? max(0, $ts - time()) : $this->banSeconds;
     }
 
     private function tooMany(int $retryAfter): Response
     {
-        return response()->json([
+        return $this->responseFactory->json([
             'message' => 'Too many requests detected. Please slow down.',
         ], 429)->withHeaders([
             'Retry-After' => $retryAfter,

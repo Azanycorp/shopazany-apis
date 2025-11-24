@@ -3,43 +3,31 @@
 namespace App\Services\Curl;
 
 use Exception;
+use Illuminate\Support\Facades\Http;
 
 class GetCurl
 {
-    protected string $url;
-
-    protected $headers = [];
-
-    public function __construct(string $url, array $headers = [])
-    {
-        $this->url = $url;
-        foreach ($headers as $key => $value) {
-            $this->headers[] = "$key: $value";
-        }
-    }
+    public function __construct(
+        protected string $url,
+        protected array $headers = []
+    ) {}
 
     public function execute(): array
     {
-        $ch = curl_init();
+        $response = Http::withHeaders($this->headers)
+            ->timeout(30)
+            ->get($this->url);
 
-        curl_setopt($ch, CURLOPT_URL, $this->url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $this->headers);
-
-        $response = curl_exec($ch);
-
-        if (curl_errno($ch) !== 0) {
-            throw new Exception('Curl error: '.curl_error($ch));
+        if ($response->failed()) {
+            throw new Exception('Request error: '.$response->json('message', 'Unknown error'));
         }
 
-        curl_close($ch);
-
-        $result = json_decode($response, true);
+        $result = $response->json();
 
         if (! $result || ! isset($result['data'])) {
             return [
                 'status' => false,
-                'message' => $result['message'],
+                'message' => $result['message'] ?? 'Invalid response format',
             ];
         }
 

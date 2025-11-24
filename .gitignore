@@ -19,3 +19,6 @@ yarn-error.log
 /.idea
 /.vscode
 /nbproject/private/
+bash.exe.stackdump
+/rector
+/storage/rector
