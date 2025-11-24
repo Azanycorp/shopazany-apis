@@ -7,6 +7,7 @@ use App\Enum\UserLog;
 use App\Enum\UserStatus;
 use App\Enum\UserType;
 use App\Models\User;
+use App\Services\Auth\HttpService;
 use App\Services\Auth\LoginService;
 use App\Trait\HttpResponse;
 use App\Trait\SignUp;
@@ -15,57 +16,172 @@ class AuthService
 {
     use HttpResponse, SignUp;
 
-    public function __construct(private readonly \Illuminate\Database\DatabaseManager $databaseManager, private readonly \Illuminate\Hashing\BcryptHasher $bcryptHasher) {}
+    public function __construct(private readonly \Illuminate\Database\DatabaseManager $databaseManager, private readonly \Illuminate\Hashing\BcryptHasher $bcryptHasher, private HttpService $httpService) {}
 
     public function login($request)
     {
         return LoginService::AuthLogin($request);
     }
 
+    // public function signup($request)
+    // {
+    //     $request->validated($request->all());
+    //     $user = null;
+    //     $headerName = config('security.header_key');
+    //     $headerValue = $request->header($headerName);
+
+    //     $requestData = $request->only([
+    //         'first_name',
+    //         'last_name',
+    //         'email',
+    //         'password'
+    //     ]);
+
+    //     $requestData['signed_up_from'] = 'azany_b2b';
+    //     $requestData['type'] = 'b2b_seller';
+
+    //     $response = $this->httpService->register(
+    //         $requestData,
+    //         [
+    //             $headerName => $headerValue
+    //         ]
+    //     );
+    //         if ($response->failed()) {
+    //             return $this->error(null, $response['message'], 400);
+    //         }
+
+    //     try {
+    //         $code = generateVerificationCode();
+    //         $user = User::create([
+    //             'email' => $request->email,
+    //             'type' => UserType::B2B_SELLER,
+    //             'email_verified_at' => null,
+    //             'verification_code' => $code,
+    //             'is_verified' => 0,
+    //             'info_source' => $request->info_source ?? null,
+    //             'password' => $this->bcryptHasher->make($request->password),
+    //         ]);
+    //         if ($request->referrer_code) {
+    //             $affiliate = User::with('wallet')
+    //                 ->where(['referrer_code' => $request->referrer_code, 'is_affiliate_member' => 1])
+    //                 ->first();
+
+    //             if (! $affiliate) {
+    //                 return $this->error(null, 'No Affiliate found!', 404);
+    //             }
+
+    //             $this->handleReferrers($request->referrer_code, $user);
+    //         }
+
+    //         $description = "User with email: {$request->email} signed up as b2b seller";
+    //         $response = $this->success(null, 'Created successfully', 201);
+    //         $action = UserLog::CREATED;
+
+    //         logUserAction($request, $action, $description, $response, $user);
+
+    //         return $response;
+    //     } catch (\Exception $e) {
+    //         $description = "Sign up failed: {$request->email}";
+    //         $response = $this->error(null, $e->getMessage(), 500);
+    //         $action = UserLog::FAILED;
+
+    //         logUserAction($request, $action, $description, $response, $user);
+
+    //         return $response;
+    //     }
+    // }
+
     public function signup($request)
     {
-        $request->validated($request->all());
-        $user = null;
+        // If you're using FormRequest, only call ->validated() with no params.
+        $request->validated();
+
+        $headerName = config('security.header_key');
+        $headerValue = $request->header($headerName);
+
+        $payload = $this->buildExternalPayload($request);
+
+        // Register via external service
+        $externalResponse = $this->httpService->register(
+            $payload,
+            [$headerName => $headerValue]
+        );
+
+        if ($externalResponse->failed()) {
+            return $this->error(null, $externalResponse['message'], 400);
+        }
 
         try {
-            $code = generateVerificationCode();
-            $user = User::create([
-                'email' => $request->email,
-                'type' => UserType::B2B_SELLER,
-                'email_verified_at' => null,
-                'verification_code' => $code,
-                'is_verified' => 0,
-                'info_source' => $request->info_source ?? null,
-                'password' => $this->bcryptHasher->make($request->password),
-            ]);
-            if ($request->referrer_code) {
-                $affiliate = User::with('wallet')
-                    ->where(['referrer_code' => $request->referrer_code, 'is_affiliate_member' => 1])
-                    ->first();
+            // Create our user internally
+            $user = $this->createLocalUser($request);
 
-                if (! $affiliate) {
-                    return $this->error(null, 'No Affiliate found!', 404);
+            // If referral was supplied, process it
+            if ($request->filled('referrer_code')) {
+                $refResponse = $this->handleReferral($request, $user);
+
+                if ($refResponse !== true) {
+                    return $refResponse; // handles affiliate not found
                 }
-
-                $this->handleReferrers($request->referrer_code, $user);
             }
 
-            $description = "User with email: {$request->email} signed up as b2b seller";
+            // SUCCESS
+            $message = "User with email: {$request->email} signed up as b2b seller";
             $response = $this->success(null, 'Created successfully', 201);
-            $action = UserLog::CREATED;
 
-            logUserAction($request, $action, $description, $response, $user);
+            logUserAction($request, UserLog::CREATED, $message, $response, $user);
 
             return $response;
         } catch (\Exception $e) {
-            $description = "Sign up failed: {$request->email}";
-            $response = $this->error(null, $e->getMessage(), 500);
-            $action = UserLog::FAILED;
 
-            logUserAction($request, $action, $description, $response, $user);
+            // FAILED
+            $message = "Sign up failed: {$request->email}";
+            $response = $this->error(null, $e->getMessage(), 500);
+
+            logUserAction($request, UserLog::FAILED, $message, $response);
 
             return $response;
         }
+    }
+
+    protected function buildExternalPayload($request)
+    {
+        return [
+            'first_name' => $request->first_name,
+            'last_name' => $request->last_name,
+            'email' => $request->email,
+            'password' => $request->password,
+            'signed_up_from' => 'azany_b2b',
+            'type' => 'b2b_seller',
+        ];
+    }
+
+    protected function createLocalUser($request)
+    {
+        return User::create([
+            'email' => $request->email,
+            'type' => UserType::B2B_SELLER,
+            'email_verified_at' => null,
+            'verification_code' => generateVerificationCode(),
+            'is_verified' => 0,
+            'info_source' => $request->info_source ?? null,
+            'password' => $this->bcryptHasher->make($request->password),
+        ]);
+    }
+
+    protected function handleReferral($request, $user)
+    {
+        $affiliate = User::with('wallet')
+            ->where('referrer_code', $request->referrer_code)
+            ->where('is_affiliate_member', 1)
+            ->first();
+
+        if (! $affiliate) {
+            return $this->error(null, 'No Affiliate found!', 404);
+        }
+
+        $this->handleReferrers($request->referrer_code, $user);
+
+        return true;
     }
 
     public function verify($request)
