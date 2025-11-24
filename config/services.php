@@ -91,4 +91,10 @@ return [
         'private_key' => env('IMAGEKIT_PRIVATE_KEY'),
         'endpoint_key' => env('IMAGEKIT_URL_ENDPOINT'),
     ],
+
+    'auth_service' => [
+        'url' => env('AUTH_SERVICE_URL'),
+        'key' => env('X_AUTH_KEY'),
+        'value' => env('X_AUTH_VALUE'),
+    ],
 ];

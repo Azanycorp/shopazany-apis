@@ -2,11 +2,16 @@
 
 namespace App\Services\Auth;
 
-use App\Enum\UserLog;
-use App\Enum\UserStatus;
+use App\Enum\UserType;
 use App\Models\User;
+use App\Pipelines\Auth\CheckAccountStatus;
+use App\Pipelines\Auth\EnsureLocalUserExists;
+use App\Pipelines\Auth\HandleTwoFactor;
+use App\Pipelines\Auth\LogUserIn;
+use App\Pipelines\Auth\ValidateExternalAuth;
+use App\Services\Auth\Auth as ServicesAuth;
 use App\Trait\Login;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Pipeline;
 
 class LoginService
 {
@@ -16,37 +21,65 @@ class LoginService
     {
         $request->validated();
 
-        if (Auth::attempt($request->only(['email', 'password']))) {
-            $user = User::where('email', $request->email)->first();
+        return Pipeline::send($request)
+            ->through([
+                ValidateExternalAuth::class,
+                EnsureLocalUserExists::class,
+                CheckAccountStatus::class,
+                HandleTwoFactor::class,
+                LogUserIn::class,
+            ])
+            ->thenReturn();
+    }
 
-            if (app(self::class)->isAccountUnverifiedOrInactive($user, $request)) {
-                return app(self::class)->handleAccountIssues($user, $request, 'Account not verified or inactive', UserLog::LOGIN_ATTEMPT);
-            }
+    public static function externalAuthCheck($request)
+    {
+        $auth = app(ServicesAuth::class);
+        $options = new RequestOptions(
+            headers: [
+                config('services.auth_service.key') => config('services.auth_service.value'),
+            ],
+            data: [
+                'email' => $request->input('email'),
+                'password' => $request->input('password'),
+            ]
+        );
 
-            if (app(self::class)->isAccountPending($user, $request)) {
-                return app(self::class)->handleAccountIssues($user, $request, 'Account not verified or inactive', UserLog::LOGIN_ATTEMPT, UserStatus::PENDING);
-            }
+        return $auth->post(config('services.auth_service.url').'/login', $options);
+    }
 
-            if (app(self::class)->isAccountSuspended($user, $request)) {
-                return app(self::class)->handleAccountIssues($user, $request, 'Account is suspended, contact support', UserLog::LOGIN_ATTEMPT, UserStatus::SUSPENDED);
-            }
+    public static function syncLocalUserToAuthService($user, string $password)
+    {
+        $auth = app(ServicesAuth::class);
 
-            if (app(self::class)->isAccountBlocked($user, $request)) {
-                return app(self::class)->handleAccountIssues($user, $request, 'Account is blocked, contact support', UserLog::LOGIN_ATTEMPT, UserStatus::BLOCKED);
-            }
+        try {
+            $options = new RequestOptions(
+                headers: [
+                    config('services.auth_service.key') => config('services.auth_service.value'),
+                ],
+                data: [
+                    'first_name' => $user->first_name,
+                    'last_name' => $user->last_name,
+                    'email' => $user->email,
+                    'type' => $user->type === UserType::CUSTOMER ? 'b2c_customer' : 'b2c_seller',
+                    'country_id' => $user->country,
+                    'state_id' => $user->state_id,
+                    'password' => $password,
+                    'signed_up_from' => 'azany_b2c',
+                    'email_verified_at' => now(),
+                    'is_verified' => true,
+                    'status' => 'active',
+                ]
+            );
 
-            if (! $user->is_admin_approve) {
-                return app(self::class)->handleAccountIssues($user, $request, 'Account not approved, contact support', UserLog::LOGIN_ATTEMPT, UserStatus::BLOCKED);
-            }
-
-            if ($user->two_factor_enabled) {
-                return app(self::class)->handleTwoFactorAuthentication($user, $request);
-            }
-
-            return app(self::class)->logUserIn($user, $request);
+            return $auth->post(config('services.auth_service.url').'/register', $options);
+        } catch (\Exception $e) {
+            return [
+                'status' => false,
+                'message' => $e->getMessage(),
+                'data' => null,
+            ];
         }
-
-        return app(self::class)->handleInvalidCredentials($request);
     }
 
     public static function biometricLogin($request)
