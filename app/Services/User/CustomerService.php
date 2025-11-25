@@ -412,6 +412,7 @@ class CustomerService
 
         $user->reedemPoints()->create([
             'name' => $request->name,
+            'point' => $request->point,
             'status' => RedeemPointStatus::REDEEMED,
         ]);
 
