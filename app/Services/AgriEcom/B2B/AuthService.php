@@ -7,9 +7,13 @@ use App\Enum\UserLog;
 use App\Enum\UserStatus;
 use App\Enum\UserType;
 use App\Models\User;
+use App\Pipelines\Signup\B2B\CreateB2BBuyer;
+use App\Pipelines\Signup\B2B\CreateB2BSeller;
+use App\Pipelines\Signup\B2B\CreateB2BWithAuthService;
 use App\Services\Auth\LoginService;
 use App\Trait\HttpResponse;
 use App\Trait\SignUp;
+use Illuminate\Support\Facades\Pipeline;
 
 class AuthService
 {
@@ -24,50 +28,17 @@ class AuthService
 
     public function signup($request)
     {
-        $request->validated($request->all());
-        $user = null;
+        $request->merge([
+            'type' => UserType::B2B_AGRIECOM_SELLER,
+        ]);
 
-        try {
-            $code = generateVerificationCode();
-
-            $user = User::create([
-                'email' => $request->email,
-                'type' => UserType::B2B_AGRIECOM_SELLER,
-                'email_verified_at' => null,
-                'verification_code' => $code,
-                'is_verified' => 0,
-                'info_source' => $request->info_source ?? null,
-                'password' => $this->bcryptHasher->make($request->password),
-            ]);
-
-            if ($request->referrer_code) {
-                $affiliate = User::with('wallet')
-                    ->where(['referrer_code' => $request->referrer_code, 'is_affiliate_member' => 1])
-                    ->first();
-
-                if (! $affiliate) {
-                    return $this->error(null, 'No Affiliate found!', 404);
-                }
-
-                $this->handleReferrers($request->referrer_code, $user);
-            }
-
-            $description = "User with email: {$request->email} signed up as b2b agriEcomm seller";
-            $response = $this->success(null, 'Created successfully', 201);
-            $action = UserLog::CREATED;
-
-            logUserAction($request, $action, $description, $response, $user);
-
-            return $response;
-        } catch (\Exception $e) {
-            $description = "Sign up failed: {$request->email}";
-            $response = $this->error(null, $e->getMessage(), 500);
-            $action = UserLog::FAILED;
-
-            logUserAction($request, $action, $description, $response, $user);
-
-            return $response;
-        }
+        return Pipeline::send($request)
+            ->withinTransaction()
+            ->through([
+                CreateB2BWithAuthService::class,
+                CreateB2BSeller::class,
+            ])
+            ->thenReturn();
     }
 
     public function verify($request)
@@ -153,57 +124,66 @@ class AuthService
 
     public function buyerOnboarding($request)
     {
-        $user = null;
-        $this->databaseManager->beginTransaction();
+        $request->merge([
+            'type' => UserType::B2B_AGRIECOM_BUYER,
+        ]);
 
-        try {
-            $code = generateVerificationCode();
-            $currencyCode = $this->currencyCode($request);
+        return Pipeline::send($request)
+            ->withinTransaction()
+            ->through([
+                CreateB2BWithAuthService::class,
+                CreateB2BBuyer::class,
+            ])
+            ->thenReturn();
 
-            $user = User::create([
-                'first_name' => $request->first_name,
-                'last_name' => $request->last_name,
-                'email' => $request->email,
-                'type' => UserType::B2B_AGRIECOM_BUYER,
-                'service_type' => $request->service_type,
-                'average_spend' => $request->average_spend,
-                'company_name' => $request->company_name,
-                'company_size' => $request->company_size,
-                'website' => $request->website,
-                'country' => $request->country_id,
-                'default_currency' => $currencyCode,
-                'email_verified_at' => null,
-                'verification_code' => $code,
-                'is_verified' => 0,
-                'password' => $this->bcryptHasher->make($request->password),
-            ]);
+        // try {
+        //     $code = generateVerificationCode();
+        //     $currencyCode = $this->currencyCode($request);
 
-            $user->b2bCompany()->create([
-                'service_type' => $request->service_type,
-                'average_spend' => $request->average_spend,
-                'business_name' => $request->company_name,
-                'company_size' => $request->company_size,
-                'website' => $request->website,
-                'country_id' => $request->country_id,
-            ]);
+        //     $user = User::create([
+        //         'first_name' => $request->first_name,
+        //         'last_name' => $request->last_name,
+        //         'email' => $request->email,
+        //         'type' => UserType::B2B_AGRIECOM_BUYER,
+        //         'service_type' => $request->service_type,
+        //         'average_spend' => $request->average_spend,
+        //         'company_name' => $request->company_name,
+        //         'company_size' => $request->company_size,
+        //         'website' => $request->website,
+        //         'country' => $request->country_id,
+        //         'default_currency' => $currencyCode,
+        //         'email_verified_at' => null,
+        //         'verification_code' => $code,
+        //         'is_verified' => 0,
+        //         'password' => $this->bcryptHasher->make($request->password),
+        //     ]);
 
-            $description = "User with email: {$request->email} signed up as b2b buyer";
-            $response = $this->success(null, 'Created successfully');
-            $action = UserLog::CREATED;
+        //     $user->b2bCompany()->create([
+        //         'service_type' => $request->service_type,
+        //         'average_spend' => $request->average_spend,
+        //         'business_name' => $request->company_name,
+        //         'company_size' => $request->company_size,
+        //         'website' => $request->website,
+        //         'country_id' => $request->country_id,
+        //     ]);
 
-            logUserAction($request, $action, $description, $response, $user);
-            $this->databaseManager->commit();
+        //     $description = "User with email: {$request->email} signed up as b2b buyer";
+        //     $response = $this->success(null, 'Created successfully');
+        //     $action = UserLog::CREATED;
 
-            return $this->success($user, 'Created successfully');
-        } catch (\Exception $e) {
-            $this->databaseManager->rollBack();
+        //     logUserAction($request, $action, $description, $response, $user);
+        //     $this->databaseManager->commit();
 
-            $description = "Sign up failed: {$request->email}";
-            $response = $this->error(null, $e->getMessage(), 500);
-            $action = UserLog::FAILED;
-            logUserAction($request, $action, $description, $response, $user);
+        //     return $this->success($user, 'Created successfully');
+        // } catch (\Exception $e) {
+        //     $this->databaseManager->rollBack();
 
-            return $response;
-        }
+        //     $description = "Sign up failed: {$request->email}";
+        //     $response = $this->error(null, $e->getMessage(), 500);
+        //     $action = UserLog::FAILED;
+        //     logUserAction($request, $action, $description, $response, $user);
+
+        //     return $response;
+        // }
     }
 }
