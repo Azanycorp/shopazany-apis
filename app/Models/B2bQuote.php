@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enum\UserType;
 use App\Trait\ClearsResponseCache;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class B2bQuote extends Model
@@ -26,19 +27,19 @@ class B2bQuote extends Model
         ];
     }
 
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'buyer_id')->where('type', UserType::B2B_BUYER);
     }
 
-    public function seller()
+    public function seller(): BelongsTo
     {
         return $this->belongsTo(User::class, 'seller_id')->where('type', UserType::B2B_SELLER);
     }
 
-    public function product()
+    public function product(): BelongsTo
     {
-        return $this->belongsTo(B2BProduct::class);
+        return $this->belongsTo(B2BProduct::class, 'product_id');
     }
 
     /**

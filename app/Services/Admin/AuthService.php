@@ -35,9 +35,9 @@ class AuthService
                 'expires_at' => $token->accessToken->expires_at,
                 'role' => $user->roles ? $user->roles->map(function ($role): array {
                     return [
-                        'id' => $role?->id,
-                        'name' => $role?->name,
-                        'permissions' => $role?->permissions->flatMap(function ($permission): array {
+                        'id' => $role->id,
+                        'name' => $role->name,
+                        'permissions' => $role->permissions->flatMap(function ($permission): array {
                             return [$permission->name];
                         })->toArray(),
                     ];

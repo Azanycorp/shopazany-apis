@@ -16,20 +16,20 @@ class B2BSubCategoryResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => (int) $this->id,
-            'name' => (string) $this->name,
-            'slug' => (string) $this->slug,
-            'image' => (string) $this->image,
-            'status' => (string) $this->status,
+            'id' => (int) $this->resource->id,
+            'name' => (string) $this->resource->name,
+            'slug' => (string) $this->resource->slug,
+            'image' => (string) $this->resource->image,
+            'status' => (string) $this->resource->status,
             'subcategory' => (object) [
-                'total' => $this->count(),
-                'active' => $this->where('status', 'active')->count(),
+                'total' => $this->resource->count(),
+                'active' => $this->resource->where('status', 'active')->count(),
             ],
             'products' => (object) [
-                'active' => $this->products()->where('status', ProductStatus::ACTIVE)->count(),
-                'inactive' => $this->products()->where('status', ProductStatus::PENDING)->count(),
+                'active' => $this->resource->products()->where('status', ProductStatus::ACTIVE)->count(),
+                'inactive' => $this->resource->products()->where('status', ProductStatus::PENDING)->count(),
             ],
-            'category_image' => (string) $this->category?->image,
+            'category_image' => (string) $this->resource->category?->image,
         ];
     }
 }

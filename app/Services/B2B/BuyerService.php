@@ -102,7 +102,7 @@ class BuyerService
             ->firstOrFail();
 
         $user->status = UserStatus::BLOCKED;
-        $user->is_admin_approve = 0;
+        $user->is_admin_approve = false;
 
         $user->save();
 
@@ -130,7 +130,7 @@ class BuyerService
         $query = trim($request->query('approved'));
 
         $users = User::where('type', UserType::CUSTOMER)
-            ->when($query !== null, function ($queryBuilder) use ($query): void {
+            ->when($query, function ($queryBuilder) use ($query): void {
                 $queryBuilder->where('is_admin_approve', $query);
             })
             ->paginate(25);
@@ -545,16 +545,21 @@ class BuyerService
 
         try {
             foreach ($quotes as $quote) {
-                if (blank($quote->product_data['unit_price'])) {
+                $productData = is_array($quote->product_data)
+                    ? $quote->product_data
+                    : json_decode($quote->product_data, true);
+
+                if (! $productData || blank($productData['unit_price'] ?? null)) {
                     continue;
                 }
+
                 if (blank($quote->qty)) {
                     continue;
                 }
                 $product = B2BProduct::findOrFail($quote->product_id);
                 $unit_price = currencyConvert(
                     userAuth()->default_currency,
-                    $quote->product_data['unit_price'],
+                    $productData['unit_price'],
                     $product->shopCountry->currency ?? 'USD',
                 );
 
@@ -593,9 +598,13 @@ class BuyerService
         try {
             $product = B2BProduct::findOrFail($quote->product_id);
 
+            $productData = is_array($quote->product_data)
+                ? $quote->product_data
+                : json_decode($quote->product_data, true);
+
             $unit_price = currencyConvert(
                 userAuth()->default_currency,
-                $quote->product_data['unit_price'],
+                $productData['unit_price'],
                 $product->shopCountry->currency ?? 'USD',
             );
 
@@ -1045,7 +1054,7 @@ class BuyerService
             'website' => $request->website ?? $company->website,
             'average_spend' => $request->average_spend ?? $company->average_spend,
             'service_type' => $request->service_type ?? $company->service_type,
-            'country_id' => $request->country_id ?? $company->country,
+            'country_id' => $request->country_id ?? $company->country_id,
             'logo' => $request->hasFile('image') ? $logo_url['url'] : $company->logo,
         ]);
 

@@ -25,7 +25,7 @@ class SellerAuthMiddleware
             return $this->error(null, 'Unauthorized action.', 401);
         }
 
-        if ($user && $user->type !== UserType::SELLER) {
+        if ($user->type !== UserType::SELLER) {
             return $this->error(null, 'Unauthorized action.', 401);
         }
 

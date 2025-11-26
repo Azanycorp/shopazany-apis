@@ -213,8 +213,8 @@ class BannerPromoService
         $deal = Deal::query()->create([
             'title' => $request->title,
             'slug' => $slug,
-            'image' => $image['url'],
-            'public_id' => $image['public_id'],
+            'image' => $image['url'] ?? null,
+            'public_id' => $image['public_id'] ?? null,
             'position' => $request->position,
             'type' => $request->type,
         ]);

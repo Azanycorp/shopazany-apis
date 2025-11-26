@@ -16,7 +16,7 @@ class SearchOrderResource extends JsonResource
     {
         $user = $request->user();
 
-        $sellerProducts = $this->products->filter(function ($product) use ($user): bool {
+        $sellerProducts = $this->resource->products->filter(function ($product) use ($user): bool {
             return $product->user_id === $user->id;
         });
 
@@ -29,13 +29,13 @@ class SearchOrderResource extends JsonResource
         });
 
         return [
-            'id' => (int) $this->id,
-            'order_no' => (string) $this->order_no,
-            'customer' => "{$this->user?->first_name} {$this->user?->last_name}",
-            'order_date' => (string) $this->order_date,
+            'id' => (int) $this->resource->id,
+            'order_no' => (string) $this->resource->order_no,
+            'customer' => "{$this->resource->user?->first_name} {$this->resource->user?->last_name}",
+            'order_date' => (string) $this->resource->order_date,
             'total_amount' => $totalAmountForSeller,
-            'payment_method' => (string) $this->payment_method,
-            'status' => (string) $this->status,
+            'payment_method' => (string) $this->resource->payment_method,
+            'status' => (string) $this->resource->status,
         ];
     }
 }

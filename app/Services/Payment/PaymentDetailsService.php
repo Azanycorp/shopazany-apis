@@ -118,7 +118,8 @@ class PaymentDetailsService
         }
 
         if ($user->is_subscribed) {
-            $currentPlan = $user?->subscription_plan?->subscriptionPlan;
+            $currentUserSubscription = $user->activeSubscription();
+            $currentPlan = $currentUserSubscription->subscriptionPlan;
             $newPlan = SubscriptionPlan::findOrFail($request->input('subscription_plan_id'));
 
             if ($newPlan->tier < $currentPlan->tier) {
@@ -163,7 +164,7 @@ class PaymentDetailsService
         }
 
         if ($user->is_subscribed) {
-            $currentPlan = $user?->subscription_plan?->subscriptionPlan;
+            $currentPlan = $user->subscription_plan->subscriptionPlan;
             $newPlan = SubscriptionPlan::findOrFail($request->input('subscription_plan_id'));
 
             if ($newPlan->tier < $currentPlan->tier) {

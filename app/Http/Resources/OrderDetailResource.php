@@ -16,14 +16,14 @@ class OrderDetailResource extends JsonResource
     public function toArray(Request $request): array
     {
         $user = $request->user();
-        $sellerProducts = $this->products->filter(function ($product) use ($user): bool {
+        $sellerProducts = $this->resource->products->filter(function ($product) use ($user): bool {
             return $product->user_id === $user->id;
         });
-        $userCurrency = $user?->default_currency ?? 'USD';
+        $userCurrency = $user->default_currency ?? 'USD';
         $totalConvertedAmount = 0;
 
         $products = $sellerProducts->map(function ($product) use ($userCurrency, &$totalConvertedAmount): array {
-            $productCurrency = $product->shopCountry?->currency ?? 'USD';
+            $productCurrency = $product->shopCountry->currency ?? 'USD';
 
             $convertedSubTotal = currencyConvert(
                 $productCurrency,
@@ -60,30 +60,30 @@ class OrderDetailResource extends JsonResource
         })->toArray();
 
         return [
-            'id' => (int) $this->id,
-            'order_no' => (string) $this->order_no,
+            'id' => (int) $this->resource->id,
+            'order_no' => (string) $this->resource->order_no,
             'total_amount' => $totalConvertedAmount,
             'customer' => (object) [
-                'id' => $this->user?->id,
-                'name' => trim("{$this->user?->first_name} {$this->user?->last_name}"),
-                'email' => $this->user?->email,
-                'phone' => $this->user?->phone,
+                'id' => $this->resource->user?->id,
+                'name' => trim("{$this->resource->user?->first_name} {$this->resource->user?->last_name}"),
+                'email' => $this->resource->user?->email,
+                'phone' => $this->resource->user?->phone,
             ],
             'products' => $products,
             'shipping_address' => (object) [
-                'name' => $this->user?->userShippingAddress()->first()?->first_name.' '.$this->user?->userShippingAddress()->first()?->last_name,
-                'phone' => $this->user?->userShippingAddress()->first()?->phone,
-                'email' => $this->user?->userShippingAddress()->first()?->email,
-                'address' => $this->user?->userShippingAddress()->first()?->street_address,
-                'city' => $this->user?->userShippingAddress()->first()?->city,
-                'state' => $this->user?->userShippingAddress()->first()?->state,
-                'zip' => $this->user?->userShippingAddress()->first()?->zip,
+                'name' => "{$this->resource->user?->userShippingAddress()->first()?->first_name} {$this->resource->user?->userShippingAddress()->first()?->last_name}",
+                'phone' => $this->resource->user?->userShippingAddress()->first()?->phone,
+                'email' => $this->resource->user?->userShippingAddress()->first()?->email,
+                'address' => $this->resource->user?->userShippingAddress()->first()?->street_address,
+                'city' => $this->resource->user?->userShippingAddress()->first()?->city,
+                'state' => $this->resource->user?->userShippingAddress()->first()?->state,
+                'zip' => $this->resource->user?->userShippingAddress()->first()?->zip,
             ],
-            'order_date' => Date::parse($this->created_at)->format('d M Y'),
-            'order_time' => Date::parse($this->created_at)->format('h:i A'),
-            'payment_status' => strtolower($this->payment_status) === 'success' ? 'paid' : 'not-paid',
-            'payment_method' => $this->payment_method,
-            'status' => $this->status,
+            'order_date' => Date::parse($this->resource->created_at)->format('d M Y'),
+            'order_time' => Date::parse($this->resource->created_at)->format('h:i A'),
+            'payment_status' => strtolower($this->resource->payment_status) === 'success' ? 'paid' : 'not-paid',
+            'payment_method' => $this->resource->payment_method,
+            'status' => $this->resource->status,
         ];
     }
 }

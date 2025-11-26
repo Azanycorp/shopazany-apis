@@ -15,25 +15,25 @@ class BuyerResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => (int) $this->id,
-            'uuid' => (string) $this->uuid,
-            'first_name' => (string) $this->first_name,
-            'last_name' => (string) $this->last_name,
-            'middlename' => (string) $this->middlename,
-            'phone' => (string) $this->phone,
-            'email' => (string) $this->email,
-            'default_currency' => (string) $this->default_currency,
-            'date_of_birth' => (string) $this->date_of_birth,
-            'image' => (string) $this->image,
+            'id' => (int) $this->resource->id,
+            'uuid' => (string) $this->resource->uuid,
+            'first_name' => (string) $this->resource->first_name,
+            'last_name' => (string) $this->resource->last_name,
+            'middlename' => (string) $this->resource->middlename,
+            'phone' => (string) $this->resource->phone,
+            'email' => (string) $this->resource->email,
+            'default_currency' => (string) $this->resource->default_currency,
+            'date_of_birth' => (string) $this->resource->date_of_birth,
+            'image' => (string) $this->resource->image,
             'address' => (object) [
-                'address' => (string) $this->address,
-                'city' => (string) $this->city,
-                'country' => (string) $this->userCountry?->name,
-                'state' => (string) $this->state?->name,
+                'address' => (string) $this->resource->address,
+                'city' => (string) $this->resource->city,
+                'country' => (string) $this->resource->userCountry?->name,
+                'state' => (string) $this->resource->state?->name,
             ],
-            'is_approved' => $this->is_admin_approve,
-            'status' => (string) $this->status,
-            'company' => $this->b2bCompany,
+            'is_approved' => $this->resource->is_admin_approve,
+            'status' => (string) $this->resource->status,
+            'company' => $this->resource->b2bCompany,
         ];
     }
 }

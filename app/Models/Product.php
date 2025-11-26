@@ -8,10 +8,28 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * @property-read \App\Models\Pivots\OrderItemPivot $pivot
+ * @property-read int $pivot_variation_id
+ * @property-read int $pivot_product_quantity
+ * @property-read float $pivot_price
+ * @property-read float $pivot_sub_total
+ * @property-read string $pivot_status
+ * @property int $country_id
+ * @property string|null $currency
+ * @property float $average_rating
+ * @property-read ShopCountry|null $shopCountry
+ * @property int $id
+ * @property string $name
+ * @property string $image
+ * @property string $public_id
+ * @property float $discounted_price
+ */
 class Product extends Model
 {
     use ClearsResponseCache, HasFactory;
@@ -118,12 +136,12 @@ class Product extends Model
         return $this->belongsTo(ShopCountry::class, 'country_id', 'country_id');
     }
 
-    public function wishlists()
+    public function wishlists(): HasMany
     {
         return $this->hasMany(Wishlist::class, 'product_id');
     }
 
-    public function orders()
+    public function orders(): BelongsToMany
     {
         return $this->belongsToMany(Order::class, 'order_items')
             ->withPivot('product_quantity', 'price', 'sub_total', 'status');
@@ -207,17 +225,17 @@ class Product extends Model
     protected function discountedPrice(): Attribute
     {
         return Attribute::get(function () {
-            $discountType = $this->discount_type;
-            $discountValue = $this->discount_value;
+            $discountType = (string) $this->discount_type;
+            $discountValue = (float) $this->discount_value;
             if ($discountType === 'percentage') {
-                return $this->product_price - ($this->product_price * ($discountValue / 100));
+                return (float) $this->product_price - ((float) $this->product_price * ($discountValue / 100));
             }
 
             if ($discountType === 'flat') {
-                return $this->product_price - $discountValue;
+                return (float) $this->product_price - $discountValue;
             }
 
-            return $this->product_price;
+            return (float) $this->product_price;
         });
     }
 

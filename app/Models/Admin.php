@@ -5,10 +5,17 @@ namespace App\Models;
 use App\Notifications\ResetPasswordNotification;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
+/**
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Role> $roles
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Permission> $permissions
+ * @property-read string $fullName
+ */
 class Admin extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
@@ -55,22 +62,22 @@ class Admin extends Authenticatable
         $this->notify(new ResetPasswordNotification($url));
     }
 
-    public function products()
+    public function products(): HasMany
     {
         return $this->hasMany(Product::class, 'admin_id');
     }
 
-    public function blogs()
+    public function blogs(): HasMany
     {
         return $this->hasMany(Blog::class, 'admin_id');
     }
 
-    public function roles()
+    public function roles(): BelongsToMany
     {
         return $this->belongsToMany(Role::class);
     }
 
-    public function permissions()
+    public function permissions(): BelongsToMany
     {
         return $this->belongsToMany(Permission::class);
     }
