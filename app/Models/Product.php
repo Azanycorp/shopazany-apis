@@ -136,11 +136,17 @@ class Product extends Model
         return $this->belongsTo(ShopCountry::class, 'country_id', 'country_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Wishlist, $this>
+     */
     public function wishlists(): HasMany
     {
         return $this->hasMany(Wishlist::class, 'product_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<\App\Models\Order, $this, \Illuminate\Database\Eloquent\Relations\Pivot>
+     */
     public function orders(): BelongsToMany
     {
         return $this->belongsToMany(Order::class, 'order_items')

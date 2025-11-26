@@ -17,6 +17,9 @@ class Blog extends Model
         'description',
     ];
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Admin, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(Admin::class, 'admin_id');

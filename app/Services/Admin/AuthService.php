@@ -11,7 +11,12 @@ class AuthService
 {
     use HttpResponse;
 
-    public function __construct(private readonly \Illuminate\Auth\AuthManager $authManager, private readonly \Illuminate\Auth\Passwords\PasswordBrokerManager $passwordBrokerManager, private readonly \Illuminate\Contracts\Routing\ResponseFactory $responseFactory, private readonly \Illuminate\Hashing\BcryptHasher $bcryptHasher) {}
+    public function __construct(
+        private readonly \Illuminate\Auth\AuthManager $authManager,
+        private readonly \Illuminate\Auth\Passwords\PasswordBrokerManager $passwordBrokerManager,
+        private readonly \Illuminate\Contracts\Routing\ResponseFactory $responseFactory,
+        private readonly \Illuminate\Hashing\BcryptHasher $bcryptHasher
+    ) {}
 
     public function login($request)
     {
@@ -39,12 +44,12 @@ class AuthService
                         'name' => $role->name,
                         'permissions' => $role->permissions->flatMap(function ($permission): array {
                             return [$permission->name];
-                        })->toArray(),
+                        })->all(),
                     ];
-                })->toArray() : [],
+                })->all() : [],
                 'user_permissions' => $user->permissions ? $user->permissions->flatMap(function ($permission): array {
                     return [$permission->name];
-                })->toArray() : [],
+                })->all() : [],
             ]);
         }
 

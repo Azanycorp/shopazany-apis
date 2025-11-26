@@ -21,6 +21,9 @@ class Deal extends Model
         'updated_at',
     ];
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Banner, $this>
+     */
     public function banners(): HasMany
     {
         return $this->hasMany(Banner::class, 'deal_id');

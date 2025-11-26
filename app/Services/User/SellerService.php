@@ -376,7 +376,7 @@ class SellerService extends Controller
 
         /** @var \App\Models\Product[]|\Illuminate\Database\Eloquent\Collection $sellerProducts */
         $sellerProducts = $order->products()
-            ->whereHas('user', function ($query) use ($currentUserId): void {
+            ->whereHas('user', function (Builder $query) use ($currentUserId): void {
                 $query->where('user_id', $currentUserId);
             })->get();
 

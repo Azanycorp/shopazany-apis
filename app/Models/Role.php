@@ -19,6 +19,9 @@ class Role extends Model
         'name',
     ];
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<\App\Models\Permission, $this, \Illuminate\Database\Eloquent\Relations\Pivot>
+     */
     public function permissions(): BelongsToMany
     {
         return $this->belongsToMany(Permission::class);

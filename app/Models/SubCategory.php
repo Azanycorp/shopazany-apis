@@ -21,11 +21,17 @@ class SubCategory extends Model
         'type',
     ];
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Category, $this>
+     */
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class, 'category_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Product, $this>
+     */
     public function products(): HasMany
     {
         return $this->hasMany(Product::class, 'sub_category_id');

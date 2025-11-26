@@ -150,7 +150,7 @@ class AffiliateService
                     'joined' => $referral->created_at,
                     'platform' => 'B2C',
                 ]
-            )->toArray() : [],
+            )->all() : [],
         ];
 
         return $this->success($data, 'Affiliate User Detail');

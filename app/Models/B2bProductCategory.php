@@ -20,11 +20,17 @@ class B2bProductCategory extends Model
         'meta_description',
     ];
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\B2bProductSubCategory, $this>
+     */
     public function subcategory(): HasMany
     {
         return $this->hasMany(B2bProductSubCategory::class, 'category_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\B2BProduct, $this>
+     */
     public function products(): HasMany
     {
         return $this->hasMany(B2BProduct::class, 'category_id');
