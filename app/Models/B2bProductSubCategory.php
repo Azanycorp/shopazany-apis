@@ -19,6 +19,9 @@ class B2bProductSubCategory extends Model
         'status',
     ];
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\B2bProductCategory, $this>
+     */
     public function category(): BelongsTo
     {
         return $this->belongsTo(B2bProductCategory::class, 'category_id');

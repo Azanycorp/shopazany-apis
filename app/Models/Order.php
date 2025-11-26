@@ -68,6 +68,14 @@ class Order extends Model
         return $this->belongsTo(Product::class, 'product_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<
+     *     \App\Models\Product,
+     *     $this,
+     *     \App\Models\Pivots\OrderItemPivot,
+     *     'pivot'
+     * >
+     */
     public function products(): BelongsToMany
     {
         return $this->belongsToMany(Product::class, 'order_items')

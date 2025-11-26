@@ -54,6 +54,9 @@ trait UserRelationship
     }
 
     // Returns users that this user referred (i.e., their downline)
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<\App\Models\User, $this, \Illuminate\Database\Eloquent\Relations\Pivot>
+     */
     public function referrals(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'referral_relationships', 'referrer_id', 'referee_id');

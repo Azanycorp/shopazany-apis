@@ -22,6 +22,7 @@ use Illuminate\Contracts\Hashing\Hasher;
 use Illuminate\Contracts\Routing\ResponseFactory;
 use Illuminate\Database\DatabaseManager;
 use Illuminate\Hashing\BcryptHasher;
+use Illuminate\Support\Collection;
 
 class UserService extends Controller
 {
@@ -304,7 +305,7 @@ class UserService extends Controller
             ];
         });
 
-        $mergedData = collect($transactions)
+        $mergedData = (new Collection($transactions))
             ->merge($withdrawals)
             ->sortByDesc('date')
             ->values();
@@ -465,7 +466,7 @@ class UserService extends Controller
                     'status' => $referral->status,
                     'referral_date' => $referral->created_at->format('Y-m-d'),
                 ];
-            })->toArray() : [],
+            })->all() : [],
         ];
 
         return $this->success($data, 'Referral management');

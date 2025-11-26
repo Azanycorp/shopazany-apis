@@ -62,21 +62,33 @@ class Admin extends Authenticatable
         $this->notify(new ResetPasswordNotification($url));
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Product, $this>
+     */
     public function products(): HasMany
     {
         return $this->hasMany(Product::class, 'admin_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Blog, $this>
+     */
     public function blogs(): HasMany
     {
         return $this->hasMany(Blog::class, 'admin_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<\App\Models\Role, $this, \Illuminate\Database\Eloquent\Relations\Pivot>
+     */
     public function roles(): BelongsToMany
     {
         return $this->belongsToMany(Role::class);
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<\App\Models\Permission, $this, \Illuminate\Database\Eloquent\Relations\Pivot>
+     */
     public function permissions(): BelongsToMany
     {
         return $this->belongsToMany(Permission::class);
