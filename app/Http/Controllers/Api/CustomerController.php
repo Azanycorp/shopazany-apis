@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\CustomerSupportRequest;
 use App\Http\Requests\OrderRateRequest;
 use App\Http\Requests\PurchaseServiceRequest;
+use App\Http\Requests\RedeemPointRequest;
 use App\Services\User\CustomerService;
 use Illuminate\Http\Request;
 
@@ -86,7 +87,7 @@ class CustomerController extends Controller
         return $this->service->activity($userId);
     }
 
-    public function redeemPoint(Request $request)
+    public function redeemPoint(RedeemPointRequest $request)
     {
         return $this->service->redeemPoint($request);
     }

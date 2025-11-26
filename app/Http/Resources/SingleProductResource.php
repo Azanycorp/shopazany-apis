@@ -18,46 +18,46 @@ class SingleProductResource extends JsonResource
     public function toArray(Request $request): array
     {
         $item_sold = Order::whereHas('products', function (Builder $query): void {
-            $query->where('product_id', $this->id);
+            $query->where('product_id', $this->resource->id);
         })
             ->where('status', OrderStatus::DELIVERED)
             ->count();
 
-        $average_rating = $this->productReviews->avg('rating');
+        $average_rating = $this->resource->productReviews->avg('rating');
 
         return [
-            'id' => (int) $this->id,
-            'name' => (string) $this->name,
-            'slug' => (string) $this->slug,
-            'description' => (string) $this->description,
+            'id' => (int) $this->resource->id,
+            'name' => (string) $this->resource->name,
+            'slug' => (string) $this->resource->slug,
+            'description' => (string) $this->resource->description,
             'category' => (object) [
-                'category_id' => (int) $this->category_id,
-                'category_name' => (string) $this->category?->name,
-                'sub_category_id' => (int) $this->sub_category_id,
-                'sub_category_name' => (string) $this->subCategory?->name,
+                'category_id' => (int) $this->resource->category_id,
+                'category_name' => (string) $this->resource->category?->name,
+                'sub_category_id' => (int) $this->resource->sub_category_id,
+                'sub_category_name' => (string) $this->resource->subCategory?->name,
             ],
-            'brand' => (string) $this->brand?->name,
-            'color' => (string) $this->color?->name,
-            'unit' => (string) $this->unit?->name,
-            'size' => (string) $this->size?->name,
-            'product_sku' => (string) $this->product_sku,
-            'product_price' => (string) $this->product_price,
-            'discount_price' => (string) $this->discount_price,
-            'price' => (string) $this->price,
-            'current_stock_quantity' => (string) $this->current_stock_quantity,
-            'minimum_order_quantity' => (string) $this->minimum_order_quantity,
-            'front_image' => (string) $this->image,
-            'currency' => $this->shopCountry?->currency,
-            'country_id' => (int) $this->country_id,
-            'is_in_wishlist' => (bool) $this->is_in_wishlist,
+            'brand' => (string) $this->resource->brand?->name,
+            'color' => (string) $this->resource->color?->name,
+            'unit' => (string) $this->resource->unit?->name,
+            'size' => (string) $this->resource->size?->name,
+            'product_sku' => (string) $this->resource->product_sku,
+            'product_price' => (string) $this->resource->product_price,
+            'discount_price' => (string) $this->resource->discount_price,
+            'price' => (string) $this->resource->price,
+            'current_stock_quantity' => (string) $this->resource->current_stock_quantity,
+            'minimum_order_quantity' => (string) $this->resource->minimum_order_quantity,
+            'front_image' => (string) $this->resource->image,
+            'currency' => $this->resource->shopCountry?->currency,
+            'country_id' => (int) $this->resource->country_id,
+            'is_in_wishlist' => (bool) $this->resource->is_in_wishlist,
             'images' => $this->whenLoaded('productimages', function () {
-                return $this->productimages->map(function ($image): array {
+                return $this->resource->productimages->map(function ($image): array {
                     return [
                         'image' => $image->image,
                     ];
                 })->toArray();
             }),
-            'reviews' => $this->productReviews ? $this->productReviews->map(function ($review): array {
+            'reviews' => $this->resource->productReviews ? $this->resource->productReviews->map(function ($review): array {
                 return [
                     'id' => $review->id,
                     'user' => $review?->user?->full_name,
@@ -66,16 +66,16 @@ class SingleProductResource extends JsonResource
                     'date' => $review->created_at,
                 ];
             })->toArray() : [],
-            'variations' => $this->productVariations,
-            'total_reviews' => $this->product_reviews_count,
+            'variations' => $this->resource->productVariations,
+            'total_reviews' => $this->resource->product_reviews_count,
             'average_rating' => round($average_rating, 1),
             'item_sold' => $item_sold,
             'seller' => (object) [
-                'id' => $this->user?->id,
-                'uuid' => $this->user?->uuid,
-                'name' => "{$this->user?->first_name} {$this->user?->last_name}",
-                'flag' => $this->user?->userCountry?->shopCountry?->flag,
-                'country' => $this->user?->userCountry?->name,
+                'id' => $this->resource->user?->id,
+                'uuid' => $this->resource->user?->uuid,
+                'name' => "{$this->resource->user?->first_name} {$this->resource->user?->last_name}",
+                'flag' => $this->resource->user?->userCountry?->shopCountry?->flag,
+                'country' => $this->resource->user?->userCountry?->name,
             ],
 
         ];

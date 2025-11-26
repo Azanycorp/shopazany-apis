@@ -4,7 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
+/**
+ * @property-read int $id
+ * @property-read string $name
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Permission> $permissions
+ */
 class Role extends Model
 {
     use HasFactory;
@@ -13,7 +19,10 @@ class Role extends Model
         'name',
     ];
 
-    public function permissions()
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<\App\Models\Permission, $this, \Illuminate\Database\Eloquent\Relations\Pivot>
+     */
+    public function permissions(): BelongsToMany
     {
         return $this->belongsToMany(Permission::class);
     }

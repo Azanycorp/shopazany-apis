@@ -48,7 +48,7 @@ class CustomerService
         $data = [
             'total_order' => $total_order,
             'total_affiliate_invite' => 0,
-            'points_earned' => $user->wallet?->reward_point ?? 0,
+            'points_earned' => $user->wallet->reward_point ?? 0,
         ];
 
         return $this->success($data, 'Dashboard analytics');
@@ -184,7 +184,7 @@ class CustomerService
             return $this->error('Order not found', 404);
         }
 
-        $userCurrency = $order->user?->default_currency ?? 'USD';
+        $userCurrency = $order->user->default_currency ?? 'USD';
         $getSummary = $summary->handle($order, $userCurrency);
 
         $data = new CustomerOrderDetailResource($order);
@@ -355,8 +355,8 @@ class CustomerService
         }
 
         $data = (object) [
-            'points_earned' => $user->wallet?->reward_point ?? 0,
-            'points_cleared' => $user->wallet?->points_cleared ?? 0,
+            'points_earned' => $user->wallet->reward_point ?? 0,
+            'points_cleared' => $user->wallet->points_cleared ?? 0,
         ];
 
         return $this->success($data, 'Points');
@@ -412,6 +412,7 @@ class CustomerService
 
         $user->reedemPoints()->create([
             'name' => $request->name,
+            'point' => $request->point,
             'status' => RedeemPointStatus::REDEEMED,
         ]);
 

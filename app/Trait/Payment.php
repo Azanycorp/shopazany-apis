@@ -14,6 +14,7 @@ trait Payment
         return match ($request->platform) {
             'paystack' => $this->addPaystackMethod($request, $user),
             'authorize' => $this->addAuthorizeMethod($request, $user),
+            default => $this->error(null, 'Invalid platform!', 400),
         };
     }
 

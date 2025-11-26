@@ -25,7 +25,7 @@ class AgriEcomSeller
             return $this->error(null, 'Unauthorized action.', 401);
         }
 
-        if ($user && $user->type !== UserType::AGRIECOM_SELLER) {
+        if ($user->type !== UserType::AGRIECOM_SELLER) {
             return $this->error(null, 'Unauthorized action.', 401);
         }
 
