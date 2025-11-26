@@ -91,6 +91,7 @@ class User extends Authenticatable
             'referrer_link' => 'array',
             'two_factor_enabled' => 'boolean',
             'biometric_enabled' => 'boolean',
+            'service_type' => 'array',
         ];
     }
 

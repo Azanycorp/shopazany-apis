@@ -762,3 +762,17 @@ if (! function_exists('getExpectedDelivery')) {
             : '14 - 21 days';
     }
 }
+
+if (! function_exists('extractNamesFromEmail')) {
+    function extractNamesFromEmail($email)
+    {
+        $namePart = strstr($email, '@', true);
+        $namePart = str_replace(['.', '_', '-'], ' ', $namePart);
+        $nameArray = explode(' ', $namePart);
+
+        return [
+            'first_name' => ucfirst($nameArray[0]),
+            'last_name' => isset($nameArray[1]) ? ucfirst($nameArray[1]) : ucfirst($nameArray[0]),
+        ];
+    }
+}
