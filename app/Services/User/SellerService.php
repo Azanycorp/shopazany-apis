@@ -48,7 +48,7 @@ class SellerService extends Controller
             return $this->error(null, 'User not found', 404);
         }
 
-        if ($user->userbusinessinfo->isNotEmpty()) {
+        if ($user->userbusinessinfo) {
             return $this->error(null, 'Business information has been submitted', 400);
         }
 
@@ -374,6 +374,7 @@ class SellerService extends Controller
             return $this->error(null, 'Invalid status', 400);
         }
 
+        /** @var \App\Models\Product[]|\Illuminate\Database\Eloquent\Collection $sellerProducts */
         $sellerProducts = $order->products()
             ->whereHas('user', function ($query) use ($currentUserId): void {
                 $query->where('user_id', $currentUserId);

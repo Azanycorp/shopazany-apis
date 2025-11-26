@@ -156,7 +156,7 @@ class AuthService
 
         try {
             $code = generateVerificationCode();
-            $currencyCode = $this->currencyCode($request);
+            $currencyCode = currencyCodeByCountryId($request->country_id);
 
             $user = User::create([
                 'first_name' => $request->first_name,

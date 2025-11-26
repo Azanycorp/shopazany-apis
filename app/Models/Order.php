@@ -2,12 +2,22 @@
 
 namespace App\Models;
 
-use App\Enum\OrderStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Product> $products
+ * @property-read int $id
+ * @property-read \Illuminate\Database\Eloquent\Relations\Pivot $pivot
+ * @property-read int $pivot_variation_id
+ * @property-read int $pivot_product_quantity
+ * @property-read float $pivot_price
+ * @property-read float $pivot_sub_total
+ * @property-read string $pivot_status
+ */
 class Order extends Model
 {
     use HasFactory;
@@ -58,9 +68,10 @@ class Order extends Model
         return $this->belongsTo(Product::class, 'product_id');
     }
 
-    public function products()
+    public function products(): BelongsToMany
     {
         return $this->belongsToMany(Product::class, 'order_items')
+            ->using(\App\Models\Pivots\OrderItemPivot::class)
             ->withPivot('variation_id', 'product_quantity', 'price', 'sub_total', 'status');
     }
 
@@ -86,37 +97,5 @@ class Order extends Model
     public function orderActivities(): HasMany
     {
         return $this->hasMany(OrderActivity::class, 'order_id');
-    }
-
-    // Deprecated method - Do not use
-    public static function saveOrder($user, $payment, $seller, $item, $orderNo, $address, $method, $status): self
-    {
-        $data = new self;
-
-        $proId = $item['product_id'] ?? $item['itemId'];
-        $product = Product::with('shopCountry')->find($proId);
-        $user = User::find($user->id);
-
-        $data->user_id = $user->id;
-        // $data->seller_id = $seller?->id;
-        // $data->product_id = $item['product_id'] ?? $item['itemId'];
-        $data->payment_id = $payment->id;
-        // $data->product_quantity = $item['product_quantity'] ?? $item['quantity'];
-        $data->order_no = $orderNo;
-        $data->shipping_address = $address;
-        $data->order_date = now();
-        $data->total_amount = currencyConvert(
-            $user->default_currency,
-            $item['total_amount'] ?? $item['unitPrice'],
-            $product->shopCountry?->currency,
-        );
-        $data->payment_method = $method;
-        $data->payment_status = $status;
-        $data->status = OrderStatus::PENDING;
-        $data->country_id = $user->country ?? 160;
-
-        $data->save();
-
-        return $data;
     }
 }

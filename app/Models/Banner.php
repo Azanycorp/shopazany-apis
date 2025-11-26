@@ -6,7 +6,11 @@ use App\Trait\ClearsResponseCache;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property-read array $product_ids
+ */
 class Banner extends Model
 {
     use ClearsResponseCache, HasFactory;
@@ -31,7 +35,7 @@ class Banner extends Model
         ];
     }
 
-    public function deal()
+    public function deal(): BelongsTo
     {
         return $this->belongsTo(Deal::class, 'deal_id');
     }

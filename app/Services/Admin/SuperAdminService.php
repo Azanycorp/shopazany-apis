@@ -112,6 +112,8 @@ class SuperAdminService
                 ]
         );
 
+        $admin->fresh();
+
         $type = MailingEnum::ADMIN_ACCOUNT;
         $subject = 'Admin Account Created';
         $mail_class = AdminUserMail::class;
@@ -120,7 +122,7 @@ class SuperAdminService
             'pass' => $password,
         ];
         mailSend($type, $admin, $subject, $mail_class, $data);
-        $this->createNotification('New Admin Added', 'New admin account created for '.$admin->fullName);
+        $this->createNotification('New Admin Added', "New admin account created for {$admin->fullName}");
 
         return $this->success(null, 'User added successfully', 201);
     }

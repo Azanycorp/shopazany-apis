@@ -15,13 +15,13 @@ class HubResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => $this->id,
-            'name' => (string) $this->name,
-            'location' => (string) $this->location,
-            'note' => (string) $this->note,
-            'city' => (string) $this->city,
-            'country' => $this->country?->name,
-            'status' => (string) $this->status,
+            'id' => $this->resource->id,
+            'name' => (string) $this->resource->name,
+            'location' => (string) $this->resource->location,
+            'note' => (string) $this->resource->note,
+            'city' => (string) $this->resource->city,
+            'country' => $this->resource->country?->name,
+            'status' => (string) $this->resource->status,
         ];
     }
 }

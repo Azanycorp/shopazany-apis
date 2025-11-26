@@ -194,9 +194,9 @@ class CategoryService
 
         $search = $request->query('search');
 
-        $subcats = SubCategory::with(['product', 'category'])
+        $subcats = SubCategory::with(['category'])
             ->where('type', $type)
-            ->withCount(['product', 'category'])
+            ->withCount(['products', 'category'])
             ->when($search, function ($query, string $search): void {
                 $query->where('name', 'like', '%'.$search.'%');
             })
@@ -224,6 +224,7 @@ class CategoryService
     {
         $category = Category::findOrFail($request->id);
 
+        $url = null;
         if ($request->hasFile('image')) {
             $folder = folderName('category');
             $url = uploadFunction($request->file('image'), $folder, $category);

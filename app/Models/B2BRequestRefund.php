@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class B2BRequestRefund extends Model
 {
@@ -24,12 +25,12 @@ class B2BRequestRefund extends Model
         ];
     }
 
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function b2bProduct()
+    public function b2bProduct(): BelongsTo
     {
         return $this->belongsTo(B2BProduct::class, 'b2b_product_id');
     }

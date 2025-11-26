@@ -205,7 +205,7 @@ class UserService extends Controller
                 'phone_number' => $request->phone_number,
                 'document_number' => $request->document_number,
                 'document_type' => $request->document_type,
-                'image' => $kycpath,
+                'image' => $kycpath ?? null,
             ]);
 
             return $this->success(null, 'Added successfully');
@@ -249,9 +249,9 @@ class UserService extends Controller
             ->sum('amount');
 
         $data = [
-            'current_balance' => $user?->wallet?->balance,
+            'current_balance' => $user->wallet?->balance,
             'pending_withdrawals' => $pending,
-            'payment_method' => $user?->paymentMethods->where('is_default', 1)->first()?->account_number,
+            'payment_method' => $user->paymentMethods->where('is_default', 1)->first()?->account_number,
         ];
 
         return $this->success($data, 'Dashboard analytics');
@@ -279,11 +279,11 @@ class UserService extends Controller
 
         $transactions = $transactionQuery->get()->map(function ($transaction): array {
             return [
-                'id' => $transaction->id,
-                'transaction_id' => $transaction->id,
+                'id' => (int) $transaction->id,
+                'transaction_id' => (string) $transaction->id,
                 'type' => 'transaction',
                 'date' => $transaction->created_at->format('Y-m-d'),
-                'amount' => $transaction->amount,
+                'amount' => (float) $transaction->amount,
                 'status' => $transaction->status,
             ];
         });
@@ -295,16 +295,19 @@ class UserService extends Controller
 
         $withdrawals = $withdrawalQuery->get()->map(function ($withdrawal): array {
             return [
-                'id' => $withdrawal->id,
-                'transaction_id' => $withdrawal->reference,
+                'id' => (int) $withdrawal->id,
+                'transaction_id' => (string) $withdrawal->reference,
                 'type' => 'withdrawal',
                 'date' => $withdrawal->created_at->format('Y-m-d'),
-                'amount' => $withdrawal->amount,
+                'amount' => (float) $withdrawal->amount,
                 'status' => $withdrawal->status,
             ];
         });
 
-        $mergedData = (new \Illuminate\Support\Collection($transactions))->merge(new \Illuminate\Support\Collection($withdrawals))->sortByDesc('date')->values();
+        $mergedData = collect($transactions)
+            ->merge($withdrawals)
+            ->sortByDesc('date')
+            ->values();
 
         $total = $mergedData->count();
         $paginatedData = $mergedData->slice(($page - 1) * $perPage, $perPage)->values();
