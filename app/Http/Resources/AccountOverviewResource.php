@@ -16,14 +16,14 @@ class AccountOverviewResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => (int) $this->id,
-            'uuid' => (string) $this->uuid,
-            'first_name' => (string) $this->first_name,
-            'last_name' => (string) $this->last_name,
-            'middlename' => (string) $this->middlename,
-            'email' => (string) $this->email,
-            'phone' => (string) $this->phone,
-            'date_created' => Date::parse($this->created_at)->format('d M Y'),
+            'id' => $this->resource->id,
+            'uuid' => $this->resource->uuid,
+            'first_name' => $this->resource->first_name,
+            'last_name' => $this->resource->last_name,
+            'middlename' => $this->resource->middlename,
+            'email' => $this->resource->email,
+            'phone' => $this->resource->phone,
+            'date_created' => Date::parse($this->resource->created_at)->format('d M Y'),
         ];
     }
 }

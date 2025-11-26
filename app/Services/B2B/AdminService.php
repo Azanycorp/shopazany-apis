@@ -549,15 +549,17 @@ class AdminService
             ])
             ->first();
 
+        $stats = (array) $buyerStats;
+
         $buyers = User::with('b2bCompany')
             ->when($type, fn ($q) => $q->where('type', $type))
             ->latest()
             ->get();
 
         $data = [
-            'buyers_count' => $buyerStats->total_buyers,
-            'active_buyers' => $buyerStats->active_buyers,
-            'pending_buyers' => $buyerStats->pending_buyers,
+            'buyers_count' => $stats['total_buyers'],
+            'active_buyers' => $stats['active_buyers'],
+            'pending_buyers' => $stats['pending_buyers'],
             'buyers' => $buyers,
         ];
 

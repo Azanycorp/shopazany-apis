@@ -16,9 +16,9 @@ class OrderActivityResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'message' => $this->message,
-            'status' => $this->status,
-            'date' => Date::parse($this->date)->format('d M Y h:i A'),
+            'message' => $this->resource->message,
+            'status' => $this->resource->status,
+            'date' => Date::parse($this->resource->date)->format('d M Y h:i A'),
         ];
     }
 }

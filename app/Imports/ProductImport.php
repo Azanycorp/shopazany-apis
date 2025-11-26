@@ -23,9 +23,6 @@ class ProductImport implements SkipsEmptyRows, ToCollection, WithBatchInserts, W
         $this->seller = $seller;
     }
 
-    /**
-     * @param  Collection  $collection
-     */
     public function collection(Collection $rows): void
     {
         foreach ($rows as $row) {

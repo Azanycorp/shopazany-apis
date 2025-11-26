@@ -15,14 +15,14 @@ class AdminUserResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => (int) $this->id,
-            'name' => $this->first_name.' '.$this->last_name,
-            'email' => (string) $this->email,
-            'phone_number' => (string) $this->phone_number,
-            'type' => (string) $this->type,
-            'date' => (string) $this->created_at,
-            'two_factor_enabled' => (bool) $this->two_factor_enabled,
-            'role' => $this->roles ? $this->roles->map(function ($role): array {
+            'id' => (int) $this->resource->id,
+            'name' => "{$this->resource->first_name} {$this->resource->last_name}",
+            'email' => (string) $this->resource->email,
+            'phone_number' => (string) $this->resource->phone_number,
+            'type' => (string) $this->resource->type,
+            'date' => (string) $this->resource->created_at,
+            'two_factor_enabled' => (bool) $this->resource->two_factor_enabled,
+            'role' => $this->resource->roles ? $this->resource->roles->map(function ($role): array {
                 return [
                     'id' => $role?->id,
                     'name' => $role?->name,

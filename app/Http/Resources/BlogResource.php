@@ -15,14 +15,14 @@ class BlogResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => (int) $this->id,
-            'title' => $this->title,
-            'type' => $this->type,
-            'slug' => $this->slug,
-            'author' => $this->user?->first_name,
-            'image' => $this->image,
-            'description' => $this->description,
-            'date' => $this->created_at->toDateString(),
+            'id' => (int) $this->resource->id,
+            'title' => $this->resource->title,
+            'type' => $this->resource->type,
+            'slug' => $this->resource->slug,
+            'author' => $this->resource->user?->first_name,
+            'image' => $this->resource->image,
+            'description' => $this->resource->description,
+            'date' => $this->resource->created_at->toDateString(),
         ];
     }
 }

@@ -4,7 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property float $percentage
+ * @property float $total_revenue
+ */
 class Category extends Model
 {
     use HasFactory;
@@ -18,6 +23,7 @@ class Category extends Model
         'meta_title',
         'meta_description',
         'type',
+        'percentage',
     ];
 
     protected function casts(): array
@@ -27,13 +33,13 @@ class Category extends Model
         ];
     }
 
-    public function subcategory()
+    public function subcategory(): HasMany
     {
         return $this->hasMany(SubCategory::class, 'category_id');
     }
 
-    public function products()
+    public function products(): HasMany
     {
-        return $this->hasMany(Product::class);
+        return $this->hasMany(Product::class, 'category_id');
     }
 }

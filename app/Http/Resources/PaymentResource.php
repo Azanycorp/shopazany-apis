@@ -15,21 +15,21 @@ class PaymentResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => $this->id,
-            'order_no' => $this?->order?->order_no,
+            'id' => $this->resource->id,
+            'order_no' => $this->resource->order?->order_no,
             'user' => (object) [
-                'first_name' => $this->user?->first_name,
-                'last_name' => $this->user?->last_name,
-                'middlename' => $this->user?->middlename,
-                'email' => $this->user?->email,
-                'phone' => $this->user?->phone,
-                'store_name' => $this->user?->first_name.' '.$this->user?->last_name,
+                'first_name' => $this->resource->user?->first_name,
+                'last_name' => $this->resource->user?->last_name,
+                'middlename' => $this->resource->user?->middlename,
+                'email' => $this->resource->user?->email,
+                'phone' => $this->resource->user?->phone,
+                'store_name' => "{$this->resource->user?->first_name} {$this->resource->user?->last_name}",
             ],
-            'amount' => $this->amount,
-            'payment_method' => $this?->order?->payment_method,
-            'status' => $this->status,
-            'reference' => $this->reference,
-            'created_at' => $this->created_at,
+            'amount' => $this->resource->amount,
+            'payment_method' => $this->resource->order?->payment_method,
+            'status' => $this->resource->status,
+            'reference' => $this->resource->reference,
+            'created_at' => $this->resource->created_at,
         ];
     }
 }

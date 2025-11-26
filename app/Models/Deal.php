@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Deal extends Model
 {
@@ -20,7 +21,7 @@ class Deal extends Model
         'updated_at',
     ];
 
-    public function banners()
+    public function banners(): HasMany
     {
         return $this->hasMany(Banner::class, 'deal_id');
     }

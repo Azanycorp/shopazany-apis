@@ -142,7 +142,7 @@ class PaystackService
                 $method = $paymentData['metadata']['payment_method'];
                 $ref = $paymentData['reference'];
                 $amount = $paymentData['amount'];
-                $formattedAmount = number_format($amount / 100, 2, '.', '');
+                $formattedAmount = (float) number_format($amount / 100, 2, '.', '');
                 $channel = $paymentData['channel'];
                 $currency = $paymentData['currency'];
                 $ip_address = $paymentData['ip_address'];
@@ -536,12 +536,12 @@ class PaystackService
         return $uniqueOrderNumber;
     }
 
-    private static function sendSellerOrderEmail($seller, $order, string $orderNo, string $totalAmount): void
+    private static function sendSellerOrderEmail($seller, $order, string $orderNo, float $totalAmount): void
     {
         defer(fn () => send_email($seller->email, new SellerOrderMail($seller, $order, $orderNo, $totalAmount)));
     }
 
-    private static function sendOrderConfirmationEmail($user, $orderedItems, string $orderNo, string $totalAmount): void
+    private static function sendOrderConfirmationEmail($user, $orderedItems, string $orderNo, float $totalAmount): void
     {
         defer(fn () => send_email($user->email, new CustomerOrderMail($user, $orderedItems, $orderNo, $totalAmount)));
     }

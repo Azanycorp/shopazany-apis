@@ -15,14 +15,14 @@ class SellerDetailResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => (int) $this->id,
-            'uuid' => (string) $this->uuid,
-            'first_name' => (string) $this->first_name,
-            'last_name' => (string) $this->last_name,
-            'middlename' => (string) $this->middlename,
-            'image' => (string) $this->image,
-            'product_count' => $this->products_count,
-            'products' => $this->products ? $this->products->map(function ($product): array {
+            'id' => (int) $this->resource->id,
+            'uuid' => (string) $this->resource->uuid,
+            'first_name' => (string) $this->resource->first_name,
+            'last_name' => (string) $this->resource->last_name,
+            'middlename' => (string) $this->resource->middlename,
+            'image' => (string) $this->resource->image,
+            'product_count' => $this->resource->products_count,
+            'products' => $this->resource->products ? $this->resource->products->map(function ($product): array {
                 return [
                     'id' => $product->id,
                     'name' => (string) $product->name,

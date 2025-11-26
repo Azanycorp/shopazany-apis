@@ -125,7 +125,8 @@ class AffiliateService
 
     public function userDetail($id)
     {
-        $user = User::withCount(['referrals'])
+        $user = User::with('referrals')
+            ->withCount(['referrals'])
             ->withSum('transactions', 'amount')
             ->findOrFail($id);
 
@@ -138,16 +139,18 @@ class AffiliateService
             'earnings' => $user->transactions_sum_amount ?? 0,
             'referred' => $user->referrals_count ?? 0,
             'status' => $user->status,
-            'referrals' => $user->referrals->map(fn ($referral): array => [
-                'id' => $referral->id,
-                'first_name' => $referral->first_name,
-                'last_name' => $referral->last_name,
-                'email' => $referral->email,
-                'status' => $referral->status,
-                'subscription_status' => $referral->subscription_status,
-                'joined' => $referral->created_at,
-                'platform' => 'B2C',
-            ]),
+            'referrals' => $user->referrals ? $user->referrals->map(
+                fn ($referral): array => [
+                    'id' => $referral->id,
+                    'first_name' => $referral->first_name,
+                    'last_name' => $referral->last_name,
+                    'email' => $referral->email,
+                    'status' => $referral->status,
+                    'subscription_status' => $referral->subscription_status,
+                    'joined' => $referral->created_at,
+                    'platform' => 'B2C',
+                ]
+            )->toArray() : [],
         ];
 
         return $this->success($data, 'Affiliate User Detail');

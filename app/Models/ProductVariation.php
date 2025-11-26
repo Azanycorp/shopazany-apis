@@ -3,7 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property int $product_id
+ * @property-read Product $product
+ */
 class ProductVariation extends Model
 {
     protected $fillable = [
@@ -15,8 +21,8 @@ class ProductVariation extends Model
         'image',
     ];
 
-    public function product()
+    public function product(): BelongsTo
     {
-        return $this->belongsTo(Product::class);
+        return $this->belongsTo(Product::class, 'product_id');
     }
 }

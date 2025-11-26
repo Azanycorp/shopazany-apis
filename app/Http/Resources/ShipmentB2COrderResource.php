@@ -15,12 +15,12 @@ class ShipmentB2COrderResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => (int) $this->id,
-            'order_no' => (string) $this->order_no,
-            'order_date' => (string) $this->order_date,
-            'total_amount' => $this->total_amount,
-            'payment_method' => (string) $this->payment_method,
-            'status' => (string) $this->status,
+            'id' => (int) $this->resource->id,
+            'order_no' => (string) $this->resource->order_no,
+            'order_date' => (string) $this->resource->order_date,
+            'total_amount' => $this->resource->total_amount,
+            'payment_method' => (string) $this->resource->payment_method,
+            'status' => (string) $this->resource->status,
             'customer' => $this->whenLoaded('user', fn ($user) => [
                 'id' => $user->id,
                 'first_name' => $user->first_name,
@@ -37,10 +37,10 @@ class ShipmentB2COrderResource extends JsonResource
                 'image' => $product->image,
             ])),
             'vendor' => $this->whenLoaded('products', fn () => [
-                'id' => $this->products->first()?->user->id,
-                'business_name' => $this->products->first()?->user->company_name,
-                'contact' => $this->products->first()?->user->phone,
-                'location' => $this->products->first()?->user->address,
+                'id' => $this->resource->products->first()?->user->id,
+                'business_name' => $this->resource->products->first()?->user->company_name,
+                'contact' => $this->resource->products->first()?->user->phone,
+                'location' => $this->resource->products->first()?->user->address,
             ]),
         ];
     }
