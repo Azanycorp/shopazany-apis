@@ -15,13 +15,13 @@ class PromoResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => (int) $this->id,
-            'coupon_code' => (string) $this->coupon_code,
-            'type' => (string) $this->type,
-            'start_date' => (string) $this->start_date,
-            'end_date' => (string) $this->end_date,
-            'discount' => (int) $this->discount,
-            'discount_type' => (string) $this->discount_type,
+            'id' => (int) $this->resource->id,
+            'coupon_code' => (string) $this->resource->coupon_code,
+            'type' => (string) $this->resource->type,
+            'start_date' => (string) $this->resource->start_date,
+            'end_date' => (string) $this->resource->end_date,
+            'discount' => (int) $this->resource->discount,
+            'discount_type' => (string) $this->resource->discount_type,
         ];
     }
 }

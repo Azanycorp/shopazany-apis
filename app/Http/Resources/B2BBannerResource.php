@@ -15,14 +15,14 @@ class B2BBannerResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => (int) $this->id,
-            'title' => (string) $this->title,
-            'slug' => (string) $this->slug,
-            'image' => (string) $this->image,
-            'start_date' => (string) $this->start_date,
-            'end_date' => (string) $this->end_date,
-            'products' => $this->b2b_products,
-            'status' => (string) $this->status,
+            'id' => (int) $this->resource->id,
+            'title' => (string) $this->resource->title,
+            'slug' => (string) $this->resource->slug,
+            'image' => (string) $this->resource->image,
+            'start_date' => (string) $this->resource->start_date,
+            'end_date' => (string) $this->resource->end_date,
+            'products' => $this->resource->b2b_products,
+            'status' => (string) $this->resource->status,
         ];
     }
 }

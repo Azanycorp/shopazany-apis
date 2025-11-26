@@ -12,6 +12,7 @@ use App\Http\Requests\LoginRequest;
 use App\Services\B2B\Auth\AuthService;
 use App\Services\B2B\BuyerService;
 use App\Services\B2B\SellerService;
+use Illuminate\Http\Request;
 
 class B2BController extends Controller
 {
@@ -51,39 +52,39 @@ class B2BController extends Controller
         return $this->service->buyerOnboarding($request);
     }
 
-    public function searchProduct()
+    public function searchProduct(Request $request)
     {
-        return $this->buyerService->searchProduct();
+        return $this->buyerService->searchProduct($request);
     }
 
-    public function getSocialLinks()
+    public function getSocialLinks(Request $request)
     {
-        return $this->buyerService->getSocialLinks();
+        return $this->buyerService->getSocialLinks($request);
     }
 
-    public function getCategoryProducts()
+    public function getCategoryProducts(Request $request)
     {
-        return $this->buyerService->getCategoryProducts();
+        return $this->buyerService->getCategoryProducts($request);
     }
 
-    public function bestSellingProduct()
+    public function bestSellingProduct(Request $request)
     {
-        return $this->buyerService->bestSelling();
+        return $this->buyerService->bestSelling($request);
     }
 
-    public function featuredProduct()
+    public function featuredProduct(Request $request)
     {
-        return $this->buyerService->featuredProduct();
+        return $this->buyerService->featuredProduct($request);
     }
 
-    public function allCategories()
+    public function allCategories(Request $request)
     {
-        return $this->buyerService->categories();
+        return $this->buyerService->categories($request);
     }
 
-    public function getBlogs()
+    public function getBlogs(Request $request)
     {
-        return $this->buyerService->allBlogs();
+        return $this->buyerService->allBlogs($request);
     }
 
     public function getBlogDetails($slug)
@@ -106,12 +107,12 @@ class B2BController extends Controller
         return $this->buyerService->getBanners();
     }
 
-    public function getClientLogos()
+    public function getClientLogos(Request $request)
     {
-        return $this->buyerService->getClientLogos();
+        return $this->buyerService->getClientLogos($request);
     }
 
-    public function promoBanners(SellerService $sellerService)
+    public function promoBanners()
     {
         return $this->buyerService->promoBanners();
     }
@@ -121,9 +122,9 @@ class B2BController extends Controller
         return $this->buyerService->getPageBanners($page);
     }
 
-    public function getProducts()
+    public function getProducts(Request $request)
     {
-        return $this->buyerService->getProducts();
+        return $this->buyerService->getProducts($request);
     }
 
     public function getProductDetail($slug)

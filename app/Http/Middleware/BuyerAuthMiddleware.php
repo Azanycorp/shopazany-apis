@@ -25,7 +25,7 @@ class BuyerAuthMiddleware
             return $this->error(null, 'Unauthorized action.', 401);
         }
 
-        if ($user && $user->type !== UserType::CUSTOMER) {
+        if ($user->type !== UserType::CUSTOMER) {
             return $this->error(null, 'Unauthorized action.', 401);
         }
 

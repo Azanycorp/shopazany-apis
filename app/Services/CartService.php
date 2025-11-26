@@ -121,8 +121,8 @@ class CartService
 
         $cartItems = $cartItemsQuery->get();
 
-        $localItems = $cartItems->filter(fn ($cartItem): bool => $cartItem->product->country_id == 160);
-        $internationalItems = $cartItems->filter(fn ($cartItem): bool => $cartItem->product->country_id != 160);
+        $localItems = $cartItems->filter(fn ($cartItem): bool => $cartItem->product->getAttribute('country_id') == 160);
+        $internationalItems = $cartItems->filter(fn ($cartItem): bool => $cartItem->product->getAttribute('country_id') != 160);
         $defaultCurrency = userAuth()->default_currency;
 
         $totalLocalPrice = $this->getLocalPrice($localItems, $defaultCurrency);

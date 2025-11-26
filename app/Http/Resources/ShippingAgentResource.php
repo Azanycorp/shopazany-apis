@@ -15,22 +15,22 @@ class ShippingAgentResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $countryIds = $this->country_ids;
+        $countryIds = $this->resource->country_ids;
         $locations = Country::whereIn('id', $countryIds)
             ->pluck('name')
             ->toArray();
 
         return [
-            'id' => (int) $this->id,
-            'name' => (string) $this->name,
-            'type' => (string) $this->type,
-            'logo' => (string) $this->logo,
+            'id' => (int) $this->resource->id,
+            'name' => (string) $this->resource->name,
+            'type' => (string) $this->resource->type,
+            'logo' => (string) $this->resource->logo,
             'locations' => $locations,
-            'account_email' => (string) $this->account_email,
-            'account_password' => (string) $this->account_password,
-            'api_live_key' => (string) $this->api_live_key,
-            'api_test_key' => (string) $this->api_test_key,
-            'status' => (string) $this->status,
+            'account_email' => (string) $this->resource->account_email,
+            'account_password' => (string) $this->resource->account_password,
+            'api_live_key' => (string) $this->resource->api_live_key,
+            'api_test_key' => (string) $this->resource->api_test_key,
+            'status' => (string) $this->resource->status,
         ];
     }
 }

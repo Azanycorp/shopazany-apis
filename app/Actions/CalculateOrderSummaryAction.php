@@ -15,7 +15,7 @@ class CalculateOrderSummaryAction
         $discountTotal = 0;
 
         foreach ($order->products as $product) {
-            $productCurrency = $product->shopCountry?->currency ?? 'USD';
+            $productCurrency = $product->shopCountry->currency ?? 'USD';
 
             $convertedSubTotal = currencyConvert(
                 $productCurrency,

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 
 class Rfq extends Model
 {
@@ -54,9 +55,9 @@ class Rfq extends Model
 
     public static function stats()
     {
-        return (new \Illuminate\Database\DatabaseManager)->select("SELECT
+        return DB::select("SELECT
                 (SELECT ROUND(SUM(`total_amount`), 2) FROM `rfqs` WHERE `status`='confirmed') AS total_sales,
-              -- Today
+                -- Today
 
                 (SELECT ROUND(SUM(`total_amount`), 2)
                     FROM `rfqs`
@@ -64,7 +65,7 @@ class Rfq extends Model
                     DAY(created_at) = DAY(NOW())
                 ) AS total_sales_today,
 
--- Weekly
+                -- Weekly
 
                 (SELECT ROUND(SUM(`total_amount`), 2)
                     FROM `rfqs`
@@ -72,7 +73,7 @@ class Rfq extends Model
                     WEEK(created_at) = WEEK(NOW())
                 ) AS total_sales_this_week,
 
-       -- Monthly
+                -- Monthly
 
                 (SELECT
                     ROUND(SUM(`total_amount`), 2)
@@ -82,7 +83,7 @@ class Rfq extends Model
                         YEAR(created_at) = YEAR(NOW())
                 ) AS total_sales_this_month,
 
-    -- Yearly
+                -- Yearly
 
                 (SELECT
                     ROUND(SUM(`total_amount`), 2)

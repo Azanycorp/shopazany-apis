@@ -15,21 +15,21 @@ class B2BSellerResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => (int) $this->id,
-            'uuid' => (string) $this->uuid,
-            'first_name' => (string) $this->first_name,
-            'last_name' => (string) $this->last_name,
-            'middlename' => (string) $this->middlename,
-            'phone' => (string) $this->phone,
-            'email' => (string) $this->email,
-            'image' => (string) $this->image,
-            'address' => (string) $this->address,
-            'city' => (string) $this->city,
-            'country_id' => (string) $this->country,
-            'state_id' => (string) $this->state_id,
-            'product_count' => $this->b2bProducts->count(),
-            'is_approved' => $this->is_admin_approve,
-            'status' => (string) $this->status,
+            'id' => (int) $this->resource->id,
+            'uuid' => (string) $this->resource->uuid,
+            'first_name' => (string) $this->resource->first_name,
+            'last_name' => (string) $this->resource->last_name,
+            'middlename' => (string) $this->resource->middlename,
+            'phone' => (string) $this->resource->phone,
+            'email' => (string) $this->resource->email,
+            'image' => (string) $this->resource->image,
+            'address' => (string) $this->resource->address,
+            'city' => (string) $this->resource->city,
+            'country_id' => (string) $this->resource->country,
+            'state_id' => (string) $this->resource->state_id,
+            'product_count' => $this->resource->b2bProducts->count(),
+            'is_approved' => $this->resource->is_admin_approve,
+            'status' => (string) $this->resource->status,
 
         ];
     }

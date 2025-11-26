@@ -43,7 +43,7 @@ class DashboardService
             ->where('orders.status', OrderStatus::DELIVERED)
             ->whereBetween('orders.created_at', [$startDate, $endDate])
             ->get()
-            ->sum(fn ($order): float => currencyConvert($order->currency, $order->total_amount, 'USD'));
+            ->sum(fn ($order): float => currencyConvert($order->shopCountry->currency, $order->total_amount, 'USD'));
 
         $userStats = User::selectRaw('
                 SUM(CASE WHEN status = ? AND created_at >= ? THEN 1 ELSE 0 END) as active_users,
@@ -60,13 +60,15 @@ class DashboardService
         ])
             ->first();
 
+        $stats = (array) $userStats;
+
         $data = [
             'total_sales' => $total_sales,
-            'active_users' => $userStats->active_users,
-            'inactive_sellers' => $userStats->inactive_sellers,
-            'total_sellers' => $userStats->total_sellers,
-            'active_affiliate_users' => $userStats->active_affiliate_users,
-            'inActive_affiliate_users' => $userStats->inactive_affiliate_users,
+            'active_users' => $stats['active_users'],
+            'inactive_sellers' => $stats['inactive_sellers'],
+            'total_sellers' => $stats['total_sellers'],
+            'active_affiliate_users' => $stats['active_affiliate_users'],
+            'inactive_affiliate_users' => $stats['inactive_affiliate_users'],
             'date_range' => [
                 'start_date' => $startDate->toDateString(),
                 'end_date' => $endDate->toDateString(),

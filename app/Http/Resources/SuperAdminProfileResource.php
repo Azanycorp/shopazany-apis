@@ -15,12 +15,12 @@ class SuperAdminProfileResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => $this->id,
-            'first_name' => $this->first_name,
-            'last_name' => $this->last_name,
-            'email' => $this->email,
-            'permissions' => $this->modules,
-            '2fa_enabled' => $this->two_factor_enabled,
+            'id' => $this->resource->id,
+            'first_name' => $this->resource->first_name,
+            'last_name' => $this->resource->last_name,
+            'email' => $this->resource->email,
+            'permissions' => $this->resource->modules,
+            '2fa_enabled' => $this->resource->two_factor_enabled,
         ];
     }
 }

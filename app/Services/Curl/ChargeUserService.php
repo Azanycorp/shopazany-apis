@@ -31,9 +31,9 @@ class ChargeUserService
         try {
 
             $payload = [
-                'authorization_code' => $this->subscription?->authorization_data?->authorization_code,
-                'email' => $this->subscription?->user?->email,
-                'amount' => $this->subscription?->subscriptionPlan?->cost * 100,
+                'authorization_code' => $this->subscription->authorization_data?->authorization_code,
+                'email' => $this->subscription->user->email,
+                'amount' => $this->subscription->subscriptionPlan->cost * 100,
             ];
 
             $response = Http::withToken(self::$secret_key)

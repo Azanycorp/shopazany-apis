@@ -75,7 +75,7 @@ class ProductRequest extends FormRequest
             $requiredKeys = ['variation', 'sku', 'price', 'stock'];
 
             foreach ($requiredKeys as $key) {
-                if (! isset($decoded[$key]) || $decoded[$key] === '' || $decoded[$key] === null) {
+                if (! isset($decoded[$key])) {
                     return $fail("The '{$key}' in variation cannot be empty.");
                 }
             }

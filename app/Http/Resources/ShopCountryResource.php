@@ -15,11 +15,11 @@ class ShopCountryResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => (int) $this->id,
-            'country_id' => (int) $this->country_id,
-            'name' => (string) $this->name,
-            'flag' => (string) $this->flag,
-            'currency' => (string) $this->currency,
+            'id' => (int) $this->resource->id,
+            'country_id' => (int) $this->resource->country_id,
+            'name' => (string) $this->resource->name,
+            'flag' => (string) $this->resource->flag,
+            'currency' => (string) $this->resource->currency,
         ];
     }
 }

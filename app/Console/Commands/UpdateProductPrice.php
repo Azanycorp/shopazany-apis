@@ -38,7 +38,7 @@ class UpdateProductPrice extends Command
                 $updatedProducts = [];
 
                 foreach ($products as $product) {
-                    $currency = $product->user?->default_currency ?? 'USD';
+                    $currency = $product->user->default_currency ?? 'USD';
                     $rate = $exchangeRates[$currency] ?? null;
 
                     if (! $rate) {

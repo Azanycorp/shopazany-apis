@@ -20,7 +20,8 @@ class SellerOrderMail extends Mailable
         protected User $user,
         protected array $items,
         protected string $orderNo,
-        protected float $totalAmount) {}
+        protected float $totalAmount
+    ) {}
 
     /**
      * Get the message envelope.

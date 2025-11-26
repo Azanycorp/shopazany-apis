@@ -17,15 +17,23 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 
+/**
+ * @property array|string|null $referrer_link
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, User> $referrals
+ * @property int $category_count
+ * @property string $fullName
+ * @property-read bool $is_subscribed
+ * @property-read UserSubcription $subscription_plan
+ * @property-read string $type
+ * @property-read UserWallet|null $userWallet
+ * @property-read Wallet|null $wallet
+ * @property-read UserSubcription $subscription_history
+ * @property-read string $subscription_status
+ */
 class User extends Authenticatable
 {
     use ClearsResponseCache, HasApiTokens, HasFactory, Notifiable, SoftDeletes, UserRelationship;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
         'uuid',
         'first_name',
@@ -69,21 +77,11 @@ class User extends Authenticatable
         'biometric_token',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var array<int, string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
@@ -156,6 +154,13 @@ class User extends Authenticatable
 
             return $this->attributes['subscription_plan'];
         });
+    }
+
+    public function activeSubscription(): ?UserSubcription
+    {
+        return $this->userSubscriptions()
+            ->where('status', SubscriptionType::ACTIVE)
+            ->first();
     }
 
     protected function subscriptionStatus(): Attribute

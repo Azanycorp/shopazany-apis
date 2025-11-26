@@ -17,7 +17,7 @@ class CustomerService
 
     public function __construct(private readonly \Illuminate\Hashing\BcryptHasher $bcryptHasher) {}
 
-    public function allCustomers(\Illuminate\Http\Request $request): array
+    public function allCustomers($request): array
     {
         $query = trim($request->input('search'));
 
@@ -102,7 +102,7 @@ class CustomerService
         $query = trim($request->query('approved'));
 
         $users = User::where('type', UserType::CUSTOMER)
-            ->when($query !== null, function ($queryBuilder) use ($query): void {
+            ->when($query, function ($queryBuilder) use ($query): void {
                 $queryBuilder->where('is_admin_approve', $query);
             })
             ->paginate(25);

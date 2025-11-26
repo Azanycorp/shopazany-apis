@@ -15,11 +15,11 @@ class ShippingAddressResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => $this->id,
-            'street_address' => $this->street_address,
-            'state' => $this->state,
-            'city' => $this->city,
-            'zip' => $this->zip,
+            'id' => $this->resource->id,
+            'street_address' => $this->resource->street_address,
+            'state' => $this->resource->state,
+            'city' => $this->resource->city,
+            'zip' => $this->resource->zip,
         ];
     }
 }

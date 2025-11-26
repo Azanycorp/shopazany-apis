@@ -14,14 +14,14 @@ class B2BWishListResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $average_rating = $this->b2bProductReview->avg('rating');
+        $average_rating = $this->resource->b2bProductReview->avg('rating');
 
         return [
-            'id' => (int) $this->id,
-            'product' => $this->product,
-            'qty' => $this->qty,
+            'id' => (int) $this->resource->id,
+            'product' => $this->resource->product,
+            'qty' => $this->resource->qty,
             'rating' => floatval($average_rating),
-            'review_count' => (int) $this->b2bProductReview?->count(),
+            'review_count' => (int) $this->resource->b2bProductReview?->count(),
         ];
     }
 }

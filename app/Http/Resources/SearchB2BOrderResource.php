@@ -16,20 +16,20 @@ class SearchB2BOrderResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'product_quantity' => (string) $this->product_quantity,
-            'product' => (new Collection($this->product_data))->only(['name', 'fob_price', 'front_image']),
-            'total_amount' => (string) $this->total_amount,
+            'product_quantity' => (string) $this->resource->product_quantity,
+            'product' => (new Collection($this->resource->product_data))->only(['name', 'fob_price', 'front_image']),
+            'total_amount' => (string) $this->resource->total_amount,
             'vendor' => (object) [
-                'business_name' => $this?->seller?->businessInformation?->business_name,
-                'contact' => $this?->seller?->businessInformation?->business_phone,
-                'location' => $this?->seller?->businessInformation?->business_location,
+                'business_name' => $this->resource->seller?->businessInformation?->business_name,
+                'contact' => $this->resource->seller?->businessInformation?->business_phone,
+                'location' => $this->resource->seller?->businessInformation?->business_location,
             ],
             'customer' => (object) [
-                'name' => $this?->buyer?->fullName,
-                'email' => $this?->buyer?->email,
-                'phone' => $this?->buyer?->phone,
-                'city' => $this?->buyer?->city,
-                'address' => $this?->buyer->address,
+                'name' => $this->resource->buyer?->fullName,
+                'email' => $this->resource->buyer?->email,
+                'phone' => $this->resource->buyer?->phone,
+                'city' => $this->resource->buyer?->city,
+                'address' => $this->resource->buyer->address,
             ],
         ];
     }

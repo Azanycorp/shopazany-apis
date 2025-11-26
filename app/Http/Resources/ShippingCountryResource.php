@@ -15,11 +15,11 @@ class ShippingCountryResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => (int) $this->id,
-            'name' => (string) $this->name,
-            'code' => (string) $this->code,
-            'zone' => (string) $this->zone,
-            'status' => (string) $this->status,
+            'id' => (int) $this->resource->id,
+            'name' => (string) $this->resource->name,
+            'code' => (string) $this->resource->code,
+            'zone' => (string) $this->resource->zone,
+            'status' => (string) $this->resource->status,
         ];
     }
 }

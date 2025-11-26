@@ -15,10 +15,10 @@ class PaymentServiceResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => (int) $this->id,
-            'name' => (string) $this->name,
-            'slug' => (string) $this->slug,
-            'countries' => $this->countries ? $this->countries->map(function ($country): array {
+            'id' => (int) $this->resource->id,
+            'name' => (string) $this->resource->name,
+            'slug' => (string) $this->resource->slug,
+            'countries' => $this->resource->countries ? $this->resource->countries->map(function ($country): array {
                 return [
                     'id' => $country->id,
                     'name' => $country->name,

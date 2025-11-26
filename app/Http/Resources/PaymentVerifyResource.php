@@ -15,9 +15,9 @@ class PaymentVerifyResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'message' => $this->message,
+            'message' => $this->resource->message,
             'value' => (object) [
-                'status' => $this->data['status'],
+                'status' => $this->resource->data['status'],
             ],
         ];
     }

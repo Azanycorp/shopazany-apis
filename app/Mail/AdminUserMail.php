@@ -2,7 +2,7 @@
 
 namespace App\Mail;
 
-use App\Models\User;
+use App\Models\Admin;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -17,7 +17,7 @@ class AdminUserMail extends Mailable
      * Create a new message instance.
      */
     public function __construct(
-        protected User $user,
+        protected Admin $user,
         protected string $pass
     ) {}
 

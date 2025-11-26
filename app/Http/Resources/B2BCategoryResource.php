@@ -15,14 +15,14 @@ class B2BCategoryResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => (int) $this->id,
-            'name' => (string) $this->name,
-            'slug' => (string) $this->slug,
-            'image' => (string) $this->image,
-            'products' => $this->products ? $this->products->map(function ($product): array {
+            'id' => (int) $this->resource->id,
+            'name' => (string) $this->resource->name,
+            'slug' => (string) $this->resource->slug,
+            'image' => (string) $this->resource->image,
+            'products' => $this->resource->products ? $this->resource->products->map(function ($product): array {
                 return [
                     'name' => $product?->name,
-                    'category' => $this->name,
+                    'category' => $this->resource->name,
                     'image' => $product?->front_image,
                     'slug' => $product?->slug,
                     'sold' => $product?->sold,
@@ -36,13 +36,13 @@ class B2BCategoryResource extends JsonResource
                     'review_count' => (int) $product->b2b_product_review_count,
                 ];
             })->toArray() : [],
-            'subcategory' => $this->subcategory ? $this->subcategory->map(function ($subcategory): array {
+            'subcategory' => $this->resource->subcategory ? $this->resource->subcategory->map(function ($subcategory): array {
                 return [
                     'name' => $subcategory?->name,
-                    'products' => $this->products ? $this->products->map(function ($product): array {
+                    'products' => $subcategory->products ? $subcategory->products->map(function ($product): array {
                         return [
                             'name' => $product?->name,
-                            'category' => $this->name,
+                            'category' => $this->resource->name,
                             'image' => $product?->front_image,
                             'slug' => $product?->slug,
                             'price' => (string) $product?->unit_price,

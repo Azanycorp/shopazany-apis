@@ -68,7 +68,7 @@ class ChargeUserSubscriptions extends Command
                     'referrer' => function ($query): void {
                         $query->with('wallet');
                     },
-                    'userSubscription',
+                    'userSubscriptions',
                 ])
                     ->findOrFail($subscription->user_id);
 
@@ -104,7 +104,7 @@ class ChargeUserSubscriptions extends Command
 
                 $subscription->update(['status' => SubscriptionType::EXPIRED]);
 
-                $user->userSubscription()->create([
+                $user->userSubscriptions()->create([
                     'subscription_plan_id' => $subscription->subscription_plan_id,
                     'payment_id' => $payment->id,
                     'plan_start' => now(),

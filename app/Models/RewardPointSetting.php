@@ -11,4 +11,12 @@ class RewardPointSetting extends Model
         'value',
         'currency',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'point' => 'float',
+            'value' => 'float',
+        ];
+    }
 }

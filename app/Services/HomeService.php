@@ -607,7 +607,7 @@ class HomeService
             ->get();
 
         $products->each(function ($product): void {
-            $product->default_currency = $product->shopCountry?->currency ?? 'USD';
+            $product->default_currency = $product->shopCountry->currency ?? 'USD';
             unset($product->shopCountry);
         });
 

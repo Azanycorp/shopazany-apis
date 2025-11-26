@@ -15,11 +15,11 @@ class AdminNotificationResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => $this->id,
-            'title' => (string) $this->title,
-            'content' => (string) $this->content,
-            'is_read' => (bool) $this->is_read,
-            'created_at' => $this->created_at->toDateString(),
+            'id' => $this->resource->id,
+            'title' => (string) $this->resource->title,
+            'content' => (string) $this->resource->content,
+            'is_read' => (bool) $this->resource->is_read,
+            'created_at' => $this->resource->created_at->toDateString(),
         ];
     }
 }

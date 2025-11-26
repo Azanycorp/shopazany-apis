@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Trait\ClearsResponseCache;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class B2bProductCategory extends Model
 {
@@ -19,12 +20,18 @@ class B2bProductCategory extends Model
         'meta_description',
     ];
 
-    public function subcategory()
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\B2bProductSubCategory, $this>
+     */
+    public function subcategory(): HasMany
     {
         return $this->hasMany(B2bProductSubCategory::class, 'category_id');
     }
 
-    public function products()
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\B2BProduct, $this>
+     */
+    public function products(): HasMany
     {
         return $this->hasMany(B2BProduct::class, 'category_id');
     }

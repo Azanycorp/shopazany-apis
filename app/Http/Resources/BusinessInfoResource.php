@@ -15,11 +15,11 @@ class BusinessInfoResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'business_location' => $this->business_location,
-            'business_type' => $this->business_type,
-            'identity_type' => $this->identity_type,
-            'file' => $this->file,
-            'status' => $this->status,
+            'business_location' => $this->resource->business_location,
+            'business_type' => $this->resource->business_type,
+            'identity_type' => $this->resource->identity_type,
+            'file' => $this->resource->file,
+            'status' => $this->resource->status,
         ];
     }
 }

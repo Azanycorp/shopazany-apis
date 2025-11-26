@@ -15,9 +15,9 @@ class ClientLogoResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => (int) $this->id,
-            'name' => $this->name,
-            'logo' => $this->logo,
+            'id' => (int) $this->resource->id,
+            'name' => $this->resource->name,
+            'logo' => $this->resource->logo,
         ];
     }
 }

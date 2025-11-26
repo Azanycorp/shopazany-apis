@@ -85,7 +85,7 @@ class ProductCategoryService
 
     public function createSubCategory($request)
     {
-        $category = B2BProductSubCategory::with('subcategory')->find($request->category_id);
+        $category = B2BProductSubCategory::find($request->category_id);
 
         if (! $category) {
             return $this->error(null, 'Not found', 404);
@@ -97,7 +97,7 @@ class ProductCategoryService
                 $url = uploadImage($request, 'image', 'subcategory');
             }
 
-            $category->subcategory()->create([
+            $category->create([
                 'name' => $request->name,
                 'slug' => Str::slug($request->name),
                 'image' => $url['url'] ?? null,

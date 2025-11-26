@@ -20,8 +20,9 @@ class B2BPaymentController extends Controller
 
     public function processPayment(B2BPaymentRequest $request)
     {
-        match ($request->payment_method) {
-            PaymentType::PAYSTACK => $paymentProcessor = new PaystackPaymentProcessor
+        $paymentProcessor = match ($request->payment_method) {
+            PaymentType::PAYSTACK => new PaystackPaymentProcessor,
+            default => throw new \Exception('Unsupported payment method'),
         };
 
         $paymentService = new HandlePaymentService($paymentProcessor);

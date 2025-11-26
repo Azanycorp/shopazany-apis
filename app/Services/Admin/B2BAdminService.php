@@ -22,6 +22,7 @@ use App\Models\State;
 use App\Models\Unit;
 use App\Models\User;
 use App\Trait\HttpResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 class B2BAdminService
 {
@@ -176,11 +177,11 @@ class B2BAdminService
         ShopCountry::create([
             'country_id' => $country->id,
             'name' => $country->name,
-            'flag' => $url['url'],
+            'flag' => $url['url'] ?? null,
             'currency' => $request->currency,
         ]);
 
-        return $this->success(null, 'Added successfully');
+        return $this->success(null, 'Added successfully', Response::HTTP_CREATED);
     }
 
     public function getShopByCountry()
@@ -204,7 +205,7 @@ class B2BAdminService
                 $user->referrer_code = generate_referral_code();
             }
 
-            if (! $user->referral_link) {
+            if (! $user->referrer_link) {
                 $user->referrer_link = generate_referrer_link($user->referrer_code);
             }
 

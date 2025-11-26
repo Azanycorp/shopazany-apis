@@ -15,11 +15,11 @@ class WalletResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'available_balance' => $this->balance,
+            'available_balance' => $this->resource->balance,
             'total_income' => 0,
             'total_withdrawal' => 0,
-            'total_points' => $this->reward_point,
-            'points_cleared' => $this->reward_point_cleared,
+            'total_points' => $this->resource->reward_point,
+            'points_cleared' => $this->resource->reward_point_cleared,
         ];
     }
 }
