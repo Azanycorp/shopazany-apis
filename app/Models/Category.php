@@ -33,11 +33,17 @@ class Category extends Model
         ];
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\SubCategory, $this>
+     */
     public function subcategory(): HasMany
     {
         return $this->hasMany(SubCategory::class, 'category_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Product, $this>
+     */
     public function products(): HasMany
     {
         return $this->hasMany(Product::class, 'category_id');

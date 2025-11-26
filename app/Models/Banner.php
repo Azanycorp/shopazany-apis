@@ -35,6 +35,9 @@ class Banner extends Model
         ];
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Deal, $this>
+     */
     public function deal(): BelongsTo
     {
         return $this->belongsTo(Deal::class, 'deal_id');

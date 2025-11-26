@@ -23,6 +23,9 @@ class B2CBlog extends Model
         'type',
     ];
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\B2CBlogCategory, $this>
+     */
     public function blogCategory(): BelongsTo
     {
         return $this->belongsTo(B2CBlogCategory::class, 'b2_c_blog_category_id');
