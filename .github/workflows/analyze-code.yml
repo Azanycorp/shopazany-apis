@@ -1,11 +1,11 @@
 name: Run Analyze Code
 
 on:
-  push:
   pull_request:
 
 jobs:
-  test:
+  run-analyze:
+    name: Run Analyze Code
     runs-on: ubuntu-latest
 
     steps:
