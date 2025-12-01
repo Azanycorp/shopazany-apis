@@ -13,7 +13,7 @@ trait CartTrait
     {
         return $localItems->sum(function (\App\Models\Cart $item) use ($defaultCurrency): float {
             $price = ($item->variation->price ?? $item->product->discounted_price) * $item->quantity;
-            $currency = $item->variation->product->shopCountry->currency;
+            $currency = $item->variation?->product?->shopCountry?->currency;
 
             return currencyConvert($currency, $price, $defaultCurrency);
         });
@@ -26,7 +26,7 @@ trait CartTrait
     {
         return $internationalItems->sum(function (\App\Models\Cart $item) use ($defaultCurrency): float {
             $price = ($item->variation->price ?? $item->product->discounted_price) * $item->quantity;
-            $currency = $item->variation->product->shopCountry->currency;
+            $currency = $item->variation?->product?->shopCountry?->currency;
 
             return currencyConvert($currency, $price, $defaultCurrency);
         });
@@ -38,11 +38,11 @@ trait CartTrait
     public function getTotalDiscount(string $defaultCurrency): callable
     {
         return function (\App\Models\Cart $item) use ($defaultCurrency) {
-            $original = ((float) $item->product->product_price) * $item->quantity;
-            $discounted = ((float) $item->product->discounted_price) * $item->quantity;
+            $original = ((float) $item->product?->product_price) * $item->quantity;
+            $discounted = ((float) $item->product?->discounted_price) * $item->quantity;
 
             $discountAmount = max($original - $discounted, 0);
-            $currency = $item->product->shopCountry->currency;
+            $currency = $item->product?->shopCountry?->currency;
 
             return currencyConvert($currency, $discountAmount, $defaultCurrency);
         };
