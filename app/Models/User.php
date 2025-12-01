@@ -91,6 +91,7 @@ class User extends Authenticatable
             'referrer_link' => 'array',
             'two_factor_enabled' => 'boolean',
             'biometric_enabled' => 'boolean',
+            'service_type' => 'array',
         ];
     }
 
@@ -107,7 +108,7 @@ class User extends Authenticatable
     {
         $email = $this->email;
 
-        $repository = app(Repository::class);
+        $repository = resolve(Repository::class);
         $url = $repository->get('services.reset_password_url').'?token='.$token.'&email='.$email;
 
         $this->notify(new ResetPasswordNotification($url));

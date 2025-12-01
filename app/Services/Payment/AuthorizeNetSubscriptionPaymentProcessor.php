@@ -23,8 +23,8 @@ class AuthorizeNetSubscriptionPaymentProcessor implements PaymentStrategy
     public function processPayment(array $paymentDetails): array
     {
         $user = userAuth();
-        $repository = app(Repository::class);
-        $requestClass = app(Request::class);
+        $repository = resolve(Repository::class);
+        $requestClass = resolve(Request::class);
 
         $merchantAuthentication = new AnetAPI\MerchantAuthenticationType;
         $merchantAuthentication->setName($repository->get('services.authorizenet.api_login_id'));

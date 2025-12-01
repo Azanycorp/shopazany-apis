@@ -53,7 +53,7 @@ class ChargeCardService implements PaymentStrategy
         $user = Auth::user();
         $orderNo = $this->orderNo;
         $orderNum = Str::random(8);
-        $requestClass = app(Request::class);
+        $requestClass = resolve(Request::class);
 
         $merchantAuthentication = $this->getMerchantAuthentication();
         $payment = $this->getPayment($paymentDetails);
@@ -80,7 +80,7 @@ class ChargeCardService implements PaymentStrategy
         $user = Auth::user();
         $orderNo = $this->orderNo;
         $orderNum = Str::random(8);
-        $requestClass = app(Request::class);
+        $requestClass = resolve(Request::class);
 
         $merchantAuthentication = $this->getMerchantAuthentication();
         $payment = $this->getPayment($paymentDetails);
