@@ -15,9 +15,9 @@ class SliderResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => (int) $this->id,
-            'image' => (string) $this->image,
-            'link' => (string) $this->link,
+            'id' => (int) $this->resource->id,
+            'image' => (string) $this->resource->image,
+            'link' => (string) $this->resource->link,
         ];
     }
 }

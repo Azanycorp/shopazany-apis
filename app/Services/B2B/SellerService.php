@@ -30,11 +30,14 @@ use App\Models\RfqMessage;
 use App\Models\User;
 use App\Models\UserWallet;
 use App\Models\WithdrawalRequest;
+use App\Pipelines\BusinessInformation\CreateBusinessInformation;
+use App\Pipelines\BusinessInformation\UpdateUserAccount;
 use App\Repositories\B2BProductRepository;
 use App\Repositories\B2BSellerShippingRepository;
 use App\Services\TransactionService;
 use App\Trait\HttpResponse;
 use App\Trait\Payment;
+use Illuminate\Support\Facades\Pipeline;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -52,47 +55,13 @@ class SellerService extends Controller
 
     public function businessInformation($request)
     {
-        $user = User::with('businessInformation')->findOrFail($request->user_id);
-
-        $user->update([
-            'first_name' => $request->first_name,
-            'last_name' => $request->last_name,
-            'middlename' => $request->middlename,
-            'country' => $request->country_id,
-        ]);
-
-        $folder = folderName('document/businessreg');
-
-        $businessDoc = $request->hasFile('business_reg_document') ?
-            uploadImage($request, 'business_reg_document', $folder) :
-            ['url' => null];
-
-        $identifyTypeDoc = ['url' => null];
-
-        if ($request->identification_type && $request->hasFile('identification_type_document')) {
-            $fld = folderName('document/identifytype');
-            $identifyTypeDoc = uploadImage($request, 'identification_type_document', $fld);
-        }
-
-        $user->businessInformation()->create([
-            'business_location' => $request->business_location,
-            'business_type' => $request->business_type,
-            'business_name' => $request->business_name,
-            'business_reg_number' => $request->business_reg_number,
-            'business_phone' => $request->business_phone,
-            'country_id' => $request->country_id,
-            'city' => $request->city,
-            'address' => $request->address,
-            'zip' => $request->zip,
-            'state' => $request->state,
-            'apartment' => $request->apartment,
-            'business_reg_document' => $businessDoc['url'],
-            'identification_type' => $request->identification_type,
-            'identification_type_document' => $identifyTypeDoc['url'],
-            'agree' => $request->agree,
-        ]);
-
-        return $this->success(null, 'Created successfully');
+        return Pipeline::send($request)
+            ->withinTransaction()
+            ->through([
+                UpdateUserAccount::class,
+                CreateBusinessInformation::class,
+            ])
+            ->thenReturn();
     }
 
     public function profile()
@@ -158,7 +127,7 @@ class SellerService extends Controller
 
         if ($request->hasFile('logo')) {
             $url = uploadFunction($request->file('logo'), 'logo');
-            $image = $request->hasFile('logo') ? $url['url'] : ['url' => $user->businessInformation->logo];
+            $image = $url['url'] ?? ['url' => $user->businessInformation->logo];
         }
 
         $user->businessInformation()->update([
@@ -396,11 +365,11 @@ class SellerService extends Controller
         return $this->success(null, 'Deleted successfully');
     }
 
-    public function getAnalytics($user_id)
+    public function getAnalytics($userId)
     {
         $currentUserId = userAuthId();
 
-        if ($currentUserId != $user_id) {
+        if ($currentUserId != $userId) {
             return $this->error(null, 'Unauthorized action.', 401);
         }
 
@@ -408,7 +377,7 @@ class SellerService extends Controller
             ->withCount(['b2bProducts', 'b2bProducts as category_count' => function ($query): void {
                 $query->distinct('category_id');
             }])
-            ->findOrFail($user_id);
+            ->findOrFail($userId);
 
         $data = [
             'product_count' => $user->b2b_products_count,
@@ -472,7 +441,7 @@ class SellerService extends Controller
         return $this->success(new B2BSellerShippingAddressResource($shipping), 'Address detail');
     }
 
-    public function updateShipping($request, int $shipping_id)
+    public function updateShipping(\Illuminate\Http\Request $request, int $shippingId)
     {
         $currentUserId = userAuthId();
 
@@ -493,34 +462,34 @@ class SellerService extends Controller
             'country_id' => $request->country_id,
         ];
 
-        $this->b2bSellerShippingRepository->update($shipping_id, $data);
+        $this->b2bSellerShippingRepository->update($shippingId, $data);
 
         return $this->success(null, 'Updated successfully');
     }
 
-    public function deleteShipping($user_id, int $shipping_id)
+    public function deleteShipping(int $userId, int $shippingId)
     {
         $currentUserId = userAuthId();
 
-        if ($currentUserId != $user_id) {
+        if ($currentUserId != $userId) {
             return $this->error(null, 'Unauthorized action.', 401);
         }
 
-        $this->b2bSellerShippingRepository->delete($shipping_id);
+        $this->b2bSellerShippingRepository->delete($shippingId);
 
         return $this->success(null, 'Deleted successfully');
     }
 
-    public function setDefault($user_id, $shipping_id)
+    public function setDefault(int $userId, int $shippingId)
     {
         $currentUserId = userAuthId();
 
-        if ($currentUserId != $user_id) {
+        if ($currentUserId != $userId) {
             return $this->error(null, 'Unauthorized action.', 401);
         }
 
         $shipping = B2BSellerShippingAddress::where('user_id', $currentUserId)
-            ->where('id', $shipping_id)
+            ->where('id', $shippingId)
             ->firstOrFail();
 
         if (! $shipping) {
@@ -538,15 +507,15 @@ class SellerService extends Controller
         return $this->success(null, 'Address Set as default successfully');
     }
 
-    public function getComplaints($user_id, $request)
+    public function getComplaints(int $userId, \Illuminate\Http\Request $request)
     {
         $currentUserId = userAuthId();
 
-        if ($currentUserId != $user_id) {
+        if ($currentUserId != $userId) {
             return $this->error(null, 'Unauthorized action.', 401);
         }
 
-        $user = User::with(['b2bProducts.b2bRequestRefunds'])->findOrFail($user_id);
+        $user = User::with(['b2bProducts.b2bRequestRefunds'])->findOrFail($userId);
 
         $refunds = $user->b2bProducts->flatMap(function ($product) {
             return $product->b2bRequestRefunds;
@@ -785,7 +754,7 @@ class SellerService extends Controller
 
         $orderedItems = [
             'quantity' => $order->product_quantity,
-            'buyer_name' => $user->buyerName,
+            'buyer_name' => $user->fullName,
             'order_number' => $order->order_no,
         ];
 
@@ -888,7 +857,7 @@ class SellerService extends Controller
 
         $product = B2BProduct::find($order->product_id);
 
-        if (! $order) {
+        if (! $product) {
             return $this->error(null, 'Product not found', 404);
         }
 

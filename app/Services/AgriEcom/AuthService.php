@@ -5,77 +5,47 @@ namespace App\Services\AgriEcom;
 use App\Enum\MailingEnum;
 use App\Enum\UserLog;
 use App\Enum\UserStatus;
-use App\Enum\UserType;
 use App\Mail\SignUpVerifyMail;
-use App\Mail\UserWelcomeMail;
 use App\Models\User;
+use App\Pipelines\Signup\Customer\CreateWithAuthService;
+use App\Pipelines\Signup\Seller\Agriecom\CreateSeller;
+use App\Pipelines\Verify\Verify;
+use App\Pipelines\Verify\VerifyWithAuthService;
 use App\Trait\HttpResponse;
+use Illuminate\Support\Facades\Pipeline;
 
 class AuthService
 {
     use HttpResponse;
 
-    public function __construct(private readonly \Illuminate\Hashing\BcryptHasher $bcryptHasher) {}
-
     public function register($request)
     {
-        $code = generateVerificationCode();
-
-        $user = User::query()->create([
-            'email' => $request->input('email'),
-            'type' => UserType::AGRIECOM_SELLER,
-            'email_verified_at' => null,
-            'verification_code' => $code,
-            'is_verified' => 0,
-            'password' => $this->bcryptHasher->make($request->password),
+        $request->validated($request->all());
+        $request->merge([
+            'first_name' => 'N/A',
+            'last_name' => 'N/A',
+            'type' => 'agriecom_b2b_seller',
+            'country_id' => 160,
         ]);
 
-        $description = "User with email: {$request->email} signed up";
-        $response = $this->success(null, 'Created successfully', 201);
-        $action = UserLog::CREATED;
-
-        logUserAction($request, $action, $description, $response, $user);
-
-        return $response;
+        return Pipeline::send($request)
+            ->withinTransaction()
+            ->through([
+                CreateWithAuthService::class,
+                CreateSeller::class,
+            ])
+            ->thenReturn();
     }
 
     public function verify($request)
     {
-        $user = User::where('email', $request->email)
-            ->where('verification_code', $request->code)
-            ->first();
-
-        if (! $user) {
-            return $this->error(null, 'Invalid code', 404);
-        }
-
-        $user->update([
-            'is_verified' => 1,
-            'is_admin_approve' => 1,
-            'verification_code' => null,
-            'email_verified_at' => now(),
-            'status' => UserStatus::ACTIVE,
-        ]);
-
-        $type = MailingEnum::EMAIL_VERIFICATION;
-        $subject = 'Welcome Email';
-        $mail_class = UserWelcomeMail::class;
-        $data = [
-            'user' => $user,
-        ];
-        mailSend($type, $user, $subject, $mail_class, $data);
-
-        $description = "User with email address {$request->email} verified OTP";
-        $action = UserLog::CREATED;
-        $response = $this->success([
-            'user_id' => $user->id,
-            'user_type' => $user->type,
-            'has_signed_up' => true,
-        ], 'Verified successfully');
-
-        logUserAction($request, $action, $description, $response, $user);
-
-        return $response;
+        return Pipeline::send($request)
+            ->withinTransaction()
+            ->through([
+                Verify::class,
+                VerifyWithAuthService::class,
+            ])
+            ->thenReturn();
     }
 
     public function resendCode($request)

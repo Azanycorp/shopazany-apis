@@ -19,9 +19,9 @@ class SliderImage extends Model
     protected static function booted()
     {
         static::created(function ($slider): void {
-            (new \Illuminate\Contracts\Cache\Repository)->forget('home_sliders');
+            cache()->forget('home_sliders');
 
-            (new \Illuminate\Contracts\Cache\Repository)->rememberForever('home_sliders', function () {
+            cache()->rememberForever('home_sliders', function () {
                 return SliderImage::orderBy('created_at', 'desc')->take(5)->get();
             });
         });

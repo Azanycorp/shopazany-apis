@@ -14,29 +14,29 @@ class B2BProductResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $average_rating = $this->b2bProductReview->avg('rating');
+        $average_rating = $this->resource->b2bProductReview->avg('rating');
 
         return [
-            'id' => (int) $this->id,
-            'name' => (string) $this->name,
-            'slug' => (string) $this->slug,
-            'category' => (string) $this->category?->name,
-            'subCategory' => (string) $this->subCategory?->name,
-            'price' => (string) $this->unit_price,
-            'sold' => (int) $this->sold,
-            'front_image' => (string) $this->front_image,
-            'description' => (string) $this->description,
-            'vendor' => UserResource::make($this->user),
-            'quantity' => (string) $this->quantity,
-            'default_currency' => (string) $this->default_currency,
-            'availability_quantity' => (string) $this->availability_quantity,
-            'admin_comment' => (string) $this->admin_comment,
-            'keywords' => $this?->keywords,
-            'moq' => (string) $this->minimum_order_quantity,
-            'status' => (string) $this->status,
+            'id' => (int) $this->resource->id,
+            'name' => (string) $this->resource->name,
+            'slug' => (string) $this->resource->slug,
+            'category' => (string) $this->resource->category?->name,
+            'subCategory' => (string) $this->resource->subCategory?->name,
+            'price' => (string) $this->resource->unit_price,
+            'sold' => (int) $this->resource->sold,
+            'front_image' => (string) $this->resource->front_image,
+            'description' => (string) $this->resource->description,
+            'vendor' => UserResource::make($this->resource->user),
+            'quantity' => (string) $this->resource->quantity,
+            'default_currency' => (string) $this->resource->default_currency,
+            'availability_quantity' => (string) $this->resource->availability_quantity,
+            'admin_comment' => (string) $this->resource->admin_comment,
+            'keywords' => $this->resource?->keywords,
+            'moq' => (string) $this->resource->minimum_order_quantity,
+            'status' => (string) $this->resource->status,
             'rating' => floatval($average_rating),
-            'country' => (string) $this->country?->name,
-            'reviews' => $this->b2bProductReview ? $this->b2bProductReview->map(function ($b2bProductReview): array {
+            'country' => (string) $this->resource->country?->name,
+            'reviews' => $this->resource->b2bProductReview ? $this->resource->b2bProductReview->map(function ($b2bProductReview): array {
                 return [
                     'buyer' => $b2bProductReview->user?->buyerName,
                     'rating' => floatval($b2bProductReview->rating),
@@ -44,14 +44,14 @@ class B2BProductResource extends JsonResource
                     'note' => $b2bProductReview->title,
                 ];
             })->toArray() : [],
-            'review_count' => (int) $this->b2bProductReview?->count(),
-            'b2bLikes' => $this->b2bLikes->count(),
-            'images' => $this->b2bProductImages ? $this->b2bProductImages->map(function ($image): array {
+            'review_count' => (int) $this->resource->b2bProductReview?->count(),
+            'b2bLikes' => $this->resource->b2bLikes->count(),
+            'images' => $this->resource->b2bProductImages ? $this->resource->b2bProductImages->map(function ($image): array {
                 return [
                     'image' => $image->image,
                 ];
             })->toArray() : [],
-            'date' => (string) $this->created_at,
+            'date' => (string) $this->resource->created_at,
         ];
     }
 }

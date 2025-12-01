@@ -217,7 +217,7 @@ class AdminService
                 $user->referrer_code = generate_referral_code();
             }
 
-            if (! $user->referral_link) {
+            if (! $user->referrer_link) {
                 $user->referrer_link = generate_referrer_link($user->referrer_code);
             }
 

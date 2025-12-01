@@ -8,6 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
+/**
+ * @property-read \App\Models\Country|null $shopCountry
+ */
 class Country extends Model
 {
     use ClearsResponseCache, HasFactory;

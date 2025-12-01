@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use Rector\Caching\ValueObject\Storage\FileCacheStorage;
 use Rector\Config\RectorConfig;
 use Rector\Transform\Rector\StaticCall\StaticCallToMethodCallRector;
 use Rector\ValueObject\PhpVersion;
+use RectorLaravel\Rector\ClassMethod\AddGenericReturnTypeToRelationsRector;
 use RectorLaravel\Rector\Empty_\EmptyToBlankAndFilledFuncRector;
 use RectorLaravel\Rector\FuncCall\ArgumentFuncCallToMethodCallRector;
 use RectorLaravel\Rector\FuncCall\HelperFuncCallToFacadeClassRector;
@@ -42,6 +42,6 @@ return RectorConfig::configure()
         HelperFuncCallToFacadeClassRector::class,
         StaticCallToMethodCallRector::class,
         ArgumentFuncCallToMethodCallRector::class,
+        AddGenericReturnTypeToRelationsRector::class,
     ])
-    ->withCache(__DIR__.'/rector', FileCacheStorage::class)
     ->withPhpVersion(PhpVersion::PHP_84);

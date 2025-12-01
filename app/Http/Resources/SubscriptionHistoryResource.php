@@ -15,12 +15,12 @@ class SubscriptionHistoryResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => (int) $this->id,
-            'subcription_plan' => (string) $this->subscriptionPlan->title,
-            'plan_start' => (string) $this->plan_start,
-            'plan_end' => (string) $this->plan_end,
-            'expired_at' => (string) $this->expired_at,
-            'status' => (string) $this->status,
+            'id' => (int) $this->resource->id,
+            'subcription_plan' => (string) $this->resource->subscriptionPlan->title,
+            'plan_start' => (string) $this->resource->plan_start,
+            'plan_end' => (string) $this->resource->plan_end,
+            'expired_at' => (string) $this->resource->expired_at,
+            'status' => (string) $this->resource->status,
         ];
     }
 }

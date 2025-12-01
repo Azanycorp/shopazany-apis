@@ -1,11 +1,11 @@
 name: Run Analyze Code
 
 on:
-  push:
   pull_request:
 
 jobs:
-  test:
+  run-analyze:
+    name: Run Analyze Code
     runs-on: ubuntu-latest
 
     steps:
@@ -28,5 +28,5 @@ jobs:
       - name: Generate application key
         run: php artisan key:generate
 
-      - name: Run Rector
-        run: composer rector-dry
+      - name: Run Rector & PHP Stan
+        run: composer test

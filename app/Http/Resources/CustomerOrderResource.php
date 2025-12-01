@@ -16,7 +16,7 @@ class CustomerOrderResource extends JsonResource
     {
         $user = $request->user();
 
-        $totalAmountForSeller = $this->products->sum(function ($product) use ($user): float {
+        $totalAmountForSeller = $this->resource->products->sum(function ($product) use ($user): float {
             return currencyConvert(
                 $product->shopCountry->currency ?? 'USD',
                 $product->pivot->sub_total,
@@ -25,15 +25,15 @@ class CustomerOrderResource extends JsonResource
         });
 
         return [
-            'id' => (int) $this->id,
-            'order_no' => (string) $this->order_no,
-            'customer' => "{$this->user?->first_name} {$this->user?->last_name}",
-            'order_date' => (string) $this->order_date,
+            'id' => (int) $this->resource->id,
+            'order_no' => (string) $this->resource->order_no,
+            'customer' => "{$this->resource->user?->first_name} {$this->resource->user?->last_name}",
+            'order_date' => (string) $this->resource->order_date,
             'total_amount' => $totalAmountForSeller,
-            'payment_method' => (string) $this->payment_method,
-            'products' => ProductOrderResource::collection($this->products),
-            'expected_delivery' => getExpectedDelivery($this->user?->userCountry),
-            'status' => (string) $this->status,
+            'payment_method' => (string) $this->resource->payment_method,
+            'products' => ProductOrderResource::collection($this->resource->products),
+            'expected_delivery' => getExpectedDelivery($this->resource->user?->userCountry),
+            'status' => (string) $this->resource->status,
         ];
     }
 }

@@ -25,7 +25,7 @@ class SuperAdminCheck
             return $this->error(null, 'Unauthorized action.', 401);
         }
 
-        if ($user && $user->type !== AdminType::SUPER_ADMIN) {
+        if ($user->type !== AdminType::SUPER_ADMIN) {
             return $this->error(null, 'Unauthorized action.', 401);
         }
 

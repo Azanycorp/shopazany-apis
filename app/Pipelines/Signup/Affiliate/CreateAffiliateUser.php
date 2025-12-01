@@ -104,7 +104,7 @@ class CreateAffiliateUser
             throw new \Exception('You are not a valid referrer');
         }
 
-        $points = Action::where('slug', 'create_account')->first()?->points ?? 0;
+        $points = Action::where('slug', 'create_account')->first()->points ?? 0;
         $referrer->wallet()->increment('reward_point', $points);
         $referrer->referrer()->attach($data);
         $referrer->save();
