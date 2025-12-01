@@ -10,5 +10,3 @@ parameters:
     excludePaths:
         - app/Http/Controllers/Api/GoogleAuthController.php
     treatPhpDocTypesAsCertain: false
-    ignoreErrors:
-        - '#Call to an undefined static method Unicodeveloper\\Paystack\\Facades\\Paystack::#'
