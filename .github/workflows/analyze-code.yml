@@ -1,7 +1,6 @@
 name: Run Analyze Code
 
 on:
-  push:
   pull_request:
 
 jobs:
