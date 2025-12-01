@@ -243,7 +243,7 @@ class PaystackService
                 self::sendOrderConfirmationEmail($user, $orderedItems, $orderNo, $formattedAmount);
                 self::sendSellerOrderEmail($product?->user, $orderedItems, $orderNo, $formattedAmount);
 
-                $request = app(Request::class);
+                $request = resolve(Request::class);
 
                 (new UserLogAction(
                     $request,
@@ -380,7 +380,7 @@ class PaystackService
                 $mail_class = B2BOrderEmail::class;
                 mailSend($type, $user, $subject, $mail_class, $orderItemData);
 
-                $request = app(Request::class);
+                $request = resolve(Request::class);
 
                 (new UserLogAction(
                     $request,

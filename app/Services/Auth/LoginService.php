@@ -35,7 +35,7 @@ class LoginService
 
     public static function externalAuthCheck($request)
     {
-        $auth = app(ServicesAuth::class);
+        $auth = resolve(ServicesAuth::class);
         $options = new RequestOptions(
             headers: [
                 config('services.auth_service.key') => config('services.auth_service.value'),
@@ -51,7 +51,7 @@ class LoginService
 
     public static function syncLocalUserToAuthService($user, string $password)
     {
-        $auth = app(ServicesAuth::class);
+        $auth = resolve(ServicesAuth::class);
 
         try {
             $options = new RequestOptions(
@@ -88,13 +88,13 @@ class LoginService
         $user = User::find($request->user_id);
 
         if (! $user) {
-            return app(self::class)->handleBiometricsIssue($request, 'User not found!', 404);
+            return resolve(self::class)->handleBiometricsIssue($request, 'User not found!', 404);
         }
 
         if (! $user->biometric_enabled || ! Hash::check($request->token, $user->biometric_token)) {
-            return app(self::class)->handleBiometricsIssue($request, 'Invalid biometric credentials.', 401);
+            return resolve(self::class)->handleBiometricsIssue($request, 'Invalid biometric credentials.', 401);
         }
 
-        return app(self::class)->logUserIn($user, $request);
+        return resolve(self::class)->logUserIn($user, $request);
     }
 }

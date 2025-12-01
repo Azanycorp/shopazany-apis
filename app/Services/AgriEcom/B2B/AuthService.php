@@ -19,8 +19,6 @@ class AuthService
 {
     use HttpResponse, SignUp;
 
-    public function __construct(private readonly \Illuminate\Database\DatabaseManager $databaseManager, private readonly \Illuminate\Hashing\BcryptHasher $bcryptHasher) {}
-
     public function login($request)
     {
         return LoginService::AuthLogin($request);

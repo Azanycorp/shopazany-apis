@@ -5,12 +5,11 @@ namespace App\Pipelines\Signup\B2B;
 use App\Enum\UserLog;
 use App\Models\User;
 use App\Trait\HttpResponse;
-use App\Trait\SignUp;
-use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Http\Response;
 
 class CreateB2BBuyer
 {
-    use HttpResponse, SignUp;
+    use HttpResponse;
 
     public function handle($request)
     {

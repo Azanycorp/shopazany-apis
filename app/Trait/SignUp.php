@@ -34,7 +34,7 @@ trait SignUp
         $code = generateVerificationCode();
         $names = extractNamesFromEmail($request->email);
 
-        return $user = User::create([
+        $user = User::create([
             'first_name' => $names['first_name'],
             'last_name' => $names['last_name'],
             'email' => $request->email,
@@ -45,17 +45,23 @@ trait SignUp
             'info_source' => $request->info_source ?? null,
             'password' => bcrypt($request->password),
         ]);
+
         if ($request->referrer_code) {
             $affiliate = User::with('wallet')
-                ->where(['referrer_code' => $request->referrer_code, 'is_affiliate_member' => 1])
+                ->where([
+                    'referrer_code' => $request->referrer_code,
+                    'is_affiliate_member' => 1,
+                ])
                 ->first();
 
             if (! $affiliate) {
-                return $this->error(null, 'No Affiliate found!', 404);
+                throw new \Exception('No Affiliate found!');
             }
 
             $this->handleReferrers($request->referrer_code, $user);
         }
+
+        return $user;
     }
 
     /**
