@@ -18,8 +18,6 @@ class AuthService
 {
     use HttpResponse;
 
-    public function __construct(private readonly \Illuminate\Hashing\BcryptHasher $bcryptHasher) {}
-
     public function register($request)
     {
         $request->validated($request->all());
