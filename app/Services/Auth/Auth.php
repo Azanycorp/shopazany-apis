@@ -104,6 +104,11 @@ class Auth
         return $this->sendRequest('POST', $endpoint, $options);
     }
 
+    public function patch(string $endpoint, RequestOptions|array|null $options = null)
+    {
+        return $this->sendRequest('PATCH', $endpoint, $options);
+    }
+
     public function put(string $endpoint, RequestOptions|array|null $options = null)
     {
         return $this->sendRequest('PUT', $endpoint, $options);
