@@ -714,7 +714,7 @@ class AdminService
             'two_factor_enabled' => $request->two_factor_enabled,
         ]);
 
-        return $this->success('Settings updated');
+        return $this->success(null, 'Settings updated');
     }
 
     public function updateAdminPassword($request)
@@ -726,7 +726,7 @@ class AdminService
             ->firstOrFail();
 
         if (! $this->hasher->check($request->old_password, $user->password)) {
-            return $this->error('Old password is incorrect.', 400);
+            return $this->error(null, 'Old password is incorrect.', 400);
         }
 
         $user->update([

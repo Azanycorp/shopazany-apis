@@ -37,6 +37,7 @@ use App\Repositories\B2BSellerShippingRepository;
 use App\Services\TransactionService;
 use App\Trait\HttpResponse;
 use App\Trait\Payment;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Pipeline;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
@@ -1002,7 +1003,7 @@ class SellerService extends Controller
 
         $newBalance = $wallet->master_wallet - $request->amount;
 
-        $this->databaseManager->beginTransaction();
+        DB::beginTransaction();
 
         try {
 
@@ -1017,11 +1018,11 @@ class SellerService extends Controller
 
             $wallet->update(['master_wallet' => $newBalance]);
             (new TransactionService($user, TransactionStatus::WITHDRAWAL, $request->amount))->logTransaction();
-            $this->databaseManager->commit();
+            DB::commit();
 
-            return $this->success('Payout request submitted successfully', 200);
+            return $this->success(null, 'Payout request submitted successfully');
         } catch (\Exception $e) {
-            $this->databaseManager->rollBack();
+            DB::rollBack();
 
             return $this->error(null, 'An error occurred while processing your request :'.$e->getMessage(), 500);
         }

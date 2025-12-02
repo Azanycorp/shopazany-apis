@@ -15,6 +15,7 @@ use Illuminate\Auth\AuthManager;
 use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Contracts\Routing\ResponseFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Log;
 
 class PaymentService
@@ -77,7 +78,7 @@ class PaymentService
         }
 
         if ($ref === null || ! preg_match('/^[A-Za-z0-9]{10,30}$/', $ref)) {
-            return $this->error(null, 400, 'Invalid payment reference.');
+            return $this->error(null, 'Invalid payment reference.', 400);
         }
 
         $verify = (new GetCurlService($ref))->run();
@@ -124,7 +125,7 @@ class PaymentService
 
     public function getPaymentMethod($countryId)
     {
-        $services = ModelPaymentService::whereHas('countries', function (\Illuminate\Contracts\Database\Query\Builder $q) use ($countryId): void {
+        $services = ModelPaymentService::whereHas('countries', function (Builder $q) use ($countryId): void {
             $q->where('country_id', $countryId);
         })->with('countries')->get();
 
@@ -152,7 +153,7 @@ class PaymentService
         });
 
         if (blank($banks)) {
-            return $this->error('No banks found', 404);
+            return $this->error(null, 'No banks found', 404);
         }
 
         return $this->success($banks, 'Banks retrieved successfully');
