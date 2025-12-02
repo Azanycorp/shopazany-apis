@@ -66,4 +66,11 @@ class MemoizedCacheService
 
         return Cache::memo()->remember($memoKey, 3600, fn () => $this->flexibleCacheService->categories($request));
     }
+
+    public function categorySlug(\Illuminate\Http\Request $request, string $slug): JsonResponse
+    {
+        $memoKey = "memo_category_slug_{$request->country_id}_{$slug}";
+
+        return Cache::memo()->remember($memoKey, 3600, fn () => $this->flexibleCacheService->categorySlug($request, $slug));
+    }
 }
