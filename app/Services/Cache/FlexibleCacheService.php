@@ -66,4 +66,11 @@ class FlexibleCacheService extends HomeService
 
         return Cache::flexible($cacheKey, [50, 100], fn () => $this->admin->categories($request));
     }
+
+    public function categorySlug(\Illuminate\Http\Request $request, string $slug): JsonResponse
+    {
+        $cacheKey = "category_slug:{$request->country_id}:{$slug}";
+
+        return Cache::flexible($cacheKey, [50, 100], fn () => parent::categorySlug($request, $slug));
+    }
 }
