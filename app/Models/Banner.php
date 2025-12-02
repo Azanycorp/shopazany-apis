@@ -62,13 +62,6 @@ class Banner extends Model
         );
     }
 
-    // protected function b2bProducts(): Attribute
-    // {
-    //     return Attribute::make(
-    //         get: fn ($value) => B2BProduct::whereIn('id', is_array($value) ? $value : json_decode($value, true))->get()
-    //     );
-    // }
-
     protected function b2bProducts(): Attribute
     {
         return Attribute::make(
