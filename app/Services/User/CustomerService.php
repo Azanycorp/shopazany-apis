@@ -181,7 +181,7 @@ class CustomerService
             ->first();
 
         if (! $order) {
-            return $this->error('Order not found', 404);
+            return $this->error(null, 'Order not found', 404);
         }
 
         $userCurrency = $order->user->default_currency ?? 'USD';

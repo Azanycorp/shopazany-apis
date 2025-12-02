@@ -21,7 +21,9 @@ use App\Models\Product;
 use App\Models\User;
 use App\Models\Wishlist;
 use App\Trait\HttpResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
 
 class HomeService
 {
@@ -29,7 +31,7 @@ class HomeService
 
     public function __construct(private readonly \Illuminate\Database\DatabaseManager $databaseManager) {}
 
-    public function bestSelling($request)
+    public function bestSelling(\Illuminate\Http\Request $request): JsonResponse
     {
         $countryId = $request->query('country_id');
         $type = $request->query('type');
@@ -44,7 +46,7 @@ class HomeService
                 'products.description',
                 'products.category_id',
                 'products.country_id',
-                $this->databaseManager->raw('COUNT(order_items.id) as total_orders')
+                DB::raw('COUNT(order_items.id) as total_orders')
             )
             ->leftJoin('order_items', 'order_items.product_id', '=', 'products.id')
             ->leftJoin('orders', 'orders.id', '=', 'order_items.order_id')
@@ -78,7 +80,7 @@ class HomeService
         return $this->success($products, 'Best selling products');
     }
 
-    public function allProducts($request)
+    public function allProducts(\Illuminate\Http\Request $request): JsonResponse
     {
         $countryId = $request->query('country_id');
         $type = $request->query('type');
@@ -112,7 +114,7 @@ class HomeService
         return $this->withPagination($data, 'All products');
     }
 
-    public function featuredProduct($request)
+    public function featuredProduct(\Illuminate\Http\Request $request): JsonResponse
     {
         $countryId = $request->query('country_id');
         $type = $request->query('type');
@@ -147,7 +149,7 @@ class HomeService
         return $this->success($data, 'Featured products');
     }
 
-    public function topProducts($request)
+    public function topProducts(\Illuminate\Http\Request $request): JsonResponse
     {
         $countryId = $request->query('country_id');
         $type = $request->query('type');
@@ -182,7 +184,7 @@ class HomeService
         return $this->success($data, 'Top products');
     }
 
-    public function pocketFriendly($request)
+    public function pocketFriendly(\Illuminate\Http\Request $request): JsonResponse
     {
         $countryId = $request->query('country_id');
         $type = $request->query('type');
@@ -220,7 +222,7 @@ class HomeService
         return $this->success($data, 'Pocket friendly products');
     }
 
-    public function productSlug($slug)
+    public function productSlug(string $slug): JsonResponse
     {
         $product = Product::with([
             'brand',
@@ -250,7 +252,7 @@ class HomeService
         return $this->success($data, 'Product detail');
     }
 
-    public function topBrands()
+    public function topBrands(): JsonResponse
     {
         $brands = Brand::select(['id', 'name', 'slug', 'image'])
             ->where('status', 'active')
@@ -261,7 +263,7 @@ class HomeService
         return $this->success($brands, 'Top brands');
     }
 
-    public function topSellers($request)
+    public function topSellers(\Illuminate\Http\Request $request): JsonResponse
     {
         $countryId = $request->input('country_id');
 
@@ -286,7 +288,7 @@ class HomeService
         return $this->success($topSellers, 'Top sellers');
     }
 
-    public function categorySlug($request, $slug)
+    public function categorySlug(\Illuminate\Http\Request $request, string $slug): JsonResponse
     {
         $countryId = $request->query('country_id', 231);
 
@@ -312,7 +314,7 @@ class HomeService
         return $this->success($products, 'Products by category');
     }
 
-    public function recommendedProducts($request)
+    public function recommendedProducts(\Illuminate\Http\Request $request): JsonResponse
     {
         $countryId = $request->query('country_id', 231);
 
@@ -336,7 +338,7 @@ class HomeService
         return $this->success($products, 'Recommended products');
     }
 
-    public function productReview($request)
+    public function productReview($request): JsonResponse
     {
         $user = User::findOrFail($request->user_id);
 
@@ -359,7 +361,7 @@ class HomeService
         return $this->success(null, 'Review added successfully');
     }
 
-    public function saveForLater($request)
+    public function saveForLater($request): JsonResponse
     {
         $currentUser = userAuth();
 
@@ -381,7 +383,7 @@ class HomeService
         return $this->success(null, 'Product saved for later');
     }
 
-    public function sellerInfo($request, $uuid)
+    public function sellerInfo($request, $uuid): JsonResponse
     {
         $search = $request->input('search');
 
@@ -412,7 +414,7 @@ class HomeService
         return $this->success($data, 'Seller details');
     }
 
-    public function sellerCategory($request, $uuid)
+    public function sellerCategory($request, $uuid): JsonResponse
     {
         $search = $request->input('search');
 
@@ -447,7 +449,7 @@ class HomeService
         return $this->success($categories, 'Seller categories');
     }
 
-    public function sellerReviews($request, $uuid)
+    public function sellerReviews($request, $uuid): JsonResponse
     {
         $search = $request->input('search');
         $perPage = $request->input('per_page', 4);
@@ -509,7 +511,7 @@ class HomeService
         return $this->success($responseData, 'Seller reviews');
     }
 
-    public function moveToCart($request)
+    public function moveToCart($request): JsonResponse
     {
         $itemId = $request->product_id;
         $userId = $request->user_id;
@@ -536,7 +538,7 @@ class HomeService
         return $this->error(null, 'Item not found in wishlist', 404);
     }
 
-    public function getDeals($request)
+    public function getDeals($request): JsonResponse
     {
         $type = $request->query('type', BannerType::B2C);
 
@@ -553,7 +555,7 @@ class HomeService
         return $this->success($deals, 'Deals');
     }
 
-    public function getDealDetail($slug)
+    public function getDealDetail($slug): JsonResponse
     {
         $deal = Deal::with('banners')
             ->where('slug', $slug)
@@ -566,7 +568,7 @@ class HomeService
         return $this->success($deal, 'Deal');
     }
 
-    public function flashDeals()
+    public function flashDeals(): JsonResponse
     {
         $deals = Banner::with('deal')
             ->select('id', 'title', 'slug', 'image', 'start_date', 'end_date', 'deal_id')
@@ -576,7 +578,7 @@ class HomeService
         return $this->success($deals, 'Flash deals');
     }
 
-    public function singleFlashDeal($slug)
+    public function singleFlashDeal($slug): JsonResponse
     {
         $deal = Banner::where('slug', $slug)
             ->whereStatus(BannerStatus::ACTIVE)

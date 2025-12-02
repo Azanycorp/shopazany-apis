@@ -5,33 +5,35 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\MoveToCartRequest;
 use App\Http\Requests\ProductReviewRequest;
+use App\Services\Cache\MemoizedCacheService;
 use App\Services\HomeService;
 use Illuminate\Http\Request;
 
 class HomeController extends Controller
 {
     public function __construct(
-        protected HomeService $service
+        protected HomeService $service,
+        protected MemoizedCacheService $memoizedCacheService,
     ) {}
 
     public function bestSelling(Request $request)
     {
-        return $this->service->bestSelling($request);
+        return $this->memoizedCacheService->bestSelling($request);
     }
 
     public function allProducts(Request $request)
     {
-        return $this->service->allProducts($request);
+        return $this->memoizedCacheService->allProducts($request);
     }
 
     public function featuredProduct(Request $request)
     {
-        return $this->service->featuredProduct($request);
+        return $this->memoizedCacheService->featuredProduct($request);
     }
 
     public function pocketFriendly(Request $request)
     {
-        return $this->service->pocketFriendly($request);
+        return $this->memoizedCacheService->pocketFriendly($request);
     }
 
     public function productSlug($slug)
@@ -46,7 +48,7 @@ class HomeController extends Controller
 
     public function topSellers(Request $request)
     {
-        return $this->service->topSellers($request);
+        return $this->memoizedCacheService->topSellers($request);
     }
 
     public function categorySlug(Request $request, $slug)
@@ -56,7 +58,7 @@ class HomeController extends Controller
 
     public function recommendedProducts(Request $request)
     {
-        return $this->service->recommendedProducts($request);
+        return $this->memoizedCacheService->recommendedProducts($request);
     }
 
     public function productReview(ProductReviewRequest $request)
@@ -96,7 +98,7 @@ class HomeController extends Controller
 
     public function topProducts(Request $request)
     {
-        return $this->service->topProducts($request);
+        return $this->memoizedCacheService->topProducts($request);
     }
 
     public function flashDeals()

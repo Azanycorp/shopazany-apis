@@ -124,7 +124,7 @@ trait SignUp
             ->first();
 
         if (! $coupon) {
-            return $this->error('Invalid or expired coupon', 400);
+            return $this->error(null, 'Invalid or expired coupon', 400);
         }
 
         $coupon->total_used = $coupon->total_used ?? 0;
