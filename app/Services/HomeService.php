@@ -268,7 +268,7 @@ class HomeService
         $countryId = $request->input('country_id');
 
         $topSellersQuery = User::select(
-            $this->databaseManager->raw('users.id as user_id, users.uuid, CONCAT(users.first_name, " ", users.last_name) as name, users.image as image, COUNT(order_items.id) as total_sales')
+            DB::raw('users.id as user_id, users.uuid, CONCAT(users.first_name, " ", users.last_name) as name, users.image as image, COUNT(order_items.id) as total_sales')
         )
             ->join('products', 'users.id', '=', 'products.user_id')
             ->join('order_items', 'products.id', '=', 'order_items.product_id')
