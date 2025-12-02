@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * @property-read string $currency
+ * @property-read string|null $currency
  */
 class ShopCountry extends Model
 {

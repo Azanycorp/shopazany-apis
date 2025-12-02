@@ -7,8 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * @property-read \App\Models\Product $product
- * @property-read \App\Models\ProductVariation $variation
+ * @property-read \App\Models\Product|null $product
+ * @property-read \App\Models\ProductVariation|null $variation
  * @property-read \App\Models\User $user
  * @property int $quantity
  */

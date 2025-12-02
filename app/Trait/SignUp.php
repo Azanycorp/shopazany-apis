@@ -29,6 +29,41 @@ trait SignUp
         ]);
     }
 
+    protected function createB2BSeller($request): User
+    {
+        $code = generateVerificationCode();
+        $names = extractNamesFromEmail($request->email);
+
+        $user = User::create([
+            'first_name' => $names['first_name'],
+            'last_name' => $names['last_name'],
+            'email' => $request->email,
+            'type' => $request->type,
+            'email_verified_at' => null,
+            'verification_code' => $code,
+            'is_verified' => 0,
+            'info_source' => $request->info_source ?? null,
+            'password' => bcrypt($request->password),
+        ]);
+
+        if ($request->referrer_code) {
+            $affiliate = User::with('wallet')
+                ->where([
+                    'referrer_code' => $request->referrer_code,
+                    'is_affiliate_member' => 1,
+                ])
+                ->first();
+
+            if (! $affiliate) {
+                throw new \Exception('No Affiliate found!');
+            }
+
+            $this->handleReferrers($request->referrer_code, $user);
+        }
+
+        return $user;
+    }
+
     /**
      * Normalize coupon input.
      * Convert invalid or placeholder values to null.
