@@ -13,7 +13,6 @@ class CreateB2BSeller
 
     public function handle($request)
     {
-
         $user = $this->createB2BSeller($request);
 
         $description = "User with email: {$request->email} signed up";
