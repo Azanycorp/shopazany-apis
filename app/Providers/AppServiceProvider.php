@@ -4,8 +4,10 @@ namespace App\Providers;
 
 use App\Contracts\B2BRepositoryInterface;
 use App\Models\Order;
+use App\Models\Product;
 use App\Models\User;
 use App\Observers\OrderObserver;
+use App\Observers\ProductObserver;
 use App\Observers\UserObserver;
 use App\Repositories\B2BProductRepository;
 use App\Repositories\B2BSellerShippingRepository;
@@ -55,6 +57,7 @@ class AppServiceProvider extends ServiceProvider
 
         User::observe(UserObserver::class);
         Order::observe(OrderObserver::class);
+        Product::observe(ProductObserver::class);
 
         $this->configureCommands();
         $this->configureModels();
