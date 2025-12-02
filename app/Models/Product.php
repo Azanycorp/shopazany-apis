@@ -29,7 +29,6 @@ use Illuminate\Support\Facades\DB;
  * @property string $image
  * @property string $public_id
  * @property float $discounted_price
- * @property-read \App\Models\Category|null $category
  */
 class Product extends Model
 {

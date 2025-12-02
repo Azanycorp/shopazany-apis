@@ -16,7 +16,7 @@ class ProductObserver
      */
     public function created(Product $product): void
     {
-        $this->cacheInvalidationService->clearHomeServiceCache($product->country_id, $product->type, $product?->category->slug);
+        $this->cacheInvalidationService->clearHomeServiceCache($product->country_id, $product->type, $product->category?->slug);
     }
 
     /**
