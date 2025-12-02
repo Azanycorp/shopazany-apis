@@ -360,11 +360,15 @@ class BuyerService
             ->when($type, function ($q) use ($type) {
                 $q->where('type', $type);
             })
-            ->with(['subcategory'])
-            ->withCount('products')
+            ->with(['subcategory' => function ($q) {
+                $q->with(['products' => function ($productQuery) {
+                    $productQuery->withCount('b2bProductReview');
+                }]);
+            }])
             ->with(['products' => function ($query) {
                 $query->withCount('b2bProductReview');
             }])
+            ->withCount('products')
             ->get();
 
         return $this->success(B2BCategoryResource::collection($categories), 'Product Categories');

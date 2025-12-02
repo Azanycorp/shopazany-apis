@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Collection;
 
 /**
  * @property-read array $product_ids
@@ -80,8 +81,8 @@ class Banner extends Model
                     $ids = [];
                 }
 
-                if (empty($ids)) {
-                    return collect([]);
+                if (blank($ids)) {
+                    return new Collection([]);
                 }
 
                 return B2BProduct::whereIn('id', $ids)->get();

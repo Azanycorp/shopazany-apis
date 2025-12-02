@@ -52,7 +52,8 @@ class B2BCategoryResource extends JsonResource
                             'moq' => (string) $product?->minimum_order_quantity,
                             'status' => (string) $product?->status,
                             'rating' => (int) $product?->b2bProductReview?->avg('rating'),
-                            'review_count' => (int) $product?->b2b_product_review_count,
+                            'review_count' => (int) ($product->b2b_product_review_count ?? 0),
+
                         ];
                     })->toArray() : [],
                 ];
