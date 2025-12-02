@@ -56,15 +56,36 @@ class Banner extends Model
     {
         return Attribute::make(
             get: fn ($value, $attributes) => is_array($attributes['products'])
-                    ? $attributes['products']
-                    : json_decode($attributes['products'], true)
+                ? $attributes['products']
+                : json_decode($attributes['products'], true)
         );
     }
+
+    // protected function b2bProducts(): Attribute
+    // {
+    //     return Attribute::make(
+    //         get: fn ($value) => B2BProduct::whereIn('id', is_array($value) ? $value : json_decode($value, true))->get()
+    //     );
+    // }
 
     protected function b2bProducts(): Attribute
     {
         return Attribute::make(
-            get: fn ($value) => B2BProduct::whereIn('id', is_array($value) ? $value : json_decode($value, true))->get()
+            get: function ($value) {
+                $ids = is_array($value)
+                    ? $value
+                    : json_decode($value, true);
+
+                if (! is_array($ids)) {
+                    $ids = [];
+                }
+
+                if (empty($ids)) {
+                    return collect([]);
+                }
+
+                return B2BProduct::whereIn('id', $ids)->get();
+            }
         );
     }
 }

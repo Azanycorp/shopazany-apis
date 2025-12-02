@@ -24,7 +24,6 @@ use App\Http\Resources\CustomerResource;
 use App\Http\Resources\PaymentResource;
 use App\Http\Resources\SliderResource;
 use App\Http\Resources\SocialLinkResource;
-use App\Models\B2bBanner;
 use App\Models\B2bCompany;
 use App\Models\B2bOrder;
 use App\Models\B2bProdctLike;
@@ -235,7 +234,7 @@ class BuyerService
 
     public function getBanners()
     {
-        $banners = B2bBanner::where('status', ProductStatus::ACTIVE)
+        $banners = Banner::where('status', ProductStatus::ACTIVE)
             ->get();
 
         $data = B2BBannerResource::collection($banners);
