@@ -7,6 +7,7 @@ use App\Enum\BannerType;
 use App\Enum\OrderStatus;
 use App\Enum\ProductReviewStatus;
 use App\Enum\ProductStatus;
+use App\Enum\ProductType;
 use App\Http\Resources\ReviewResource;
 use App\Http\Resources\SellerDetailResource;
 use App\Http\Resources\SellerProductResource;
@@ -29,12 +30,10 @@ class HomeService
 {
     use HttpResponse;
 
-    public function __construct(private readonly \Illuminate\Database\DatabaseManager $databaseManager) {}
-
     public function bestSelling(\Illuminate\Http\Request $request): JsonResponse
     {
         $countryId = $request->query('country_id');
-        $type = $request->query('type');
+        $type = $request->query('type', ProductType::B2C->value);
 
         $query = Product::with('shopCountry')
             ->select(
@@ -83,7 +82,7 @@ class HomeService
     public function allProducts(\Illuminate\Http\Request $request): JsonResponse
     {
         $countryId = $request->query('country_id');
-        $type = $request->query('type');
+        $type = $request->query('type', ProductType::B2C->value);
 
         $allProducts = Product::with([
             'shopCountry',
@@ -117,7 +116,7 @@ class HomeService
     public function featuredProduct(\Illuminate\Http\Request $request): JsonResponse
     {
         $countryId = $request->query('country_id');
-        $type = $request->query('type');
+        $type = $request->query('type', ProductType::B2C->value);
 
         $featuredProducts = Product::with([
             'category',
@@ -152,7 +151,7 @@ class HomeService
     public function topProducts(\Illuminate\Http\Request $request): JsonResponse
     {
         $countryId = $request->query('country_id');
-        $type = $request->query('type');
+        $type = $request->query('type', ProductType::B2C->value);
 
         $topProducts = Product::with([
             'category',
@@ -187,7 +186,7 @@ class HomeService
     public function pocketFriendly(\Illuminate\Http\Request $request): JsonResponse
     {
         $countryId = $request->query('country_id');
-        $type = $request->query('type');
+        $type = $request->query('type', ProductType::B2C->value);
 
         $query = Product::with([
             'category',
@@ -317,10 +316,16 @@ class HomeService
     public function recommendedProducts(\Illuminate\Http\Request $request): JsonResponse
     {
         $countryId = $request->query('country_id', 231);
+        $type = $request->query('type', ProductType::B2C->value);
 
         $products = Product::where('status', ProductStatus::ACTIVE)
             ->when($countryId, function ($query) use ($countryId): void {
                 $query->where('country_id', $countryId);
+            })
+            ->when($type, function ($query) use ($type): void {
+                $query->where('type', $type);
+            }, function ($query): void {
+                $query->where('type', '!=', ProductType::AgriEcom->value);
             })
             ->select(['id', 'name', 'slug', 'description', 'discount_price', 'price', 'image', 'country_id'])
             ->with(['shopCountry' => function ($query): void {
