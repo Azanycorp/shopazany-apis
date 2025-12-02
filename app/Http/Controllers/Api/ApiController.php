@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Services\Admin\AdminService;
+use App\Services\Cache\MemoizedCacheService;
 use App\Services\User\CustomerService;
 use Illuminate\Http\Request;
 
@@ -11,7 +12,8 @@ class ApiController extends Controller
 {
     public function __construct(
         protected AdminService $adminService,
-        protected CustomerService $customerService
+        protected CustomerService $customerService,
+        protected MemoizedCacheService $memoizedCacheService,
     ) {}
 
     public function addSlider(Request $request)
@@ -40,7 +42,7 @@ class ApiController extends Controller
 
     public function categories(Request $request)
     {
-        return $this->adminService->categories($request);
+        return $this->memoizedCacheService->categories($request);
     }
 
     public function country()

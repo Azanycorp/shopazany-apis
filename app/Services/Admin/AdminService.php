@@ -22,6 +22,7 @@ use App\Models\State;
 use App\Models\Unit;
 use App\Models\User;
 use App\Trait\HttpResponse;
+use Illuminate\Http\JsonResponse;
 
 class AdminService
 {
@@ -93,7 +94,7 @@ class AdminService
         return $this->success(null, 'Deleted successfully');
     }
 
-    public function categories($request)
+    public function categories(\Illuminate\Http\Request $request): JsonResponse
     {
         $type = $request->query('type', BannerType::B2C);
 

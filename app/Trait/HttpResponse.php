@@ -2,29 +2,32 @@
 
 namespace App\Trait;
 
+use Illuminate\Http\JsonResponse;
+use Symfony\Component\HttpFoundation\Response;
+
 trait HttpResponse
 {
-    protected function success($data, $message = null, $code = 200)
+    protected function success(mixed $data, ?string $message = null, int $code = Response::HTTP_OK)
     {
-        return new \Illuminate\Http\JsonResponse([
+        return new JsonResponse([
             'status' => true,
             'message' => $message,
             'data' => $data,
         ], $code);
     }
 
-    protected function error($data, $message = null, $code = 400)
+    protected function error(mixed $data, ?string $message = null, int $code = Response::HTTP_BAD_REQUEST)
     {
-        return new \Illuminate\Http\JsonResponse([
+        return new JsonResponse([
             'status' => false,
             'message' => $message,
             'data' => $data,
         ], $code);
     }
 
-    protected function withPagination($collection, ?string $message = null, $code = 200, ?array $extraMeta = [])
+    protected function withPagination($collection, ?string $message = null, int $code = Response::HTTP_OK, ?array $extraMeta = [])
     {
-        return new \Illuminate\Http\JsonResponse([
+        return new JsonResponse([
             'status' => true,
             'message' => $message,
             'data' => $collection->items(),

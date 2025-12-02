@@ -5,18 +5,20 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\MoveToCartRequest;
 use App\Http\Requests\ProductReviewRequest;
+use App\Services\Cache\MemoizedCacheService;
 use App\Services\HomeService;
 use Illuminate\Http\Request;
 
 class HomeController extends Controller
 {
     public function __construct(
-        protected HomeService $service
+        protected HomeService $service,
+        protected MemoizedCacheService $memoizedCacheService,
     ) {}
 
     public function bestSelling(Request $request)
     {
-        return $this->service->bestSelling($request);
+        return $this->memoizedCacheService->bestSelling($request);
     }
 
     public function allProducts(Request $request)
