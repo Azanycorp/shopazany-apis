@@ -294,10 +294,10 @@ class SellerService extends Controller
             OrderStatus::CANCELLED,
         ];
 
-        $orders = Order::whereHas('products', function (Builder $query) use ($id): void {
-            $query->where('user_id', $id);
-        })
-            ->withRelationShips()
+        $orders = Order::withRelationShips()
+            ->whereHas('products', function (Builder $query) use ($id): void {
+                $query->where('user_id', $id);
+            })
             ->when($status, function ($query) use ($status, $validStatuses) {
                 if (! in_array($status, $validStatuses)) {
                     return $this->responseFactory->json([
@@ -336,10 +336,10 @@ class SellerService extends Controller
             return $this->error(null, 'Unauthorized action.', 401);
         }
 
-        $order = Order::whereHas('products', function (Builder $query) use ($userId): void {
-            $query->where('user_id', $userId);
-        })
-            ->withRelationShips()
+        $order = Order::withRelationShips()
+            ->whereHas('products', function (Builder $query) use ($userId): void {
+                $query->where('user_id', $userId);
+            })
             ->where('id', $id)
             ->first();
 
@@ -527,10 +527,10 @@ class SellerService extends Controller
             return $this->error(null, 'Unauthorized action.', 401);
         }
 
-        $orders = Order::whereHas('products', function (Builder $query) use ($userId): void {
-            $query->where('user_id', $userId);
-        })
-            ->withRelationShips()
+        $orders = Order::withRelationShips()
+            ->whereHas('products', function (Builder $query) use ($userId): void {
+                $query->where('user_id', $userId);
+            })
             ->orderBy('created_at', 'desc')
             ->take(8)
             ->get();
