@@ -116,9 +116,9 @@ class Order extends Model
         return $this->hasMany(OrderActivity::class, 'order_id');
     }
 
-    protected function withRelationShips()
+    public static function withRelationShips()
     {
-        return $this->with([
+        return self::with([
             'user.userShippingAddress',
             'products' => function ($pQuery) {
                 $pQuery->withoutGlobalScope('in_stock')

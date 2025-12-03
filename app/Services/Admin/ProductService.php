@@ -77,7 +77,7 @@ class ProductService
 
     public function getProducts(\Illuminate\Http\Request $request): array
     {
-        $query = Product::withoutGlobalScope('in_stock')->query();
+        $query = Product::withoutGlobalScope('in_stock');
 
         if ($request->filled('seller_id')) {
             $query->where('user_id', $request->input('seller_id'));
