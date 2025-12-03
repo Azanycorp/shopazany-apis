@@ -173,8 +173,20 @@ class CustomerService
     {
         $order = Order::with([
             'user.userShippingAddress',
-            'products.shopCountry',
-            'products.productVariations.product',
+            'products' => function ($pQuery) {
+                $pQuery->withoutGlobalScope('in_stock')
+                    ->with([
+                        'shopCountry',
+                        'productVariations' => function ($vQuery) {
+                            $vQuery->with([
+                                'product' => function ($prodQuery) {
+                                    $prodQuery->withoutGlobalScope('in_stock')
+                                        ->with('shopCountry');
+                                },
+                            ]);
+                        },
+                    ]);
+            },
             'orderActivities',
         ])
             ->where('order_no', $orderNo)
