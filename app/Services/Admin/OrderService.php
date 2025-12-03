@@ -59,11 +59,7 @@ class OrderService
     {
         $search = $request->input('search');
 
-        $orders = Order::with([
-            'user',
-            'products.category',
-            'products.user',
-        ])
+        $orders = Order::withRelationShips()
             ->where('country_id', 160)
             ->when($search, function ($query, $search): void {
                 $query->where(function (Builder $query) use ($search): void {
@@ -111,11 +107,7 @@ class OrderService
     {
         $search = $request->input('search');
 
-        $orders = Order::with([
-            'user',
-            'products.category',
-            'products.user',
-        ])
+        $orders = Order::withRelationShips()
             ->where('country_id', '!=', 160)
             ->when($search, function ($query, $search): void {
                 $query->where(function (Builder $query) use ($search): void {
@@ -161,7 +153,7 @@ class OrderService
 
     public function orderDetail($id): array
     {
-        $order = Order::with(['user', 'products'])->findOrFail($id);
+        $order = Order::withRelationShips()->findOrFail($id);
 
         $data = new AdminOrderResource($order);
 

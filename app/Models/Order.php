@@ -115,4 +115,28 @@ class Order extends Model
     {
         return $this->hasMany(OrderActivity::class, 'order_id');
     }
+
+    protected function withRelationShips()
+    {
+        return $this->with([
+            'user.userShippingAddress',
+            'products' => function ($pQuery) {
+                $pQuery->withoutGlobalScope('in_stock')
+                    ->with([
+                        'user',
+                        'category',
+                        'shopCountry',
+                        'productVariations' => function ($vQuery) {
+                            $vQuery->with([
+                                'product' => function ($prodQuery) {
+                                    $prodQuery->withoutGlobalScope('in_stock')
+                                        ->with('shopCountry');
+                                },
+                            ]);
+                        },
+                    ]);
+            },
+            'orderActivities',
+        ]);
+    }
 }
