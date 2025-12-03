@@ -15,12 +15,6 @@ class CalculateOrderSummaryAction
         $discountTotal = 0;
 
         foreach ($order->products as $product) {
-
-            logger()->info('Product', [
-                'product_id' => $product->id,
-                'pivot' => $product->pivot,
-            ]);
-
             $totalConverted += $product->pivot->sub_total;
             $discountTotal += $product->discount_value;
         }
