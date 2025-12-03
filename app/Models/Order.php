@@ -79,8 +79,17 @@ class Order extends Model
     public function products(): BelongsToMany
     {
         return $this->belongsToMany(Product::class, 'order_items')
+            ->withoutGlobalScope('in_stock')
             ->using(\App\Models\Pivots\OrderItemPivot::class)
-            ->withPivot('variation_id', 'product_quantity', 'price', 'sub_total', 'status');
+            ->withPivot([
+                'id',
+                'product_id',
+                'variation_id',
+                'product_quantity',
+                'price',
+                'sub_total',
+                'status',
+            ]);
     }
 
     /**
