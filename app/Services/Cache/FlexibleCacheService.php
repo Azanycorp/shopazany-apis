@@ -15,62 +15,62 @@ class FlexibleCacheService extends HomeService
     {
         $cacheKey = "best_selling_products:{$request->country_id}:{$request->type}";
 
-        return Cache::flexible($cacheKey, [50, 100], fn () => parent::bestSelling($request));
+        return Cache::flexible($cacheKey, [200, 300], fn () => parent::bestSelling($request));
     }
 
     public function allProducts(\Illuminate\Http\Request $request): JsonResponse
     {
         $cacheKey = "all_products:{$request->country_id}:{$request->type}";
 
-        return Cache::flexible($cacheKey, [50, 100], fn () => parent::allProducts($request));
+        return Cache::flexible($cacheKey, [200, 300], fn () => parent::allProducts($request));
     }
 
     public function featuredProduct(\Illuminate\Http\Request $request): JsonResponse
     {
         $cacheKey = "featured_product:{$request->country_id}:{$request->type}";
 
-        return Cache::flexible($cacheKey, [50, 100], fn () => parent::featuredProduct($request));
+        return Cache::flexible($cacheKey, [200, 300], fn () => parent::featuredProduct($request));
     }
 
     public function topProducts(\Illuminate\Http\Request $request): JsonResponse
     {
         $cacheKey = "top_products:{$request->country_id}:{$request->type}";
 
-        return Cache::flexible($cacheKey, [50, 100], fn () => parent::topProducts($request));
+        return Cache::flexible($cacheKey, [200, 300], fn () => parent::topProducts($request));
     }
 
     public function pocketFriendly(\Illuminate\Http\Request $request): JsonResponse
     {
         $cacheKey = "pocket_friendly_products:{$request->country_id}:{$request->type}";
 
-        return Cache::flexible($cacheKey, [50, 100], fn () => parent::pocketFriendly($request));
+        return Cache::flexible($cacheKey, [200, 300], fn () => parent::pocketFriendly($request));
     }
 
     public function topSellers(\Illuminate\Http\Request $request): JsonResponse
     {
         $cacheKey = "top_sellers:{$request->country_id}:{$request->type}";
 
-        return Cache::flexible($cacheKey, [50, 100], fn () => parent::topSellers($request));
+        return Cache::flexible($cacheKey, [200, 300], fn () => parent::topSellers($request));
     }
 
     public function recommendedProducts(\Illuminate\Http\Request $request): JsonResponse
     {
         $cacheKey = "recommended_products:{$request->country_id}:{$request->type}";
 
-        return Cache::flexible($cacheKey, [50, 100], fn () => parent::recommendedProducts($request));
+        return Cache::flexible($cacheKey, [200, 300], fn () => parent::recommendedProducts($request));
     }
 
     public function categories(\Illuminate\Http\Request $request): JsonResponse
     {
         $cacheKey = "categories:{$request->type}";
 
-        return Cache::flexible($cacheKey, [50, 100], fn () => $this->admin->categories($request));
+        return Cache::flexible($cacheKey, [200, 300], fn () => $this->admin->categories($request));
     }
 
     public function categorySlug(\Illuminate\Http\Request $request, string $slug): JsonResponse
     {
         $cacheKey = "category_slug:{$request->country_id}:{$slug}";
 
-        return Cache::flexible($cacheKey, [50, 100], fn () => parent::categorySlug($request, $slug));
+        return Cache::flexible($cacheKey, [200, 300], fn () => parent::categorySlug($request, $slug));
     }
 }
