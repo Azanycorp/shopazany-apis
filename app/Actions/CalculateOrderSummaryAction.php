@@ -9,7 +9,7 @@ class CalculateOrderSummaryAction
     /**
      * Handle the order total calculation logic.
      */
-    public function handle(Order $order, string $userCurrency): array
+    public function handle(Order $order): array
     {
         $totalConverted = 0;
         $discountTotal = 0;
