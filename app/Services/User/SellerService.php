@@ -294,10 +294,10 @@ class SellerService extends Controller
             OrderStatus::CANCELLED,
         ];
 
-        $orders = Order::whereHas('products', function (Builder $query) use ($id): void {
-            $query->where('user_id', $id);
-        })
-            ->with(['user', 'products.shopCountry'])
+        $orders = Order::withRelationShips()
+            ->whereHas('products', function (Builder $query) use ($id): void {
+                $query->where('user_id', $id);
+            })
             ->when($status, function ($query) use ($status, $validStatuses) {
                 if (! in_array($status, $validStatuses)) {
                     return $this->responseFactory->json([
@@ -336,14 +336,10 @@ class SellerService extends Controller
             return $this->error(null, 'Unauthorized action.', 401);
         }
 
-        $order = Order::whereHas('products', function (Builder $query) use ($userId): void {
-            $query->where('user_id', $userId);
-        })
-            ->with([
-                'user.userShippingAddress',
-                'products.shopCountry',
-                'products.productVariations.product',
-            ])
+        $order = Order::withRelationShips()
+            ->whereHas('products', function (Builder $query) use ($userId): void {
+                $query->where('user_id', $userId);
+            })
             ->where('id', $id)
             ->first();
 
@@ -364,7 +360,7 @@ class SellerService extends Controller
             return $this->error(null, 'Unauthorized action.', 401);
         }
 
-        $order = Order::with(['user', 'products'])->find($orderId);
+        $order = Order::withRelationShips()->find($orderId);
 
         if (! $order) {
             return $this->error(null, 'Order not found', 404);
@@ -531,10 +527,10 @@ class SellerService extends Controller
             return $this->error(null, 'Unauthorized action.', 401);
         }
 
-        $orders = Order::whereHas('products', function (Builder $query) use ($userId): void {
-            $query->where('user_id', $userId);
-        })
-            ->with(['user', 'products.shopCountry'])
+        $orders = Order::withRelationShips()
+            ->whereHas('products', function (Builder $query) use ($userId): void {
+                $query->where('user_id', $userId);
+            })
             ->orderBy('created_at', 'desc')
             ->take(8)
             ->get();
@@ -546,17 +542,17 @@ class SellerService extends Controller
 
     public function topSelling($userId)
     {
-        $topSellingProducts = $this->databaseManager->table('order_items')
+        $topSellingProducts = DB::table('order_items')
             ->join('products', 'order_items.product_id', '=', 'products.id')
             ->where('products.user_id', $userId)
-            ->select('order_items.product_id', $this->databaseManager->raw('SUM(order_items.product_quantity) as total_quantity'))
+            ->select('order_items.product_id', DB::raw('SUM(order_items.product_quantity) as total_quantity'))
             ->groupBy('order_items.product_id')
             ->orderBy('total_quantity', 'desc')
             ->limit(8)
             ->get();
 
         $productIds = $topSellingProducts->pluck('product_id');
-        $products = Product::whereIn('id', $productIds)->get();
+        $products = Product::withoutGlobalScope('in_stock')->whereIn('id', $productIds)->get();
 
         $data = $topSellingProducts->map(function ($item) use ($products): array {
             $product = $products->firstWhere('id', $item->product_id);

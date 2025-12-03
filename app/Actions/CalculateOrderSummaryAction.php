@@ -15,29 +15,15 @@ class CalculateOrderSummaryAction
         $discountTotal = 0;
 
         foreach ($order->products as $product) {
-            $productCurrency = $product->shopCountry->currency ?? 'USD';
-
-            $convertedSubTotal = currencyConvert(
-                $productCurrency,
-                $product->pivot->sub_total,
-                $userCurrency
-            );
-
-            $convertedDiscount = currencyConvert(
-                $productCurrency,
-                $product->discount_price ?? 0,
-                $userCurrency
-            );
-
-            $totalConverted += $convertedSubTotal;
-            $discountTotal += $convertedDiscount;
+            $totalConverted += $product->pivot->sub_total;
+            $discountTotal += $product->discount_value;
         }
 
         $shipping = 0;
         $tax = 0;
         $pointReward = 0;
 
-        $summaryTotal = max(0, ($totalConverted - $discountTotal) + $shipping + $tax);
+        $summaryTotal = max(0, ($totalConverted) + $shipping + $tax);
 
         return [
             'sub_total' => $totalConverted,

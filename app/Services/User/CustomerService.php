@@ -114,11 +114,7 @@ class CustomerService
             return $this->error(null, 'User not found', 404);
         }
 
-        $orders = Order::with([
-            'user',
-            'products.shopCountry',
-            'products.productVariations.product',
-        ])
+        $orders = Order::withRelationShips()
             ->where('user_id', $userId)
             ->latest()
             ->take(7)
@@ -144,11 +140,7 @@ class CustomerService
             return $this->error(null, 'User not found', 404);
         }
 
-        $orders = Order::with([
-            'user',
-            'products.shopCountry',
-            'products.productVariations.product',
-        ])
+        $orders = Order::withRelationShips()
             ->where('user_id', $userId)
             ->when($status, fn ($query) => $query->where('status', $status))->latest()
             ->paginate(25);
@@ -171,12 +163,7 @@ class CustomerService
 
     public function getOrderDetail($orderNo, $summary)
     {
-        $order = Order::with([
-            'user.userShippingAddress',
-            'products.shopCountry',
-            'products.productVariations.product',
-            'orderActivities',
-        ])
+        $order = Order::withRelationShips()
             ->where('order_no', $orderNo)
             ->first();
 

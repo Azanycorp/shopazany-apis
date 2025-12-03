@@ -79,8 +79,17 @@ class Order extends Model
     public function products(): BelongsToMany
     {
         return $this->belongsToMany(Product::class, 'order_items')
+            ->withoutGlobalScope('in_stock')
             ->using(\App\Models\Pivots\OrderItemPivot::class)
-            ->withPivot('variation_id', 'product_quantity', 'price', 'sub_total', 'status');
+            ->withPivot([
+                'id',
+                'product_id',
+                'variation_id',
+                'product_quantity',
+                'price',
+                'sub_total',
+                'status',
+            ]);
     }
 
     /**
@@ -105,5 +114,29 @@ class Order extends Model
     public function orderActivities(): HasMany
     {
         return $this->hasMany(OrderActivity::class, 'order_id');
+    }
+
+    public static function withRelationShips()
+    {
+        return self::with([
+            'user.userShippingAddress',
+            'products' => function ($pQuery) {
+                $pQuery->withoutGlobalScope('in_stock')
+                    ->with([
+                        'user',
+                        'category',
+                        'shopCountry',
+                        'productVariations' => function ($vQuery) {
+                            $vQuery->with([
+                                'product' => function ($prodQuery) {
+                                    $prodQuery->withoutGlobalScope('in_stock')
+                                        ->with('shopCountry');
+                                },
+                            ]);
+                        },
+                    ]);
+            },
+            'orderActivities',
+        ]);
     }
 }

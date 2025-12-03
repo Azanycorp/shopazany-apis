@@ -77,7 +77,7 @@ class ProductService
 
     public function getProducts(\Illuminate\Http\Request $request): array
     {
-        $query = Product::query();
+        $query = Product::withoutGlobalScope('in_stock');
 
         if ($request->filled('seller_id')) {
             $query->where('user_id', $request->input('seller_id'));
@@ -120,7 +120,7 @@ class ProductService
 
     public function getOneProduct($slug)
     {
-        $product = Product::where('slug', $slug)->first();
+        $product = Product::withoutGlobalScope('in_stock')->where('slug', $slug)->first();
 
         if (! $product) {
             return $this->error(null, 'Product not found', 404);
@@ -133,7 +133,7 @@ class ProductService
 
     public function changeFeatured($request)
     {
-        $product = Product::findOrFail($request->product_id);
+        $product = Product::withoutGlobalScope('in_stock')->findOrFail($request->product_id);
         $product->is_featured = ! $product->is_featured;
 
         $product->save();
