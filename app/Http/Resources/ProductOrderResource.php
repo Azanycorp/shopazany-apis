@@ -33,7 +33,7 @@ class ProductOrderResource extends JsonResource
                 'variation' => $selectedVariation->variation,
                 'sku' => $selectedVariation->sku,
                 'price' => currencyConvert(
-                    $selectedVariation->product->shopCountry?->currency,
+                    $selectedVariation->product?->shopCountry?->currency,
                     $selectedVariation->price,
                     $userCurrency
                 ),

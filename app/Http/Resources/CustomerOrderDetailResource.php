@@ -18,7 +18,7 @@ class CustomerOrderDetailResource extends JsonResource
         return [
             'id' => (int) $this->resource->id,
             'order_no' => (string) $this->resource->order_no,
-            'total_amount' => $this->resource->additional['summary']['total'] ?? 0,
+            'total_amount' => $this->additional['summary']['sub_total'],
             'customer' => (object) [
                 'id' => $this->resource->user?->id,
                 'name' => trim("{$this->resource->user?->first_name} {$this->resource->user?->last_name}"),

@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * @property-read \App\Models\Pivots\OrderItemPivot $pivot
+ * @property-read int $pivot_id
+ * @property-read int $pivot_product_id
  * @property-read int $pivot_variation_id
  * @property-read int $pivot_product_quantity
  * @property-read float $pivot_price
