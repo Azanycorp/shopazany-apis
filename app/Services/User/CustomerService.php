@@ -171,8 +171,7 @@ class CustomerService
             return $this->error(null, 'Order not found', 404);
         }
 
-        $userCurrency = $order->user->default_currency ?? 'USD';
-        $getSummary = $summary->handle($order, $userCurrency);
+        $getSummary = $summary->handle($order);
 
         $data = new CustomerOrderDetailResource($order);
         $data->additional(['summary' => $getSummary]);
