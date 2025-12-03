@@ -32,6 +32,7 @@ class PaymentRequest extends FormRequest
             'shipping_address.email' => ['required_with:shipping_address', 'email'],
             'amount' => ['required', 'integer'],
             'currency' => ['required', 'string', 'in:NGN,USD'],
+            'payment_method' => ['required', 'string', 'in:paystack,b2b_paystack'],
             'payment_redirect_url' => ['required', 'string', 'url'],
         ];
     }
