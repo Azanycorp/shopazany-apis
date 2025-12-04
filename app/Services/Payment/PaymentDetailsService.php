@@ -5,14 +5,24 @@ namespace App\Services\Payment;
 use App\Enum\PaymentType;
 use App\Enum\UserStatus;
 use App\Enum\UserType;
+use App\Models\Product;
 use App\Models\SubscriptionPlan;
 use App\Models\User;
+use Illuminate\Support\Collection;
 
 class PaymentDetailsService
 {
     public static function paystackPayDetails($request): array
     {
-        if ($request->input('currency') === 'USD') {
+        $currency = $request->input('currency');
+        $userId = (int) $request->input('user_id');
+        $amount = (float) $request->input('amount');
+        $userShippingId = (int) $request->input('user_shipping_address_id');
+        $callbackUrl = $request->input('payment_redirect_url');
+        $items = $request->input('items', []);
+        $productIds = (new Collection($items))->pluck('product_id')->toArray();
+
+        if ($currency === 'USD') {
             return [
                 'status' => false,
                 'message' => 'Currrency not available at the moment',
@@ -20,14 +30,19 @@ class PaymentDetailsService
             ];
         }
 
-        $user = User::findOrFail($request->input('user_id'));
+        if (! filter_var($callbackUrl, FILTER_VALIDATE_URL)) {
+            return [
+                'status' => false,
+                'message' => 'Invalid callback URL',
+                'data' => null,
+            ];
+        }
 
-        $amount = $request->input('amount') * 100;
-        $userShippingId = $request->input('user_shipping_address_id');
-        $address = null;
+        $user = User::findOrFail($userId);
 
-        if ($userShippingId === 0 && $request->input('shipping_address')) {
+        if ($userShippingId === 0 && $request->filled('shipping_address')) {
             $shippingAddress = $request->input('shipping_address');
+
             $address = (object) [
                 'first_name' => $shippingAddress['first_name'] ?? '',
                 'last_name' => $shippingAddress['last_name'] ?? '',
@@ -39,12 +54,37 @@ class PaymentDetailsService
                 'zip' => $shippingAddress['zip'] ?? '',
             ];
         } else {
-            $address = $user->userShippingAddress()->where('id', $userShippingId)->first();
+            $address = $user->userShippingAddress()->find($userShippingId);
+
+            if (! $address) {
+                return [
+                    'status' => false,
+                    'message' => 'Shipping address not found',
+                    'data' => null,
+                ];
+            }
         }
 
-        $callbackUrl = $request->input('payment_redirect_url');
-        if (! filter_var($callbackUrl, FILTER_VALIDATE_URL)) {
-            return ['error' => 'Invalid callback URL'];
+        $products = Product::whereIn('id', $productIds)->get();
+
+        if ($products->count() !== count($productIds)) {
+            return [
+                'status' => false,
+                'message' => 'One or more products not found',
+                'data' => null,
+            ];
+        }
+
+        foreach ($items as $item) {
+            $product = $products->firstWhere('id', $item['product_id']);
+
+            if ($item['product_quantity'] > $product->current_stock_quantity) {
+                return [
+                    'status' => false,
+                    'message' => "Only {$product->current_stock_quantity} unit(s) of {$product->name} are available",
+                    'data' => null,
+                ];
+            }
         }
 
         return [
