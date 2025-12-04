@@ -28,6 +28,7 @@ use App\Models\UserWallet;
 use App\Models\Wallet;
 use App\Trait\HttpResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use net\authorize\api\contract\v1 as AnetAPI;
@@ -54,6 +55,12 @@ class ChargeCardService implements PaymentStrategy
         $orderNo = $this->orderNo;
         $orderNum = Str::random(8);
         $requestClass = resolve(Request::class);
+        $items = $paymentDetails['lineItems'];
+        $productIds = (new Collection($items))->pluck('itemId')->toArray();
+
+        if ($validateQuantity = $this->validateProductQuantity($productIds, $items)) {
+            return $validateQuantity;
+        }
 
         $merchantAuthentication = $this->getMerchantAuthentication();
         $payment = $this->getPayment($paymentDetails);
@@ -72,150 +79,6 @@ class ChargeCardService implements PaymentStrategy
         $response = $this->executeTransaction($controller);
 
         return $this->handleResponse($response, $user, $paymentDetails, $orderNo, $payment, $requestClass);
-    }
-
-    // B2B Payment section
-    public function ProcessB2BPayment(array $paymentDetails)
-    {
-        $user = Auth::user();
-        $orderNo = $this->orderNo;
-        $orderNum = Str::random(8);
-        $requestClass = resolve(Request::class);
-
-        $merchantAuthentication = $this->getMerchantAuthentication();
-        $payment = $this->getPayment($paymentDetails);
-        $order = $this->getOrder($orderNum);
-        $customerAddress = $this->getCustomerAddress($paymentDetails);
-        $customerData = $this->getCustomerData($paymentDetails, $user);
-
-        $transactionRequestType = $this->getTransactionRequestType($paymentDetails, $order, $payment, $customerAddress, $customerData);
-
-        $request = $this->createTransactionRequest($merchantAuthentication, $transactionRequestType);
-
-        $controller = new AnetController\CreateTransactionController($request);
-
-        $response = $this->executeTransaction($controller);
-
-        return $this->handleB2bResponse($response, $user, $paymentDetails, $orderNo, $payment, $requestClass);
-    }
-
-    private function handleB2bResponse($response, $user, array $paymentDetails, string $orderNo, \net\authorize\api\contract\v1\PaymentType $payment, $request)
-    {
-        if ($response != null) {
-            if ($response->getMessages()->getResultCode() == 'Ok') {
-                $tresponse = $response->getTransactionResponse();
-
-                if ($tresponse != null && $tresponse->getMessages() != null) {
-                    return $this->handleB2bSuccessResponse($response, $tresponse, $user, $paymentDetails, $orderNo, $payment, $request);
-                }
-
-                return $this->handleErrorResponse($tresponse, $response, $user, $request);
-            }
-
-            return $this->handleErrorResponse(null, $response, $user, $request);
-        }
-
-        return "No response returned \n";
-    }
-
-    private function handleB2bSuccessResponse($response, $tresponse, $user, array $paymentDetails, $orderNo, $payment, $request)
-    {
-        $rfqId = $paymentDetails['rfq_id'];
-        $centerId = $paymentDetails['centre_id'];
-        $type = $paymentDetails['type'];
-        $shipping_address_id = $paymentDetails['shipping_address_id'];
-        $shipping_agent_id = $paymentDetails['shipping_agent_id'];
-        $billing_address = $paymentDetails['billTo'];
-        $amount = $paymentDetails['amount'];
-        $data = (object) [
-            'user_id' => $user->id,
-            'centre_id' => $centerId ?? null,
-            'first_name' => $user->first_name,
-            'last_name' => $user->last_name,
-            'email' => $user->email,
-            'phone' => $user->phone,
-            'amount' => $amount,
-            'reference' => generateRefCode(),
-            'channel' => 'card',
-            'currency' => 'USD',
-            'ip_address' => $request->ip(),
-            'paid_at' => now(),
-            'createdAt' => now(),
-            'transaction_date' => now(),
-            'status' => 'success',
-            'type' => PaymentType::B2BUSERORDER,
-        ];
-
-        (new PaymentLogAction($data, $payment, 'authorizenet', 'success'))->execute();
-
-        if ($shipping_agent_id) {
-            $shipping_agent = ShippingAgent::findOrFail($shipping_agent_id);
-        }
-        $rfq = Rfq::findOrFail($rfqId);
-        $seller = User::findOrFail($rfq->seller_id);
-        $product = B2BProduct::findOrFail($rfq->product_id);
-        $saddress = BuyerShippingAddress::findOrFail($shipping_address_id);
-        $shipping_address = new B2BBuyerShippingAddressResource($saddress);
-
-        B2bOrder::create([
-            'buyer_id' => $user->id,
-            'centre_id' => $centerId ?? null,
-            'seller_id' => $rfq->seller_id,
-            'product_id' => $rfq->product_id,
-            'product_quantity' => $rfq->product_quantity,
-            'order_no' => $orderNo,
-            'product_data' => $product,
-            'shipping_address' => $shipping_address,
-            'shipping_agent' => $shipping_agent_id ? $shipping_agent->name : '',
-            'billing_address' => $billing_address,
-            'total_amount' => $amount,
-            'payment_method' => 'authorize-net',
-            'payment_status' => OrderStatus::PAID,
-            'status' => OrderStatus::PENDING,
-            'type' => $type ?? null,
-        ]);
-
-        $orderedItems = [
-            'product_name' => $product->name,
-            'image' => $product->front_image,
-            'quantity' => $rfq->product_quantity,
-            'price' => $rfq->total_amount,
-            'buyer_name' => $user->first_name.' '.$user->last_name,
-            'order_number' => $orderNo,
-        ];
-
-        $orderItemData = [
-            'orderedItems' => $orderedItems,
-        ];
-
-        $product->availability_quantity -= $rfq->product_quantity;
-        $product->sold += $rfq->product_quantity;
-        $product->save();
-
-        $wallet = UserWallet::firstOrCreate(
-            ['seller_id' => $seller->id],
-            ['master_wallet' => 0]
-        );
-        $wallet->increment('master_wallet', $amount);
-        $rfq->update([
-            'payment_status' => OrderStatus::PAID,
-            'status' => OrderStatus::COMPLETED,
-        ]);
-
-        $type = MailingEnum::ORDER_EMAIL;
-        $subject = 'B2B Order Confirmation';
-        $mail_class = B2BOrderEmail::class;
-        mailSend($type, $user, $subject, $mail_class, $orderItemData);
-
-        (new UserLogAction(
-            $request,
-            UserLog::PAYMENT,
-            'Payment successful',
-            json_encode($response),
-            $user
-        ))->run();
-
-        return $this->success(null, $tresponse->getMessages()[0]->getDescription());
     }
 
     private function getMerchantAuthentication(): \net\authorize\api\contract\v1\MerchantAuthenticationType
@@ -536,6 +399,33 @@ class ChargeCardService implements PaymentStrategy
         return $this->error(null, $msg, 403);
     }
 
+    private function validateProductQuantity($productIds, $items)
+    {
+        $products = Product::whereIn('id', $productIds)->get();
+
+        if ($products->count() !== count($productIds)) {
+            return [
+                'status' => false,
+                'message' => 'One or more products not found',
+                'data' => null,
+            ];
+        }
+
+        foreach ($items as $item) {
+            $product = $products->firstWhere('id', $item['itemId']);
+
+            if ($item['quantity'] > $product->current_stock_quantity) {
+                return [
+                    'status' => false,
+                    'message' => "Only {$product->current_stock_quantity} unit(s) of {$product->name} are available",
+                    'data' => null,
+                ];
+            }
+        }
+
+        return null;
+    }
+
     private function sendSellerOrderEmail($seller, $order, $orderNo, $totalAmount): void
     {
         send_email($seller->email, new SellerOrderMail($seller, $order, $orderNo, $totalAmount));
@@ -544,5 +434,149 @@ class ChargeCardService implements PaymentStrategy
     private function sendOrderConfirmationEmail($user, $orderedItems, $orderNo, $totalAmount): void
     {
         send_email($user->email, new CustomerOrderMail($user, $orderedItems, $orderNo, $totalAmount));
+    }
+
+    // B2B Payment section
+    public function ProcessB2BPayment(array $paymentDetails)
+    {
+        $user = Auth::user();
+        $orderNo = $this->orderNo;
+        $orderNum = Str::random(8);
+        $requestClass = resolve(Request::class);
+
+        $merchantAuthentication = $this->getMerchantAuthentication();
+        $payment = $this->getPayment($paymentDetails);
+        $order = $this->getOrder($orderNum);
+        $customerAddress = $this->getCustomerAddress($paymentDetails);
+        $customerData = $this->getCustomerData($paymentDetails, $user);
+
+        $transactionRequestType = $this->getTransactionRequestType($paymentDetails, $order, $payment, $customerAddress, $customerData);
+
+        $request = $this->createTransactionRequest($merchantAuthentication, $transactionRequestType);
+
+        $controller = new AnetController\CreateTransactionController($request);
+
+        $response = $this->executeTransaction($controller);
+
+        return $this->handleB2bResponse($response, $user, $paymentDetails, $orderNo, $payment, $requestClass);
+    }
+
+    private function handleB2bResponse($response, $user, array $paymentDetails, string $orderNo, \net\authorize\api\contract\v1\PaymentType $payment, $request)
+    {
+        if ($response != null) {
+            if ($response->getMessages()->getResultCode() == 'Ok') {
+                $tresponse = $response->getTransactionResponse();
+
+                if ($tresponse != null && $tresponse->getMessages() != null) {
+                    return $this->handleB2bSuccessResponse($response, $tresponse, $user, $paymentDetails, $orderNo, $payment, $request);
+                }
+
+                return $this->handleErrorResponse($tresponse, $response, $user, $request);
+            }
+
+            return $this->handleErrorResponse(null, $response, $user, $request);
+        }
+
+        return "No response returned \n";
+    }
+
+    private function handleB2bSuccessResponse($response, $tresponse, $user, array $paymentDetails, $orderNo, $payment, $request)
+    {
+        $rfqId = $paymentDetails['rfq_id'];
+        $centerId = $paymentDetails['centre_id'];
+        $type = $paymentDetails['type'];
+        $shipping_address_id = $paymentDetails['shipping_address_id'];
+        $shipping_agent_id = $paymentDetails['shipping_agent_id'];
+        $billing_address = $paymentDetails['billTo'];
+        $amount = $paymentDetails['amount'];
+        $data = (object) [
+            'user_id' => $user->id,
+            'centre_id' => $centerId ?? null,
+            'first_name' => $user->first_name,
+            'last_name' => $user->last_name,
+            'email' => $user->email,
+            'phone' => $user->phone,
+            'amount' => $amount,
+            'reference' => generateRefCode(),
+            'channel' => 'card',
+            'currency' => 'USD',
+            'ip_address' => $request->ip(),
+            'paid_at' => now(),
+            'createdAt' => now(),
+            'transaction_date' => now(),
+            'status' => 'success',
+            'type' => PaymentType::B2BUSERORDER,
+        ];
+
+        (new PaymentLogAction($data, $payment, 'authorizenet', 'success'))->execute();
+
+        if ($shipping_agent_id) {
+            $shipping_agent = ShippingAgent::findOrFail($shipping_agent_id);
+        }
+        $rfq = Rfq::findOrFail($rfqId);
+        $seller = User::findOrFail($rfq->seller_id);
+        $product = B2BProduct::findOrFail($rfq->product_id);
+        $saddress = BuyerShippingAddress::findOrFail($shipping_address_id);
+        $shipping_address = new B2BBuyerShippingAddressResource($saddress);
+
+        B2bOrder::create([
+            'buyer_id' => $user->id,
+            'centre_id' => $centerId ?? null,
+            'seller_id' => $rfq->seller_id,
+            'product_id' => $rfq->product_id,
+            'product_quantity' => $rfq->product_quantity,
+            'order_no' => $orderNo,
+            'product_data' => $product,
+            'shipping_address' => $shipping_address,
+            'shipping_agent' => $shipping_agent_id ? $shipping_agent->name : '',
+            'billing_address' => $billing_address,
+            'total_amount' => $amount,
+            'payment_method' => 'authorize-net',
+            'payment_status' => OrderStatus::PAID,
+            'status' => OrderStatus::PENDING,
+            'type' => $type ?? null,
+        ]);
+
+        $orderedItems = [
+            'product_name' => $product->name,
+            'image' => $product->front_image,
+            'quantity' => $rfq->product_quantity,
+            'price' => $rfq->total_amount,
+            'buyer_name' => $user->first_name.' '.$user->last_name,
+            'order_number' => $orderNo,
+        ];
+
+        $orderItemData = [
+            'orderedItems' => $orderedItems,
+        ];
+
+        $product->availability_quantity -= $rfq->product_quantity;
+        $product->sold += $rfq->product_quantity;
+        $product->save();
+
+        $wallet = UserWallet::firstOrCreate(
+            ['seller_id' => $seller->id],
+            ['master_wallet' => 0]
+        );
+        $wallet->increment('master_wallet', $amount);
+        $rfq->update([
+            'payment_status' => OrderStatus::PAID,
+            'status' => OrderStatus::COMPLETED,
+        ]);
+
+        $type = MailingEnum::ORDER_EMAIL;
+        $subject = 'B2B Order Confirmation';
+        $mail_class = B2BOrderEmail::class;
+        mailSend($type, $user, $subject, $mail_class, $orderItemData);
+
+        (new UserLogAction(
+            $request,
+            UserLog::PAYMENT,
+            'Payment successful',
+            json_encode($response),
+            $user
+        ))->run();
+
+        return $this->success(null, $tresponse->getMessages()[0]->getDescription());
     }
 }
