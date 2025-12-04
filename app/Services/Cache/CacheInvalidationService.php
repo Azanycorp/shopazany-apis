@@ -6,6 +6,10 @@ use Illuminate\Support\Facades\Cache;
 
 class CacheInvalidationService
 {
+    public function __construct(
+        protected CacheWarmService $cacheWarmService
+    ) {}
+
     public function clearHomeServiceCache(int $countryId, string $type, ?string $slug = null): void
     {
         Cache::forget("memo_best_selling_products_{$countryId}_{$type}");
@@ -41,6 +45,18 @@ class CacheInvalidationService
         ];
 
         $this->invalidateFlexibleCache($keys);
+    }
+
+    public function refreshHomeServiceCache(int $countryId, string $type, ?string $slug): void
+    {
+        $this->clearHomeServiceCache($countryId, $type, $slug);
+
+        $request = new \Illuminate\Http\Request([
+            'country_id' => $countryId,
+            'type' => $type,
+        ]);
+
+        $this->cacheWarmService->warmHomServiceCache($request, $slug);
     }
 
     protected function invalidateFlexibleCache(array $keys): void

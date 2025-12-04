@@ -135,6 +135,7 @@ class CartService
             'total_local_price' => $totalLocalPrice,
             'total_international_price' => $totalInternationalPrice,
             'total_discount_price' => $cartItems->sum($totalDiscount),
+            'item_count' => $cartItems->count(),
         ], 'Cart items');
     }
 
