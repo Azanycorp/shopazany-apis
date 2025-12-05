@@ -21,7 +21,6 @@ class ProductObserver
             $product->type,
             $product->category?->slug
         );
-
     }
 
     /**
