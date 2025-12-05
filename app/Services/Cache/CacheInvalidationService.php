@@ -47,7 +47,7 @@ class CacheInvalidationService
         $this->invalidateFlexibleCache($keys);
     }
 
-    public function refreshHomeServiceCache(int $countryId, string $type, ?string $slug): void
+    public function refreshHomeServiceCache(int $countryId, string $type, ?string $slug = null): void
     {
         $this->clearHomeServiceCache($countryId, $type, $slug);
 
