@@ -123,12 +123,11 @@ class UserService extends Controller
 
     public function withdraw($request)
     {
-        $auth = $this->authManager->user();
+        $auth = userAuth();
 
         if (
-            ! $auth || $auth->type === UserType::CUSTOMER ||
-            (! $auth->is_affiliate_member && ! in_array($auth->type, [UserType::SELLER, UserType::AGRIECOM_SELLER])) ||
-            $auth->id !== $request->user_id
+            $auth->type === UserType::CUSTOMER || (! $auth->is_affiliate_member && ! \in_array($auth->type, [UserType::SELLER, UserType::AGRIECOM_SELLER], true))
+            || $auth->id !== $request->user_id
         ) {
             return $this->error(null, 'Unauthorized action.', 401);
         }
@@ -330,17 +329,13 @@ class UserService extends Controller
 
     public function addPaymentMethod($request)
     {
-        $auth = $this->authManager->user();
-
-        if (! $auth) {
-            return $this->error(null, 'Unauthorized action.', 401);
-        }
+        $auth = userAuth();
 
         if ($auth->type === UserType::CUSTOMER) {
             return $this->error(null, 'Unauthorized action.', 401);
         }
 
-        if ($auth->id !== $request->user_id || (! $auth->is_affiliate_member && ! in_array($auth->type, [UserType::SELLER, UserType::B2B_SELLER, UserType::AGRIECOM_SELLER, UserType::B2B_AGRIECOM_SELLER]))) {
+        if ($auth->id !== $request->user_id || ! $auth->is_affiliate_member && ! in_array($auth->type, [UserType::SELLER, UserType::B2B_SELLER, UserType::AGRIECOM_SELLER, UserType::B2B_AGRIECOM_SELLER])) {
             return $this->error(null, 'Unauthorized action.', 401);
         }
 
@@ -413,7 +408,7 @@ class UserService extends Controller
         }
 
         $user->update([
-            'two_factor_enabled' => $request->two_factor_enabled,
+            'two_factor_enabled' => $request->two_factor_enabled ?? false,
             'password' => $password,
         ]);
 

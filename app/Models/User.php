@@ -28,7 +28,17 @@ use Laravel\Sanctum\HasApiTokens;
  * @property-read UserWallet|null $userWallet
  * @property-read Wallet|null $wallet
  * @property-read UserSubcription $subscription_history
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, PaymentMethod> $paymentMethods
  * @property-read string $subscription_status
+ * @property string $password
+ * @property string $first_name
+ * @property string $last_name
+ * @property string $email
+ * @property int $id
+ * @property string $uuid
+ * @property bool $is_affiliate_member
+ * @property bool $two_factor_enabled
+ * @property bool $biometric_enabled
  */
 class User extends Authenticatable
 {
