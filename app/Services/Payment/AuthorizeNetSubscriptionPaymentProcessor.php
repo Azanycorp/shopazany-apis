@@ -40,7 +40,7 @@ class AuthorizeNetSubscriptionPaymentProcessor implements PaymentStrategy
 
         $customerData = new AnetAPI\CustomerDataType;
         $customerData->setType('individual');
-        $customerData->setId($user->id);
+        $customerData->setId((string) $user->id);
         $customerData->setEmail($paymentDetails['email']);
 
         $transactionRequestType = new AnetAPI\TransactionRequestType;
