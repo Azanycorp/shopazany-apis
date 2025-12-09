@@ -34,7 +34,7 @@ if (! function_exists('total_amount')) {
 if (! function_exists('reward_user')) {
     function reward_user($user, $actionName, $status, $newUser = null)
     {
-        $rewardService = \Illuminate\Support\Facades\App::make(RewardService::class);
+        $rewardService = App::make(RewardService::class);
 
         return $rewardService->rewardUser($user, $actionName, $status, $newUser);
     }
@@ -48,14 +48,14 @@ if (! function_exists('log_user_activity')) {
 }
 
 if (! function_exists('userAuth')) {
-    function userAuth()
+    function userAuth(): User
     {
         return auth()->user();
     }
 }
 
 if (! function_exists('userAuthId')) {
-    function userAuthId()
+    function userAuthId(): int|string|null
     {
         return auth()->id();
     }
@@ -153,7 +153,7 @@ if (! function_exists('uploadImageFile')) {
         $folderName = ltrim($folder, '/');
         $fullFolder = "{$prefix}/{$folderName}";
 
-        $uploader = \Illuminate\Support\Facades\App::make(FileUploader::class);
+        $uploader = App::make(FileUploader::class);
 
         return $uploader->upload($file, $fullFolder);
     }
@@ -163,7 +163,7 @@ if (! function_exists('uploadSingleProductImage')) {
     {
         if ($request->hasFile($file)) {
             if (filled($product->public_id)) {
-                \Illuminate\Support\Facades\App::make(FileUploader::class)->deleteFile($product->public_id);
+                App::make(FileUploader::class)->deleteFile($product->public_id);
             }
 
             $fileSize = $request->file($file)->getSize();
@@ -216,11 +216,11 @@ if (! function_exists('uploadImage')) {
             }
 
             if (! is_null($country) && filled($country->public_id)) {
-                \Illuminate\Support\Facades\App::make(FileUploader::class)->deleteFile($country->public_id);
+                App::make(FileUploader::class)->deleteFile($country->public_id);
             }
 
             if (! is_null($banner) && filled($banner->public_id)) {
-                \Illuminate\Support\Facades\App::make(FileUploader::class)->deleteFile($banner->public_id);
+                App::make(FileUploader::class)->deleteFile($banner->public_id);
             }
 
             $upload = uploadImageFile($request->file($file), $folder);
@@ -271,7 +271,7 @@ if (! function_exists('uploadFunction')) {
         }
 
         if (! is_null($model) && filled($model->public_id)) {
-            \Illuminate\Support\Facades\App::make(FileUploader::class)->deleteFile($model->public_id);
+            App::make(FileUploader::class)->deleteFile($model->public_id);
         }
 
         $upload = uploadImageFile($file, $folder);
@@ -287,7 +287,7 @@ if (! function_exists('deleteFile')) {
     function deleteFile($model): void
     {
         if (! is_null($model) && filled($model->public_id)) {
-            \Illuminate\Support\Facades\App::make(FileUploader::class)->deleteFile($model->public_id);
+            App::make(FileUploader::class)->deleteFile($model->public_id);
         }
     }
 }
@@ -301,7 +301,7 @@ if (! function_exists('uploadUserImage')) {
         $folder = folderName('profile')."/{$name}";
 
         if (! is_null($user) && filled($user->public_id)) {
-            \Illuminate\Support\Facades\App::make(FileUploader::class)->deleteFile($user->public_id);
+            App::make(FileUploader::class)->deleteFile($user->public_id);
         }
 
         $fileSize = $request->file($file)->getSize();

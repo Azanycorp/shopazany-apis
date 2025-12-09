@@ -61,7 +61,7 @@ class WithdrawRequestPayout extends Command
         $this->info('Withdrawal request processing completed.');
     }
 
-    private function withdraw(\App\Models\User $user): void
+    private function withdraw(User $user): void
     {
         if ($user->paymentMethods->isEmpty()) {
             $this->warn("Skipping user {$user->id}: No payment method found.");
