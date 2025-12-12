@@ -5,6 +5,7 @@ namespace App\Services\Admin;
 use App\Enum\LoginStatus;
 use App\Models\Admin;
 use App\Trait\HttpResponse;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Password;
 
 class AuthService
@@ -12,7 +13,6 @@ class AuthService
     use HttpResponse;
 
     public function __construct(
-        private readonly \Illuminate\Auth\AuthManager $authManager,
         private readonly \Illuminate\Auth\Passwords\PasswordBrokerManager $passwordBrokerManager,
         private readonly \Illuminate\Contracts\Routing\ResponseFactory $responseFactory,
         private readonly \Illuminate\Hashing\BcryptHasher $bcryptHasher
@@ -22,7 +22,7 @@ class AuthService
     {
         $request->validated();
 
-        if ($this->authManager->guard('admin')->attempt($request->only(['email', 'password']))) {
+        if (Auth::guard('admin')->attempt($request->only(['email', 'password']))) {
             $user = Admin::with('roles.permissions')->where('email', $request->email)->first();
 
             if ($user->status === LoginStatus::INACTIVE) {
@@ -32,7 +32,7 @@ class AuthService
                 ], 'Account inactive', 400);
             }
 
-            $token = $user->createToken('API Token of '.$user->email);
+            $token = $user->createToken("API Token of {$user->email}", ['admin:access']);
 
             return $this->success([
                 'id' => $user->id,

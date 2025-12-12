@@ -53,7 +53,7 @@ Route::middleware('validate.header')
                 Route::get('sizes', 'sizes');
             });
 
-        Route::middleware(['auth:sanctum', 'auth-gates', 'auth.check'])
+        Route::middleware(['auth:sanctum', 'auth-gates', 'auth.check', 'abilities:admin:access'])
             ->group(function (): void {
                 Route::get('/profile', [ApiController::class, 'adminProfile']);
                 Route::post('/add/slider', [ApiController::class, 'addSlider']);

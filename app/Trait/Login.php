@@ -80,7 +80,7 @@ trait Login
     protected function logUserIn($user, $request)
     {
         $user->tokens()->delete();
-        $token = $user->createToken("API Token of {$user->email}");
+        $token = $user->createToken("API Token of {$user->email}", ['b2c:access']);
 
         $description = "User with email {$request->email} logged in";
         $response = $this->success([
