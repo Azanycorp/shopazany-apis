@@ -113,7 +113,7 @@ Route::middleware('validate.header')
         Route::post('/payment/paystack/transfer/approve', [PaymentController::class, 'approveTransfer'])
             ->withoutMiddleware('validate.header');
 
-        Route::group(['middleware' => ['auth:api', 'auth.check'], 'prefix' => 'user'], function (): void {
+        Route::group(['middleware' => ['auth:api', 'auth.check', 'abilities:b2c:access'], 'prefix' => 'user'], function (): void {
             // Biometric Login
             Route::post('/biometric-login', [AuthController::class, 'biometricLogin'])
                 ->middleware('throttle:6,1');
