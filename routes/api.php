@@ -113,7 +113,7 @@ Route::middleware('validate.header')
         Route::post('/payment/paystack/transfer/approve', [PaymentController::class, 'approveTransfer'])
             ->withoutMiddleware('validate.header');
 
-        Route::middleware(['auth:sanctum', 'auth.check', 'abilities:b2c:access'])
+        Route::middleware(['auth:sanctum', 'auth.check'])
             ->prefix('user')
             ->group(function (): void {
                 // Biometric Login
