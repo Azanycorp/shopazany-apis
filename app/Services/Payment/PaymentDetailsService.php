@@ -16,7 +16,7 @@ class PaymentDetailsService
     {
         $currency = $request->input('currency');
         $userId = (int) $request->input('user_id');
-        $amount = (float) $request->input('amount');
+        $amount = $request->input('amount') * 100;
         $userShippingId = (int) $request->input('user_shipping_address_id');
         $callbackUrl = $request->input('payment_redirect_url');
         $items = $request->input('items', []);

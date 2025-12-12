@@ -60,15 +60,17 @@ class ProfileResource extends JsonResource
                 'file' => $this->resource->userbusinessinfo?->file,
                 'status' => $this->resource->userbusinessinfo?->status,
             ],
-            'shipping_address' => $this->resource->userShippingAddress ? $this->resource->userShippingAddress->map(function ($addr): array {
-                return [
-                    'id' => $addr?->id,
-                    'street_address' => $addr?->street_address,
-                    'state' => $addr?->state,
-                    'city' => $addr?->city,
-                    'zip' => $addr?->zip,
-                ];
-            })->toArray() : [],
+            'shipping_address' => $this->resource->userShippingAddress ? $this->resource->userShippingAddress->map(fn ($addr) => [
+                'id' => $addr?->id,
+                'first_name' => $addr?->first_name,
+                'last_name' => $addr?->last_name,
+                'email' => $addr?->email,
+                'phone' => $addr?->phone,
+                'street_address' => $addr?->street_address,
+                'state' => $addr?->state,
+                'city' => $addr?->city,
+                'zip' => $addr?->zip,
+            ])->toArray() : [],
             'subscribed' => $this->resource->is_subscribed,
             'user_subscription_plan' => (object) [
                 'id' => (int) $this->resource->subscription_plan?->id,
