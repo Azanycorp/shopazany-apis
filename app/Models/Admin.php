@@ -15,6 +15,17 @@ use Laravel\Sanctum\HasApiTokens;
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Role> $roles
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Permission> $permissions
  * @property-read string $fullName
+ * @property string $first_name
+ * @property string $last_name
+ * @property string $email
+ * @property string $type
+ * @property string $password
+ * @property int $id
+ * @property string $status
+ * @property string $verification_code
+ * @property string $verification_code_expire_at
+ * @property array|null $modules
+ * @property-read string $phone_number
  */
 class Admin extends Authenticatable
 {

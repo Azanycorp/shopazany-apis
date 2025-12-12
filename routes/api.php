@@ -113,189 +113,191 @@ Route::middleware('validate.header')
         Route::post('/payment/paystack/transfer/approve', [PaymentController::class, 'approveTransfer'])
             ->withoutMiddleware('validate.header');
 
-        Route::group(['middleware' => ['auth:api', 'auth.check'], 'prefix' => 'user'], function (): void {
-            // Biometric Login
-            Route::post('/biometric-login', [AuthController::class, 'biometricLogin'])
-                ->middleware('throttle:6,1');
+        Route::middleware(['auth:sanctum', 'auth.check'])
+            ->prefix('user')
+            ->group(function (): void {
+                // Biometric Login
+                Route::post('/biometric-login', [AuthController::class, 'biometricLogin'])
+                    ->middleware('throttle:6,1');
 
-            // Product
-            Route::post('product-review', [HomeController::class, 'productReview']);
-            Route::post('/product/save-for-later', [HomeController::class, 'saveForLater']);
-            // Move to Cart
-            Route::post('/product/cart', [HomeController::class, 'moveToCart']);
+                // Product
+                Route::post('product-review', [HomeController::class, 'productReview']);
+                Route::post('/product/save-for-later', [HomeController::class, 'saveForLater']);
+                // Move to Cart
+                Route::post('/product/cart', [HomeController::class, 'moveToCart']);
 
-            // Payment
-            Route::prefix('payment')
-                ->controller(PaymentController::class)
-                ->group(function (): void {
-                    // Paystack
-                    Route::post('/paystack', 'processPayment')
-                        ->middleware(['tx.replay', 'burst.guard']);
-                    Route::get('/verify/paystack/{user_id}/{reference}', 'verifyPayment');
+                // Payment
+                Route::prefix('payment')
+                    ->controller(PaymentController::class)
+                    ->group(function (): void {
+                        // Paystack
+                        Route::post('/paystack', 'processPayment')
+                            ->middleware(['tx.replay', 'burst.guard']);
+                        Route::get('/verify/paystack/{user_id}/{reference}', 'verifyPayment');
 
-                    // Account LookUp
-                    Route::post('/account-lookup', 'accountLookup');
+                        // Account LookUp
+                        Route::post('/account-lookup', 'accountLookup');
 
-                    // Authorize.net
-                    Route::post('/authorize', 'authorizeNetCard')
-                        ->middleware(['tx.replay', 'burst.guard']);
+                        // Authorize.net
+                        Route::post('/authorize', 'authorizeNetCard')
+                            ->middleware(['tx.replay', 'burst.guard']);
 
-                    // Authorize.net for B2B
-                    Route::post('/authorize-b2b', 'b2bAuthorizeNetCard')
-                        ->middleware(['tx.replay', 'burst.guard']);
+                        // Authorize.net for B2B
+                        Route::post('/authorize-b2b', 'b2bAuthorizeNetCard')
+                            ->middleware(['tx.replay', 'burst.guard']);
 
-                    // Payment Method
-                    Route::get('/method/{country_id}', 'getPaymentMethod');
-                    // Shipping Agent
-                    Route::get('/shipping-agents', 'getShippingAgents');
-                });
-
-            // Subscription
-            Route::prefix('subscription')
-                ->controller(SubscriptionController::class)
-                ->group(function (): void {
-                    Route::get('/country/{country_id}', 'getPlanByCountry');
-                    Route::post('/payment', 'subscriptionPayment')
-                        ->middleware(['tx.replay', 'burst.guard']);
-                    Route::get('/history/{user_id}', 'subscriptionHistory');
-                });
-
-            Route::controller(UserController::class)->group(function (): void {
-                Route::get('/profile', 'profile');
-                Route::post('/bank/account', 'bankAccount');
-                Route::delete('/remove/account', 'removeBankAccount');
-                Route::post('/withdraw', 'withdraw')
-                    ->middleware(['check.wallet', 'tx.replay', 'burst.guard']);
-
-                Route::post('/kyc', 'userKyc');
-                Route::post('/earning-option', 'earningOption');
-
-                Route::prefix('withdrawal')->group(function (): void {
-                    Route::post('/', 'addMethod');
-                    Route::get('/history/{user_id}', 'withdrawalHistory');
-                    Route::get('/method/{user_id}', 'withdrawalMethod');
-                    Route::post('/request', 'withdrawalRequest')
-                        ->middleware(['tx.replay', 'burst.guard']);
-                });
-
-                Route::prefix('affiliate')->group(function (): void {
-                    Route::get('/dashboard-analytic/{user_id}', 'dashboardAnalytic');
-                    Route::get('/transaction/{user_id}', 'transactionHistory');
-                    Route::post('/payment-method', 'addPaymentMethod');
-                    Route::get('/payment-method/{user_id}', 'getPaymentMethod');
-                    Route::get('/referral/management/{user_id}', 'referralManagement');
-                });
-
-                Route::post('/biometric/setup', 'setupBiometric');
-                Route::post('/update-profile/{user_id}', 'updateProfile');
-                Route::post('/settings/{user_id}', 'changeSettings');
-            });
-
-            Route::prefix('cart')->controller(CartController::class)->group(function (): void {
-                Route::get('/{user_id}', 'getCartItems');
-                Route::post('/add', 'addToCart');
-                Route::delete('/{user_id}/clear', 'clearCart');
-                Route::delete('/{user_id}/remove/{cart_id}', 'removeCartItem');
-                Route::patch('/update-cart', 'updateCart');
-            });
-
-            Route::middleware('check.user.country')
-                ->prefix('customer')
-                ->controller(CustomerController::class)
-                ->group(function (): void {
-                    // Account and Dashboard Routes
-                    Route::get('/account-overview/{user_id}', 'acountOverview');
-                    Route::get('/activity/{user_id}', 'activity');
-                    Route::get('/dashboard/analytic/{user_id}', 'dashboardAnalytics');
-
-                    // Order Routes
-                    Route::get('/recent-orders/{user_id}', 'recentOrders');
-                    Route::get('/orders/{user_id}', 'getOrders');
-                    Route::get('/order/detail/{order_no}', 'getOrderDetail');
-                    Route::post('/rate/order', 'rateOrder');
-
-                    // Reward Point
-                    Route::get('/reward/dashboard/{user_id}', 'rewardDashboard');
-                    Route::post('/redeem/point', 'redeemPoint');
-
-                    // Reward partners (service)
-                    Route::prefix('service')->group(function (): void {
-                        Route::get('/', 'getServices');
-                        Route::post('/purchase', 'purchaseService');
-                        Route::get('/company/detail/{slug}', 'getCompanyDetail');
-                        Route::get('/company', 'getCompanies');
-                        Route::get('/by-category/{slug}', 'getServicesByCategory');
-                        Route::get('/category', 'getCategories');
-                        Route::get('/detail/{id}', 'getServiceDetail');
-
-                        Route::prefix('customer')->group(function (): void {
-                            Route::get('/', 'getCustomers');
-                        });
+                        // Payment Method
+                        Route::get('/method/{country_id}', 'getPaymentMethod');
+                        // Shipping Agent
+                        Route::get('/shipping-agents', 'getShippingAgents');
                     });
 
-                    Route::post('/shipping', 'shipping');
+                // Subscription
+                Route::prefix('subscription')
+                    ->controller(SubscriptionController::class)
+                    ->group(function (): void {
+                        Route::get('/country/{country_id}', 'getPlanByCountry');
+                        Route::post('/payment', 'subscriptionPayment')
+                            ->middleware(['tx.replay', 'burst.guard']);
+                        Route::get('/history/{user_id}', 'subscriptionHistory');
+                    });
 
-                    // Support Route
-                    Route::post('/support', 'support');
+                Route::controller(UserController::class)->group(function (): void {
+                    Route::get('/profile', 'profile');
+                    Route::post('/bank/account', 'bankAccount');
+                    Route::delete('/remove/account', 'removeBankAccount');
+                    Route::post('/withdraw', 'withdraw')
+                        ->middleware(['check.wallet', 'tx.replay', 'burst.guard']);
 
-                    // Wishlist Routes
-                    Route::post('/wishlist', 'wishlist');
-                    Route::get('/wishlist/{user_id}', 'getWishlist');
-                    Route::get('/wishlist/single/{user_id}/{wishlist_id}', 'getSingleWishlist');
-                    Route::delete('/wishlist/remove/{user_id}/{wishlist_id}', 'removeWishlist');
+                    Route::post('/kyc', 'userKyc');
+                    Route::post('/earning-option', 'earningOption');
+
+                    Route::prefix('withdrawal')->group(function (): void {
+                        Route::post('/', 'addMethod');
+                        Route::get('/history/{user_id}', 'withdrawalHistory');
+                        Route::get('/method/{user_id}', 'withdrawalMethod');
+                        Route::post('/request', 'withdrawalRequest')
+                            ->middleware(['tx.replay', 'burst.guard']);
+                    });
+
+                    Route::prefix('affiliate')->group(function (): void {
+                        Route::get('/dashboard-analytic/{user_id}', 'dashboardAnalytic');
+                        Route::get('/transaction/{user_id}', 'transactionHistory');
+                        Route::post('/payment-method', 'addPaymentMethod');
+                        Route::get('/payment-method/{user_id}', 'getPaymentMethod');
+                        Route::get('/referral/management/{user_id}', 'referralManagement');
+                    });
+
+                    Route::post('/biometric/setup', 'setupBiometric');
+                    Route::post('/update-profile/{user_id}', 'updateProfile');
+                    Route::post('/settings/{user_id}', 'changeSettings');
                 });
 
-            Route::post('customer/mailing/subscribe', [MailingListController::class, 'signup']);
+                Route::prefix('cart')->controller(CartController::class)->group(function (): void {
+                    Route::get('/{user_id}', 'getCartItems');
+                    Route::post('/add', 'addToCart');
+                    Route::delete('/{user_id}/clear', 'clearCart');
+                    Route::delete('/{user_id}/remove/{cart_id}', 'removeCartItem');
+                    Route::patch('/update-cart', 'updateCart');
+                });
 
-            Route::middleware('check.user.country')
-                ->prefix('seller')
-                ->controller(SellerController::class)
-                ->group(function (): void {
-                    // Business Information
-                    Route::post('/business/information', 'businessInfo');
-                    Route::get('/dashboard/analytic/{user_id}', 'dashboardAnalytics');
+                Route::middleware('check.user.country')
+                    ->prefix('customer')
+                    ->controller(CustomerController::class)
+                    ->group(function (): void {
+                        // Account and Dashboard Routes
+                        Route::get('/account-overview/{user_id}', 'acountOverview');
+                        Route::get('/activity/{user_id}', 'activity');
+                        Route::get('/dashboard/analytic/{user_id}', 'dashboardAnalytics');
 
-                    // Product Routes
-                    Route::prefix('product')->group(function (): void {
-                        Route::post('/create', 'createProduct');
-                        Route::post('/edit/{product_id}/{user_id}', 'updateProduct')
-                            ->middleware('ensure.user');
-                        Route::get('/{user_id}', 'getProduct')
-                            ->middleware('ensure.user');
-                        Route::get('/top-selling/{user_id}', 'topSelling')
-                            ->middleware('ensure.user');
-                        Route::delete('/delete/{product_id}/{user_id}', 'deleteProduct')
-                            ->middleware('ensure.user');
-                        Route::post('/import', 'productImport');
-                        Route::get('/export/{user_id}/{type}', 'export');
+                        // Order Routes
+                        Route::get('/recent-orders/{user_id}', 'recentOrders');
+                        Route::get('/orders/{user_id}', 'getOrders');
+                        Route::get('/order/detail/{order_no}', 'getOrderDetail');
+                        Route::post('/rate/order', 'rateOrder');
 
-                        // Product Attributes
-                        Route::prefix('attribute')->group(function (): void {
-                            Route::post('/create', 'createAttribute');
-                            Route::get('/{user_id}', 'getAttribute')
-                                ->middleware('ensure.user');
-                            Route::get('/{id}/{user_id}', 'getSingleAttribute')
-                                ->middleware('ensure.user');
-                            Route::patch('/edit/{id}/{user_id}', 'updateAttribute')
-                                ->middleware('ensure.user');
-                            Route::delete('/delete/{id}/{user_id}', 'deleteAttribute')
-                                ->middleware('ensure.user');
+                        // Reward Point
+                        Route::get('/reward/dashboard/{user_id}', 'rewardDashboard');
+                        Route::post('/redeem/point', 'redeemPoint');
+
+                        // Reward partners (service)
+                        Route::prefix('service')->group(function (): void {
+                            Route::get('/', 'getServices');
+                            Route::post('/purchase', 'purchaseService');
+                            Route::get('/company/detail/{slug}', 'getCompanyDetail');
+                            Route::get('/company', 'getCompanies');
+                            Route::get('/by-category/{slug}', 'getServicesByCategory');
+                            Route::get('/category', 'getCategories');
+                            Route::get('/detail/{id}', 'getServiceDetail');
+
+                            Route::prefix('customer')->group(function (): void {
+                                Route::get('/', 'getCustomers');
+                            });
                         });
 
-                        Route::get('/{product_id}/{user_id}', 'getSingleProduct')
-                            ->middleware('ensure.user');
+                        Route::post('/shipping', 'shipping');
+
+                        // Support Route
+                        Route::post('/support', 'support');
+
+                        // Wishlist Routes
+                        Route::post('/wishlist', 'wishlist');
+                        Route::get('/wishlist/{user_id}', 'getWishlist');
+                        Route::get('/wishlist/single/{user_id}/{wishlist_id}', 'getSingleWishlist');
+                        Route::delete('/wishlist/remove/{user_id}/{wishlist_id}', 'removeWishlist');
                     });
 
-                    // Orders Routes
-                    Route::prefix('orders/{user_id}')->group(function (): void {
-                        Route::get('/', 'getAllOrders')
-                            ->middleware('ensure.user');
-                        Route::get('/summary', 'getOrderSummary');
-                        Route::get('/{id}', 'getOrderDetail');
-                        Route::patch('/update-status/{id}', 'updateOrderStatus');
+                Route::post('customer/mailing/subscribe', [MailingListController::class, 'signup']);
+
+                Route::middleware('check.user.country')
+                    ->prefix('seller')
+                    ->controller(SellerController::class)
+                    ->group(function (): void {
+                        // Business Information
+                        Route::post('/business/information', 'businessInfo');
+                        Route::get('/dashboard/analytic/{user_id}', 'dashboardAnalytics');
+
+                        // Product Routes
+                        Route::prefix('product')->group(function (): void {
+                            Route::post('/create', 'createProduct');
+                            Route::post('/edit/{product_id}/{user_id}', 'updateProduct')
+                                ->middleware('ensure.user');
+                            Route::get('/{user_id}', 'getProduct')
+                                ->middleware('ensure.user');
+                            Route::get('/top-selling/{user_id}', 'topSelling')
+                                ->middleware('ensure.user');
+                            Route::delete('/delete/{product_id}/{user_id}', 'deleteProduct')
+                                ->middleware('ensure.user');
+                            Route::post('/import', 'productImport');
+                            Route::get('/export/{user_id}/{type}', 'export');
+
+                            // Product Attributes
+                            Route::prefix('attribute')->group(function (): void {
+                                Route::post('/create', 'createAttribute');
+                                Route::get('/{user_id}', 'getAttribute')
+                                    ->middleware('ensure.user');
+                                Route::get('/{id}/{user_id}', 'getSingleAttribute')
+                                    ->middleware('ensure.user');
+                                Route::patch('/edit/{id}/{user_id}', 'updateAttribute')
+                                    ->middleware('ensure.user');
+                                Route::delete('/delete/{id}/{user_id}', 'deleteAttribute')
+                                    ->middleware('ensure.user');
+                            });
+
+                            Route::get('/{product_id}/{user_id}', 'getSingleProduct')
+                                ->middleware('ensure.user');
+                        });
+
+                        // Orders Routes
+                        Route::prefix('orders/{user_id}')->group(function (): void {
+                            Route::get('/', 'getAllOrders')
+                                ->middleware('ensure.user');
+                            Route::get('/summary', 'getOrderSummary');
+                            Route::get('/{id}', 'getOrderDetail');
+                            Route::patch('/update-status/{id}', 'updateOrderStatus');
+                        });
                     });
-                });
-        });
+            });
     });
 
 require __DIR__.'/b2b.php';
