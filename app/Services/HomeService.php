@@ -636,7 +636,7 @@ class HomeService
             return $this->error(null, 'Country not selected', 400);
         }
 
-        $search = $request->query('search');
+        $search = $request->query('q');
 
         $products = Product::where('status', ProductStatus::ACTIVE)
             ->when($countryId, fn ($q) => $q->where('country_id', $countryId))
