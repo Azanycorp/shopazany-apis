@@ -160,7 +160,7 @@ class BannerPromoService
             ]);
         }
 
-        return $this->success(null, 'Created successfully');
+        return $this->success(null, 'Created successfully', 201);
     }
 
     protected function totalOrders($type, $request)

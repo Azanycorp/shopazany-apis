@@ -246,6 +246,9 @@ Route::middleware('validate.header')
                         Route::get('/wishlist/{user_id}', 'getWishlist');
                         Route::get('/wishlist/single/{user_id}/{wishlist_id}', 'getSingleWishlist');
                         Route::delete('/wishlist/remove/{user_id}/{wishlist_id}', 'removeWishlist');
+
+                        // Reedem promo
+                        Route::post('/redeem/promo', 'redeemPromo');
                     });
 
                 Route::post('customer/mailing/subscribe', [MailingListController::class, 'signup']);
