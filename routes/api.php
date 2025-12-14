@@ -90,6 +90,7 @@ Route::middleware('validate.header')
                 Route::get('/deal/{slug}', 'getDealDetail');
                 Route::get('/flash/deals', 'flashDeals');
                 Route::get('/flash/deal/{slug}', 'singleFlashDeal');
+                Route::get('/search', 'search');
 
                 Route::prefix('blog')
                     ->controller(BlogController::class)
