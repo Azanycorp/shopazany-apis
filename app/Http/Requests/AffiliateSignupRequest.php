@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\App;
 use Illuminate\Validation\Rules\Password;
 
 class AffiliateSignupRequest extends FormRequest
@@ -22,7 +23,7 @@ class AffiliateSignupRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+        $rules = [
             'first_name' => ['required', 'string'],
             'last_name' => ['required', 'string'],
             'country_id' => ['required', 'integer', 'exists:countries,id'],
@@ -30,6 +31,24 @@ class AffiliateSignupRequest extends FormRequest
             'email' => ['required', 'email', 'email:rfc,dns'],
             'password' => ['required', 'string', 'confirmed', Password::defaults()],
             'referral_code' => ['somtimes', 'string'],
+        ];
+
+        if (App::environment('production')) {
+            $rules['email'][] = 'regex:/^[a-zA-Z0-9._%+-]+@(gmail\.com|yahoo\.com|outlook\.com|hotmail\.com)$/';
+        }
+
+        return $rules;
+    }
+
+    /**
+     * Get custom error messages for specific fields.
+     *
+     * @return array
+     */
+    public function messages()
+    {
+        return [
+            'email.regex' => 'Please use a valid email address with one of the following domains: gmail.com, yahoo.com, outlook.com, hotmail.com.',
         ];
     }
 }
