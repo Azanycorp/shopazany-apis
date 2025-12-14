@@ -17,6 +17,7 @@ use App\Models\Payment;
 use App\Models\PaymentMethod;
 use App\Models\Product;
 use App\Models\ProductAttribute;
+use App\Models\PromoRedemption;
 use App\Models\RedeemPoint;
 use App\Models\State;
 use App\Models\Transaction;
@@ -274,5 +275,13 @@ trait UserRelationship
     public function productAttributes(): HasMany
     {
         return $this->hasMany(ProductAttribute::class, 'user_id');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\PromoRedemption, $this>
+     */
+    public function promoRedemptions(): HasMany
+    {
+        return $this->hasMany(PromoRedemption::class, 'user_id');
     }
 }

@@ -13,6 +13,8 @@ use App\Models\Country;
 use App\Models\CustomerSupport;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\Promo;
+use App\Models\PromoRedemption;
 use App\Models\User;
 use App\Models\UserShippingAddress;
 use App\Models\Wishlist;
@@ -614,5 +616,47 @@ class CustomerService
         $code = $addr->wasRecentlyCreated ? 201 : 200;
 
         return $this->success(null, $msg, $code);
+    }
+
+    public function redeemPromo($request, $promoRedeemAction)
+    {
+        $user = User::find($request->user_id);
+
+        if (! $user) {
+            return $this->error(null, 'User not found!', 404);
+        }
+
+        $promo = Promo::where('coupon_code', $request->promo_code)
+            ->wherePast('start_date')
+            ->whereFuture('end_date')
+            ->first();
+
+        if (! $promo) {
+            return $this->error(null, 'Promo code not found or expired!', 404);
+        }
+
+        $alreadyUsed = PromoRedemption::where('user_id', $user->id)
+            ->where('promo_id', $promo->id)
+            ->where('product_id', $request->product_id)
+            ->exists();
+
+        if ($alreadyUsed) {
+            return $this->error(null, 'Promo code already used.', 409);
+        }
+
+        $productPrice = Product::where('id', $request->product_id)->value('price');
+
+        if (! $productPrice) {
+            return $this->error(null, 'Product not found.', 404);
+        }
+
+        $discountedAmount = max(0, (int) $productPrice - (int) $promo->discount);
+
+        $promoRedeemAction->handle($user->id, $promo->id, $request->product_id);
+
+        return $this->success([
+            'amount' => $discountedAmount,
+            'discounted_amount' => $promo->discount,
+        ], 'Promo code applied successfully.');
     }
 }
