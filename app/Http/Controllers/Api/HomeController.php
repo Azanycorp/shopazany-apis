@@ -120,4 +120,9 @@ class HomeController extends Controller
     {
         return $this->service->getDealDetail($slug);
     }
+
+    public function search(Request $request)
+    {
+        return $this->service->search($request);
+    }
 }
