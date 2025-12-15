@@ -60,7 +60,13 @@ class DashboardService
         ])
             ->first();
 
-        $stats = (array) $userStats;
+        $stats = $userStats?->toArray() ?? [
+            'active_users' => 0,
+            'inactive_sellers' => 0,
+            'total_sellers' => 0,
+            'active_affiliate_users' => 0,
+            'inactive_affiliate_users' => 0,
+        ];
 
         $data = [
             'total_sales' => $total_sales,
