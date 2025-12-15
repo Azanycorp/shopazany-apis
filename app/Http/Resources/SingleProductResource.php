@@ -77,7 +77,6 @@ class SingleProductResource extends JsonResource
                 'flag' => $this->resource->user?->userCountry?->shopCountry?->flag,
                 'country' => $this->resource->user?->userCountry?->name,
             ],
-
         ];
     }
 }
