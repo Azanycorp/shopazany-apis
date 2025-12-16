@@ -21,6 +21,7 @@ use App\Models\Deal;
 use App\Models\Product;
 use App\Models\User;
 use App\Models\Wishlist;
+use App\Trait\General;
 use App\Trait\HttpResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -28,7 +29,7 @@ use Illuminate\Support\Facades\DB;
 
 class HomeService
 {
-    use HttpResponse;
+    use General, HttpResponse;
 
     public function bestSelling(\Illuminate\Http\Request $request): JsonResponse
     {
@@ -631,24 +632,18 @@ class HomeService
     public function search(\Illuminate\Http\Request $request)
     {
         $countryId = $request->query('country_id');
+        $type = $request->query('type');
 
-        if (! $countryId) {
-            return $this->error(null, 'Country not selected', 400);
+        if (! $countryId && ! $type) {
+            return $this->error(null, 'Country & type not selected', 400);
         }
 
         $search = $request->query('q');
 
-        $products = Product::where('status', ProductStatus::ACTIVE)
-            ->when($countryId, fn ($q) => $q->where('country_id', $countryId))
-            ->when($search, fn ($q) => $q->whereAny(['name', 'description'], 'like', "%{$search}%"))
-            ->select('id', 'name', 'slug', 'price', 'image', 'category_id', 'discount_price', 'default_currency')
-            ->withCount('productReviews as total_reviews')
-            ->withAvg('productReviews as average_rating', 'rating')
-            ->get()
-            ->map(fn ($product) => tap($product, function ($p) {
-                $p->average_rating = $p->average_rating ? round($p->average_rating, 1) : 0;
-            }));
-
-        return $this->success($products, 'Search results');
+        return match ($type) {
+            'product' => $this->searchByProduct($countryId, $search),
+            'order' => $this->searchByOrder($search),
+            default => $this->error(null, 'Invalid type', 400),
+        };
     }
 }
