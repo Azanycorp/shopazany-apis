@@ -6,6 +6,7 @@ use App\Enum\OrderStatus;
 use App\Enum\ProductStatus;
 use App\Http\Resources\CustomerOrderResource;
 use App\Models\Order;
+use App\Models\Product;
 
 trait General
 {
