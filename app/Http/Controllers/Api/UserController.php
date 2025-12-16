@@ -130,4 +130,9 @@ class UserController extends Controller
     {
         return $this->service->setupBiometric($request);
     }
+
+    public function deleteAccount(int $userId)
+    {
+        return $this->service->deleteAccount($userId);
+    }
 }

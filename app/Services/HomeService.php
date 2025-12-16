@@ -428,11 +428,8 @@ class HomeService
             ->with([
                 'products' => function ($query) use ($search): void {
                     $query->with(['category' => function ($q) use ($search): void {
-                        $q->select(['id', 'name', 'slug', 'image']);
-
-                        if ($search) {
-                            $q->where('name', 'like', '%'.$search.'%');
-                        }
+                        $q->select(['id', 'name', 'slug', 'image'])
+                            ->when($search, fn ($q) => $q->whereLike('name', "%{$search}%"));
                     }]);
                 },
             ])
@@ -633,6 +630,7 @@ class HomeService
     {
         $countryId = $request->query('country_id');
         $type = $request->query('type');
+        $categoryId = $request->query('category_id');
 
         if (! $countryId && ! $type) {
             return $this->error(null, 'Country & type not selected', 400);
@@ -641,7 +639,7 @@ class HomeService
         $search = $request->query('q');
 
         return match ($type) {
-            'product' => $this->searchByProduct($countryId, $search),
+            'product' => $this->searchByProduct($countryId, $search, $categoryId),
             'order' => $this->searchByOrder($search),
             default => $this->error(null, 'Invalid type', 400),
         };

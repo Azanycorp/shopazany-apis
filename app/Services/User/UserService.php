@@ -16,7 +16,6 @@ use App\Models\WithdrawalRequest;
 use App\Services\TransactionService;
 use App\Trait\HttpResponse;
 use App\Trait\Payment;
-use Illuminate\Auth\AuthManager;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Hashing\Hasher;
 use Illuminate\Contracts\Routing\ResponseFactory;
@@ -29,7 +28,6 @@ class UserService extends Controller
     use HttpResponse, Payment;
 
     public function __construct(
-        private readonly AuthManager $authManager,
         private readonly DatabaseManager $databaseManager,
         private readonly Hasher $hasher,
         private readonly Repository $repository,
@@ -39,7 +37,7 @@ class UserService extends Controller
 
     public function profile()
     {
-        $auth = $this->userAuth();
+        $auth = userAuth();
         $user = User::with(['wallet', 'bankAccount', 'userbusinessinfo', 'userSubscriptions', 'userShippingAddress'])
             ->withCount('referrals')
             ->findOrFail($auth->id)
@@ -52,7 +50,7 @@ class UserService extends Controller
 
     public function updateProfile($request, $userId)
     {
-        $currentUserId = $this->authManager->id();
+        $currentUserId = userAuthId();
 
         if ($currentUserId != $userId) {
             return $this->error(null, 'Unauthorized action.', 401);
@@ -232,7 +230,7 @@ class UserService extends Controller
 
     public function dashboardAnalytic($id)
     {
-        $currentUserId = $this->authManager->id();
+        $currentUserId = userAuthId();
 
         if ($currentUserId != $id) {
             return $this->error(null, 'Unauthorized action.', 401);
@@ -259,7 +257,7 @@ class UserService extends Controller
 
     public function transactionHistory($request, $userId)
     {
-        $currentUserId = $this->authManager->id();
+        $currentUserId = userAuthId();
 
         if ($currentUserId != $userId) {
             return $this->error(null, 'Unauthorized action.', 401);
@@ -373,7 +371,7 @@ class UserService extends Controller
 
     public function getPaymentMethod($userId)
     {
-        $currentUserId = $this->authManager->id();
+        $currentUserId = userAuthId();
 
         if ($currentUserId != $userId) {
             return $this->error(null, 'Unauthorized action.', 401);
@@ -389,7 +387,7 @@ class UserService extends Controller
 
     public function changeSettings($request, $userId)
     {
-        $currentUserId = $this->authManager->id();
+        $currentUserId = userAuthId();
 
         if ($currentUserId != $userId) {
             return $this->error(null, 'Unauthorized action.', 401);
@@ -417,7 +415,7 @@ class UserService extends Controller
 
     public function referralManagement($request, $userId)
     {
-        $currentUserId = $this->authManager->id();
+        $currentUserId = userAuthId();
 
         if ($currentUserId !== (int) $userId) {
             return $this->error(null, 'Unauthorized action.', 403);
@@ -469,7 +467,7 @@ class UserService extends Controller
 
     public function withdrawalHistory($request, $userId)
     {
-        $currentUserId = $this->authManager->id();
+        $currentUserId = userAuthId();
 
         if ($currentUserId != $userId) {
             return $this->error(null, 'Unauthorized action.', 401);
@@ -539,5 +537,18 @@ class UserService extends Controller
         ]);
 
         return $this->success(null, 'Biometric setup successfully');
+    }
+
+    public function deleteAccount(int $userId)
+    {
+        $user = User::find($userId);
+
+        if (! $user) {
+            return $this->error(null, 'User not found', 404);
+        }
+
+        $user->delete();
+
+        return $this->success(null, 'Account deleted successfully');
     }
 }
