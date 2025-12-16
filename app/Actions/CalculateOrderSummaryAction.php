@@ -34,12 +34,12 @@ class CalculateOrderSummaryAction
         $summaryTotal = max(0, ($totalConverted) + $shipping + $tax);
 
         return [
-            'sub_total' => number_format($totalConverted, 2),
-            'discount' => number_format($discountTotal, 2),
-            'shipping' => number_format($shipping, 2),
-            'tax' => number_format($tax, 2),
-            'point_reward' => number_format($pointReward, 2),
-            'total' => number_format($summaryTotal, 2),
+            'sub_total' => $totalConverted,
+            'discount' => $discountTotal,
+            'shipping' => $shipping,
+            'tax' => $tax,
+            'point_reward' => $pointReward,
+            'total' => $summaryTotal,
         ];
     }
 }
