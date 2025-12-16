@@ -18,6 +18,8 @@ class CustomerOrderDetailResource extends JsonResource
         return [
             'id' => (int) $this->resource->id,
             'order_no' => (string) $this->resource->order_no,
+            'discount' => $this->additional['summary']['discount'],
+            'tax' => $this->additional['summary']['tax'],
             'total_amount' => $this->additional['summary']['sub_total'],
             'customer' => (object) [
                 'id' => $this->resource->user?->id,

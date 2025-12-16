@@ -165,6 +165,8 @@ class CustomerService
 
     public function getOrderDetail($orderNo, $summary)
     {
+        $user = userAuth();
+
         $order = Order::withRelationShips()
             ->where('order_no', $orderNo)
             ->first();
@@ -173,7 +175,7 @@ class CustomerService
             return $this->error(null, 'Order not found', 404);
         }
 
-        $getSummary = $summary->handle($order);
+        $getSummary = $summary->handle($order, $user);
 
         $data = new CustomerOrderDetailResource($order);
         $data->additional(['summary' => $getSummary]);
