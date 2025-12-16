@@ -53,11 +53,12 @@ trait General
         return null;
     }
 
-    protected function searchByProduct($countryId, $search)
+    protected function searchByProduct($countryId, $search, $categoryId = null)
     {
         $products = Product::where('status', ProductStatus::ACTIVE)
             ->when($countryId, fn ($q) => $q->where('country_id', $countryId))
             ->when($search, fn ($q) => $q->whereAny(['name', 'description'], 'like', "%{$search}%"))
+            ->when($categoryId, fn ($q) => $q->where('category_id', $categoryId))
             ->select('id', 'name', 'slug', 'price', 'image', 'category_id', 'discount_price', 'default_currency')
             ->withCount('productReviews as total_reviews')
             ->withAvg('productReviews as average_rating', 'rating')

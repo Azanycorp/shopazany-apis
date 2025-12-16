@@ -192,6 +192,9 @@ Route::middleware('validate.header')
                     Route::post('/biometric/setup', 'setupBiometric');
                     Route::post('/update-profile/{user_id}', 'updateProfile');
                     Route::post('/settings/{user_id}', 'changeSettings');
+
+                    // Delete Account
+                    Route::delete('/delete-account/{user_id}', 'deleteAccount');
                 });
 
                 Route::prefix('cart')->controller(CartController::class)->group(function (): void {
