@@ -20,7 +20,7 @@ class CustomerOrderResource extends JsonResource
             return currencyConvert(
                 $product->shopCountry->currency ?? 'USD',
                 $product->pivot->sub_total,
-                $user->default_currency
+                $user->default_currency ?? $product->default_currency
             );
         });
 
