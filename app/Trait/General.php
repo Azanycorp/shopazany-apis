@@ -53,7 +53,7 @@ trait General
         return null;
     }
 
-    protected function searchByProduct(int $countryId, string $search, ?int $categoryId = null)
+    protected function searchByProduct($countryId, string $search, ?int $categoryId = null)
     {
         $products = Product::where('status', ProductStatus::ACTIVE)
             ->when($countryId, fn ($q) => $q->where('country_id', $countryId))
@@ -70,7 +70,7 @@ trait General
         return $this->success($products, 'Product search results');
     }
 
-    protected function searchByOrder(string $search, int $userId)
+    protected function searchByOrder(string $search, $userId)
     {
         $orders = Order::withRelationShips()
             ->where('user_id', $userId)
