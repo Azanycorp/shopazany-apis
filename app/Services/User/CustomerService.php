@@ -449,63 +449,87 @@ class CustomerService
         $url = $this->repository->get('services.reward_service.url').'/service';
         $params = $request->only(['search']);
 
-        $response = $this->auth->request('get', $url, $params);
+        try {
+            $response = $this->auth->request('get', $url, $params);
 
-        $services = $response->json();
-
-        if (! isset($services['data'])) {
-            return $services;
-        }
-
-        $services['data'] = (new \Illuminate\Support\Collection($services['data']))->map(function (array $item) {
-            $price = (float) $item['price'];
-            $currency = $item['currency'];
-
-            try {
-                $item['point'] = amountToPoint($price, $currency);
-            } catch (\Throwable $e) {
-                $item['point'] = null;
+            if ($response->failed()) {
+                return $this->error(null, 'Failed to fetch services', $response->status());
             }
 
-            return $item;
-        })->all();
+            $services = $response->json();
 
-        return $services;
+            if (! isset($services['data'])) {
+                return $services;
+            }
+
+            $services['data'] = (new \Illuminate\Support\Collection($services['data']))->map(function (array $item) {
+                $price = (float) $item['price'];
+                $currency = $item['currency'];
+
+                try {
+                    $item['point'] = amountToPoint($price, $currency);
+                } catch (\Throwable $e) {
+                    $item['point'] = null;
+                }
+
+                return $item;
+            })->all();
+
+            return $services;
+        } catch (\Throwable $th) {
+            return $this->error(null, $th->getMessage(), 400);
+        }
     }
 
     public function getCompanies()
     {
-        $url = $this->repository->get('services.reward_service.url').'/service/company';
-        $response = $this->auth->request('get', $url, []);
+        try {
+            $url = $this->repository->get('services.reward_service.url').'/service/company';
+            $response = $this->auth->request('get', $url, []);
 
-        return $response->json();
+            if ($response->failed()) {
+                return $this->error(null, 'Failed to fetch companies', $response->status());
+            }
+
+            return $response->json();
+        } catch (\Throwable $th) {
+            return $this->error(null, $th->getMessage(), 400);
+        }
     }
 
     public function getCompanyDetail($slug)
     {
-        $url = $this->repository->get('services.reward_service.url')."/service/company/detail/{$slug}";
-        $response = $this->auth->request('get', $url, []);
+        try {
+            $url = $this->repository->get('services.reward_service.url')."/service/company/detail/{$slug}";
+            $response = $this->auth->request('get', $url, []);
 
-        $services = $response->json();
-
-        if (! isset($services['data'])) {
-            return $services;
-        }
-
-        $services['data']['additional_products'] = (new \Illuminate\Support\Collection($services['data']['additional_products']))->map(function (array $item) {
-            $price = (float) $item['price'];
-            $currency = $item['currency'];
-
-            try {
-                $item['point'] = amountToPoint($price, $currency);
-            } catch (\Throwable $e) {
-                $item['point'] = null;
+            if ($response->failed()) {
+                return $this->error(null, 'Failed to fetch company detail', $response->status());
             }
 
-            return $item;
-        })->all();
+            $services = $response->json();
 
-        return $services;
+            if (! isset($services['data'])) {
+                return $services;
+            }
+
+            $services['data']['additional_products'] = (new \Illuminate\Support\Collection($services['data']['additional_products']))->map(function (array $item) {
+                $price = (float) $item['price'];
+                $currency = $item['currency'];
+
+                try {
+                    $item['point'] = amountToPoint($price, $currency);
+                } catch (\Throwable $e) {
+                    $item['point'] = null;
+                }
+
+                return $item;
+            })->all();
+
+            return $services;
+        } catch (\Throwable $th) {
+            return $this->error(null, $th->getMessage(), 400);
+        }
     }
 
     public function purchaseService($request)
@@ -548,6 +572,11 @@ class CustomerService
 
         try {
             $response = $this->auth->request('post', $url, $params);
+
+            if ($response->failed()) {
+                return $this->error(null, 'Something went wrong. Please try again later.', 400);
+            }
+
             $status = $response->status();
             $data = $response->json();
 
@@ -562,7 +591,7 @@ class CustomerService
 
             return $this->success(null, $data['message'] ?? 'Service purchased successfully.');
         } catch (\Exception $e) {
-            return $this->error(null, "Something went wrong. Please try again later. {$e->getMessage()}", 500);
+            return $this->error(null, "Something went wrong. Please try again later. {$e->getMessage()}", 400);
         }
     }
 
@@ -578,6 +607,10 @@ class CustomerService
                 ['email' => $user->email]
             );
 
+            if ($response->failed()) {
+                return $this->error(null, 'Something went wrong. Please try again later.', 400);
+            }
+
             $services = $response->json();
 
             if (! isset($services['data'])) {
@@ -586,7 +619,7 @@ class CustomerService
 
             return $services['data']['orders'] ?? [];
         } catch (\Exception $e) {
-            return $this->error(null, "Something went wrong. Please try again later. {$e->getMessage()}", 500);
+            return $this->error(null, "Something went wrong. Please try again later. {$e->getMessage()}", 400);
         }
     }
 
