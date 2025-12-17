@@ -631,6 +631,7 @@ class HomeService
         $countryId = $request->query('country_id');
         $type = $request->query('type');
         $categoryId = $request->query('category_id');
+        $userId = $request->query('user_id');
 
         if (! $countryId && ! $type) {
             return $this->error(null, 'Country & type not selected', 400);
@@ -640,7 +641,7 @@ class HomeService
 
         return match ($type) {
             'product' => $this->searchByProduct($countryId, $search, $categoryId),
-            'order' => $this->searchByOrder($search),
+            'order' => $this->searchByOrder($search, $userId),
             default => $this->error(null, 'Invalid type', 400),
         };
     }
