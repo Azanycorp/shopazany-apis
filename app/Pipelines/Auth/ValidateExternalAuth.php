@@ -35,7 +35,7 @@ class ValidateExternalAuth
                 return $this->error(null, $response['message'], Response::HTTP_UNPROCESSABLE_ENTITY);
             }
 
-            if ($localUser && ! Hash::check($request->input('password'), $localUser->password)) {
+            if (! Hash::check($request->input('password'), $localUser->password)) {
                 return $this->handleInvalidCredentials($request);
             }
 
@@ -60,7 +60,7 @@ class ValidateExternalAuth
              * External auth FAILED (user does NOT exist in external service)
              * But user exists LOCALLY → Sync local → external
              */
-            if ($localUser && $response->failed()) {
+            if ($response->failed()) {
                 $created = LoginService::syncLocalUserToAuthService($localUser, $request->password);
 
                 if ($created->failed()) {
