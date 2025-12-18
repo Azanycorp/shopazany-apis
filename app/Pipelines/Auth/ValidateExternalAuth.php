@@ -17,12 +17,19 @@ class ValidateExternalAuth
     public function handle($request, Closure $next)
     {
         try {
-            $response = LoginService::externalAuthCheck($request);
-            $localUser = User::where('email', $request->email)->first();
+            $localUser = User::withTrashed()
+                ->where('email', $request->email)
+                ->first();
+
+            if (! $localUser) {
+                return $this->error(null, 'Invalid credentials.', Response::HTTP_UNAUTHORIZED);
+            }
 
             if ($localUser->trashed()) {
                 return $this->error(null, 'Account is deleted!', Response::HTTP_UNAUTHORIZED);
             }
+
+            $response = LoginService::externalAuthCheck($request);
 
             if ($response->status() === 422) {
                 return $this->error(null, $response['message'], Response::HTTP_UNPROCESSABLE_ENTITY);
