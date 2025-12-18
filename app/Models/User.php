@@ -39,6 +39,7 @@ use Laravel\Sanctum\HasApiTokens;
  * @property bool $is_affiliate_member
  * @property bool $two_factor_enabled
  * @property bool $biometric_enabled
+ * @property string $biometric_token
  */
 class User extends Authenticatable
 {
