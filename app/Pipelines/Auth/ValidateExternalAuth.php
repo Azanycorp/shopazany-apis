@@ -20,6 +20,10 @@ class ValidateExternalAuth
             $response = LoginService::externalAuthCheck($request);
             $localUser = User::where('email', $request->email)->first();
 
+            if ($localUser->trashed()) {
+                return $this->error(null, 'Account is deleted!', Response::HTTP_UNAUTHORIZED);
+            }
+
             if ($response->status() === 422) {
                 return $this->error(null, $response['message'], Response::HTTP_UNPROCESSABLE_ENTITY);
             }
