@@ -673,7 +673,7 @@ class CustomerService
             return $this->error(null, 'Promo code not found or expired!', 404);
         }
 
-        $products = Product::with(['shopCountry', 'variation.product.shopCountry'])
+        $products = Product::with(['shopCountry', 'productVariations.product.shopCountry'])
             ->whereIn('id', $request->product_ids)
             ->get();
 
@@ -700,7 +700,7 @@ class CustomerService
         $currency = 'USD';
 
         foreach ($products as $product) {
-            $currency = $product->shopCountry->currency ?? $product->variation?->product?->shopCountry?->currency;
+            $currency = $product->shopCountry->currency ?? $product->productVariations?->product?->shopCountry?->currency;
         }
 
         if ($promo->discount_type === 'percent') {
