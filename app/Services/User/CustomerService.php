@@ -700,7 +700,7 @@ class CustomerService
         $currency = 'USD';
 
         foreach ($products as $product) {
-            $currency = $product->shopCountry->currency ?? $product->productVariations?->product?->shopCountry?->currency;
+            $currency = $product->shopCountry->currency ?? $product->productVariations->product->shopCountry->currency;
         }
 
         if ($promo->discount_type === 'percent') {
