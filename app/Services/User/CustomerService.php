@@ -19,6 +19,7 @@ use App\Models\User;
 use App\Models\UserShippingAddress;
 use App\Models\Wishlist;
 use App\Services\Auth\Auth;
+use App\Services\CartService;
 use App\Trait\General;
 use App\Trait\HttpResponse;
 use Spatie\ResponseCache\Facades\ResponseCache;
@@ -28,7 +29,9 @@ class CustomerService
     use General, HttpResponse;
 
     public function __construct(
-        protected Auth $auth, private readonly \Illuminate\Contracts\Config\Repository $repository,
+        protected Auth $auth,
+        private readonly \Illuminate\Contracts\Config\Repository $repository,
+        protected CartService $cartService
     ) {}
 
     public function dashboardAnalytics(int $userId)
@@ -670,28 +673,61 @@ class CustomerService
             return $this->error(null, 'Promo code not found or expired!', 404);
         }
 
+        $products = Product::with(['shopCountry', 'variation.product.shopCountry'])
+            ->whereIn('id', $request->product_ids)
+            ->get();
+
+        if ($products->isEmpty()) {
+            return $this->error(null, 'Invalid products selected.', 422);
+        }
+
         $alreadyUsed = PromoRedemption::where('user_id', $user->id)
             ->where('promo_id', $promo->id)
-            ->where('product_id', $request->product_id)
+            ->whereIn('product_id', $products->pluck('id'))
             ->exists();
 
         if ($alreadyUsed) {
             return $this->error(null, 'Promo code already used.', 409);
         }
 
-        $productPrice = Product::where('id', $request->product_id)->value('price');
+        $cart = $this->cartService->getCartItems($user->id);
 
-        if (! $productPrice) {
-            return $this->error(null, 'Product not found.', 404);
+        if (! isset($cart['data'])) {
+            return $this->error(null, 'Cart is empty.', 400);
         }
 
-        $discountedAmount = max(0, (int) $productPrice - (int) $promo->discount);
+        $originalAmount = (int) $cart['data']['total_local_price'] + (int) $cart['data']['total_international_price'];
+        $currency = 'USD';
 
-        $promoRedeemAction->handle($user->id, $promo->id, $request->product_id);
+        foreach ($products as $product) {
+            $currency = $product->shopCountry->currency ?? $product->variation?->product?->shopCountry?->currency;
+        }
+
+        if ($promo->discount_type === 'percent') {
+            $discountAmount = round(($promo->discount / 100) * $originalAmount);
+        } else {
+            $discountAmount = currencyConvert(
+                $currency,
+                $promo->discount,
+                $user->default_currency
+            );
+        }
+
+        $discountAmount = min($discountAmount, $originalAmount);
+        $totalAmount = max(0, $originalAmount - $discountAmount);
+
+        foreach ($products as $product) {
+            $promoRedeemAction->handle(
+                $user->id,
+                $promo->id,
+                $product->id
+            );
+        }
 
         return $this->success([
-            'amount' => $discountedAmount,
-            'discounted_amount' => $promo->discount,
+            'original_amount' => $originalAmount,
+            'discounted_amount' => $discountAmount,
+            'total_amount' => $totalAmount,
         ], 'Promo code applied successfully.');
     }
 }

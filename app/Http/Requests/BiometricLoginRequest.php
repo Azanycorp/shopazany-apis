@@ -22,8 +22,7 @@ class BiometricLoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'user_id' => ['required', 'integer', 'exists:users,id'],
-            'token' => ['required', 'string'],
+            'email' => ['required', 'email', 'exists:users,email'],
         ];
     }
 }

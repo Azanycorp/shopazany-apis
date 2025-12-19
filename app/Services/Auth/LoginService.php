@@ -11,7 +11,6 @@ use App\Pipelines\Auth\LogUserIn;
 use App\Pipelines\Auth\ValidateExternalAuth;
 use App\Services\Auth\Auth as ServicesAuth;
 use App\Trait\Login;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Pipeline;
 
 class LoginService
@@ -85,14 +84,14 @@ class LoginService
 
     public static function biometricLogin($request)
     {
-        $user = User::find($request->user_id);
+        $user = User::where('email', $request->email)->first();
 
         if (! $user) {
             return resolve(self::class)->handleBiometricsIssue($request, 'User not found!', 404);
         }
 
-        if (! $user->biometric_enabled || ! Hash::check($request->token, $user->biometric_token)) {
-            return resolve(self::class)->handleBiometricsIssue($request, 'Invalid biometric credentials.', 401);
+        if (! $user->biometric_enabled) {
+            return resolve(self::class)->handleBiometricsIssue($request, 'Biometrics not enabled.', 401);
         }
 
         return resolve(self::class)->logUserIn($user, $request);
