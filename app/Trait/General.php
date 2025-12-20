@@ -126,9 +126,9 @@ trait General
         }
 
         return $this->success([
-            'original_amount' => (float) number_format($originalAmount, 2),
-            'discounted_amount' => (float) number_format($discountAmount, 2),
-            'total_amount' => (float) number_format($totalAmount, 2),
+            'original_amount' => (float) round($originalAmount, 2),
+            'discounted_amount' => (float) round($discountAmount, 2),
+            'total_amount' => (float) round($totalAmount, 2),
         ], 'Promo code applied successfully.');
     }
 
