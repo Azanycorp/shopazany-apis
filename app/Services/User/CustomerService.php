@@ -697,52 +697,7 @@ class CustomerService
 
         try {
             return DB::transaction(function () use ($user, $promo, $products, $promoRedeemAction) {
-                $cartResponse = $this->cartService->getCartItems($user->id);
-
-                if ($cartResponse->getStatusCode() !== 200) {
-                    return $cartResponse;
-                }
-
-                /** @var array $cart */
-                $cart = $cartResponse->getData(true);
-
-                if (blank($cart['data'])) {
-                    return $this->error(null, 'Cart is empty.', 400);
-                }
-
-                $originalAmount = $this->getCartTotal($cart);
-                $currency = 'USD';
-
-                foreach ($products as $product) {
-                    $currency = $product->shopCountry->currency ?? $product->productVariations->product->shopCountry->currency;
-                }
-
-                if ($promo->discount_type === 'percent') {
-                    $discount = round(($promo->discount / 100) * $originalAmount);
-                } else {
-                    $discount = currencyConvert(
-                        $currency,
-                        $promo->discount,
-                        $user->default_currency
-                    );
-                }
-
-                $discountAmount = min($discount, $originalAmount);
-                $totalAmount = max(0, $originalAmount - $discountAmount);
-
-                foreach ($products as $product) {
-                    $promoRedeemAction->handle(
-                        $user->id,
-                        $promo->id,
-                        $product->id
-                    );
-                }
-
-                return $this->success([
-                    'original_amount' => $originalAmount,
-                    'discounted_amount' => $discountAmount,
-                    'total_amount' => $totalAmount,
-                ], 'Promo code applied successfully.');
+                return $this->applyPromoTransaction($user, $promo, $products, $promoRedeemAction);
             });
         } catch (\Throwable $th) {
             return $this->error(null, $th->getMessage(), 400);
