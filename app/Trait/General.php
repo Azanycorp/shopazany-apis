@@ -81,4 +81,12 @@ trait General
 
         return $this->withPagination($data, 'Order search results');
     }
+
+    protected function getCartTotal(array $cart): float
+    {
+        return
+            ($cart['data']['total_local_price'] ?? 0)
+            + ($cart['data']['total_international_price'] ?? 0)
+            - ($cart['data']['total_discount_price'] ?? 0);
+    }
 }

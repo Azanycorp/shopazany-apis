@@ -699,6 +699,10 @@ class CustomerService
             return DB::transaction(function () use ($user, $promo, $products, $promoRedeemAction) {
                 $cartResponse = $this->cartService->getCartItems($user->id);
 
+                if ($cartResponse->getStatusCode() !== 200) {
+                    return $cartResponse;
+                }
+
                 /** @var array $cart */
                 $cart = $cartResponse->getData(true);
 
@@ -706,7 +710,7 @@ class CustomerService
                     return $this->error(null, 'Cart is empty.', 400);
                 }
 
-                $originalAmount = (int) ($cart['data']['total_local_price'] ?? 0) + (int) ($cart['data']['total_international_price'] ?? 0);
+                $originalAmount = $this->getCartTotal($cart);
                 $currency = 'USD';
 
                 foreach ($products as $product) {
@@ -716,15 +720,14 @@ class CustomerService
                 if ($promo->discount_type === 'percent') {
                     $discount = round(($promo->discount / 100) * $originalAmount);
                 } else {
-                    $discount = $promo->discount;
+                    $discount = currencyConvert(
+                        $currency,
+                        $promo->discount,
+                        $user->default_currency
+                    );
                 }
 
-                $discountAmount = currencyConvert(
-                    $currency,
-                    $discount,
-                    $user->default_currency
-                );
-
+                $discountAmount = min($discount, $originalAmount);
                 $totalAmount = max(0, $originalAmount - $discountAmount);
 
                 foreach ($products as $product) {
