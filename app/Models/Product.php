@@ -31,6 +31,7 @@ use Illuminate\Support\Facades\DB;
  * @property string $image
  * @property string $public_id
  * @property float $discounted_price
+ * @property-read ProductVariation|null $productVariations
  */
 class Product extends Model
 {
