@@ -733,7 +733,11 @@ class CustomerService
 
                 return $this->success([
                     'original_amount' => $originalAmount,
-                    'discounted_amount' => $discount,
+                    'discounted_amount' => [
+                        'discount' => $discount,
+                        'type' => $promo->discount_type,
+                        'main' => $discountAmount,
+                    ],
                     'total_amount' => $totalAmount,
                 ], 'Promo code applied successfully.');
             });
