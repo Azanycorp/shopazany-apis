@@ -82,9 +82,9 @@ trait General
         return $this->withPagination($data, 'Order search results');
     }
 
-    protected function applyPromoTransaction($user, $promo, $products, $promoRedeemAction)
+    protected function applyPromoTransaction($user, $promo, $products, $promoRedeemAction, $cartService)
     {
-        $cartResponse = $this->cartService->getCartItems($user->id);
+        $cartResponse = $cartService->getCartItems($user->id);
 
         if ($cartResponse->getStatusCode() !== 200) {
             return $cartResponse;
