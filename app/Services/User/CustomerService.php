@@ -698,7 +698,7 @@ class CustomerService
                 /** @var array $cart */
                 $cart = $cartResponse->getData(true);
 
-                if (empty($cart['data'])) {
+                if (blank($cart['data'])) {
                     return $this->error(null, 'Cart is empty.', 400);
                 }
 
