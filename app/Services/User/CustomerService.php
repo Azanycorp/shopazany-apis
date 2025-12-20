@@ -710,16 +710,17 @@ class CustomerService
                 }
 
                 if ($promo->discount_type === 'percent') {
-                    $discountAmount = round(($promo->discount / 100) * $originalAmount);
+                    $discount = round(($promo->discount / 100) * $originalAmount);
                 } else {
-                    $discountAmount = currencyConvert(
-                        $currency,
-                        $promo->discount,
-                        $user->default_currency
-                    );
+                    $discount = $promo->discount;
                 }
 
-                $discountAmount = min($discountAmount, $originalAmount);
+                $discountAmount = currencyConvert(
+                    $currency,
+                    $discount,
+                    $user->default_currency
+                );
+
                 $totalAmount = max(0, $originalAmount - $discountAmount);
 
                 foreach ($products as $product) {
