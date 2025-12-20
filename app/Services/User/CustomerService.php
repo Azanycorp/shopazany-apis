@@ -695,9 +695,11 @@ class CustomerService
             return $this->error(null, 'Promo code already used.', 409);
         }
 
+        $cartService = $this->cartService;
+
         try {
-            return DB::transaction(function () use ($user, $promo, $products, $promoRedeemAction) {
-                return $this->applyPromoTransaction($user, $promo, $products, $promoRedeemAction);
+            return DB::transaction(function () use ($user, $promo, $products, $promoRedeemAction, $cartService) {
+                return $this->applyPromoTransaction($user, $promo, $products, $promoRedeemAction, $cartService);
             });
         } catch (\Throwable $th) {
             return $this->error(null, $th->getMessage(), 400);
