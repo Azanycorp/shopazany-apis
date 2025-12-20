@@ -674,6 +674,10 @@ class CustomerService
             return $this->error(null, 'Promo code not found or expired!', 404);
         }
 
+        if ($promo->type !== 'product') {
+            return $this->error(null, 'Invalid promo type.', 422);
+        }
+
         $products = Product::with(['shopCountry', 'productVariations.product.shopCountry'])
             ->whereIn('id', $request->product_ids)
             ->get();
