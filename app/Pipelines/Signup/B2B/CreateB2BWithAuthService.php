@@ -31,7 +31,7 @@ class CreateB2BWithAuthService
                     'email' => $request->email,
                     'type' => $request->type,
                     'country_id' => $request->country_id ?? 160,
-                    'state_id' => $request->state_id ?? null,
+                    'state_id' => $request->state_id ?? 24,
                     'password' => bcrypt($request->password),
                     'signed_up_from' => 'azany_b2b',
                 ]

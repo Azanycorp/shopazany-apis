@@ -24,6 +24,8 @@ class SignupRequest extends FormRequest
     {
         return [
             'email' => ['required', 'email', 'email:rfc,dns', 'unique:users,email'],
+            'country_id' => ['required', 'integer', 'exists:countries,id'],
+            'state_id' => ['required', 'integer', 'exists:states,id'],
             'password' => ['required', 'string', 'confirmed', Password::defaults()],
             'type' => ['nullable', 'string'],
         ];
