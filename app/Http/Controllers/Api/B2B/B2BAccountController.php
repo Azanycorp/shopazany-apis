@@ -17,7 +17,8 @@ class B2BAccountController extends Controller
     public function __construct(
         protected AuthService $service,
         protected SellerService $sellerService,
-        protected BuyerService $buyerService) {}
+        protected BuyerService $buyerService
+    ) {}
 
     public function login(LoginRequest $request)
     {
