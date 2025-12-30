@@ -13,7 +13,9 @@ trait CartTrait
     {
         return $localItems->sum(function (\App\Models\Cart $item) use ($defaultCurrency): float {
             $price = ($item->variation->price ?? $item->product->discounted_price) * $item->quantity;
-            $currency = $item->product?->shopCountry->currency ?? $item->variation?->product?->shopCountry?->currency;
+            $currency = $item->variation
+                ? $item->variation->product->shopCountry->currency
+                : $item->product?->shopCountry->currency;
 
             return currencyConvert($currency, $price, $defaultCurrency);
         });
@@ -26,7 +28,9 @@ trait CartTrait
     {
         return $internationalItems->sum(function (\App\Models\Cart $item) use ($defaultCurrency): float {
             $price = ($item->variation->price ?? $item->product->discounted_price) * $item->quantity;
-            $currency = $item->product?->shopCountry->currency ?? $item->variation?->product?->shopCountry?->currency;
+            $currency = $item->variation
+                ? $item->variation->product->shopCountry->currency
+                : $item->product?->shopCountry->currency;
 
             return currencyConvert($currency, $price, $defaultCurrency);
         });
@@ -44,7 +48,9 @@ trait CartTrait
             $discountAmount = max($original - $discounted, 0);
             $currency = $item->product?->shopCountry?->currency;
 
-            return currencyConvert($currency, $discountAmount, $defaultCurrency);
+            $discountAmount = currencyConvert($currency, $discountAmount, $defaultCurrency);
+
+            return $item->variation ? 0 : $discountAmount;
         };
     }
 }
