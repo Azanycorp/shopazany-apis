@@ -19,8 +19,10 @@ use App\Models\User;
 use App\Models\UserShippingAddress;
 use App\Models\Wishlist;
 use App\Services\Auth\Auth;
+use App\Services\CartService;
 use App\Trait\General;
 use App\Trait\HttpResponse;
+use Illuminate\Support\Facades\DB;
 use Spatie\ResponseCache\Facades\ResponseCache;
 
 class CustomerService
@@ -28,7 +30,9 @@ class CustomerService
     use General, HttpResponse;
 
     public function __construct(
-        protected Auth $auth, private readonly \Illuminate\Contracts\Config\Repository $repository,
+        protected Auth $auth,
+        private readonly \Illuminate\Contracts\Config\Repository $repository,
+        protected CartService $cartService
     ) {}
 
     public function dashboardAnalytics(int $userId)
@@ -670,28 +674,35 @@ class CustomerService
             return $this->error(null, 'Promo code not found or expired!', 404);
         }
 
+        if ($promo->type !== 'product') {
+            return $this->error(null, 'Invalid promo type.', 422);
+        }
+
+        $products = Product::with(['shopCountry', 'productVariations.product.shopCountry'])
+            ->whereIn('id', $request->product_ids)
+            ->get();
+
+        if ($products->isEmpty()) {
+            return $this->error(null, 'Invalid products selected.', 422);
+        }
+
         $alreadyUsed = PromoRedemption::where('user_id', $user->id)
             ->where('promo_id', $promo->id)
-            ->where('product_id', $request->product_id)
+            ->whereIn('product_id', $products->pluck('id'))
             ->exists();
 
         if ($alreadyUsed) {
             return $this->error(null, 'Promo code already used.', 409);
         }
 
-        $productPrice = Product::where('id', $request->product_id)->value('price');
+        $cartService = $this->cartService;
 
-        if (! $productPrice) {
-            return $this->error(null, 'Product not found.', 404);
+        try {
+            return DB::transaction(function () use ($user, $promo, $products, $promoRedeemAction, $cartService) {
+                return $this->applyPromoTransaction($user, $promo, $products, $promoRedeemAction, $cartService);
+            });
+        } catch (\Throwable $th) {
+            return $this->error(null, $th->getMessage(), 400);
         }
-
-        $discountedAmount = max(0, (int) $productPrice - (int) $promo->discount);
-
-        $promoRedeemAction->handle($user->id, $promo->id, $request->product_id);
-
-        return $this->success([
-            'amount' => $discountedAmount,
-            'discounted_amount' => $promo->discount,
-        ], 'Promo code applied successfully.');
     }
 }
