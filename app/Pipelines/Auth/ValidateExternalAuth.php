@@ -64,10 +64,7 @@ class ValidateExternalAuth
                 $created = LoginService::syncLocalUserToAuthService($localUser, $request->password);
 
                 if ($created->failed()) {
-                    return $this->error([
-                        'data' => $created->json(),
-                        'user' => $localUser,
-                    ], $created['message'], Response::HTTP_BAD_REQUEST);
+                    return $this->error(null, $created['message'], Response::HTTP_BAD_REQUEST);
                 }
 
                 $request->externalUser = $created['data'];
