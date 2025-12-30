@@ -23,12 +23,14 @@ Route::middleware('validate.header')
         // Buisness Info
         Route::post('/business/information', [SellerController::class, 'createBusinessInformation']);
 
-        Route::prefix('cart')->controller(CartController::class)->group(function (): void {
-            Route::get('/{user_id}', 'getCartItems');
-            Route::post('/add', 'addToCart');
-            Route::delete('/{user_id}/clear', 'clearCart');
-            Route::delete('/{user_id}/remove/{cart_id}', 'removeCartItem');
-            Route::patch('/update-cart', 'updateCart');
+        Route::group(['middleware' => ['auth:api', 'auth.check']], function (): void {
+            Route::prefix('cart')->controller(CartController::class)->group(function (): void {
+                Route::get('/{user_id}', 'getCartItems');
+                Route::post('/add', 'addToCart');
+                Route::delete('/{user_id}/clear', 'clearCart');
+                Route::delete('/{user_id}/remove/{cart_id}', 'removeCartItem');
+                Route::patch('/update-cart', 'updateCart');
+            });
         });
 
         Route::group(['middleware' => ['auth:api', 'auth.check', 'agriecom_seller.auth']], function (): void {
