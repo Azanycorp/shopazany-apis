@@ -24,7 +24,6 @@ use App\Http\Resources\CustomerResource;
 use App\Http\Resources\PaymentResource;
 use App\Http\Resources\SliderResource;
 use App\Http\Resources\SocialLinkResource;
-use App\Models\B2bBanner;
 use App\Models\B2bCompany;
 use App\Models\B2bOrder;
 use App\Models\B2bProdctLike;
@@ -235,7 +234,7 @@ class BuyerService
 
     public function getBanners()
     {
-        $banners = B2bBanner::where('status', ProductStatus::ACTIVE)
+        $banners = Banner::where('status', ProductStatus::ACTIVE)
             ->get();
 
         $data = B2BBannerResource::collection($banners);
@@ -361,11 +360,15 @@ class BuyerService
             ->when($type, function ($q) use ($type) {
                 $q->where('type', $type);
             })
-            ->with(['subcategory'])
-            ->withCount('products')
+            ->with(['subcategory' => function ($q) {
+                $q->with(['products' => function ($productQuery) {
+                    $productQuery->withCount('b2bProductReview');
+                }]);
+            }])
             ->with(['products' => function ($query) {
                 $query->withCount('b2bProductReview');
             }])
+            ->withCount('products')
             ->get();
 
         return $this->success(B2BCategoryResource::collection($categories), 'Product Categories');
