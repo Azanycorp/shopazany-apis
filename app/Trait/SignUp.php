@@ -41,6 +41,8 @@ trait SignUp
             'type' => $request->type,
             'email_verified_at' => null,
             'verification_code' => $code,
+            'country' => $request->country_id ?? 160,
+            'state_id' => $request->state_id ?? null,
             'is_verified' => 0,
             'info_source' => $request->info_source ?? null,
             'password' => bcrypt($request->password),
