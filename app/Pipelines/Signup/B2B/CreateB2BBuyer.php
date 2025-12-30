@@ -27,7 +27,7 @@ class CreateB2BBuyer
             'company_size' => $request->company_size,
             'website' => $request->website,
             'country' => $request->country_id ?? 160,
-            'state_id' => $request->state_id ?? 24,
+            'state_id' => $request->state_id ?? null,
             'default_currency' => $currencyCode,
             'email_verified_at' => null,
             'verification_code' => $code,
