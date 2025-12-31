@@ -115,7 +115,7 @@ class CartService
             'variation.product',
             'variation.product.shopCountry',
         ])
-            ->when($isAgiecom, fn ($query) => $query->where('is_agriecom', true))
+            ->where('is_agriecom', $isAgiecom)
             ->when(
                 $this->authManager->check(),
                 fn ($q) => $q->where('user_id', $userId),
