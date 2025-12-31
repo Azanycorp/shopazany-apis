@@ -26,6 +26,7 @@ class CartRequest extends FormRequest
             'product_id' => ['required', 'integer', 'exists:products,id'],
             'quantity' => ['required', 'integer', 'min:1'],
             'variation_id' => ['nullable', 'integer'],
+            'is_agriecom' => ['nullable', 'boolean'],
         ];
     }
 }

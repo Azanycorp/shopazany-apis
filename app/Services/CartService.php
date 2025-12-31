@@ -89,11 +89,14 @@ class CartService
             'variation_id' => null,
             'product_id' => $request->product_id,
             'quantity' => $quantity,
+            'is_agriecom' => $request->is_agriecom,
         ]);
     }
 
-    public function getCartItems($userId)
+    public function getCartItems($userId, Request $request)
     {
+        $isAgiecom = $request->boolean('is_agriecom');
+
         $currentUserId = userAuth()->id;
 
         if ($currentUserId != $userId) {
@@ -102,7 +105,7 @@ class CartService
 
         $sessionId = $this->sessionManager->get('cart_id');
 
-        $cartItemsQuery = Cart::with([
+        $cartItems = Cart::with([
             'product.user',
             'product.category',
             'product.subCategory',
@@ -111,15 +114,14 @@ class CartService
             'variation',
             'variation.product',
             'variation.product.shopCountry',
-        ]);
-
-        if ($this->authManager->check()) {
-            $cartItemsQuery->where('user_id', $userId);
-        } else {
-            $cartItemsQuery->where('session_id', $sessionId);
-        }
-
-        $cartItems = $cartItemsQuery->get();
+        ])
+            ->when($isAgiecom, fn ($query) => $query->where('is_agriecom', true))
+            ->when(
+                $this->authManager->check(),
+                fn ($q) => $q->where('user_id', $userId),
+                fn ($q) => $q->where('session_id', $sessionId)
+            )
+            ->get();
 
         $localItems = $cartItems->filter(fn ($cartItem): bool => $cartItem->product->getAttribute('country_id') == 160);
         $internationalItems = $cartItems->filter(fn ($cartItem): bool => $cartItem->product->getAttribute('country_id') != 160);
@@ -213,10 +215,13 @@ class CartService
         ], [
             'variation_id' => $data['variation_id'],
             'quantity' => $data['quantity'],
+            'is_agriecom' => $data['is_agriecom'],
         ]);
 
-        $msg = $cart->wasRecentlyCreated ? 'Item added to cart' : 'Cart updated';
+        $msg = $cart->wasRecentlyCreated ?
+            ['msg' => 'Item added to cart', 'code' => 201] :
+            ['msg' => 'Item updated in cart', 'code' => 200];
 
-        return $this->success(null, $msg);
+        return $this->success(null, $msg['msg'], $msg['code']);
     }
 }
