@@ -89,7 +89,7 @@ class CartService
             'variation_id' => null,
             'product_id' => $request->product_id,
             'quantity' => $quantity,
-            'is_agriecom' => $request->is_agriecom,
+            'is_agriecom' => $request->is_agriecom ?? false,
         ]);
     }
 
