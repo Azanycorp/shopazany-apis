@@ -22,7 +22,15 @@ class Cart extends Model
         'session_id',
         'quantity',
         'variation_id',
+        'is_agriecom',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'is_agriecom' => 'boolean',
+        ];
+    }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\User, $this>

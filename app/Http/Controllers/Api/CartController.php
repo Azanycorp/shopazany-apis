@@ -18,9 +18,9 @@ class CartController extends Controller
         return $this->service->addToCart($request);
     }
 
-    public function getCartItems($userId)
+    public function getCartItems($userId, Request $request)
     {
-        return $this->service->getCartItems($userId);
+        return $this->service->getCartItems($userId, $request);
     }
 
     public function removeCartItem($userId, $cartId)
