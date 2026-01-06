@@ -65,9 +65,9 @@ class CustomerController extends Controller
         return $this->service->wishlist($request);
     }
 
-    public function getWishlist(int $userId)
+    public function getWishlist(int $userId, Request $request)
     {
-        return $this->service->getWishlist($userId);
+        return $this->service->getWishlist($userId, $request);
     }
 
     public function getSingleWishlist(int $userId, $id)
