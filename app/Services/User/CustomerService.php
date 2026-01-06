@@ -23,7 +23,6 @@ use App\Services\CartService;
 use App\Trait\General;
 use App\Trait\HttpResponse;
 use Illuminate\Support\Facades\DB;
-use Spatie\ResponseCache\Facades\ResponseCache;
 
 class CustomerService
 {
@@ -257,16 +256,16 @@ class CustomerService
 
         $user->wishlist()->create([
             'product_id' => $product->id,
+            'is_agriecom' => $request->boolean('is_agriecom'),
         ]);
-
-        ResponseCache::clear();
 
         return $this->success(null, 'Product added to wishlist!');
     }
 
-    public function getWishlist(int $userId)
+    public function getWishlist(int $userId, \Illuminate\Http\Request $request)
     {
         $currentUser = userAuth();
+        $isAgriEcom = $request->boolean('is_agriecom');
 
         if ($currentUser->id != $userId || $currentUser->type != UserType::CUSTOMER) {
             return $this->error(null, 'Unauthorized action.', 401);
@@ -278,7 +277,13 @@ class CustomerService
             return $this->error(null, 'User not found', 404);
         }
 
-        $wishlists = $user->wishlist()->with(['product.category', 'product.shopCountry'])->get();
+        $wishlists = $user->wishlist()
+            ->with(['product.category', 'product.shopCountry'])
+            ->when($isAgriEcom, function ($query) use ($isAgriEcom) {
+                return $query->where('is_agriecom', $isAgriEcom);
+            })
+            ->get();
+
         $data = WishlistResource::collection($wishlists);
 
         return $this->success($data, 'Wishlists');
