@@ -291,7 +291,7 @@ class BuyerService
     public function getProducts($request)
     {
         $type = $request->query('type');
-        $sort = $request->query('sort'); // sorting key
+        $sort = $request->query('sort');
 
         $products = B2BProduct::with([
             'category',
@@ -325,6 +325,7 @@ class BuyerService
     {
         $type = $request->query('type');
         $subcategoryId = $request->query('sub_category_id');
+        $sort = $request->query('sort');
 
         $products = B2BProduct::with([
             'category',
@@ -338,7 +339,15 @@ class BuyerService
             ->whereStatus(ProductStatus::ACTIVE)
             ->when($type, fn ($q) => $q->where('type', $type))
             ->when($subcategoryId, fn ($q) => $q->where('sub_category_id', $subcategoryId))
-            ->latest()
+            ->when($sort, function ($q) use ($sort) {
+                match ($sort) {
+                    'price_asc' => $q->orderBy('unit_price', 'asc'),
+                    'price_desc' => $q->orderBy('price', 'desc'),
+                    'name_asc' => $q->orderBy('name', 'asc'),
+                    'name_desc' => $q->orderBy('name', 'desc'),
+                    default => $q->latest(),
+                };
+            }, fn ($q) => $q->latest())
             ->get();
 
         return $this->success(B2BProductResource::collection($products), 'Products');
@@ -502,15 +511,43 @@ class BuyerService
         return $this->success(B2BProductResource::collection($products), 'Products filtered');
     }
 
-    public function categoryBySlug($slug)
+    public function categoryBySlug($request, $slug)
     {
-        $category = B2bProductCategory::with(['subcategory', 'products', 'products.b2bProductReview', 'products.b2bLikes'])
+
+        // $category = B2bProductCategory::with(['subcategory', 'products', 'products.b2bProductReview', 'products.b2bLikes'])
+        //     ->withCount('products')
+        //     ->with(['products' => function ($query): void {
+        //         $query->withCount('b2bProductReview');
+        //     }])
+        //     ->select('id', 'name', 'slug', 'image')
+        //     ->where(['featured' => 1, 'slug' => $slug])
+        //     ->firstOrFail();
+        $sort = $request->query('sort');
+
+        $category = B2bProductCategory::with([
+            'subcategory',
+            'products' => function ($query) use ($sort) {
+                $query->withCount('b2bProductReview')
+                    ->with('b2bLikes');
+                if ($sort) {
+                    match ($sort) {
+                        'price_asc' => $query->orderBy('unit_price', 'asc'),
+                        'price_desc' => $query->orderBy('unit_price', 'desc'),
+                        'name_asc' => $query->orderBy('name', 'asc'),
+                        'name_desc' => $query->orderBy('name', 'desc'),
+                        default => $query->latest(),
+                    };
+                } else {
+                    $query->latest();
+                }
+            },
+        ])
             ->withCount('products')
-            ->with(['products' => function ($query): void {
-                $query->withCount('b2bProductReview');
-            }])
             ->select('id', 'name', 'slug', 'image')
-            ->where(['featured' => 1, 'slug' => $slug])
+            ->where([
+                'featured' => 1,
+                'slug' => $slug,
+            ])
             ->firstOrFail();
 
         return $this->success(new B2BCategoryResource($category), 'Products by category');
