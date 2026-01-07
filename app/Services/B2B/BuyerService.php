@@ -304,8 +304,6 @@ class BuyerService
         ])
             ->whereStatus(ProductStatus::ACTIVE)
             ->when($type, fn ($q) => $q->where('type', $type))
-
-            // SORTING
             ->when($sort, function ($q) use ($sort) {
                 match ($sort) {
                     'price_asc' => $q->orderBy('unit_price', 'asc'),
@@ -348,6 +346,7 @@ class BuyerService
                     default => $q->latest(),
                 };
             }, fn ($q) => $q->latest())
+
             ->get();
 
         return $this->success(B2BProductResource::collection($products), 'Products');
@@ -360,9 +359,7 @@ class BuyerService
         $categories = B2bProductCategory::with(['subcategory'])
             ->withCount('products')
             ->with([
-                'products' => function ($query) {
-                    $query->withCount('b2bProductReview');
-                },
+                'products' => fn ($query) => $query->withCount('b2bProductReview'),
                 'products.b2bProductReview',
                 'products.b2bLikes',
             ])
@@ -520,26 +517,23 @@ class BuyerService
         $category = B2bProductCategory::with([
             'subcategory',
             'products' => function ($query) use ($sort, $type) {
-                $query->withCount('b2bProductReview')
-                    ->with('b2bLikes');
-
-                if ($type) {
-                    $query->whereRaw('LOWER(TRIM(type)) = ?', [strtolower($type)]);
-                }
 
                 $query->withCount('b2bProductReview')
-                    ->with('b2bLikes');
-                if ($sort) {
-                    match ($sort) {
-                        'price_asc' => $query->orderBy('unit_price', 'asc'),
-                        'price_desc' => $query->orderBy('unit_price', 'desc'),
-                        'name_asc' => $query->orderBy('name', 'asc'),
-                        'name_desc' => $query->orderBy('name', 'desc'),
-                        default => $query->latest(),
-                    };
-                } else {
-                    $query->latest();
-                }
+                    ->with('b2bLikes')
+                    ->when(
+                        $type,
+                        fn ($q) => $q->whereRaw('LOWER(TRIM(type)) = ?', [strtolower($type)])
+                    )
+                    ->when($sort, function ($q) use ($sort) {
+                        match ($sort) {
+                            'price_asc' => $q->orderBy('unit_price', 'asc'),
+                            'price_desc' => $q->orderBy('price', 'desc'),
+                            'name_asc' => $q->orderBy('name', 'asc'),
+                            'name_desc' => $q->orderBy('name', 'desc'),
+                            default => $q->latest(),
+                        };
+                    }, fn ($q) => $q->latest());
+
             },
         ])
             ->withCount('products')
