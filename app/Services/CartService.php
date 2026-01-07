@@ -66,6 +66,7 @@ class CartService
                 'variation_id' => $variation->id,
                 'product_id' => $request->product_id,
                 'quantity' => $quantity,
+                'is_agriecom' => $request->boolean('is_agriecom'),
             ]);
         }
 
@@ -89,7 +90,7 @@ class CartService
             'variation_id' => null,
             'product_id' => $request->product_id,
             'quantity' => $quantity,
-            'is_agriecom' => $request->is_agriecom ?? false,
+            'is_agriecom' => $request->boolean('is_agriecom'),
         ]);
     }
 
