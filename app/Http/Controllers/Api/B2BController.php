@@ -82,6 +82,11 @@ class B2BController extends Controller
         return $this->buyerService->categories($request);
     }
 
+    public function getCategories(Request $request)
+    {
+        return $this->buyerService->getCategories($request);
+    }
+
     public function getBlogs(Request $request)
     {
         return $this->buyerService->allBlogs($request);
@@ -125,6 +130,11 @@ class B2BController extends Controller
     public function getProducts(Request $request)
     {
         return $this->buyerService->getProducts($request);
+    }
+
+    public function getProductsBySubcategoryId(Request $request)
+    {
+        return $this->buyerService->getProductsBySubcategoryId($request);
     }
 
     public function getProductDetail($slug)

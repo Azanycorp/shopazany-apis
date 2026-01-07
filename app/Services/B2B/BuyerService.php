@@ -9,6 +9,7 @@ use App\Enum\RefundRequestStatus;
 use App\Enum\RfqStatus;
 use App\Enum\UserStatus;
 use App\Enum\UserType;
+use App\Http\Resources\B2BAllCategoryResource;
 use App\Http\Resources\B2BBannerResource;
 use App\Http\Resources\B2BBestSellingProductResource;
 use App\Http\Resources\B2BBuyerShippingAddressResource;
@@ -290,6 +291,7 @@ class BuyerService
     public function getProducts($request)
     {
         $type = $request->query('type');
+        $sort = $request->query('sort'); // sorting key
 
         $products = B2BProduct::with([
             'category',
@@ -302,6 +304,40 @@ class BuyerService
         ])
             ->whereStatus(ProductStatus::ACTIVE)
             ->when($type, fn ($q) => $q->where('type', $type))
+
+            // SORTING
+            ->when($sort, function ($q) use ($sort) {
+                match ($sort) {
+                    'price_asc' => $q->orderBy('unit_price', 'asc'),
+                    'price_desc' => $q->orderBy('price', 'desc'),
+                    'name_asc' => $q->orderBy('name', 'asc'),
+                    'name_desc' => $q->orderBy('name', 'desc'),
+                    default => $q->latest(),
+                };
+            }, fn ($q) => $q->latest())
+
+            ->get();
+
+        return $this->success(B2BProductResource::collection($products), 'Products');
+    }
+
+    public function getProductsBySubcategoryId($request)
+    {
+        $type = $request->query('type');
+        $subcategoryId = $request->query('sub_category_id');
+
+        $products = B2BProduct::with([
+            'category',
+            'user',
+            'b2bLikes',
+            'b2bProductReview.user',
+            'subCategory',
+            'country',
+            'b2bProductImages',
+        ])
+            ->whereStatus(ProductStatus::ACTIVE)
+            ->when($type, fn ($q) => $q->where('type', $type))
+            ->when($subcategoryId, fn ($q) => $q->where('sub_category_id', $subcategoryId))
             ->latest()
             ->get();
 
@@ -329,6 +365,21 @@ class BuyerService
             ->get();
 
         return $this->success(B2BCategoryResource::collection($categories), 'Categories');
+    }
+
+    public function getCategories($request)
+    {
+        $type = $request->query('type');
+
+        $categories = B2bProductCategory::with(['subcategory'])
+            ->when($type, function ($q) use ($type) {
+                $q->where('type', $type);
+            })
+            ->where('featured', 1)
+            ->latest()
+            ->get();
+
+        return $this->success(B2BAllCategoryResource::collection($categories), 'Categories');
     }
 
     public function allBlogs($request)
