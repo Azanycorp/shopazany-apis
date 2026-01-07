@@ -513,20 +513,20 @@ class BuyerService
 
     public function categoryBySlug($request, $slug)
     {
-
-        // $category = B2bProductCategory::with(['subcategory', 'products', 'products.b2bProductReview', 'products.b2bLikes'])
-        //     ->withCount('products')
-        //     ->with(['products' => function ($query): void {
-        //         $query->withCount('b2bProductReview');
-        //     }])
-        //     ->select('id', 'name', 'slug', 'image')
-        //     ->where(['featured' => 1, 'slug' => $slug])
-        //     ->firstOrFail();
         $sort = $request->query('sort');
+
+        $type = $request->query('type');
 
         $category = B2bProductCategory::with([
             'subcategory',
-            'products' => function ($query) use ($sort) {
+            'products' => function ($query) use ($sort, $type) {
+                $query->withCount('b2bProductReview')
+                    ->with('b2bLikes');
+
+                if ($type) {
+                    $query->whereRaw('LOWER(TRIM(type)) = ?', [strtolower($type)]);
+                }
+
                 $query->withCount('b2bProductReview')
                     ->with('b2bLikes');
                 if ($sort) {
