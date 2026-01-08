@@ -171,8 +171,8 @@ class SellerController extends Controller
         return $this->b2cSellerService->updateOrderStatus($userId, $id, $request);
     }
 
-    public function getOrderSummary(int $userId)
+    public function getOrderSummary(int $userId, Request $request)
     {
-        return $this->b2cSellerService->getOrderSummary($userId);
+        return $this->b2cSellerService->getOrderSummary($userId, $request);
     }
 }

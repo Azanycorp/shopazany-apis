@@ -150,7 +150,8 @@ class Order extends Model
         }
     }
 
-    public function scopeFilterByType(Builder $query, bool $isAgriEcom): Builder
+    #[\Illuminate\Database\Eloquent\Attributes\Scope]
+    protected function filterByType(Builder $query, bool $isAgriEcom): Builder
     {
         return $query->where(
             'type',
