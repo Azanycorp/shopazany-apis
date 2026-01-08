@@ -3,6 +3,7 @@
 namespace App\Services\Admin;
 
 use App\Enum\OrderStatus;
+use App\Enum\OrderType;
 use App\Http\Resources\AdminOrderResource;
 use App\Models\Order;
 use App\Trait\HttpResponse;
@@ -14,23 +15,41 @@ class OrderService
 
     public function __construct(private readonly \Illuminate\Contracts\Routing\UrlGenerator $urlGenerator) {}
 
-    public function orderAnalytics()
+    public function orderAnalytics($request)
     {
-        $all_orders = Order::count();
-        $orders = Order::sum('total_amount');
-        $pendingorder_amount = Order::where('status', OrderStatus::PENDING)->sum('total_amount');
-        $shippedorder_amount = Order::where('status', OrderStatus::SHIPPED)->sum('total_amount');
-        $deliveredorder_amount = Order::where('status', OrderStatus::DELIVERED)->sum('total_amount');
+        $isAgriEcom = $request->boolean('is_agriecom');
+
+        $all_orders = Order::where('type', $isAgriEcom ? OrderType::AGRIECOM : OrderType::AZANY)->count();
+        $orders = Order::where('type', $isAgriEcom ? OrderType::AGRIECOM : OrderType::AZANY)->sum('total_amount');
+
+        $pendingOrderAmount = Order::where('status', OrderStatus::PENDING)
+            ->filterByType($isAgriEcom)
+            ->sum('total_amount');
+
+        $shippedOrderAmount = Order::where('status', OrderStatus::SHIPPED)
+            ->filterByType($isAgriEcom)
+            ->sum('total_amount');
+        $deliveredOrderAmount = Order::where('status', OrderStatus::DELIVERED)
+            ->filterByType($isAgriEcom)
+            ->sum('total_amount');
 
         $all_order_amount = abbreviateNumber($orders);
-        $pending_order_amount = abbreviateNumber($pendingorder_amount);
-        $shipped_order_amount = abbreviateNumber($shippedorder_amount);
-        $delivered_order_amount = abbreviateNumber($deliveredorder_amount);
+        $pending_order_amount = abbreviateNumber($pendingOrderAmount);
+        $shipped_order_amount = abbreviateNumber($shippedOrderAmount);
+        $delivered_order_amount = abbreviateNumber($deliveredOrderAmount);
 
-        $cancelled_order = Order::where('status', OrderStatus::CANCELLED)->count();
-        $pending_order = Order::where('status', OrderStatus::PENDING)->count();
-        $shipped_order = Order::where('status', OrderStatus::SHIPPED)->count();
-        $delivered_order = Order::where('status', OrderStatus::DELIVERED)->count();
+        $cancelled_order = Order::where('status', OrderStatus::CANCELLED)
+            ->filterByType($isAgriEcom)
+            ->count();
+        $pending_order = Order::where('status', OrderStatus::PENDING)
+            ->filterByType($isAgriEcom)
+            ->count();
+        $shipped_order = Order::where('status', OrderStatus::SHIPPED)
+            ->filterByType($isAgriEcom)
+            ->count();
+        $delivered_order = Order::where('status', OrderStatus::DELIVERED)
+            ->filterByType($isAgriEcom)
+            ->count();
 
         $data = [
             'all_orders' => [
@@ -58,17 +77,17 @@ class OrderService
     public function localOrder($request): array
     {
         $search = $request->input('search');
+        $isAgriEcom = $request->boolean('is_agriecom');
 
         $orders = Order::withRelationShips()
             ->where('country_id', 160)
+            ->filterByType($isAgriEcom)
             ->when($search, function ($query, $search): void {
                 $query->where(function (Builder $query) use ($search): void {
                     $query->whereHas('user', function (Builder $query) use ($search): void {
-                        $query->where('first_name', 'like', "%{$search}%")
-                            ->orWhere('last_name', 'like', "%{$search}%");
+                        $query->whereAny(['first_name', 'last_name'], 'like', "%{$search}%");
                     })->orWhereHas('products.user', function (Builder $query) use ($search): void {
-                        $query->where('first_name', 'like', "%{$search}%")
-                            ->orWhere('last_name', 'like', "%{$search}%");
+                        $query->whereAny(['first_name', 'last_name'], 'like', "%{$search}%");
                     })->orWhere('order_no', 'like', "%{$search}%");
                 });
             })
@@ -84,7 +103,6 @@ class OrderService
 
         $currentPage = $request->input('page', 1);
         $perPage = 25;
-
         $paginatedOrders = $orders->slice(($currentPage - 1) * $perPage, $perPage);
 
         $data = AdminOrderResource::collection($paginatedOrders);
@@ -106,17 +124,17 @@ class OrderService
     public function intOrder($request): array
     {
         $search = $request->input('search');
+        $isAgriEcom = $request->boolean('is_agriecom');
 
         $orders = Order::withRelationShips()
             ->where('country_id', '!=', 160)
+            ->filterByType($isAgriEcom)
             ->when($search, function ($query, $search): void {
                 $query->where(function (Builder $query) use ($search): void {
                     $query->whereHas('user', function (Builder $query) use ($search): void {
-                        $query->where('first_name', 'like', "%{$search}%")
-                            ->orWhere('last_name', 'like', "%{$search}%");
+                        $query->whereAny(['first_name', 'last_name'], 'like', "%{$search}%");
                     })->orWhereHas('products.user', function (Builder $query) use ($search): void {
-                        $query->where('first_name', 'like', "%{$search}%")
-                            ->orWhere('last_name', 'like', "%{$search}%");
+                        $query->whereAny(['first_name', 'last_name'], 'like', "%{$search}%");
                     })->orWhere('order_no', 'like', "%{$search}%");
                 });
             })
@@ -132,7 +150,6 @@ class OrderService
 
         $currentPage = $request->input('page', 1);
         $perPage = 25;
-
         $paginatedOrders = $orders->slice(($currentPage - 1) * $perPage, $perPage);
 
         $data = AdminOrderResource::collection($paginatedOrders);
@@ -154,7 +171,6 @@ class OrderService
     public function orderDetail($id): array
     {
         $order = Order::withRelationShips()->findOrFail($id);
-
         $data = new AdminOrderResource($order);
 
         return [
@@ -166,16 +182,22 @@ class OrderService
 
     public function searchOrder($request): array
     {
-        $query = Order::query();
+        $isAgriEcom = $request->boolean('is_agriecom');
 
-        $query->join('products', 'orders.product_id', '=', 'products.id');
-
-        if ($request->has('name') && filled($request->input('name'))) {
-            $productName = $request->input('name');
-            $query->where('products.name', 'like', "%$productName%");
-        }
-
-        $orders = $query->select('orders.*')->paginate(25);
+        $orders = Order::query()
+            ->filterByType($isAgriEcom)
+            ->join('products', 'orders.product_id', '=', 'products.id')
+            ->when(
+                filled($request->input('name')),
+                fn ($q) => $q->where(
+                    'products.name',
+                    'like',
+                    '%'.$request->input('name').'%'
+                )
+            )
+            ->select('orders.*')
+            ->latest('orders.created_at')
+            ->paginate(25);
 
         $data = AdminOrderResource::collection($orders);
 

@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enum\OrderType;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -34,6 +36,7 @@ class Order extends Model
         'payment_status',
         'status',
         'country_id',
+        'type',
     ];
 
     protected function casts(): array
@@ -138,5 +141,20 @@ class Order extends Model
             },
             'orderActivities',
         ]);
+    }
+
+    public function markAsAgriecom(int $userId): void
+    {
+        if (Cart::where('user_id', $userId)->where('is_agriecom', true)->exists()) {
+            $this->update(['type' => OrderType::AGRIECOM]);
+        }
+    }
+
+    public function scopeFilterByType(Builder $query, bool $isAgriEcom): Builder
+    {
+        return $query->where(
+            'type',
+            $isAgriEcom ? OrderType::AGRIECOM : OrderType::AZANY
+        );
     }
 }

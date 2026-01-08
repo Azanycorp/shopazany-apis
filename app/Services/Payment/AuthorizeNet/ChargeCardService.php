@@ -255,8 +255,11 @@ class ChargeCardService implements PaymentStrategy
             'order_date' => now(),
             'shipping_address' => $paymentDetails['billTo']['address'],
             'country_id' => $user->country ?? 160,
-            'status' => 'pending',
+            'status' => OrderStatus::PENDING,
         ]);
+
+        // Update order type if agriecom cart exists
+        $order->markAsAgriecom($user->id);
 
         $orderedItems = [];
         $product = null;
@@ -369,6 +372,7 @@ class ChargeCardService implements PaymentStrategy
         if ($product->user) {
             $this->sendSellerOrderEmail($product->user, $orderedItems, $orderNo, $amount);
         }
+
         $this->sendOrderConfirmationEmail($user, $orderedItems, $orderNo, $amount);
 
         (new UserLogAction(
@@ -426,12 +430,12 @@ class ChargeCardService implements PaymentStrategy
         return null;
     }
 
-    private function sendSellerOrderEmail($seller, $order, $orderNo, $totalAmount): void
+    private function sendSellerOrderEmail(User $seller, array $order, string $orderNo, float $totalAmount): void
     {
         send_email($seller->email, new SellerOrderMail($seller, $order, $orderNo, $totalAmount));
     }
 
-    private function sendOrderConfirmationEmail($user, $orderedItems, $orderNo, $totalAmount): void
+    private function sendOrderConfirmationEmail(User $user, array $orderedItems, string $orderNo, float $totalAmount): void
     {
         send_email($user->email, new CustomerOrderMail($user, $orderedItems, $orderNo, $totalAmount));
     }

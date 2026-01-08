@@ -30,9 +30,9 @@ class CustomerController extends Controller
         return $this->service->acountOverview($userId);
     }
 
-    public function recentOrders(int $userId)
+    public function recentOrders(int $userId, Request $request)
     {
-        return $this->service->recentOrders($userId);
+        return $this->service->recentOrders($userId, $request);
     }
 
     public function getOrders(int $userId, Request $request)
