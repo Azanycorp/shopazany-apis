@@ -284,6 +284,7 @@ class SellerService extends Controller
     public function getAllOrders($request, $id): array
     {
         $status = $request->query('status');
+        $isAgriEcom = $request->boolean('is_agriecom');
 
         $validStatuses = [
             OrderStatus::PENDING,
@@ -309,6 +310,7 @@ class SellerService extends Controller
 
                 return $query->where('status', $status);
             })
+            ->filterByType($isAgriEcom)
             ->latest()
             ->paginate(25);
 
@@ -519,9 +521,10 @@ class SellerService extends Controller
         return $this->success($data, 'Analytics');
     }
 
-    public function getOrderSummary($userId)
+    public function getOrderSummary($userId, $request)
     {
         $currentUserId = $this->authManager->id();
+        $isAgriEcom = $request->boolean('is_agriecom');
 
         if ($currentUserId != $userId) {
             return $this->error(null, 'Unauthorized action.', 401);
@@ -531,6 +534,7 @@ class SellerService extends Controller
             ->whereHas('products', function (Builder $query) use ($userId): void {
                 $query->where('user_id', $userId);
             })
+            ->filterByType($isAgriEcom)
             ->orderBy('created_at', 'desc')
             ->take(8)
             ->get();

@@ -85,9 +85,9 @@ class SellerController extends Controller
         return $this->service->dashboardAnalytics($userId);
     }
 
-    public function getOrderSummary($userId)
+    public function getOrderSummary($userId, Request $request)
     {
-        return $this->service->getOrderSummary($userId);
+        return $this->service->getOrderSummary($userId, $request);
     }
 
     public function topSelling($userId)

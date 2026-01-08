@@ -142,11 +142,14 @@ class SellerService
         return $this->success(null, 'User has been removed successfully');
     }
 
-    public function paymentHistory($id)
+    public function paymentHistory($id, $request)
     {
+        $isAgriEcom = $request->boolean('is_agriecom');
+
         $orders = Order::whereHas('products', function (Builder $query) use ($id): void {
             $query->where('user_id', $id);
         })
+            ->filterByType($isAgriEcom)
             ->with('payments')
             ->get();
 

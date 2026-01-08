@@ -3,6 +3,7 @@
 namespace App\Services\Admin;
 
 use App\Enum\OrderStatus;
+use App\Enum\OrderType;
 use App\Enum\UserStatus;
 use App\Enum\UserType;
 use App\Models\Category;
@@ -19,6 +20,7 @@ class DashboardService
     public function dashboardAnalytics($request)
     {
         $period = $request->query('period', 'last_7_days');
+        $isAgriEcom = $request->boolean('is_agriecom');
 
         switch ($period) {
             case 'this_week':
@@ -40,6 +42,7 @@ class DashboardService
 
         $total_sales = Order::select('shop_countries.currency', 'orders.total_amount')
             ->join('shop_countries', 'orders.country_id', '=', 'shop_countries.country_id')
+            ->where('orders.type', $isAgriEcom ? OrderType::AGRIECOM : OrderType::AZANY)
             ->where('orders.status', OrderStatus::DELIVERED)
             ->whereBetween('orders.created_at', [$startDate, $endDate])
             ->get()
@@ -106,15 +109,19 @@ class DashboardService
         return $this->success($bestSellers, 'Best sellers based on delivered orders');
     }
 
-    public function bestSellingCat()
+    public function bestSellingCat($request)
     {
+        $isAgriEcom = $request->boolean('is_agriecom');
+
         $totalSales = Order::where('status', OrderStatus::DELIVERED)
+            ->filterByType($isAgriEcom)
             ->sum('total_amount');
 
         $bestSellingCategories = Category::select('categories.name as category_name')
             ->leftJoin('products', 'categories.id', '=', 'products.category_id')
             ->leftJoin('order_items', 'products.id', '=', 'order_items.product_id')
             ->leftJoin('orders', 'order_items.order_id', '=', 'orders.id')
+            ->where('orders.type', $isAgriEcom ? OrderType::AGRIECOM : OrderType::AZANY)
             ->where('orders.status', OrderStatus::DELIVERED)
             ->selectRaw('SUM(order_items.product_quantity) as count_sold')
             ->selectRaw('SUM(orders.total_amount) as total_revenue')
