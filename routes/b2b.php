@@ -39,9 +39,11 @@ Route::middleware('validate.header')
                 Route::get('/blog/details/{slug}', 'getBlogDetails');
                 Route::get('/sliders', 'getSliders');
                 Route::get('/page-banners/{page}', 'getPageBanners');
+                Route::get('/product-by-subcategory', 'getProductsBySubcategoryId');
                 Route::get('/products', 'getProducts');
                 Route::get('/categories-products', 'getCategoryProducts');
                 Route::get('/product-categories', 'allCategories');
+                Route::get('/categories-list', 'getCategories');
                 Route::get('/product-by-category/{slug}', 'categoryBySlug');
                 Route::get('/best-selling-products', 'bestSellingProduct');
                 Route::get('/featured-products', 'featuredProduct');

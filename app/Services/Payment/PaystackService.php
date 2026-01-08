@@ -203,6 +203,9 @@ class PaystackService
                     'status' => OrderStatus::PENDING,
                 ]);
 
+                // Update order type if agriecom cart exists
+                $order->markAsAgriecom($userId);
+
                 $msg = 'Your order has been placed successfully.';
                 logOrderActivity($order->id, $msg, OrderStatus::PENDING);
 

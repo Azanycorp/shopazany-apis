@@ -9,6 +9,7 @@ use App\Enum\RefundRequestStatus;
 use App\Enum\RfqStatus;
 use App\Enum\UserStatus;
 use App\Enum\UserType;
+use App\Http\Resources\B2BAllCategoryResource;
 use App\Http\Resources\B2BBannerResource;
 use App\Http\Resources\B2BBestSellingProductResource;
 use App\Http\Resources\B2BBuyerShippingAddressResource;
@@ -290,6 +291,7 @@ class BuyerService
     public function getProducts($request)
     {
         $type = $request->query('type');
+        $sort = $request->query('sort');
 
         $products = B2BProduct::with([
             'category',
@@ -302,7 +304,49 @@ class BuyerService
         ])
             ->whereStatus(ProductStatus::ACTIVE)
             ->when($type, fn ($q) => $q->where('type', $type))
-            ->latest()
+            ->when($sort, function ($q) use ($sort) {
+                match ($sort) {
+                    'price_asc' => $q->orderBy('unit_price', 'asc'),
+                    'price_desc' => $q->orderBy('price', 'desc'),
+                    'name_asc' => $q->orderBy('name', 'asc'),
+                    'name_desc' => $q->orderBy('name', 'desc'),
+                    default => $q->latest(),
+                };
+            }, fn ($q) => $q->latest())
+
+            ->get();
+
+        return $this->success(B2BProductResource::collection($products), 'Products');
+    }
+
+    public function getProductsBySubcategoryId($request)
+    {
+        $type = $request->query('type');
+        $subcategoryId = $request->query('sub_category_id');
+        $sort = $request->query('sort');
+
+        $products = B2BProduct::with([
+            'category',
+            'user',
+            'b2bLikes',
+            'b2bProductReview.user',
+            'subCategory',
+            'country',
+            'b2bProductImages',
+        ])
+            ->whereStatus(ProductStatus::ACTIVE)
+            ->when($type, fn ($q) => $q->where('type', $type))
+            ->when($subcategoryId, fn ($q) => $q->where('sub_category_id', $subcategoryId))
+            ->when($sort, function ($q) use ($sort) {
+                match ($sort) {
+                    'price_asc' => $q->orderBy('unit_price', 'asc'),
+                    'price_desc' => $q->orderBy('price', 'desc'),
+                    'name_asc' => $q->orderBy('name', 'asc'),
+                    'name_desc' => $q->orderBy('name', 'desc'),
+                    default => $q->latest(),
+                };
+            }, fn ($q) => $q->latest())
+
             ->get();
 
         return $this->success(B2BProductResource::collection($products), 'Products');
@@ -315,9 +359,7 @@ class BuyerService
         $categories = B2bProductCategory::with(['subcategory'])
             ->withCount('products')
             ->with([
-                'products' => function ($query) {
-                    $query->withCount('b2bProductReview');
-                },
+                'products' => fn ($query) => $query->withCount('b2bProductReview'),
                 'products.b2bProductReview',
                 'products.b2bLikes',
             ])
@@ -329,6 +371,19 @@ class BuyerService
             ->get();
 
         return $this->success(B2BCategoryResource::collection($categories), 'Categories');
+    }
+
+    public function getCategories($request)
+    {
+        $type = $request->query('type');
+
+        $categories = B2bProductCategory::with(['subcategory'])
+            ->when($type, fn ($q) => $q->where('type', $type))
+            ->where('featured', 1)
+            ->latest()
+            ->get();
+
+        return $this->success(B2BAllCategoryResource::collection($categories), 'Categories');
     }
 
     public function allBlogs($request)
@@ -344,7 +399,7 @@ class BuyerService
         return $this->success(BlogResource::collection($blogs), 'Blogs');
     }
 
-    public function singleBlog($slug)
+    public function singleBlog(string $slug)
     {
         $blog = Blog::with('user')->where('slug', $slug)
             ->firstOrFail();
@@ -451,21 +506,45 @@ class BuyerService
         return $this->success(B2BProductResource::collection($products), 'Products filtered');
     }
 
-    public function categoryBySlug($slug)
+    public function categoryBySlug($request, string $slug)
     {
-        $category = B2bProductCategory::with(['subcategory', 'products', 'products.b2bProductReview', 'products.b2bLikes'])
+        $sort = $request->query('sort');
+
+        $type = $request->query('type');
+
+        $category = B2bProductCategory::with([
+            'subcategory',
+            'products' => function ($query) use ($sort, $type) {
+
+                $query->withCount('b2bProductReview')
+                    ->with('b2bLikes')
+                    ->when(
+                        $type,
+                        fn ($q) => $q->whereRaw('LOWER(TRIM(type)) = ?', [strtolower($type)])
+                    )
+                    ->when($sort, function ($q) use ($sort) {
+                        match ($sort) {
+                            'price_asc' => $q->orderBy('unit_price', 'asc'),
+                            'price_desc' => $q->orderBy('price', 'desc'),
+                            'name_asc' => $q->orderBy('name', 'asc'),
+                            'name_desc' => $q->orderBy('name', 'desc'),
+                            default => $q->latest(),
+                        };
+                    }, fn ($q) => $q->latest());
+            },
+        ])
             ->withCount('products')
-            ->with(['products' => function ($query): void {
-                $query->withCount('b2bProductReview');
-            }])
             ->select('id', 'name', 'slug', 'image')
-            ->where(['featured' => 1, 'slug' => $slug])
+            ->where([
+                'featured' => 1,
+                'slug' => $slug,
+            ])
             ->firstOrFail();
 
         return $this->success(new B2BCategoryResource($category), 'Products by category');
     }
 
-    public function getProductDetail($slug)
+    public function getProductDetail(string $slug)
     {
         $product = B2BProduct::with([
             'category',

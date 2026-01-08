@@ -105,9 +105,10 @@ class CustomerService
         return $this->success($data, 'Account overview');
     }
 
-    public function recentOrders(int $userId)
+    public function recentOrders(int $userId, $request)
     {
         $currentUser = userAuth();
+        $isAgriEcom = $request->boolean('is_agriecom');
 
         if ($currentUser->id != $userId || $currentUser->type != UserType::CUSTOMER) {
             return $this->error(null, 'Unauthorized action.', 401);
@@ -121,6 +122,7 @@ class CustomerService
 
         $orders = Order::withRelationShips()
             ->where('user_id', $userId)
+            ->filterByType($isAgriEcom)
             ->latest()
             ->take(7)
             ->get();
@@ -134,6 +136,7 @@ class CustomerService
     {
         $currentUser = userAuth();
         $status = $request->query('status');
+        $isAgriEcom = $request->boolean('is_agriecom');
 
         if ($currentUser->id != $userId || $currentUser->type != UserType::CUSTOMER) {
             return $this->error(null, 'Unauthorized action.', 401);
@@ -147,7 +150,9 @@ class CustomerService
 
         $orders = Order::withRelationShips()
             ->where('user_id', $userId)
-            ->when($status, fn ($query) => $query->where('status', $status))->latest()
+            ->filterByType($isAgriEcom)
+            ->when($status, fn ($query) => $query->where('status', $status))
+            ->latest()
             ->paginate(25);
 
         $data = CustomerOrderResource::collection($orders);
