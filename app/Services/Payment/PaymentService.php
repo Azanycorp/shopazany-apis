@@ -46,7 +46,13 @@ class PaymentService
             default => throw new \Exception('Unsupported payment method'),
         };
 
-        return $paymentService->process($paymentDetails);
+        $service = $paymentService->process($paymentDetails);
+
+        if ($service['status'] === false) {
+            return $this->error(null, $service['message'], 400);
+        }
+
+        return $service;
     }
 
     public function webhook($request)
