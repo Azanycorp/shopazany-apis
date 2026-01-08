@@ -46,13 +46,13 @@ class PaymentService
             default => throw new \Exception('Unsupported payment method'),
         };
 
-        if (($paymentDetails['status'] ?? false) === false) {
-            return $this->error(['s' => $paymentDetails], $paymentDetails['message'] ?? 'Payment failed', 400);
+        if (isset($paymentDetails['status']) && $paymentDetails['status'] === false) {
+            return $this->error(null, $paymentDetails['message'], 400);
         }
 
         $response = $paymentService->process($paymentDetails);
 
-        if (($response['status'] ?? false) === false) {
+        if (isset($response['status']) && $response['status'] === false) {
             return $this->error(null, $response['message'], 400);
         }
 
