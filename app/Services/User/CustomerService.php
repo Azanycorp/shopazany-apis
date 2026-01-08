@@ -284,9 +284,7 @@ class CustomerService
 
         $wishlists = $user->wishlist()
             ->with(['product.category', 'product.shopCountry'])
-            ->when($isAgriEcom, function ($query) use ($isAgriEcom) {
-                return $query->where('is_agriecom', $isAgriEcom);
-            })
+            ->when($isAgriEcom, fn ($query) => $query->where('is_agriecom', true))
             ->get();
 
         $data = WishlistResource::collection($wishlists);
