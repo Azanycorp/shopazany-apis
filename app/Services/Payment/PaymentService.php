@@ -47,7 +47,7 @@ class PaymentService
         };
 
         if (($paymentDetails['status'] ?? false) === false) {
-            return $this->error(null, $paymentDetails['message'], 400);
+            return $this->error(null, $paymentDetails['message'] ?? $paymentDetails, 400);
         }
 
         $response = $paymentService->process($paymentDetails);
