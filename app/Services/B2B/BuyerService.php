@@ -378,9 +378,7 @@ class BuyerService
         $type = $request->query('type');
 
         $categories = B2bProductCategory::with(['subcategory'])
-            ->when($type, function ($q) use ($type) {
-                $q->where('type', $type);
-            })
+            ->when($type, fn ($q) => $q->where('type', $type))
             ->where('featured', 1)
             ->latest()
             ->get();
@@ -401,7 +399,7 @@ class BuyerService
         return $this->success(BlogResource::collection($blogs), 'Blogs');
     }
 
-    public function singleBlog($slug)
+    public function singleBlog(string $slug)
     {
         $blog = Blog::with('user')->where('slug', $slug)
             ->firstOrFail();
@@ -508,7 +506,7 @@ class BuyerService
         return $this->success(B2BProductResource::collection($products), 'Products filtered');
     }
 
-    public function categoryBySlug($request, $slug)
+    public function categoryBySlug($request, string $slug)
     {
         $sort = $request->query('sort');
 
@@ -533,7 +531,6 @@ class BuyerService
                             default => $q->latest(),
                         };
                     }, fn ($q) => $q->latest());
-
             },
         ])
             ->withCount('products')
@@ -547,7 +544,7 @@ class BuyerService
         return $this->success(new B2BCategoryResource($category), 'Products by category');
     }
 
-    public function getProductDetail($slug)
+    public function getProductDetail(string $slug)
     {
         $product = B2BProduct::with([
             'category',
