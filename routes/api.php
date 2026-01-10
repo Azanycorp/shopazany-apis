@@ -43,7 +43,7 @@ Route::middleware('validate.header')
                 });
 
             Route::get('/country', [ApiController::class, 'country']);
-            Route::get('/states/{country_id}', [ApiController::class, 'states']);
+            Route::get('/states/{country_id}', [ApiController::class, 'states'])->whereNumber('country_id');
 
             // Google Auth
             Route::controller(GoogleAuthController::class)
@@ -65,14 +65,15 @@ Route::middleware('validate.header')
             ->controller(CategoryController::class)
             ->group(function (): void {
                 Route::get('/all', 'categories');
-                Route::get('/subcategory/{category_id}', 'getSubcategory');
+                Route::get('/subcategory/{category_id}', 'getSubcategory')->whereNumber('category_id');
             });
 
         Route::get('/user/seller/template', [SellerController::class, 'getTemplate']);
         Route::get('/b2b/seller/template', [B2BSellerController::class, 'getTemplate']);
         Route::get('/shop/country', [ApiController::class, 'getShopByCountry'])
             ->middleware('cacheResponse:86400');
-        Route::get('/shop-by/country/{shop_country_id}', [ApiController::class, 'userShopByCountry']);
+        Route::get('/shop-by/country/{shop_country_id}', [ApiController::class, 'userShopByCountry'])
+            ->whereNumber('shop_country_id');
 
         Route::controller(HomeController::class)
             ->group(function (): void {
@@ -148,7 +149,7 @@ Route::middleware('validate.header')
                             ->middleware(['tx.replay', 'burst.guard']);
 
                         // Payment Method
-                        Route::get('/method/{country_id}', 'getPaymentMethod');
+                        Route::get('/method/{country_id}', 'getPaymentMethod')->whereNumber('country_id');
                         // Shipping Agent
                         Route::get('/shipping-agents', 'getShippingAgents');
                     });
@@ -157,10 +158,10 @@ Route::middleware('validate.header')
                 Route::prefix('subscription')
                     ->controller(SubscriptionController::class)
                     ->group(function (): void {
-                        Route::get('/country/{country_id}', 'getPlanByCountry');
+                        Route::get('/country/{country_id}', 'getPlanByCountry')->whereNumber('country_id');
                         Route::post('/payment', 'subscriptionPayment')
                             ->middleware(['tx.replay', 'burst.guard']);
-                        Route::get('/history/{user_id}', 'subscriptionHistory');
+                        Route::get('/history/{user_id}', 'subscriptionHistory')->whereNumber('user_id');
                     });
 
                 Route::controller(UserController::class)->group(function (): void {
@@ -175,33 +176,36 @@ Route::middleware('validate.header')
 
                     Route::prefix('withdrawal')->group(function (): void {
                         Route::post('/', 'addMethod');
-                        Route::get('/history/{user_id}', 'withdrawalHistory');
-                        Route::get('/method/{user_id}', 'withdrawalMethod');
+                        Route::get('/history/{user_id}', 'withdrawalHistory')->whereNumber('user_id');
+                        Route::get('/method/{user_id}', 'withdrawalMethod')->whereNumber('user_id');
                         Route::post('/request', 'withdrawalRequest')
                             ->middleware(['tx.replay', 'burst.guard']);
                     });
 
                     Route::prefix('affiliate')->group(function (): void {
-                        Route::get('/dashboard-analytic/{user_id}', 'dashboardAnalytic');
-                        Route::get('/transaction/{user_id}', 'transactionHistory');
+                        Route::get('/dashboard-analytic/{user_id}', 'dashboardAnalytic')
+                            ->whereNumber('user_id');
+                        Route::get('/transaction/{user_id}', 'transactionHistory')->whereNumber('user_id');
                         Route::post('/payment-method', 'addPaymentMethod');
-                        Route::get('/payment-method/{user_id}', 'getPaymentMethod');
-                        Route::get('/referral/management/{user_id}', 'referralManagement');
+                        Route::get('/payment-method/{user_id}', 'getPaymentMethod')->whereNumber('user_id');
+                        Route::get('/referral/management/{user_id}', 'referralManagement')->whereNumber('user_id');
                     });
 
                     Route::post('/biometric/setup', 'setupBiometric');
                     Route::post('/update-profile/{user_id}', 'updateProfile');
-                    Route::post('/settings/{user_id}', 'changeSettings');
+                    Route::post('/settings/{user_id}', 'changeSettings')->whereNumber('user_id');
 
                     // Delete Account
                     Route::delete('/delete-account/{user_id}', 'deleteAccount');
                 });
 
                 Route::prefix('cart')->controller(CartController::class)->group(function (): void {
-                    Route::get('/{user_id}', 'getCartItems');
+                    Route::get('/{user_id}', 'getCartItems')->whereNumber('user_id');
                     Route::post('/add', 'addToCart');
-                    Route::delete('/{user_id}/clear', 'clearCart');
-                    Route::delete('/{user_id}/remove/{cart_id}', 'removeCartItem');
+                    Route::delete('/{user_id}/clear', 'clearCart')->whereNumber('user_id');
+                    Route::delete('/{user_id}/remove/{cart_id}', 'removeCartItem')
+                        ->whereNumber('user_id')
+                        ->whereNumber('cart_id');
                     Route::patch('/update-cart', 'updateCart');
                 });
 
@@ -210,18 +214,18 @@ Route::middleware('validate.header')
                     ->controller(CustomerController::class)
                     ->group(function (): void {
                         // Account and Dashboard Routes
-                        Route::get('/account-overview/{user_id}', 'acountOverview');
-                        Route::get('/activity/{user_id}', 'activity');
-                        Route::get('/dashboard/analytic/{user_id}', 'dashboardAnalytics');
+                        Route::get('/account-overview/{user_id}', 'acountOverview')->whereNumber('user_id');
+                        Route::get('/activity/{user_id}', 'activity')->whereNumber('user_id');
+                        Route::get('/dashboard/analytic/{user_id}', 'dashboardAnalytics')->whereNumber('user_id');
 
                         // Order Routes
-                        Route::get('/recent-orders/{user_id}', 'recentOrders');
-                        Route::get('/orders/{user_id}', 'getOrders');
+                        Route::get('/recent-orders/{user_id}', 'recentOrders')->whereNumber('user_id');
+                        Route::get('/orders/{user_id}', 'getOrders')->whereNumber('user_id');
                         Route::get('/order/detail/{order_no}', 'getOrderDetail');
                         Route::post('/rate/order', 'rateOrder');
 
                         // Reward Point
-                        Route::get('/reward/dashboard/{user_id}', 'rewardDashboard');
+                        Route::get('/reward/dashboard/{user_id}', 'rewardDashboard')->whereNumber('user_id');
                         Route::post('/redeem/point', 'redeemPoint');
 
                         // Reward partners (service)
@@ -232,7 +236,7 @@ Route::middleware('validate.header')
                             Route::get('/company', 'getCompanies');
                             Route::get('/by-category/{slug}', 'getServicesByCategory');
                             Route::get('/category', 'getCategories');
-                            Route::get('/detail/{id}', 'getServiceDetail');
+                            Route::get('/detail/{id}', 'getServiceDetail')->whereNumber('id');
 
                             Route::prefix('customer')->group(function (): void {
                                 Route::get('/', 'getCustomers');
@@ -246,9 +250,13 @@ Route::middleware('validate.header')
 
                         // Wishlist Routes
                         Route::post('/wishlist', 'wishlist');
-                        Route::get('/wishlist/{user_id}', 'getWishlist');
-                        Route::get('/wishlist/single/{user_id}/{wishlist_id}', 'getSingleWishlist');
-                        Route::delete('/wishlist/remove/{user_id}/{wishlist_id}', 'removeWishlist');
+                        Route::get('/wishlist/{user_id}', 'getWishlist')->whereNumber('user_id');
+                        Route::get('/wishlist/single/{user_id}/{wishlist_id}', 'getSingleWishlist')
+                            ->whereNumber('user_id')
+                            ->whereNumber('wishlist_id');
+                        Route::delete('/wishlist/remove/{user_id}/{wishlist_id}', 'removeWishlist')
+                            ->whereNumber('user_id')
+                            ->whereNumber('wishlist_id');
 
                         // Reedem promo
                         Route::post('/redeem/promo', 'redeemPromo');
@@ -262,47 +270,67 @@ Route::middleware('validate.header')
                     ->group(function (): void {
                         // Business Information
                         Route::post('/business/information', 'businessInfo');
-                        Route::get('/dashboard/analytic/{user_id}', 'dashboardAnalytics');
+                        Route::get('/dashboard/analytic/{user_id}', 'dashboardAnalytics')->whereNumber('user_id');
 
                         // Product Routes
                         Route::prefix('product')->group(function (): void {
                             Route::post('/create', 'createProduct');
                             Route::post('/edit/{product_id}/{user_id}', 'updateProduct')
+                                ->whereNumber('product_id')
+                                ->whereNumber('user_id')
                                 ->middleware('ensure.user');
                             Route::get('/{user_id}', 'getProduct')
+                                ->whereNumber('user_id')
                                 ->middleware('ensure.user');
                             Route::get('/top-selling/{user_id}', 'topSelling')
+                                ->whereNumber('user_id')
                                 ->middleware('ensure.user');
                             Route::delete('/delete/{product_id}/{user_id}', 'deleteProduct')
+                                ->whereNumber('product_id')
+                                ->whereNumber('user_id')
                                 ->middleware('ensure.user');
                             Route::post('/import', 'productImport');
-                            Route::get('/export/{user_id}/{type}', 'export');
+                            Route::get('/export/{user_id}/{type}', 'export')
+                                ->whereNumber('user_id')
+                                ->whereIn('type', ['product', 'order']);
 
                             // Product Attributes
                             Route::prefix('attribute')->group(function (): void {
                                 Route::post('/create', 'createAttribute');
                                 Route::get('/{user_id}', 'getAttribute')
+                                    ->whereNumber('user_id')
                                     ->middleware('ensure.user');
                                 Route::get('/{id}/{user_id}', 'getSingleAttribute')
+                                    ->whereNumber('id')
+                                    ->whereNumber('user_id')
                                     ->middleware('ensure.user');
                                 Route::patch('/edit/{id}/{user_id}', 'updateAttribute')
+                                    ->whereNumber('id')
+                                    ->whereNumber('user_id')
                                     ->middleware('ensure.user');
                                 Route::delete('/delete/{id}/{user_id}', 'deleteAttribute')
+                                    ->whereNumber('id')
+                                    ->whereNumber('user_id')
                                     ->middleware('ensure.user');
                             });
 
                             Route::get('/{product_id}/{user_id}', 'getSingleProduct')
+                                ->whereNumber('product_id')
+                                ->whereNumber('user_id')
                                 ->middleware('ensure.user');
                         });
 
                         // Orders Routes
-                        Route::prefix('orders/{user_id}')->group(function (): void {
-                            Route::get('/', 'getAllOrders')
-                                ->middleware('ensure.user');
-                            Route::get('/summary', 'getOrderSummary');
-                            Route::get('/{id}', 'getOrderDetail');
-                            Route::patch('/update-status/{id}', 'updateOrderStatus');
-                        });
+                        Route::prefix('orders/{user_id}')
+                            ->group(function (): void {
+                                Route::get('/', 'getAllOrders')
+                                    ->middleware('ensure.user');
+                                Route::get('/summary', 'getOrderSummary');
+                                Route::get('/{id}', 'getOrderDetail')
+                                    ->whereNumber('id');
+                                Route::patch('/update-status/{id}', 'updateOrderStatus')
+                                    ->whereNumber('id');
+                            });
                     });
             });
     });

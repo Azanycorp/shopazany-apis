@@ -7,7 +7,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 trait HttpResponse
 {
-    protected function success(mixed $data, ?string $message = null, int $code = Response::HTTP_OK)
+    protected function success(mixed $data, ?string $message = null, int $code = Response::HTTP_OK): JsonResponse
     {
         return new JsonResponse([
             'status' => true,
@@ -16,7 +16,7 @@ trait HttpResponse
         ], $code);
     }
 
-    protected function error(mixed $data, ?string $message = null, int $code = Response::HTTP_BAD_REQUEST)
+    protected function error(mixed $data, ?string $message = null, int $code = Response::HTTP_BAD_REQUEST): JsonResponse
     {
         return new JsonResponse([
             'status' => false,
@@ -25,7 +25,7 @@ trait HttpResponse
         ], $code);
     }
 
-    protected function withPagination($collection, ?string $message = null, int $code = Response::HTTP_OK, ?array $extraMeta = [])
+    protected function withPagination($collection, ?string $message = null, int $code = Response::HTTP_OK, ?array $extraMeta = []): JsonResponse
     {
         return new JsonResponse([
             'status' => true,
