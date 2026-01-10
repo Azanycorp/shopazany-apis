@@ -442,7 +442,7 @@ class SellerService extends Controller
 
     public function export($userId, $type)
     {
-        $currentUserId = $this->authManager->id();
+        $currentUserId = userAuthId();
 
         if ($currentUserId != $userId) {
             return $this->error(null, 'Unauthorized action.', 401);
@@ -462,7 +462,7 @@ class SellerService extends Controller
 
     public function dashboardAnalytics($userId)
     {
-        $currentUserId = $this->authManager->id();
+        $currentUserId = userAuthId();
 
         if ($currentUserId != $userId) {
             return $this->error(null, 'Unauthorized action.', 401);

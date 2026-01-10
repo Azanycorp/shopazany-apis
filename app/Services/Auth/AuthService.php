@@ -285,7 +285,7 @@ class AuthService extends Controller
     public function logout($request)
     {
         $user = $request->user();
-        $user->tokens()->where('id', $user->currentAccessToken()->id)->delete();
+        $user?->tokens()->where('id', $user?->currentAccessToken()->id)->delete();
 
         $description = "User with email address {$user->email} logged out";
         $action = UserLog::LOGOUT;
