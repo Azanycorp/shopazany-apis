@@ -73,11 +73,11 @@ class AdminSellerController extends Controller
         return $this->service->removeSeller($id);
     }
 
-    public function paymentHistory($id)
+    public function paymentHistory($id, Request $request)
     {
         abort_if($this->gate->denies('seller_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
 
-        return $this->service->paymentHistory($id);
+        return $this->service->paymentHistory($id, $request);
     }
 
     public function bulkRemove(Request $request)

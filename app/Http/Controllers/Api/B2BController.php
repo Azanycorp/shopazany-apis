@@ -82,19 +82,24 @@ class B2BController extends Controller
         return $this->buyerService->categories($request);
     }
 
+    public function getCategories(Request $request)
+    {
+        return $this->buyerService->getCategories($request);
+    }
+
     public function getBlogs(Request $request)
     {
         return $this->buyerService->allBlogs($request);
     }
 
-    public function getBlogDetails($slug)
+    public function getBlogDetails(string $slug)
     {
         return $this->buyerService->singleBlog($slug);
     }
 
-    public function categoryBySlug($slug)
+    public function categoryBySlug(Request $request, string $slug)
     {
-        return $this->buyerService->categoryBySlug($slug);
+        return $this->buyerService->categoryBySlug($request, $slug);
     }
 
     public function getSliders()
@@ -127,7 +132,12 @@ class B2BController extends Controller
         return $this->buyerService->getProducts($request);
     }
 
-    public function getProductDetail($slug)
+    public function getProductsBySubcategoryId(Request $request)
+    {
+        return $this->buyerService->getProductsBySubcategoryId($request);
+    }
+
+    public function getProductDetail(string $slug)
     {
         return $this->buyerService->getProductDetail($slug);
     }

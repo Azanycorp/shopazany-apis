@@ -16,11 +16,11 @@ class OrderController extends Controller
         private readonly \Illuminate\Contracts\Auth\Access\Gate $gate
     ) {}
 
-    public function orderAnalytics()
+    public function orderAnalytics(Request $request)
     {
         abort_if($this->gate->denies('order_management'), Response::HTTP_FORBIDDEN, self::MESSAGE);
 
-        return $this->service->orderAnalytics();
+        return $this->service->orderAnalytics($request);
     }
 
     public function localOrder(Request $request): array
