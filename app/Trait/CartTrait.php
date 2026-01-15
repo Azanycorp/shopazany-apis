@@ -12,10 +12,25 @@ trait CartTrait
     public function getLocalPrice(Collection $localItems, string $defaultCurrency): float
     {
         return $localItems->sum(function (\App\Models\Cart $item) use ($defaultCurrency): float {
-            $price = ($item->variation->price ?? $item->product->discounted_price) * $item->quantity;
-            $currency = $item->variation
-                ? $item->variation->product->shopCountry->currency
-                : $item->product?->shopCountry->currency;
+            $unitPrice = $item->variation->price
+                ?? $item->product->discounted_price
+                ?? 0;
+
+            $price = $unitPrice * $item->quantity;
+
+            $product = $item->variation
+                ? $item->variation->product
+                : $item->product;
+
+            if (! $product || ! $product->shopCountry) {
+                return 0;
+            }
+
+            $currency = $product->shopCountry->currency;
+
+            if (! $currency) {
+                return 0;
+            }
 
             return currencyConvert($currency, $price, $defaultCurrency);
         });
@@ -27,10 +42,25 @@ trait CartTrait
     public function getInternaltionalPrice(Collection $internationalItems, string $defaultCurrency): float
     {
         return $internationalItems->sum(function (\App\Models\Cart $item) use ($defaultCurrency): float {
-            $price = ($item->variation->price ?? $item->product->discounted_price) * $item->quantity;
-            $currency = $item->variation
-                ? $item->variation->product->shopCountry->currency
-                : $item->product?->shopCountry->currency;
+            $unitPrice = $item->variation->price
+                ?? $item->product->discounted_price
+                ?? 0;
+
+            $price = $unitPrice * $item->quantity;
+
+            $product = $item->variation
+                ? $item->variation->product
+                : $item->product;
+
+            if (! $product || ! $product->shopCountry) {
+                return 0;
+            }
+
+            $currency = $product->shopCountry->currency;
+
+            if (! $currency) {
+                return 0;
+            }
 
             return currencyConvert($currency, $price, $defaultCurrency);
         });
