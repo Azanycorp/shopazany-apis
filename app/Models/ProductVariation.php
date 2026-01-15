@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /**
  * @property int $id
  * @property int $product_id
- * @property-read Product $product
+ * @property-read Product $product|null
  */
 class ProductVariation extends Model
 {
