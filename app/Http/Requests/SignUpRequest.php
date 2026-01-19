@@ -33,9 +33,9 @@ class SignUpRequest extends FormRequest
             'terms' => ['required', 'boolean'],
         ];
 
-        if (App::environment('production')) {
-            $rules['email'][] = 'regex:/^[a-zA-Z0-9._%+-]+@(gmail\.com|yahoo\.com|outlook\.com|hotmail\.com)$/';
-        }
+        // if (App::environment('production')) {
+        //     $rules['email'][] = 'regex:/^[a-zA-Z0-9._%+-]+@(gmail\.com|yahoo\.com|outlook\.com|hotmail\.com)$/';
+        // }
 
         return $rules;
     }
