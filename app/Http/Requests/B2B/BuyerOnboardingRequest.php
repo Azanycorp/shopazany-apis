@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\B2B;
 
+use App\Rules\NoDisposableEmail;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Password;
 
@@ -25,7 +26,7 @@ class BuyerOnboardingRequest extends FormRequest
         return [
             'first_name' => ['required', 'string'],
             'last_name' => ['required', 'string'],
-            'email' => ['required', 'email', 'email:rfc,dns', 'unique:users,email'],
+            'email' => ['required', 'email', 'email:rfc,dns', 'unique:users,email', new NoDisposableEmail],
             'service_type' => ['required', 'array'],
             'service_type.*' => ['string'],
             'average_spend' => ['required'],
