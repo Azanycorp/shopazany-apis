@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\B2B;
 
+use App\Rules\NoDisposableEmail;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Password;
 
@@ -23,7 +24,7 @@ class SignupRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => ['required', 'email', 'email:rfc,dns', 'unique:users,email'],
+            'email' => ['required', 'email', 'email:rfc,dns', 'unique:users,email', new NoDisposableEmail],
             'country_id' => ['nullable', 'integer', 'exists:countries,id'],
             'state_id' => ['nullable', 'integer', 'exists:states,id'],
             'password' => ['required', 'string', 'confirmed', Password::defaults()],
