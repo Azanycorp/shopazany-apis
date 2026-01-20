@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Rules\NoDisposableEmail;
 use Illuminate\Foundation\Http\FormRequest;
 
 class AdminUserRequest extends FormRequest
@@ -25,7 +26,7 @@ class AdminUserRequest extends FormRequest
             'first_name' => ['required', 'string', 'max:240'],
             'last_name' => ['required', 'string', 'max:240'],
             'phone_number' => ['required', 'string', 'max:20'],
-            'email' => ['required', 'email:rfc,dns', 'unique:admins,email'],
+            'email' => ['required', 'email:rfc,dns', 'unique:admins,email', new NoDisposableEmail],
         ];
     }
 }
