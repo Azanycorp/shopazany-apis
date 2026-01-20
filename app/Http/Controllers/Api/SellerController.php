@@ -24,7 +24,7 @@ class SellerController extends Controller
 
     public function createProduct(ProductRequest $request): JsonResponse
     {
-        return $this->service->createProduct($request);
+        return $this->service->createProduct($request, 'b2c');
     }
 
     public function updateProduct(Request $request, int $id, int $userId): JsonResponse
