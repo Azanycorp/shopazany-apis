@@ -218,18 +218,7 @@ class SellerService extends Controller
 
         $data = SellerProductResource::collection($products);
 
-        return [
-            'status' => 'true',
-            'message' => 'All products',
-            'data' => $data,
-            'pagination' => [
-                'current_page' => $products->currentPage(),
-                'last_page' => $products->lastPage(),
-                'per_page' => $products->perPage(),
-                'prev_page_url' => $products->previousPageUrl(),
-                'next_page_url' => $products->nextPageUrl(),
-            ],
-        ];
+        return $this->withPagination($data, 'All products');
     }
 
     public function getSingleProduct($productId, $userId)
