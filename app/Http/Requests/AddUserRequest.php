@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Rules\NoDisposableEmail;
 use Illuminate\Foundation\Http\FormRequest;
 
 class AddUserRequest extends FormRequest
@@ -24,7 +25,7 @@ class AddUserRequest extends FormRequest
         return [
             'first_name' => ['required', 'string', 'max:100'],
             'last_name' => ['required', 'string', 'max:100'],
-            'email' => ['required', 'email'],
+            'email' => ['required', 'email', new NoDisposableEmail, 'unique:users,email'],
             'phone_number' => ['required', 'string'],
             'modules' => ['required', 'array'],
         ];

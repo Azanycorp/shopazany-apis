@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\AgriEcom;
 
+use App\Rules\NoDisposableEmail;
 use Illuminate\Foundation\Http\FormRequest;
 
 class RegisterRequest extends FormRequest
@@ -22,7 +23,7 @@ class RegisterRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => ['required', 'string', 'email', 'max:255', ' unique:users'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email', new NoDisposableEmail],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ];
     }
