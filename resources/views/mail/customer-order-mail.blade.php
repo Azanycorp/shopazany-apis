@@ -161,25 +161,16 @@
     <div class="logo">
         <img src="https://ik.imagekit.io/mdee2wnwm/Azany/logo/azanylogo.png?updatedAt=1753939975701" alt="Azany Logo">
     </div>
-    <h1>Hi {{ $user->first_name }},</h1>
-    <h2>Order {{ $orderNo }} Has been Placed.</h2>
-    <p class="subtitle">Your #1 Global E-commerce Platform</p>
+    <h1>Dear {{ $user->first_name }},</h1>
+    <p>Exciting news! Your recent order (#[Order ID number]) has been shipped and is speeding its way to your doorstep! </p>
 
     <div class="banner">
         <div class="banner-text">ORDER CONFIRMED</div>
         <img src="https://ik.imagekit.io/mdee2wnwm/Azany/mail_images/Rectangle%206263.png?updatedAt=1753940698633" alt="Order Confirmed Banner">
     </div>
 
-    <div class="message">
-        <h2>We Appreciate Your Purchase!</h2>
-        <p>Hello {{ $user->first_name }}, We're Getting Your Order Ready For Dispatch.<br>We'll Notify You As Soon As It's On Its Way.</p>
-        <p>— Azany Team</p>
-    </div>
-
-    <a href="#" class="btn">Track your Purchase</a>
-
     <div class="purchase-details">
-        <h2>Purchase Details</h2>
+        <h2>Order Details</h2>
 
         @php
             $subtotal = 0;
@@ -238,6 +229,21 @@
                 {{ $symbol }}{{ number_format($totalAmount) }}
             </span>
         </div>
+    </div>
+
+    <div class="additional-info">
+        <h3>Additional Information:</h3>
+        <p>• Manage your order details and view invoices anytime by logging into your account on our <a href="{{ $loginUrl }}">website</a>.</p>
+        <p>• For any questions about your order, contact our customer service team at <a href="mailto:support@azany.com">+88015-88888-9999</a> or by phone at +88015-88888-9999.</p>
+    </div>
+
+    <div class="message">
+        <p style="font-size: 1.1em; font-weight: bold;">We hope you love your new purchase! We appreciate your business and can't wait for you to receive it.</p>
+        <p style="font-size: 1.1em; font-weight: bold;">See you soon!</p>
+    </div>
+
+    <div class="social-ps">
+        <strong>P.S.</strong> Don't forget to share your excitement! Tag us on social media and show us how you're enjoying your new items!
     </div>
 
     <div class="footer">

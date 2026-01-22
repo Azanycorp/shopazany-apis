@@ -20,7 +20,8 @@ class CustomerOrderMail extends Mailable
         protected User $user,
         protected array $items,
         protected string $orderNo,
-        protected float $totalAmount) {}
+        protected float $totalAmount
+    ) {}
 
     /**
      * Get the message envelope.
@@ -28,7 +29,7 @@ class CustomerOrderMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Order Placed Successfully',
+            subject: 'Yay! Your Azany Order is on its way!',
         );
     }
 
@@ -44,6 +45,8 @@ class CustomerOrderMail extends Mailable
                 'items' => $this->items,
                 'orderNo' => $this->orderNo,
                 'totalAmount' => $this->totalAmount,
+                'accountLink' => $this->getUrls()['baseUrl'],
+                'loginUrl' => $this->getUrls()['loginUrl'],
             ],
         );
     }
@@ -56,5 +59,20 @@ class CustomerOrderMail extends Mailable
     public function attachments(): array
     {
         return [];
+    }
+
+    protected function getUrls(): array
+    {
+        if (app()->environment('production')) {
+            return [
+                'baseUrl' => 'https://shopazany.com/en',
+                'loginUrl' => 'https://shopazany.com/en/login',
+            ];
+        }
+
+        return [
+            'baseUrl' => 'https://fe-staging.shopazany.com/en',
+            'loginUrl' => 'https://fe-staging.shopazany.com/en/login',
+        ];
     }
 }

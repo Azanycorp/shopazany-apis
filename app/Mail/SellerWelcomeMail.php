@@ -8,11 +8,15 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class SignUpVerifyMail extends Mailable
+class SellerWelcomeMail extends Mailable
 {
     use Queueable, SerializesModels;
 
     public $user;
+
+    public $baseUrl;
+
+    public $loginUrl;
 
     /**
      * Create a new message instance.
@@ -20,6 +24,9 @@ class SignUpVerifyMail extends Mailable
     public function __construct($user)
     {
         $this->user = $user;
+        $urls = $this->getUrls();
+        $this->baseUrl = $urls['baseUrl'];
+        $this->loginUrl = $urls['loginUrl'];
     }
 
     /**
@@ -28,7 +35,7 @@ class SignUpVerifyMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: "You're in! Verify It's You in 5 Minutes",
+            subject: "Welcome to Azany, {$this->user['first_name']} - You're Officially an Azany Seller!",
         );
     }
 
@@ -38,10 +45,7 @@ class SignUpVerifyMail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'mail.signupverify',
-            with: [
-                'user' => $this->user,
-            ]
+            markdown: 'mail.seller-welcome-mail',
         );
     }
 
@@ -53,5 +57,20 @@ class SignUpVerifyMail extends Mailable
     public function attachments(): array
     {
         return [];
+    }
+
+    protected function getUrls(): array
+    {
+        if (app()->environment('production')) {
+            return [
+                'baseUrl' => 'https://shopazany.com/en',
+                'loginUrl' => 'https://shopazany.com/en/login',
+            ];
+        }
+
+        return [
+            'baseUrl' => 'https://fe-staging.shopazany.com/en',
+            'loginUrl' => 'https://fe-staging.shopazany.com/en/login',
+        ];
     }
 }
