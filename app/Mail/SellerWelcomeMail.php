@@ -8,7 +8,7 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class UserWelcomeMail extends Mailable
+class SellerWelcomeMail extends Mailable
 {
     use Queueable, SerializesModels;
 
@@ -35,7 +35,7 @@ class UserWelcomeMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Welcome to Azany! Shop & Score Rewards',
+            subject: "Welcome to Azany, {$this->user['first_name']} - You're Officially an Azany Seller!",
         );
     }
 
@@ -45,13 +45,7 @@ class UserWelcomeMail extends Mailable
     public function content(): Content
     {
         return new Content(
-            markdown: 'mail.user-welcome-mail',
-            with: [
-                'user' => $this->user,
-                'baseUrl' => $this->baseUrl,
-                'loginUrl' => $this->loginUrl,
-                'rewardPoint' => 100,
-            ]
+            markdown: 'mail.seller-welcome-mail',
         );
     }
 

@@ -120,7 +120,8 @@ Route::middleware('validate.header')
             ->group(function (): void {
                 // Biometric Login
                 Route::post('/biometric-login', [AuthController::class, 'biometricLogin'])
-                    ->middleware('throttle:6,1');
+                    ->middleware('throttle:6,1')
+                    ->withoutMiddleware(['auth:sanctum', 'auth.check']);
 
                 // Product
                 Route::post('product-review', [HomeController::class, 'productReview']);

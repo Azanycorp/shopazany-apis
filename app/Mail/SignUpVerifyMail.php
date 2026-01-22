@@ -28,7 +28,7 @@ class SignUpVerifyMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Verify your account',
+            subject: "You're in! Verify It's You in 5 Minutes",
         );
     }
 
