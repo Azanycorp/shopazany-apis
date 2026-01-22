@@ -50,7 +50,7 @@ class UserWelcomeMail extends Mailable
                 'user' => $this->user,
                 'baseUrl' => $this->baseUrl,
                 'loginUrl' => $this->loginUrl,
-                'rewardPoint' => 500,
+                'rewardPoint' => 100,
             ]
         );
     }
