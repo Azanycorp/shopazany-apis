@@ -35,7 +35,7 @@ class UserWelcomeMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Welcome to Azany',
+            subject: 'Welcome to Azany! Shop & Score Rewards',
         );
     }
 
@@ -50,6 +50,7 @@ class UserWelcomeMail extends Mailable
                 'user' => $this->user,
                 'baseUrl' => $this->baseUrl,
                 'loginUrl' => $this->loginUrl,
+                'rewardPoint' => 500,
             ]
         );
     }
