@@ -160,42 +160,43 @@
                 </p>
 
                 <p style="color: #4B5563; margin-bottom: 1.5rem; line-height: 1.6;">
-                    Welcome to the Azany Tribe! We're thrilled you've joined our crew, not just an ordinary online store, but a cultural hub where you discover unique finds, express your style, and connect with cool peeps like yourself.
+                    Welcome aboard! You've officially joined the coolest ecommerce family – Azany! We're thrilled to have you as a new seller and can't wait to see you shine with your unique products.
+                </p>
+
+                <p style="color: #4B5563; margin-bottom: 1.5rem; line-height: 1.6;">
+                    At Azany, we're not just your average online shop. We're all about cultural vibes, diverse finds, and connecting passionate sellers like you with buyers who appreciate unique stuff.
                 </p>
 
                 <div class="points-badge" style="background-color: #FFFBEB; border: 2px solid #F59E0B; border-radius: 0.5rem; padding: 1rem; margin: 1.5rem 0; text-align: center;">
-                    <h3 style="color: #D97706; font-weight: bold; margin-bottom: 0.5rem;">🎉 Welcome Bonus! 🎉</h3>
-                    <p style="color: #4B5563; margin-bottom: 0.5rem;">To kick things off, enjoy <strong style="color: #10B981; font-size: 1.2rem;">{{ $rewardPoint }}</strong> reward points just for signing up!</p>
-                    <p style="color: #4B5563; margin-bottom: 0;">There's even more to earn with your first purchase.</p>
+                    <h3 style="color: #D97706; font-weight: bold; margin-bottom: 0.5rem;">Here's the exciting part with Azany:</h3>
+                    <p style="color: #4B5563; margin-bottom: 0.5rem;">- Global Stage: Showcase your products to potential buyers worldwide, regardless of their location.</p>
+                    <p style="color: #4B5563; margin-bottom: 0;">- Sell with Ease: Our platform is super user-friendly, allowing you to showcase your products and manage orders effortlessly.</p>
+                    <p style="color: #4B5563; margin-bottom: 0;">- Marketing Support: We've got your back with built-in promotion tools and support to help you get discovered.</p>
+                    <p style="color: #4B5563; margin-bottom: 0;">- 24/7 Support Crew: We're here to answer your questions and be your hype team around the clock.</p>
                 </div>
 
                 <p style="color: #4B5563; margin-bottom: 1.5rem; line-height: 1.6;">
-                    Ready to explore? Dive into our top picks on our
-                    <a href="{{ $baseUrl }}" style="color: #3B82F6; font-weight: bold;">best-selling products page</a>.
+                    Ready to dive in? Let's make e-commerce history together!
                 </p>
 
-                <div style="margin: 2rem 0; text-align: center;">
-                    <a href="{{ $baseUrl }}" class="btn-primary" style="background-color: #3B82F6; color: white; padding: 0.5rem 1.5rem; border-radius: 0.25rem; display: inline-block; font-weight: bold;">Shop Best Sellers</a>
-                </div>
+                <p>
+                    ✅ Create your stunning online shop
+                </p>
+                <p>
+                    ✅ List your awesome products
+                </p>
+                <p>
+                    ✅ Start selling like a pro
+                </p>
 
-                <div style="margin: 2rem 0; text-align: center;">
-                    <p style="color: #4B5563; margin-bottom: 0.5rem; font-weight: bold;">Follow us on social media for insider deals & fun:</p>
-                    <div class="social-icons" style="margin: 1rem 0;">
-                        <!-- Add social media icons here if available -->
-                        {{-- <p style="color: #3B82F6; font-weight: bold;">@ {{ $social_media_handle }} on all platforms</p> --}}
-
-                        <a href="#"><img src="facebook-icon.png" alt="Facebook" style="height: 24px;"></a>
-                        <a href="#"><img src="instagram-icon.png" alt="Instagram" style="height: 24px;"></a>
-                        <a href="#"><img src="twitter-icon.png" alt="Twitter" style="height: 24px;"></a>
-                    </div>
-                </div>
+                <p style="color: #4B5563; margin-bottom: 1.5rem; line-height: 1.6; font-weight: bold; font-size: 1.1rem;">Have questions? We're just a shout away.</p>
 
                 <p style="color: #4B5563; margin-bottom: 1.5rem; line-height: 1.6; font-weight: bold; font-size: 1.1rem;">
-                    Happy shopping!
+                    Let's embark on this exciting journey together!
                 </p>
 
                 <p style="color: #4B5563; margin-bottom: 1.5rem; line-height: 1.6;">
-                    The Azany Team
+                    With Excitement, Azany!
                 </p>
             </td>
         </tr>

@@ -2,10 +2,8 @@
 
 namespace App\Pipelines\Verify;
 
-use App\Enum\MailingEnum;
 use App\Enum\UserLog;
 use App\Enum\UserStatus;
-use App\Mail\UserWelcomeMail;
 use App\Models\User;
 use App\Trait\HttpResponse;
 use App\Trait\SignUp;
@@ -38,13 +36,8 @@ class Verify
             $user->update(['pending_referrer_code' => null]);
         }
 
-        $type = MailingEnum::EMAIL_VERIFICATION;
-        $subject = 'Email verification';
-        $mail_class = UserWelcomeMail::class;
-        $data = [
-            'user' => $user,
-        ];
-        mailSend($type, $user, $subject, $mail_class, $data);
+        // Send email to user (customer, seller e.t.c)
+        $this->sendEmailToUser($user);
 
         $user->tokens()->delete();
         $token = $user->createToken('API Token of '.$user->email);

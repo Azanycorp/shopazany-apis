@@ -3,7 +3,10 @@
 namespace App\Trait;
 
 use App\Enum\Coupon as EnumCoupon;
+use App\Enum\MailingEnum;
 use App\Enum\UserType;
+use App\Mail\SellerWelcomeMail;
+use App\Mail\UserWelcomeMail;
 use App\Models\Coupon;
 use App\Models\User;
 
@@ -157,5 +160,43 @@ trait SignUp
         ]);
 
         return null;
+    }
+
+    protected function sendEmailToUser(User $user): void
+    {
+        match ($user->type) {
+            UserType::CUSTOMER => $this->sendCustomerEmail($user),
+            UserType::SELLER,
+            UserType::AGRIECOM_SELLER => $this->sendSellerEmail($user),
+            default => null,
+        };
+    }
+
+    /**
+     * Send email to b2c customer
+     */
+    private function sendCustomerEmail(User $user): void
+    {
+        mailSend(
+            MailingEnum::EMAIL_VERIFICATION,
+            $user,
+            'Email verification',
+            UserWelcomeMail::class,
+            ['user' => $user]
+        );
+    }
+
+    /**
+     * Send email to b2c seller
+     */
+    private function sendSellerEmail(User $user): void
+    {
+        mailSend(
+            MailingEnum::EMAIL_VERIFICATION,
+            $user,
+            'Email verification',
+            SellerWelcomeMail::class,
+            ['user' => $user]
+        );
     }
 }
