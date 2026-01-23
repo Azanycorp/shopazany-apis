@@ -39,6 +39,7 @@ class ProfileResource extends JsonResource
             'is_affiliate_member' => (bool) $this->resource->is_affiliate_member,
             'two_factor_enabled' => (bool) $this->resource->two_factor_enabled,
             'is_biometric_enabled' => (bool) $this->resource->biometric_enabled,
+            'hear_about_us' => (string) $this->resource->hear_about_us,
             'status' => (string) $this->resource->status,
             'wallet' => (object) [
                 'available_balance' => $this->resource->wallet?->balance,
