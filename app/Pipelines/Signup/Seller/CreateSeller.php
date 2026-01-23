@@ -34,7 +34,7 @@ class CreateSeller
             }
         }
 
-        if (! empty($referrer)) {
+        if (filled($referrer)) {
             try {
                 $this->validateReferrerCode((string) $referrer);
             } catch (\Exception $e) {
