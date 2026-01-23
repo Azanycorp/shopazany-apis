@@ -74,9 +74,8 @@ trait SignUp
      * Convert invalid or placeholder values to null.
      *
      * @param  mixed  $coupon
-     * @return string|null
      */
-    protected function normalizeCoupon($coupon)
+    protected function normalizeCoupon(?string $coupon): ?string
     {
         if (is_null($coupon) || trim(strtolower($coupon)) === 'null' || trim($coupon) === '') {
             return null;
@@ -85,7 +84,7 @@ trait SignUp
         return $coupon;
     }
 
-    protected function handleReferrers($referrerCode, $user)
+    protected function handleReferrers(string $referrerCode, User $user)
     {
         if (! $referrerCode) {
             throw new \InvalidArgumentException('Referrer code is required');
@@ -102,7 +101,7 @@ trait SignUp
         reward_user($referrer, 'referral', 'completed', $user);
     }
 
-    protected function validateCoupon($couponCode)
+    protected function validateCoupon(string $couponCode)
     {
         $coupon = Coupon::where('code', $couponCode)
             ->whereStatus(EnumCoupon::ACTIVE->value)
@@ -121,7 +120,16 @@ trait SignUp
         }
     }
 
-    protected function assignCoupon($couponCode, $user)
+    protected function validateReferrerCode(string $code)
+    {
+        $user = User::where('referrer_code', $code)->first();
+
+        if (! $user) {
+            throw new \Exception('Invalid referrer code');
+        }
+    }
+
+    protected function assignCoupon(string $couponCode, User $user)
     {
         $coupon = Coupon::where('code', $couponCode)
             ->whereStatus(EnumCoupon::ACTIVE->value)

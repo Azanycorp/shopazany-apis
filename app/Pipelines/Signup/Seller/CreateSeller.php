@@ -24,11 +24,19 @@ class CreateSeller
         $currencyCode = currencyCodeByCountryId($request->country_id);
         $coupon = $request->query('coupon');
         $coupon = $this->normalizeCoupon($coupon);
-        $referrer = $request->query('referrer');
+        $referrer = $request->query('referrer') ?? $request->input('referrer_code');
 
         if ($coupon) {
             try {
                 $this->validateCoupon($coupon);
+            } catch (\Exception $e) {
+                return $this->error(null, $e->getMessage(), 400);
+            }
+        }
+
+        if (! empty($referrer)) {
+            try {
+                $this->validateReferrerCode((string) $referrer);
             } catch (\Exception $e) {
                 return $this->error(null, $e->getMessage(), 400);
             }
@@ -51,6 +59,7 @@ class CreateSeller
                 'email_verified_at' => null,
                 'verification_code' => $code,
                 'is_verified' => 0,
+                'hear_about_us' => $request->string('hear_about_us'),
                 'password' => $this->bcryptHasher->make($request->string('password')),
             ]);
 

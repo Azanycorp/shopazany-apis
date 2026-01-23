@@ -86,6 +86,7 @@ class User extends Authenticatable
         'pending_referrer_code',
         'biometric_enabled',
         'biometric_token',
+        'hear_about_us',
     ];
 
     protected $hidden = [
@@ -193,6 +194,14 @@ class User extends Authenticatable
     {
         return Attribute::make(
             get: fn (): string => "{$this->first_name} {$this->last_name}"
+        );
+    }
+
+    protected function hearAboutUs(): Attribute
+    {
+        return Attribute::make(
+            get: fn ($value) => ucfirst($value),
+            set: fn ($value) => $value ? strtolower($value) : null
         );
     }
 
