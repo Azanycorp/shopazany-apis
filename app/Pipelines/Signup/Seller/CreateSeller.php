@@ -26,7 +26,7 @@ class CreateSeller
         $coupon = $this->normalizeCoupon($coupon);
         $referrer = $request->query('referrer') ?? $request->input('referrer_code');
 
-        if ($coupon) {
+        if (filled($coupon)) {
             try {
                 $this->validateCoupon($coupon);
             } catch (\Exception $e) {
@@ -34,7 +34,7 @@ class CreateSeller
             }
         }
 
-        if (! empty($referrer)) {
+        if (filled($referrer)) {
             try {
                 $this->validateReferrerCode((string) $referrer);
             } catch (\Exception $e) {
@@ -63,11 +63,11 @@ class CreateSeller
                 'password' => $this->bcryptHasher->make($request->string('password')),
             ]);
 
-            if ($coupon) {
+            if (filled($coupon)) {
                 $this->assignCoupon($coupon, $user);
             }
 
-            if ($referrer) {
+            if (filled($referrer)) {
                 $user->update(['pending_referrer_code' => $referrer]);
             }
 
