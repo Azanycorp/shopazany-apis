@@ -72,8 +72,6 @@ trait SignUp
     /**
      * Normalize coupon input.
      * Convert invalid or placeholder values to null.
-     *
-     * @param  mixed  $coupon
      */
     protected function normalizeCoupon(?string $coupon): ?string
     {
