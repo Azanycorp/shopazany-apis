@@ -22,7 +22,7 @@ class QuoteRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'rfq_id' => ['required', 'integer', 'exists:rfqs,id'],
+            'rfq_id' => ['required', 'integer', 'exists:b2b_quotes,id'],
         ];
     }
 }
