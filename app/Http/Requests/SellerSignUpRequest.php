@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Rules\NoDisposableEmail;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 
 class SellerSignUpRequest extends FormRequest
@@ -31,7 +32,16 @@ class SellerSignUpRequest extends FormRequest
             'address' => ['required', 'string'],
             'country_id' => ['required', 'integer', 'exists:countries,id'],
             'state_id' => ['required', 'integer', 'exists:states,id'],
+            'hear_about_us' => ['nullable', 'string', Rule::in(['google', 'facebook', 'instagram', 'youtube', 'linkedin', 'affiliate'])],
+            'referrer_code' => ['nullable', 'string'],
             'password' => ['required', 'string', 'confirmed', Password::defaults()],
+        ];
+    }
+
+    public function messages()
+    {
+        return [
+            'hear_about_us.in' => 'The hear about us field must be one of the following: google, facebook, instagram, youtube, linkedin, affiliate.',
         ];
     }
 }
