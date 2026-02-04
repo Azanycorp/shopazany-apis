@@ -24,8 +24,8 @@ class B2BBuyerShippingAddressResource extends JsonResource
             'street' => (string) $this->resource->street,
             'city' => (string) $this->resource->city,
             'postal_code' => (string) $this->resource->postal_code,
-            'state' => (string) $this->resource->state?->resource->name,
-            'country' => (string) $this->resource->country?->resource->name,
+            'state' => (string) $this->resource->state?->name,
+            'country' => (string) $this->resource->country?->name,
         ];
     }
 }
