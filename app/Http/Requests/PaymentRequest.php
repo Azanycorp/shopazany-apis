@@ -23,8 +23,6 @@ class PaymentRequest extends FormRequest
     {
         $rules = [
             'user_id' => ['required', 'integer', 'exists:users,id'],
-            'shipping_agent_id' => ['nullable', 'integer', 'exists:shipping_agents,id'],
-            'shipping_address_id' => ['required', 'integer', 'exists:buyer_shipping_addresses,id'],
             'centre_id' => ['nullable', 'integer', 'exists:collation_centers,id'],
             'amount' => ['required', 'integer'],
             'currency' => ['required', 'string', 'in:NGN,USD'],
@@ -38,6 +36,11 @@ class PaymentRequest extends FormRequest
             $rules['shipping_address.first_name'] = ['required_with:shipping_address', 'string'];
             $rules['shipping_address.last_name'] = ['nullable', 'string'];
             $rules['shipping_address.email'] = ['required_with:shipping_address', 'email'];
+        }
+
+        if ($this->payment_method === 'b2b_paystack') {
+            $rules['shipping_agent_id'] = ['nullable', 'integer', 'exists:shipping_agents,id'];
+            $rules['shipping_address_id'] = ['required', 'integer', 'exists:buyer_shipping_addresses,id'];
         }
 
         return $rules;
