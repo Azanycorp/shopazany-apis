@@ -649,7 +649,8 @@ class BuyerService
                     'buyer_id' => $quote->buyer_id,
                     'seller_id' => $quote->seller_id,
                     'quote_no' => strtoupper(Str::random(10).$userId),
-                    'type' => $type ?? null,
+                    'type' => $type,
+                    'status' => RfqStatus::PENDING,
                     'product_id' => $quote->product_id,
                     'product_quantity' => $quote->qty,
                     'total_amount' => $unit_price * $quote->qty,
@@ -696,7 +697,8 @@ class BuyerService
                 'buyer_id' => $quote->buyer_id,
                 'seller_id' => $quote->seller_id,
                 'quote_no' => strtoupper(Str::random(10).userAuthId()),
-                'type' => $type ?? null,
+                'type' => $type,
+                'status' => RfqStatus::PENDING,
                 'product_id' => $quote->product_id,
                 'product_quantity' => $quote->qty,
                 'total_amount' => $amount,
@@ -998,6 +1000,8 @@ class BuyerService
     {
         $quote = B2bWishList::findOrFail($request->id);
 
+        $type = $request->query('type');
+
         if (! $quote) {
             return $this->error(null, 'No record found', 404);
         }
@@ -1020,6 +1024,8 @@ class BuyerService
                 'seller_id' => $product->user_id,
                 'quote_no' => strtoupper(Str::random(10).$this->authManager->user()->id),
                 'product_id' => $product->id,
+                'type' => $type,
+                'status' => RfqStatus::PENDING,
                 'product_quantity' => $request->qty,
                 'total_amount' => $amount,
                 'p_unit_price' => $product->unit_price,
