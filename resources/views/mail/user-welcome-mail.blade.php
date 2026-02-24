@@ -182,11 +182,9 @@
                     <p style="color: #4B5563; margin-bottom: 0.5rem; font-weight: bold;">Follow us on social media for insider deals & fun:</p>
                     <div class="social-icons" style="margin: 1rem 0;">
                         <!-- Add social media icons here if available -->
-                        {{-- <p style="color: #3B82F6; font-weight: bold;">@ {{ $social_media_handle }} on all platforms</p> --}}
-
-                        <a href="#"><img src="facebook-icon.png" alt="Facebook" style="height: 24px;"></a>
-                        <a href="#"><img src="instagram-icon.png" alt="Instagram" style="height: 24px;"></a>
-                        <a href="#"><img src="twitter-icon.png" alt="Twitter" style="height: 24px;"></a>
+                        <a href="https://www.facebook.com/shopazany"><img src="https://upload.wikimedia.org/wikipedia/commons/c/cd/Facebook_logo_%28square%29.png" alt="Facebook" style="height: 24px;"></a>
+                        <a href="https://www.instagram.com/shopazany/?hl=en"><img src="https://upload.wikimedia.org/wikipedia/commons/5/58/Instagram-Icon.png" alt="Instagram" style="height: 24px;"></a>
+                        <a href="https://x.com/shopazany"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/cc/X_icon.svg/960px-X_icon.svg.png" alt="X (Formarlly twitter)" style="height: 24px;"></a>
                     </div>
                 </div>
 
