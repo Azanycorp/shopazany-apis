@@ -16,8 +16,6 @@ class B2BUserWelcomeMail extends Mailable
 
     public $baseUrl;
 
-    public $loginUrl;
-
     /**
      * Create a new message instance.
      */
@@ -26,7 +24,6 @@ class B2BUserWelcomeMail extends Mailable
         $this->user = $user;
         $urls = $this->getUrls();
         $this->baseUrl = $urls['baseUrl'];
-        $this->loginUrl = $urls['loginUrl'];
     }
 
     /**
