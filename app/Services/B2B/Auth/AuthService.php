@@ -59,7 +59,7 @@ class AuthService
 
         $type = MailingEnum::EMAIL_VERIFICATION;
         $subject = 'Email verification';
-        $mail_class = "App\Mail\UserWelcomeMail";
+        $mail_class = "App\Mail\B2BUserWelcomeMail";
         $data = [
             'user' => $user,
         ];
