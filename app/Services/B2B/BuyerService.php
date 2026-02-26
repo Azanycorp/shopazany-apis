@@ -314,9 +314,9 @@ class BuyerService
                 };
             }, fn ($q) => $q->latest())
 
-            ->get();
+            ->paginate(70);
 
-        return $this->success(B2BProductResource::collection($products), 'Products');
+        return $this->withPagination(B2BProductResource::collection($products), 'Products');
     }
 
     public function getProductsBySubcategoryId($request)
@@ -479,9 +479,9 @@ class BuyerService
             })
             ->groupBy('product_id', 'id')
             ->orderByDesc('total_sold')
-            ->get();
+            ->paginate(70);
 
-        return $this->success(B2BBestSellingProductResource::collection($bestSellingProducts), 'Best selling products');
+        return $this->withPagination(B2BBestSellingProductResource::collection($bestSellingProducts), 'Best selling products');
     }
 
     public function viewAllFeaturedProduct($request)
@@ -503,9 +503,9 @@ class BuyerService
             ->where('status', ProductStatus::ACTIVE)
             ->when($countryId, fn ($q) => $q->where('country_id', $countryId))
             ->when($type, fn ($q) => $q->where('type', $type))
-            ->get();
+            ->paginate(70);
 
-        return $this->success(B2BProductResource::collection($featuredProducts), 'Featured products');
+        return $this->withPagination(B2BProductResource::collection($featuredProducts), 'Featured products');
     }
 
     public function featuredProduct($request)
