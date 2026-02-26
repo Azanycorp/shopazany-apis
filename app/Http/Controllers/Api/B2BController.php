@@ -72,9 +72,19 @@ class B2BController extends Controller
         return $this->buyerService->bestSelling($request);
     }
 
+    public function viewAllBestSellingProduct(Request $request)
+    {
+        return $this->buyerService->viewAllBestSelling($request);
+    }
+
     public function featuredProduct(Request $request)
     {
         return $this->buyerService->featuredProduct($request);
+    }
+
+    public function viewAllFeaturedProduct(Request $request)
+    {
+        return $this->buyerService->viewAllFeaturedProduct($request);
     }
 
     public function allCategories(Request $request)
