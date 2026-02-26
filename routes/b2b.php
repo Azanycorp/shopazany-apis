@@ -46,7 +46,9 @@ Route::middleware('validate.header')
                 Route::get('/categories-list', 'getCategories');
                 Route::get('/product-by-category/{slug}', 'categoryBySlug');
                 Route::get('/best-selling-products', 'bestSellingProduct');
+                Route::get('/best-selling-products-view-all', 'viewAllBestSellingProduct');
                 Route::get('/featured-products', 'featuredProduct');
+                Route::get('/featured-products-view-all', 'viewAllFeaturedProduct');
                 Route::get('/search-products', 'searchProduct');
                 Route::get('/product/{slug}', 'getProductDetail');
             });

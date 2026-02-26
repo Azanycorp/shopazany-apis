@@ -313,10 +313,9 @@ class BuyerService
                     default => $q->latest(),
                 };
             }, fn ($q) => $q->latest())
+            ->paginate($request->query('per_page') ?? 25);
 
-            ->get();
-
-        return $this->success(B2BProductResource::collection($products), 'Products');
+        return $this->withPagination(B2BProductResource::collection($products), 'Products');
     }
 
     public function getProductsBySubcategoryId($request)
@@ -455,6 +454,57 @@ class BuyerService
             ->get();
 
         return $this->success(B2BBestSellingProductResource::collection($bestSellingProducts), 'Best selling products');
+    }
+
+    public function viewAllBestSelling($request)
+    {
+        $type = $request->input('type');
+
+        $bestSellingProducts = B2bOrder::with([
+            'product:id,name,front_image,unit_price,slug,default_currency,type',
+            'product.b2bProductReview:id,product_id,rating',
+            'b2bProductReview',
+        ])
+            ->select(
+                'id',
+                'product_id',
+                $this->databaseManager->raw('SUM(product_quantity) as total_sold')
+            )
+            ->where('status', OrderStatus::DELIVERED)
+            ->when($type, function ($query, $type) {
+                $query->whereHas('product', function (Builder $q) use ($type) {
+                    $q->where('type', $type);
+                });
+            })
+            ->groupBy('product_id', 'id')
+            ->orderByDesc('total_sold')
+            ->paginate($request->query('per_page') ?? 25);
+
+        return $this->withPagination(B2BBestSellingProductResource::collection($bestSellingProducts), 'Best selling products');
+    }
+
+    public function viewAllFeaturedProduct($request)
+    {
+        $countryId = $request->query('country_id');
+        $type = $request->query('type');
+
+        $featuredProducts = B2BProduct::with([
+            'shopCountry',
+            'orders',
+            'b2bProductReview.user',
+            'category',
+            'user',
+            'b2bLikes',
+            'subCategory',
+            'country',
+            'b2bProductImages',
+        ])
+            ->where('status', ProductStatus::ACTIVE)
+            ->when($countryId, fn ($q) => $q->where('country_id', $countryId))
+            ->when($type, fn ($q) => $q->where('type', $type))
+            ->paginate($request->query('per_page') ?? 25);
+
+        return $this->withPagination(B2BProductResource::collection($featuredProducts), 'Featured products');
     }
 
     public function featuredProduct($request)
