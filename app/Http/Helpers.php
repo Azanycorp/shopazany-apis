@@ -3,7 +3,6 @@
 use App\Actions\UserLogAction;
 use App\Models\Action;
 use App\Models\B2BRequestRefund;
-use App\Models\BusinessSetting;
 use App\Models\Country;
 use App\Models\Currency;
 use App\Models\Language;
@@ -58,24 +57,6 @@ if (! function_exists('userAuthId')) {
     function userAuthId(): int|string|null
     {
         return auth()->id();
-    }
-}
-
-if (! function_exists('getSetting')) {
-    function getSetting($key, $default = null, $lang = false)
-    {
-        $settings = Cache::remember('business_settings', 86400, function () {
-            return BusinessSetting::all();
-        });
-
-        if ($lang === false) {
-            $setting = $settings->where('type', $key)->first();
-        } else {
-            $setting = $settings->where('type', $key)->where('lang', $lang)->first();
-            $setting = $setting ? $setting : $settings->where('type', $key)->first();
-        }
-
-        return $setting == null ? $default : $setting->value;
     }
 }
 

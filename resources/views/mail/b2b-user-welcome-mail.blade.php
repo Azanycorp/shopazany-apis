@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome to Azany! Shop & Score Rewards</title>
+    <title>Welcome to Azany B2B Let’s Get Your Business Thriving</title>
     <style>
         body {
             background-color: white;
@@ -162,12 +162,6 @@
                 <p style="color: #4B5563; margin-bottom: 1.5rem; line-height: 1.6;">
                     Welcome to the Azany Tribe! We're thrilled you've joined our crew, not just an ordinary online store, but a cultural hub where you discover unique finds, express your style, and connect with cool peeps like yourself.
                 </p>
-
-                <div class="points-badge" style="background-color: #FFFBEB; border: 2px solid #F59E0B; border-radius: 0.5rem; padding: 1rem; margin: 1.5rem 0; text-align: center;">
-                    <h3 style="color: #D97706; font-weight: bold; margin-bottom: 0.5rem;">🎉 Welcome Bonus! 🎉</h3>
-                    <p style="color: #4B5563; margin-bottom: 0.5rem;">To kick things off, enjoy <strong style="color: #10B981; font-size: 1.2rem;">{{ $rewardPoint }}</strong> reward points just for signing up!</p>
-                    <p style="color: #4B5563; margin-bottom: 0;">There's even more to earn with your first purchase.</p>
-                </div>
 
                 <p style="color: #4B5563; margin-bottom: 1.5rem; line-height: 1.6;">
                     Ready to explore? Dive into our top picks on our
