@@ -47,7 +47,7 @@ class Auth
                 ->retry(
                     $options->getRetries(),
                     $options->getRetryDelay(),
-                    function ($exception) {
+                    function (\Exception $exception) {
                         return $this->shouldRetry($exception);
                     }
                 );
