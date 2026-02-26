@@ -4,6 +4,7 @@ namespace App\Services\Auth;
 
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
+use Throwable;
 
 class Auth
 {
@@ -47,7 +48,9 @@ class Auth
                 ->retry(
                     $options->getRetries(),
                     $options->getRetryDelay(),
-                    function (\Exception $exception) {
+                    function (
+                        Throwable $exception,
+                    ): bool {
                         return $this->shouldRetry($exception);
                     }
                 );
@@ -79,7 +82,7 @@ class Auth
         }
     }
 
-    private function shouldRetry(\Exception $exception): bool
+    private function shouldRetry(Throwable $exception): bool
     {
         if ($exception instanceof ConnectionException) {
             return true;
