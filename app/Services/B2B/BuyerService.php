@@ -313,8 +313,7 @@ class BuyerService
                     default => $q->latest(),
                 };
             }, fn ($q) => $q->latest())
-
-            ->paginate(request()->input('per_page') ?? 25);
+            ->paginate($request->query('per_page') ?? 25);
 
         return $this->withPagination(B2BProductResource::collection($products), 'Products');
     }
@@ -479,7 +478,7 @@ class BuyerService
             })
             ->groupBy('product_id', 'id')
             ->orderByDesc('total_sold')
-            ->paginate(request()->input('per_page') ?? 25);
+            ->paginate($request->query('per_page') ?? 25);
 
         return $this->withPagination(B2BBestSellingProductResource::collection($bestSellingProducts), 'Best selling products');
     }
@@ -503,7 +502,7 @@ class BuyerService
             ->where('status', ProductStatus::ACTIVE)
             ->when($countryId, fn ($q) => $q->where('country_id', $countryId))
             ->when($type, fn ($q) => $q->where('type', $type))
-            ->paginate(request()->input('per_page') ?? 25);
+            ->paginate($request->query('per_page') ?? 25);
 
         return $this->withPagination(B2BProductResource::collection($featuredProducts), 'Featured products');
     }
