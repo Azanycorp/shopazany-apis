@@ -117,9 +117,9 @@ class B2BController extends Controller
         return $this->buyerService->getSliders();
     }
 
-    public function getBanners()
+    public function getBanners(Request $request)
     {
-        return $this->buyerService->getBanners();
+        return $this->buyerService->getBanners($request);
     }
 
     public function getClientLogos(Request $request)

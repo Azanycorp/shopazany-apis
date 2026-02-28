@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Collection;
 
 /**
  * @property-read array $product_ids
@@ -65,17 +64,11 @@ class Banner extends Model
     protected function b2bProducts(): Attribute
     {
         return Attribute::make(
-            get: function ($value) {
-                $ids = is_array($value)
-                    ? $value
-                    : json_decode($value, true);
-
-                if (! is_array($ids)) {
-                    $ids = [];
-                }
+            get: function ($value, $attributes) {
+                $ids = json_decode($attributes['products'] ?? '[]', true);
 
                 if (blank($ids)) {
-                    return new Collection([]);
+                    return new \Illuminate\Support\Collection([]);
                 }
 
                 return B2BProduct::whereIn('id', $ids)->get();

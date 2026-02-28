@@ -233,11 +233,16 @@ class BuyerService
         return $this->success(null, 'Request sent successful', 201);
     }
 
-    public function getBanners()
+    public function getBanners($request)
     {
-        $banners = Banner::where('status', ProductStatus::ACTIVE)
-            ->get();
+        $type = $request->query('type');
 
+        $banners = Banner::where('status', ProductStatus::ACTIVE)
+            ->when($type, function ($q) use ($type) {
+                $q->where('type', $type);
+            })
+            ->latest()
+            ->get();
         $data = B2BBannerResource::collection($banners);
 
         return $this->success($data, 'banners');
@@ -534,8 +539,8 @@ class BuyerService
 
     public function searchProduct($request)
     {
-        $searchQuery = $request->input('search');
-        $type = $request->input('type');
+        $searchQuery = $request->query('search');
+        $type = $request->query('type');
 
         $products = B2BProduct::with([
             'country',
