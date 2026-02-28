@@ -67,8 +67,8 @@ class Banner extends Model
             get: function ($value, $attributes) {
                 $ids = json_decode($attributes['products'] ?? '[]', true);
 
-                if (empty($ids)) {
-                    return collect([]);
+                if (blank($ids)) {
+                    return new \Illuminate\Support\Collection([]);
                 }
 
                 return B2BProduct::whereIn('id', $ids)->get();
