@@ -554,7 +554,15 @@ class BuyerService
             ->when($type, fn ($q) => $q->where('type', $type))
             ->where(function (Builder $query) use ($searchQuery) {
                 $query->where('name', 'LIKE', '%'.$searchQuery.'%')
-                    ->orWhere('unit_price', 'LIKE', '%'.$searchQuery.'%');
+                    ->orWhere('unit_price', 'LIKE', '%'.$searchQuery.'%')
+
+                    ->orWhereHas('category', function (\Illuminate\Contracts\Database\Query\Builder $q) use ($searchQuery) {
+                        $q->where('name', 'LIKE', '%'.$searchQuery.'%');
+                    })
+
+                    ->orWhereHas('subCategory', function (\Illuminate\Contracts\Database\Query\Builder $q) use ($searchQuery) {
+                        $q->where('name', 'LIKE', '%'.$searchQuery.'%');
+                    });
             })
             ->get();
 
