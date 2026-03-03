@@ -233,11 +233,16 @@ class BuyerService
         return $this->success(null, 'Request sent successful', 201);
     }
 
-    public function getBanners()
+    public function getBanners($request)
     {
-        $banners = Banner::where('status', ProductStatus::ACTIVE)
-            ->get();
+        $type = $request->query('type');
 
+        $banners = Banner::where('status', ProductStatus::ACTIVE)
+            ->when($type, function ($q) use ($type) {
+                $q->where('type', $type);
+            })
+            ->latest()
+            ->get();
         $data = B2BBannerResource::collection($banners);
 
         return $this->success($data, 'banners');
@@ -534,8 +539,8 @@ class BuyerService
 
     public function searchProduct($request)
     {
-        $searchQuery = $request->input('search');
-        $type = $request->input('type');
+        $searchQuery = $request->query('search');
+        $type = $request->query('type');
 
         $products = B2BProduct::with([
             'country',
@@ -549,7 +554,15 @@ class BuyerService
             ->when($type, fn ($q) => $q->where('type', $type))
             ->where(function (Builder $query) use ($searchQuery) {
                 $query->where('name', 'LIKE', '%'.$searchQuery.'%')
-                    ->orWhere('unit_price', 'LIKE', '%'.$searchQuery.'%');
+                    ->orWhere('unit_price', 'LIKE', '%'.$searchQuery.'%')
+
+                    ->orWhereHas('category', function (\Illuminate\Contracts\Database\Query\Builder $q) use ($searchQuery) {
+                        $q->where('name', 'LIKE', '%'.$searchQuery.'%');
+                    })
+
+                    ->orWhereHas('subCategory', function (\Illuminate\Contracts\Database\Query\Builder $q) use ($searchQuery) {
+                        $q->where('name', 'LIKE', '%'.$searchQuery.'%');
+                    });
             })
             ->get();
 
