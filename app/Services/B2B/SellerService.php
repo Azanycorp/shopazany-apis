@@ -74,6 +74,29 @@ class SellerService extends Controller
         return $this->success(new B2BSellerProfileResource($user), 'Seller profile');
     }
 
+    public function switchUserType($request)
+    {
+        $currentUserId = userAuthId();
+
+        if ($currentUserId != $request->user_id) {
+            return $this->error(null, 'Unauthorized action.', 401);
+        }
+
+        $user = User::find($currentUserId);
+
+        if (! $user) {
+            return $this->error(null, 'Invalid code', 404);
+        }
+
+        $user->update([
+            'last_user_type' => $user->type,
+            'date_switched' => now(),
+            'type' => $request->type,
+        ]);
+
+        return $this->success(null, 'Role Switched successfully');
+    }
+
     public function editAccount($request)
     {
         $currentUserId = userAuthId();
