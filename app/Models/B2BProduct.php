@@ -20,6 +20,7 @@ class B2BProduct extends Model
         'slug',
         'category_id',
         'sub_category_id',
+        'brand_id',
         'keywords',
         'description',
         'front_image',
