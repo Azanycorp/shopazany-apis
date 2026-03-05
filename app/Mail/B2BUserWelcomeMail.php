@@ -2,7 +2,6 @@
 
 namespace App\Mail;
 
-use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -13,7 +12,7 @@ class B2BUserWelcomeMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public User $user;
+    public $user;
 
     public string $baseUrl;
 

@@ -73,6 +73,8 @@ class User extends Authenticatable
         'is_affiliate_member',
         'status',
         'type',
+        'last_user_type',
+        'date_switched',
         'middlename',
         'state_id',
         'is_admin_approve',
