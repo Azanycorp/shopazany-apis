@@ -123,6 +123,11 @@ Route::middleware('validate.header')
                 });
             });
 
+            // role switch
+            Route::controller(B2BSellerController::class)->group(function (): void {
+                Route::post('/switch-user-type', 'switchUserType');
+            });
+
             // Buyer
             Route::group(
                 [
