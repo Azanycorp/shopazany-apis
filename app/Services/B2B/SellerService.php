@@ -82,10 +82,10 @@ class SellerService extends Controller
             return $this->error(null, 'Unauthorized action.', 401);
         }
 
-        $user = User::find($currentUserId);
+        $user = User::find($request->user_id);
 
         if (! $user) {
-            return $this->error(null, 'Invalid code', 404);
+            return $this->error(null, 'User not found', 404);
         }
 
         $user->update([
