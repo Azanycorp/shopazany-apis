@@ -17,6 +17,7 @@ class UserBusinessInformation extends Model
         'file',
         'confirm',
         'status',
+        'how_to_sell',
     ];
 
     public function user()
