@@ -8,6 +8,7 @@ use App\Http\Requests\B2B\SellerShippingRequest;
 use App\Http\Requests\B2B\UpdateProductRequest;
 use App\Http\Requests\B2B\WithdrawalMethodRequest;
 use App\Http\Requests\ChangePasswordRequest;
+use App\Http\Requests\SwitchUserTypeRequest;
 use App\Services\B2B\SellerService;
 use Illuminate\Http\Request;
 
@@ -30,6 +31,11 @@ class B2BSellerController extends Controller
     public function profile()
     {
         return $this->service->profile();
+    }
+
+    public function switchUserType(SwitchUserTypeRequest $request)
+    {
+        return $this->service->switchUserType($request);
     }
 
     public function editAccount(Request $request)

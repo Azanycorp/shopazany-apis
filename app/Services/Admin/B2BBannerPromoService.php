@@ -14,6 +14,7 @@ use App\Models\B2bPromo;
 use App\Models\Banner;
 use App\Models\Promo;
 use App\Trait\HttpResponse;
+use Illuminate\Support\Str;
 
 class B2BBannerPromoService
 {
@@ -23,11 +24,18 @@ class B2BBannerPromoService
     {
         $image = uploadImage($request, 'image', 'banner');
 
+        $slug = Str::slug($request->title);
+
+        if (Banner::where('slug', $slug)->exists()) {
+            $slug = $slug.'-'.uniqid();
+        }
+
         Banner::create([
             'title' => $request->title,
             'image' => $image['url'],
             'public_id' => $image['public_id'],
-            'type' => BannerType::B2B,
+            'slug' => $slug,
+            'type' => $request->type ?? BannerType::B2B,
             'start_date' => $request->start_date,
             'end_date' => $request->end_date,
             'products' => $request->products,
