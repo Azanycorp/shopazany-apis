@@ -63,7 +63,7 @@ class SellerService extends Controller
                 $url = $this->storeFile($request->file('file'), $folder, $request);
             }
 
-            $user->update($request->only(['first_name', 'last_name']));
+            $user->update($request->only(['first_name', 'last_name', 'middlename']));
 
             $user->userbusinessinfo()->create([
                 'business_location' => $request->business_location,
