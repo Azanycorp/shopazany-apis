@@ -71,6 +71,7 @@ class SellerService extends Controller
                 'identity_type' => $request->identity_type,
                 'file' => $url['url'],
                 'confirm' => $request->confirm,
+                'how_to_sell' => $request->how_to_sell,
             ]);
 
             return $this->success(null, 'Information added successfully');
