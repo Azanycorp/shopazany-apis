@@ -85,6 +85,8 @@ Route::middleware('validate.header')
                 Route::get('/recommended/products', 'recommendedProducts');
                 Route::get('/single/product/{slug}', 'productSlug');
                 Route::get('/top-brands', 'topBrands');
+                Route::get('/brands', 'allBrands');
+                Route::get('/units', 'allUnits');
                 Route::get('/top-sellers', 'topSellers');
                 Route::get('/top-products', 'topProducts');
                 Route::get('/deals', 'getDeals');
