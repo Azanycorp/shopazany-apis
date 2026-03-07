@@ -20,7 +20,7 @@ class EnsureUserIsOwner
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $routeUserId = $request->route('user_id');
+        $routeUserId = $request->route('user_id') ?? $request->input('user_id');
 
         if ($this->authManager->id() != $routeUserId) {
             return $this->error(null, 'You are not authorized to access this resource', 403);

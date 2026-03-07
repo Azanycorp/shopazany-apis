@@ -19,6 +19,7 @@ use App\Models\Cart;
 use App\Models\Category;
 use App\Models\Deal;
 use App\Models\Product;
+use App\Models\Unit;
 use App\Models\User;
 use App\Models\Wishlist;
 use App\Trait\General;
@@ -254,13 +255,33 @@ class HomeService
 
     public function topBrands(): JsonResponse
     {
-        $brands = Brand::select(['id', 'name', 'slug', 'image'])
+        $brands = Brand::select('id', 'name', 'slug', 'image')
             ->where('status', 'active')
             ->latest()
             ->take(8)
             ->get();
 
         return $this->success($brands, 'Top brands');
+    }
+
+    public function allBrands(): JsonResponse
+    {
+        $brands = Brand::select('id', 'name', 'slug', 'image')
+            ->where('status', 'active')
+            ->latest()
+            ->get();
+
+        return $this->success($brands, 'Brands');
+    }
+
+    public function allUnits(): JsonResponse
+    {
+        $units = Unit::select('id', 'name')
+            ->where('status', 'active')
+            ->latest()
+            ->get();
+
+        return $this->success($units, 'Units');
     }
 
     public function topSellers(\Illuminate\Http\Request $request): JsonResponse
