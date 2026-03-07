@@ -85,6 +85,8 @@ Route::middleware('validate.header')
                 Route::get('/recommended/products', 'recommendedProducts');
                 Route::get('/single/product/{slug}', 'productSlug');
                 Route::get('/top-brands', 'topBrands');
+                Route::get('/brands', 'allBrands');
+                Route::get('/units', 'allUnits');
                 Route::get('/top-sellers', 'topSellers');
                 Route::get('/top-products', 'topProducts');
                 Route::get('/deals', 'getDeals');
@@ -195,6 +197,9 @@ Route::middleware('validate.header')
                     Route::post('/biometric/setup', 'setupBiometric');
                     Route::post('/update-profile/{user_id}', 'updateProfile');
                     Route::post('/settings/{user_id}', 'changeSettings')->whereNumber('user_id');
+
+                    // Switch Account
+                    Route::post('/switch-account', 'switchAccount')->middleware('ensure.user');
 
                     // Delete Account
                     Route::delete('/delete-account/{user_id}', 'deleteAccount');

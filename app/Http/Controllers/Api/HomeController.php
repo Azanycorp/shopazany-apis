@@ -46,6 +46,16 @@ class HomeController extends Controller
         return $this->service->topBrands();
     }
 
+    public function allBrands()
+    {
+        return $this->service->allBrands();
+    }
+
+    public function allUnits()
+    {
+        return $this->service->allUnits();
+    }
+
     public function topSellers(Request $request)
     {
         return $this->memoizedCacheService->topSellers($request);
