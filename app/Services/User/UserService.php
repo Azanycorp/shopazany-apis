@@ -539,6 +539,23 @@ class UserService extends Controller
         return $this->success(null, 'Biometric setup successfully');
     }
 
+    public function switchAccount($request)
+    {
+        $user = User::find($request->user_id);
+
+        if (! $user) {
+            return $this->error(null, 'User not found', 404);
+        }
+
+        $user->update([
+            'last_user_type' => $user->type,
+            'type' => $request->type,
+            'date_switched' => now(),
+        ]);
+
+        return $this->success(null, 'Role Switched successfully');
+    }
+
     public function deleteAccount(int $userId)
     {
         $user = User::find($userId);

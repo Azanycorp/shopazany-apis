@@ -7,6 +7,7 @@ use App\Http\Requests\AffiliateSettingsRequest;
 use App\Http\Requests\BankAccountRequest;
 use App\Http\Requests\KycRequest;
 use App\Http\Requests\SetupBiometricRequest;
+use App\Http\Requests\SwitchAccountRequest;
 use App\Http\Requests\WithdrawalRequest;
 use App\Services\User\UserService;
 use Illuminate\Http\Request;
@@ -129,6 +130,11 @@ class UserController extends Controller
     public function setupBiometric(SetupBiometricRequest $request)
     {
         return $this->service->setupBiometric($request);
+    }
+
+    public function switchAccount(SwitchAccountRequest $request)
+    {
+        return $this->service->switchAccount($request);
     }
 
     public function deleteAccount(int $userId)

@@ -196,6 +196,9 @@ Route::middleware('validate.header')
                     Route::post('/update-profile/{user_id}', 'updateProfile');
                     Route::post('/settings/{user_id}', 'changeSettings')->whereNumber('user_id');
 
+                    // Switch Account
+                    Route::post('/switch-account', 'switchAccount')->middleware('ensure.user');
+
                     // Delete Account
                     Route::delete('/delete-account/{user_id}', 'deleteAccount');
                 });
