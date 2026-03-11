@@ -107,7 +107,10 @@ class SellerService extends Controller
             $url = $this->uploadFrontImage($request, $folderPath);
             $product = $this->createProductRecord($request, $user, $slug, $url, $type);
             $this->uploadAdditionalImages($request, $name, $product);
-            $this->createProductVariations($request, $product, $name);
+
+            if ($request->filled('variation')) {
+                $this->createProductVariations($request, $product, $name);
+            }
 
             DB::commit();
 

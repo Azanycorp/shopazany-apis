@@ -176,6 +176,11 @@ Route::middleware('validate.header')
 
                     Route::post('/kyc', 'userKyc');
                     Route::post('/earning-option', 'earningOption');
+                    Route::prefix('fcm/token')
+                        ->group(function () {
+                            Route::post('save', 'saveFCMToken');
+                            Route::patch('remove', 'removeFCMToken');
+                        });
 
                     Route::prefix('withdrawal')->group(function (): void {
                         Route::post('/', 'addMethod');
