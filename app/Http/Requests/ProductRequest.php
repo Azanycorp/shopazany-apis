@@ -34,8 +34,8 @@ class ProductRequest extends FormRequest
             'images.*' => ['required', 'image', 'mimes:png,jpg,jpeg', 'max:10240'],
             'discount_type' => ['nullable', 'in:flat,percentage'],
             'discount_value' => ['nullable', 'numeric', 'min:0', $this->discountRule()],
-            'variation' => ['required', 'array'],
-            'variation.*' => ['required', 'string', $this->variationRule()],
+            'variation' => ['nullable', 'array'],
+            'variation.*' => ['nullable', 'string', $this->variationRule()],
             'variation_image' => ['nullable', 'array'],
             'variation_image.*' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:10240'],
         ];

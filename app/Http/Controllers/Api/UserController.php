@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\AffiliateSettingsRequest;
 use App\Http\Requests\BankAccountRequest;
 use App\Http\Requests\KycRequest;
+use App\Http\Requests\SaveFCMTokenRequest;
 use App\Http\Requests\SetupBiometricRequest;
 use App\Http\Requests\SwitchAccountRequest;
 use App\Http\Requests\WithdrawalRequest;
@@ -140,5 +141,19 @@ class UserController extends Controller
     public function deleteAccount(int $userId)
     {
         return $this->service->deleteAccount($userId);
+    }
+
+    public function saveFCMToken(SaveFCMTokenRequest $request)
+    {
+        return $this->service->saveFCMToken($request);
+    }
+
+    public function removeFCMToken(Request $request)
+    {
+        $request->validate([
+            'user_id' => ['required', 'integer', 'exists:users,id'],
+        ]);
+
+        return $this->service->removeFCMToken($request);
     }
 }
