@@ -22,7 +22,7 @@ class NotificationDispatcher
             }
         }
 
-        $users = collect($dto->recipients instanceof Collection ? $dto->recipients : [$dto->recipients]);
+        $users = new Collection($dto->recipients instanceof Collection ? $dto->recipients : [$dto->recipients]);
 
         foreach ($users as $user) {
             $tokens = [];
