@@ -15,6 +15,7 @@
         "authorizenet/authorizenet": "^2.0",
         "imagekit/imagekit": "^4.0",
         "jenssegers/agent": "^2.6",
+        "kreait/laravel-firebase": "^7.0",
         "laravel/framework": "^12.53",
         "laravel/sanctum": "^4.2",
         "laravel/socialite": "^5.23",

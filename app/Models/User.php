@@ -89,6 +89,7 @@ class User extends Authenticatable
         'biometric_enabled',
         'biometric_token',
         'hear_about_us',
+        'fcm_token',
     ];
 
     protected $hidden = [
