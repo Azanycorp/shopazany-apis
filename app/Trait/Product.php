@@ -59,7 +59,17 @@ trait Product
 
     public function createProductVariations($request, $product, $name): void
     {
-        $variations = (new \Illuminate\Support\Collection($request->variation))->map(fn ($item): mixed => json_decode($item, true));
+        $variations = (new \Illuminate\Support\Collection($request->variation))
+            ->map(function ($item) {
+                $decoded = json_decode($item, true);
+
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    throw new \InvalidArgumentException('Invalid variation JSON provided.');
+                }
+
+                return $decoded;
+            });
+
         $variationImages = $request->file('variation_image', []);
 
         foreach ($variations as $index => $variation) {
