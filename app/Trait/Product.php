@@ -4,6 +4,8 @@ namespace App\Trait;
 
 trait Product
 {
+    use GeneratesSku;
+
     public function uploadFrontImage($request, $folderPath)
     {
         if ($request->hasFile('front_image')) {
@@ -30,6 +32,10 @@ trait Product
             $request->discount_value
         );
 
+        $sku = $request->filled('product_sku')
+            ? $request->product_sku
+            : $this->generateUniqueSku();
+
         return $user->products()->create([
             'name' => $request->name,
             'slug' => $slug,
@@ -40,7 +46,7 @@ trait Product
             'color_id' => $request->color_id,
             'unit_id' => $request->unit_id,
             'size_id' => $request->size_id,
-            'product_sku' => $request->product_sku,
+            'product_sku' => $sku,
             'product_price' => $request->product_price,
             'price' => $price,
             'discount_type' => $request->discount_type,
