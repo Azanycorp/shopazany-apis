@@ -194,10 +194,10 @@ class SellerService extends Controller
             return $this->error(null, 'User not found', 404);
         }
 
-        $category = $request->input('category');
-        $brand = $request->input('brand');
-        $color = $request->input('color');
-        $search = $request->input('search');
+        $category = $request->query('category');
+        $brand = $request->query('brand');
+        $color = $request->query('color');
+        $search = $request->query('search');
 
         $query = $user->products()
             ->with([
@@ -213,6 +213,7 @@ class SellerService extends Controller
                 'productReviews',
                 'productVariations',
             ])
+            ->where('status', ProductStatus::ACTIVE)
             ->when($category, fn ($q) => $q->where('category_id', $category))
             ->when($brand, fn ($q) => $q->where('brand_id', $brand))
             ->when($color, fn ($q) => $q->where('color_id', $color))
