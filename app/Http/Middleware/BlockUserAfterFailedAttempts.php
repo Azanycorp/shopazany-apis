@@ -5,14 +5,16 @@ namespace App\Http\Middleware;
 use App\Enum\UserStatus;
 use App\Models\User;
 use Closure;
+use Illuminate\Contracts\Cache\Repository;
+use Illuminate\Contracts\Routing\ResponseFactory;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class BlockUserAfterFailedAttempts
 {
     public function __construct(
-        private readonly \Illuminate\Contracts\Cache\Repository $cacheManager,
-        private readonly \Illuminate\Contracts\Routing\ResponseFactory $responseFactory,
+        private readonly Repository $cacheManager,
+        private readonly ResponseFactory $responseFactory,
     ) {}
 
     public function handle(Request $request, Closure $next): Response

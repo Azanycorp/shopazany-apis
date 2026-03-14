@@ -3,17 +3,21 @@
 namespace App\Models;
 
 use App\Enum\OrderType;
+use App\Models\Pivots\OrderItemPivot;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 
 /**
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Product> $products
+ * @property-read Collection<int, Product> $products
  * @property-read int $id
- * @property-read \Illuminate\Database\Eloquent\Relations\Pivot $pivot
+ * @property-read Pivot $pivot
  * @property-read int $pivot_variation_id
  * @property-read int $pivot_product_quantity
  * @property-read float $pivot_price
@@ -47,7 +51,7 @@ class Order extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\User, $this>
+     * @return BelongsTo<User, $this>
      */
     public function user(): BelongsTo
     {
@@ -56,7 +60,7 @@ class Order extends Model
 
     // Deprecated method - Do not use
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\User, $this>
+     * @return BelongsTo<User, $this>
      */
     public function seller(): BelongsTo
     {
@@ -64,7 +68,7 @@ class Order extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Product, $this>
+     * @return BelongsTo<Product, $this>
      */
     public function product(): BelongsTo
     {
@@ -72,10 +76,10 @@ class Order extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<
-     *     \App\Models\Product,
+     * @return BelongsToMany<
+     *     Product,
      *     $this,
-     *     \App\Models\Pivots\OrderItemPivot,
+     *     OrderItemPivot,
      *     'pivot'
      * >
      */
@@ -83,7 +87,7 @@ class Order extends Model
     {
         return $this->belongsToMany(Product::class, 'order_items')
             ->withoutGlobalScope('in_stock')
-            ->using(\App\Models\Pivots\OrderItemPivot::class)
+            ->using(OrderItemPivot::class)
             ->withPivot([
                 'id',
                 'product_id',
@@ -96,7 +100,7 @@ class Order extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\ShopCountry, $this>
+     * @return BelongsTo<ShopCountry, $this>
      */
     public function shopCountry(): BelongsTo
     {
@@ -104,7 +108,7 @@ class Order extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Payment, $this>
+     * @return HasMany<Payment, $this>
      */
     public function payments(): HasMany
     {
@@ -112,7 +116,7 @@ class Order extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\OrderActivity, $this>
+     * @return HasMany<OrderActivity, $this>
      */
     public function orderActivities(): HasMany
     {
@@ -150,7 +154,7 @@ class Order extends Model
         }
     }
 
-    #[\Illuminate\Database\Eloquent\Attributes\Scope]
+    #[Scope]
     protected function filterByType(Builder $query, bool $isAgriEcom): Builder
     {
         return $query->where(

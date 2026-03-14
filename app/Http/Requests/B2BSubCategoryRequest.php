@@ -5,7 +5,7 @@ namespace App\Http\Requests;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
-class ResetPasswordRequest extends FormRequest
+class B2BSubCategoryRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -23,9 +23,8 @@ class ResetPasswordRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => ['required', 'email'],
-            'password' => ['required', 'confirmed', 'min:8'],
-            'token' => ['required', 'string'],
+            'category_id' => ['required', 'integer', 'exists:b2b_product_categories,id'],
+            'name' => ['required', 'string', 'max:100'],
         ];
     }
 }

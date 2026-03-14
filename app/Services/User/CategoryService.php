@@ -162,7 +162,7 @@ class CategoryService
             ->get();
 
         $totalActive = $categories->where('status', CategoryStatus::ACTIVE)->count();
-        $subCategoryActiveCount = Subcategory::where('status', CategoryStatus::ACTIVE)
+        $subCategoryActiveCount = SubCategory::where('status', CategoryStatus::ACTIVE)
             ->where('type', $type)
             ->count();
         $productActiveCount = Product::where('status', CategoryStatus::ACTIVE)

@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Api\B2B;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\B2BSubCategoryRequest;
 use App\Http\Requests\CategoryRequest;
-use App\Http\Requests\SubCategoryRequest;
 use App\Services\B2B\ProductCategoryService;
 use Illuminate\Contracts\Auth\Access\Gate;
 use Illuminate\Http\Request;
@@ -38,6 +38,11 @@ class ProductCategoryController extends Controller
         return $this->service->categories();
     }
 
+    public function singleCategory(int $id)
+    {
+        return $this->service->singleCategory($id);
+    }
+
     public function adminCategories(Request $request)
     {
         abort_if($this->gate->denies('categories'), Response::HTTP_FORBIDDEN, self::MESSAGE);
@@ -45,7 +50,7 @@ class ProductCategoryController extends Controller
         return $this->service->adminCategories($request);
     }
 
-    public function createSubCategory(SubCategoryRequest $request)
+    public function createSubCategory(B2BSubCategoryRequest $request)
     {
         abort_if($this->gate->denies('sub_category_create'), Response::HTTP_FORBIDDEN, self::MESSAGE);
 

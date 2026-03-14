@@ -22,6 +22,9 @@ use App\Services\Auth\Auth;
 use App\Services\CartService;
 use App\Trait\General;
 use App\Trait\HttpResponse;
+use Illuminate\Contracts\Config\Repository;
+use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class CustomerService
@@ -30,7 +33,7 @@ class CustomerService
 
     public function __construct(
         protected Auth $auth,
-        private readonly \Illuminate\Contracts\Config\Repository $repository,
+        private readonly Repository $repository,
         protected CartService $cartService
     ) {}
 
@@ -267,7 +270,7 @@ class CustomerService
         return $this->success(null, 'Product added to wishlist!');
     }
 
-    public function getWishlist(int $userId, \Illuminate\Http\Request $request)
+    public function getWishlist(int $userId, Request $request)
     {
         $currentUser = userAuth();
         $isAgriEcom = $request->boolean('is_agriecom');
@@ -440,7 +443,7 @@ class CustomerService
             return $services;
         }
 
-        $services['data'] = (new \Illuminate\Support\Collection($services['data']))->map(function (array $item) {
+        $services['data'] = (new Collection($services['data']))->map(function (array $item) {
             $price = (float) $item['price'];
             $currency = $item['currency'];
 
@@ -474,7 +477,7 @@ class CustomerService
                 return $services;
             }
 
-            $services['data'] = (new \Illuminate\Support\Collection($services['data']))->map(function (array $item) {
+            $services['data'] = (new Collection($services['data']))->map(function (array $item) {
                 $price = (float) $item['price'];
                 $currency = $item['currency'];
 
@@ -525,7 +528,7 @@ class CustomerService
                 return $services;
             }
 
-            $services['data']['additional_products'] = (new \Illuminate\Support\Collection($services['data']['additional_products']))->map(function (array $item) {
+            $services['data']['additional_products'] = (new Collection($services['data']['additional_products']))->map(function (array $item) {
                 $price = (float) $item['price'];
                 $currency = $item['currency'];
 

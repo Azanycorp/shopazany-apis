@@ -24,7 +24,7 @@ class BuyerShippingAddress extends Model
     ];
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\User, $this>
+     * @return BelongsTo<User, $this>
      */
     public function user(): BelongsTo
     {
@@ -32,7 +32,7 @@ class BuyerShippingAddress extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Country, $this>
+     * @return BelongsTo<Country, $this>
      */
     public function country(): BelongsTo
     {
@@ -40,7 +40,7 @@ class BuyerShippingAddress extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\State, $this>
+     * @return BelongsTo<State, $this>
      */
     public function state(): BelongsTo
     {

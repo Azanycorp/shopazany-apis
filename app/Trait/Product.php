@@ -2,6 +2,8 @@
 
 namespace App\Trait;
 
+use Illuminate\Support\Collection;
+
 trait Product
 {
     public function uploadFrontImage($request, $folderPath)
@@ -59,7 +61,7 @@ trait Product
 
     public function createProductVariations($request, $product, $name): void
     {
-        $variations = (new \Illuminate\Support\Collection($request->variation))
+        $variations = (new Collection($request->variation))
             ->map(function ($item) {
                 $decoded = json_decode($item, true);
 
@@ -111,7 +113,7 @@ trait Product
     {
         $processedVariationIds = [];
 
-        $variations = (new \Illuminate\Support\Collection($request->variation))->map(fn ($item): mixed => json_decode($item, true));
+        $variations = (new Collection($request->variation))->map(fn ($item): mixed => json_decode($item, true));
         $variationImages = $request->file('variation_image', []);
 
         foreach ($variations as $index => $variation) {

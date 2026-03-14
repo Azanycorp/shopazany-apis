@@ -25,6 +25,7 @@ use App\Models\Wishlist;
 use App\Trait\General;
 use App\Trait\HttpResponse;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
@@ -32,7 +33,7 @@ class HomeService
 {
     use General, HttpResponse;
 
-    public function bestSelling(\Illuminate\Http\Request $request): JsonResponse
+    public function bestSelling(Request $request): JsonResponse
     {
         $countryId = $request->query('country_id');
         $type = $request->query('type', ProductType::B2C->value);
@@ -81,7 +82,7 @@ class HomeService
         return $this->success($products, 'Best selling products');
     }
 
-    public function allProducts(\Illuminate\Http\Request $request): JsonResponse
+    public function allProducts(Request $request): JsonResponse
     {
         $countryId = $request->query('country_id');
         $type = $request->query('type', ProductType::B2C->value);
@@ -115,7 +116,7 @@ class HomeService
         return $this->withPagination($data, 'All products');
     }
 
-    public function featuredProduct(\Illuminate\Http\Request $request): JsonResponse
+    public function featuredProduct(Request $request): JsonResponse
     {
         $countryId = $request->query('country_id');
         $type = $request->query('type', ProductType::B2C->value);
@@ -150,7 +151,7 @@ class HomeService
         return $this->success($data, 'Featured products');
     }
 
-    public function topProducts(\Illuminate\Http\Request $request): JsonResponse
+    public function topProducts(Request $request): JsonResponse
     {
         $countryId = $request->query('country_id');
         $type = $request->query('type', ProductType::B2C->value);
@@ -185,7 +186,7 @@ class HomeService
         return $this->success($data, 'Top products');
     }
 
-    public function pocketFriendly(\Illuminate\Http\Request $request): JsonResponse
+    public function pocketFriendly(Request $request): JsonResponse
     {
         $countryId = $request->query('country_id');
         $type = $request->query('type', ProductType::B2C->value);
@@ -284,7 +285,7 @@ class HomeService
         return $this->success($units, 'Units');
     }
 
-    public function topSellers(\Illuminate\Http\Request $request): JsonResponse
+    public function topSellers(Request $request): JsonResponse
     {
         $countryId = $request->input('country_id');
 
@@ -309,7 +310,7 @@ class HomeService
         return $this->success($topSellers, 'Top sellers');
     }
 
-    public function categorySlug(\Illuminate\Http\Request $request, string $slug): JsonResponse
+    public function categorySlug(Request $request, string $slug): JsonResponse
     {
         $countryId = $request->query('country_id', 231);
 
@@ -335,7 +336,7 @@ class HomeService
         return $this->success($products, 'Products by category');
     }
 
-    public function recommendedProducts(\Illuminate\Http\Request $request): JsonResponse
+    public function recommendedProducts(Request $request): JsonResponse
     {
         $countryId = $request->query('country_id', 231);
         $type = $request->query('type', ProductType::B2C->value);
@@ -647,7 +648,7 @@ class HomeService
         return $this->success($data, 'Flash deal');
     }
 
-    public function search(\Illuminate\Http\Request $request)
+    public function search(Request $request)
     {
         $countryId = $request->query('country_id');
         $type = $request->query('type');

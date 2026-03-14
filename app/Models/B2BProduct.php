@@ -47,7 +47,7 @@ class B2BProduct extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\B2bProdctLike, $this>
+     * @return HasMany<B2bProdctLike, $this>
      */
     public function b2bLikes(): HasMany
     {
@@ -55,7 +55,7 @@ class B2BProduct extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\B2bProdctReview, $this>
+     * @return HasMany<B2bProdctReview, $this>
      */
     public function b2bProductReview(): HasMany
     {
@@ -63,7 +63,7 @@ class B2BProduct extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\B2BProductImage, $this>
+     * @return HasMany<B2BProductImage, $this>
      */
     public function b2bProductImages(): HasMany
     {
@@ -71,7 +71,7 @@ class B2BProduct extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\User, $this>
+     * @return BelongsTo<User, $this>
      */
     public function user(): BelongsTo
     {
@@ -79,7 +79,7 @@ class B2BProduct extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\ShopCountry, $this>
+     * @return BelongsTo<ShopCountry, $this>
      */
     public function shopCountry(): BelongsTo
     {
@@ -87,7 +87,7 @@ class B2BProduct extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\B2bProductCategory, $this>
+     * @return BelongsTo<B2bProductCategory, $this>
      */
     public function category(): BelongsTo
     {
@@ -95,7 +95,7 @@ class B2BProduct extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\B2bProductSubCategory, $this>
+     * @return BelongsTo<B2bProductSubCategory, $this>
      */
     public function subCategory(): BelongsTo
     {
@@ -103,7 +103,7 @@ class B2BProduct extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\B2bOrder, $this>
+     * @return HasMany<B2bOrder, $this>
      */
     public function orders(): HasMany
     {
@@ -111,7 +111,7 @@ class B2BProduct extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Country, $this>
+     * @return BelongsTo<Country, $this>
      */
     public function country(): BelongsTo
     {
@@ -119,7 +119,7 @@ class B2BProduct extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\B2BRequestRefund, $this>
+     * @return HasMany<B2BRequestRefund, $this>
      */
     public function b2bRequestRefunds(): HasMany
     {

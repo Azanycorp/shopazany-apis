@@ -4,6 +4,8 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Cache\RateLimiter;
+use Illuminate\Contracts\Cache\Repository;
+use Illuminate\Contracts\Routing\ResponseFactory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Symfony\Component\HttpFoundation\Response;
@@ -12,8 +14,8 @@ class BurstGuard
 {
     public function __construct(
         private RateLimiter $limiter,
-        private readonly \Illuminate\Contracts\Cache\Repository $cacheManager,
-        private readonly \Illuminate\Contracts\Routing\ResponseFactory $responseFactory,
+        private readonly Repository $cacheManager,
+        private readonly ResponseFactory $responseFactory,
         private int $maxPer5s = 5,
         private int $maxPer60s = 20,
         private int $banSeconds = 300
@@ -22,7 +24,7 @@ class BurstGuard
     /**
      * Handle an incoming request.
      *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * @param  Closure(Request): (Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
     {

@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Models\B2BProduct;
+use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 
@@ -19,7 +20,7 @@ class B2BProductExport implements FromCollection, WithHeadings
     }
 
     /**
-     * @return \Illuminate\Support\Collection
+     * @return Collection
      */
     public function collection()
     {

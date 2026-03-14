@@ -1,5 +1,9 @@
 <?php
 
+use Torann\Currency\Drivers\Database;
+use Torann\Currency\Drivers\Filesystem;
+use Torann\Currency\Formatters\PHPIntl;
+
 return [
 
     /*
@@ -67,13 +71,13 @@ return [
     'drivers' => [
 
         'database' => [
-            'class' => \Torann\Currency\Drivers\Database::class,
+            'class' => Database::class,
             'connection' => null,
             'table' => 'currencies',
         ],
 
         'filesystem' => [
-            'class' => \Torann\Currency\Drivers\Filesystem::class,
+            'class' => Filesystem::class,
             'disk' => null,
             'path' => 'currencies.json',
         ],
@@ -109,7 +113,7 @@ return [
     'formatters' => [
 
         'php_intl' => [
-            'class' => \Torann\Currency\Formatters\PHPIntl::class,
+            'class' => PHPIntl::class,
         ],
 
     ],

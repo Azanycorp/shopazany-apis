@@ -9,7 +9,9 @@ use App\Notifications\ResetPasswordNotification;
 use App\Trait\ClearsResponseCache;
 use App\Trait\UserRelationship;
 use Illuminate\Contracts\Config\Repository;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -19,7 +21,7 @@ use Laravel\Sanctum\HasApiTokens;
 
 /**
  * @property array|string|null $referrer_link
- * @property-read \Illuminate\Database\Eloquent\Collection<int, User> $referrals
+ * @property-read Collection<int, User> $referrals
  * @property int $category_count
  * @property string $fullName
  * @property-read bool $is_subscribed
@@ -28,7 +30,7 @@ use Laravel\Sanctum\HasApiTokens;
  * @property-read UserWallet|null $userWallet
  * @property-read Wallet|null $wallet
  * @property-read UserSubcription $subscription_history
- * @property-read \Illuminate\Database\Eloquent\Collection<int, PaymentMethod> $paymentMethods
+ * @property-read Collection<int, PaymentMethod> $paymentMethods
  * @property-read string $subscription_status
  * @property string $password
  * @property string $first_name
@@ -208,7 +210,7 @@ class User extends Authenticatable
         );
     }
 
-    #[\Illuminate\Database\Eloquent\Attributes\Scope]
+    #[Scope]
     protected function filterReferrals($query, $searchQuery, $statusFilter)
     {
         if (filled($searchQuery)) {

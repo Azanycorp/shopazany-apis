@@ -33,7 +33,7 @@ class Rfq extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\User, $this>
+     * @return BelongsTo<User, $this>
      */
     public function seller(): BelongsTo
     {
@@ -41,7 +41,7 @@ class Rfq extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\User, $this>
+     * @return BelongsTo<User, $this>
      */
     public function buyer(): BelongsTo
     {

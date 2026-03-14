@@ -34,7 +34,7 @@ class Category extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\SubCategory, $this>
+     * @return HasMany<SubCategory, $this>
      */
     public function subcategory(): HasMany
     {
@@ -42,7 +42,7 @@ class Category extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Product, $this>
+     * @return HasMany<Product, $this>
      */
     public function products(): HasMany
     {
