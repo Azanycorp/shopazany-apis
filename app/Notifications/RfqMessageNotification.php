@@ -2,7 +2,6 @@
 
 namespace App\Notifications;
 
-use App\Models\RfqMessage;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -14,12 +13,12 @@ class RfqMessageNotification extends Notification
 
     public User $user;
 
-    public RfqMessage $message;
+    public $message;
 
     /**
      * Create a new notification instance.
      */
-    public function __construct(User $user, RfqMessage $message)
+    public function __construct(User $user, $message)
     {
         $this->user = $user;
         $this->message = $message;
@@ -42,9 +41,9 @@ class RfqMessageNotification extends Notification
     {
 
         return (new MailMessage)
-            ->greeting("Hello {$this->user->full_name},")
-            ->line($this->message->buyer?->full_name.' sent you a message regarding RFQ #'.$this->message->rfq->id)
-            ->line('From : '.$this->message->buyer?->full_name)
+            ->greeting("Hello {$this->user->first_name},")
+            ->line($this->message->buyer?->first_name.' sent you a message regarding RFQ #'.$this->message->rfq->id)
+            ->line('From : '.$this->message->buyer?->first_name)
             ->line('Prefered price : '.$this->message->p_unit_price)
             ->line($this->message->note)
             ->line('Kindly login to your account to reply to this message.');
