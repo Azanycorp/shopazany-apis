@@ -462,7 +462,10 @@ class SellerService extends Controller
             return $this->error(null, 'Unauthorized action.', 401);
         }
 
-        $totalProducts = Product::where('user_id', $userId)->count();
+        $totalProducts = Product::where('user_id', $userId)
+            ->where('status', ProductStatus::ACTIVE)
+            ->count();
+
         $totalOrders = Order::whereHas('products', function (Builder $query) use ($userId): void {
             $query->where('user_id', $userId);
         })->count();
