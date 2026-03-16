@@ -24,7 +24,7 @@ class ProductCategoryService
                 $url = uploadImage($request, 'image', 'category');
             }
 
-            B2BProductCategory::create([
+            B2bProductCategory::create([
                 'name' => $request->name,
                 'slug' => Str::slug($request->name),
                 'image' => $url['url'] ?? null,
@@ -39,7 +39,7 @@ class ProductCategoryService
 
     public function updateCategory($request, $id)
     {
-        $category = B2BProductCategory::findOrFail($id);
+        $category = B2bProductCategory::findOrFail($id);
 
         try {
             if ($request->file('image')) {
@@ -60,7 +60,7 @@ class ProductCategoryService
 
     public function categories()
     {
-        $categories = B2BProductCategory::where('featured', 1)
+        $categories = B2bProductCategory::where('featured', 1)
             ->latest()
             ->take(10)
             ->get();
@@ -72,7 +72,7 @@ class ProductCategoryService
     {
         $search = $request->query('search');
 
-        $categories = B2BProductCategory::with(['products', 'subcategory'])
+        $categories = B2bProductCategory::with(['products', 'subcategory'])
             ->withCount(['products', 'subcategory'])
             ->when($search, function ($query, string $search): void {
                 $query->where('name', 'like', '%'.$search.'%');
@@ -85,7 +85,7 @@ class ProductCategoryService
 
     public function createSubCategory($request)
     {
-        $category = B2BProductSubCategory::find($request->category_id);
+        $category = B2bProductSubCategory::find($request->category_id);
 
         if (! $category) {
             return $this->error(null, 'Not found', 404);
@@ -122,7 +122,7 @@ class ProductCategoryService
 
     public function featuredStatus($request, $id)
     {
-        $category = B2BProductCategory::findOrFail($id);
+        $category = B2bProductCategory::findOrFail($id);
 
         if ($request->has('featured')) {
             $category->featured = $request->input('featured') ? 1 : 0;
@@ -139,7 +139,7 @@ class ProductCategoryService
 
     public function categoryAnalytic()
     {
-        $categories = B2BProductSubCategory::withCount(['subcategory', 'products'])
+        $categories = B2bProductSubCategory::withCount(['subcategory', 'products'])
             ->get();
 
         $totalActive = $categories->where('status', CategoryStatus::ACTIVE)->count();
@@ -167,7 +167,7 @@ class ProductCategoryService
     {
         $search = $request->query('search');
 
-        $subcats = B2BProductSubCategory::with(['products', 'category'])
+        $subcats = B2bProductSubCategory::with(['products', 'category'])
             ->withCount('products')
             ->when($search, function ($query, string $search): void {
                 $query->where('name', 'like', '%'.$search.'%');
@@ -180,7 +180,7 @@ class ProductCategoryService
 
     public function subStatus($request, $id)
     {
-        $sub = B2BProductSubCategory::findOrFail($id);
+        $sub = B2bProductSubCategory::findOrFail($id);
 
         if ($request->filled('status')) {
             $sub->status = $request->input('status') == 1 ? CategoryStatus::ACTIVE : CategoryStatus::INACTIVE;
@@ -202,7 +202,7 @@ class ProductCategoryService
 
     public function deleteSubCategory($id)
     {
-        $subcat = B2BProductSubCategory::findOrFail($id);
+        $subcat = B2bProductSubCategory::findOrFail($id);
 
         $subcat->delete();
 

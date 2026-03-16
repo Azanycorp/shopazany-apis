@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
- * @property-read \App\Models\Country|null $shopCountry
+ * @property-read Country|null $shopCountry
  */
 class Country extends Model
 {
@@ -23,7 +23,7 @@ class Country extends Model
     ];
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Product, $this>
+     * @return HasMany<Product, $this>
      */
     public function products(): HasMany
     {
@@ -31,7 +31,7 @@ class Country extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasOne<\App\Models\ShopCountry, $this>
+     * @return HasOne<ShopCountry, $this>
      */
     public function shopCountry(): HasOne
     {

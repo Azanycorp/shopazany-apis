@@ -7,6 +7,7 @@ use App\Http\Resources\SellerProductResource;
 use App\Models\Admin;
 use App\Models\Product;
 use App\Trait\HttpResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class ProductService
@@ -75,7 +76,7 @@ class ProductService
         return $this->success(null, 'Added successfully');
     }
 
-    public function getProducts(\Illuminate\Http\Request $request): array
+    public function getProducts(Request $request): array
     {
         $query = Product::withoutGlobalScope('in_stock');
 

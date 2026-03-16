@@ -18,7 +18,7 @@ class Blog extends Model
     ];
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Admin, $this>
+     * @return BelongsTo<Admin, $this>
      */
     public function user(): BelongsTo
     {

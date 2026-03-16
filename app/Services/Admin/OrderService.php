@@ -7,13 +7,14 @@ use App\Enum\OrderType;
 use App\Http\Resources\AdminOrderResource;
 use App\Models\Order;
 use App\Trait\HttpResponse;
+use Illuminate\Contracts\Routing\UrlGenerator;
 use Illuminate\Database\Eloquent\Builder;
 
 class OrderService
 {
     use HttpResponse;
 
-    public function __construct(private readonly \Illuminate\Contracts\Routing\UrlGenerator $urlGenerator) {}
+    public function __construct(private readonly UrlGenerator $urlGenerator) {}
 
     public function orderAnalytics($request)
     {

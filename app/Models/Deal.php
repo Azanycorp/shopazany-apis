@@ -22,7 +22,7 @@ class Deal extends Model
     ];
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Banner, $this>
+     * @return HasMany<Banner, $this>
      */
     public function banners(): HasMany
     {

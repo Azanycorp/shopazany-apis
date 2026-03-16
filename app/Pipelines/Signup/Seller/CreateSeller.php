@@ -7,6 +7,7 @@ use App\Enum\UserType;
 use App\Models\User;
 use App\Trait\HttpResponse;
 use App\Trait\SignUp;
+use Illuminate\Hashing\BcryptHasher;
 use Symfony\Component\HttpFoundation\Response;
 
 class CreateSeller
@@ -14,7 +15,7 @@ class CreateSeller
     use HttpResponse, SignUp;
 
     public function __construct(
-        private readonly \Illuminate\Hashing\BcryptHasher $bcryptHasher,
+        private readonly BcryptHasher $bcryptHasher,
     ) {}
 
     public function handle($request)

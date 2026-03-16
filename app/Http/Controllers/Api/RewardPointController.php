@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AddRewardPointRequest;
 use App\Services\RewardPoint\RewardPointService;
+use Illuminate\Contracts\Auth\Access\Gate;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
@@ -13,7 +14,7 @@ class RewardPointController extends Controller
     private const MESSAGE = '403 Forbidden';
 
     public function __construct(
-        protected RewardPointService $service, private readonly \Illuminate\Contracts\Auth\Access\Gate $gate
+        protected RewardPointService $service, private readonly Gate $gate
     ) {}
 
     public function addPoints(AddRewardPointRequest $request)

@@ -1,10 +1,17 @@
 <?php
 
+use App\Providers\AppServiceProvider;
+use App\Providers\AuthServiceProvider;
+use Jenssegers\Agent\AgentServiceProvider;
+use Maatwebsite\Excel\ExcelServiceProvider;
+use Torann\Currency\CurrencyServiceProvider;
+use Unicodeveloper\Paystack\PaystackServiceProvider;
+
 return [
-    App\Providers\AppServiceProvider::class,
-    App\Providers\AuthServiceProvider::class,
-    Jenssegers\Agent\AgentServiceProvider::class,
-    Maatwebsite\Excel\ExcelServiceProvider::class,
-    Torann\Currency\CurrencyServiceProvider::class,
-    Unicodeveloper\Paystack\PaystackServiceProvider::class,
+    AppServiceProvider::class,
+    AuthServiceProvider::class,
+    AgentServiceProvider::class,
+    ExcelServiceProvider::class,
+    CurrencyServiceProvider::class,
+    PaystackServiceProvider::class,
 ];

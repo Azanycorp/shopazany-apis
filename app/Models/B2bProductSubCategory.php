@@ -20,7 +20,7 @@ class B2bProductSubCategory extends Model
     ];
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\B2bProductCategory, $this>
+     * @return BelongsTo<B2bProductCategory, $this>
      */
     public function category(): BelongsTo
     {
@@ -28,7 +28,7 @@ class B2bProductSubCategory extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\B2BProduct, $this>
+     * @return HasMany<B2BProduct, $this>
      */
     public function products(): HasMany
     {

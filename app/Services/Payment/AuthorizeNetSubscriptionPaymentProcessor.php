@@ -13,8 +13,9 @@ use App\Services\SubscriptionService;
 use App\Trait\HttpResponse;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Http\Request;
+use net\authorize\api\constants\ANetEnvironment;
 use net\authorize\api\contract\v1 as AnetAPI;
-use net\authorize\api\controller as AnetController;
+use net\authorize\api\controller\CreateTransactionController;
 
 class AuthorizeNetSubscriptionPaymentProcessor implements PaymentStrategy
 {
@@ -54,7 +55,7 @@ class AuthorizeNetSubscriptionPaymentProcessor implements PaymentStrategy
         $request->setRefId('ref'.time());
         $request->setTransactionRequest($transactionRequestType);
 
-        $controller = new AnetController\CreateTransactionController($request);
+        $controller = new CreateTransactionController($request);
 
         $response = $this->executeTransaction($controller);
 
@@ -75,16 +76,16 @@ class AuthorizeNetSubscriptionPaymentProcessor implements PaymentStrategy
         return ['error' => 'No response from Authorize.net'];
     }
 
-    private function executeTransaction(\net\authorize\api\controller\CreateTransactionController $controller)
+    private function executeTransaction(CreateTransactionController $controller)
     {
         if (app()->environment('production')) {
-            return $controller->executeWithApiResponse(\net\authorize\api\constants\ANetEnvironment::PRODUCTION);
+            return $controller->executeWithApiResponse(ANetEnvironment::PRODUCTION);
         }
 
-        return $controller->executeWithApiResponse(\net\authorize\api\constants\ANetEnvironment::SANDBOX);
+        return $controller->executeWithApiResponse(ANetEnvironment::SANDBOX);
     }
 
-    private function handleSuccessResponse($response, $tresponse, $user, array $paymentDetails, \net\authorize\api\contract\v1\PaymentType $payment, $request): array
+    private function handleSuccessResponse($response, $tresponse, $user, array $paymentDetails, AnetAPI\PaymentType $payment, $request): array
     {
         // $subUser = User::findOrFail($user->id);
         $referrer = User::with(['wallet'])->find($paymentDetails['referrer_id']);

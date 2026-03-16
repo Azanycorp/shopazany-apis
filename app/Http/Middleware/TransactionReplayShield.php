@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Date;
 use Symfony\Component\HttpFoundation\Response;
@@ -26,7 +27,7 @@ class TransactionReplayShield
     /**
      * Handle an incoming request.
      *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * @param  Closure(Request): (Response)  $next
      */
     public function handle(Request $request, Closure $next, ...$keys): Response
     {
@@ -106,7 +107,7 @@ class TransactionReplayShield
         return $next($request);
     }
 
-    private function tryInsertUnique(string $sig, $actorId, string $routeSig, \Illuminate\Support\Carbon $expiresAt, \Illuminate\Support\Carbon $now): bool
+    private function tryInsertUnique(string $sig, $actorId, string $routeSig, Carbon $expiresAt, Carbon $now): bool
     {
         try {
             $this->databaseManager->table('tx_replay_guards')->insert([

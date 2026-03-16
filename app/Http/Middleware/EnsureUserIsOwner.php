@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Trait\HttpResponse;
 use Closure;
+use Illuminate\Auth\AuthManager;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -11,12 +12,12 @@ class EnsureUserIsOwner
 {
     use HttpResponse;
 
-    public function __construct(private readonly \Illuminate\Auth\AuthManager $authManager) {}
+    public function __construct(private readonly AuthManager $authManager) {}
 
     /**
      * Handle an incoming request.
      *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * @param  Closure(Request): (Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
     {
