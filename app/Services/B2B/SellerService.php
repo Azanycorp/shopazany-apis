@@ -744,9 +744,14 @@ class SellerService extends Controller
     public function replyRequest($request)
     {
         $rfq = Rfq::find($request->rfq_id);
+        $user = User::find($rfq->buyer_id);
+
+        if (! $user) {
+            return $this->error(null, 'User not found', 404);
+        }
 
         if (! $rfq) {
-            return $this->error(null, 'No record found details', 404);
+            return $this->error(null, 'No record found for rfq', 404);
         }
 
         $amount = ($request->preferred_unit_price * $rfq->product_quantity);
@@ -762,6 +767,7 @@ class SellerService extends Controller
             'p_unit_price' => $request->preferred_unit_price,
             'total_amount' => $amount,
         ]);
+        Notification::send($user, new RfqMessageNotification($user, $message));
 
         return $this->success($message, 'message details');
     }
