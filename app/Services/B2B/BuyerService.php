@@ -45,6 +45,7 @@ use App\Models\RfqMessage;
 use App\Models\SliderImage;
 use App\Models\SocialSetting;
 use App\Models\User;
+use App\Notifications\RfqMessageNotification;
 use App\Trait\HttpResponse;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Contracts\Hashing\Hasher;
@@ -52,6 +53,7 @@ use Illuminate\Database\DatabaseManager;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Hashing\BcryptHasher;
 use Illuminate\Support\Facades\Date;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 
 class BuyerService
@@ -708,9 +710,9 @@ class BuyerService
                 }
                 $product = B2BProduct::findOrFail($quote->product_id);
                 $unit_price = currencyConvert(
-                    userAuth()->default_currency,
-                    $productData['unit_price'],
                     $product->shopCountry->currency ?? 'USD',
+                    $productData['unit_price'],
+                    userAuth()->default_currency,
                 );
 
                 Rfq::create([
@@ -754,9 +756,9 @@ class BuyerService
                 : json_decode($quote->product_data, true);
 
             $unit_price = currencyConvert(
-                userAuth()->default_currency,
-                $productData['unit_price'],
                 $product->shopCountry->currency ?? 'USD',
+                $productData['unit_price'],
+                userAuth()->default_currency,
             );
 
             $amount = total_amount($unit_price, $quote->qty);
@@ -935,13 +937,17 @@ class BuyerService
 
         try {
 
-            $rfq->messages()->create([
+            $user = User::find($rfq->seller_id);
+
+            $message = $rfq->messages()->create([
                 'rfq_id' => $request->rfq_id,
                 'buyer_id' => userAuthId(),
                 'p_unit_price' => $request->p_unit_price,
                 'preferred_qty' => $rfq->product_quantity,
                 'note' => $request->note,
             ]);
+
+            Notification::send($user, new RfqMessageNotification($user, $message));
 
             $rfq->update(['status' => 'review']);
             $this->databaseManager->commit();
