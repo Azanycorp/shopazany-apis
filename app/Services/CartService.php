@@ -213,8 +213,8 @@ class CartService
             'user_id' => $data['user_id'],
             'session_id' => $data['session_id'],
             'product_id' => $data['product_id'],
-        ], [
             'variation_id' => $data['variation_id'],
+        ], [
             'quantity' => $data['quantity'],
             'is_agriecom' => $data['is_agriecom'],
         ]);
