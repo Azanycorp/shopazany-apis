@@ -820,9 +820,9 @@ class SellerService extends Controller
             $amount = $rfq->total_amount;
 
             $total_amount = currencyConvert(
-                userAuth()->default_currency,
-                $amount,
                 $product->shopCountry->currency ?? 'USD',
+                $amount,
+                userAuth()->default_currency,
             );
 
             $order = B2bOrder::create([
