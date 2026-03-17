@@ -18,7 +18,12 @@ use App\Models\User;
 use App\Trait\General;
 use App\Trait\HttpResponse;
 use App\Trait\Product as TraitProduct;
+use Illuminate\Auth\AuthManager;
+use Illuminate\Contracts\Routing\ResponseFactory;
+use Illuminate\Database\DatabaseManager;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Foundation\Application;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
@@ -28,10 +33,10 @@ class SellerService extends Controller
     use General, HttpResponse, TraitProduct;
 
     public function __construct(
-        private readonly \Illuminate\Auth\AuthManager $authManager,
-        private readonly \Illuminate\Foundation\Application $application,
-        private readonly \Illuminate\Database\DatabaseManager $databaseManager,
-        private readonly \Illuminate\Contracts\Routing\ResponseFactory $responseFactory
+        private readonly AuthManager $authManager,
+        private readonly Application $application,
+        private readonly DatabaseManager $databaseManager,
+        private readonly ResponseFactory $responseFactory
     ) {}
 
     public function businessInfo($request)
@@ -366,7 +371,7 @@ class SellerService extends Controller
             return $this->error(null, 'Invalid status', 400);
         }
 
-        /** @var \App\Models\Product[]|\Illuminate\Database\Eloquent\Collection $sellerProducts */
+        /** @var Product[]|\Illuminate\Database\Eloquent\Collection $sellerProducts */
         $sellerProducts = $order->products()
             ->whereHas('user', function (Builder $query) use ($currentUserId): void {
                 $query->where('user_id', $currentUserId);
@@ -575,7 +580,7 @@ class SellerService extends Controller
         $user = User::with('productAttributes')
             ->findOrFail($request->user_id);
 
-        $attributeNames = (new \Illuminate\Support\Collection($request['attributes']))->pluck('name')->toArray();
+        $attributeNames = (new Collection($request['attributes']))->pluck('name')->toArray();
 
         $existing = $user->productAttributes()
             ->whereIn('name', $attributeNames)

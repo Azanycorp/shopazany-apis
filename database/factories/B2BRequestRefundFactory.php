@@ -2,10 +2,11 @@
 
 namespace Database\Factories;
 
+use App\Models\B2BRequestRefund;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\B2BRequestRefund>
+ * @extends Factory<B2BRequestRefund>
  */
 class B2BRequestRefundFactory extends Factory
 {

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 class SubSubCategory extends Model
 {
@@ -17,8 +18,8 @@ class SubSubCategory extends Model
      * @property int $sub_category_id
      * @property string $name
      * @property string $brands
-     * @property \Illuminate\Support\Carbon $created_at
-     * @property \Illuminate\Support\Carbon $updated_at
+     * @property Carbon $created_at
+     * @property Carbon $updated_at
      *
      * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\SubSubCategory newModelQuery()
      * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\SubSubCategory newQuery()

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 
 class PaymentService extends Model
 {
@@ -13,7 +14,7 @@ class PaymentService extends Model
     ];
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<\App\Models\Country, $this, \Illuminate\Database\Eloquent\Relations\Pivot>
+     * @return BelongsToMany<Country, $this, Pivot>
      */
     public function countries(): BelongsToMany
     {

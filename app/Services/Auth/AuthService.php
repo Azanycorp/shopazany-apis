@@ -17,6 +17,9 @@ use App\Pipelines\Verify\Verify;
 use App\Pipelines\Verify\VerifyWithAuthService;
 use App\Trait\HttpResponse;
 use App\Trait\SignUp;
+use Illuminate\Auth\Passwords\PasswordBrokerManager;
+use Illuminate\Contracts\Routing\ResponseFactory;
+use Illuminate\Hashing\BcryptHasher;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Pipeline;
 
@@ -25,9 +28,9 @@ class AuthService extends Controller
     use HttpResponse, SignUp;
 
     public function __construct(
-        private readonly \Illuminate\Auth\Passwords\PasswordBrokerManager $passwordBrokerManager,
-        private readonly \Illuminate\Hashing\BcryptHasher $bcryptHasher,
-        private readonly \Illuminate\Contracts\Routing\ResponseFactory $responseFactory
+        private readonly PasswordBrokerManager $passwordBrokerManager,
+        private readonly BcryptHasher $bcryptHasher,
+        private readonly ResponseFactory $responseFactory
     ) {}
 
     public function login($request)

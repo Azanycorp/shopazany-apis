@@ -10,12 +10,13 @@ use App\Models\Order;
 use App\Models\User;
 use App\Trait\HttpResponse;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Hashing\BcryptHasher;
 
 class SellerService
 {
     use HttpResponse;
 
-    public function __construct(private readonly \Illuminate\Hashing\BcryptHasher $bcryptHasher) {}
+    public function __construct(private readonly BcryptHasher $bcryptHasher) {}
 
     public function allSellers($request): array
     {

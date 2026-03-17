@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Services\Admin\OrderService;
+use Illuminate\Contracts\Auth\Access\Gate;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
@@ -13,7 +14,7 @@ class OrderController extends Controller
 
     public function __construct(
         protected OrderService $service,
-        private readonly \Illuminate\Contracts\Auth\Access\Gate $gate
+        private readonly Gate $gate
     ) {}
 
     public function orderAnalytics(Request $request)

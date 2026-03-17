@@ -8,8 +8,10 @@ use App\Notifications\WithdrawalNotification;
 use App\Services\PayoutService;
 use App\Trait\Transfer;
 use Illuminate\Console\Command;
+use Illuminate\Database\DatabaseManager;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Sleep;
 
 class WithdrawRequestPayout extends Command
 {
@@ -32,7 +34,7 @@ class WithdrawRequestPayout extends Command
     /**
      * Create a new console command instance.
      */
-    public function __construct(private readonly \Illuminate\Database\DatabaseManager $databaseManager)
+    public function __construct(private readonly DatabaseManager $databaseManager)
     {
         parent::__construct();
     }
@@ -159,7 +161,7 @@ class WithdrawRequestPayout extends Command
             $user->notify(new WithdrawalNotification($request, 'failed'));
         } else {
             $this->warn("Retrying payout for user {$user->id}, withdrawal ID {$request->id} (Attempt {$attempt}/{$maxRetries})...");
-            \Illuminate\Support\Sleep::sleep(5);
+            Sleep::sleep(5);
         }
     }
 

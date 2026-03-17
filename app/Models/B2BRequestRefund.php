@@ -26,7 +26,7 @@ class B2BRequestRefund extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\User, $this>
+     * @return BelongsTo<User, $this>
      */
     public function user(): BelongsTo
     {
@@ -34,7 +34,7 @@ class B2BRequestRefund extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\B2BProduct, $this>
+     * @return BelongsTo<B2BProduct, $this>
      */
     public function b2bProduct(): BelongsTo
     {

@@ -10,12 +10,13 @@ use App\Models\Payment;
 use App\Models\User;
 use App\Trait\HttpResponse;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Hashing\BcryptHasher;
 
 class CustomerService
 {
     use HttpResponse;
 
-    public function __construct(private readonly \Illuminate\Hashing\BcryptHasher $bcryptHasher) {}
+    public function __construct(private readonly BcryptHasher $bcryptHasher) {}
 
     public function allCustomers($request): array
     {
