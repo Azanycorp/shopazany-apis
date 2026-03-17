@@ -35,11 +35,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 
 trait UserRelationship
 {
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasOne<\App\Models\Wallet, $this>
+     * @return HasOne<Wallet, $this>
      */
     public function wallet(): HasOne
     {
@@ -47,7 +48,7 @@ trait UserRelationship
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasOne<\App\Models\UserWallet, $this>
+     * @return HasOne<UserWallet, $this>
      */
     public function userWallet(): HasOne
     {
@@ -56,7 +57,7 @@ trait UserRelationship
 
     // Returns users that this user referred (i.e., their downline)
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<\App\Models\User, $this, \Illuminate\Database\Eloquent\Relations\Pivot>
+     * @return BelongsToMany<User, $this, Pivot>
      */
     public function referrals(): BelongsToMany
     {
@@ -65,7 +66,7 @@ trait UserRelationship
 
     // Returns the user that referred this user (i.e., their upliner)
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<\App\Models\User, $this, \Illuminate\Database\Eloquent\Relations\Pivot>
+     * @return BelongsToMany<User, $this, Pivot>
      */
     public function referrer(): BelongsToMany
     {
@@ -78,7 +79,7 @@ trait UserRelationship
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasOne<\App\Models\BankAccount, $this>
+     * @return HasOne<BankAccount, $this>
      */
     public function bankAccount(): HasOne
     {
@@ -86,7 +87,7 @@ trait UserRelationship
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\WithdrawalRequest, $this>
+     * @return HasMany<WithdrawalRequest, $this>
      */
     public function withdrawalRequests(): HasMany
     {
@@ -94,7 +95,7 @@ trait UserRelationship
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasOne<\App\Models\Kyc, $this>
+     * @return HasOne<Kyc, $this>
      */
     public function kyc(): HasOne
     {
@@ -102,7 +103,7 @@ trait UserRelationship
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasOne<\App\Models\UserBusinessInformation, $this>
+     * @return HasOne<UserBusinessInformation, $this>
      */
     public function userbusinessinfo(): HasOne
     {
@@ -110,7 +111,7 @@ trait UserRelationship
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Product, $this>
+     * @return HasMany<Product, $this>
      */
     public function products(): HasMany
     {
@@ -118,7 +119,7 @@ trait UserRelationship
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Order, $this>
+     * @return HasMany<Order, $this>
      */
     public function userOrders(): HasMany
     {
@@ -126,7 +127,7 @@ trait UserRelationship
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Order, $this>
+     * @return HasMany<Order, $this>
      */
     public function sellerOrders(): HasMany
     {
@@ -134,7 +135,7 @@ trait UserRelationship
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Country, $this>
+     * @return BelongsTo<Country, $this>
      */
     public function userCountry(): BelongsTo
     {
@@ -142,7 +143,7 @@ trait UserRelationship
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\State, $this>
+     * @return BelongsTo<State, $this>
      */
     public function state(): BelongsTo
     {
@@ -150,7 +151,7 @@ trait UserRelationship
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Transaction, $this>
+     * @return HasMany<Transaction, $this>
      */
     public function transactions(): HasMany
     {
@@ -158,7 +159,7 @@ trait UserRelationship
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\PaymentMethod, $this>
+     * @return HasMany<PaymentMethod, $this>
      */
     public function paymentMethods(): HasMany
     {
@@ -166,7 +167,7 @@ trait UserRelationship
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\OrderRate, $this>
+     * @return HasMany<OrderRate, $this>
      */
     public function orderRate(): HasMany
     {
@@ -174,7 +175,7 @@ trait UserRelationship
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\B2bOrderRating, $this>
+     * @return HasMany<B2bOrderRating, $this>
      */
     public function b2bOrderRate(): HasMany
     {
@@ -182,7 +183,7 @@ trait UserRelationship
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Wishlist, $this>
+     * @return HasMany<Wishlist, $this>
      */
     public function wishlist(): HasMany
     {
@@ -190,7 +191,7 @@ trait UserRelationship
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\UserAction, $this>
+     * @return HasMany<UserAction, $this>
      */
     public function userActions(): HasMany
     {
@@ -198,7 +199,7 @@ trait UserRelationship
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\UserActivityLog, $this>
+     * @return HasMany<UserActivityLog, $this>
      */
     public function userActivityLog(): HasMany
     {
@@ -206,7 +207,7 @@ trait UserRelationship
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\UserShippingAddress, $this>
+     * @return HasMany<UserShippingAddress, $this>
      */
     public function userShippingAddress(): HasMany
     {
@@ -214,7 +215,7 @@ trait UserRelationship
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Payment, $this>
+     * @return HasMany<Payment, $this>
      */
     public function payments(): HasMany
     {
@@ -222,7 +223,7 @@ trait UserRelationship
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\RedeemPoint, $this>
+     * @return HasMany<RedeemPoint, $this>
      */
     public function reedemPoints(): HasMany
     {
@@ -230,7 +231,7 @@ trait UserRelationship
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\UserSubcription, $this>
+     * @return HasMany<UserSubcription, $this>
      */
     public function userSubscriptions(): HasMany
     {
@@ -238,7 +239,7 @@ trait UserRelationship
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasOne<\App\Models\BusinessInformation, $this>
+     * @return HasOne<BusinessInformation, $this>
      */
     public function businessInformation(): HasOne
     {
@@ -246,7 +247,7 @@ trait UserRelationship
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\B2BProduct, $this>
+     * @return HasMany<B2BProduct, $this>
      */
     public function b2bProducts(): HasMany
     {
@@ -254,7 +255,7 @@ trait UserRelationship
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\B2BSellerShippingAddress, $this>
+     * @return HasMany<B2BSellerShippingAddress, $this>
      */
     public function b2bSellerShippingAddresses(): HasMany
     {
@@ -262,7 +263,7 @@ trait UserRelationship
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasOne<\App\Models\B2bCompany, $this>
+     * @return HasOne<B2bCompany, $this>
      */
     public function b2bCompany(): HasOne
     {
@@ -270,7 +271,7 @@ trait UserRelationship
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\ProductAttribute, $this>
+     * @return HasMany<ProductAttribute, $this>
      */
     public function productAttributes(): HasMany
     {
@@ -278,7 +279,7 @@ trait UserRelationship
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\PromoRedemption, $this>
+     * @return HasMany<PromoRedemption, $this>
      */
     public function promoRedemptions(): HasMany
     {

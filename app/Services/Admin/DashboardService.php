@@ -10,12 +10,14 @@ use App\Models\Category;
 use App\Models\Order;
 use App\Models\User;
 use App\Trait\HttpResponse;
+use Illuminate\Database\DatabaseManager;
+use Illuminate\Support\Facades\Date;
 
 class DashboardService
 {
     use HttpResponse;
 
-    public function __construct(private readonly \Illuminate\Database\DatabaseManager $databaseManager) {}
+    public function __construct(private readonly DatabaseManager $databaseManager) {}
 
     public function dashboardAnalytics($request)
     {
@@ -24,21 +26,21 @@ class DashboardService
 
         switch ($period) {
             case 'this_week':
-                $startDate = \Illuminate\Support\Facades\Date::now()->startOfWeek();
+                $startDate = Date::now()->startOfWeek();
                 break;
             case 'this_month':
-                $startDate = \Illuminate\Support\Facades\Date::now()->startOfMonth();
+                $startDate = Date::now()->startOfMonth();
                 break;
             case 'this_year':
-                $startDate = \Illuminate\Support\Facades\Date::now()->startOfYear();
+                $startDate = Date::now()->startOfYear();
                 break;
             case 'last_7_days':
             default:
-                $startDate = \Illuminate\Support\Facades\Date::now()->subDays(7);
+                $startDate = Date::now()->subDays(7);
                 break;
         }
 
-        $endDate = \Illuminate\Support\Facades\Date::now();
+        $endDate = Date::now();
 
         $total_sales = Order::select('shop_countries.currency', 'orders.total_amount')
             ->join('shop_countries', 'orders.country_id', '=', 'shop_countries.country_id')

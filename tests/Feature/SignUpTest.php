@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Action;
 use App\Models\User;
+use Illuminate\Contracts\Config\Repository;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
@@ -19,7 +20,7 @@ class SignUpTest extends TestCase
      *
      * @final
      */
-    public function __construct(string $name, private readonly \Illuminate\Contracts\Config\Repository $repository)
+    public function __construct(string $name, private readonly Repository $repository)
     {
         parent::__construct($name);
     }

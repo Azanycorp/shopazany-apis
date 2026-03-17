@@ -22,13 +22,15 @@ use App\Models\State;
 use App\Models\Unit;
 use App\Models\User;
 use App\Trait\HttpResponse;
+use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class AdminService
 {
     use HttpResponse;
 
-    public function __construct(private readonly \Illuminate\Contracts\Cache\Repository $cacheManager) {}
+    public function __construct(private readonly Repository $cacheManager) {}
 
     public function addSlider($request)
     {
@@ -94,7 +96,7 @@ class AdminService
         return $this->success(null, 'Deleted successfully');
     }
 
-    public function categories(\Illuminate\Http\Request $request): JsonResponse
+    public function categories(Request $request): JsonResponse
     {
         $type = $request->query('type', BannerType::B2C);
 

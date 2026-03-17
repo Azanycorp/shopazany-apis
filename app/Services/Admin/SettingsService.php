@@ -18,14 +18,17 @@ use App\Models\SubscriptionPlan;
 use App\Models\TermsService;
 use App\Trait\HttpResponse;
 use App\Trait\SignUp;
+use Illuminate\Database\DatabaseManager;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Foundation\Application;
+use Illuminate\Hashing\BcryptHasher;
 use Illuminate\Support\Str;
 
 class SettingsService
 {
     use HttpResponse, SignUp;
 
-    public function __construct(private readonly \Illuminate\Foundation\Application $application, private readonly \Illuminate\Database\DatabaseManager $databaseManager, private readonly \Illuminate\Hashing\BcryptHasher $bcryptHasher) {}
+    public function __construct(private readonly Application $application, private readonly DatabaseManager $databaseManager, private readonly BcryptHasher $bcryptHasher) {}
 
     public function addSeo($request)
     {

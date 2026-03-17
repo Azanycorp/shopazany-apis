@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Collection;
 
 /**
  * @property-read array $product_ids
@@ -36,7 +37,7 @@ class Banner extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Deal, $this>
+     * @return BelongsTo<Deal, $this>
      */
     public function deal(): BelongsTo
     {
@@ -68,7 +69,7 @@ class Banner extends Model
                 $ids = json_decode($attributes['products'] ?? '[]', true);
 
                 if (blank($ids)) {
-                    return new \Illuminate\Support\Collection([]);
+                    return new Collection([]);
                 }
 
                 return B2BProduct::whereIn('id', $ids)->get();

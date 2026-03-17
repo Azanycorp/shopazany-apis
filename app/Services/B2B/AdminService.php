@@ -40,7 +40,10 @@ use App\Repositories\B2BProductRepository;
 use App\Repositories\B2BSellerShippingRepository;
 use App\Trait\HttpResponse;
 use App\Trait\SignUp;
+use Illuminate\Contracts\Hashing\Hasher;
+use Illuminate\Database\DatabaseManager;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Hashing\BcryptHasher;
 use Illuminate\Support\Str;
 
 class AdminService
@@ -50,9 +53,9 @@ class AdminService
     public function __construct(
         protected B2BProductRepository $b2bProductRepository,
         protected B2BSellerShippingRepository $b2bSellerShippingRepository,
-        private readonly \Illuminate\Database\DatabaseManager $databaseManager,
-        private readonly \Illuminate\Contracts\Hashing\Hasher $hasher,
-        private readonly \Illuminate\Hashing\BcryptHasher $bcryptHasher
+        private readonly DatabaseManager $databaseManager,
+        private readonly Hasher $hasher,
+        private readonly BcryptHasher $bcryptHasher
     ) {}
 
     // dashboard

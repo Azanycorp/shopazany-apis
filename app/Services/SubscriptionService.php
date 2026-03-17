@@ -13,12 +13,13 @@ use App\Services\Payment\HandlePaymentService;
 use App\Services\Payment\PaymentDetailsService;
 use App\Services\Payment\PaystackPaymentProcessor;
 use App\Trait\HttpResponse;
+use Illuminate\Auth\AuthManager;
 
 class SubscriptionService
 {
     use HttpResponse;
 
-    public function __construct(private readonly \Illuminate\Auth\AuthManager $authManager) {}
+    public function __construct(private readonly AuthManager $authManager) {}
 
     public function getPlanByCountry($request, $countryId)
     {

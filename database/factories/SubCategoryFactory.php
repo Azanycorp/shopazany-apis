@@ -2,10 +2,12 @@
 
 namespace Database\Factories;
 
+use App\Models\Category;
+use App\Models\SubCategory;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\SubCategory>
+ * @extends Factory<SubCategory>
  */
 class SubCategoryFactory extends Factory
 {
@@ -18,7 +20,7 @@ class SubCategoryFactory extends Factory
     {
         return [
             'name' => fake()->word(),
-            'category_id' => \App\Models\Category::factory(),
+            'category_id' => Category::factory(),
             'slug' => fake()->slug,
         ];
     }

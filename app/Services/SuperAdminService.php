@@ -27,13 +27,18 @@ use App\Models\ShippmentBatch;
 use App\Trait\HttpResponse;
 use App\Trait\SignUp;
 use App\Trait\SuperAdminNotification;
+use Illuminate\Auth\AuthManager;
+use Illuminate\Contracts\Hashing\Hasher;
+use Illuminate\Database\DatabaseManager;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Hashing\BcryptHasher;
+use Illuminate\Support\Collection;
 
 class SuperAdminService
 {
     use HttpResponse, SignUp, SuperAdminNotification;
 
-    public function __construct(private readonly \Illuminate\Database\DatabaseManager $databaseManager, private readonly \Illuminate\Auth\AuthManager $authManager, private readonly \Illuminate\Contracts\Hashing\Hasher $hasher, private readonly \Illuminate\Hashing\BcryptHasher $bcryptHasher) {}
+    public function __construct(private readonly DatabaseManager $databaseManager, private readonly AuthManager $authManager, private readonly Hasher $hasher, private readonly BcryptHasher $bcryptHasher) {}
 
     public function getDashboardDetails()
     {
@@ -329,7 +334,7 @@ class SuperAdminService
             return $this->error(null, 'This order has already been logged at this hub.', 422);
         }
 
-        $loggedItems = (new \Illuminate\Support\Collection($request->items ?? []))
+        $loggedItems = (new Collection($request->items ?? []))
             ->map(fn ($it) => [
                 'item_id' => $it['item_id'] ?? null,
                 'item_condition' => $it['item_condition'] ?? null,

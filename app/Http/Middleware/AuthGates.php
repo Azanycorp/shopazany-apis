@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Admin;
 use Closure;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Http\Request;
@@ -14,12 +15,12 @@ class AuthGates
     /**
      * Handle an incoming request.
      *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * @param  Closure(Request): (Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
     {
         $user = $this->authManager->guard('admin')->user();
-        if ($user instanceof \App\Models\Admin) {
+        if ($user instanceof Admin) {
             $user->load('roles.permissions');
         }
 

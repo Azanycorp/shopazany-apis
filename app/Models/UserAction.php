@@ -23,7 +23,7 @@ class UserAction extends Model
     ];
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\User, $this>
+     * @return BelongsTo<User, $this>
      */
     public function user(): BelongsTo
     {
@@ -31,7 +31,7 @@ class UserAction extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Action, $this>
+     * @return BelongsTo<Action, $this>
      */
     public function action(): BelongsTo
     {

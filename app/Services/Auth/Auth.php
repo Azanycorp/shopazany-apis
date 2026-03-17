@@ -2,13 +2,14 @@
 
 namespace App\Services\Auth;
 
+use Illuminate\Contracts\Config\Repository;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use Throwable;
 
 class Auth
 {
-    public function __construct(private readonly \Illuminate\Contracts\Config\Repository $repository) {}
+    public function __construct(private readonly Repository $repository) {}
 
     public function request(string $method, string $endpoint, ?array $data = [], ?string $token = null)
     {
@@ -68,7 +69,7 @@ class Auth
                 default => throw new \InvalidArgumentException("Unsupported method [$method]"),
             };
 
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             logger()->error("HTTP Request Timeout: {$method} {$endpoint}", [
                 'error' => $e->getMessage(),
                 'timeout' => $options->getTimeout(),

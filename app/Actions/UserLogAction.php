@@ -17,7 +17,7 @@ class UserLogAction
 
     protected $response;
 
-    protected \Jenssegers\Agent\Agent $agent;
+    protected Agent $agent;
 
     public function __construct($request, $action, $description, $response, $user = null)
     {
