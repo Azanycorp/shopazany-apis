@@ -45,8 +45,15 @@ use App\Models\RfqMessage;
 use App\Models\SliderImage;
 use App\Models\SocialSetting;
 use App\Models\User;
+use App\Notifications\RfqMessageNotification;
 use App\Trait\HttpResponse;
+use Illuminate\Auth\AuthManager;
+use Illuminate\Contracts\Hashing\Hasher;
+use Illuminate\Database\DatabaseManager;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Hashing\BcryptHasher;
+use Illuminate\Support\Facades\Date;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 
 class BuyerService
@@ -54,10 +61,10 @@ class BuyerService
     use HttpResponse;
 
     public function __construct(
-        private readonly \Illuminate\Database\DatabaseManager $databaseManager,
-        private readonly \Illuminate\Auth\AuthManager $authManager,
-        private readonly \Illuminate\Contracts\Hashing\Hasher $hasher,
-        private readonly \Illuminate\Hashing\BcryptHasher $bcryptHasher
+        private readonly DatabaseManager $databaseManager,
+        private readonly AuthManager $authManager,
+        private readonly Hasher $hasher,
+        private readonly BcryptHasher $bcryptHasher
     ) {}
 
     // Admin section
@@ -415,7 +422,7 @@ class BuyerService
     {
         $type = $request->query('type');
 
-        $categories = B2BProductCategory::select('id', 'type', 'name', 'slug', 'image')
+        $categories = B2bProductCategory::select('id', 'type', 'name', 'slug', 'image')
             ->when($type, function ($q) use ($type) {
                 $q->where('type', $type);
             })
@@ -703,9 +710,9 @@ class BuyerService
                 }
                 $product = B2BProduct::findOrFail($quote->product_id);
                 $unit_price = currencyConvert(
-                    userAuth()->default_currency,
-                    $productData['unit_price'],
                     $product->shopCountry->currency ?? 'USD',
+                    $productData['unit_price'],
+                    userAuth()->default_currency,
                 );
 
                 Rfq::create([
@@ -749,9 +756,9 @@ class BuyerService
                 : json_decode($quote->product_data, true);
 
             $unit_price = currencyConvert(
-                userAuth()->default_currency,
-                $productData['unit_price'],
                 $product->shopCountry->currency ?? 'USD',
+                $productData['unit_price'],
+                userAuth()->default_currency,
             );
 
             $amount = total_amount($unit_price, $quote->qty);
@@ -846,13 +853,13 @@ class BuyerService
 
         $seven_days_partners = B2bOrder::where(['seller_id' => $currentUserId, 'status' => OrderStatus::DELIVERED])
             ->distinct('buyer_id')
-            ->where('created_at', '<=', \Illuminate\Support\Facades\Date::today()->subDays(7))
+            ->where('created_at', '<=', Date::today()->subDays(7))
             ->count('buyer_id');
 
         $seven_days_orderStats = B2bOrder::where([
             'seller_id' => $currentUserId,
             'status' => OrderStatus::DELIVERED,
-        ])->where('created_at', '<=', \Illuminate\Support\Facades\Date::today()->subDays(7))->sum('total_amount');
+        ])->where('created_at', '<=', Date::today()->subDays(7))->sum('total_amount');
 
         $data = [
             'total_purchase' => $orderStats,
@@ -930,13 +937,17 @@ class BuyerService
 
         try {
 
-            $rfq->messages()->create([
+            $user = User::find($rfq->seller_id);
+
+            $message = $rfq->messages()->create([
                 'rfq_id' => $request->rfq_id,
                 'buyer_id' => userAuthId(),
                 'p_unit_price' => $request->p_unit_price,
                 'preferred_qty' => $rfq->product_quantity,
                 'note' => $request->note,
             ]);
+
+            Notification::send($user, new RfqMessageNotification($user, $message));
 
             $rfq->update(['status' => 'review']);
             $this->databaseManager->commit();

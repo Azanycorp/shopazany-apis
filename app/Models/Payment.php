@@ -29,7 +29,7 @@ class Payment extends Model
     ];
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\User, $this>
+     * @return BelongsTo<User, $this>
      */
     public function user(): BelongsTo
     {
@@ -37,7 +37,7 @@ class Payment extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Order, $this>
+     * @return BelongsTo<Order, $this>
      */
     public function order(): BelongsTo
     {

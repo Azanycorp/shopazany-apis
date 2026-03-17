@@ -10,6 +10,10 @@ use App\Exports\B2BProductExport;
 use App\Exports\ProductExport;
 use App\Models\User;
 use App\Trait\HttpResponse;
+use Illuminate\Filesystem\FilesystemManager;
+use Illuminate\Foundation\Application;
+use Illuminate\Http\Request;
+use Illuminate\Routing\UrlGenerator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
@@ -19,9 +23,9 @@ abstract class Controller
     use HttpResponse;
 
     public function __construct(
-        private readonly \Illuminate\Foundation\Application $application,
-        private readonly \Illuminate\Filesystem\FilesystemManager $filesystemManager,
-        private readonly \Illuminate\Routing\UrlGenerator $urlGenerator,
+        private readonly Application $application,
+        private readonly FilesystemManager $filesystemManager,
+        private readonly UrlGenerator $urlGenerator,
     ) {}
 
     public function generateUniqueReferrerCode()
@@ -66,7 +70,7 @@ abstract class Controller
         return "/stag/document/{$email}";
     }
 
-    protected function storeFile($file, string $folder, \Illuminate\Http\Request $request): string
+    protected function storeFile($file, string $folder, Request $request): string
     {
         return uploadImage($request, $file, $folder);
     }

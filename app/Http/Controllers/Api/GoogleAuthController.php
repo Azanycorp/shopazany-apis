@@ -6,13 +6,16 @@ use App\Enum\UserStatus;
 use App\Enum\UserType;
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use Illuminate\Contracts\Config\Repository;
+use Illuminate\Hashing\BcryptHasher;
+use Illuminate\Routing\Redirector;
 use Laravel\Socialite\Facades\Socialite;
 
 class GoogleAuthController extends Controller
 {
     protected $frontendBaseUrl;
 
-    public function __construct(\Illuminate\Contracts\Config\Repository $repository, private readonly \Illuminate\Hashing\BcryptHasher $bcryptHasher, private readonly \Illuminate\Routing\Redirector $redirector)
+    public function __construct(Repository $repository, private readonly BcryptHasher $bcryptHasher, private readonly Redirector $redirector)
     {
         if (app()->environment('production')) {
             $this->frontendBaseUrl = $repository->get('services.frontend_baseurl');

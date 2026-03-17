@@ -18,7 +18,7 @@ class CollationCenter extends Model
     ];
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Country, $this>
+     * @return BelongsTo<Country, $this>
      */
     public function country(): BelongsTo
     {

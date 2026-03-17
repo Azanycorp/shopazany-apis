@@ -24,7 +24,7 @@ class B2CBlog extends Model
     ];
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\B2CBlogCategory, $this>
+     * @return BelongsTo<B2CBlogCategory, $this>
      */
     public function blogCategory(): BelongsTo
     {

@@ -8,12 +8,14 @@ use App\Enum\MailingEnum;
 use App\Mail\AccountVerificationEmail;
 use App\Models\Admin;
 use App\Trait\HttpResponse;
+use Illuminate\Auth\AuthManager;
+use Illuminate\Hashing\BcryptHasher;
 
 class SuperAdminAuthService
 {
     use HttpResponse;
 
-    public function __construct(private readonly \Illuminate\Auth\AuthManager $authManager, private readonly \Illuminate\Hashing\BcryptHasher $bcryptHasher) {}
+    public function __construct(private readonly AuthManager $authManager, private readonly BcryptHasher $bcryptHasher) {}
 
     public function login($request)
     {

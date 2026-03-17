@@ -30,6 +30,7 @@ use App\Models\RfqMessage;
 use App\Models\User;
 use App\Models\UserWallet;
 use App\Models\WithdrawalRequest;
+use App\Notifications\RfqMessageNotification;
 use App\Pipelines\BusinessInformation\CreateBusinessInformation;
 use App\Pipelines\BusinessInformation\UpdateUserAccount;
 use App\Repositories\B2BProductRepository;
@@ -37,7 +38,13 @@ use App\Repositories\B2BSellerShippingRepository;
 use App\Services\TransactionService;
 use App\Trait\HttpResponse;
 use App\Trait\Payment;
+use Illuminate\Auth\AuthManager;
+use Illuminate\Contracts\Hashing\Hasher;
+use Illuminate\Database\DatabaseManager;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Pipeline;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
@@ -49,9 +56,9 @@ class SellerService extends Controller
     public function __construct(
         protected B2BProductRepository $b2bProductRepository,
         protected B2BSellerShippingRepository $b2bSellerShippingRepository,
-        private readonly \Illuminate\Contracts\Hashing\Hasher $hasher,
-        private readonly \Illuminate\Auth\AuthManager $authManager,
-        private readonly \Illuminate\Database\DatabaseManager $databaseManager
+        private readonly Hasher $hasher,
+        private readonly AuthManager $authManager,
+        private readonly DatabaseManager $databaseManager
     ) {}
 
     public function businessInformation($request)
@@ -465,7 +472,7 @@ class SellerService extends Controller
         return $this->success(new B2BSellerShippingAddressResource($shipping), 'Address detail');
     }
 
-    public function updateShipping(\Illuminate\Http\Request $request, int $shippingId)
+    public function updateShipping(Request $request, int $shippingId)
     {
         $currentUserId = userAuthId();
 
@@ -531,7 +538,7 @@ class SellerService extends Controller
         return $this->success(null, 'Address Set as default successfully');
     }
 
-    public function getComplaints(int $userId, \Illuminate\Http\Request $request)
+    public function getComplaints(int $userId, Request $request)
     {
         $currentUserId = userAuthId();
 
@@ -740,8 +747,14 @@ class SellerService extends Controller
     {
         $rfq = Rfq::find($request->rfq_id);
 
+        $user = User::find($rfq->buyer_id);
+
+        if (! $user) {
+            return $this->error(null, 'User not found', 404);
+        }
+
         if (! $rfq) {
-            return $this->error(null, 'No record found details', 404);
+            return $this->error(null, 'No record found for rfq', 404);
         }
 
         $amount = ($request->preferred_unit_price * $rfq->product_quantity);
@@ -757,6 +770,8 @@ class SellerService extends Controller
             'p_unit_price' => $request->preferred_unit_price,
             'total_amount' => $amount,
         ]);
+
+        Notification::send($user, new RfqMessageNotification($user, $message));
 
         return $this->success($message, 'message details');
     }
@@ -806,9 +821,9 @@ class SellerService extends Controller
             $amount = $rfq->total_amount;
 
             $total_amount = currencyConvert(
-                userAuth()->default_currency,
-                $amount,
                 $product->shopCountry->currency ?? 'USD',
+                $amount,
+                userAuth()->default_currency,
             );
 
             $order = B2bOrder::create([
@@ -940,7 +955,7 @@ class SellerService extends Controller
 
         $seven_days_partners = B2bOrder::where(['seller_id' => $currentUserId, 'status' => OrderStatus::DELIVERED])
             ->distinct('buyer_id')
-            ->where('created_at', '<=', \Illuminate\Support\Facades\Date::today()->subDays(7))
+            ->where('created_at', '<=', Date::today()->subDays(7))
             ->count('buyer_id');
 
         $orderStats = B2bOrder::where([
@@ -950,7 +965,7 @@ class SellerService extends Controller
         $seven_days_orderStats = B2bOrder::where([
             'seller_id' => $currentUserId,
             'status' => OrderStatus::DELIVERED,
-        ])->where('created_at', '<=', \Illuminate\Support\Facades\Date::today()->subDays(7))->sum('total_amount');
+        ])->where('created_at', '<=', Date::today()->subDays(7))->sum('total_amount');
 
         $rfqs = Rfq::with('buyer')->where('seller_id', $currentUserId)->get();
 

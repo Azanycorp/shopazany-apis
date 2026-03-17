@@ -2,6 +2,7 @@
 
 namespace App\Services\Cache;
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
 class CacheInvalidationService
@@ -51,7 +52,7 @@ class CacheInvalidationService
     {
         $this->clearHomeServiceCache($countryId, $type, $slug);
 
-        $request = new \Illuminate\Http\Request([
+        $request = new Request([
             'country_id' => $countryId,
             'type' => $type,
         ]);

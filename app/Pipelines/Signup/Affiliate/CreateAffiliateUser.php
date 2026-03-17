@@ -9,6 +9,7 @@ use App\Mail\SignUpVerifyMail;
 use App\Models\Action;
 use App\Models\User;
 use App\Trait\HttpResponse;
+use Illuminate\Hashing\BcryptHasher;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
@@ -18,7 +19,7 @@ class CreateAffiliateUser
     use HttpResponse;
 
     public function __construct(
-        private readonly \Illuminate\Hashing\BcryptHasher $bcryptHasher,
+        private readonly BcryptHasher $bcryptHasher,
     ) {}
 
     public function handle($request)

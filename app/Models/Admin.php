@@ -4,16 +4,18 @@ namespace App\Models;
 
 use App\Notifications\ResetPasswordNotification;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
 /**
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Role> $roles
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Permission> $permissions
+ * @property-read Collection<int, Role> $roles
+ * @property-read Collection<int, Permission> $permissions
  * @property-read string $fullName
  * @property string $first_name
  * @property string $last_name
@@ -74,7 +76,7 @@ class Admin extends Authenticatable
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Product, $this>
+     * @return HasMany<Product, $this>
      */
     public function products(): HasMany
     {
@@ -82,7 +84,7 @@ class Admin extends Authenticatable
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Blog, $this>
+     * @return HasMany<Blog, $this>
      */
     public function blogs(): HasMany
     {
@@ -90,7 +92,7 @@ class Admin extends Authenticatable
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<\App\Models\Role, $this, \Illuminate\Database\Eloquent\Relations\Pivot>
+     * @return BelongsToMany<Role, $this, Pivot>
      */
     public function roles(): BelongsToMany
     {
@@ -98,7 +100,7 @@ class Admin extends Authenticatable
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<\App\Models\Permission, $this, \Illuminate\Database\Eloquent\Relations\Pivot>
+     * @return BelongsToMany<Permission, $this, Pivot>
      */
     public function permissions(): BelongsToMany
     {

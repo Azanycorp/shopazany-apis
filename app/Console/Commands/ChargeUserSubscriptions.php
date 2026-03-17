@@ -11,6 +11,8 @@ use App\Models\UserSubcription;
 use App\Services\Curl\ChargeUserService;
 use App\Services\SubscriptionService;
 use Illuminate\Console\Command;
+use Illuminate\Database\DatabaseManager;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Log;
 
 class ChargeUserSubscriptions extends Command
@@ -32,7 +34,7 @@ class ChargeUserSubscriptions extends Command
     /**
      * Create a new console command instance.
      */
-    public function __construct(private readonly \Illuminate\Database\DatabaseManager $databaseManager)
+    public function __construct(private readonly DatabaseManager $databaseManager)
     {
         parent::__construct();
     }
@@ -42,7 +44,7 @@ class ChargeUserSubscriptions extends Command
      */
     public function handle(): void
     {
-        UserSubcription::where('plan_end', '<=', \Illuminate\Support\Facades\Date::now()->subDays(30))
+        UserSubcription::where('plan_end', '<=', Date::now()->subDays(30))
             ->where('subscription_type', PaymentType::PAYSTACK)
             ->whereNotNull('authorization_data')
             ->whereNull('expired_at')

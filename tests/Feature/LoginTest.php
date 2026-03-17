@@ -6,7 +6,10 @@ use App\Mail\LoginVerifyMail;
 use App\Models\Action;
 use App\Models\User;
 use App\Services\Auth\LoginService;
+use Illuminate\Auth\AuthManager;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Hashing\BcryptHasher;
+use Illuminate\Mail\Mailer;
 use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
@@ -21,7 +24,7 @@ class LoginTest extends TestCase
      *
      * @final
      */
-    public function __construct(string $name, private readonly \Illuminate\Mail\Mailer $mailer, private readonly \Illuminate\Auth\AuthManager $authManager, private readonly \Illuminate\Hashing\BcryptHasher $bcryptHasher)
+    public function __construct(string $name, private readonly Mailer $mailer, private readonly AuthManager $authManager, private readonly BcryptHasher $bcryptHasher)
     {
         parent::__construct($name);
     }

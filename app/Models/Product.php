@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use App\Models\Pivots\OrderItemPivot;
 use App\Trait\ClearsResponseCache;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -10,11 +12,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 /**
- * @property-read \App\Models\Pivots\OrderItemPivot $pivot
+ * @property-read OrderItemPivot $pivot
  * @property-read int $pivot_id
  * @property-read int $pivot_product_id
  * @property-read int $pivot_variation_id
@@ -85,7 +88,7 @@ class Product extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\User, $this>
+     * @return BelongsTo<User, $this>
      */
     public function user(): BelongsTo
     {
@@ -93,7 +96,7 @@ class Product extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Admin, $this>
+     * @return BelongsTo<Admin, $this>
      */
     public function admin(): BelongsTo
     {
@@ -101,7 +104,7 @@ class Product extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Category, $this>
+     * @return BelongsTo<Category, $this>
      */
     public function category(): BelongsTo
     {
@@ -109,7 +112,7 @@ class Product extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\SubCategory, $this>
+     * @return BelongsTo<SubCategory, $this>
      */
     public function subCategory(): BelongsTo
     {
@@ -117,7 +120,7 @@ class Product extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\ProductImage, $this>
+     * @return HasMany<ProductImage, $this>
      */
     public function productimages(): HasMany
     {
@@ -125,7 +128,7 @@ class Product extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Country, $this>
+     * @return BelongsTo<Country, $this>
      */
     public function country(): BelongsTo
     {
@@ -133,7 +136,7 @@ class Product extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\ShopCountry, $this>
+     * @return BelongsTo<ShopCountry, $this>
      */
     public function shopCountry(): BelongsTo
     {
@@ -141,7 +144,7 @@ class Product extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Wishlist, $this>
+     * @return HasMany<Wishlist, $this>
      */
     public function wishlists(): HasMany
     {
@@ -149,7 +152,7 @@ class Product extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<\App\Models\Order, $this, \Illuminate\Database\Eloquent\Relations\Pivot>
+     * @return BelongsToMany<Order, $this, Pivot>
      */
     public function orders(): BelongsToMany
     {
@@ -158,7 +161,7 @@ class Product extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Size, $this>
+     * @return BelongsTo<Size, $this>
      */
     public function size(): BelongsTo
     {
@@ -166,7 +169,7 @@ class Product extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Brand, $this>
+     * @return BelongsTo<Brand, $this>
      */
     public function brand(): BelongsTo
     {
@@ -174,7 +177,7 @@ class Product extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Color, $this>
+     * @return BelongsTo<Color, $this>
      */
     public function color(): BelongsTo
     {
@@ -182,7 +185,7 @@ class Product extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Unit, $this>
+     * @return BelongsTo<Unit, $this>
      */
     public function unit(): BelongsTo
     {
@@ -190,7 +193,7 @@ class Product extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Cart, $this>
+     * @return HasMany<Cart, $this>
      */
     public function carts(): HasMany
     {
@@ -198,7 +201,7 @@ class Product extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\ProductReview, $this>
+     * @return HasMany<ProductReview, $this>
      */
     public function productReviews(): HasMany
     {
@@ -206,7 +209,7 @@ class Product extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\ProductVariation, $this>
+     * @return HasMany<ProductVariation, $this>
      */
     public function productVariations(): HasMany
     {
@@ -250,7 +253,7 @@ class Product extends Model
     }
 
     // Scopes
-    #[\Illuminate\Database\Eloquent\Attributes\Scope]
+    #[Scope]
     protected function topRated(Builder $query)
     {
         return $query->select(
@@ -272,7 +275,7 @@ class Product extends Model
             ->orderByDesc('sold_count');
     }
 
-    #[\Illuminate\Database\Eloquent\Attributes\Scope]
+    #[Scope]
     protected function mostFavorite(Builder $query)
     {
         return $query->select(
