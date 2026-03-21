@@ -749,7 +749,7 @@ class SellerService extends Controller
         $mail_class = B2BSHippedOrderMail::class;
         mailSend($type, $user, $subject, $mail_class, $orderedItems);
 
-        return $this->success($order, 'order Shipped successfully');
+        return $this->success($order, 'order Processed successfully');
     }
 
     public function markShipped($data)
@@ -759,9 +759,11 @@ class SellerService extends Controller
         if (! $order) {
             return $this->error(null, 'order not found');
         }
+
         if ($order->status == OrderStatus::CANCELLED) {
             return $this->error(null, 'Order has been cancelled and cannot be shipped');
         }
+
         $user = User::find($order->buyer_id);
 
         if (! $user) {
@@ -830,6 +832,10 @@ class SellerService extends Controller
     public function markDelivered($data)
     {
         $order = B2bOrder::where('seller_id', userAuthId())->findOrFail($data->order_id);
+
+        if ($order->status == OrderStatus::CANCELLED) {
+            return $this->error(null, 'Order has been cancelled and cannot be marked delivered');
+        }
 
         $user = User::find($order->buyer_id);
 

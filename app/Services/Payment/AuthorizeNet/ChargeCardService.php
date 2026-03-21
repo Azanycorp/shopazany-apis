@@ -547,12 +547,14 @@ class ChargeCardService implements PaymentStrategy
             'status' => OrderStatus::PENDING,
             'type' => $type ?? null,
         ]);
+
         $order->orderStages()->create([
             'message' => 'Your order has been placed successfully.',
-            'status' => OrderStatus::PENDING,
+            'status' => 'Order Placed',
             'current_location' => 'Online',
             'date' => now(),
         ]);
+
         $orderedItems = [
             'product_name' => $product->name,
             'image' => $product->front_image,
