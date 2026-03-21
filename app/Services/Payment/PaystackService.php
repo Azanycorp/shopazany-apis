@@ -336,7 +336,7 @@ class PaystackService
                 );
                 $product->save();
 
-                B2bOrder::create([
+                $order = B2bOrder::create([
                     'buyer_id' => $userId,
                     'centre_id' => $centerId ?? null,
                     'seller_id' => $rfq->seller_id,
@@ -351,6 +351,13 @@ class PaystackService
                     'payment_status' => OrderStatus::PAID,
                     'status' => OrderStatus::PENDING,
                     'type' => $type,
+                ]);
+
+                $order->orderStages()->create([
+                    'message' => 'Your order has been placed successfully.',
+                    'status' => OrderStatus::PENDING,
+                    'current_location' => 'Online',
+                    'date' => now(),
                 ]);
 
                 $wallet = UserWallet::firstOrCreate(

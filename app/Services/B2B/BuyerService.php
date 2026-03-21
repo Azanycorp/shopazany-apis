@@ -903,7 +903,7 @@ class BuyerService
 
     public function orderDetails($id)
     {
-        $order = B2bOrder::with(['seller', 'buyer'])
+        $order = B2bOrder::with(['seller', 'buyer', 'orderStages'])
             ->where('buyer_id', userAuthId())
             ->where('id', $id)
             ->firstOrFail();

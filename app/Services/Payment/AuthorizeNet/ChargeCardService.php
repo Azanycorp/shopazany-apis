@@ -530,7 +530,7 @@ class ChargeCardService implements PaymentStrategy
         $saddress = BuyerShippingAddress::findOrFail($shipping_address_id);
         $shipping_address = new B2BBuyerShippingAddressResource($saddress);
 
-        B2bOrder::create([
+        $order = B2bOrder::create([
             'buyer_id' => $user->id,
             'centre_id' => $centerId ?? null,
             'seller_id' => $rfq->seller_id,
@@ -547,7 +547,12 @@ class ChargeCardService implements PaymentStrategy
             'status' => OrderStatus::PENDING,
             'type' => $type ?? null,
         ]);
-
+        $order->orderStages()->create([
+            'message' => 'Your order has been placed successfully.',
+            'status' => OrderStatus::PENDING,
+            'current_location' => 'Online',
+            'date' => now(),
+        ]);
         $orderedItems = [
             'product_name' => $product->name,
             'image' => $product->front_image,

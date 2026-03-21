@@ -42,6 +42,13 @@ class B2BOrderResource extends JsonResource
                 'email' => $this->resource->buyer?->email,
                 'phone' => $this->resource->buyer?->phone,
             ],
+
+            'orderStages' => (object) [
+                'message' => $this->resource->orderStages?->message,
+                'status' => $this->resource->orderStages?->status,
+                'current_location' => $this->resource->orderStages?->current_location,
+                'date' => $this->resource->orderStages?->date,
+            ],
         ];
     }
 }

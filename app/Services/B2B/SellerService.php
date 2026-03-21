@@ -791,6 +791,12 @@ class SellerService extends Controller
             'delivery_date' => now()->toDateString(),
         ]);
 
+        $order->orderStages()->create([
+            'message' => 'Your order has been delivered successfully.',
+            'status' => OrderStatus::DELIVERED,
+            'current_location' => 'Buyer\'s location',
+            'date' => now(),
+        ]);
         $orderedItems = [
             'quantity' => $order->product_quantity,
             'buyer_name' => $user->fullName,
@@ -837,6 +843,13 @@ class SellerService extends Controller
                 'payment_method' => PaymentType::OFFLINE,
                 'payment_status' => OrderStatus::PAID,
                 'status' => OrderStatus::PENDING,
+            ]);
+
+            $order->orderStages()->create([
+                'message' => 'Your order has been placed successfully.',
+                'status' => OrderStatus::PENDING,
+                'current_location' => 'Online',
+                'date' => now(),
             ]);
 
             $orderedItems = [
@@ -890,8 +903,20 @@ class SellerService extends Controller
             return $this->error(null, 'Order not found', 404);
         }
 
+        $user = User::find($order->buyer_id);
+
+        if (! $user) {
+            return $this->error(null, 'Buyer not found');
+        }
         $order->update([
             'status' => OrderStatus::CANCELLED,
+        ]);
+
+        $order->orderStages()->create([
+            'message' => 'Your order has been cancelled.',
+            'status' => OrderStatus::CANCELLED,
+            'current_location' => 'Online',
+            'date' => now(),
         ]);
 
         $product = B2BProduct::find($order->product_id);
@@ -903,6 +928,18 @@ class SellerService extends Controller
         $product->availability_quantity += $order->product_quantity;
         $product->sold -= $order->product_quantity;
         $product->save();
+
+        $orderedItems = [
+            'quantity' => $order->product_quantity,
+            'price' => $order->total_amount,
+            'buyer_name' => $user->first_name.' '.$user->last_name,
+            'order_number' => $order->order_no,
+        ];
+
+        $type = MailingEnum::ORDER_EMAIL;
+        $subject = 'B2B Order Cancel Confirmation';
+        $mail_class = B2BSHippedOrderMail::class;
+        mailSend($type, $user, $subject, $mail_class, $orderedItems);
 
         return $this->success(null, 'Order Cancelled successful');
     }
