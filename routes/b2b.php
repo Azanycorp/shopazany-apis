@@ -77,6 +77,7 @@ Route::middleware('validate.header')
                     Route::prefix('order')->group(function (): void {
                         Route::get('/details/{id}', 'orderDetails');
                         Route::post('/mark-as-shipped', 'shippOrder');
+                        Route::post('/process-order', 'processOrder');
                         Route::post('/mark-as-delivered', 'markDelivered');
                         Route::post('/cancel-order', 'cancelOrder');
                         Route::post('/rate-order', 'rateOrder');

@@ -709,7 +709,7 @@ class SellerService extends Controller
         return $this->success($data, 'rfq details');
     }
 
-    public function markShipped($data)
+    public function processOrder($data)
     {
         $order = B2bOrder::where('seller_id', userAuthId())->find($data->order_id);
 
@@ -717,6 +717,51 @@ class SellerService extends Controller
             return $this->error(null, 'order not found');
         }
 
+        if ($order->status == OrderStatus::CANCELLED) {
+            return $this->error(null, 'Order has been cancelled and cannot be processed');
+        }
+        $user = User::find($order->buyer_id);
+
+        if (! $user) {
+            return $this->error(null, 'Buyer not found');
+        }
+
+        $order->update([
+            'status' => OrderStatus::PROCESSING,
+        ]);
+
+        $order->orderStages()->create([
+            'message' => 'Processing your order and preparing for shipment.',
+            'status' => 'Processing',
+            'current_location' => 'Seller\'s location',
+            'date' => now(),
+        ]);
+
+        $orderedItems = [
+            'quantity' => $order->product_quantity,
+            'price' => $order->total_amount,
+            'buyer_name' => $user->first_name.' '.$user->last_name,
+            'order_number' => $order->order_no,
+        ];
+
+        $type = MailingEnum::ORDER_EMAIL;
+        $subject = 'B2B Order Shipped Confirmation';
+        $mail_class = B2BSHippedOrderMail::class;
+        mailSend($type, $user, $subject, $mail_class, $orderedItems);
+
+        return $this->success($order, 'order Shipped successfully');
+    }
+
+    public function markShipped($data)
+    {
+        $order = B2bOrder::where('seller_id', userAuthId())->find($data->order_id);
+
+        if (! $order) {
+            return $this->error(null, 'order not found');
+        }
+        if ($order->status == OrderStatus::CANCELLED) {
+            return $this->error(null, 'Order has been cancelled and cannot be shipped');
+        }
         $user = User::find($order->buyer_id);
 
         if (! $user) {
@@ -728,6 +773,12 @@ class SellerService extends Controller
             'shipped_date' => now()->toDateString(),
         ]);
 
+        $order->orderStages()->create([
+            'message' => 'Your order has been shipped successfully.',
+            'status' => 'Order Shipped',
+            'current_location' => 'Driver\'s location',
+            'date' => now(),
+        ]);
         $orderedItems = [
             'quantity' => $order->product_quantity,
             'price' => $order->total_amount,
@@ -793,7 +844,7 @@ class SellerService extends Controller
 
         $order->orderStages()->create([
             'message' => 'Your order has been delivered successfully.',
-            'status' => OrderStatus::DELIVERED,
+            'status' => 'Order Delivered',
             'current_location' => 'Buyer\'s location',
             'date' => now(),
         ]);
@@ -847,7 +898,7 @@ class SellerService extends Controller
 
             $order->orderStages()->create([
                 'message' => 'Your order has been placed successfully.',
-                'status' => OrderStatus::PENDING,
+                'status' => 'Order Placed',
                 'current_location' => 'Online',
                 'date' => now(),
             ]);
@@ -914,7 +965,7 @@ class SellerService extends Controller
 
         $order->orderStages()->create([
             'message' => 'Your order has been cancelled.',
-            'status' => OrderStatus::CANCELLED,
+            'status' => 'Order Cancelled',
             'current_location' => 'Online',
             'date' => now(),
         ]);

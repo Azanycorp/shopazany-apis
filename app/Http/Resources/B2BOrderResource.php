@@ -42,13 +42,14 @@ class B2BOrderResource extends JsonResource
                 'email' => $this->resource->buyer?->email,
                 'phone' => $this->resource->buyer?->phone,
             ],
-
-            'orderStages' => (object) [
-                'message' => $this->resource->orderStages?->message,
-                'status' => $this->resource->orderStages?->status,
-                'current_location' => $this->resource->orderStages?->current_location,
-                'date' => $this->resource->orderStages?->date,
-            ],
+            'order_stages' => $this->resource->orderStages ? $this->resource->orderStages->map(function ($stage): array {
+                return [
+                    'message' => $stage?->message,
+                    'status' => $stage?->status,
+                    'current_location' => $stage?->current_location,
+                    'date' => (string) $stage?->date,
+                ];
+            })->toArray() : [],
         ];
     }
 }

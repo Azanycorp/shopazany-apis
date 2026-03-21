@@ -355,7 +355,7 @@ class PaystackService
 
                 $order->orderStages()->create([
                     'message' => 'Your order has been placed successfully.',
-                    'status' => OrderStatus::PENDING,
+                    'status' => 'Order Placed',
                     'current_location' => 'Online',
                     'date' => now(),
                 ]);
