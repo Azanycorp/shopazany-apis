@@ -44,10 +44,10 @@ class B2BOrderResource extends JsonResource
             ],
             'order_stages' => $this->resource->orderStages ? $this->resource->orderStages->map(function ($stage): array {
                 return [
-                    'message' => $stage?->message,
-                    'status' => $stage?->status,
-                    'current_location' => $stage?->current_location,
-                    'date' => (string) $stage?->date,
+                    'message' => "{$stage?->message}",
+                    'status' => "{$stage?->status}",
+                    'current_location' => "{$stage?->current_location}",
+                    'date' => "{$stage?->date}",
                 ];
             })->toArray() : [],
         ];

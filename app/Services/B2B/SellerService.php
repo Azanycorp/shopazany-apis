@@ -714,16 +714,16 @@ class SellerService extends Controller
         $order = B2bOrder::where('seller_id', userAuthId())->find($data->order_id);
 
         if (! $order) {
-            return $this->error(null, 'order not found');
+            return $this->error(null, 'order not found', 404);
         }
 
         if ($order->status == OrderStatus::CANCELLED) {
-            return $this->error(null, 'Order has been cancelled and cannot be processed');
+            return $this->error(null, 'Order has been cancelled and cannot be processed', 422);
         }
         $user = User::find($order->buyer_id);
 
         if (! $user) {
-            return $this->error(null, 'Buyer not found');
+            return $this->error(null, 'Buyer not found', 404);
         }
 
         $order->update([
@@ -749,7 +749,7 @@ class SellerService extends Controller
         $mail_class = B2BSHippedOrderMail::class;
         mailSend($type, $user, $subject, $mail_class, $orderedItems);
 
-        return $this->success($order, 'order Processed successfully');
+        return $this->success($order, 'order Processed successfully', 200);
     }
 
     public function markShipped($data)
@@ -757,17 +757,17 @@ class SellerService extends Controller
         $order = B2bOrder::where('seller_id', userAuthId())->find($data->order_id);
 
         if (! $order) {
-            return $this->error(null, 'order not found');
+            return $this->error(null, 'order not found', 404);
         }
 
         if ($order->status == OrderStatus::CANCELLED) {
-            return $this->error(null, 'Order has been cancelled and cannot be shipped');
+            return $this->error(null, 'Order has been cancelled and cannot be shipped', 422);
         }
 
         $user = User::find($order->buyer_id);
 
         if (! $user) {
-            return $this->error(null, 'Buyer not found');
+            return $this->error(null, 'Buyer not found', 404);
         }
 
         $order->update([
@@ -778,7 +778,7 @@ class SellerService extends Controller
         $order->orderStages()->create([
             'message' => 'Your order has been shipped successfully.',
             'status' => 'Order Shipped',
-            'current_location' => 'Driver\'s location',
+            'current_location' => "Driver\'s location",
             'date' => now(),
         ]);
         $orderedItems = [
@@ -793,7 +793,7 @@ class SellerService extends Controller
         $mail_class = B2BSHippedOrderMail::class;
         mailSend($type, $user, $subject, $mail_class, $orderedItems);
 
-        return $this->success($order, 'order Shipped successfully');
+        return $this->success($order, 'order Shipped successfully', 200);
     }
 
     public function replyRequest($request)
@@ -826,7 +826,7 @@ class SellerService extends Controller
 
         Notification::send($user, new RfqMessageNotification($user, $message));
 
-        return $this->success($message, 'message details');
+        return $this->success($message, 'message details', 201);
     }
 
     public function markDelivered($data)
@@ -834,7 +834,7 @@ class SellerService extends Controller
         $order = B2bOrder::where('seller_id', userAuthId())->findOrFail($data->order_id);
 
         if ($order->status == OrderStatus::CANCELLED) {
-            return $this->error(null, 'Order has been cancelled and cannot be marked delivered');
+            return $this->error(null, 'Order has been cancelled and cannot be marked delivered', 422);
         }
 
         $user = User::find($order->buyer_id);
@@ -851,7 +851,7 @@ class SellerService extends Controller
         $order->orderStages()->create([
             'message' => 'Your order has been delivered successfully.',
             'status' => 'Order Delivered',
-            'current_location' => 'Buyer\'s location',
+            'current_location' => "Buyer\'s location",
             'date' => now(),
         ]);
         $orderedItems = [
@@ -865,7 +865,7 @@ class SellerService extends Controller
         $mail_class = B2BDeliveredOrderMail::class;
         mailSend($type, $user, $subject, $mail_class, $orderedItems);
 
-        return $this->success($order, 'Order marked delivered successfully');
+        return $this->success($order, 'Order marked delivered successfully', 200);
     }
 
     public function confirmPayment($request)
@@ -963,7 +963,7 @@ class SellerService extends Controller
         $user = User::find($order->buyer_id);
 
         if (! $user) {
-            return $this->error(null, 'Buyer not found');
+            return $this->error(null, 'Buyer not found', 404);
         }
         $order->update([
             'status' => OrderStatus::CANCELLED,
@@ -998,7 +998,7 @@ class SellerService extends Controller
         $mail_class = B2BSHippedOrderMail::class;
         mailSend($type, $user, $subject, $mail_class, $orderedItems);
 
-        return $this->success(null, 'Order Cancelled successful');
+        return $this->success(null, 'Order Cancelled successful', 200);
     }
 
     public function rateOrder($request)

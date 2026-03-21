@@ -10,15 +10,12 @@ class B2BCancelledOrderMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    protected $orderedItems;
-
     /**
      * Create a new message instance.
      */
-    public function __construct($orderedItems)
-    {
-        $this->orderedItems = $orderedItems;
-    }
+    public function __construct(
+        protected $orderedItems
+    ) {}
 
     public function build()
     {
