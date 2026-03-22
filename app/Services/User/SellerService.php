@@ -208,6 +208,7 @@ class SellerService extends Controller
 
         $query = $user->products()
             ->with([
+                'user.productAttributes:id,user_id,name,value,use_for_variation',
                 'category',
                 'subCategory',
                 'shopCountry',
@@ -244,7 +245,7 @@ class SellerService extends Controller
         }
 
         $product = Product::with([
-            'user.productAttributes',
+            'user.productAttributes:id,user_id,name,value,use_for_variation',
             'category',
             'subCategory',
             'shopCountry',
