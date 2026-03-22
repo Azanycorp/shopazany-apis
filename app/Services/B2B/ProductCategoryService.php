@@ -11,6 +11,7 @@ use App\Models\B2BProduct;
 use App\Models\B2bProductCategory;
 use App\Models\B2bProductSubCategory;
 use App\Trait\HttpResponse;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
 
 class ProductCategoryService
@@ -26,6 +27,7 @@ class ProductCategoryService
 
             B2bProductCategory::create([
                 'name' => $request->name,
+                'type' => $request->type,
                 'slug' => Str::slug($request->name),
                 'image' => $url['url'] ?? null,
                 'featured' => 1,
@@ -58,6 +60,15 @@ class ProductCategoryService
         }
     }
 
+    public function singleCategory($id)
+    {
+        $category = B2bProductCategory::with(['products', 'subcategory'])
+            ->where('id', $id)
+            ->firstOrFail();
+
+        return $this->success(new B2BCategoryResource($category), 'Category details');
+    }
+
     public function categories()
     {
         $categories = B2bProductCategory::where('featured', 1)
@@ -71,13 +82,15 @@ class ProductCategoryService
     public function adminCategories($request)
     {
         $search = $request->query('search');
+        $type = $request->query('type');
 
         $categories = B2bProductCategory::with(['products', 'subcategory'])
             ->withCount(['products', 'subcategory'])
-            ->when($search, function ($query, string $search): void {
-                $query->where('name', 'like', '%'.$search.'%');
+            ->when($type, fn ($q) => $q->where('type', $type))
+            ->where(function (Builder $query) use ($search) {
+                $query->where('name', 'LIKE', '%'.$search.'%');
+
             })
-            ->latest()
             ->get();
 
         return $this->success(AdminCategoryResource::collection($categories), 'Categories retrieved successfully');
@@ -85,7 +98,7 @@ class ProductCategoryService
 
     public function createSubCategory($request)
     {
-        $category = B2bProductSubCategory::find($request->category_id);
+        $category = B2bProductCategory::find($request->category_id);
 
         if (! $category) {
             return $this->error(null, 'Not found', 404);
@@ -97,10 +110,11 @@ class ProductCategoryService
                 $url = uploadImage($request, 'image', 'subcategory');
             }
 
-            $category->create([
+            B2bProductSubCategory::create([
                 'name' => $request->name,
                 'slug' => Str::slug($request->name),
                 'image' => $url['url'] ?? null,
+                'category_id' => $request->category_id,
             ]);
 
             return $this->success(null, 'Created successfully', 201);
@@ -195,6 +209,13 @@ class ProductCategoryService
     {
         $category = B2bProductCategory::findOrFail($id);
 
+        if ($category->products()->exists()) {
+            return $this->error(null, 'Cannot delete category: It contains products.', 422);
+        }
+
+        if ($category->subcategory()->exists()) {
+            return $this->error(null, 'Cannot delete category: It contains subcategories.', 422);
+        }
         $category->delete();
 
         return $this->success(null, 'Deleted successfully');

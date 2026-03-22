@@ -38,6 +38,11 @@ class ProductCategoryController extends Controller
         return $this->service->categories();
     }
 
+    public function singleCategory(int $id)
+    {
+        return $this->service->singleCategory($id);
+    }
+
     public function adminCategories(Request $request)
     {
         abort_if($this->gate->denies('categories'), Response::HTTP_FORBIDDEN, self::MESSAGE);

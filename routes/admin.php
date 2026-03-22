@@ -356,15 +356,16 @@ Route::middleware('validate.header')
                         ->controller(ProductCategoryController::class)
                         ->group(function (): void {
                             Route::post('/create', 'createCategory');
-                            Route::get('/all', 'adminCategories')->middleware('cacheResponse:300');
+                            Route::get('/all', 'adminCategories');
                             Route::get('/analytics', 'categoryAnalytic');
+                            Route::get('/details/{id}', 'singleCategory');
                             Route::post('/update/{id}', 'updateCategory');
                             Route::post('/change/{category_id}', 'featuredStatus');
                             Route::delete('/delete/{id}', 'deleteCategory');
 
                             Route::post('/create/subcategory', 'createSubCategory');
                             Route::get('/subcategory', 'getAdminSubcategory');
-                            Route::get('/{category_id}/subcategory', 'getSubcategory')->middleware('cacheResponse:300');
+                            Route::get('/{category_id}/subcategory', 'getSubcategory');
                             Route::post('/subcategory/status/{sub_category_id}', 'subStatus');
                             Route::delete('/subcategory/delete/{id}', 'deleteSubCategory');
                         });

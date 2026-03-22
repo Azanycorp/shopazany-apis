@@ -30,6 +30,7 @@ use App\Models\RfqMessage;
 use App\Models\User;
 use App\Models\UserWallet;
 use App\Models\WithdrawalRequest;
+use App\Notifications\RfqMessageNotification;
 use App\Pipelines\BusinessInformation\CreateBusinessInformation;
 use App\Pipelines\BusinessInformation\UpdateUserAccount;
 use App\Repositories\B2BProductRepository;
@@ -44,6 +45,7 @@ use Illuminate\Database\DatabaseManager;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Pipeline;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
@@ -58,7 +60,7 @@ class SellerService extends Controller
         private readonly Hasher $hasher,
         private readonly AuthManager $authManager,
         private readonly DatabaseManager $databaseManager,
-        private readonly GeneralService $generalService,
+        private readonly GeneralService $generalService
     ) {}
 
     public function businessInformation($request)
@@ -747,8 +749,14 @@ class SellerService extends Controller
     {
         $rfq = Rfq::find($request->rfq_id);
 
+        $user = User::find($rfq->buyer_id);
+
+        if (! $user) {
+            return $this->error(null, 'User not found', 404);
+        }
+
         if (! $rfq) {
-            return $this->error(null, 'No record found details', 404);
+            return $this->error(null, 'No record found for rfq', 404);
         }
 
         $amount = ($request->preferred_unit_price * $rfq->product_quantity);
@@ -764,6 +772,8 @@ class SellerService extends Controller
             'p_unit_price' => $request->preferred_unit_price,
             'total_amount' => $amount,
         ]);
+
+        Notification::send($user, new RfqMessageNotification($user, $message));
 
         return $this->success($message, 'message details');
     }
@@ -813,9 +823,9 @@ class SellerService extends Controller
             $amount = $rfq->total_amount;
 
             $total_amount = currencyConvert(
-                userAuth()->default_currency,
-                $amount,
                 $product->shopCountry->currency ?? 'USD',
+                $amount,
+                userAuth()->default_currency,
             );
 
             $order = B2bOrder::create([
