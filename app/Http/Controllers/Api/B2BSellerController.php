@@ -170,6 +170,11 @@ class B2BSellerController extends Controller
         return $this->service->markShipped($request);
     }
 
+    public function processOrder(Request $request)
+    {
+        return $this->service->processOrder($request);
+    }
+
     public function markDelivered(Request $request)
     {
         return $this->service->markDelivered($request);
