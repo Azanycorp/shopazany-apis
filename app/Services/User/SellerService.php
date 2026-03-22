@@ -217,9 +217,11 @@ class SellerService extends Controller
                 'unit',
                 'size',
                 'orders',
-                'productReviews',
                 'productVariations',
+                'productReviews' => fn ($q) => $q->latest()->take(10)->with('user'),
             ])
+            ->withAvg('productReviews', 'rating')
+            ->withCount('productReviews')
             ->where('status', ProductStatus::ACTIVE)
             ->when($category, fn ($q) => $q->where('category_id', $category))
             ->when($brand, fn ($q) => $q->where('brand_id', $brand))
