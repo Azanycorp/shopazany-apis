@@ -139,4 +139,28 @@ trait General
             + ($cart['data']['total_international_price'] ?? 0)
             - ($cart['data']['total_discount_price'] ?? 0);
     }
+
+    protected function updateSellerInfo($user, $request): void
+    {
+        $folder = folderName($request->business_name ?? $user->company_name);
+
+        $logo = $request->hasFile('business_logo')
+            ? uploadImage($request, $request->file('business_logo'), $folder)
+            : null;
+
+        $banner = $request->hasFile('business_banner')
+            ? uploadImage($request, $request->file('business_banner'), $folder)
+            : null;
+
+        $user->userbusinessinfo()->update([
+            'business_logo' => $logo['url'] ?? $user->userbusinessinfo?->business_logo,
+            'business_banner' => $banner['url'] ?? $user->userbusinessinfo?->business_banner,
+            'min_order_amount' => $request->min_order_amount ?? $user->userbusinessinfo?->min_order_amount,
+            'opening_time' => $request->opening_time ?? $user->userbusinessinfo?->opening_time,
+            'closing_time' => $request->closing_time ?? $user->userbusinessinfo?->closing_time,
+            'estimated_delivery_days' => $request->estimated_delivery_days ?? $user->userbusinessinfo?->estimated_delivery_days,
+            'order_prefix' => $request->order_prefix ?? $user->userbusinessinfo?->order_prefix,
+            'description' => $request->description ?? $user->userbusinessinfo?->description,
+        ]);
+    }
 }

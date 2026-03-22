@@ -35,6 +35,7 @@ use App\Pipelines\BusinessInformation\CreateBusinessInformation;
 use App\Pipelines\BusinessInformation\UpdateUserAccount;
 use App\Repositories\B2BProductRepository;
 use App\Repositories\B2BSellerShippingRepository;
+use App\Services\GeneralService;
 use App\Services\TransactionService;
 use App\Trait\HttpResponse;
 use App\Trait\Payment;
@@ -58,7 +59,8 @@ class SellerService extends Controller
         protected B2BSellerShippingRepository $b2bSellerShippingRepository,
         private readonly Hasher $hasher,
         private readonly AuthManager $authManager,
-        private readonly DatabaseManager $databaseManager
+        private readonly DatabaseManager $databaseManager,
+        private readonly GeneralService $generalService
     ) {}
 
     public function businessInformation($request)
@@ -185,7 +187,7 @@ class SellerService extends Controller
 
         switch ($request->type) {
             case 'product':
-                return $this->exportB2bProduct($userId, $request);
+                return $this->generalService->exportB2bProduct($userId, $request);
 
             case 'order':
                 return 'None yet';
@@ -611,7 +613,7 @@ class SellerService extends Controller
 
         switch ($data->type) {
             case 'product':
-                return $this->b2bExportProduct($userId);
+                return $this->generalService->b2bExportProduct($userId);
 
             case 'order':
                 return 'None yet';
@@ -1000,7 +1002,7 @@ class SellerService extends Controller
     {
         $currentUserId = userAuthId();
 
-        $wallet = UserWallet::firstOrCreate(
+        UserWallet::firstOrCreate(
             ['seller_id' => $currentUserId]
         );
 

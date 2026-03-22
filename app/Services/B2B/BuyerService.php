@@ -854,6 +854,7 @@ class BuyerService
         $seven_days_partners = B2bOrder::where(['seller_id' => $currentUserId, 'status' => OrderStatus::DELIVERED])
             ->distinct('buyer_id')
             ->where('created_at', '<=', Date::today()->subDays(7))
+            ->where('created_at', '<=', Date::today()->subDays(7))
             ->count('buyer_id');
 
         $seven_days_orderStats = B2bOrder::where([
