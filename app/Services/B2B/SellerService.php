@@ -711,18 +711,65 @@ class SellerService extends Controller
         return $this->success($data, 'rfq details');
     }
 
+    public function processOrder($data)
+    {
+        $order = B2bOrder::where('seller_id', userAuthId())->find($data->order_id);
+
+        if (! $order) {
+            return $this->error(null, 'order not found', 404);
+        }
+
+        if ($order->status == OrderStatus::CANCELLED) {
+            return $this->error(null, 'Order has been cancelled and cannot be processed', 422);
+        }
+        $user = User::find($order->buyer_id);
+
+        if (! $user) {
+            return $this->error(null, 'Buyer not found', 404);
+        }
+
+        $order->update([
+            'status' => OrderStatus::PROCESSING,
+        ]);
+
+        $order->orderStages()->create([
+            'message' => 'Processing your order and preparing for shipment.',
+            'status' => 'Processing',
+            'current_location' => "Seller\'s location",
+            'date' => now(),
+        ]);
+
+        $orderedItems = [
+            'quantity' => $order->product_quantity,
+            'price' => $order->total_amount,
+            'buyer_name' => "{$user->first_name} {$user->last_name}",
+            'order_number' => $order->order_no,
+        ];
+
+        $type = MailingEnum::ORDER_EMAIL;
+        $subject = 'B2B Order Shipped Confirmation';
+        $mail_class = B2BSHippedOrderMail::class;
+        mailSend($type, $user, $subject, $mail_class, $orderedItems);
+
+        return $this->success($order, 'order Processed successfully');
+    }
+
     public function markShipped($data)
     {
         $order = B2bOrder::where('seller_id', userAuthId())->find($data->order_id);
 
         if (! $order) {
-            return $this->error(null, 'order not found');
+            return $this->error(null, 'order not found', 404);
+        }
+
+        if ($order->status == OrderStatus::CANCELLED) {
+            return $this->error(null, 'Order has been cancelled and cannot be shipped', 422);
         }
 
         $user = User::find($order->buyer_id);
 
         if (! $user) {
-            return $this->error(null, 'Buyer not found');
+            return $this->error(null, 'Buyer not found', 404);
         }
 
         $order->update([
@@ -730,6 +777,12 @@ class SellerService extends Controller
             'shipped_date' => now()->toDateString(),
         ]);
 
+        $order->orderStages()->create([
+            'message' => 'Your order has been shipped successfully.',
+            'status' => 'Order Shipped',
+            'current_location' => "Driver\'s location",
+            'date' => now(),
+        ]);
         $orderedItems = [
             'quantity' => $order->product_quantity,
             'price' => $order->total_amount,
@@ -782,6 +835,10 @@ class SellerService extends Controller
     {
         $order = B2bOrder::where('seller_id', userAuthId())->findOrFail($data->order_id);
 
+        if ($order->status == OrderStatus::CANCELLED) {
+            return $this->error(null, 'Order has been cancelled and cannot be marked delivered', 422);
+        }
+
         $user = User::find($order->buyer_id);
 
         if (! $user) {
@@ -793,6 +850,12 @@ class SellerService extends Controller
             'delivery_date' => now()->toDateString(),
         ]);
 
+        $order->orderStages()->create([
+            'message' => 'Your order has been delivered successfully.',
+            'status' => 'Order Delivered',
+            'current_location' => "Buyer\'s location",
+            'date' => now(),
+        ]);
         $orderedItems = [
             'quantity' => $order->product_quantity,
             'buyer_name' => $user->fullName,
@@ -839,6 +902,13 @@ class SellerService extends Controller
                 'payment_method' => PaymentType::OFFLINE,
                 'payment_status' => OrderStatus::PAID,
                 'status' => OrderStatus::PENDING,
+            ]);
+
+            $order->orderStages()->create([
+                'message' => 'Your order has been placed successfully.',
+                'status' => 'Order Placed',
+                'current_location' => 'Online',
+                'date' => now(),
             ]);
 
             $orderedItems = [
@@ -892,8 +962,20 @@ class SellerService extends Controller
             return $this->error(null, 'Order not found', 404);
         }
 
+        $user = User::find($order->buyer_id);
+
+        if (! $user) {
+            return $this->error(null, 'Buyer not found', 404);
+        }
         $order->update([
             'status' => OrderStatus::CANCELLED,
+        ]);
+
+        $order->orderStages()->create([
+            'message' => 'Your order has been cancelled.',
+            'status' => 'Order Cancelled',
+            'current_location' => 'Online',
+            'date' => now(),
         ]);
 
         $product = B2BProduct::find($order->product_id);
@@ -905,6 +987,18 @@ class SellerService extends Controller
         $product->availability_quantity += $order->product_quantity;
         $product->sold -= $order->product_quantity;
         $product->save();
+
+        $orderedItems = [
+            'quantity' => $order->product_quantity,
+            'price' => $order->total_amount,
+            'buyer_name' => "{$user->first_name} {$user->last_name}",
+            'order_number' => $order->order_no,
+        ];
+
+        $type = MailingEnum::ORDER_EMAIL;
+        $subject = 'B2B Order Cancel Confirmation';
+        $mail_class = B2BSHippedOrderMail::class;
+        mailSend($type, $user, $subject, $mail_class, $orderedItems);
 
         return $this->success(null, 'Order Cancelled successful');
     }
@@ -1136,7 +1230,7 @@ class SellerService extends Controller
 
         $methods = $user->paymentMethods;
 
-        return $this->success($methods, 'All Withdrawal methods', 200);
+        return $this->success($methods, 'All Withdrawal methods');
     }
 
     public function getSingleMethod($id)
@@ -1147,7 +1241,7 @@ class SellerService extends Controller
             'bank_name',
         ])->where('user_id', userAuthId())->where('id', $id)->firstOrFail();
 
-        return $this->success($method, 'Withdrawal details', 200);
+        return $this->success($method, 'Withdrawal details');
     }
 
     public function updateMethod($request, $id)
@@ -1166,7 +1260,7 @@ class SellerService extends Controller
             'bank_name' => $request->bank_name,
         ]);
 
-        return $this->success($method, 'Withdrawal details Updated', 200);
+        return $this->success($method, 'Withdrawal details Updated');
     }
 
     public function makeAccounDefaultt($request)
@@ -1181,7 +1275,7 @@ class SellerService extends Controller
             'is_default' => true,
         ]);
 
-        return $this->success($method, 'Withdrawal details set to default', 200);
+        return $this->success($method, 'Withdrawal details set to default');
     }
 
     public function deleteMethod($id)
@@ -1190,6 +1284,6 @@ class SellerService extends Controller
 
         $method->delete();
 
-        return $this->success(null, 'Withdrawal details deleted successfully', 200);
+        return $this->success(null, 'Withdrawal details deleted successfully');
     }
 }
