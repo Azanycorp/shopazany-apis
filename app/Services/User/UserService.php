@@ -14,6 +14,7 @@ use App\Models\Transaction;
 use App\Models\User;
 use App\Models\WithdrawalRequest;
 use App\Services\TransactionService;
+use App\Trait\General;
 use App\Trait\HttpResponse;
 use App\Trait\Payment;
 use Illuminate\Contracts\Config\Repository;
@@ -25,7 +26,7 @@ use Illuminate\Support\Collection;
 
 class UserService extends Controller
 {
-    use HttpResponse, Payment;
+    use General, HttpResponse, Payment;
 
     public function __construct(
         private readonly DatabaseManager $databaseManager,
@@ -50,17 +51,14 @@ class UserService extends Controller
 
     public function updateProfile($request, $userId)
     {
-        $currentUserId = userAuthId();
-
-        if ($currentUserId != $userId) {
-            return $this->error(null, 'Unauthorized action.', 401);
-        }
-
-        $user = User::find($userId);
+        $user = User::with('userbusinessinfo')->find($userId);
 
         if (! $user) {
             return $this->error(null, 'User not found', 404);
         }
+
+        $image = null;
+        $currencyCode = null;
 
         if ($request->hasFile('image')) {
             $image = uploadUserImage($request, 'image', $user);
@@ -71,19 +69,24 @@ class UserService extends Controller
         }
 
         $user->update([
-            'first_name' => $request->first_name ?? $user->first_name,
-            'last_name' => $request->last_name ?? $user->last_name,
-            'middlename' => $request->middlename ?? $user->middlename,
-            'company_name' => $request->business_name ?? $user->company_name,
-            'address' => $request->address ?? $user->address,
-            'phone' => $request->phone_number ?? $user->phone,
-            'date_of_birth' => $request->date_of_birth ?? $user->date_of_birth,
-            'country' => $request->country_id ?? $user->country,
-            'state_id' => $request->state_id ?? $user->state_id,
+            'first_name' => $request->filled('first_name') ? $request->first_name : $user->first_name,
+            'last_name' => $request->filled('last_name') ? $request->last_name : $user->last_name,
+            'middlename' => $request->filled('middlename') ? $request->middlename : $user->middlename,
+            'company_name' => $request->filled('business_name') ? $request->business_name : $user->company_name,
+            'address' => $request->filled('address') ? $request->address : $user->address,
+            'phone' => $request->filled('phone_number') ? $request->phone_number : $user->phone,
+            'email' => $request->filled('email') ? $request->email : $user->email,
+            'date_of_birth' => $request->filled('date_of_birth') ? $request->date_of_birth : $user->date_of_birth,
+            'country' => $request->filled('country_id') ? $request->country_id : $user->country,
+            'state_id' => $request->filled('state_id') ? $request->state_id : $user->state_id,
             'default_currency' => $currencyCode ?? $user->default_currency,
             'image' => $image['url'] ?? $user->image,
             'public_id' => $image['public_id'] ?? $user->public_id,
         ]);
+
+        if ($user->type === UserType::SELLER) {
+            $this->updateSellerInfo($user, $request);
+        }
 
         return $this->success(['user_id' => $user->id], 'Updated successfully');
     }
