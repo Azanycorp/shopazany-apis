@@ -733,14 +733,14 @@ class SellerService extends Controller
         $order->orderStages()->create([
             'message' => 'Processing your order and preparing for shipment.',
             'status' => 'Processing',
-            'current_location' => 'Seller\'s location',
+            'current_location' => "Seller\'s location",
             'date' => now(),
         ]);
 
         $orderedItems = [
             'quantity' => $order->product_quantity,
             'price' => $order->total_amount,
-            'buyer_name' => $user->first_name.' '.$user->last_name,
+            'buyer_name' => "{$user->first_name} {$user->last_name}",
             'order_number' => $order->order_no,
         ];
 
@@ -749,7 +749,7 @@ class SellerService extends Controller
         $mail_class = B2BSHippedOrderMail::class;
         mailSend($type, $user, $subject, $mail_class, $orderedItems);
 
-        return $this->success($order, 'order Processed successfully', 200);
+        return $this->success($order, 'order Processed successfully');
     }
 
     public function markShipped($data)
@@ -793,7 +793,7 @@ class SellerService extends Controller
         $mail_class = B2BSHippedOrderMail::class;
         mailSend($type, $user, $subject, $mail_class, $orderedItems);
 
-        return $this->success($order, 'order Shipped successfully', 200);
+        return $this->success($order, 'order Shipped successfully');
     }
 
     public function replyRequest($request)
@@ -826,7 +826,7 @@ class SellerService extends Controller
 
         Notification::send($user, new RfqMessageNotification($user, $message));
 
-        return $this->success($message, 'message details', 201);
+        return $this->success($message, 'message details');
     }
 
     public function markDelivered($data)
@@ -865,7 +865,7 @@ class SellerService extends Controller
         $mail_class = B2BDeliveredOrderMail::class;
         mailSend($type, $user, $subject, $mail_class, $orderedItems);
 
-        return $this->success($order, 'Order marked delivered successfully', 200);
+        return $this->success($order, 'Order marked delivered successfully');
     }
 
     public function confirmPayment($request)
@@ -989,7 +989,7 @@ class SellerService extends Controller
         $orderedItems = [
             'quantity' => $order->product_quantity,
             'price' => $order->total_amount,
-            'buyer_name' => $user->first_name.' '.$user->last_name,
+            'buyer_name' => "{$user->first_name} {$user->last_name}",
             'order_number' => $order->order_no,
         ];
 
@@ -998,7 +998,7 @@ class SellerService extends Controller
         $mail_class = B2BSHippedOrderMail::class;
         mailSend($type, $user, $subject, $mail_class, $orderedItems);
 
-        return $this->success(null, 'Order Cancelled successful', 200);
+        return $this->success(null, 'Order Cancelled successful');
     }
 
     public function rateOrder($request)
@@ -1228,7 +1228,7 @@ class SellerService extends Controller
 
         $methods = $user->paymentMethods;
 
-        return $this->success($methods, 'All Withdrawal methods', 200);
+        return $this->success($methods, 'All Withdrawal methods');
     }
 
     public function getSingleMethod($id)
@@ -1239,7 +1239,7 @@ class SellerService extends Controller
             'bank_name',
         ])->where('user_id', userAuthId())->where('id', $id)->firstOrFail();
 
-        return $this->success($method, 'Withdrawal details', 200);
+        return $this->success($method, 'Withdrawal details');
     }
 
     public function updateMethod($request, $id)
@@ -1258,7 +1258,7 @@ class SellerService extends Controller
             'bank_name' => $request->bank_name,
         ]);
 
-        return $this->success($method, 'Withdrawal details Updated', 200);
+        return $this->success($method, 'Withdrawal details Updated');
     }
 
     public function makeAccounDefaultt($request)
@@ -1273,7 +1273,7 @@ class SellerService extends Controller
             'is_default' => true,
         ]);
 
-        return $this->success($method, 'Withdrawal details set to default', 200);
+        return $this->success($method, 'Withdrawal details set to default');
     }
 
     public function deleteMethod($id)
@@ -1282,6 +1282,6 @@ class SellerService extends Controller
 
         $method->delete();
 
-        return $this->success(null, 'Withdrawal details deleted successfully', 200);
+        return $this->success(null, 'Withdrawal details deleted successfully');
     }
 }
