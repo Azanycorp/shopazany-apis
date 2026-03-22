@@ -40,8 +40,6 @@ class SellerProductResource extends JsonResource
             'current_stock_quantity' => (string) $this->resource->current_stock_quantity,
             'minimum_order_quantity' => (string) $this->resource->minimum_order_quantity,
             'order_count' => (int) $this->resource->orders?->count(),
-            'review_count' => (int) $this->resource->productReviews?->count(),
-            'rating' => 3.5,
             'front_image' => (string) $this->resource->image,
             'images' => $this->whenLoaded('productimages', function () {
                 return $this->resource->productimages->map(function ($image): array {
@@ -50,7 +48,18 @@ class SellerProductResource extends JsonResource
                     ];
                 })->toArray();
             }),
+            'properties' => $this->resource->user?->productAttributes,
             'variations' => $this->resource->productVariations,
+            'review_count' => $this->resource->product_reviews_count,
+            'rating' => round($this->resource->product_reviews_avg_rating ?? 0, 1),
+            'reviews' => $this->resource->productReviews->map(fn ($review) => [
+                'name' => $review->user
+                    ? trim("{$review->user->first_name} {$review->user->last_name}")
+                    : 'Anonymous',
+                'review' => $review->review,
+                'rating' => $review->rating,
+                'created_at' => $review->created_at->toISOString(),
+            ]),
             'currency' => $this->resource->shopCountry?->currency,
             'country_id' => (int) $this->resource->country_id,
             'is_featured' => (bool) $this->resource->is_featured,
