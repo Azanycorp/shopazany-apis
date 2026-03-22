@@ -18,6 +18,14 @@ class UserBusinessInformation extends Model
         'confirm',
         'status',
         'how_to_sell',
+        'business_logo',
+        'business_banner',
+        'min_order_amount',
+        'opening_time',
+        'closing_time',
+        'estimated_delivery_days',
+        'order_prefix',
+        'description',
     ];
 
     public function user()

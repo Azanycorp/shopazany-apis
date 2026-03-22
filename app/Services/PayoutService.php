@@ -7,8 +7,9 @@ use App\Models\User;
 use App\Services\Curl\CurlService;
 use App\Services\Curl\PostCurl;
 use Illuminate\Support\Facades\Log;
+use net\authorize\api\constants\ANetEnvironment;
 use net\authorize\api\contract\v1 as AnetAPI;
-use net\authorize\api\controller as AnetController;
+use net\authorize\api\controller\CreateTransactionController;
 
 class PayoutService
 {
@@ -146,7 +147,7 @@ class PayoutService
             $anetRequest->setRefId($refId);
             $anetRequest->setTransactionRequest($transactionRequestType);
 
-            $controller = new AnetController\CreateTransactionController($anetRequest);
+            $controller = new CreateTransactionController($anetRequest);
             $response = self::executeTransaction($controller);
 
             // If no response, return failure
@@ -206,12 +207,12 @@ class PayoutService
         }
     }
 
-    private static function executeTransaction(\net\authorize\api\controller\CreateTransactionController $controller)
+    private static function executeTransaction(CreateTransactionController $controller)
     {
         if (app()->environment('production')) {
-            return $controller->executeWithApiResponse(\net\authorize\api\constants\ANetEnvironment::PRODUCTION);
+            return $controller->executeWithApiResponse(ANetEnvironment::PRODUCTION);
         }
 
-        return $controller->executeWithApiResponse(\net\authorize\api\constants\ANetEnvironment::SANDBOX);
+        return $controller->executeWithApiResponse(ANetEnvironment::SANDBOX);
     }
 }

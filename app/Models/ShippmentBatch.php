@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 
 class ShippmentBatch extends Model
@@ -33,9 +34,9 @@ class ShippmentBatch extends Model
         ];
     }
 
-    protected function shippments(): \Illuminate\Database\Eloquent\Casts\Attribute
+    protected function shippments(): Attribute
     {
-        return \Illuminate\Database\Eloquent\Casts\Attribute::make(get: function () {
+        return Attribute::make(get: function () {
             return Shippment::whereIn('id', $this->shippment_ids ?? [])->get();
         });
     }

@@ -5,12 +5,13 @@ namespace App\Services;
 use App\Services\Uploads\ImageKitUploader;
 use App\Services\Uploads\LocalUploader;
 use App\Services\Uploads\S3Uploader;
+use Illuminate\Contracts\Config\Repository;
 
 class FileUploader
 {
     protected $providers = [];
 
-    public function __construct(\Illuminate\Contracts\Config\Repository $repository)
+    public function __construct(Repository $repository)
     {
         foreach ($repository->get('fileservices.providers') as $providerConfig) {
             $providerName = $providerConfig['name'];

@@ -2,6 +2,7 @@
 
 namespace App\Trait;
 
+use App\Models\Product;
 use Illuminate\Support\Str;
 
 trait GeneratesSku
@@ -17,6 +18,6 @@ trait GeneratesSku
 
     protected function skuExists(string $sku): bool
     {
-        return \App\Models\Product::where('product_sku', $sku)->exists();
+        return Product::where('product_sku', $sku)->exists();
     }
 }

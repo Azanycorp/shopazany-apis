@@ -2,16 +2,17 @@
 
 namespace App\Trait;
 
+use App\Models\Cart;
 use Illuminate\Database\Eloquent\Collection;
 
 trait CartTrait
 {
     /**
-     * @param  \Illuminate\Database\Eloquent\Collection<int, \App\Models\Cart>  $localItems
+     * @param  Collection<int, Cart>  $localItems
      */
     public function getLocalPrice(Collection $localItems, string $defaultCurrency): float
     {
-        return $localItems->sum(function (\App\Models\Cart $item) use ($defaultCurrency): float {
+        return $localItems->sum(function (Cart $item) use ($defaultCurrency): float {
             $unitPrice = $item->variation->price
                 ?? $item->product->discounted_price
                 ?? 0;
@@ -37,11 +38,11 @@ trait CartTrait
     }
 
     /**
-     * @param  \Illuminate\Database\Eloquent\Collection<int, \App\Models\Cart>  $internationalItems
+     * @param  Collection<int, Cart>  $internationalItems
      */
     public function getInternaltionalPrice(Collection $internationalItems, string $defaultCurrency): float
     {
-        return $internationalItems->sum(function (\App\Models\Cart $item) use ($defaultCurrency): float {
+        return $internationalItems->sum(function (Cart $item) use ($defaultCurrency): float {
             $unitPrice = $item->variation->price
                 ?? $item->product->discounted_price
                 ?? 0;
@@ -67,11 +68,11 @@ trait CartTrait
     }
 
     /**
-     * @return callable(\App\Models\Cart): float
+     * @return callable(Cart): float
      */
     public function getTotalDiscount(string $defaultCurrency): callable
     {
-        return function (\App\Models\Cart $item) use ($defaultCurrency) {
+        return function (Cart $item) use ($defaultCurrency) {
             $original = ((float) $item->product?->product_price) * $item->quantity;
             $discounted = ((float) $item->product?->discounted_price) * $item->quantity;
 

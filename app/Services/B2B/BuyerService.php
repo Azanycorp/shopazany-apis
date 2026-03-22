@@ -46,7 +46,12 @@ use App\Models\SliderImage;
 use App\Models\SocialSetting;
 use App\Models\User;
 use App\Trait\HttpResponse;
+use Illuminate\Auth\AuthManager;
+use Illuminate\Contracts\Hashing\Hasher;
+use Illuminate\Database\DatabaseManager;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Hashing\BcryptHasher;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Str;
 
 class BuyerService
@@ -54,10 +59,10 @@ class BuyerService
     use HttpResponse;
 
     public function __construct(
-        private readonly \Illuminate\Database\DatabaseManager $databaseManager,
-        private readonly \Illuminate\Auth\AuthManager $authManager,
-        private readonly \Illuminate\Contracts\Hashing\Hasher $hasher,
-        private readonly \Illuminate\Hashing\BcryptHasher $bcryptHasher
+        private readonly DatabaseManager $databaseManager,
+        private readonly AuthManager $authManager,
+        private readonly Hasher $hasher,
+        private readonly BcryptHasher $bcryptHasher
     ) {}
 
     // Admin section
@@ -415,7 +420,7 @@ class BuyerService
     {
         $type = $request->query('type');
 
-        $categories = B2BProductCategory::select('id', 'type', 'name', 'slug', 'image')
+        $categories = B2bProductCategory::select('id', 'type', 'name', 'slug', 'image')
             ->when($type, function ($q) use ($type) {
                 $q->where('type', $type);
             })
@@ -846,13 +851,13 @@ class BuyerService
 
         $seven_days_partners = B2bOrder::where(['seller_id' => $currentUserId, 'status' => OrderStatus::DELIVERED])
             ->distinct('buyer_id')
-            ->where('created_at', '<=', \Illuminate\Support\Facades\Date::today()->subDays(7))
+            ->where('created_at', '<=', Date::today()->subDays(7))
             ->count('buyer_id');
 
         $seven_days_orderStats = B2bOrder::where([
             'seller_id' => $currentUserId,
             'status' => OrderStatus::DELIVERED,
-        ])->where('created_at', '<=', \Illuminate\Support\Facades\Date::today()->subDays(7))->sum('total_amount');
+        ])->where('created_at', '<=', Date::today()->subDays(7))->sum('total_amount');
 
         $data = [
             'total_purchase' => $orderStats,

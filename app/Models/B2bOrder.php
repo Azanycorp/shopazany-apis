@@ -34,7 +34,7 @@ class B2bOrder extends Model
     ];
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\B2BProduct, $this>
+     * @return BelongsTo<B2BProduct, $this>
      */
     public function product(): BelongsTo
     {
@@ -42,7 +42,7 @@ class B2bOrder extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\User, $this>
+     * @return BelongsTo<User, $this>
      */
     public function seller(): BelongsTo
     {
@@ -50,7 +50,7 @@ class B2bOrder extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\CollationCenter, $this>
+     * @return BelongsTo<CollationCenter, $this>
      */
     public function collationCentre(): BelongsTo
     {
@@ -58,7 +58,7 @@ class B2bOrder extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Country, $this>
+     * @return BelongsTo<Country, $this>
      */
     public function country(): BelongsTo
     {
@@ -66,7 +66,7 @@ class B2bOrder extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\User, $this>
+     * @return BelongsTo<User, $this>
      */
     public function buyer(): BelongsTo
     {
@@ -83,7 +83,7 @@ class B2bOrder extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\B2bProdctReview, $this>
+     * @return HasMany<B2bProdctReview, $this>
      */
     public function b2bProductReview(): HasMany
     {

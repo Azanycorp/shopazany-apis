@@ -201,7 +201,9 @@ Route::middleware('validate.header')
                     });
 
                     Route::post('/biometric/setup', 'setupBiometric');
-                    Route::post('/update-profile/{user_id}', 'updateProfile');
+                    Route::post('/update-profile/{user_id}', 'updateProfile')
+                        ->middleware('ensure.user')
+                        ->whereNumber('user_id');
                     Route::post('/settings/{user_id}', 'changeSettings')->whereNumber('user_id');
 
                     // Switch Account
@@ -303,6 +305,7 @@ Route::middleware('validate.header')
                                 ->middleware('ensure.user');
                             Route::post('/import', 'productImport');
                             Route::get('/export/{user_id}/{type}', 'export')
+                                ->middleware('ensure.user')
                                 ->whereNumber('user_id')
                                 ->whereIn('type', ['product', 'order']);
 

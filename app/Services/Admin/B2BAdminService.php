@@ -22,13 +22,14 @@ use App\Models\State;
 use App\Models\Unit;
 use App\Models\User;
 use App\Trait\HttpResponse;
+use Illuminate\Contracts\Cache\Repository;
 use Symfony\Component\HttpFoundation\Response;
 
 class B2BAdminService
 {
     use HttpResponse;
 
-    public function __construct(private readonly \Illuminate\Contracts\Cache\Repository $cacheManager) {}
+    public function __construct(private readonly Repository $cacheManager) {}
 
     public function addSlider($request)
     {

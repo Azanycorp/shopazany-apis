@@ -31,8 +31,15 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use net\authorize\api\constants\ANetEnvironment;
 use net\authorize\api\contract\v1 as AnetAPI;
-use net\authorize\api\controller as AnetController;
+use net\authorize\api\contract\v1\CreateTransactionRequest;
+use net\authorize\api\contract\v1\CustomerAddressType;
+use net\authorize\api\contract\v1\CustomerDataType;
+use net\authorize\api\contract\v1\MerchantAuthenticationType;
+use net\authorize\api\contract\v1\OrderType;
+use net\authorize\api\contract\v1\TransactionRequestType;
+use net\authorize\api\controller\CreateTransactionController;
 
 class ChargeCardService implements PaymentStrategy
 {
@@ -74,23 +81,23 @@ class ChargeCardService implements PaymentStrategy
 
         $request = $this->createTransactionRequest($merchantAuthentication, $transactionRequestType);
 
-        $controller = new AnetController\CreateTransactionController($request);
+        $controller = new CreateTransactionController($request);
 
         $response = $this->executeTransaction($controller);
 
         return $this->handleResponse($response, $user, $paymentDetails, $orderNo, $payment, $requestClass);
     }
 
-    private function getMerchantAuthentication(): \net\authorize\api\contract\v1\MerchantAuthenticationType
+    private function getMerchantAuthentication(): MerchantAuthenticationType
     {
-        $merchantAuthentication = new AnetAPI\MerchantAuthenticationType;
+        $merchantAuthentication = new MerchantAuthenticationType;
         $merchantAuthentication->setName(config('services.authorizenet.api_login_id'));
         $merchantAuthentication->setTransactionKey(config('services.authorizenet.transaction_key'));
 
         return $merchantAuthentication;
     }
 
-    private function getPayment(array $paymentDetails): \net\authorize\api\contract\v1\PaymentType
+    private function getPayment(array $paymentDetails): AnetAPI\PaymentType
     {
         $creditCard = new AnetAPI\CreditCardType;
         $creditCard->setCardNumber($paymentDetails['payment']['creditCard']['cardNumber']);
@@ -103,18 +110,18 @@ class ChargeCardService implements PaymentStrategy
         return $payment;
     }
 
-    private function getOrder($orderNo): \net\authorize\api\contract\v1\OrderType
+    private function getOrder($orderNo): OrderType
     {
-        $order = new AnetAPI\OrderType;
+        $order = new OrderType;
         $order->setInvoiceNumber($orderNo);
         $order->setDescription('Purchase of various items');
 
         return $order;
     }
 
-    private function getCustomerAddress(array $paymentDetails): \net\authorize\api\contract\v1\CustomerAddressType
+    private function getCustomerAddress(array $paymentDetails): CustomerAddressType
     {
-        $customerAddress = new AnetAPI\CustomerAddressType;
+        $customerAddress = new CustomerAddressType;
         $customerAddress->setFirstName($paymentDetails['billTo']['firstName']);
         $customerAddress->setLastName($paymentDetails['billTo']['lastName']);
         $customerAddress->setCompany($paymentDetails['billTo']['company']);
@@ -127,9 +134,9 @@ class ChargeCardService implements PaymentStrategy
         return $customerAddress;
     }
 
-    private function getCustomerData(array $paymentDetails, $user): \net\authorize\api\contract\v1\CustomerDataType
+    private function getCustomerData(array $paymentDetails, $user): CustomerDataType
     {
-        $customerData = new AnetAPI\CustomerDataType;
+        $customerData = new CustomerDataType;
         $customerData->setType('individual');
         $customerData->setId($user->id);
         $customerData->setEmail($paymentDetails['customer']['email']);
@@ -137,9 +144,9 @@ class ChargeCardService implements PaymentStrategy
         return $customerData;
     }
 
-    private function getTransactionRequestType(array $paymentDetails, \net\authorize\api\contract\v1\OrderType $order, \net\authorize\api\contract\v1\PaymentType $payment, \net\authorize\api\contract\v1\CustomerAddressType $customerAddress, \net\authorize\api\contract\v1\CustomerDataType $customerData): \net\authorize\api\contract\v1\TransactionRequestType
+    private function getTransactionRequestType(array $paymentDetails, OrderType $order, AnetAPI\PaymentType $payment, CustomerAddressType $customerAddress, CustomerDataType $customerData): TransactionRequestType
     {
-        $transactionRequestType = new AnetAPI\TransactionRequestType;
+        $transactionRequestType = new TransactionRequestType;
         $transactionRequestType->setTransactionType('authCaptureTransaction');
         $transactionRequestType->setAmount($paymentDetails['amount']);
         $transactionRequestType->setOrder($order);
@@ -150,7 +157,7 @@ class ChargeCardService implements PaymentStrategy
         return $transactionRequestType;
     }
 
-    private function addLineItems(\net\authorize\api\contract\v1\TransactionRequestType $transactionRequestType, array $paymentDetails): void
+    private function addLineItems(TransactionRequestType $transactionRequestType, array $paymentDetails): void
     {
         if (isset($paymentDetails['lineItems']) && is_array($paymentDetails['lineItems'])) {
             foreach ($paymentDetails['lineItems'] as $item) {
@@ -166,9 +173,9 @@ class ChargeCardService implements PaymentStrategy
         }
     }
 
-    private function createTransactionRequest(\net\authorize\api\contract\v1\MerchantAuthenticationType $merchantAuthentication, \net\authorize\api\contract\v1\TransactionRequestType $transactionRequestType): \net\authorize\api\contract\v1\CreateTransactionRequest
+    private function createTransactionRequest(MerchantAuthenticationType $merchantAuthentication, TransactionRequestType $transactionRequestType): CreateTransactionRequest
     {
-        $request = new AnetAPI\CreateTransactionRequest;
+        $request = new CreateTransactionRequest;
         $request->setMerchantAuthentication($merchantAuthentication);
         $request->setRefId('ref'.time());
         $request->setTransactionRequest($transactionRequestType);
@@ -176,13 +183,13 @@ class ChargeCardService implements PaymentStrategy
         return $request;
     }
 
-    private function executeTransaction(\net\authorize\api\controller\CreateTransactionController $controller)
+    private function executeTransaction(CreateTransactionController $controller)
     {
         if (app()->environment('production')) {
-            return $controller->executeWithApiResponse(\net\authorize\api\constants\ANetEnvironment::PRODUCTION);
+            return $controller->executeWithApiResponse(ANetEnvironment::PRODUCTION);
         }
 
-        return $controller->executeWithApiResponse(\net\authorize\api\constants\ANetEnvironment::SANDBOX);
+        return $controller->executeWithApiResponse(ANetEnvironment::SANDBOX);
     }
 
     private function handleResponse(
@@ -190,7 +197,7 @@ class ChargeCardService implements PaymentStrategy
         User $user,
         array $paymentDetails,
         string $orderNo,
-        \net\authorize\api\contract\v1\PaymentType $payment,
+        AnetAPI\PaymentType $payment,
         Request $request
     ) {
         if ($response != null) {
@@ -386,7 +393,7 @@ class ChargeCardService implements PaymentStrategy
         return $this->success(['order_no' => $orderNo], $tresponse->getMessages()[0]->getDescription());
     }
 
-    private function handleErrorResponse($tresponse, $response, $user, \Illuminate\Http\Request $request)
+    private function handleErrorResponse($tresponse, $response, $user, Request $request)
     {
         $msg = $tresponse != null ?
             "Payment failed: {$tresponse->getErrors()[0]->getErrorText()}" :
@@ -458,14 +465,14 @@ class ChargeCardService implements PaymentStrategy
 
         $request = $this->createTransactionRequest($merchantAuthentication, $transactionRequestType);
 
-        $controller = new AnetController\CreateTransactionController($request);
+        $controller = new CreateTransactionController($request);
 
         $response = $this->executeTransaction($controller);
 
         return $this->handleB2bResponse($response, $user, $paymentDetails, $orderNo, $payment, $requestClass);
     }
 
-    private function handleB2bResponse($response, $user, array $paymentDetails, string $orderNo, \net\authorize\api\contract\v1\PaymentType $payment, $request)
+    private function handleB2bResponse($response, $user, array $paymentDetails, string $orderNo, AnetAPI\PaymentType $payment, $request)
     {
         if ($response != null) {
             if ($response->getMessages()->getResultCode() == 'Ok') {

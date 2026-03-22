@@ -5,6 +5,9 @@ namespace App\Services\Admin;
 use App\Enum\LoginStatus;
 use App\Models\Admin;
 use App\Trait\HttpResponse;
+use Illuminate\Auth\Passwords\PasswordBrokerManager;
+use Illuminate\Contracts\Routing\ResponseFactory;
+use Illuminate\Hashing\BcryptHasher;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Password;
 
@@ -13,9 +16,9 @@ class AuthService
     use HttpResponse;
 
     public function __construct(
-        private readonly \Illuminate\Auth\Passwords\PasswordBrokerManager $passwordBrokerManager,
-        private readonly \Illuminate\Contracts\Routing\ResponseFactory $responseFactory,
-        private readonly \Illuminate\Hashing\BcryptHasher $bcryptHasher
+        private readonly PasswordBrokerManager $passwordBrokerManager,
+        private readonly ResponseFactory $responseFactory,
+        private readonly BcryptHasher $bcryptHasher
     ) {}
 
     public function login($request)

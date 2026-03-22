@@ -6,18 +6,21 @@ use App\Enum\UserStatus;
 use App\Enum\WithdrawalStatus;
 use App\Models\User;
 use App\Trait\HttpResponse;
+use Illuminate\Auth\Passwords\PasswordBrokerManager;
+use Illuminate\Contracts\Routing\ResponseFactory;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Password;
 
 class AffiliateService
 {
     use HttpResponse;
 
-    public function __construct(private readonly \Illuminate\Auth\Passwords\PasswordBrokerManager $passwordBrokerManager, private readonly \Illuminate\Contracts\Routing\ResponseFactory $responseFactory) {}
+    public function __construct(private readonly PasswordBrokerManager $passwordBrokerManager, private readonly ResponseFactory $responseFactory) {}
 
     public function overview()
     {
-        $startDate = \Illuminate\Support\Facades\Date::now()->subDays(7)->startOfDay();
-        $endDate = \Illuminate\Support\Facades\Date::now()->endOfDay();
+        $startDate = Date::now()->subDays(7)->startOfDay();
+        $endDate = Date::now()->endOfDay();
 
         $activeAffiliates = User::where('is_affiliate_member', 1)
             ->where('status', UserStatus::ACTIVE)

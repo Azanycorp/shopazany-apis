@@ -5,6 +5,7 @@ namespace App\Trait;
 use App\Enum\ShippmentCategory;
 use App\Models\AdminNotification;
 use App\Models\Shippment;
+use Illuminate\Support\Collection;
 
 trait SuperAdminNotification
 {
@@ -69,7 +70,7 @@ trait SuperAdminNotification
     {
         $itemsCount = (string) $b2bOrder->product_quantity;
 
-        $package = (new \Illuminate\Support\Collection($b2bOrder->product_data ?? []))->only(['name', 'fob_price', 'front_image']);
+        $package = (new Collection($b2bOrder->product_data ?? []))->only(['name', 'fob_price', 'front_image']);
 
         $businessInfo = $b2bOrder->seller?->businessInformation;
         $vendor = $businessInfo ? (object) [

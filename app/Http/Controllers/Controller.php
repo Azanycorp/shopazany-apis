@@ -6,23 +6,15 @@ use App\Actions\UserLogAction;
 use App\Enum\MailingEnum;
 use App\Enum\UserLog;
 use App\Enum\UserStatus;
-use App\Exports\B2BProductExport;
-use App\Exports\ProductExport;
 use App\Models\User;
 use App\Trait\HttpResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
-use Maatwebsite\Excel\Facades\Excel;
 
 abstract class Controller
 {
     use HttpResponse;
-
-    public function __construct(
-        private readonly \Illuminate\Foundation\Application $application,
-        private readonly \Illuminate\Filesystem\FilesystemManager $filesystemManager,
-        private readonly \Illuminate\Routing\UrlGenerator $urlGenerator,
-    ) {}
 
     public function generateUniqueReferrerCode()
     {
@@ -57,64 +49,9 @@ abstract class Controller
         (new UserLogAction($request, $action, $description, $response, $user))->run();
     }
 
-    protected function getStorageFolder(string $email): string
-    {
-        if ($this->application->environment('production')) {
-            return "/prod/document/{$email}";
-        }
-
-        return "/stag/document/{$email}";
-    }
-
-    protected function storeFile($file, string $folder, \Illuminate\Http\Request $request): string
+    protected function storeFile($file, string $folder, Request $request): string
     {
         return uploadImage($request, $file, $folder);
-    }
-
-    protected function exportB2bProduct(string $userId, $data)
-    {
-        $fileName = 'products_'.time().'.xlsx';
-        $path = 'public';
-
-        if ($this->application->environment('production')) {
-            $folderPath = 'prod/exports/user_'.$userId.'/';
-            $fileName = $folderPath.'products_'.time().'.xlsx';
-            $path = 's3';
-
-        } elseif ($this->application->environment('staging')) {
-            $folderPath = 'stag/exports/user_'.$userId.'/';
-            $fileName = $folderPath.'products_'.time().'.xlsx';
-            $path = 's3';
-        }
-
-        Excel::store(new B2BProductExport($userId, $data), $fileName, $path);
-
-        $fileUrl = ($path === 's3') ? $this->filesystemManager->disk('s3')->url($fileName) : $this->urlGenerator->asset('storage/'.$fileName);
-
-        return $this->success(['file_url' => $fileUrl], 'Product export successful.');
-    }
-
-    protected function exportProduct(string $userId)
-    {
-        $fileName = 'products_'.time().'.xlsx';
-        $path = 'public';
-
-        if ($this->application->environment('production')) {
-            $folderPath = 'prod/exports/user_'.$userId.'/';
-            $fileName = $folderPath.'products_'.time().'.xlsx';
-            $path = 's3';
-
-        } elseif ($this->application->environment('staging')) {
-            $folderPath = 'stag/exports/user_'.$userId.'/';
-            $fileName = $folderPath.'products_'.time().'.xlsx';
-            $path = 's3';
-        }
-
-        Excel::store(new ProductExport($userId), $fileName, $path);
-
-        $fileUrl = ($path === 's3') ? $this->filesystemManager->disk('s3')->url($fileName) : $this->urlGenerator->asset('storage/'.$fileName);
-
-        return $this->success(['file_url' => $fileUrl], 'Product export successful.');
     }
 
     protected function isAccountUnverifiedOrInactive($user, $request)
@@ -211,28 +148,5 @@ abstract class Controller
         logUserAction($request, $action, $description, $response);
 
         return $response;
-    }
-
-    protected function b2bExportProduct(string $userId)
-    {
-        $fileName = 'products_'.time().'.xlsx';
-        $path = 'public';
-
-        if ($this->application->environment('production')) {
-            $folderPath = 'prod/exports/user_'.$userId.'/';
-            $fileName = $folderPath.'products_'.time().'.xlsx';
-            $path = 's3';
-
-        } elseif ($this->application->environment('staging')) {
-            $folderPath = 'stag/exports/user_'.$userId.'/';
-            $fileName = $folderPath.'products_'.time().'.xlsx';
-            $path = 's3';
-        }
-
-        $data = null;
-        Excel::store(new B2BProductExport($userId, $data), $fileName, $path);
-        $fileUrl = ($path === 's3') ? $this->filesystemManager->disk('s3')->url($fileName) : $this->urlGenerator->asset('storage/'.$fileName);
-
-        return $this->success(['file_url' => $fileUrl], 'Product export successful.');
     }
 }

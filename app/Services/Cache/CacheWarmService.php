@@ -2,13 +2,15 @@
 
 namespace App\Services\Cache;
 
+use Illuminate\Http\Request;
+
 class CacheWarmService
 {
     public function __construct(
         protected FlexibleCacheService $flexibleCacheService
     ) {}
 
-    public function warmHomServiceCache(\Illuminate\Http\Request $request, string $slug): void
+    public function warmHomServiceCache(Request $request, string $slug): void
     {
         $this->flexibleCacheService->bestSelling($request);
         $this->flexibleCacheService->allProducts($request);

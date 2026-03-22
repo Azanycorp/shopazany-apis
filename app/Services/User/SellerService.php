@@ -15,10 +15,16 @@ use App\Mail\OrderStatusUpdated;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
+use App\Services\GeneralService;
 use App\Trait\General;
 use App\Trait\HttpResponse;
 use App\Trait\Product as TraitProduct;
+use Illuminate\Auth\AuthManager;
+use Illuminate\Contracts\Routing\ResponseFactory;
+use Illuminate\Database\DatabaseManager;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Foundation\Application;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
@@ -28,10 +34,11 @@ class SellerService extends Controller
     use General, HttpResponse, TraitProduct;
 
     public function __construct(
-        private readonly \Illuminate\Auth\AuthManager $authManager,
-        private readonly \Illuminate\Foundation\Application $application,
-        private readonly \Illuminate\Database\DatabaseManager $databaseManager,
-        private readonly \Illuminate\Contracts\Routing\ResponseFactory $responseFactory
+        private readonly AuthManager $authManager,
+        private readonly Application $application,
+        private readonly DatabaseManager $databaseManager,
+        private readonly ResponseFactory $responseFactory,
+        private readonly GeneralService $generalService,
     ) {}
 
     public function businessInfo($request)
@@ -56,7 +63,7 @@ class SellerService extends Controller
             $parts = explode('@', $user->email);
             $name = $parts[0];
 
-            $folder = $this->getStorageFolder($name);
+            $folder = $this->generalService->getStorageFolder($name);
 
             $url = ['url' => null];
             if ($request->hasFile('file')) {
@@ -235,6 +242,7 @@ class SellerService extends Controller
         }
 
         $product = Product::with([
+            'user.productAttributes',
             'category',
             'subCategory',
             'shopCountry',
@@ -244,9 +252,11 @@ class SellerService extends Controller
             'unit',
             'size',
             'orders',
-            'productReviews',
             'productVariations',
+            'productReviews' => fn ($q) => $q->latest()->take(10)->with('user'),
         ])
+            ->withAvg('productReviews', 'rating')
+            ->withCount('productReviews')
             ->find($productId);
 
         if (! $product) {
@@ -366,7 +376,7 @@ class SellerService extends Controller
             return $this->error(null, 'Invalid status', 400);
         }
 
-        /** @var \App\Models\Product[]|\Illuminate\Database\Eloquent\Collection $sellerProducts */
+        /** @var Product[]|\Illuminate\Database\Eloquent\Collection $sellerProducts */
         $sellerProducts = $order->products()
             ->whereHas('user', function (Builder $query) use ($currentUserId): void {
                 $query->where('user_id', $currentUserId);
@@ -436,15 +446,9 @@ class SellerService extends Controller
 
     public function export($userId, $type)
     {
-        $currentUserId = userAuthId();
-
-        if ($currentUserId != $userId) {
-            return $this->error(null, 'Unauthorized action.', 401);
-        }
-
         switch ($type) {
             case 'product':
-                return $this->exportProduct($userId);
+                return $this->generalService->exportProduct($userId);
 
             case 'order':
                 return 'None yet';
@@ -466,13 +470,13 @@ class SellerService extends Controller
             ->where('status', ProductStatus::ACTIVE)
             ->count();
 
-        $totalOrders = Order::whereHas('products', function (Builder $query) use ($userId): void {
+        $orderBaseQuery = Order::whereHas('products', function (Builder $query) use ($userId): void {
             $query->where('user_id', $userId);
-        })->count();
+        });
 
-        $orderCounts = Order::whereHas('products', function (Builder $query) use ($userId): void {
-            $query->where('user_id', $userId);
-        })
+        $totalOrders = (clone $orderBaseQuery)->count();
+
+        $orderCounts = (clone $orderBaseQuery)
             ->selectRaw('
                 SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as pending_count,
                 SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as confirmed_count,
@@ -496,9 +500,19 @@ class SellerService extends Controller
             ->topRated()
             ->limit(5)
             ->get();
+
         $mostFavorites = Product::where('products.user_id', $userId)
             ->mostFavorite()
             ->limit(5)
+            ->get();
+
+        $recentOrders = (clone $orderBaseQuery)
+            ->with([
+                'products' => fn ($q) => $q->where('user_id', $userId),
+                'user',
+            ])
+            ->latest()
+            ->take(5)
             ->get();
 
         $data = [
@@ -513,6 +527,18 @@ class SellerService extends Controller
             'cancelled_count' => $orderCounts->cancelled_count ?? 0,
             'top_rated' => $topRateds,
             'most_favorite' => $mostFavorites,
+            'recent_orders' => $recentOrders->map(function ($order) {
+                return [
+                    'id' => $order->id,
+                    'customer_name' => $order->user
+                        ? trim("{$order->user->first_name} {$order->user->last_name}")
+                        : 'N/A',
+                    'total_amount' => $order->total_amount,
+                    'order_no' => $order->order_no,
+                    'status' => $order->status,
+                    'created_at' => $order->created_at->toISOString(),
+                ];
+            }),
         ];
 
         return $this->success($data, 'Analytics');
@@ -575,7 +601,7 @@ class SellerService extends Controller
         $user = User::with('productAttributes')
             ->findOrFail($request->user_id);
 
-        $attributeNames = (new \Illuminate\Support\Collection($request['attributes']))->pluck('name')->toArray();
+        $attributeNames = (new Collection($request['attributes']))->pluck('name')->toArray();
 
         $existing = $user->productAttributes()
             ->whereIn('name', $attributeNames)
