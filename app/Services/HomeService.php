@@ -97,11 +97,13 @@ class HomeService
             'unit',
             'size',
             'orders',
-            'productReviews',
+            'productReviews' => fn ($q) => $q->latest()->take(10)->with('user'),
             'productVariations' => function ($query): void {
                 $query->select('id', 'product_id', 'variation', 'sku', 'price', 'stock', 'image');
             },
         ])
+            ->withAvg('productReviews', 'rating')
+            ->withCount('productReviews')
             ->where('status', ProductStatus::ACTIVE)
             ->when($type, function ($q) use ($type) {
                 $q->where('type', $type);
@@ -130,11 +132,13 @@ class HomeService
             'unit',
             'size',
             'orders',
-            'productReviews',
+            'productReviews' => fn ($q) => $q->latest()->take(10)->with('user'),
             'productVariations' => function ($query): void {
                 $query->select('id', 'product_id', 'variation', 'sku', 'price', 'stock', 'image');
             },
         ])
+            ->withAvg('productReviews', 'rating')
+            ->withCount('productReviews')
             ->where('is_featured', true)
             ->where('status', ProductStatus::ACTIVE)
             ->when($type, function ($q) use ($type) {
@@ -165,11 +169,13 @@ class HomeService
             'unit',
             'size',
             'orders',
-            'productReviews',
+            'productReviews' => fn ($q) => $q->latest()->take(10)->with('user'),
             'productVariations' => function ($query): void {
                 $query->select('id', 'product_id', 'variation', 'sku', 'price', 'stock', 'image');
             },
         ])
+            ->withAvg('productReviews', 'rating')
+            ->withCount('productReviews')
             ->where('status', ProductStatus::ACTIVE)
             ->when($type, function ($q) use ($type) {
                 $q->where('type', $type);
@@ -200,11 +206,13 @@ class HomeService
             'unit',
             'size',
             'orders',
-            'productReviews',
+            'productReviews' => fn ($q) => $q->latest()->take(10)->with('user'),
             'productVariations' => function ($query): void {
                 $query->select('id', 'product_id', 'variation', 'sku', 'price', 'stock', 'image');
             },
         ])
+            ->withAvg('productReviews', 'rating')
+            ->withCount('productReviews')
             ->when($type, function ($q) use ($type) {
                 $q->where('type', $type);
             }, function ($q) {
