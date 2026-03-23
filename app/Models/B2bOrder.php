@@ -83,6 +83,14 @@ class B2bOrder extends Model
     }
 
     /**
+     * @return HasMany<OrderStage, $this>
+     */
+    public function orderStages(): HasMany
+    {
+        return $this->hasMany(OrderStage::class, 'order_id');
+    }
+
+    /**
      * @return HasMany<B2bProdctReview, $this>
      */
     public function b2bProductReview(): HasMany
