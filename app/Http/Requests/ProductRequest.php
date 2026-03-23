@@ -36,7 +36,7 @@ class ProductRequest extends FormRequest
             'discount_type' => ['nullable', 'in:flat,percentage'],
             'discount_value' => ['nullable', 'numeric', 'min:0', $this->discountRule()],
             'variation' => ['nullable', 'array'],
-            'variation.*' => ['nullable', 'string', $this->variationRule()],
+            'variation.*' => ['nullable', 'array', $this->variationRule()],
             'variation_image' => ['nullable', 'array'],
             'variation_image.*' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:10240'],
         ];
@@ -67,25 +67,23 @@ class ProductRequest extends FormRequest
     protected function variationRule(): \Closure
     {
         return function ($attribute, $value, $fail) {
-            $decoded = json_decode($value, true);
-
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                return $fail('Each variation must be a valid JSON string.');
+            if (! is_array($value)) {
+                return $fail('Each variation must be a valid array.');
             }
 
             $requiredKeys = ['variation', 'sku', 'price', 'stock'];
 
             foreach ($requiredKeys as $key) {
-                if (! isset($decoded[$key])) {
+                if (! isset($value[$key])) {
                     return $fail("The '{$key}' in variation cannot be empty.");
                 }
             }
 
-            if (! is_numeric($decoded['price']) || $decoded['price'] < 0) {
+            if (! is_numeric($value['price']) || $value['price'] < 0) {
                 return $fail("The 'price' in variation must be a non-negative number.");
             }
 
-            if (! is_numeric($decoded['stock']) || $decoded['stock'] < 0) {
+            if (! is_numeric($value['stock']) || $value['stock'] < 0) {
                 return $fail("The 'stock' in variation must be a non-negative number.");
             }
         };
