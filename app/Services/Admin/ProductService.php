@@ -7,6 +7,7 @@ use App\Http\Resources\SellerProductResource;
 use App\Models\Admin;
 use App\Models\Product;
 use App\Trait\HttpResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -76,7 +77,7 @@ class ProductService
         return $this->success(null, 'Added successfully');
     }
 
-    public function getProducts(Request $request): array
+    public function getProducts(Request $request): JsonResponse
     {
         $products = Product::withoutGlobalScope('in_stock')
             ->with([
