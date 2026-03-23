@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\ProductRequest;
 use App\Services\Admin\ProductService;
 use Illuminate\Contracts\Auth\Access\Gate;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
@@ -25,7 +26,7 @@ class AdminProductController extends Controller
         return $this->service->addProduct($request);
     }
 
-    public function getProducts(Request $request): array
+    public function getProducts(Request $request): JsonResponse
     {
         abort_if($this->gate->denies('product_list'), Response::HTTP_FORBIDDEN, self::MESSAGE);
 
