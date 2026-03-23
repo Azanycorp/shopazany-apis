@@ -290,7 +290,7 @@ class AuthService extends Controller
         $user = $request->user();
         $user?->tokens()->where('id', $user?->currentAccessToken()->id)->delete();
 
-        $description = "User with email address {$user->email} logged out";
+        $description = "User with email address {$user?->email} logged out";
         $action = UserLog::LOGOUT;
         $response = $this->success([
             'message' => 'You have successfully logged out and your token has been deleted',

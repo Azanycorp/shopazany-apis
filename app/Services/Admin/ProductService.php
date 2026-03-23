@@ -7,6 +7,7 @@ use App\Http\Resources\SellerProductResource;
 use App\Models\Admin;
 use App\Models\Product;
 use App\Trait\HttpResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -76,52 +77,53 @@ class ProductService
         return $this->success(null, 'Added successfully');
     }
 
-    public function getProducts(Request $request): array
+    public function getProducts(Request $request): JsonResponse
     {
-        $query = Product::withoutGlobalScope('in_stock');
-
-        if ($request->filled('seller_id')) {
-            $query->where('user_id', $request->input('seller_id'));
-        }
-
-        if ($request->filled('search')) {
-            $query->where('name', 'like', '%'.$request->input('search').'%');
-        }
-
-        $query->with([
-            'productimages',
-            'category',
-            'subCategory',
-            'brand',
-            'color',
-            'unit',
-            'size',
-            'shopCountry',
-            'orders',
-            'productReviews',
-        ]);
-
-        $products = $query->paginate(25);
+        $products = Product::withoutGlobalScope('in_stock')
+            ->with([
+                'productimages',
+                'category',
+                'subCategory',
+                'brand',
+                'color',
+                'unit',
+                'size',
+                'shopCountry',
+                'orders',
+                'productReviews' => fn ($q) => $q->latest()->take(10)->with('user'),
+                'productVariations:id,product_id,variation,sku,price,stock,image',
+            ])
+            ->withAvg('productReviews', 'rating')
+            ->withCount('productReviews')
+            ->when($request->filled('seller_id'), fn ($q) => $q->where('user_id', $request->input('seller_id')))
+            ->when($request->filled('search'), fn ($q) => $q->where('name', 'like', '%'.$request->input('search').'%'))
+            ->paginate(25);
 
         $data = SellerProductResource::collection($products);
 
-        return [
-            'status' => 'true',
-            'message' => 'All products',
-            'data' => $data,
-            'pagination' => [
-                'current_page' => $products->currentPage(),
-                'last_page' => $products->lastPage(),
-                'per_page' => $products->perPage(),
-                'prev_page_url' => $products->previousPageUrl(),
-                'next_page_url' => $products->nextPageUrl(),
-            ],
-        ];
+        return $this->withPagination($data, 'All products');
     }
 
     public function getOneProduct($slug)
     {
-        $product = Product::withoutGlobalScope('in_stock')->where('slug', $slug)->first();
+        $product = Product::withoutGlobalScope('in_stock')
+            ->with([
+                'shopCountry',
+                'productimages',
+                'category',
+                'subCategory',
+                'brand',
+                'color',
+                'unit',
+                'size',
+                'orders',
+                'productReviews' => fn ($q) => $q->latest()->take(10)->with('user'),
+                'productVariations:id,product_id,variation,sku,price,stock,image',
+            ])
+            ->withAvg('productReviews', 'rating')
+            ->withCount('productReviews')
+            ->where('slug', $slug)
+            ->first();
 
         if (! $product) {
             return $this->error(null, 'Product not found', 404);
