@@ -2,6 +2,9 @@
 
 namespace App\Services\Auth;
 
+use App\Actions\AuditLogAction;
+use App\DTO\AuditLog;
+use App\Enum\AuditEvent;
 use App\Enum\MailingEnum;
 use App\Enum\UserLog;
 use App\Enum\UserStatus;
@@ -30,7 +33,8 @@ class AuthService extends Controller
     public function __construct(
         private readonly PasswordBrokerManager $passwordBrokerManager,
         private readonly BcryptHasher $bcryptHasher,
-        private readonly ResponseFactory $responseFactory
+        private readonly ResponseFactory $responseFactory,
+        private readonly AuditLogAction $auditLogAction,
     ) {}
 
     public function login($request)
@@ -74,6 +78,15 @@ class AuthService extends Controller
         ]);
 
         logUserAction($request, $action, $description, $response, $user);
+
+        $this->auditLogAction->execute(new AuditLog(
+            user: $user,
+            event: AuditEvent::LoggedIn,
+            description: $description,
+            before: [],
+            model: $user,
+            tags: 'Auth'
+        ));
 
         return $response;
     }
