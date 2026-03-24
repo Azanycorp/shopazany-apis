@@ -83,7 +83,7 @@ trait Login
             before: [],
             model: $user,
             tags: '2FA Login'
-        ));
+        ), $request);
 
         return $response;
     }
@@ -114,7 +114,7 @@ trait Login
             before: [],
             model: $user,
             tags: 'Auth'
-        ));
+        ), $request);
 
         return $response;
     }

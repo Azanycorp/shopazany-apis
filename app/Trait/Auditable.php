@@ -68,7 +68,7 @@ trait Auditable
 
         $filtered = array_diff_key($values, array_flip($exclude));
 
-        if (! empty($only)) {
+        if (filled($only)) {
             $filtered = array_intersect_key($filtered, array_flip($only));
         }
 

@@ -4,6 +4,7 @@ namespace App\Actions;
 
 use App\DTO\AuditLog;
 use App\Services\AuditLog\AuditLogger;
+use Illuminate\Http\Request;
 
 class AuditLogAction
 {
@@ -11,7 +12,7 @@ class AuditLogAction
         private readonly AuditLogger $audit,
     ) {}
 
-    public function execute(AuditLog $auditLog): void
+    public function execute(AuditLog $auditLog, Request $request): void
     {
         $this->audit
             ->actor($auditLog->user)
@@ -19,12 +20,12 @@ class AuditLogAction
             ->old(
                 is_array($auditLog->before)
                     ? $auditLog->before
-                    : optional($auditLog->before)->getAttributes() ?? []
+                    : $auditLog->before?->getAttributes() ?? []
             )
             ->new($auditLog->model?->getAttributes())
             ->describe($auditLog->description)
             ->tag($auditLog->tags)
-            ->meta(['source' => 'api', 'ip' => request()->ip()])
+            ->meta(['source' => 'api', 'ip' => $request->ip()])
             ->log($auditLog->event);
     }
 }
