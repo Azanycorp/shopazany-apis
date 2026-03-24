@@ -28,6 +28,8 @@ class UpdateProductPrice extends Command
      */
     public function handle(): void
     {
+        // This has been disabled for now.
+
         Product::with(['user'])
             ->where('status', ProductStatus::ACTIVE)
             ->chunk(100, function ($products): void {

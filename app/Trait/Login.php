@@ -2,6 +2,8 @@
 
 namespace App\Trait;
 
+use App\DTO\AuditLog;
+use App\Enum\AuditEvent;
 use App\Enum\MailingEnum;
 use App\Enum\UserLog;
 use App\Enum\UserStatus;
@@ -45,7 +47,7 @@ trait Login
         return $response;
     }
 
-    protected function handleTwoFactorAuthentication($user, $request)
+    protected function handleTwoFactorAuthentication($user, $request, $auditLogAction)
     {
         if ($user->login_code_expires_at > now()) {
             return $this->error(null, 'Please wait a few minutes before requesting a new code.', 400);
@@ -64,7 +66,7 @@ trait Login
         ];
         mailSend($type, $user, $subject, $mail_class, $data);
 
-        $description = "Attempt to login by {$request->email}";
+        $description = "Attempt to login by {$request->email} using 2FA";
         $response = $this->success([
             'user_id' => $user->id,
             'user_type' => $user->type,
@@ -74,10 +76,19 @@ trait Login
 
         logUserAction($request, $action, $description, $response, $user);
 
+        $auditLogAction->execute(new AuditLog(
+            user: $user,
+            event: AuditEvent::LoggedIn,
+            description: $description,
+            before: [],
+            model: $user,
+            tags: '2FA Login'
+        ));
+
         return $response;
     }
 
-    protected function logUserIn($user, $request)
+    protected function logUserIn($user, $request, $auditLogAction)
     {
         // $user->tokens()->delete();
         $token = $user->createToken("API Token of {$user->email}", ['b2c:access']);
@@ -95,6 +106,15 @@ trait Login
         ], 'Login successful.');
 
         logUserAction($request, UserLog::LOGGED_IN, $description, $response, $user);
+
+        $auditLogAction->execute(new AuditLog(
+            user: $user,
+            event: AuditEvent::LoggedIn,
+            description: $description,
+            before: [],
+            model: $user,
+            tags: 'Auth'
+        ));
 
         return $response;
     }
