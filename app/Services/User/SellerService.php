@@ -2,6 +2,9 @@
 
 namespace App\Services\User;
 
+use App\Actions\AuditLogAction;
+use App\DTO\AuditLog;
+use App\Enum\AuditEvent;
 use App\Enum\MailingEnum;
 use App\Enum\OrderStatus;
 use App\Enum\ProductStatus;
@@ -39,6 +42,7 @@ class SellerService extends Controller
         private readonly DatabaseManager $databaseManager,
         private readonly ResponseFactory $responseFactory,
         private readonly GeneralService $generalService,
+        private readonly AuditLogAction $auditLogAction,
     ) {}
 
     public function businessInfo($request)
@@ -96,6 +100,7 @@ class SellerService extends Controller
         }
 
         $user = User::with('products')->find($request->user_id);
+
         if (! $user) {
             return $this->error(null, 'User not found', 404);
         }
@@ -118,6 +123,15 @@ class SellerService extends Controller
             if ($request->filled('variation')) {
                 $this->createProductVariations($request, $product, $name);
             }
+
+            $this->auditLogAction->execute(new AuditLog(
+                user: $user,
+                event: AuditEvent::Created,
+                description: "User with email {$user->email} created a product",
+                before: [],
+                model: $product,
+                tags: 'product'
+            ), $request);
 
             DB::commit();
 
@@ -164,6 +178,7 @@ class SellerService extends Controller
         }
 
         $image = uploadSingleProductImage($request, 'front_image', $frontImage, $product);
+        $before = $product->getAttributes();
 
         $product->update([
             'name' => $request->name,
@@ -189,6 +204,15 @@ class SellerService extends Controller
 
         $this->uploadAdditionalImages($request, $name, $product);
         $this->updateProductVariations($request, $product, $name);
+
+        $this->auditLogAction->execute(new AuditLog(
+            user: $user,
+            event: AuditEvent::Updated,
+            description: "User with email {$user->email} updated a product",
+            before: $before,
+            model: $product,
+            tags: 'product'
+        ), $request);
 
         return $this->success(null, 'Updated successfully');
     }
