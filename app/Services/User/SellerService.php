@@ -527,7 +527,7 @@ class SellerService extends Controller
             ])
             ->select(
                 'products.*',
-                DB::raw('SUM(order_items.quantity) as total_sold')
+                DB::raw('SUM(order_items.product_quantity) as total_sold')
             )
             ->groupBy('products.id')
             ->orderByDesc('total_sold')
