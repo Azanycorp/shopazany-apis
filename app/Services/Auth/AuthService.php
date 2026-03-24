@@ -42,9 +42,9 @@ class AuthService extends Controller
         return LoginService::AuthLogin($request);
     }
 
-    public function biometricLogin($request)
+    public function biometricLogin($request, $auditLogAction)
     {
-        return LoginService::biometricLogin($request);
+        return LoginService::biometricLogin($request, $auditLogAction);
     }
 
     public function loginVerify($request)
@@ -86,7 +86,7 @@ class AuthService extends Controller
             before: [],
             model: $user,
             tags: 'Auth'
-        ));
+        ), $request);
 
         return $response;
     }

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Request as RequestFacade;
 
-class AuditLogger
+final class AuditLogger
 {
     private ?Model $actor = null;
 

@@ -82,7 +82,7 @@ class LoginService
         }
     }
 
-    public static function biometricLogin($request)
+    public static function biometricLogin($request, $auditLogAction)
     {
         $user = User::where('email', $request->email)->first();
 
@@ -94,6 +94,6 @@ class LoginService
             return resolve(self::class)->handleBiometricsIssue($request, 'Biometrics not enabled.', 401);
         }
 
-        return resolve(self::class)->logUserIn($user, $request);
+        return resolve(self::class)->logUserIn($user, $request, $auditLogAction);
     }
 }

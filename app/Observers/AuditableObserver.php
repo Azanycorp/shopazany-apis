@@ -2,14 +2,14 @@
 
 namespace App\Observers;
 
+use App\Contracts\Auditable as AuditableContract;
 use App\Enum\AuditEvent;
 use App\Services\AuditLog\AuditLogger;
-use App\Trait\Auditable;
 use Illuminate\Database\Eloquent\Model;
 
 class AuditableObserver
 {
-    private static bool $muted = false;
+    protected static bool $muted = false;
 
     public static function mute(): void
     {
@@ -26,6 +26,9 @@ class AuditableObserver
         return static::$muted;
     }
 
+    /**
+     * @param  Model&AuditableContract  $model
+     */
     public function created(Model $model): void
     {
         if (! $this->shouldLog($model)) {
@@ -39,6 +42,9 @@ class AuditableObserver
             ->log(AuditEvent::Created);
     }
 
+    /**
+     * @param  Model&AuditableContract  $model
+     */
     public function updated(Model $model): void
     {
         if (! $this->shouldLog($model)) {
@@ -46,7 +52,7 @@ class AuditableObserver
         }
 
         $dirty = $model->getDirty();
-        if (empty($dirty)) {
+        if (blank($dirty)) {
             return;
         }
 
@@ -61,6 +67,9 @@ class AuditableObserver
             ->log(AuditEvent::Updated);
     }
 
+    /**
+     * @param  Model&AuditableContract  $model
+     */
     public function deleted(Model $model): void
     {
         if (! $this->shouldLog($model)) {
@@ -79,6 +88,9 @@ class AuditableObserver
             ->log($event);
     }
 
+    /**
+     * @param  Model&AuditableContract  $model
+     */
     public function restored(Model $model): void
     {
         if (! $this->shouldLog($model)) {
@@ -97,7 +109,7 @@ class AuditableObserver
             return false;
         }
 
-        if (! in_array(Auditable::class, class_uses_recursive($model))) {
+        if (! $model instanceof AuditableContract) {
             return false;
         }
 
