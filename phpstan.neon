@@ -13,3 +13,4 @@ parameters:
     reportUnmatchedIgnoredErrors: false
     ignoreErrors:
         - '#Call to an undefined static method Unicodeveloper\\Paystack\\Facades\\Paystack::#'
+        - '#Trait App\\Trait\\Auditable is used zero times#'

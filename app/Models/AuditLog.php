@@ -3,10 +3,16 @@
 namespace App\Models;
 
 use App\Enum\AuditEvent;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Support\Collection;
 
+/**
+ * @property array|null $old_values
+ * @property array|null $new_values
+ */
 class AuditLog extends Model
 {
     public $timestamps = false;
@@ -51,33 +57,38 @@ class AuditLog extends Model
         return $this->morphTo();
     }
 
-    public function scopeForEvent(Builder $query, AuditEvent|string $event): Builder
+    #[Scope]
+    protected function forEvent(Builder $query, AuditEvent|string $event): Builder
     {
         $value = $event instanceof AuditEvent ? $event->value : $event;
 
         return $query->where('event', $value);
     }
 
-    public function scopeForActor(Builder $query, Model $actor): Builder
+    #[Scope]
+    protected function forActor(Builder $query, Model $actor): Builder
     {
         return $query->where('actor_type', $actor->getMorphClass())
             ->where('actor_id', $actor->getKey());
     }
 
-    public function scopeForAuditable(Builder $query, Model $model): Builder
+    #[Scope]
+    protected function forAuditable(Builder $query, Model $model): Builder
     {
         return $query->where('auditable_type', $model->getMorphClass())
             ->where('auditable_id', $model->getKey());
     }
 
-    public function scopeWithTag(Builder $query, string $tag): Builder
+    #[Scope]
+    protected function withTag(Builder $query, string $tag): Builder
     {
         return $query->whereJsonContains('tags', $tag);
     }
 
-    public function scopeCritical(Builder $query): Builder
+    #[Scope]
+    protected function critical(Builder $query): Builder
     {
-        $criticalEvents = collect(AuditEvent::cases())
+        $criticalEvents = $criticalEvents = (new Collection(AuditEvent::cases()))
             ->filter(fn ($e) => $e->isCritical())
             ->map(fn ($e) => $e->value)
             ->all();
@@ -85,19 +96,17 @@ class AuditLog extends Model
         return $query->whereIn('event', $criticalEvents);
     }
 
-    public function scopeInDateRange(Builder $query, string $from, string $to): Builder
+    #[Scope]
+    protected function inDateRange(Builder $query, string $from, string $to): Builder
     {
         return $query->whereBetween('created_at', [$from, $to]);
     }
 
     public function getChangedAttributes(): array
     {
-        if (! $this->old_values || ! $this->new_values) {
-            return [];
-        }
+        $old = is_array($this->old_values) ? $this->old_values : [];
+        $new = is_array($this->new_values) ? $this->new_values : [];
 
-        return array_keys(
-            array_diff_assoc($this->new_values, $this->old_values)
-        );
+        return array_keys(array_diff_assoc($new, $old));
     }
 }

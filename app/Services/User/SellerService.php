@@ -131,7 +131,7 @@ class SellerService extends Controller
                 before: [],
                 model: $product,
                 tags: 'product'
-            ));
+            ), $request);
 
             DB::commit();
 
@@ -212,7 +212,7 @@ class SellerService extends Controller
             before: $before,
             model: $product,
             tags: 'product'
-        ));
+        ), $request);
 
         return $this->success(null, 'Updated successfully');
     }
