@@ -20,7 +20,6 @@ Schedule::daily()
         Schedule::command('queue:prune-batches --hours=48 --unfinished=72');
         // Product stock and pricing updates
         Schedule::command('product:check-product-stock');
-        Schedule::command('app:update-product-price');
         // Expire coupons
         Schedule::command('coupon:expire');
     });
