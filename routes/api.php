@@ -289,21 +289,27 @@ Route::middleware('validate.header')
                         // Product Routes
                         Route::prefix('product')->group(function (): void {
                             Route::post('/create', 'createProduct');
+
                             Route::post('/edit/{product_id}/{user_id}', 'updateProduct')
                                 ->whereNumber('product_id')
                                 ->whereNumber('user_id')
                                 ->middleware('ensure.user');
+
                             Route::get('/{user_id}', 'getProduct')
                                 ->whereNumber('user_id')
                                 ->middleware('ensure.user');
+
                             Route::get('/top-selling/{user_id}', 'topSelling')
                                 ->whereNumber('user_id')
                                 ->middleware('ensure.user');
+
                             Route::delete('/delete/{product_id}/{user_id}', 'deleteProduct')
                                 ->whereNumber('product_id')
                                 ->whereNumber('user_id')
                                 ->middleware('ensure.user');
+
                             Route::post('/import', 'productImport');
+
                             Route::get('/export/{user_id}/{type}', 'export')
                                 ->middleware('ensure.user')
                                 ->whereNumber('user_id')
