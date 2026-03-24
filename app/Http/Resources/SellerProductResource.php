@@ -63,6 +63,7 @@ class SellerProductResource extends JsonResource
             'currency' => $this->resource->shopCountry?->currency,
             'country_id' => (int) $this->resource->country_id,
             'is_featured' => (bool) $this->resource->is_featured,
+            'condition' => (string) $this->resource->condition,
             'type' => (string) $this->resource->type,
             'status' => (string) $this->resource->status,
         ];
