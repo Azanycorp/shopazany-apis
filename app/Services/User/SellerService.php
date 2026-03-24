@@ -519,6 +519,21 @@ class SellerService extends Controller
             ->take(5)
             ->get();
 
+        $topSellingProducts = Product::where('products.user_id', $userId)
+            ->join('order_items', 'products.id', '=', 'order_items.product_id')
+            ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->whereIn('orders.status', [
+                OrderStatus::DELIVERED,
+            ])
+            ->select(
+                'products.*',
+                DB::raw('SUM(order_items.quantity) as total_sold')
+            )
+            ->groupBy('products.id')
+            ->orderByDesc('total_sold')
+            ->limit(5)
+            ->get();
+
         $data = [
             'total_products' => $totalProducts,
             'total_orders' => $totalOrders,
@@ -543,6 +558,7 @@ class SellerService extends Controller
                     'created_at' => $order->created_at->toISOString(),
                 ];
             }),
+            'top_selling' => $topSellingProducts,
         ];
 
         return $this->success($data, 'Analytics');
