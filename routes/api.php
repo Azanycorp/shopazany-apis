@@ -213,15 +213,24 @@ Route::middleware('validate.header')
                     Route::delete('/delete-account/{user_id}', 'deleteAccount');
                 });
 
-                Route::prefix('cart')->controller(CartController::class)->group(function (): void {
-                    Route::get('/{user_id}', 'getCartItems')->whereNumber('user_id');
-                    Route::post('/add', 'addToCart');
-                    Route::delete('/{user_id}/clear', 'clearCart')->whereNumber('user_id');
-                    Route::delete('/{user_id}/remove/{cart_id}', 'removeCartItem')
-                        ->whereNumber('user_id')
-                        ->whereNumber('cart_id');
-                    Route::patch('/update-cart', 'updateCart');
-                });
+                Route::middleware('ensure.user')
+                    ->prefix('cart')
+                    ->controller(CartController::class)
+                    ->group(function (): void {
+                        Route::get('/{user_id}', 'getCartItems')
+                            ->whereNumber('user_id');
+
+                        Route::post('/add', 'addToCart');
+
+                        Route::delete('/{user_id}/clear', 'clearCart')
+                            ->whereNumber('user_id');
+
+                        Route::delete('/{user_id}/remove/{cart_id}', 'removeCartItem')
+                            ->whereNumber('user_id')
+                            ->whereNumber('cart_id');
+
+                        Route::patch('/update-cart', 'updateCart');
+                    });
 
                 Route::middleware('check.user.country')
                     ->prefix('customer')
