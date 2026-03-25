@@ -23,9 +23,9 @@ class CartController extends Controller
         return $this->service->getCartItems($userId, $request);
     }
 
-    public function removeCartItem($userId, $cartId)
+    public function removeCartItem(Request $request, $userId, $cartId)
     {
-        return $this->service->removeCartItem($userId, $cartId);
+        return $this->service->removeCartItem($request, $userId, $cartId);
     }
 
     public function clearCart($userId)
