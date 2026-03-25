@@ -2,15 +2,20 @@
 
 namespace App\Services;
 
+use App\Actions\AuditLogAction;
+use App\DTO\AuditLog;
+use App\Enum\AuditEvent;
 use App\Http\Resources\CartResource;
 use App\Models\Cart;
 use App\Models\Product;
 use App\Models\ProductVariation;
+use App\Models\User;
 use App\Trait\CartTrait;
 use App\Trait\HttpResponse;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Http\Request;
 use Illuminate\Session\SessionManager;
+use Illuminate\Support\Facades\DB;
 
 class CartService
 {
@@ -18,15 +23,16 @@ class CartService
 
     public function __construct(
         private readonly AuthManager $authManager,
-        private readonly SessionManager $sessionManager
+        private readonly SessionManager $sessionManager,
+        private readonly AuditLogAction $auditLogAction,
     ) {}
 
     public function addToCart($request)
     {
-        $currentUserId = userAuth()->id;
+        $user = User::find($request->user_id);
 
-        if ($currentUserId != $request->user_id) {
-            return $this->error(null, 'Unauthorized action.', 401);
+        if (! $user) {
+            return $this->error(null, 'User not found', 404);
         }
 
         $this->sessionManager->put(['cart_id' => session_id()]);
@@ -61,49 +67,34 @@ class CartService
             }
 
             return $this->upsertCart([
-                'user_id' => $currentUserId,
+                'user_id' => $user->id,
                 'session_id' => $sessionId,
                 'variation_id' => $variation->id,
                 'product_id' => $request->product_id,
                 'quantity' => $quantity,
                 'is_agriecom' => $request->boolean('is_agriecom'),
-            ]);
+            ], $user, $request);
         }
 
         $product = Product::findOrFail($request->product_id);
 
-        if ($product->current_stock_quantity <= 0) {
-            return $this->error(null, 'Product is out of stock.', 400);
-        }
-
-        if ($quantity > $product->minimum_order_quantity) {
-            return $this->error(null, "You can only order a maximum of {$product->minimum_order_quantity} of this product.", 400);
-        }
-
-        if ($quantity > $product->current_stock_quantity) {
-            return $this->error(null, "Only {$product->current_stock_quantity} units available.", 400);
+        if ($validate = $this->productValidate($product, $quantity)) {
+            return $validate;
         }
 
         return $this->upsertCart([
-            'user_id' => $currentUserId,
+            'user_id' => $user->id,
             'session_id' => $sessionId,
             'variation_id' => null,
             'product_id' => $request->product_id,
             'quantity' => $quantity,
             'is_agriecom' => $request->boolean('is_agriecom'),
-        ]);
+        ], $user, $request);
     }
 
     public function getCartItems($userId, Request $request)
     {
         $isAgiecom = $request->boolean('is_agriecom');
-
-        $currentUserId = userAuth()->id;
-
-        if ($currentUserId != $userId) {
-            return $this->error(null, 'Unauthorized action.', 401);
-        }
-
         $sessionId = $this->sessionManager->get('cart_id');
 
         $cartItems = Cart::with([
@@ -142,29 +133,45 @@ class CartService
         ], 'Cart items');
     }
 
-    public function removeCartItem($userId, $cartId)
+    public function removeCartItem($request, $userId, $cartId)
     {
-        $currentUserId = userAuth()->id;
+        $user = User::find($userId);
 
-        if ($currentUserId != $userId) {
-            return $this->error(null, 'Unauthorized action.', 401);
+        if (! $user) {
+            return $this->error(null, 'User not found', 404);
         }
 
-        Cart::where('user_id', $userId)
+        $cart = Cart::where('user_id', $userId)
             ->where('id', $cartId)
-            ->delete();
+            ->first();
 
-        return $this->success(null, 'Item removed from cart');
+        if (! $cart) {
+            return $this->error(null, 'Cart item not found', 404);
+        }
+
+        try {
+            return DB::transaction(function () use ($cart, $user, $request) {
+                $before = $cart->getAttributes();
+                $cart->delete();
+
+                $this->auditLogAction->execute(new AuditLog(
+                    user: $user,
+                    event: AuditEvent::Deleted,
+                    description: 'Cart deleted',
+                    before: $before,
+                    model: $cart,
+                    tags: 'cart'
+                ), $request);
+
+                return $this->success(null, 'Item removed from cart');
+            });
+        } catch (\Exception $e) {
+            return $this->error(null, $e->getMessage(), 400);
+        }
     }
 
     public function clearCart($userId)
     {
-        $currentUserId = userAuth()->id;
-
-        if ($currentUserId != $userId) {
-            return $this->error(null, 'Unauthorized action.', 401);
-        }
-
         $sessionId = $this->sessionManager->get('cart_id');
 
         if ($this->authManager->check()) {
@@ -180,10 +187,10 @@ class CartService
 
     public function updateCart(Request $request)
     {
-        $currentUserId = userAuth()->id;
+        $user = User::find($request->user_id);
 
-        if ($currentUserId != $request->user_id) {
-            return $this->error(null, 'Unauthorized action.', 401);
+        if (! $user) {
+            return $this->error(null, 'User not found', 404);
         }
 
         $productId = $request->product_id;
@@ -199,30 +206,71 @@ class CartService
             return $this->error(null, 'You have exceeded the minimum order quantity', 400);
         }
 
-        $cartItem = Cart::where('user_id', $currentUserId)
+        $cartItem = Cart::where('user_id', $request->user_id)
             ->where('product_id', $productId)
             ->firstOrFail();
+
+        $before = $cartItem->getAttributes();
         $cartItem->update(['quantity' => $quantity]);
+
+        $this->auditLogAction->execute(new AuditLog(
+            user: $user,
+            event: AuditEvent::Updated,
+            description: 'Cart updated',
+            before: $before,
+            model: $cartItem,
+            tags: 'cart'
+        ), $request);
 
         return $this->success(null, 'Cart quantity updated successfully');
     }
 
-    protected function upsertCart(array $data)
+    protected function upsertCart(array $data, $user, $request)
     {
-        $cart = Cart::updateOrCreate([
-            'user_id' => $data['user_id'],
-            'session_id' => $data['session_id'],
-            'product_id' => $data['product_id'],
-            'variation_id' => $data['variation_id'],
-        ], [
-            'quantity' => $data['quantity'],
-            'is_agriecom' => $data['is_agriecom'],
-        ]);
+        try {
+            return DB::transaction(function () use ($data, $user, $request) {
+                $cart = Cart::updateOrCreate([
+                    'user_id' => $data['user_id'],
+                    'session_id' => $data['session_id'],
+                    'product_id' => $data['product_id'],
+                    'variation_id' => $data['variation_id'],
+                ], [
+                    'quantity' => $data['quantity'],
+                    'is_agriecom' => $data['is_agriecom'],
+                ]);
 
-        $msg = $cart->wasRecentlyCreated ?
-            ['msg' => 'Item added to cart', 'code' => 201] :
-            ['msg' => 'Item updated in cart', 'code' => 200];
+                $msg = $cart->wasRecentlyCreated ?
+                    ['msg' => 'Item added to cart', 'code' => 201] :
+                    ['msg' => 'Item updated in cart', 'code' => 200];
 
-        return $this->success(null, $msg['msg'], $msg['code']);
+                $this->auditLogAction->execute(new AuditLog(
+                    user: $user,
+                    event: AuditEvent::Created,
+                    description: "User with email {$user->email} Addded to cart",
+                    before: [],
+                    model: $cart,
+                    tags: 'cart'
+                ), $request);
+
+                return $this->success(null, $msg['msg'], $msg['code']);
+            });
+        } catch (\Throwable $e) {
+            return $this->error(null, "An error occurred while updating the cart: {$e->getMessage()}", 400);
+        }
+    }
+
+    private function productValidate($product, $quantity)
+    {
+        if ($product->current_stock_quantity <= 0) {
+            return $this->error(null, 'Product is out of stock.', 400);
+        }
+
+        if ($quantity > $product->minimum_order_quantity) {
+            return $this->error(null, "You can only order a maximum of {$product->minimum_order_quantity} of this product.", 400);
+        }
+
+        if ($quantity > $product->current_stock_quantity) {
+            return $this->error(null, "Only {$product->current_stock_quantity} units available.", 400);
+        }
     }
 }
