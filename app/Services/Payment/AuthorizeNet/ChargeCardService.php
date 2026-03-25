@@ -537,7 +537,7 @@ class ChargeCardService implements PaymentStrategy
             'product_id' => $rfq->product_id,
             'product_quantity' => $rfq->product_quantity,
             'order_no' => $orderNo,
-            'product_data' => $product,
+            'product_data' => $rfq->product_data,
             'shipping_address' => $shipping_address,
             'shipping_agent' => $shipping_agent_id ? $shipping_agent->name : '',
             'billing_address' => $billing_address,

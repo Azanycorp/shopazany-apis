@@ -343,7 +343,7 @@ class PaystackService
                     'product_id' => $rfq->product_id,
                     'product_quantity' => $rfq->product_quantity,
                     'order_no' => $orderNo,
-                    'product_data' => $product,
+                    'product_data' => $rfq->product_data,
                     'shipping_agent' => $shipping_agent_id ? $shipping_agent->name : 'DHL',
                     'shipping_address' => $address,
                     'total_amount' => $formattedAmount,
