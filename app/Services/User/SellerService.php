@@ -415,13 +415,13 @@ class SellerService extends Controller
         }
 
         foreach ($sellerProducts as $product) {
-            $this->databaseManager->table('order_items')
+            DB::table('order_items')
                 ->where('order_id', $orderId)
                 ->where('product_id', $product->id)
                 ->update(['status' => $request->status]);
         }
 
-        $remainingStatuses = $this->databaseManager->table('order_items')
+        $remainingStatuses = DB::table('order_items')
             ->where('order_id', $orderId)
             ->pluck('status')
             ->unique();
