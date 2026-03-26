@@ -142,7 +142,7 @@ Route::middleware('validate.header')
                     Route::post('add-quote', 'requestQuote');
                     Route::get('send-all-quotes', 'sendAllQuotes');
                     Route::post('send-rfq', 'sendSingleQuote');
-                    Route::delete('remove-rfq/{id}', 'removeQuote');
+                    Route::delete('remove-quote/{id}', 'removeQuote');
                     Route::post('request-review', 'reviewRequest');
                     Route::post('add-review', 'addReview');
                     Route::post('/add-to-wish', 'addTowishList');
@@ -152,11 +152,11 @@ Route::middleware('validate.header')
                     Route::get('quotes', 'allQuotes');
                     Route::get('/wish-list', 'wishList');
                     Route::get('rfq', 'getAllRfqs');
+                    Route::delete('delete-rfq/{id}', 'removeRfq');
+                    Route::get('dashboard', 'dashboard');
+                    Route::get('rfq-details/{id}', 'getRfqDetails');
+                    Route::get('rfq-messages/{id}', 'getRfqMessages');
 
-                    Route::middleware('cacheResponse:300')->group(function (): void {
-                        Route::get('dashboard', 'dashboard');
-                        Route::get('rfq-details/{id}', 'getRfqDetails');
-                    });
                     Route::get('orders', 'allOrders');
                     Route::get('order-details/{id}', 'getOrderDetails');
 

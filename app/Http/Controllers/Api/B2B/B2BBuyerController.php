@@ -48,6 +48,16 @@ class B2BBuyerController extends Controller
         return $this->buyerService->removeQuote($id);
     }
 
+    public function removeRfq(int $id)
+    {
+        return $this->buyerService->removeRfq($id);
+    }
+
+    public function getRfqMessages(int $id)
+    {
+        return $this->buyerService->getRfqMessages($id);
+    }
+
     // Dasbaord
     public function dashboard()
     {
