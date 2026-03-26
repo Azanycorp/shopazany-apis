@@ -823,6 +823,7 @@ class SellerService extends Controller
 
         $rfq->update([
             'p_unit_price' => $request->preferred_unit_price,
+            'product_data->unit_price' => $request->preferred_unit_price,
             'total_amount' => $amount,
         ]);
 
