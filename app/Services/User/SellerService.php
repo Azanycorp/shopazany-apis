@@ -24,7 +24,6 @@ use App\Trait\HttpResponse;
 use App\Trait\Product as TraitProduct;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Contracts\Routing\ResponseFactory;
-use Illuminate\Database\DatabaseManager;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Collection;
@@ -39,7 +38,6 @@ class SellerService extends Controller
     public function __construct(
         private readonly AuthManager $authManager,
         private readonly Application $application,
-        private readonly DatabaseManager $databaseManager,
         private readonly ResponseFactory $responseFactory,
         private readonly GeneralService $generalService,
         private readonly AuditLogAction $auditLogAction,
@@ -415,13 +413,13 @@ class SellerService extends Controller
         }
 
         foreach ($sellerProducts as $product) {
-            $this->databaseManager->table('order_items')
+            DB::table('order_items')
                 ->where('order_id', $orderId)
                 ->where('product_id', $product->id)
                 ->update(['status' => $request->status]);
         }
 
-        $remainingStatuses = $this->databaseManager->table('order_items')
+        $remainingStatuses = DB::table('order_items')
             ->where('order_id', $orderId)
             ->pluck('status')
             ->unique();
@@ -590,19 +588,14 @@ class SellerService extends Controller
 
     public function getOrderSummary($userId, $request)
     {
-        $currentUserId = $this->authManager->id();
         $isAgriEcom = $request->boolean('is_agriecom');
-
-        if ($currentUserId != $userId) {
-            return $this->error(null, 'Unauthorized action.', 401);
-        }
 
         $orders = Order::withRelationShips()
             ->whereHas('products', function (Builder $query) use ($userId): void {
                 $query->where('user_id', $userId);
             })
             ->filterByType($isAgriEcom)
-            ->orderBy('created_at', 'desc')
+            ->latest()
             ->take(8)
             ->get();
 

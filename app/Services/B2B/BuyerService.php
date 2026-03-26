@@ -751,6 +751,14 @@ class BuyerService
         try {
             $product = B2BProduct::findOrFail($quote->product_id);
 
+            if ($product->availability_quantity < $product->minimum_order_quantity) {
+                return $this->error(null, 'This product is currently out of stock.', 422);
+            }
+
+            if ($quote->qty > $product->availability_quantity) {
+                return $this->error(null, 'The requested quantity exceeds available stock.', 422);
+            }
+
             $productData = is_array($quote->product_data)
                 ? $quote->product_data
                 : json_decode($quote->product_data, true);
@@ -792,13 +800,23 @@ class BuyerService
         return $this->success(null, 'Item removed successfully');
     }
 
+    public function removeRfq($id)
+    {
+        $rfq = Rfq::where('buyer_id', userAuthId())->where('id', $id)->firstOrFail();
+        $rfq->messages()->delete();
+        $rfq->delete();
+
+        return $this->success(null, 'Item removed successfully');
+    }
+
     public function sendQuote($request)
     {
         $userId = userAuthId();
+
         $product = B2BProduct::findOrFail($request->product_id);
 
-        if ($product->availability_quantity < 1) {
-            return $this->error(null, 'This product is currently not available for purchase', 422);
+        if ($product->availability_quantity < $product->minimum_order_quantity) {
+            return $this->error(null, 'This product is currently not available for purchase.', 422);
         }
 
         $quote = B2bQuote::where('product_id', $product->id)
@@ -806,15 +824,15 @@ class BuyerService
             ->exists();
 
         if ($quote) {
-            return $this->error(null, 'Product already exist');
+            return $this->error(null, 'A quote for this product already exists in your account.', 422);
         }
 
         if ($request->qty < $product->minimum_order_quantity) {
-            return $this->error(null, 'Your peferred quantity can not be less than the one already set', 422);
+            return $this->error(null, "The minimum order quantity for this product is {$product->minimum_order_quantity}.", 422);
         }
 
         if ($request->qty > $product->availability_quantity) {
-            return $this->error(null, 'Your peferred quantity is greater than the availability quantity : '.$product->availability_quantity, 422);
+            return $this->error(null, 'The requested quantity exceeds available stock.', 422);
         }
 
         $quote = B2bQuote::create([
@@ -897,7 +915,7 @@ class BuyerService
                 $subQuery->where('buyer_id', userAuthId())
                     ->where('order_no', 'LIKE', '%'.$searchQuery.'%');
             });
-        })->get();
+        })->latest()->get();
 
         return $this->success($orders, 'orders lists');
     }
@@ -914,7 +932,7 @@ class BuyerService
 
     public function rfqDetails($id)
     {
-        $rfq = Rfq::with(['seller', 'messages'])->where('buyer_id', userAuthId())->findOrFail($id);
+        $rfq = Rfq::with(['seller', 'messages'])->where('buyer_id', userAuthId())->firstOrFail($id);
 
         $messages = RfqMessage::with(['seller', 'buyer'])->where('rfq_id', $rfq->id)->get();
         $data = [
@@ -923,6 +941,15 @@ class BuyerService
         ];
 
         return $this->success($data, 'rfq details');
+    }
+
+    public function getRfqMessages($id)
+    {
+        $rfq = Rfq::select('id', 'buyer_id')->where('buyer_id', userAuthId())->firstOrFail($id);
+
+        $messages = RfqMessage::with(['seller', 'buyer'])->where('rfq_id', $rfq->id)->get();
+
+        return $this->success($messages, 'rfq messages');
     }
 
     // send review request to vendor
@@ -1029,7 +1056,7 @@ class BuyerService
             return $this->error(null, 'No record found', 404);
         }
 
-        if ($product->availability_quantity < 1) {
+        if ($product->availability_quantity < $product->minimum_order_quantity) {
             return $this->error(null, 'This product is currently not available for purchase', 422);
         }
 
@@ -1073,25 +1100,37 @@ class BuyerService
 
     public function sendFromWishList($request)
     {
-        $quote = B2bWishList::findOrFail($request->id);
-
+        $userId = userAuthId();
         $type = $request->query('type');
 
+        $quote = B2bWishList::where('user_id', $userId)->where('id', $request->id)->first();
+
         if (! $quote) {
-            return $this->error(null, 'No record found', 404);
+            return $this->error(null, 'No record found for the specified wish list item', 404);
         }
 
         $product = B2BProduct::findOrFail($quote->product_id);
 
+        if ($product->availability_quantity < $product->minimum_order_quantity) {
+            return $this->error(null, 'This product is currently not available for purchase.', 422);
+        }
+
         if ($request->qty < $product->minimum_order_quantity) {
-            return $this->error(null, 'Your peferred quantity can not be less than the one already set', 422);
+            return $this->error(null, 'Your preferred quantity can not be less than the one already set', 422);
         }
 
         if ($request->qty > $product->availability_quantity) {
-            return $this->error(null, 'Your peferred quantity is greater than the availability quantity : '.$product->availability_quantity, 422);
+            return $this->error(null, 'Your preferred quantity is greater than the availability quantity : '.$product->availability_quantity, 422);
         }
 
         try {
+
+            $unit_price = currencyConvert(
+                $product->shopCountry->currency ?? 'USD',
+                $product->unit_price,
+                userAuth()->default_currency,
+            );
+
             $amount = total_amount($product->unit_price, $request->qty);
 
             Rfq::create([
@@ -1103,7 +1142,7 @@ class BuyerService
                 'status' => RfqStatus::PENDING,
                 'product_quantity' => $request->qty,
                 'total_amount' => $amount,
-                'p_unit_price' => $product->unit_price,
+                'p_unit_price' => $unit_price,
                 'product_data' => $product,
             ]);
 

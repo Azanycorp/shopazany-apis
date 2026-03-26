@@ -352,10 +352,12 @@ Route::middleware('validate.header')
 
                         // Orders Routes
                         Route::prefix('orders/{user_id}')
+                            ->whereNumber('user_id')
                             ->group(function (): void {
                                 Route::get('/', 'getAllOrders')
                                     ->middleware('ensure.user');
-                                Route::get('/summary', 'getOrderSummary');
+                                Route::get('/summary', 'getOrderSummary')
+                                    ->middleware('ensure.user');
                                 Route::get('/{id}', 'getOrderDetail')
                                     ->whereNumber('id');
                                 Route::patch('/update-status/{id}', 'updateOrderStatus')
