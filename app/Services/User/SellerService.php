@@ -590,19 +590,14 @@ class SellerService extends Controller
 
     public function getOrderSummary($userId, $request)
     {
-        $currentUserId = $this->authManager->id();
         $isAgriEcom = $request->boolean('is_agriecom');
-
-        if ($currentUserId != $userId) {
-            return $this->error(null, 'Unauthorized action.', 401);
-        }
 
         $orders = Order::withRelationShips()
             ->whereHas('products', function (Builder $query) use ($userId): void {
                 $query->where('user_id', $userId);
             })
             ->filterByType($isAgriEcom)
-            ->orderBy('created_at', 'desc')
+            ->latest()
             ->take(8)
             ->get();
 
