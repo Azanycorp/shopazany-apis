@@ -24,7 +24,6 @@ use App\Trait\HttpResponse;
 use App\Trait\Product as TraitProduct;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Contracts\Routing\ResponseFactory;
-use Illuminate\Database\DatabaseManager;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Collection;
@@ -39,7 +38,6 @@ class SellerService extends Controller
     public function __construct(
         private readonly AuthManager $authManager,
         private readonly Application $application,
-        private readonly DatabaseManager $databaseManager,
         private readonly ResponseFactory $responseFactory,
         private readonly GeneralService $generalService,
         private readonly AuditLogAction $auditLogAction,
