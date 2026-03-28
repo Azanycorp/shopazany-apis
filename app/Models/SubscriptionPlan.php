@@ -27,8 +27,6 @@ class SubscriptionPlan extends Model
         'type',
     ];
 
-    protected $defaultOrder = ['tier' => 'asc'];
-
     protected function casts(): array
     {
         return [
