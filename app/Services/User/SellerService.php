@@ -103,6 +103,10 @@ class SellerService extends Controller
             return $this->error(null, 'User not found', 404);
         }
 
+        if ($user->hasReachedProductLimit()) {
+            return $this->error(null, 'You have reached your product limit. Please upgrade your plan.', 403);
+        }
+
         $slug = Str::slug($request->name);
         if (Product::where('slug', $slug)->exists()) {
             $slug .= '-'.uniqid();
