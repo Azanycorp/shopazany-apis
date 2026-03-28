@@ -243,6 +243,6 @@ class User extends Authenticatable
             return false;
         }
 
-        return $this->products()->count() >= $plan->product_limit;
+        return $this->products()->withoutGlobalScopes()->count() >= $plan->product_limit;
     }
 }
