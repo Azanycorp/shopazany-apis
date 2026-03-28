@@ -27,6 +27,7 @@ class SubscriptionService
 
         $plan = SubscriptionPlan::where('country_id', $countryId)
             ->where('type', $type)
+            ->orderBy('tier')
             ->get();
 
         $data = SubscriptionPlanResource::collection($plan);
