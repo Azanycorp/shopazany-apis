@@ -25,6 +25,7 @@ class SubscriptionPlan extends Model
         'tier',
         'currency',
         'type',
+        'product_limit',
     ];
 
     protected function casts(): array

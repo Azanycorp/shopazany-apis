@@ -227,4 +227,22 @@ class User extends Authenticatable
 
         return $query;
     }
+
+    public function hasReachedProductLimit(): bool
+    {
+        $subscription = $this->activeSubscription();
+
+        if (! $subscription) {
+            return false;
+        }
+
+        $plan = $subscription->subscriptionPlan;
+
+        // No plan or unlimited
+        if (! $plan || $plan->product_limit === null) {
+            return false;
+        }
+
+        return $this->products()->count() >= $plan->product_limit;
+    }
 }
