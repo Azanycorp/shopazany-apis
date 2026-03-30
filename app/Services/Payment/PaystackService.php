@@ -351,7 +351,7 @@ class PaystackService
                     'buyer_unit_price' => $rfq->buyer_unit_price,
                     'buyer_total_amount' => $formattedAmount,
                     'seller_total_amount' => $seller_amount,
-                    'total_amount' => $formattedAmount,
+                    'total_amount' => $seller_amount,
                     'payment_method' => $method,
                     'payment_status' => OrderStatus::PAID,
                     'status' => OrderStatus::PENDING,
