@@ -380,7 +380,7 @@ class PaystackService
                     'product_name' => $product->name,
                     'image' => $product->front_image,
                     'quantity' => $rfq->product_quantity,
-                    'price' => $seller_amount,
+                    'price' => $formattedAmount,
                     'buyer_name' => $user->first_name.' '.$user->last_name,
                     'order_number' => $orderNo,
                     'currency' => $user->default_currency,
