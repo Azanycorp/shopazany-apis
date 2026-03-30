@@ -940,8 +940,8 @@ class SellerService extends Controller
                 'product_name' => $product->name,
                 'image' => $product->front_image,
                 'quantity' => $rfq->product_quantity,
-                'price' => $total_amount,
-                'buyer_name' => "{$user->first_name} {$user->last_name}",
+                'price' => $buyer_total_amount,
+                'buyer_name' => "{$buyer->first_name} {$buyer->last_name}",
                 'order_number' => $order->order_no,
                 'currency' => $buyer->default_currency ?? userAuth()->default_currency,
             ];
@@ -959,7 +959,7 @@ class SellerService extends Controller
                 ['master_wallet' => 0]
             );
 
-            $wallet->increment('master_wallet', $total_amount);
+            $wallet->increment('master_wallet', $seller_total_amount);
 
             $rfq->update([
                 'payment_status' => OrderStatus::PAID,
