@@ -530,10 +530,11 @@ class ChargeCardService implements PaymentStrategy
         $product = B2BProduct::findOrFail($rfq->product_id);
         $saddress = BuyerShippingAddress::findOrFail($shipping_address_id);
         $shipping_address = new B2BBuyerShippingAddressResource($saddress);
-        $seller_amount = currencyConvert(
+
+        $buyer_amount = currencyConvert(
             $product->shopCountry->currency ?? 'USD',
             $amount,
-            $user->default_currency,
+            $buyer->default_currency,
         );
 
         $order = B2bOrder::create([
@@ -549,7 +550,7 @@ class ChargeCardService implements PaymentStrategy
             'billing_address' => $billing_address,
             'seller_unit_price' => $rfq->seller_unit_price,
             'buyer_unit_price' => $rfq->buyer_unit_price,
-            'buyer_total_amount' => $amount,
+            'buyer_total_amount' => $buyer_amount,
             'seller_total_amount' => $amount,
             'total_amount' => $amount,
             'payment_method' => 'authorize-net',
