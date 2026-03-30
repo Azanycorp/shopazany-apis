@@ -23,6 +23,8 @@ use App\Http\Resources\BuyerResource;
 use App\Http\Resources\ClientLogoResource;
 use App\Http\Resources\CustomerResource;
 use App\Http\Resources\PaymentResource;
+use App\Http\Resources\RfqMessageResource;
+use App\Http\Resources\RfqResource;
 use App\Http\Resources\SliderResource;
 use App\Http\Resources\SocialLinkResource;
 use App\Models\B2bCompany;
@@ -708,12 +710,19 @@ class BuyerService
                 if (blank($quote->qty)) {
                     continue;
                 }
+
                 $product = B2BProduct::findOrFail($quote->product_id);
-                $unit_price = currencyConvert(
+
+                $unit_price = $productData['unit_price'];
+
+                $buyer_unit_price = currencyConvert(
                     $product->shopCountry->currency ?? 'USD',
                     $productData['unit_price'],
                     userAuth()->default_currency,
                 );
+
+                $seller_amount = total_amount($unit_price, $quote->qty);
+                $buyer_amount = total_amount($buyer_unit_price, $quote->qty);
 
                 Rfq::create([
                     'buyer_id' => $quote->buyer_id,
@@ -723,8 +732,10 @@ class BuyerService
                     'status' => RfqStatus::PENDING,
                     'product_id' => $quote->product_id,
                     'product_quantity' => $quote->qty,
-                    'total_amount' => $unit_price * $quote->qty,
-                    'p_unit_price' => $unit_price,
+                    'seller_unit_price' => $unit_price,
+                    'buyer_unit_price' => $buyer_unit_price,
+                    'buyer_total_amount' => $buyer_amount,
+                    'seller_total_amount' => $seller_amount,
                     'product_data' => $quote->product_data,
                     'created_at' => now(),
                     'updated_at' => now(),
@@ -763,13 +774,16 @@ class BuyerService
                 ? $quote->product_data
                 : json_decode($quote->product_data, true);
 
-            $unit_price = currencyConvert(
+            $unit_price = $productData['unit_price'];
+
+            $buyer_unit_price = currencyConvert(
                 $product->shopCountry->currency ?? 'USD',
                 $productData['unit_price'],
                 userAuth()->default_currency,
             );
 
-            $amount = total_amount($unit_price, $quote->qty);
+            $seller_amount = total_amount($unit_price, $quote->qty);
+            $buyer_amount = total_amount($buyer_unit_price, $quote->qty);
 
             Rfq::create([
                 'buyer_id' => $quote->buyer_id,
@@ -779,8 +793,10 @@ class BuyerService
                 'status' => RfqStatus::PENDING,
                 'product_id' => $quote->product_id,
                 'product_quantity' => $quote->qty,
-                'total_amount' => $amount,
-                'p_unit_price' => $unit_price,
+                'seller_unit_price' => $unit_price,
+                'buyer_unit_price' => $buyer_unit_price,
+                'buyer_total_amount' => $buyer_amount,
+                'seller_total_amount' => $seller_amount,
                 'product_data' => $quote->product_data,
             ]);
 
@@ -899,11 +915,11 @@ class BuyerService
     {
         $userId = userAuthId();
 
-        $rfqs = Rfq::with('seller')->where('buyer_id', $userId)
+        $rfqs = Rfq::with(['seller', 'buyer'])->where('buyer_id', $userId)
             ->latest()
             ->get();
 
-        return $this->success($rfqs, 'rfqs lists');
+        return $this->success(RfqResource::collection($rfqs), 'rfqs lists');
     }
 
     public function allOrders($request)
@@ -932,12 +948,12 @@ class BuyerService
 
     public function rfqDetails($id)
     {
-        $rfq = Rfq::with(['seller', 'messages'])->where('buyer_id', userAuthId())->firstOrFail($id);
+        $rfq = Rfq::with(['seller', 'messages', 'buyer'])->where('buyer_id', userAuthId())->where('id', $id)->firstOrFail();
 
         $messages = RfqMessage::with(['seller', 'buyer'])->where('rfq_id', $rfq->id)->get();
         $data = [
-            'rfq' => $rfq,
-            'messages' => $messages,
+            'rfq' => new RfqResource($rfq),
+            'messages' => RfqMessageResource::collection($messages),
         ];
 
         return $this->success($data, 'rfq details');
@@ -949,7 +965,7 @@ class BuyerService
 
         $messages = RfqMessage::with(['seller', 'buyer'])->where('rfq_id', $rfq->id)->get();
 
-        return $this->success($messages, 'rfq messages');
+        return $this->success(RfqMessageResource::collection($messages), 'rfq messages');
     }
 
     // send review request to vendor
@@ -966,21 +982,41 @@ class BuyerService
         try {
 
             $user = User::find($rfq->seller_id);
+            $buyer_unit_price = currencyConvert(
+                $product->shopCountry->currency ?? 'USD',
+                $request->p_unit_price,
+                userAuth()->default_currency,
+            );
+
+            $seller_unit_price = currencyConvert(
+                userAuth()->default_currency,
+                $request->p_unit_price,
+                $product->shopCountry->currency ?? 'USD',
+            );
 
             $message = $rfq->messages()->create([
                 'rfq_id' => $request->rfq_id,
                 'buyer_id' => userAuthId(),
+                'seller_id' => $user->id,
                 'p_unit_price' => $request->p_unit_price,
                 'preferred_qty' => $rfq->product_quantity,
                 'note' => $request->note,
             ]);
 
-            Notification::send($user, new RfqMessageNotification($user, $message));
+            // Notification::send($user, new RfqMessageNotification($user, $message));
+            $amount = total_amount($buyer_unit_price, $rfq->product_quantity);
 
-            $rfq->update(['status' => 'review']);
+            $rfq->update([
+                'status' => 'review',
+                'buyer_unit_price' => $buyer_unit_price,
+                'buyer_total_amount' => $amount,
+                'seller_unit_price' => $seller_unit_price,
+                'seller_total_amount' => $seller_unit_price * $rfq->product_quantity,
+            ]);
+
             $this->databaseManager->commit();
 
-            return $this->success($rfq, 'Review sent successfully with details.');
+            return $this->success(new RfqMessageResource($message), 'Review sent successfully with details.');
         } catch (\Exception $e) {
             $this->databaseManager->rollBack();
 
@@ -988,7 +1024,6 @@ class BuyerService
         }
     }
 
-    // send review request to vendor
     public function acceptQuote($request)
     {
         $rfq = Rfq::find($request->rfq_id);
@@ -1125,13 +1160,16 @@ class BuyerService
 
         try {
 
-            $unit_price = currencyConvert(
+            $unit_price = $product->unit_price;
+
+            $buyer_unit_price = currencyConvert(
                 $product->shopCountry->currency ?? 'USD',
-                $product->unit_price,
+                $unit_price,
                 userAuth()->default_currency,
             );
 
-            $amount = total_amount($product->unit_price, $request->qty);
+            $seller_amount = total_amount($unit_price, $request->qty);
+            $buyer_amount = total_amount($buyer_unit_price, $request->qty);
 
             Rfq::create([
                 'buyer_id' => $quote->user_id,
@@ -1141,8 +1179,10 @@ class BuyerService
                 'type' => $type,
                 'status' => RfqStatus::PENDING,
                 'product_quantity' => $request->qty,
-                'total_amount' => $amount,
-                'p_unit_price' => $unit_price,
+                'seller_unit_price' => $unit_price,
+                'buyer_unit_price' => $buyer_unit_price,
+                'buyer_total_amount' => $buyer_amount,
+                'seller_total_amount' => $seller_amount,
                 'product_data' => $product,
             ]);
 

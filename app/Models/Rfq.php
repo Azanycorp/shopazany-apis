@@ -16,6 +16,10 @@ class Rfq extends Model
         'product_id',
         'product_quantity',
         'p_unit_price',
+        'seller_unit_price',
+        'buyer_unit_price',
+        'buyer_total_amount',
+        'seller_total_amount',
         'product_data',
         'total_amount',
         'payment_status',
@@ -35,6 +39,11 @@ class Rfq extends Model
     /**
      * @return BelongsTo<User, $this>
      */
+    public function product(): BelongsTo
+    {
+        return $this->belongsTo(B2BProduct::class, 'product_id', 'id');
+    }
+
     public function seller(): BelongsTo
     {
         return $this->belongsTo(User::class, 'seller_id', 'id');

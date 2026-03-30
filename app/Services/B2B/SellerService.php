@@ -14,6 +14,8 @@ use App\Http\Resources\B2BOrderResource;
 use App\Http\Resources\B2BProductResource;
 use App\Http\Resources\B2BSellerProfileResource;
 use App\Http\Resources\B2BSellerShippingAddressResource;
+use App\Http\Resources\RfqMessageResource;
+use App\Http\Resources\RfqResource;
 use App\Imports\B2BProductImport;
 use App\Imports\ProductImport;
 use App\Mail\B2BDeliveredOrderMail;
@@ -689,7 +691,7 @@ class SellerService extends Controller
 
         $data = [
             'total_rfqs' => $rfqs->count(),
-            'rfqs' => $rfqs,
+            'rfqs' => RfqResource::collection($rfqs),
             'total_orders' => $orders_count,
             'orders' => $orders,
         ];
@@ -699,13 +701,13 @@ class SellerService extends Controller
 
     public function getRfqDetails($id)
     {
-        $rfq = Rfq::with(['buyer', 'seller'])->findOrFail($id);
+        $rfq = Rfq::with(['buyer', 'seller'])->where('seller_id', userAuthId())->findOrFail($id);
 
         $messages = RfqMessage::with(['seller', 'buyer'])->where('rfq_id', $rfq->id)->get();
 
         $data = [
-            'rfq' => $rfq,
-            'messages' => $messages,
+            'rfq' => new RfqResource($rfq),
+            'messages' => RfqMessageResource::collection($messages),
         ];
 
         return $this->success($data, 'rfq details');
@@ -813,23 +815,29 @@ class SellerService extends Controller
         }
 
         $amount = ($request->preferred_unit_price * $rfq->product_quantity);
+        $buyer_unit_price = currencyConvert(
+            $product->shopCountry->currency ?? 'USD',
+            $request->p_unit_price,
+            $user->default_currency,
+        );
 
         $message = RfqMessage::create([
             'rfq_id' => $rfq->id,
             'seller_id' => userAuthId(),
+            'preferred_qty' => $rfq->product_quantity,
             'p_unit_price' => $request->preferred_unit_price,
             'note' => $request->note,
         ]);
 
         $rfq->update([
-            'p_unit_price' => $request->preferred_unit_price,
-            'product_data->unit_price' => $request->preferred_unit_price,
-            'total_amount' => $amount,
+            'buyer_unit_price' => $buyer_unit_price,
+            'buyer_total_amount' => $buyer_unit_price * $rfq->product_quantity,
+            'seller_unit_price' => $request->preferred_unit_price,
+            'seller_total_amount' => $amount,
         ]);
+        // Notification::send($user, new RfqMessageNotification($user, $message));
 
-        Notification::send($user, new RfqMessageNotification($user, $message));
-
-        return $this->success($message, 'message details');
+        return $this->success(new RfqMessageResource($message), 'message details');
     }
 
     public function markDelivered($data)

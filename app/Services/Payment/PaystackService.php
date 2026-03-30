@@ -329,6 +329,7 @@ class PaystackService
 
                 $product->availability_quantity -= $rfq->product_quantity;
                 $product->sold += $rfq->product_quantity;
+
                 $seller_amount = currencyConvert(
                     $user->default_currency,
                     $formattedAmount,
@@ -346,6 +347,10 @@ class PaystackService
                     'product_data' => $rfq->product_data,
                     'shipping_agent' => $shipping_agent_id ? $shipping_agent->name : 'DHL',
                     'shipping_address' => $address,
+                    'seller_unit_price' => $rfq->seller_unit_price,
+                    'buyer_unit_price' => $rfq->buyer_unit_price,
+                    'buyer_total_amount' => $formattedAmount,
+                    'seller_total_amount' => $seller_amount,
                     'total_amount' => $formattedAmount,
                     'payment_method' => $method,
                     'payment_status' => OrderStatus::PAID,
