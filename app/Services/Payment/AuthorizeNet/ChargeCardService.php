@@ -526,9 +526,15 @@ class ChargeCardService implements PaymentStrategy
         }
         $rfq = Rfq::findOrFail($rfqId);
         $seller = User::findOrFail($rfq->seller_id);
+        $buyer = User::findOrFail($rfq->buyer_id);
         $product = B2BProduct::findOrFail($rfq->product_id);
         $saddress = BuyerShippingAddress::findOrFail($shipping_address_id);
         $shipping_address = new B2BBuyerShippingAddressResource($saddress);
+        $seller_amount = currencyConvert(
+            $product->shopCountry->currency ?? 'USD',
+            $amount,
+            $user->default_currency,
+        );
 
         $order = B2bOrder::create([
             'buyer_id' => $user->id,
