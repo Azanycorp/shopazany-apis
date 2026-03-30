@@ -894,7 +894,7 @@ class BuyerService
         $seven_days_orderStats = B2bOrder::where([
             'seller_id' => $currentUserId,
             'status' => OrderStatus::DELIVERED,
-        ])->where('created_at', '<=', Date::today()->subDays(7))->sum('total_amount');
+        ])->where('created_at', '<=', Date::today()->subDays(7))->sum('buyer_total_amount');
 
         $data = [
             'total_purchase' => $orderStats,

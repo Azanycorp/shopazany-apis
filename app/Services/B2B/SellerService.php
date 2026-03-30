@@ -901,10 +901,15 @@ class SellerService extends Controller
         try {
             $amount = $rfq->total_amount;
 
-            $total_amount = currencyConvert(
+            $buyer_total_amount = currencyConvert(
                 $product->shopCountry->currency ?? 'USD',
                 $amount,
-                userAuth()->default_currency,
+                $buyer->default_currency,
+            );
+            $seller_total_amount = currencyConvert(
+                $product->shopCountry->currency ?? 'USD',
+                $amount,
+                $buyer->default_currency,
             );
 
             $order = B2bOrder::create([
@@ -914,7 +919,11 @@ class SellerService extends Controller
                 'product_quantity' => $rfq->product_quantity,
                 'order_no' => 'ORD-'.now()->timestamp.'-'.Str::random(8),
                 'product_data' => $product,
-                'total_amount' => $total_amount,
+                'total_amount' => $seller_total_amount,
+                'seller_unit_price' => $rfq->seller_unit_price,
+                'buyer_unit_price' => $rfq->buyer_unit_price,
+                'buyer_total_amount' => $buyer_total_amount,
+                'seller_total_amount' => $seller_total_amount,
                 'payment_method' => PaymentType::OFFLINE,
                 'payment_status' => OrderStatus::PAID,
                 'status' => OrderStatus::PENDING,
@@ -932,7 +941,7 @@ class SellerService extends Controller
                 'image' => $product->front_image,
                 'quantity' => $rfq->product_quantity,
                 'price' => $total_amount,
-                'buyer_name' => $buyer->first_name.' '.$buyer->last_name,
+                'buyer_name' => "{$user->first_name} {$user->last_name}",
                 'order_number' => $order->order_no,
                 'currency' => $buyer->default_currency ?? userAuth()->default_currency,
             ];
@@ -1072,12 +1081,12 @@ class SellerService extends Controller
 
         $orderStats = B2bOrder::where([
             'seller_id' => $currentUserId,
-        ])->where('status', OrderStatus::DELIVERED)->sum('total_amount');
+        ])->where('status', OrderStatus::DELIVERED)->sum('seller_total_amount');
 
         $seven_days_orderStats = B2bOrder::where([
             'seller_id' => $currentUserId,
             'status' => OrderStatus::DELIVERED,
-        ])->where('created_at', '<=', Date::today()->subDays(7))->sum('total_amount');
+        ])->where('created_at', '<=', Date::today()->subDays(7))->sum('seller_total_amount');
 
         $rfqs = Rfq::with('buyer')->where('seller_id', $currentUserId)->get();
 

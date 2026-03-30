@@ -381,7 +381,7 @@ class PaystackService
                     'image' => $product->front_image,
                     'quantity' => $rfq->product_quantity,
                     'price' => $formattedAmount,
-                    'buyer_name' => $user->first_name.' '.$user->last_name,
+                    'buyer_name' => "{$user->first_name} {$user->last_name}",
                     'order_number' => $orderNo,
                     'currency' => $user->default_currency,
                 ];
