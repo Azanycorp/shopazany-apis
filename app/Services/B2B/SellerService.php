@@ -804,21 +804,27 @@ class SellerService extends Controller
     {
         $rfq = Rfq::find($request->rfq_id);
 
-        $user = User::find($rfq->buyer_id);
-
-        if (! $user) {
-            return $this->error(null, 'User not found', 404);
+        $buyer = User::find($rfq->buyer_id);
+        if (! $buyer) {
+            return $this->error(null, 'Buyer not found', 404);
         }
 
         if (! $rfq) {
             return $this->error(null, 'No record found for rfq', 404);
         }
 
+        $product = B2BProduct::find($rfq->product_id);
+
+        if (! $product) {
+            return $this->error(null, 'No product found', 404);
+        }
+
         $amount = ($request->preferred_unit_price * $rfq->product_quantity);
+
         $buyer_unit_price = currencyConvert(
             $product->shopCountry->currency ?? 'USD',
-            $request->p_unit_price,
-            $user->default_currency,
+            $request->preferred_unit_price,
+            $buyer->default_currency,
         );
 
         $message = RfqMessage::create([
@@ -831,11 +837,12 @@ class SellerService extends Controller
 
         $rfq->update([
             'buyer_unit_price' => $buyer_unit_price,
+            'product_data->unit_price' => $request->preferred_unit_price,
             'buyer_total_amount' => $buyer_unit_price * $rfq->product_quantity,
             'seller_unit_price' => $request->preferred_unit_price,
             'seller_total_amount' => $amount,
         ]);
-        // Notification::send($user, new RfqMessageNotification($user, $message));
+        Notification::send($buyer, new RfqMessageNotification($buyer, $message));
 
         return $this->success(new RfqMessageResource($message), 'message details');
     }

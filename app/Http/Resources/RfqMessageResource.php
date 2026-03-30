@@ -18,12 +18,12 @@ class RfqMessageResource extends JsonResource
         $targetCurrency = auth()->user()->default_currency;
 
         return [
-            'id' => $this->id,
-            'buyer_id' => $this->buyer_id,
-            'seller_id' => $this->seller_id,
+            'id' => (int) $this->resource->id,
+            'buyer_id' => $this->resource->buyer_id,
+            'seller_id' => $this->resource->seller_id,
             'p_unit_price' => currencyConvert(
                 $sourceCurrency,
-                $this->p_unit_price,
+                $this->resource->p_unit_price,
                 $targetCurrency
             ),
             'seller' => (object) [
@@ -38,7 +38,7 @@ class RfqMessageResource extends JsonResource
                 'email' => $this->resource->seller?->email,
                 'phone' => $this->resource->seller?->phone,
             ],
-            'note' => $this->note,
+            'note' => $this->resource->note,
         ];
     }
 }

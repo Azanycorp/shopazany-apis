@@ -974,7 +974,13 @@ class BuyerService
         $rfq = Rfq::find($request->rfq_id);
 
         if (! $rfq) {
-            return $this->error(null, 'No record found', 404);
+            return $this->error(null, 'No rfq record found', 404);
+        }
+
+        $product = B2BProduct::find($rfq->product_id);
+
+        if (! $product) {
+            return $this->error(null, 'No product record found', 404);
         }
 
         $this->databaseManager->beginTransaction();
@@ -1003,7 +1009,7 @@ class BuyerService
                 'note' => $request->note,
             ]);
 
-            // Notification::send($user, new RfqMessageNotification($user, $message));
+            Notification::send($user, new RfqMessageNotification($user, $message));
             $amount = total_amount($buyer_unit_price, $rfq->product_quantity);
 
             $rfq->update([

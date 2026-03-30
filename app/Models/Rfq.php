@@ -37,7 +37,7 @@ class Rfq extends Model
     }
 
     /**
-     * @return BelongsTo<User, $this>
+     * @return BelongsTo<B2BProduct, $this>
      */
     public function product(): BelongsTo
     {

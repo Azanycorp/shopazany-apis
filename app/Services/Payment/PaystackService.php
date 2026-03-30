@@ -406,7 +406,7 @@ class PaystackService
                 ))->run();
             });
         } catch (\Exception $e) {
-            Log::error('Error in handlePaymentSuccess: '.$e->getMessage().' in '.$e->getFile().' on line '.$e->getLine());
+            Log::error("Error in handlePaymentSuccess: {$e->getMessage()} in {$e->getFile()} on line {$e->getLine()}");
             throw $e;
         }
     }
