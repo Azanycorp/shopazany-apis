@@ -12,10 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('b2b_orders', function (Blueprint $table) {
-            $table->double('seller_unit_price')->default(0);
-            $table->double('buyer_unit_price')->default(0);
-            $table->double('buyer_total_amount')->default(0);
-            $table->double('seller_total_amount')->default(0);
+            $table->decimal('seller_unit_price', 19, 4)->default(0.0000);
+            $table->decimal('buyer_unit_price', 19, 4)->default(0.0000);
+            $table->decimal('buyer_total_amount', 19, 4)->default(0.0000);
+            $table->decimal('seller_total_amount', 19, 4)->default(0.0000);
         });
     }
 
