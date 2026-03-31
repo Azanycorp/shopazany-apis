@@ -12,10 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('rfqs', function (Blueprint $table) {
-            $table->decimal('seller_unit_price', 19, 4)->default(0.0000);
-            $table->decimal('buyer_unit_price', 19, 4)->default(0.0000);
-            $table->decimal('buyer_total_amount', 19, 4)->default(0.0000);
-            $table->decimal('seller_total_amount', 19, 4)->default(0.0000);
+            $table->decimal('seller_unit_price', 10, 2)->default(0.00);
+            $table->decimal('buyer_unit_price', 10, 2)->default(0.00);
+            $table->decimal('buyer_total_amount', 10, 2)->default(0.00);
+            $table->decimal('seller_total_amount', 10, 2)->default(0.00);
         });
     }
 
