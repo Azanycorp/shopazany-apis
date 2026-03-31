@@ -42,6 +42,7 @@ use Laravel\Sanctum\HasApiTokens;
  * @property bool $two_factor_enabled
  * @property bool $biometric_enabled
  * @property string $biometric_token
+ * @property-read Promo|null $coupons
  */
 class User extends Authenticatable
 {

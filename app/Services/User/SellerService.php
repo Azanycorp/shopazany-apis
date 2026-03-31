@@ -12,6 +12,7 @@ use App\Enum\UserType;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\OrderDetailResource;
 use App\Http\Resources\OrderResource;
+use App\Http\Resources\SellerCouponResource;
 use App\Http\Resources\SellerProductResource;
 use App\Imports\ProductImport;
 use App\Mail\OrderStatusUpdated;
@@ -26,6 +27,7 @@ use Illuminate\Auth\AuthManager;
 use Illuminate\Contracts\Routing\ResponseFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Application;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -754,5 +756,79 @@ class SellerService extends Controller
         $attribute->delete();
 
         return $this->success(null, 'Attribute deleted successfully');
+    }
+
+    public function createCoupon($request): JsonResponse
+    {
+        $user = User::with('coupons')->find($request->user_id);
+
+        if (! $user) {
+            return $this->error(null, 'User not found', 404);
+        }
+
+        $user->coupons()->create([
+            'type' => 'product',
+            'coupon_code' => $request->name,
+            'discount' => $request->discount_value,
+            'discount_type' => $request->discount_type,
+            'start_date' => $request->start_date,
+            'end_date' => $request->end_date,
+            'min_order_value' => $request->min_order_value,
+            'max_order_value' => $request->max_order_value,
+            'status' => 'active',
+        ]);
+
+        return $this->success(null, 'Coupon created successfully', 201);
+    }
+
+    public function getCoupons(int $userId): JsonResponse
+    {
+        $user = User::with('coupons')->find($userId);
+
+        if (! $user) {
+            return $this->error(null, 'User not found', 404);
+        }
+
+        $data = SellerCouponResource::collection($user->coupons);
+
+        return $this->success($data, 'Coupon list');
+    }
+
+    public function getCoupon(int $userId, $id): JsonResponse
+    {
+        $user = User::with('coupons')->find($userId);
+
+        if (! $user) {
+            return $this->error(null, 'User not found', 404);
+        }
+
+        $coupon = $user->coupons()->find($id);
+
+        if (! $coupon) {
+            return $this->error(null, 'Coupon not found', 404);
+        }
+
+        $data = new SellerCouponResource($coupon);
+
+        return $this->success($data->resolve()['data'], 'Coupon detail');
+    }
+
+    public function deleteCoupon(int $userId, $id): JsonResponse
+    {
+        $user = User::with('coupons')->find($userId);
+
+        if (! $user) {
+            return $this->error(null, 'User not found', 404);
+        }
+
+        $coupon = $user->coupons()->find($id);
+
+        if (! $coupon) {
+            return $this->error(null, 'Coupon not found', 404);
+        }
+
+        $coupon->delete();
+
+        return $this->success(null, 'Coupon deleted successfully');
     }
 }

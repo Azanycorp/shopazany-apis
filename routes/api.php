@@ -363,6 +363,21 @@ Route::middleware('validate.header')
                                 Route::patch('/update-status/{id}', 'updateOrderStatus')
                                     ->whereNumber('id');
                             });
+
+                        // Coupon
+                        Route::middleware('ensure.user')
+                            ->prefix('coupon')
+                            ->group(function () {
+                                Route::post('/create', 'createCoupon');
+                                Route::get('/{user_id}', 'getCoupons')->whereNumber('user_id');
+                                Route::get('/{user_id}/{id}', 'getCoupon')
+                                    ->whereNumber('user_id')
+                                    ->whereNumber('id');
+
+                                Route::delete('/{user_id}/{id}/delete', 'deleteCoupon')
+                                    ->whereNumber('user_id')
+                                    ->whereNumber('id');
+                            });
                     });
             });
     });
