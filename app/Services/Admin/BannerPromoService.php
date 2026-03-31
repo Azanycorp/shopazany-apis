@@ -109,22 +109,12 @@ class BannerPromoService
     {
         $type = $request->coupon_type;
 
-        switch ($type) {
-            case CouponType::PRODUCT:
-                return $this->product($type, $request);
-
-            case CouponType::TOTAL_ORDERS:
-                return $this->totalOrders($type, $request);
-
-            case CouponType::WELCOME_COUPON:
-                return $this->welcomeCoupon($type, $request);
-
-            default:
-                // code...
-                break;
-        }
-
-        return null;
+        return match ($type) {
+            CouponType::PRODUCT => $this->product($type, $request),
+            CouponType::TOTAL_ORDERS => $this->totalOrders($type, $request),
+            CouponType::WELCOME_COUPON => $this->welcomeCoupon($type, $request),
+            default => null
+        };
     }
 
     public function promos()

@@ -4,6 +4,7 @@ namespace App\Services\User;
 
 use App\Enum\RedeemPointStatus;
 use App\Enum\UserType;
+use App\Exceptions\PromoValidationException;
 use App\Http\Resources\AccountOverviewResource;
 use App\Http\Resources\CustomerOrderDetailResource;
 use App\Http\Resources\CustomerOrderResource;
@@ -668,12 +669,29 @@ class CustomerService
         return $this->success(null, $msg, $code);
     }
 
-    public function redeemPromo($request, $promoRedeemAction)
+    public function redeemPromo($request, $promoRedeemAction): mixed
+    {
+        try {
+            [$user, $promo, $products] = $this->validatePromoRedemption($request);
+
+            return DB::transaction(function () use ($user, $promo, $products, $promoRedeemAction) {
+                return $this->applyPromoTransaction($user, $promo, $products, $promoRedeemAction, $this->cartService);
+            });
+        } catch (PromoValidationException $e) {
+            return $this->error(null, $e->getMessage(), $e->getHttpStatus());
+        } catch (\Throwable $th) {
+            return $this->error(null, $th->getMessage(), 400);
+        }
+    }
+
+    /**
+     * @throws PromoValidationException
+     */
+    private function validatePromoRedemption($request): array
     {
         $user = User::find($request->user_id);
-
         if (! $user) {
-            return $this->error(null, 'User not found!', 404);
+            throw new PromoValidationException('User not found!', 404);
         }
 
         $promo = Promo::where('coupon_code', $request->promo_code)
@@ -682,11 +700,11 @@ class CustomerService
             ->first();
 
         if (! $promo) {
-            return $this->error(null, 'Promo code not found or expired!', 404);
+            throw new PromoValidationException('Promo code not found or expired!', 404);
         }
 
         if ($promo->type !== 'product') {
-            return $this->error(null, 'Invalid promo type.', 422);
+            throw new PromoValidationException('Invalid promo type.', 422);
         }
 
         $products = Product::with(['shopCountry', 'productVariations.product.shopCountry'])
@@ -694,7 +712,7 @@ class CustomerService
             ->get();
 
         if ($products->isEmpty()) {
-            return $this->error(null, 'Invalid products selected.', 422);
+            throw new PromoValidationException('Invalid products selected.', 422);
         }
 
         $alreadyUsed = PromoRedemption::where('user_id', $user->id)
@@ -703,17 +721,9 @@ class CustomerService
             ->exists();
 
         if ($alreadyUsed) {
-            return $this->error(null, 'Promo code already used.', 409);
+            throw new PromoValidationException('Promo code already used.', 409);
         }
 
-        $cartService = $this->cartService;
-
-        try {
-            return DB::transaction(function () use ($user, $promo, $products, $promoRedeemAction, $cartService) {
-                return $this->applyPromoTransaction($user, $promo, $products, $promoRedeemAction, $cartService);
-            });
-        } catch (\Throwable $th) {
-            return $this->error(null, $th->getMessage(), 400);
-        }
+        return [$user, $promo, $products];
     }
 }
