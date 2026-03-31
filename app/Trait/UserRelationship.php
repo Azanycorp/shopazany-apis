@@ -17,6 +17,7 @@ use App\Models\Payment;
 use App\Models\PaymentMethod;
 use App\Models\Product;
 use App\Models\ProductAttribute;
+use App\Models\Promo;
 use App\Models\PromoRedemption;
 use App\Models\RedeemPoint;
 use App\Models\State;
@@ -73,7 +74,7 @@ trait UserRelationship
         return $this->belongsToMany(User::class, 'referral_relationships', 'referee_id', 'referrer_id');
     }
 
-    public function B2bWithdrawalMethod(): HasMany
+    public function b2bWithdrawalMethod(): HasMany
     {
         return $this->HasMany(B2bWithdrawalMethod::class, 'user_id')->latest('id');
     }
@@ -284,5 +285,13 @@ trait UserRelationship
     public function promoRedemptions(): HasMany
     {
         return $this->hasMany(PromoRedemption::class, 'user_id');
+    }
+
+    /**
+     * @return HasMany<Promo, $this>
+     */
+    public function coupons(): HasMany
+    {
+        return $this->hasMany(Promo::class, 'user_id');
     }
 }

@@ -7,6 +7,7 @@ use App\Http\Requests\AddAttributeRequest;
 use App\Http\Requests\BusinessInfoRequest;
 use App\Http\Requests\ProductImportRequest;
 use App\Http\Requests\ProductRequest;
+use App\Http\Requests\SellerCreateCouponRequest;
 use App\Services\User\SellerService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -125,5 +126,25 @@ class SellerController extends Controller
     public function deleteAttribute(int $id, int $userId): JsonResponse
     {
         return $this->service->deleteAttribute($id, $userId);
+    }
+
+    public function createCoupon(SellerCreateCouponRequest $sellerCreateCouponRequest): JsonResponse
+    {
+        return $this->service->createCoupon($sellerCreateCouponRequest);
+    }
+
+    public function getCoupons(int $userId): JsonResponse
+    {
+        return $this->service->getCoupons($userId);
+    }
+
+    public function getCoupon(int $userId, int $id): JsonResponse
+    {
+        return $this->service->getCoupon($userId, $id);
+    }
+
+    public function deleteCoupon(int $userId, int $id): JsonResponse
+    {
+        return $this->service->deleteCoupon($userId, $id);
     }
 }
