@@ -7,6 +7,7 @@ use App\Enum\ProductStatus;
 use App\Http\Resources\CustomerOrderResource;
 use App\Models\Order;
 use App\Models\Product;
+use Illuminate\Support\Collection;
 
 trait General
 {
@@ -23,7 +24,7 @@ trait General
             OrderStatus::CANCELLED,
         ];
 
-        return collect($priority)->first(
+        return (new Collection($priority))->first(
             $statuses->contains(...),
             OrderStatus::PENDING
         );
