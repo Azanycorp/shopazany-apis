@@ -4,14 +4,13 @@ namespace App\Http\Middleware;
 
 use App\Trait\HttpResponse;
 use Closure;
-use Illuminate\Database\DatabaseManager;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Date;
+use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response;
 
 class TransactionReplayShield
@@ -19,7 +18,6 @@ class TransactionReplayShield
     use HttpResponse;
 
     public function __construct(
-        private readonly DatabaseManager $databaseManager,
         private int $windowSeconds = 15,
         private array $payloadBlacklist = ['_token', 'csrf_token', '_method', 'timestamp', 'ts', 'nonce', 'trace_id', 'request_id', 'reference'],
     ) {}
@@ -67,8 +65,8 @@ class TransactionReplayShield
 
         $sig = hash('sha256', json_encode([$actor, $routeSig, $payload], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
 
-        $now = now();
-        $exp = now()->addSeconds($this->windowSeconds);
+        $now = now()->utc()->startOfSecond();
+        $exp = $now->copy()->addSeconds($this->windowSeconds);
 
         // ----- Fast path: try unique insert -----
         if ($this->tryInsertUnique($sig, $actorId, $routeName ?: $path, $exp, $now)) {
@@ -76,29 +74,21 @@ class TransactionReplayShield
         }
 
         // ----- On conflict: check expiry and reclaim if expired -----
-        $row = $this->databaseManager->table('tx_replay_guards')->where('key', $sig)->first();
+        $row = DB::table('tx_replay_guards')->where('key', $sig)->first();
 
         if ($row) {
-            $rowExp = Date::parse($row->expires_at);
+            $rowExp = Carbon::parse($row->expires_at)->utc();
 
             if ($rowExp->lte($now)) {
-                // Expired → atomically reclaim so new request can proceed
-                $affected = $this->databaseManager->table('tx_replay_guards')
+                DB::table('tx_replay_guards')
                     ->where('key', $sig)
-                    ->where('expires_at', '<=', $now)
-                    ->update(['expires_at' => $exp, 'updated_at' => $now]);
+                    ->update([
+                        'expires_at' => $exp,
+                        'updated_at' => $now,
+                    ]);
 
-                if ($affected === 1) {
-                    return $next($request);
-                }
-
-                // Lost race → refresh row and fall through
-                // $row = $this->databaseManager->table('tx_replay_guards')->where('key', $sig)->first();
-                // $rowExp = $row ? Date::parse($row->expires_at) : $now->addSeconds($this->windowSeconds);
+                return $next($request);
             }
-
-            // Still within window → early return
-            // $remaining = max(1, $now->diffInSeconds($rowExp, false));
 
             return $this->error(null, 'Duplicate request detected. Please wait a moment and try again.', 409);
         }
@@ -110,7 +100,7 @@ class TransactionReplayShield
     private function tryInsertUnique(string $sig, $actorId, string $routeSig, Carbon $expiresAt, Carbon $now): bool
     {
         try {
-            $this->databaseManager->table('tx_replay_guards')->insert([
+            DB::table('tx_replay_guards')->insert([
                 'key' => $sig,
                 'actor_id' => $actorId,
                 'route_sig' => $routeSig,
