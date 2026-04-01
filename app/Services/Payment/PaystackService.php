@@ -329,6 +329,7 @@ class PaystackService
 
                 $product->availability_quantity -= $rfq->product_quantity;
                 $product->sold += $rfq->product_quantity;
+
                 $seller_amount = currencyConvert(
                     $user->default_currency,
                     $formattedAmount,
@@ -346,7 +347,11 @@ class PaystackService
                     'product_data' => $rfq->product_data,
                     'shipping_agent' => $shipping_agent_id ? $shipping_agent->name : 'DHL',
                     'shipping_address' => $address,
-                    'total_amount' => $formattedAmount,
+                    'seller_unit_price' => $rfq->seller_unit_price,
+                    'buyer_unit_price' => $rfq->buyer_unit_price,
+                    'buyer_total_amount' => $formattedAmount,
+                    'seller_total_amount' => $seller_amount,
+                    'total_amount' => $seller_amount,
                     'payment_method' => $method,
                     'payment_status' => OrderStatus::PAID,
                     'status' => OrderStatus::PENDING,
@@ -375,8 +380,8 @@ class PaystackService
                     'product_name' => $product->name,
                     'image' => $product->front_image,
                     'quantity' => $rfq->product_quantity,
-                    'price' => $seller_amount,
-                    'buyer_name' => $user->first_name.' '.$user->last_name,
+                    'price' => $formattedAmount,
+                    'buyer_name' => "{$user->first_name} {$user->last_name}",
                     'order_number' => $orderNo,
                     'currency' => $user->default_currency,
                 ];
@@ -401,7 +406,7 @@ class PaystackService
                 ))->run();
             });
         } catch (\Exception $e) {
-            Log::error('Error in handlePaymentSuccess: '.$e->getMessage().' in '.$e->getFile().' on line '.$e->getLine());
+            Log::error("Error in handlePaymentSuccess: {$e->getMessage()} in {$e->getFile()} on line {$e->getLine()}");
             throw $e;
         }
     }

@@ -526,9 +526,16 @@ class ChargeCardService implements PaymentStrategy
         }
         $rfq = Rfq::findOrFail($rfqId);
         $seller = User::findOrFail($rfq->seller_id);
+        $buyer = User::findOrFail($rfq->buyer_id);
         $product = B2BProduct::findOrFail($rfq->product_id);
         $saddress = BuyerShippingAddress::findOrFail($shipping_address_id);
         $shipping_address = new B2BBuyerShippingAddressResource($saddress);
+
+        $buyer_amount = currencyConvert(
+            $product->shopCountry->currency ?? 'USD',
+            $amount,
+            $buyer->default_currency,
+        );
 
         $order = B2bOrder::create([
             'buyer_id' => $user->id,
@@ -541,6 +548,10 @@ class ChargeCardService implements PaymentStrategy
             'shipping_address' => $shipping_address,
             'shipping_agent' => $shipping_agent_id ? $shipping_agent->name : '',
             'billing_address' => $billing_address,
+            'seller_unit_price' => $rfq->seller_unit_price,
+            'buyer_unit_price' => $rfq->buyer_unit_price,
+            'buyer_total_amount' => $buyer_amount,
+            'seller_total_amount' => $amount,
             'total_amount' => $amount,
             'payment_method' => 'authorize-net',
             'payment_status' => OrderStatus::PAID,
