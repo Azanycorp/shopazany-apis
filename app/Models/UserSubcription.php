@@ -29,6 +29,10 @@ class UserSubcription extends Model
         'expired_at',
     ];
 
+    protected $hidden = [
+        'authorization_data',
+    ];
+
     protected function casts(): array
     {
         return [
