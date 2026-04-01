@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -77,7 +78,7 @@ class TransactionReplayShield
         $row = DB::table('tx_replay_guards')->where('key', $sig)->first();
 
         if ($row) {
-            $rowExp = Carbon::parse($row->expires_at)->utc();
+            $rowExp = Date::parse($row->expires_at)->utc();
 
             if ($rowExp->lte($now)) {
                 DB::table('tx_replay_guards')
@@ -97,6 +98,9 @@ class TransactionReplayShield
         return $next($request);
     }
 
+    /**
+     * @param  mixed  $actorId
+     */
     private function tryInsertUnique(string $sig, $actorId, string $routeSig, Carbon $expiresAt, Carbon $now): bool
     {
         try {
