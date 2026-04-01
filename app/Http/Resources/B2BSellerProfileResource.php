@@ -28,7 +28,7 @@ class B2BSellerProfileResource extends JsonResource
             'country_id' => (string) $this->resource->country,
             'state_id' => (string) $this->resource->state_id,
             'referrer_code' => (string) $this->resource->referrer_code,
-            'referrer_link' => (string) $this->resource->referrer_link,
+            'referrer_link' => (object) $this->resource->referrer_link,
             'date_of_birth' => (string) $this->resource->date_of_birth,
             'is_verified' => (bool) $this->resource->is_verified,
             'income_type' => (string) $this->resource->income_type,

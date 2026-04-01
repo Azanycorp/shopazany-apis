@@ -14,6 +14,8 @@ use App\Http\Resources\B2BOrderResource;
 use App\Http\Resources\B2BProductResource;
 use App\Http\Resources\B2BSellerProfileResource;
 use App\Http\Resources\B2BSellerShippingAddressResource;
+use App\Http\Resources\RfqMessageResource;
+use App\Http\Resources\RfqResource;
 use App\Imports\B2BProductImport;
 use App\Imports\ProductImport;
 use App\Mail\B2BDeliveredOrderMail;
@@ -689,7 +691,7 @@ class SellerService extends Controller
 
         $data = [
             'total_rfqs' => $rfqs->count(),
-            'rfqs' => $rfqs,
+            'rfqs' => RfqResource::collection($rfqs),
             'total_orders' => $orders_count,
             'orders' => $orders,
         ];
@@ -699,13 +701,13 @@ class SellerService extends Controller
 
     public function getRfqDetails($id)
     {
-        $rfq = Rfq::with(['buyer', 'seller'])->findOrFail($id);
+        $rfq = Rfq::with(['buyer', 'seller'])->where('seller_id', userAuthId())->findOrFail($id);
 
         $messages = RfqMessage::with(['seller', 'buyer'])->where('rfq_id', $rfq->id)->get();
 
         $data = [
-            'rfq' => $rfq,
-            'messages' => $messages,
+            'rfq' => new RfqResource($rfq),
+            'messages' => RfqMessageResource::collection($messages),
         ];
 
         return $this->success($data, 'rfq details');
@@ -802,34 +804,47 @@ class SellerService extends Controller
     {
         $rfq = Rfq::find($request->rfq_id);
 
-        $user = User::find($rfq->buyer_id);
-
-        if (! $user) {
-            return $this->error(null, 'User not found', 404);
+        $buyer = User::find($rfq->buyer_id);
+        if (! $buyer) {
+            return $this->error(null, 'Buyer not found', 404);
         }
 
         if (! $rfq) {
             return $this->error(null, 'No record found for rfq', 404);
         }
 
+        $product = B2BProduct::find($rfq->product_id);
+
+        if (! $product) {
+            return $this->error(null, 'No product found', 404);
+        }
+
         $amount = ($request->preferred_unit_price * $rfq->product_quantity);
+
+        $buyer_unit_price = currencyConvert(
+            $product->shopCountry->currency ?? 'USD',
+            $request->preferred_unit_price,
+            $buyer->default_currency,
+        );
 
         $message = RfqMessage::create([
             'rfq_id' => $rfq->id,
             'seller_id' => userAuthId(),
+            'preferred_qty' => $rfq->product_quantity,
             'p_unit_price' => $request->preferred_unit_price,
             'note' => $request->note,
         ]);
 
         $rfq->update([
-            'p_unit_price' => $request->preferred_unit_price,
+            'buyer_unit_price' => $buyer_unit_price,
             'product_data->unit_price' => $request->preferred_unit_price,
-            'total_amount' => $amount,
+            'buyer_total_amount' => $buyer_unit_price * $rfq->product_quantity,
+            'seller_unit_price' => $request->preferred_unit_price,
+            'seller_total_amount' => $amount,
         ]);
+        Notification::send($buyer, new RfqMessageNotification($buyer, $message));
 
-        Notification::send($user, new RfqMessageNotification($user, $message));
-
-        return $this->success($message, 'message details');
+        return $this->success(new RfqMessageResource($message), 'message details');
     }
 
     public function markDelivered($data)
@@ -886,10 +901,15 @@ class SellerService extends Controller
         try {
             $amount = $rfq->total_amount;
 
-            $total_amount = currencyConvert(
+            $buyer_total_amount = currencyConvert(
                 $product->shopCountry->currency ?? 'USD',
                 $amount,
-                userAuth()->default_currency,
+                $buyer->default_currency,
+            );
+            $seller_total_amount = currencyConvert(
+                $product->shopCountry->currency ?? 'USD',
+                $amount,
+                $buyer->default_currency,
             );
 
             $order = B2bOrder::create([
@@ -899,7 +919,11 @@ class SellerService extends Controller
                 'product_quantity' => $rfq->product_quantity,
                 'order_no' => 'ORD-'.now()->timestamp.'-'.Str::random(8),
                 'product_data' => $product,
-                'total_amount' => $total_amount,
+                'total_amount' => $seller_total_amount,
+                'seller_unit_price' => $rfq->seller_unit_price,
+                'buyer_unit_price' => $rfq->buyer_unit_price,
+                'buyer_total_amount' => $buyer_total_amount,
+                'seller_total_amount' => $seller_total_amount,
                 'payment_method' => PaymentType::OFFLINE,
                 'payment_status' => OrderStatus::PAID,
                 'status' => OrderStatus::PENDING,
@@ -916,8 +940,8 @@ class SellerService extends Controller
                 'product_name' => $product->name,
                 'image' => $product->front_image,
                 'quantity' => $rfq->product_quantity,
-                'price' => $total_amount,
-                'buyer_name' => $buyer->first_name.' '.$buyer->last_name,
+                'price' => $buyer_total_amount,
+                'buyer_name' => "{$buyer->first_name} {$buyer->last_name}",
                 'order_number' => $order->order_no,
                 'currency' => $buyer->default_currency ?? userAuth()->default_currency,
             ];
@@ -935,7 +959,7 @@ class SellerService extends Controller
                 ['master_wallet' => 0]
             );
 
-            $wallet->increment('master_wallet', $total_amount);
+            $wallet->increment('master_wallet', $seller_total_amount);
 
             $rfq->update([
                 'payment_status' => OrderStatus::PAID,
@@ -1057,12 +1081,12 @@ class SellerService extends Controller
 
         $orderStats = B2bOrder::where([
             'seller_id' => $currentUserId,
-        ])->where('status', OrderStatus::DELIVERED)->sum('total_amount');
+        ])->where('status', OrderStatus::DELIVERED)->sum('seller_total_amount');
 
         $seven_days_orderStats = B2bOrder::where([
             'seller_id' => $currentUserId,
             'status' => OrderStatus::DELIVERED,
-        ])->where('created_at', '<=', Date::today()->subDays(7))->sum('total_amount');
+        ])->where('created_at', '<=', Date::today()->subDays(7))->sum('seller_total_amount');
 
         $rfqs = Rfq::with('buyer')->where('seller_id', $currentUserId)->get();
 
