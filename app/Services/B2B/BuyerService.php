@@ -872,7 +872,7 @@ class BuyerService
 
         $orderStats = B2bOrder::where('buyer_id', $currentUserId)
             ->where('status', OrderStatus::DELIVERED)
-            ->sum('total_amount');
+            ->sum('buyer_total_amount');
 
         $uniqueSellersCount = B2bOrder::where(['buyer_id' => $currentUserId, 'status' => OrderStatus::DELIVERED])
             ->distinct('seller_id')
@@ -933,7 +933,7 @@ class BuyerService
             });
         })->latest()->get();
 
-        return $this->success($orders, 'orders lists');
+        return $this->success(B2BOrderResource::collection($orders), 'orders lists');
     }
 
     public function orderDetails($id)
@@ -1009,7 +1009,8 @@ class BuyerService
                 'note' => $request->note,
             ]);
 
-            Notification::send($user, new RfqMessageNotification($user, $message));
+            $sender = User::select('id', 'first_name', 'last_name')->find(userAuthId());
+            Notification::send($user, new RfqMessageNotification($user, $sender, $message));
             $amount = total_amount($buyer_unit_price, $rfq->product_quantity);
 
             $rfq->update([
