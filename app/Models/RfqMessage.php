@@ -28,6 +28,6 @@ class RfqMessage extends Model
 
     public function rfq(): BelongsTo
     {
-        return $this->BelongsTo(RfqMessage::class, 'rfq_id');
+        return $this->BelongsTo(Rfq::class, 'rfq_id');
     }
 }
