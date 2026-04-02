@@ -14,14 +14,33 @@ class RfqResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $sourceCurrency = $this->product->default_currency ?? 'USD';
+        $targetCurrency = auth()->user()->default_currency;
+
         return [
             'id' => (int) $this->resource->id,
             'buyer_id' => $this->resource->buyer_id,
             'seller_id' => $this->resource->seller_id,
-            'buyer_unit_price' => $this->resource->buyer_unit_price,
-            'seller_unit_price' => $this->resource->seller_unit_price,
-            'buyer_total_amount' => $this->resource->buyer_total_amount,
-            'seller_total_amount' => $this->resource->seller_total_amount,
+            'buyer_unit_price' => currencyConvert(
+                $sourceCurrency,
+                $this->resource->buyer_unit_price,
+                $targetCurrency
+            ),
+            'seller_unit_price' => currencyConvert(
+                $sourceCurrency,
+                $this->resource->seller_unit_price,
+                $targetCurrency
+            ),
+            'buyer_total_amount' => currencyConvert(
+                $sourceCurrency,
+                $this->resource->buyer_total_amount,
+                $targetCurrency
+            ),
+            'seller_total_amount' => currencyConvert(
+                $sourceCurrency,
+                $this->resource->seller_total_amount,
+                $targetCurrency
+            ),
             'quote_no' => $this->resource->quote_no,
             'product_id' => $this->resource->product_id,
             'product_quantity' => $this->resource->product_quantity,

@@ -693,7 +693,7 @@ class SellerService extends Controller
             'total_rfqs' => $rfqs->count(),
             'rfqs' => RfqResource::collection($rfqs),
             'total_orders' => $orders_count,
-            'orders' => $orders,
+            'orders' => B2BOrderResource::collection($orders),
         ];
 
         return $this->success($data, 'orders');
@@ -804,15 +804,15 @@ class SellerService extends Controller
     {
         $rfq = Rfq::find($request->rfq_id);
 
-        $buyer = User::find($rfq->buyer_id);
-        if (! $buyer) {
-            return $this->error(null, 'Buyer not found', 404);
-        }
-
         if (! $rfq) {
             return $this->error(null, 'No record found for rfq', 404);
         }
 
+        $buyer = User::find($rfq->buyer_id);
+
+        if (! $buyer) {
+            return $this->error(null, 'Buyer not found', 404);
+        }
         $product = B2BProduct::find($rfq->product_id);
 
         if (! $product) {
@@ -842,7 +842,9 @@ class SellerService extends Controller
             'seller_unit_price' => $request->preferred_unit_price,
             'seller_total_amount' => $amount,
         ]);
-        Notification::send($buyer, new RfqMessageNotification($buyer, $message));
+
+        $sender = User::select('id', 'first_name', 'last_name')->find(userAuthId());
+        Notification::send($buyer, new RfqMessageNotification($buyer, $sender, $message));
 
         return $this->success(new RfqMessageResource($message), 'message details');
     }
@@ -1110,7 +1112,7 @@ class SellerService extends Controller
             'rejected_withdrawals' => $payouts->where('status', WithdrawalStatus::FAILED)->count(),
             'delivery_charges' => $payouts->where('status', OrderStatus::PAID)->sum('fee'),
             'life_time' => $payouts->where('status', OrderStatus::PAID)->sum('amount'),
-            'recent_orders' => $orders,
+            'recent_orders' => B2BOrderResource::collection($orders->take(5)),
         ];
 
         return $this->success($data, 'Dashboard details');
