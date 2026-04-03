@@ -11,6 +11,7 @@ class RfqMessage extends Model
         'rfq_id',
         'buyer_id',
         'seller_id',
+        'seller_unit_price',
         'p_unit_price',
         'preferred_qty',
         'note',

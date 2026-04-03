@@ -21,6 +21,7 @@ class RfqMessageResource extends JsonResource
             'id' => (int) $this->resource->id,
             'buyer_id' => $this->resource->buyer_id,
             'seller_id' => $this->resource->seller_id,
+            'seller_unit_price' => $this->resource->seller_unit_price,
             'p_unit_price' => currencyConvert(
                 $sourceCurrency,
                 $this->resource->p_unit_price,
@@ -33,10 +34,10 @@ class RfqMessageResource extends JsonResource
                 'phone' => $this->resource->seller?->phone,
             ],
             'buyer' => (object) [
-                'first_name' => $this->resource->seller?->first_name,
-                'last_name' => $this->resource->seller?->last_name,
-                'email' => $this->resource->seller?->email,
-                'phone' => $this->resource->seller?->phone,
+                'first_name' => $this->resource->buyer?->first_name,
+                'last_name' => $this->resource->buyer?->last_name,
+                'email' => $this->resource->buyer?->email,
+                'phone' => $this->resource->buyer?->phone,
             ],
             'note' => $this->resource->note,
         ];
