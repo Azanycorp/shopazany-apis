@@ -988,17 +988,6 @@ class BuyerService
         try {
 
             $user = User::find($rfq->seller_id);
-            $buyer_unit_price = currencyConvert(
-                $product->shopCountry->currency ?? 'USD',
-                $request->p_unit_price,
-                userAuth()->default_currency,
-            );
-
-            $seller_unit_price = currencyConvert(
-                userAuth()->default_currency,
-                $request->p_unit_price,
-                $product->shopCountry->currency ?? 'USD',
-            );
 
             $message = $rfq->messages()->create([
                 'rfq_id' => $request->rfq_id,
@@ -1009,16 +998,16 @@ class BuyerService
                 'note' => $request->note,
             ]);
 
-            $sender = User::select('id', 'first_name', 'last_name')->find(userAuthId());
-            Notification::send($user, new RfqMessageNotification($user, $sender, $message));
-            $amount = total_amount($buyer_unit_price, $rfq->product_quantity);
+            $sender = User::select('id', 'first_name', 'last_name', 'default_currency')->find(userAuthId());
+            $seller_unit_price = currencyConvert(
+                $sender->default_currency ?? 'USD',
+                $request->p_unit_price,
+                $user->default_currency,
+            );
+            Notification::send($user, new RfqMessageNotification($user, $sender, $message, $seller_unit_price));
 
             $rfq->update([
                 'status' => 'review',
-                'buyer_unit_price' => $buyer_unit_price,
-                'buyer_total_amount' => $amount,
-                'seller_unit_price' => $seller_unit_price,
-                'seller_total_amount' => $seller_unit_price * $rfq->product_quantity,
             ]);
 
             $this->databaseManager->commit();

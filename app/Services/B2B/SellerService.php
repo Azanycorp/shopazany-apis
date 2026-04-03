@@ -832,6 +832,7 @@ class SellerService extends Controller
             'seller_id' => userAuthId(),
             'preferred_qty' => $rfq->product_quantity,
             'p_unit_price' => $request->preferred_unit_price,
+            'seller_unit_price' => $request->preferred_unit_price,
             'note' => $request->note,
         ]);
 
@@ -844,7 +845,7 @@ class SellerService extends Controller
         ]);
 
         $sender = User::select('id', 'first_name', 'last_name')->find(userAuthId());
-        Notification::send($buyer, new RfqMessageNotification($buyer, $sender, $message));
+        Notification::send($buyer, new RfqMessageNotification($buyer, $sender, $message, $buyer_unit_price));
 
         return $this->success(new RfqMessageResource($message), 'message details');
     }
