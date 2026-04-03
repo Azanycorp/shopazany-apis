@@ -4,7 +4,7 @@ namespace App\Services\Payment;
 
 use App\Enum\PaymentType;
 use App\Enum\UserStatus;
-use App\Enum\UserType;
+use App\Enum\UserTypes;
 use App\Models\Product;
 use App\Models\SubscriptionPlan;
 use App\Models\User;
@@ -137,42 +137,21 @@ class PaymentDetailsService
 
     public static function paystackSubcriptionPayDetails($request): array
     {
-        $amount = $request->input('amount') * 100;
-
         $callbackUrl = $request->input('redirect_url');
-        if (! filter_var($callbackUrl, FILTER_VALIDATE_URL)) {
-            return ['error' => 'Invalid callback URL'];
-        }
 
         $user = User::with([
-            'referrer' => function ($query): void {
-                $query->with('wallet');
-            },
-            'userSubscriptions' => function ($query): void {
-                $query->where('status', UserStatus::ACTIVE);
-            },
+            'referrer' => fn ($q) => $q->with('wallet'),
+            'userSubscriptions' => fn ($q) => $q->where('status', UserStatus::ACTIVE),
         ])->findOrFail($request->user_id);
 
-        if (! in_array($user->type, [UserType::SELLER, UserType::B2B_SELLER, UserType::AGRIECOM_SELLER])) {
-            return ['error' => 'You are not allowed to subscribe to a plan'];
-        }
-
-        if ($user->is_subscribed) {
-            $currentUserSubscription = $user->activeSubscription();
-            $currentPlan = $currentUserSubscription->subscriptionPlan;
-            $newPlan = SubscriptionPlan::findOrFail($request->input('subscription_plan_id'));
-
-            if ($newPlan->tier < $currentPlan->tier) {
-                return ['error' => 'You cannot downgrade your subscription plan'];
-            }
-            if ($newPlan->id == $currentPlan->id) {
-                return ['error' => 'You are already subscribed to this plan'];
-            }
+        $error = self::validateSubscriptionRequest($request, $user, $callbackUrl);
+        if ($error) {
+            return ['error' => $error];
         }
 
         return [
             'email' => $request->input('email'),
-            'amount' => $amount,
+            'amount' => $request->input('amount') * 100,
             'currency' => 'NGN',
             'metadata' => json_encode([
                 'user_id' => $request->input('user_id'),
@@ -183,7 +162,6 @@ class PaymentDetailsService
             ]),
             'callback_url' => $callbackUrl,
         ];
-
     }
 
     public static function authorizeNetSubcriptionPayDetails($request): array
@@ -199,7 +177,7 @@ class PaymentDetailsService
             },
         ])->findOrFail($request->user_id);
 
-        if (! in_array($user->type, [UserType::SELLER, UserType::B2B_SELLER, UserType::AGRIECOM_SELLER])) {
+        if (! in_array($user->type, [UserTypes::SELLER->value, UserTypes::B2B_SELLER->value, UserTypes::AGRIECOM_SELLER->value])) {
             return ['error' => 'You are not allowed to subscribe to a plan'];
         }
 
@@ -226,5 +204,37 @@ class PaymentDetailsService
             'expiration_date' => $request->input('expiration_date'),
             'card_code' => $request->input('card_code'),
         ];
+    }
+
+    private static function validateSubscriptionRequest($request, User $user, string $callbackUrl): ?string
+    {
+        if (! filter_var($callbackUrl, FILTER_VALIDATE_URL)) {
+            return 'Invalid callback URL';
+        }
+
+        $allowedTypes = [
+            UserTypes::SELLER->value,
+            UserTypes::B2B_SELLER->value,
+            UserTypes::AGRIECOM_SELLER->value,
+        ];
+
+        if (! in_array($user->type, $allowedTypes)) {
+            return 'You are not allowed to subscribe to a plan';
+        }
+
+        if ($user->is_subscribed) {
+            $currentPlan = $user->activeSubscription()->subscriptionPlan;
+            $newPlan = SubscriptionPlan::findOrFail($request->input('subscription_plan_id'));
+
+            if ($newPlan->tier < $currentPlan->tier) {
+                return 'You cannot downgrade your subscription plan';
+            }
+
+            if ($newPlan->id === $currentPlan->id) {
+                return 'You are already subscribed to this plan';
+            }
+        }
+
+        return null;
     }
 }
