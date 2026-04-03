@@ -23,24 +23,16 @@ class RfqResource extends JsonResource
             'seller_id' => $this->resource->seller_id,
             'buyer_unit_price' => currencyConvert(
                 $sourceCurrency,
-                $this->resource->buyer_unit_price,
-                $targetCurrency
-            ),
-            'seller_unit_price' => currencyConvert(
-                $sourceCurrency,
                 $this->resource->seller_unit_price,
                 $targetCurrency
             ),
+            'seller_unit_price' => $this->resource->seller_unit_price,
             'buyer_total_amount' => currencyConvert(
-                $sourceCurrency,
-                $this->resource->buyer_total_amount,
-                $targetCurrency
-            ),
-            'seller_total_amount' => currencyConvert(
                 $sourceCurrency,
                 $this->resource->seller_total_amount,
                 $targetCurrency
             ),
+            'seller_total_amount' => $this->resource->seller_total_amount,
             'quote_no' => $this->resource->quote_no,
             'product_id' => $this->resource->product_id,
             'product_quantity' => $this->resource->product_quantity,
@@ -57,10 +49,10 @@ class RfqResource extends JsonResource
                 'phone' => $this->resource->seller?->phone,
             ],
             'buyer' => (object) [
-                'first_name' => $this->resource->seller?->first_name,
-                'last_name' => $this->resource->seller?->last_name,
-                'email' => $this->resource->seller?->email,
-                'phone' => $this->resource->seller?->phone,
+                'first_name' => $this->resource->buyer?->first_name,
+                'last_name' => $this->resource->buyer?->last_name,
+                'email' => $this->resource->buyer?->email,
+                'phone' => $this->resource->buyer?->phone,
             ],
         ];
     }
