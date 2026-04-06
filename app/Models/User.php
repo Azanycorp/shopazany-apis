@@ -10,6 +10,7 @@ use App\Trait\ClearsResponseCache;
 use App\Trait\UserRelationship;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -233,7 +234,7 @@ class User extends Authenticatable
     }
 
     #[Scope]
-    protected function isNotAffiliateMember(Builder $query)
+    protected function isNotAffiliateMember(EloquentBuilder $query)
     {
         return $query->where(function (Builder $q) {
             $q->where('is_affiliate_member', false)
