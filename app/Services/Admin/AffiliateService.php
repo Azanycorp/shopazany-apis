@@ -102,6 +102,7 @@ class AffiliateService
         $topAffiliates = User::where('is_affiliate_member', 1)
             ->withCount('referrals')
             ->with('wallet')
+            ->latest()
             ->paginate(25);
 
         $topAffiliates->getCollection()->transform(function ($user) {
