@@ -31,7 +31,7 @@ class SellerService
                     $subQuery->whereAny(
                         ['first_name', 'last_name', 'middlename', 'email'],
                         'LIKE',
-                        "%{$searchQuery}%"
+                        "%$searchQuery%"
                     );
                 });
             })
