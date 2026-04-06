@@ -25,12 +25,14 @@ class SellerService
 
         $users = User::with(['products', 'b2bProducts', 'bankAccount', 'wallet'])
             ->where('type', UserType::SELLER)
+            ->isNotAffiliateMember()
             ->when($searchQuery, function (Builder $queryBuilder) use ($searchQuery): void {
                 $queryBuilder->where(function (Builder $subQuery) use ($searchQuery): void {
-                    $subQuery->where('first_name', 'LIKE', '%'.$searchQuery.'%')
-                        ->orWhere('last_name', 'LIKE', '%'.$searchQuery.'%')
-                        ->orWhere('middlename', 'LIKE', '%'.$searchQuery.'%')
-                        ->orWhere('email', 'LIKE', '%'.$searchQuery.'%');
+                    $subQuery->whereAny(
+                        ['first_name', 'last_name', 'middlename', 'email'],
+                        'LIKE',
+                        "%{$searchQuery}%"
+                    );
                 });
             })
             ->when($approvedQuery !== null, function ($queryBuilder) use ($approvedQuery): void {

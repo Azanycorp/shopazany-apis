@@ -10,6 +10,7 @@ use App\Trait\ClearsResponseCache;
 use App\Trait\UserRelationship;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -227,6 +228,15 @@ class User extends Authenticatable
         }
 
         return $query;
+    }
+
+    #[Scope]
+    protected function isNotAffiliateMember(Builder $query)
+    {
+        return $query->where(function ($q) {
+            $q->where('is_affiliate_member', false)
+                ->orWhereNull('is_affiliate_member');
+        });
     }
 
     public function hasReachedProductLimit(): bool
