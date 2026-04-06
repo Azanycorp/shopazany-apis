@@ -10,12 +10,11 @@ use App\Trait\ClearsResponseCache;
 use App\Trait\UserRelationship;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Database\Eloquent\Attributes\Scope;
-use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Query\Builder;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
@@ -234,9 +233,9 @@ class User extends Authenticatable
     }
 
     #[Scope]
-    protected function isNotAffiliateMember(EloquentBuilder $query)
+    protected function isNotAffiliateMember(Builder $query): Builder
     {
-        return $query->where(function (Builder $q) {
+        return $query->where(function ($q) {
             $q->where('is_affiliate_member', false)
                 ->orWhereNull('is_affiliate_member');
         });
