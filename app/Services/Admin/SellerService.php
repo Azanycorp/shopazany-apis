@@ -38,6 +38,7 @@ class SellerService
             ->when($approvedQuery !== null, function ($queryBuilder) use ($approvedQuery): void {
                 $queryBuilder->where('is_admin_approve', $approvedQuery);
             })
+            ->latest()
             ->paginate(25);
 
         $data = SellerResource::collection($users);
