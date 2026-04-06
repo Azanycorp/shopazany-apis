@@ -101,12 +101,7 @@ class AffiliateService
     {
         $topAffiliates = User::where('is_affiliate_member', 1)
             ->withCount('referrals')
-            ->leftJoin('wallets', 'wallets.user_id', '=', 'users.id')
-            ->select([
-                'users.*',
-                'wallets.balance as wallet_balance',
-            ])
-            ->orderByDesc('wallets.balance')
+            ->with('wallet')
             ->paginate(25);
 
         $topAffiliates->getCollection()->transform(function ($user) {
@@ -114,7 +109,7 @@ class AffiliateService
                 'id' => $user->id,
                 'first_name' => $user->first_name,
                 'last_name' => $user->last_name,
-                'earnings' => $user->wallet_balance ?? 0,
+                'earnings' => $user->wallet->balance ?? 0,
                 'default_currency' => $user->default_currency,
                 'referred' => $user->referrals_count ?? 0,
                 'referrer_code' => $user->referrer_code,

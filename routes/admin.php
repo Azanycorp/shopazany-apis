@@ -258,8 +258,7 @@ Route::middleware('validate.header')
                     ->group(function (): void {
                         Route::get('/overview', 'overview')
                             ->middleware('cacheResponse:600');
-                        Route::get('/users', 'allUsers')
-                            ->middleware('cacheResponse:600');
+                        Route::get('/users', 'allUsers');
                         Route::get('/user/{id}', 'userDetail');
                         Route::patch('/suspend/{id}', 'suspend');
                         Route::post('/reset-password', 'resetPassword');
