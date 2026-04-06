@@ -11,7 +11,7 @@ use Illuminate\Validation\Rules\Password;
 
 class AdminSellerController extends Controller
 {
-    private const MESSAGE = '403 Forbidden';
+    private const string MESSAGE = '403 Forbidden';
 
     public function __construct(
         private readonly SellerService $service,

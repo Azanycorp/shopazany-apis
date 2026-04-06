@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
@@ -216,9 +217,11 @@ class User extends Authenticatable
     {
         if (filled($searchQuery)) {
             $query->where(function ($q) use ($searchQuery): void {
-                $q->where('first_name', 'LIKE', "%$searchQuery%")
-                    ->orWhere('last_name', 'LIKE', "%$searchQuery%")
-                    ->orWhere('email', 'LIKE', "%$searchQuery%");
+                $q->whereAny(
+                    ['first_name', 'last_name', 'middlename', 'email'],
+                    'LIKE',
+                    "%$searchQuery%"
+                );
             });
         }
 
@@ -227,6 +230,15 @@ class User extends Authenticatable
         }
 
         return $query;
+    }
+
+    #[Scope]
+    protected function isNotAffiliateMember(Builder $query)
+    {
+        return $query->where(function (Builder $q) {
+            $q->where('is_affiliate_member', false)
+                ->orWhereNull('is_affiliate_member');
+        });
     }
 
     public function hasReachedProductLimit(): bool
