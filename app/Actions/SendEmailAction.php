@@ -16,6 +16,6 @@ class SendEmailAction
 
     public function run(): void
     {
-        defer(fn () => send_email($this->email, $this->action));
+        defer(fn () => sendEmail($this->email, $this->action));
     }
 }
