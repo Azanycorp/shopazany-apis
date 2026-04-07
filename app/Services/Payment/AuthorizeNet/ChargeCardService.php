@@ -344,7 +344,6 @@ class ChargeCardService implements PaymentStrategy
 
                     $wallet->increment('balance', $amount);
                 }
-
             } catch (\Exception $e) {
                 (new UserLogAction(
                     $request,
@@ -439,12 +438,12 @@ class ChargeCardService implements PaymentStrategy
 
     private function sendSellerOrderEmail(User $seller, array $order, string $orderNo, float $totalAmount): void
     {
-        send_email($seller->email, new SellerOrderMail($seller, $order, $orderNo, $totalAmount));
+        sendEmail($seller->email, new SellerOrderMail($seller, $order, $orderNo, $totalAmount));
     }
 
     private function sendOrderConfirmationEmail(User $user, array $orderedItems, string $orderNo, float $totalAmount): void
     {
-        send_email($user->email, new CustomerOrderMail($user, $orderedItems, $orderNo, $totalAmount));
+        sendEmail($user->email, new CustomerOrderMail($user, $orderedItems, $orderNo, $totalAmount));
     }
 
     // B2B Payment section

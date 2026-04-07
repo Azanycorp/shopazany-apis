@@ -29,7 +29,7 @@ class CouponService
             $code = strtoupper(Str::random(8));
         } while (Coupon::where('code', $code)->exists());
 
-        $link = generate_coupon_links($request->platform, $code);
+        $link = generateCouponLinks($request->platform, $code);
 
         Coupon::create([
             'name' => 'Signup coupon',
@@ -50,7 +50,7 @@ class CouponService
                 $code = strtoupper(Str::random(8));
             } while (Coupon::where('code', $code)->exists());
 
-            $link = generate_coupon_links($request->platform, $code);
+            $link = generateCouponLinks($request->platform, $code);
 
             $coupon = Coupon::create([
                 'name' => 'Signup coupon',
