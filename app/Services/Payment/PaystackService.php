@@ -238,7 +238,7 @@ class PaystackService
                         ->orWhere('slug', 'purchase_an_item')
                         ->value('slug');
 
-                    reward_user($user, $actionSlug, 'completed');
+                    rewardUser($user, $actionSlug, 'completed');
                 }
 
                 Cart::where('user_id', $userId)->delete();
@@ -553,12 +553,12 @@ class PaystackService
 
     private static function sendSellerOrderEmail($seller, $order, string $orderNo, float $totalAmount): void
     {
-        defer(fn () => send_email($seller->email, new SellerOrderMail($seller, $order, $orderNo, $totalAmount)));
+        defer(fn () => sendEmail($seller->email, new SellerOrderMail($seller, $order, $orderNo, $totalAmount)));
     }
 
     private static function sendOrderConfirmationEmail($user, $orderedItems, string $orderNo, float $totalAmount): void
     {
-        defer(fn () => send_email($user->email, new CustomerOrderMail($user, $orderedItems, $orderNo, $totalAmount)));
+        defer(fn () => sendEmail($user->email, new CustomerOrderMail($user, $orderedItems, $orderNo, $totalAmount)));
     }
 
     private static function logTransfer(array $data, $method): void

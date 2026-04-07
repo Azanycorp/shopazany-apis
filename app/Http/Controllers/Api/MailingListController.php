@@ -22,7 +22,7 @@ class MailingListController extends Controller
             'email' => $user->email,
         ]);
 
-        reward_user($user, 'mailing_subscribe', 'completed');
+        rewardUser($user, 'mailing_subscribe', 'completed');
 
         return $this->success(null, 'Successfully subscribed to the mailing list.');
     }

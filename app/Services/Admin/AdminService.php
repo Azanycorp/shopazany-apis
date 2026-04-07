@@ -217,11 +217,11 @@ class AdminService
 
         foreach ($users as $user) {
             if (! $user->referrer_code) {
-                $user->referrer_code = generate_referral_code();
+                $user->referrer_code = generateReferralCode();
             }
 
             if (! $user->referrer_link) {
-                $user->referrer_link = generate_referrer_link($user->referrer_code);
+                $user->referrer_link = generateReferrerLink($user->referrer_code);
             }
 
             $user->save();

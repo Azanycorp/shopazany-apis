@@ -59,7 +59,7 @@ class RewardService
             $wallet->refresh();
         }
 
-        log_user_activity($user, $action, $status);
+        logUserActivity($user, $action, $status);
 
         return $action->points;
     }

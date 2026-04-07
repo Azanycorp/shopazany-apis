@@ -33,12 +33,12 @@ class UserObserver implements ShouldHandleEventsAfterCommit
                 ->orWhere('slug', 'create_an_account')
                 ->value('slug');
 
-            reward_user($user, $actionSlug, 'completed');
+            rewardUser($user, $actionSlug, 'completed');
         }
 
         if ($user->is_affiliate_member) {
-            $user->referrer_code = generate_referral_code();
-            $user->referrer_link = generate_referrer_links($user->referrer_code);
+            $user->referrer_code = generateReferralCode();
+            $user->referrer_link = generateReferrerLinks($user->referrer_code);
             $user->save();
         }
 
