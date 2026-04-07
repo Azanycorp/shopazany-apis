@@ -80,7 +80,7 @@ class SellerService extends Controller
                 'business_location' => $request->business_location,
                 'business_type' => $request->business_type,
                 'identity_type' => $request->identity_type,
-                'file' => $url['url'],
+                'file' => $url['url'] ?? 'N/A',
                 'confirm' => $request->confirm,
                 'how_to_sell' => $request->how_to_sell,
             ]);
