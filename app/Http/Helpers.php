@@ -204,8 +204,7 @@ if (! function_exists('uploadImage')) {
                 App::make(FileUploader::class)->deleteFile($banner->public_id);
             }
 
-            $upload = uploadImageFile($request->file($file), $folder);
-            $response = $upload;
+            $response = uploadImageFile($request->file($file), $folder);
         }
 
         return $response;
@@ -619,8 +618,15 @@ if (! function_exists('currencyCodeByCountryId')) {
         $currencyCode = getCurrencyCode($sortname);
 
         $supportedCurrencies = [
-            'NGN', 'GHS', 'KES', 'ZAR', 'XOF',
-            'USD', 'CAD', 'GBP', 'EUR',
+            'NGN',
+            'GHS',
+            'KES',
+            'ZAR',
+            'XOF',
+            'USD',
+            'CAD',
+            'GBP',
+            'EUR',
         ];
 
         return in_array($currencyCode, $supportedCurrencies, true)
