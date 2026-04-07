@@ -49,7 +49,7 @@ abstract class Controller
         (new UserLogAction($request, $action, $description, $response, $user))->run();
     }
 
-    protected function storeFile($file, string $folder, Request $request): array
+    protected function storeFile($file, string $folder, Request $request)
     {
         return uploadImage($request, $file, $folder);
     }
