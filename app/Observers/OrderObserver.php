@@ -20,7 +20,7 @@ class OrderObserver implements ShouldHandleEventsAfterCommit
         //     $user = User::find($order->user_id);
         //     if ($user) {
         //         Mail::to($user->email)->send(new CustomerOrderMail($user, $order));
-        //         //defer(fn() => send_email($user->email, new CustomerOrderMail($user, $order)));
+        //         //defer(fn() => sendEmail($user->email, new CustomerOrderMail($user, $order)));
         //     }
         // }
 

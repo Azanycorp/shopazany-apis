@@ -348,7 +348,7 @@ class SettingsService
             $admin->permissions()->sync($request->permissions);
             $this->databaseManager->commit();
 
-            defer(fn () => send_email($request->email, new AdminUserMail($admin, $password)));
+            defer(fn () => sendEmail($request->email, new AdminUserMail($admin, $password)));
 
             return $this->success(null, 'Created successfully', 201);
         } catch (\Throwable $th) {

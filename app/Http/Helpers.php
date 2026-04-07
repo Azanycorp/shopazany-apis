@@ -30,8 +30,8 @@ if (! function_exists('total_amount')) {
     }
 }
 
-if (! function_exists('reward_user')) {
-    function reward_user($user, $actionName, $status, $newUser = null)
+if (! function_exists('rewardUser')) {
+    function rewardUser($user, $actionName, $status, $newUser = null)
     {
         $rewardService = App::make(RewardService::class);
 
@@ -39,8 +39,8 @@ if (! function_exists('reward_user')) {
     }
 }
 
-if (! function_exists('log_user_activity')) {
-    function log_user_activity($user, $action, $status, $description = null): void
+if (! function_exists('logUserActivity')) {
+    function logUserActivity($user, $action, $status, $description = null): void
     {
         UserActivityLog::logAction($user, $action, $status, $description);
     }
@@ -332,8 +332,8 @@ if (! function_exists('generateRefCode')) {
     }
 }
 
-if (! function_exists('generate_referral_code')) {
-    function generate_referral_code(): string
+if (! function_exists('generateReferralCode')) {
+    function generateReferralCode(): string
     {
         do {
             $code = strtoupper(Str::random(10));
@@ -343,8 +343,8 @@ if (! function_exists('generate_referral_code')) {
     }
 }
 
-if (! function_exists('generate_referrer_link')) {
-    function generate_referrer_link(string $referrer_code): string
+if (! function_exists('generateReferrerLink')) {
+    function generateReferrerLink(string $referrer_code): string
     {
         if (App::environment('production')) {
             return config('services.frontend.seller_baseurl').'?referrer='.$referrer_code;
@@ -354,8 +354,8 @@ if (! function_exists('generate_referrer_link')) {
     }
 }
 
-if (! function_exists('generate_referrer_links')) {
-    function generate_referrer_links(string $referrer_code): array
+if (! function_exists('generateReferrerLinks')) {
+    function generateReferrerLinks(string $referrer_code): array
     {
         $environment = app()->environment();
 
@@ -378,13 +378,13 @@ if (! function_exists('generate_referrer_links')) {
 
         return array_map(fn ($key, $url): array => [
             'name' => $key,
-            'link' => $url.'?referrer='.$referrer_code,
+            'link' => "$url?referrer=$referrer_code",
         ], array_keys($selectedBaseUrls), $selectedBaseUrls);
     }
 }
 
-if (! function_exists('generate_coupon_links')) {
-    function generate_coupon_links(string $platform, string $code): string
+if (! function_exists('generateCouponLinks')) {
+    function generateCouponLinks(string $platform, string $code): string
     {
         $environment = app()->environment();
 
@@ -411,8 +411,8 @@ if (! function_exists('generate_coupon_links')) {
     }
 }
 
-if (! function_exists('send_email')) {
-    function send_email($email, $action): void
+if (! function_exists('sendEmail')) {
+    function sendEmail($email, $action): void
     {
         Mail::to($email)->send($action);
     }
@@ -434,17 +434,21 @@ if (! function_exists('generateRandomString')) {
 if (! function_exists('abbreviateNumber')) {
     function abbreviateNumber($number)
     {
+        $suffix = '';
+        $value = $number;
+
         if ($number >= 1000000000) {
-            return number_format($number / 1000000000, 1).'B';
-        }
-        if ($number >= 1000000) {
-            return number_format($number / 1000000, 1).'M';
-        }
-        if ($number >= 1000) {
-            return number_format($number / 1000, 1).'K';
+            $value = $number / 1000000000;
+            $suffix = 'B';
+        } elseif ($number >= 1000000) {
+            $value = $number / 1000000;
+            $suffix = 'M';
+        } elseif ($number >= 1000) {
+            $value = $number / 1000;
+            $suffix = 'K';
         }
 
-        return $number;
+        return $suffix ? number_format($value, 1).$suffix : $number;
     }
 }
 
@@ -510,11 +514,11 @@ if (! function_exists('orderNo')) {
         $timestamp = now()->timestamp;
         $randomNumber = mt_rand(100000, 999999);
 
-        $uniqueOrderNumber = 'ORD-'.$timestamp.'-'.$randomNumber;
+        $uniqueOrderNumber = "ORD-$timestamp-$randomNumber";
 
         while (Order::where('order_no', $uniqueOrderNumber)->exists()) {
             $randomNumber = mt_rand(100000, 999999);
-            $uniqueOrderNumber = 'ORD-'.$timestamp.'-'.$randomNumber;
+            $uniqueOrderNumber = "ORD-$timestamp-$randomNumber";
         }
 
         return $uniqueOrderNumber;
@@ -555,7 +559,7 @@ if (! function_exists('currencyConvertTo')) {
     {
         static $rates = [];
 
-        $to = $to ?? 'USD';
+        $to ??= 'USD';
 
         $cacheKey = "USD_to_{$to}";
         if (! isset($rates[$cacheKey])) {
@@ -582,6 +586,7 @@ if (! function_exists('generateBatchId')) {
         return 'BCH-'.date('Y').'-'.random_int(10000000, 99999999);
     }
 }
+
 if (! function_exists('generateShipmentId')) {
     function generateShipmentId(): string
     {

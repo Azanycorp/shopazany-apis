@@ -392,7 +392,7 @@ class HomeService
             ->orWhere('slug', 'write_a_product_review')
             ->value('slug');
 
-        reward_user($user, $actionSlug, 'completed');
+        rewardUser($user, $actionSlug, 'completed');
 
         return $this->success(null, 'Review added successfully');
     }

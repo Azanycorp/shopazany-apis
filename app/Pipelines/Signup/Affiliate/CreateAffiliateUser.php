@@ -51,7 +51,7 @@ class CreateAffiliateUser
             DB::transaction(function () use ($request, $user): void {
                 $referrer_code = $this->determineReferrerCode($request);
 
-                $referrer_links = generate_referrer_links($referrer_code);
+                $referrer_links = generateReferrerLinks($referrer_code);
                 $code = generateVerificationCode();
 
                 $data = $this->userTrigger($user, $request, $referrer_links, $referrer_code, $code);
