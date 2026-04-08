@@ -362,7 +362,8 @@ Route::middleware('validate.header')
                                 Route::get('/{id}', 'getOrderDetail')
                                     ->whereNumber('id');
                                 Route::patch('/update-status/{id}', 'updateOrderStatus')
-                                    ->whereNumber('id');
+                                    ->whereNumber('id')
+                                    ->middleware('ensure.user');
                             });
 
                         // Coupon
