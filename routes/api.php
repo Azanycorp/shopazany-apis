@@ -292,12 +292,13 @@ Route::middleware('validate.header')
                     ->controller(SellerController::class)
                     ->group(function (): void {
                         // Business Information
-                        Route::post('/business/information', 'businessInfo');
+                        Route::post('/business/information', 'businessInfo')
+                            ->middleware('ensure.user');
                         Route::get('/dashboard/analytic/{user_id}', 'dashboardAnalytics')->whereNumber('user_id');
 
                         // Product Routes
                         Route::prefix('product')->group(function (): void {
-                            Route::post('/create', 'createProduct');
+                            Route::post('/create', 'createProduct')->middleware('ensure.user');
 
                             Route::post('/edit/{product_id}/{user_id}', 'updateProduct')
                                 ->whereNumber('product_id')
