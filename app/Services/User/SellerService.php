@@ -47,20 +47,10 @@ class SellerService extends Controller
 
     public function businessInfo($request)
     {
-        $currentUserId = $this->authManager->id();
-
-        if ($currentUserId != $request->user_id) {
-            return $this->error(null, 'Unauthorized action.', 401);
-        }
-
         $user = User::with('userbusinessinfo')->find($request->user_id);
 
-        if (! $user) {
-            return $this->error(null, 'User not found', 404);
-        }
-
-        if ($user->userbusinessinfo) {
-            return $this->error(null, 'Business information has been submitted', 400);
+        if ($validationResponse = $this->validateBusinessInfoRequest($user)) {
+            return $validationResponse;
         }
 
         try {
@@ -87,26 +77,17 @@ class SellerService extends Controller
 
             return $this->success(null, 'Information added successfully');
         } catch (\Exception $e) {
-            return $this->error(null, $e->getMessage(), 500);
+            return $this->error(null, $e->getMessage(), 400);
         }
     }
 
     public function createProduct($request, ?string $type = null)
     {
         $currentUser = userAuth();
-
-        if ($currentUser->id != $request->user_id || ! in_array($currentUser->type, [UserType::SELLER, UserType::AGRIECOM_SELLER])) {
-            return $this->error(null, 'Unauthorized action.', 401);
-        }
-
         $user = User::with('products')->find($request->user_id);
 
-        if (! $user) {
-            return $this->error(null, 'User not found', 404);
-        }
-
-        if ($user->hasReachedProductLimit()) {
-            return $this->error(null, 'You have reached your product limit. Please upgrade your plan.', 403);
+        if ($validateRequest = $this->validateCreateProductRequest($currentUser, $user)) {
+            return $validateRequest;
         }
 
         $slug = Str::slug($request->name);
@@ -830,5 +811,33 @@ class SellerService extends Controller
         $coupon->delete();
 
         return $this->success(null, 'Coupon deleted successfully');
+    }
+
+    private function validateBusinessInfoRequest($user): ?JsonResponse
+    {
+        if (! $user) {
+            return $this->error(null, 'User not found', 404);
+        }
+
+        if ($user->userbusinessinfo) {
+            return $this->error(null, 'Business information has been submitted', 400);
+        }
+
+        return null;
+    }
+
+    private function validateCreateProductRequest($currentUser, $user): ?JsonResponse
+    {
+        $errorResponse = null;
+
+        if (! in_array($currentUser->type, [UserType::SELLER, UserType::AGRIECOM_SELLER])) {
+            $errorResponse = $this->error(null, 'Unauthorized action.', 401);
+        } elseif (! $user) {
+            $errorResponse = $this->error(null, 'User not found', 404);
+        } elseif ($user->hasReachedProductLimit()) {
+            $errorResponse = $this->error(null, 'You have reached your product limit. Please upgrade your plan.', 403);
+        }
+
+        return $errorResponse;
     }
 }
