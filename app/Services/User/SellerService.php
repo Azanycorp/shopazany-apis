@@ -372,27 +372,16 @@ class SellerService extends Controller
 
     public function updateOrderStatus($userId, $orderId, $request)
     {
-        $currentUserId = $this->authManager->id();
-
-        if ($currentUserId != $userId) {
-            return $this->error(null, 'Unauthorized action.', 401);
-        }
-
         $order = Order::withRelationShips()->find($orderId);
 
-        if (! $order) {
-            return $this->error(null, 'Order not found', 404);
+        if ($validate = $this->validateUpdateOrderStatus($request, $order)) {
+            return $validate;
         }
 
-        if (! in_array($request->status, OrderStatus::all(), true)) {
-            return $this->error(null, 'Invalid status', 400);
-        }
-
-        /** @var Product[]|\Illuminate\Database\Eloquent\Collection $sellerProducts */
         /** @var Product[]|\Illuminate\Database\Eloquent\Collection $sellerProducts */
         $sellerProducts = $order->products()
-            ->whereHas('user', function (Builder $query) use ($currentUserId): void {
-                $query->where('user_id', $currentUserId);
+            ->whereHas('user', function (Builder $query) use ($userId): void {
+                $query->where('user_id', $userId);
             })->get();
 
         if ($sellerProducts->isEmpty()) {
@@ -687,17 +676,13 @@ class SellerService extends Controller
     {
         $user = User::with('productAttributes')->find($userId);
 
-        if (! $user) {
-            return $this->error(null, 'User not found', 404);
+        $result = $this->findUserAttribute($user, $attributeId);
+
+        if ($result instanceof JsonResponse) {
+            return $result;
         }
 
-        $attribute = $user->productAttributes()
-            ->where('id', $attributeId)
-            ->first();
-
-        if (! $attribute) {
-            return $this->error(null, 'Attribute not found', 404);
-        }
+        $attribute = $result;
 
         if ($request->name !== $attribute->name) {
             $duplicate = $user->productAttributes()
@@ -839,5 +824,35 @@ class SellerService extends Controller
         }
 
         return $errorResponse;
+    }
+
+    private function validateUpdateOrderStatus($request, $order): ?JsonResponse
+    {
+        if (! $order) {
+            return $this->error(null, 'Order not found', 404);
+        }
+
+        if (! in_array($request->status, OrderStatus::all(), true)) {
+            return $this->error(null, 'Invalid status', 400);
+        }
+
+        return null;
+    }
+
+    private function findUserAttribute($user, $attributeId)
+    {
+        if (! $user) {
+            return $this->error(null, 'User not found', 404);
+        }
+
+        $attribute = $user->productAttributes()
+            ->where('id', $attributeId)
+            ->first();
+
+        if (! $attribute) {
+            return $this->error(null, 'Attribute not found', 404);
+        }
+
+        return $attribute;
     }
 }
