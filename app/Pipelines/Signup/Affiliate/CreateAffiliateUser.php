@@ -4,12 +4,13 @@ namespace App\Pipelines\Signup\Affiliate;
 
 use App\Enum\MailingEnum;
 use App\Enum\UserLog;
-use App\Enum\UserType;
+use App\Enum\UserTypes;
 use App\Mail\SignUpVerifyMail;
 use App\Models\Action;
 use App\Models\User;
 use App\Trait\HttpResponse;
 use Illuminate\Hashing\BcryptHasher;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
@@ -28,29 +29,14 @@ class CreateAffiliateUser
 
         try {
             $user = User::where('email', $request->email)->first();
-            $response = $this->handleExistingUser($user);
 
-            if ($response) {
-                return $response;
-            }
-
-            if ($request->referrer_code) {
-                $referrer = User::where('referrer_code', $request->referrer_code)->first();
-
-                if ($referrer && (! $referrer->email_verified_at || $referrer->is_verified != 1)) {
-                    $description = "User with referral code and email {$referrer->email} has not been verified";
-                    $action = UserLog::CREATED;
-                    $response = $this->error(null, 'User with referral code has not been verified', 400);
-
-                    logUserAction($request, $action, $description, $response, $user);
-
-                    return $response;
-                }
+            $guardResponse = $this->getGuardResponse($user, $request);
+            if ($guardResponse) {
+                return $guardResponse;
             }
 
             DB::transaction(function () use ($request, $user): void {
                 $referrer_code = $this->determineReferrerCode($request);
-
                 $referrer_links = generateReferrerLinks($referrer_code);
                 $code = generateVerificationCode();
 
@@ -73,12 +59,37 @@ class CreateAffiliateUser
         }
     }
 
-    private function determineReferrerCode($request)
+    private function getGuardResponse($user, $request): mixed
+    {
+        $existingUserResponse = $this->handleExistingUser($user);
+        if ($existingUserResponse) {
+            return $existingUserResponse;
+        }
+
+        if ($request->referrer_code) {
+            $referrer = User::where('referrer_code', $request->referrer_code)->first();
+
+            if ($referrer && (! $referrer->email_verified_at || $referrer->is_verified != 1)) {
+                $description = "User with referral code and email {$referrer->email} has not been verified";
+                $response = $this->error(null, 'User with referral code has not been verified', 400);
+
+                logUserAction($request, UserLog::CREATED, $description, $response, $user);
+
+                return $response;
+            }
+        }
+
+        return null;
+    }
+
+    private function determineReferrerCode($request): string
     {
         $initial_referrer_code = Str::random(10);
+
         if (! $request->referrer_code) {
             return $initial_referrer_code;
         }
+
         if (User::where('referrer_code', $request->referrer_code)->exists()) {
             return $this->generateUniqueReferrerCode();
         }
@@ -86,10 +97,10 @@ class CreateAffiliateUser
         return $request->referrer_code;
     }
 
-    private function handleExistingUser($user)
+    private function handleExistingUser($user): ?JsonResponse
     {
-        if ($user) {
-            return $this->getUserReferrer($user);
+        if ($user && filled($user->referrer_code)) {
+            return $this->error(null, 'Account has been created', 403);
         }
 
         return null;
@@ -111,7 +122,7 @@ class CreateAffiliateUser
         $referrer->save();
     }
 
-    private function userTrigger($user, $request, array $referrer_links, $referrer_code, string $code)
+    private function userTrigger($user, $request, array $referrer_links, $referrer_code, string $code): User
     {
         $currencyCode = currencyCodeByCountryId($request->country_id);
 
@@ -124,7 +135,7 @@ class CreateAffiliateUser
                 'country' => $request->country_id,
                 'state_id' => $request->state_id,
                 'default_currency' => $currencyCode,
-                'type' => UserType::SELLER,
+                'type' => UserTypes::AFFILIATE->value,
                 'referrer_code' => $referrer_code,
                 'referrer_link' => $referrer_links,
                 'is_verified' => 1,
@@ -138,7 +149,7 @@ class CreateAffiliateUser
 
             logUserAction($request, $action, $description, $response, $user);
 
-            if (is_null($emailVerified)) {
+            if (blank($emailVerified)) {
                 $user->update(['email_verified_at' => null, 'verification_code' => $code]);
 
                 $type = MailingEnum::SIGN_UP_OTP;
@@ -157,7 +168,7 @@ class CreateAffiliateUser
             'first_name' => $request->first_name,
             'last_name' => $request->last_name,
             'email' => $request->email,
-            'type' => UserType::SELLER,
+            'type' => UserTypes::AFFILIATE->value,
             'default_currency' => $currencyCode,
             'email_verified_at' => null,
             'verification_code' => $code,
@@ -176,16 +187,7 @@ class CreateAffiliateUser
         return $user;
     }
 
-    private function getUserReferrer($user)
-    {
-        if ($user->referrer_code !== null) {
-            return $this->error(null, 'Account has been created', 403);
-        }
-
-        return null;
-    }
-
-    private function generateUniqueReferrerCode()
+    private function generateUniqueReferrerCode(): string
     {
         do {
             $referrer_code = Str::random(10);
