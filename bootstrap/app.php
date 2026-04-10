@@ -13,6 +13,7 @@ use App\Http\Middleware\BuyerAuthMiddleware;
 use App\Http\Middleware\CheckUserCountry;
 use App\Http\Middleware\CheckWalletBalance;
 use App\Http\Middleware\EnsureUserIsOwner;
+use App\Http\Middleware\LogApiRequests;
 use App\Http\Middleware\SellerAuthMiddleware;
 use App\Http\Middleware\SuperAdminCheck;
 use App\Http\Middleware\TransactionReplayShield;
@@ -42,6 +43,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->appendToGroup('auth-gates', [
             AuthGates::class,
         ]);
+        $middleware->appendToGroup('api', LogApiRequests::class);
 
         $middleware->alias([
             'check.wallet' => CheckWalletBalance::class,
@@ -86,5 +88,4 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(function ($request) {
             return $request->is('api/*') || $request->expectsJson();
         });
-
     })->create();
