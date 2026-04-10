@@ -51,7 +51,7 @@ class CreateAffiliateUser
         } catch (\Exception $e) {
             $description = 'User creation failed';
             $action = UserLog::FAILED;
-            $response = $this->error(null, $e->getMessage(), 500);
+            $response = $this->error(null, $e->getMessage(), 400);
 
             logUserAction($request, $action, $description, $response, $user);
 
