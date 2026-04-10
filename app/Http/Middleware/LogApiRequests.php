@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\Response;
 class LogApiRequests
 {
     // Headers you don't want stored (sensitive data)
-    protected array $excludedHeaders = ['authorization', 'cookie', 'set-cookie', 'X-SHPAZY-AUTH'];
+    protected array $excludedHeaders = ['authorization', 'cookie', 'set-cookie', 'x-shpazy-auth'];
 
     // Request fields to mask
     protected array $sensitiveFields = ['password', 'password_confirmation', 'token', 'secret'];
