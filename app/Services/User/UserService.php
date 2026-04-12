@@ -210,7 +210,6 @@ class UserService extends Controller
             ]);
 
             return $this->success(null, 'Added successfully');
-
         } catch (\Exception $e) {
             return $this->error(null, $e->getMessage(), 500);
         }
@@ -483,22 +482,19 @@ class UserService extends Controller
         $perPage = $request->query('per_page', 25);
         $page = $request->query('page', 1);
 
-        $withdrawalQuery = WithdrawalRequest::where('user_id', $userId);
+        $withdrawalQuery = WithdrawalRequest::where('user_id', $userId)
+            ->when($status, fn ($q) => $q->where('status', $status))
+            ->latest()
+            ->get();
 
-        if ($status) {
-            $withdrawalQuery->where('status', $status);
-        }
-
-        $withdrawals = $withdrawalQuery->get()->map(function ($withdrawal): array {
-            return [
-                'id' => $withdrawal->id,
-                'transaction_id' => $withdrawal->reference,
-                'type' => 'withdrawal',
-                'date' => $withdrawal->created_at->format('Y-m-d'),
-                'amount' => $withdrawal->amount,
-                'status' => $withdrawal->status,
-            ];
-        });
+        $withdrawals = $withdrawalQuery->map(fn ($withdrawal) => [
+            'id' => $withdrawal->id,
+            'transaction_id' => $withdrawal->reference,
+            'type' => 'withdrawal',
+            'date' => $withdrawal->created_at->format('Y-m-d'),
+            'amount' => $withdrawal->amount,
+            'status' => $withdrawal->status,
+        ]);
 
         $total = $withdrawals->count();
         $paginatedData = $withdrawals->sortByDesc('date')->values()->slice(($page - 1) * $perPage, $perPage)->values();
