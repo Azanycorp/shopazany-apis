@@ -94,6 +94,8 @@ class User extends Authenticatable
         'biometric_token',
         'hear_about_us',
         'fcm_token',
+        'code',
+        'expires_at',
     ];
 
     protected $hidden = [
@@ -111,6 +113,7 @@ class User extends Authenticatable
             'two_factor_enabled' => 'boolean',
             'biometric_enabled' => 'boolean',
             'service_type' => 'array',
+            'expires_at' => 'datetime',
         ];
     }
 

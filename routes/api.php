@@ -40,6 +40,13 @@ Route::middleware('validate.header')
                         ->middleware('throttle:6,1');
                     Route::post('/affiliate/signup', 'affiliateSignup')
                         ->middleware('throttle:6,1');
+
+                    Route::prefix('mobile')
+                        ->group(function () {
+                            Route::post('/forgot/password', 'mobileForget')
+                                ->middleware('throttle:6,1');
+                            Route::post('/reset/password', 'mobileReset');
+                        });
                 });
 
             Route::get('/country', [ApiController::class, 'country']);
