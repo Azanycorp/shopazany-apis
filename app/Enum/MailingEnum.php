@@ -13,6 +13,8 @@ enum MailingEnum: string
 
     const RESEND_CODE = 'resend_code';
 
+    const RESET_OTP = 'reset_otp';
+
     const EMAIL_VERIFICATION = 'email_verification';
 
     const ACCOUNT_VERIFICATION = 'account_verification';

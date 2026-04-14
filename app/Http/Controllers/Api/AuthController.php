@@ -91,4 +91,24 @@ class AuthController extends Controller
     {
         return $this->authService->sellerSignup($request);
     }
+
+    public function mobileForget(Request $request)
+    {
+        $request->validate([
+            'email' => ['required', 'email', 'email:rfc:dns'],
+        ]);
+
+        return $this->authService->mobileForget($request);
+    }
+
+    public function mobileReset(Request $request)
+    {
+        $request->validate([
+            'code' => ['required', 'string', 'max:10'],
+            'email' => ['required', 'email'],
+            'password' => ['required', 'confirmed', 'min:8'],
+        ]);
+
+        return $this->authService->mobileReset($request);
+    }
 }
