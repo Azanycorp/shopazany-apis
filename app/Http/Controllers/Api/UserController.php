@@ -26,6 +26,10 @@ class UserController extends Controller
 
     public function updateProfile(Request $request, $userId)
     {
+        $request->validate([
+            'order_prefix' => ['nullable', 'string', 'unique:user_business_information,order_prefix'],
+        ]);
+
         return $this->service->updateProfile($request, $userId);
     }
 
