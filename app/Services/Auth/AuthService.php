@@ -313,4 +313,62 @@ class AuthService extends Controller
 
         return $response;
     }
+
+    public function mobileForget($request)
+    {
+        $user = User::where('email', $request->email)->first();
+
+        if (! $user) {
+            return $this->error('error', 'User not found', 404);
+        }
+
+        $code = generateVerificationCode();
+
+        $user->update([
+            'code' => $code,
+            'expires_at' => now()->addMinutes(10),
+        ]);
+
+        $type = MailingEnum::RESET_OTP;
+        $subject = 'Reset OTP';
+        $mailClass = LoginVerifyMail::class;
+        $data = [
+            'user' => $user,
+        ];
+        mailSend($type, $user, $subject, $mailClass, $data);
+
+        $description = "User with email address {$request->email} requested for password change";
+        $action = UserLog::PASSWORD_FORGOT;
+        $response = $this->success(null, 'Request successfully');
+
+        logUserAction($request, $action, $description, $response, $user);
+
+        return $this->success(null, 'Code sent successfully');
+    }
+
+    public function mobileReset($request)
+    {
+        $user = User::where('email', $request->email)
+            ->where('code', $request->code)
+            ->whereFuture('expires_at')
+            ->first();
+
+        if (! $user) {
+            return $this->error(null, 'Invalid code!', 400);
+        }
+
+        $user->update([
+            'password' => bcrypt($request->pasword),
+            'code' => null,
+            'expires_at' => null,
+        ]);
+
+        $description = "User with email address {$request->email} changed password successfully";
+        $action = UserLog::PASSWORD_RESET;
+        $response = $this->success(null, 'Reset successfully');
+
+        logUserAction($request, $action, $description, $response, $user);
+
+        return $this->success(null, 'Updated successfully');
+    }
 }
