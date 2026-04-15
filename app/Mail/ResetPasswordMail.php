@@ -17,7 +17,7 @@ class ResetPasswordMail extends Mailable
     /**
      * Create a new message instance.
      */
-    public function __construct(private User $user, private string $code) {}
+    public function __construct(private User $user) {}
 
     /**
      * Get the message envelope.
@@ -38,7 +38,6 @@ class ResetPasswordMail extends Mailable
             markdown: 'mail.reset-password-mail',
             with: [
                 'user' => $this->user,
-                'code' => $this->code,
             ]
         );
     }

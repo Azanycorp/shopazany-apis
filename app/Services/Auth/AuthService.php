@@ -10,6 +10,7 @@ use App\Enum\UserLog;
 use App\Enum\UserStatus;
 use App\Http\Controllers\Controller;
 use App\Mail\LoginVerifyMail;
+use App\Mail\ResetPasswordMail;
 use App\Mail\SignUpVerifyMail;
 use App\Models\User;
 use App\Pipelines\Signup\Affiliate\CreateAffiliateUser;
@@ -331,7 +332,7 @@ class AuthService extends Controller
 
         $type = MailingEnum::RESET_OTP;
         $subject = 'Reset OTP';
-        $mailClass = LoginVerifyMail::class;
+        $mailClass = ResetPasswordMail::class;
         $data = [
             'user' => $user,
         ];
