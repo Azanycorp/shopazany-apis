@@ -34,7 +34,6 @@ class PostCurl
             }
 
             return $result['data'];
-
         } catch (Exception $e) {
             throw new Exception('HTTP error: '.$e->getMessage());
         }
