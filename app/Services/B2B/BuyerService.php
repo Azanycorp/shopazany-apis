@@ -276,9 +276,11 @@ class BuyerService
         return $this->success(SocialLinkResource::collection($links), 'Social links');
     }
 
-    public function promoBanners()
+    public function promoBanners($request)
     {
-        $banners = Banner::where('type', BannerType::B2B)->latest()->get();
+        $type = $request->query('type', BannerType::B2B);
+
+        $banners = Banner::where('type', $type)->latest()->get();
 
         return $this->success(B2BBannerResource::collection($banners), 'Banners');
     }
@@ -581,8 +583,7 @@ class BuyerService
     public function categoryBySlug($request, string $slug)
     {
         $sort = $request->query('sort');
-
-        $type = $request->query('type');
+        $type = $request->query('type', BannerType::B2B);
 
         $category = B2bProductCategory::with([
             'subcategory',
@@ -610,6 +611,7 @@ class BuyerService
             ->where([
                 'featured' => 1,
                 'slug' => $slug,
+                'type' => $type,
             ])
             ->firstOrFail();
 
