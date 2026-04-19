@@ -76,9 +76,9 @@ class B2BBuyerController extends Controller
     }
 
     // Rfq
-    public function getAllRfqs()
+    public function getAllRfqs(Request $request)
     {
-        return $this->buyerService->allRfqs();
+        return $this->buyerService->allRfqs($request);
     }
 
     public function getRfqDetails($id)

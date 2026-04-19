@@ -26,14 +26,18 @@ class CategoryRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:100'],
             'image' => ['nullable', 'image', 'mimes:png,jpg,jpeg'],
-            'type' => ['required', 'string', 'in:'.BannerType::B2C.','.BannerType::B2B.','.BannerType::AGRIECOM_B2C],
+            'type' => [
+                'required',
+                'string',
+                'in:'.BannerType::B2C.','.BannerType::B2B.','.BannerType::AGRIECOM_B2C.','.BannerType::AGRIECOM_B2B,
+            ],
         ];
     }
 
     public function messages(): array
     {
         return [
-            'type.in' => 'The type must be one of: '.BannerType::B2C.','.BannerType::B2B.','.BannerType::AGRIECOM_B2C,
+            'type.in' => 'The type must be one of: '.BannerType::B2C.','.BannerType::B2B.','.BannerType::AGRIECOM_B2C.','.BannerType::AGRIECOM_B2B,
         ];
     }
 }

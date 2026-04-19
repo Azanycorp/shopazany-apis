@@ -276,9 +276,11 @@ class BuyerService
         return $this->success(SocialLinkResource::collection($links), 'Social links');
     }
 
-    public function promoBanners()
+    public function promoBanners($request)
     {
-        $banners = Banner::where('type', BannerType::B2B)->latest()->get();
+        $type = $request->query('type', BannerType::B2B);
+
+        $banners = Banner::where('type', $type)->latest()->get();
 
         return $this->success(B2BBannerResource::collection($banners), 'Banners');
     }
@@ -581,8 +583,7 @@ class BuyerService
     public function categoryBySlug($request, string $slug)
     {
         $sort = $request->query('sort');
-
-        $type = $request->query('type');
+        $type = $request->query('type', BannerType::B2B);
 
         $category = B2bProductCategory::with([
             'subcategory',
@@ -610,6 +611,7 @@ class BuyerService
             ->where([
                 'featured' => 1,
                 'slug' => $slug,
+                'type' => $type,
             ])
             ->firstOrFail();
 
@@ -758,6 +760,14 @@ class BuyerService
         $quote = B2bQuote::findOrFail($request->rfq_id);
 
         $type = $request->query('type');
+
+        if (blank($type)) {
+            return $this->error(null, 'Type is required', 422);
+        }
+
+        if (! in_array($type, ['b2b', 'b2b_agriecom'])) {
+            return $this->error(null, 'Type should either be b2b or b2b_agriecom', 422);
+        }
 
         try {
             $product = B2BProduct::findOrFail($quote->product_id);
@@ -911,11 +921,22 @@ class BuyerService
         return $this->success($data, 'Dashboard details');
     }
 
-    public function allRfqs()
+    public function allRfqs($request)
     {
         $userId = userAuthId();
+        $type = $request->query('type');
 
-        $rfqs = Rfq::with(['seller', 'buyer'])->where('buyer_id', $userId)
+        if (blank($type)) {
+            return $this->error(null, 'Type is required', 422);
+        }
+
+        if (! in_array($type, ['b2b', 'b2b_agriecom'])) {
+            return $this->error(null, 'Type should either be b2b or b2b_agriecom', 422);
+        }
+
+        $rfqs = Rfq::with(['seller', 'buyer'])
+            ->where('buyer_id', $userId)
+            ->where('type', $type)
             ->latest()
             ->get();
 
@@ -948,7 +969,10 @@ class BuyerService
 
     public function rfqDetails($id)
     {
-        $rfq = Rfq::with(['seller', 'messages', 'buyer'])->where('buyer_id', userAuthId())->where('id', $id)->firstOrFail();
+        $rfq = Rfq::with(['seller', 'messages', 'buyer'])
+            ->where('buyer_id', userAuthId())
+            ->where('id', $id)
+            ->firstOrFail();
 
         $messages = RfqMessage::with(['seller', 'buyer'])->where('rfq_id', $rfq->id)->get();
         $data = [

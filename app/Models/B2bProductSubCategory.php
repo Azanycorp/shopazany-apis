@@ -17,6 +17,7 @@ class B2bProductSubCategory extends Model
         'image',
         'slug',
         'status',
+        'type',
     ];
 
     /**
