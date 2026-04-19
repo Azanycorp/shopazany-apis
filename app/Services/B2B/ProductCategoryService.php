@@ -89,7 +89,6 @@ class ProductCategoryService
             ->when($type, fn ($q) => $q->where('type', $type))
             ->where(function (Builder $query) use ($search) {
                 $query->where('name', 'LIKE', '%'.$search.'%');
-
             })
             ->get();
 
@@ -115,6 +114,7 @@ class ProductCategoryService
                 'slug' => Str::slug($request->name),
                 'image' => $url['url'] ?? null,
                 'category_id' => $request->category_id,
+                'type' => $request->type,
             ]);
 
             return $this->success(null, 'Created successfully', 201);
@@ -123,10 +123,15 @@ class ProductCategoryService
         }
     }
 
-    public function getSubcategory($id)
+    public function getSubcategory($request, $id)
     {
+        $type = strtolower($request->query('type'));
+        $search = $request->query('search');
+
         $subcats = B2bProductSubCategory::with(['products', 'category'])
             ->where('category_id', $id)
+            ->where('type', $type)
+            ->when(filled($search), fn ($q) => $q->where('name', 'like', '%'.$search.'%'))
             ->get();
 
         $data = B2BSubCategoryResource::collection($subcats);
@@ -180,8 +185,10 @@ class ProductCategoryService
     public function getAdminSubcategory($request)
     {
         $search = $request->query('search');
+        $type = strtolower($request->query('type'));
 
         $subcats = B2bProductSubCategory::with(['products', 'category'])
+            ->where('type', $type)
             ->withCount('products')
             ->when($search, function ($query, string $search): void {
                 $query->where('name', 'like', '%'.$search.'%');
