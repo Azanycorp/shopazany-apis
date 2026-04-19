@@ -12,7 +12,7 @@ use Illuminate\Http\Response;
 
 class ProductCategoryController extends Controller
 {
-    public const MESSAGE = '403 Forbidden';
+    public const string MESSAGE = '403 Forbidden';
 
     public function __construct(
         private readonly ProductCategoryService $service,
@@ -57,9 +57,13 @@ class ProductCategoryController extends Controller
         return $this->service->createSubCategory($request);
     }
 
-    public function getSubcategory(int $id)
+    public function getSubcategory(Request $request, int $id)
     {
-        return $this->service->getSubcategory($id);
+        $request->validate([
+            'type' => ['required', 'in:b2b,b2b_agriecom'],
+        ]);
+
+        return $this->service->getSubcategory($request, $id);
     }
 
     public function featuredStatus(Request $request, int $id)
@@ -77,6 +81,10 @@ class ProductCategoryController extends Controller
     public function getAdminSubcategory(Request $request)
     {
         abort_if($this->gate->denies('sub_category'), Response::HTTP_FORBIDDEN, self::MESSAGE);
+
+        $request->validate([
+            'type' => ['required', 'in:b2b,b2b_agriecom'],
+        ]);
 
         return $this->service->getAdminSubcategory($request);
     }

@@ -30,6 +30,7 @@ class B2BSubCategoryResource extends JsonResource
                 'inactive' => $this->resource->products()->where('status', ProductStatus::PENDING)->count(),
             ],
             'category_image' => (string) $this->resource->category?->image,
+            'type' => $this->resource->type,
         ];
     }
 }
