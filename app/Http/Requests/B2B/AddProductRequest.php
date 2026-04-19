@@ -26,7 +26,7 @@ class AddProductRequest extends FormRequest
             'user_id' => ['required', 'integer', 'exists:users,id'],
             'name' => ['required', 'string', 'max:200', 'regex:/^[a-zA-Z0-9\s\-]+$/'],
             'category_id' => ['required', 'integer', 'exists:b2b_product_categories,id'],
-            'sub_category_id' => ['nullable', 'integer', 'exists:b2b_product_categories,id'],
+            'sub_category_id' => ['nullable', 'integer', 'exists:b2b_product_sub_categories,id'],
             'keywords' => ['required', 'array', 'min:1', 'max:10'],
             'keywords.*' => ['required', 'string', 'max:50'],
             'description' => ['required', 'string', 'max:500'],
