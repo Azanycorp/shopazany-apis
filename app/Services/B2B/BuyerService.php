@@ -765,8 +765,8 @@ class BuyerService
             return $this->error(null, 'Type is required', 422);
         }
 
-        if (! in_array($type, ['b2b', 'b2b_agriecom'])) {
-            return $this->error(null, 'Type should either be b2b or b2b_agriecom', 422);
+        if (! in_array($type, ['b2b', 'agriecom_b2b'])) {
+            return $this->error(null, 'Type should either be b2b or agriecom_b2b', 422);
         }
 
         try {
@@ -930,8 +930,8 @@ class BuyerService
             return $this->error(null, 'Type is required', 422);
         }
 
-        if (! in_array($type, ['b2b', 'b2b_agriecom'])) {
-            return $this->error(null, 'Type should either be b2b or b2b_agriecom', 422);
+        if (! in_array($type, ['b2b', 'agriecom_b2b'])) {
+            return $this->error(null, 'Type should either be b2b or agriecom_b2b', 422);
         }
 
         $rfqs = Rfq::with(['seller', 'buyer'])

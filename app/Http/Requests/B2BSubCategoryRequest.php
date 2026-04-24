@@ -26,7 +26,7 @@ class B2BSubCategoryRequest extends FormRequest
         return [
             'category_id' => ['required', 'integer', 'exists:b2b_product_categories,id'],
             'name' => ['required', 'string', 'max:100'],
-            'type' => ['required', 'string', Rule::in(['b2b', 'b2b_agriecom'])],
+            'type' => ['required', 'string', Rule::in(['b2b', 'agriecom_b2b'])],
         ];
     }
 }

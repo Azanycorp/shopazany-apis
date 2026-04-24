@@ -60,7 +60,7 @@ class ProductCategoryController extends Controller
     public function getSubcategory(Request $request, int $id)
     {
         $request->validate([
-            'type' => ['required', 'in:b2b,b2b_agriecom'],
+            'type' => ['required', 'in:b2b,agriecom_b2b'],
         ]);
 
         return $this->service->getSubcategory($request, $id);
@@ -83,7 +83,7 @@ class ProductCategoryController extends Controller
         abort_if($this->gate->denies('sub_category'), Response::HTTP_FORBIDDEN, self::MESSAGE);
 
         $request->validate([
-            'type' => ['required', 'in:b2b,b2b_agriecom'],
+            'type' => ['required', 'in:b2b,agriecom_b2b'],
         ]);
 
         return $this->service->getAdminSubcategory($request);

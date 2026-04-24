@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class B2BAuthorizeNetCardRequest extends FormRequest
 {
@@ -38,6 +39,7 @@ class B2BAuthorizeNetCardRequest extends FormRequest
             'billTo.state' => ['required', 'string'],
             'billTo.country' => ['required', 'string'],
             'customer.email' => ['required', 'email'],
+            'type' => ['required', 'string', Rule::in(['b2b', 'agriecom_b2b'])],
         ];
     }
 }
