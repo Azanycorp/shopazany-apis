@@ -3,6 +3,7 @@
 namespace App\Services\Payment;
 
 use App\Enum\PaymentType;
+use App\Enum\Type;
 use App\Http\Resources\PaymentVerifyResource;
 use App\Models\Bank;
 use App\Models\PaymentService as ModelPaymentService;
@@ -126,11 +127,13 @@ class PaymentService
 
     public function authorizeNetCard($request)
     {
-        if ($request->type == 'b2b') {
-            return $this->chargeCardService->processB2BPayment($request->all());
+        $data = $request->all();
+
+        if (\in_array($request->type, [Type::B2B->value, Type::AGRIECOM_B2B->value])) {
+            return $this->chargeCardService->processB2BPayment($data);
         }
 
-        return $this->chargeCardService->processPayment($request->all());
+        return $this->chargeCardService->processPayment($data);
     }
 
     public function getPaymentMethod($countryId)
