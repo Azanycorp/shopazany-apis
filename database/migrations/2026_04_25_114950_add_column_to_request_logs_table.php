@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('request_logs', function (Blueprint $table) {
-            $table->longText('user_agent')->change();
+            $table->longText('user_agent')->change()->nullable();
         });
     }
 };
