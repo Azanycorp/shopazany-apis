@@ -238,7 +238,7 @@ class User extends Authenticatable
     #[Scope]
     protected function isNotAffiliateMember(Builder $query): Builder
     {
-        return $query->where(function (\Illuminate\Contracts\Database\Query\Builder $q) {
+        return $query->where(function ($q) {
             $q->where('is_affiliate_member', false)
                 ->orWhereNull('is_affiliate_member');
         });
