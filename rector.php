@@ -10,6 +10,7 @@ use RectorLaravel\Rector\Empty_\EmptyToBlankAndFilledFuncRector;
 use RectorLaravel\Rector\FuncCall\ArgumentFuncCallToMethodCallRector;
 use RectorLaravel\Rector\FuncCall\HelperFuncCallToFacadeClassRector;
 use RectorLaravel\Rector\FuncCall\RemoveDumpDataDeadCodeRector;
+use RectorLaravel\Rector\MethodCall\EloquentWhereTypeHintClosureParameterRector;
 use RectorLaravel\Rector\MethodCall\ResponseHelperCallToJsonResponseRector;
 use RectorLaravel\Set\LaravelLevelSetList;
 use RectorLaravel\Set\LaravelSetList;
@@ -36,12 +37,15 @@ return RectorConfig::configure()
         LaravelSetList::LARAVEL_TESTING,
     ])
     ->withConfiguredRule(RemoveDumpDataDeadCodeRector::class, [
-        'dd', 'dump', 'var_dump',
+        'dd',
+        'dump',
+        'var_dump',
     ])
     ->withSkip([
         HelperFuncCallToFacadeClassRector::class,
         StaticCallToMethodCallRector::class,
         ArgumentFuncCallToMethodCallRector::class,
         AddGenericReturnTypeToRelationsRector::class,
+        EloquentWhereTypeHintClosureParameterRector::class,
     ])
     ->withPhpVersion(PhpVersion::PHP_84);
