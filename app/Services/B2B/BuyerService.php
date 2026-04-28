@@ -449,7 +449,7 @@ class BuyerService
         $type = $request->input('type');
 
         $bestSellingProducts = B2bOrder::with([
-            'product:id,name,front_image,unit_price,slug,default_currency,type',
+            'product:id,name,front_image,unit_price,slug,default_currency,type,availability_quantity,minimum_order_quantity',
             'product.b2bProductReview:id,product_id,rating',
             'b2bProductReview',
         ])
