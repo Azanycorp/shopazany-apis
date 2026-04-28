@@ -48,6 +48,7 @@ class B2BCategoryResource extends JsonResource
                             'price' => (string) $product?->unit_price,
                             'description' => (string) $product?->description,
                             'default_currency' => (string) $product?->default_currency,
+                            'availability_quantity' => (string) $product?->availability_quantity,
                             'keywords' => $product?->keywords,
                             'moq' => (string) $product?->minimum_order_quantity,
                             'status' => (string) $product?->status,
