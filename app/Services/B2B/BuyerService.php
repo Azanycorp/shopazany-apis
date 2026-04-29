@@ -1012,22 +1012,24 @@ class BuyerService
         try {
 
             $user = User::find($rfq->seller_id);
+            $sender = User::select('id', 'first_name', 'last_name', 'default_currency')->find(userAuthId());
+
+            $seller_unit_price = currencyConvert(
+                $sender->default_currency ?? 'USD',
+                $request->p_unit_price,
+                $user->default_currency,
+            );
 
             $message = $rfq->messages()->create([
                 'rfq_id' => $request->rfq_id,
                 'buyer_id' => userAuthId(),
                 'seller_id' => $user->id,
                 'p_unit_price' => $request->p_unit_price,
+                'seller_unit_price' => $seller_unit_price,
                 'preferred_qty' => $rfq->product_quantity,
                 'note' => $request->note,
             ]);
 
-            $sender = User::select('id', 'first_name', 'last_name', 'default_currency')->find(userAuthId());
-            $seller_unit_price = currencyConvert(
-                $sender->default_currency ?? 'USD',
-                $request->p_unit_price,
-                $user->default_currency,
-            );
             Notification::send($user, new RfqMessageNotification($user, $sender, $message, $seller_unit_price));
 
             $rfq->update([
