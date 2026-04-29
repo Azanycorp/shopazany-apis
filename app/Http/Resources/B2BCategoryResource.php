@@ -30,6 +30,7 @@ class B2BCategoryResource extends JsonResource
                     'description' => (string) $product?->description,
                     'default_currency' => (string) $product?->default_currency,
                     'keywords' => $product?->keywords,
+                    'availability_quantity' => (string) $product?->availability_quantity,
                     'moq' => (string) $product?->minimum_order_quantity,
                     'status' => (string) $product?->status,
                     'rating' => (int) $product?->b2bProductReview?->avg('rating'),
