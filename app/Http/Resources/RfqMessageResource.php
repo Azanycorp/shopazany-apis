@@ -14,7 +14,7 @@ class RfqMessageResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $sourceCurrency = $this->seller->default_currency ?? 'USD';
+        $sourceCurrency = $this->resource->seller->default_currency ?? 'USD';
         $targetCurrency = auth()->user()->default_currency;
 
         return [
