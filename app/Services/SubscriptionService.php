@@ -46,6 +46,9 @@ class SubscriptionService
                 new AuthorizeNetSubscriptionPaymentProcessor,
                 PaymentDetailsService::authorizeNetSubcriptionPayDetails($request),
             ],
+            default => throw new \InvalidArgumentException(
+                "Unsupported type: {$request->type}"
+            ),
         };
 
         $paymentService = new HandlePaymentService($processor);
