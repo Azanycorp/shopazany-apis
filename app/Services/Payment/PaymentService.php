@@ -42,6 +42,9 @@ class PaymentService
                 new B2BPaystackPaymentProcessor,
                 PaymentDetailsService::b2bPaystackPayDetails($request),
             ],
+            default => throw new \InvalidArgumentException(
+                "Unsupported payment method: {$request->payment_method}"
+            ),
         };
 
         if (isset($details['status']) && $details['status'] === false) {
@@ -103,7 +106,7 @@ class PaymentService
 
         $transfers = data_get($payload, 'data.transfers', []);
 
-        if (blank($transfers)) {
+        if (blank($transfers) || ! is_array($transfers)) {
             Log::warning('No transfers found in approval payload:', $payload);
 
             return $this->responseFactory->json(['message' => 'Invalid transfer request'], 400);
