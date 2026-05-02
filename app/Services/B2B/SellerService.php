@@ -831,7 +831,7 @@ class SellerService extends Controller
             'rfq_id' => $rfq->id,
             'seller_id' => userAuthId(),
             'preferred_qty' => $rfq->product_quantity,
-            'p_unit_price' => $request->preferred_unit_price,
+            'p_unit_price' => $buyer_unit_price,
             'seller_unit_price' => $request->preferred_unit_price,
             'note' => $request->note,
         ]);
