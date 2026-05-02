@@ -37,25 +37,27 @@ class SubscriptionService
 
     public function subscriptionPayment($request)
     {
-        $paymentProcessor = match ($request->type) {
-            PaymentType::PAYSTACK => new PaystackPaymentProcessor,
-            PaymentType::AUTHORIZE => new AuthorizeNetSubscriptionPaymentProcessor,
-            default => throw new \Exception('Unsupported payment method'),
+        [$processor, $details] = match ($request->type) {
+            PaymentType::PAYSTACK => [
+                new PaystackPaymentProcessor,
+                PaymentDetailsService::paystackSubcriptionPayDetails($request),
+            ],
+            PaymentType::B2B_PAYSTACK => [
+                new AuthorizeNetSubscriptionPaymentProcessor,
+                PaymentDetailsService::authorizeNetSubcriptionPayDetails($request),
+            ],
+            default => throw new \InvalidArgumentException(
+                "Unsupported type: {$request->type}"
+            ),
         };
 
-        $paymentService = new HandlePaymentService($paymentProcessor);
+        $paymentService = new HandlePaymentService($processor);
 
-        $paymentDetails = match ($request->type) {
-            PaymentType::PAYSTACK => PaymentDetailsService::paystackSubcriptionPayDetails($request),
-            PaymentType::AUTHORIZE => PaymentDetailsService::authorizeNetSubcriptionPayDetails($request),
-            default => throw new \Exception('Unsupported payment method'),
-        };
-
-        if (isset($paymentDetails['error'])) {
-            return $this->error(null, $paymentDetails['error'], 400);
+        if (isset($details['error'])) {
+            return $this->error(null, $details['error'], 400);
         }
 
-        return $paymentService->process($paymentDetails);
+        return $paymentService->process($details);
     }
 
     public function subscriptionHistory($userId)
