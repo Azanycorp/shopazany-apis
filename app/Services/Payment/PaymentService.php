@@ -33,25 +33,24 @@ class PaymentService
 
     public function processPayment($request)
     {
-        $paymentProcessor = match ($request->payment_method) {
-            PaymentType::PAYSTACK => new PaystackPaymentProcessor,
-            PaymentType::B2B_PAYSTACK => new B2BPaystackPaymentProcessor,
-            default => throw new \Exception('Unsupported payment method'),
+        [$processor, $details] = match ($request->payment_method) {
+            PaymentType::PAYSTACK => [
+                new PaystackPaymentProcessor,
+                PaymentDetailsService::paystackPayDetails($request),
+            ],
+            PaymentType::B2B_PAYSTACK => [
+                new B2BPaystackPaymentProcessor,
+                PaymentDetailsService::b2bPaystackPayDetails($request),
+            ],
         };
 
-        $paymentService = new HandlePaymentService($paymentProcessor);
-
-        $paymentDetails = match ($request->payment_method) {
-            PaymentType::PAYSTACK => PaymentDetailsService::paystackPayDetails($request),
-            PaymentType::B2B_PAYSTACK => PaymentDetailsService::b2bPaystackPayDetails($request),
-            default => throw new \Exception('Unsupported payment method'),
-        };
-
-        if (isset($paymentDetails['status']) && $paymentDetails['status'] === false) {
-            return $this->error(null, $paymentDetails['message'], 400);
+        if (isset($details['status']) && $details['status'] === false) {
+            return $this->error(null, $details['message'], 400);
         }
 
-        $response = $paymentService->process($paymentDetails);
+        $paymentService = new HandlePaymentService($processor);
+
+        $response = $paymentService->process($details);
 
         if (isset($response['status']) && $response['status'] === false) {
             return $this->error(null, $response['message'], 400);

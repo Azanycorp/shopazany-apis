@@ -74,7 +74,6 @@ class User extends Authenticatable
         'income_type',
         'image',
         'public_id',
-        'is_affiliate_member',
         'status',
         'type',
         'last_user_type',
