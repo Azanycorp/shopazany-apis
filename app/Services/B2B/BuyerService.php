@@ -701,9 +701,7 @@ class BuyerService
 
         try {
             foreach ($quotes as $quote) {
-                $productData = is_array($quote->product_data)
-                    ? $quote->product_data
-                    : json_decode($quote->product_data, true);
+                $productData = $quote->product_data ?? [];
 
                 if (! $productData || blank($productData['unit_price'] ?? null)) {
                     continue;
@@ -780,9 +778,7 @@ class BuyerService
                 return $this->error(null, 'The requested quantity exceeds available stock.', 422);
             }
 
-            $productData = is_array($quote->product_data)
-                ? $quote->product_data
-                : json_decode($quote->product_data, true);
+            $productData = $quote->product_data ?? [];
 
             $unit_price = $productData['unit_price'];
 

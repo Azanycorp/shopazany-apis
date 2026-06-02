@@ -207,7 +207,7 @@ class B2BAdminService
             }
 
             if (! $user->referrer_link) {
-                $user->referrer_link = generateReferrerLink($user->referrer_code);
+                $user->referrer_link = generateReferrerLinks($user->referrer_code);
             }
 
             $user->save();
