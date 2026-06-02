@@ -1313,12 +1313,14 @@ class BuyerService
 
         $company->update([
             'business_name' => $request->business_name ?? $company->business_name,
+            'tax_id' => $request->tax_id ?? $company->tax_id,
             'business_phone' => $request->business_phone ?? $company->business_phone,
             'company_size' => $request->company_size ?? $company->company_size,
             'website' => $request->website ?? $company->website,
             'average_spend' => $request->average_spend ?? $company->average_spend,
             'service_type' => $request->service_type ?? $company->service_type,
             'country_id' => $request->country_id ?? $company->country_id,
+            'address' => $request->address ?? $company->address,
             'logo' => $request->hasFile('image') ? $logo_url['url'] : $company->logo,
         ]);
 
