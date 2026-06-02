@@ -7,29 +7,19 @@ use App\Models\User;
 use App\Notifications\WithdrawalNotification;
 use App\Services\PayoutService;
 use App\Trait\Transfer;
+use Illuminate\Console\Attributes\Description;
+use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Database\DatabaseManager;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Sleep;
 
+#[Description('Payout system for withdrawal requests')]
+#[Signature('withdraw-request:process')]
 class WithdrawRequestPayout extends Command
 {
     use Transfer;
-
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
-    protected $signature = 'withdraw-request:process';
-
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'Payout system for withdrawal requests';
 
     /**
      * Create a new console command instance.

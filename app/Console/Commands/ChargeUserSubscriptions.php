@@ -10,27 +10,17 @@ use App\Models\User;
 use App\Models\UserSubcription;
 use App\Services\Curl\ChargeUserService;
 use App\Services\SubscriptionService;
+use Illuminate\Console\Attributes\Description;
+use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Database\DatabaseManager;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Log;
 
+#[Description('Charge users for subscriptions that have expired or are due for renewal.')]
+#[Signature('usersubscriptions:charge')]
 class ChargeUserSubscriptions extends Command
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
-    protected $signature = 'usersubscriptions:charge';
-
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'Charge users for subscriptions that have expired or are due for renewal.';
-
     /**
      * Create a new console command instance.
      */

@@ -4,24 +4,14 @@ namespace App\Console\Commands;
 
 use App\Enum\ProductStatus;
 use App\Models\Product;
+use Illuminate\Console\Attributes\Description;
+use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 
+#[Description('Updates all products with negative stock quantity to zero.')]
+#[Signature('products:fix-negative-stock')]
 class FixNegativeStock extends Command
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
-    protected $signature = 'products:fix-negative-stock';
-
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'Updates all products with negative stock quantity to zero.';
-
     /**
      * Execute the console command.
      */
