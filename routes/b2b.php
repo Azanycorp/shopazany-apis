@@ -161,18 +161,18 @@ Route::middleware('validate.header')
                     Route::get('order-details/{id}', 'getOrderDetails');
 
                     // profile
-                    Route::get('/profile', 'profile')->middleware('cacheResponse:300');
+                    Route::get('/profile', 'profile');
                     Route::post('/edit-account', 'editAccount');
                     Route::patch('/change-password', 'changePassword');
                     Route::post('/change-2fa', 'change2Fa');
-                    Route::get('/company-info', 'companyInfo')->middleware('cacheResponse:300');
+                    Route::get('/company-info', 'companyInfo');
                     Route::post('/edit-company', 'editCompany');
 
                     // Shipping address
                     Route::prefix('shipping-address')->group(function (): void {
                         Route::get('/', 'allShippingAddress');
                         Route::post('/add', 'addShippingAddress');
-                        Route::get('/details/{id}', 'getShippingAddress')->middleware('cacheResponse:300');
+                        Route::get('/details/{id}', 'getShippingAddress');
                         Route::post('/update/{id}', 'updateShippingAddress');
                         Route::post('/make-default/{id}', 'setDefaultAddress');
                         Route::delete('/delete/{id}', 'deleteShippingAddress');
