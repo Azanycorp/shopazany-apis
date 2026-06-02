@@ -390,7 +390,7 @@ class CustomerService
                 'status' => $log->status,
                 'date' => $log->created_at,
             ];
-        })->toArray();
+        })->all();
 
         $rewardOrders = $this->getCustomers();
         if (is_object($rewardOrders) && method_exists($rewardOrders, 'toArray')) {
