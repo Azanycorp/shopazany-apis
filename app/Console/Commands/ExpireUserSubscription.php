@@ -4,25 +4,15 @@ namespace App\Console\Commands;
 
 use App\Enum\SubscriptionType;
 use App\Models\UserSubcription;
+use Illuminate\Console\Attributes\Description;
+use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Date;
 
+#[Description('Expire user subscriptions that are past 30 days of their end date.')]
+#[Signature('usersubscriptions:expire')]
 class ExpireUserSubscription extends Command
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
-    protected $signature = 'usersubscriptions:expire';
-
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'Expire user subscriptions that are past 30 days of their end date.';
-
     /**
      * Execute the console command.
      */

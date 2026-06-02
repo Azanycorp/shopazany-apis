@@ -4,24 +4,14 @@ namespace App\Console\Commands;
 
 use App\Enum\Coupon as EnumCoupon;
 use App\Models\Coupon;
+use Illuminate\Console\Attributes\Description;
+use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 
+#[Description('Deactivate expired coupons')]
+#[Signature('coupon:expire')]
 class CouponExpire extends Command
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
-    protected $signature = 'coupon:expire';
-
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'Deactivate expired coupons';
-
     /**
      * Execute the console command.
      */
