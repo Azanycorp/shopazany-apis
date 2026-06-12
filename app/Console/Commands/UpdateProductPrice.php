@@ -5,24 +5,14 @@ namespace App\Console\Commands;
 use App\Enum\ProductStatus;
 use App\Models\Currency;
 use App\Models\Product;
+use Illuminate\Console\Attributes\Description;
+use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 
+#[Description('Update product price based on rate')]
+#[Signature('app:update-product-price')]
 class UpdateProductPrice extends Command
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
-    protected $signature = 'app:update-product-price';
-
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'Update product price based on rate';
-
     /**
      * Execute the console command.
      */

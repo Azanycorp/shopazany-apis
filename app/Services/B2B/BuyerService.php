@@ -701,9 +701,7 @@ class BuyerService
 
         try {
             foreach ($quotes as $quote) {
-                $productData = is_array($quote->product_data)
-                    ? $quote->product_data
-                    : json_decode($quote->product_data, true);
+                $productData = $quote->product_data ?? [];
 
                 if (! $productData || blank($productData['unit_price'] ?? null)) {
                     continue;
@@ -780,9 +778,7 @@ class BuyerService
                 return $this->error(null, 'The requested quantity exceeds available stock.', 422);
             }
 
-            $productData = is_array($quote->product_data)
-                ? $quote->product_data
-                : json_decode($quote->product_data, true);
+            $productData = $quote->product_data ?? [];
 
             $unit_price = $productData['unit_price'];
 
@@ -1313,12 +1309,14 @@ class BuyerService
 
         $company->update([
             'business_name' => $request->business_name ?? $company->business_name,
+            'tax_id' => $request->tax_id ?? $company->tax_id,
             'business_phone' => $request->business_phone ?? $company->business_phone,
             'company_size' => $request->company_size ?? $company->company_size,
             'website' => $request->website ?? $company->website,
             'average_spend' => $request->average_spend ?? $company->average_spend,
             'service_type' => $request->service_type ?? $company->service_type,
             'country_id' => $request->country_id ?? $company->country_id,
+            'address' => $request->address ?? $company->address,
             'logo' => $request->hasFile('image') ? $logo_url['url'] : $company->logo,
         ]);
 

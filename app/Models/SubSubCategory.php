@@ -7,6 +7,15 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 
+/**
+ * @property-read SubCategory|null $subCategory
+ *
+ * @method static Builder<static>|SubSubCategory newModelQuery()
+ * @method static Builder<static>|SubSubCategory newQuery()
+ * @method static Builder<static>|SubSubCategory query()
+ *
+ * @mixin \Eloquent
+ */
 class SubSubCategory extends Model
 {
     use HasFactory;

@@ -69,7 +69,7 @@ class HomeService
                 fn ($q) => $q->where('products.type', $type),
                 fn ($q) => $q->where('products.type', '!=', 'agriecom')
             )
-            ->orderBy('total_orders', 'DESC')
+            ->orderBy('total_orders', 'desc')
             ->take(10);
 
         $products = $query->get();

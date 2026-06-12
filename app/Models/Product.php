@@ -4,74 +4,157 @@ namespace App\Models;
 
 use App\Models\Pivots\OrderItemPivot;
 use App\Trait\ClearsResponseCache;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\Pivot;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 /**
- * @property-read OrderItemPivot $pivot
- * @property-read int $pivot_id
- * @property-read int $pivot_product_id
- * @property-read int $pivot_variation_id
- * @property-read int $pivot_product_quantity
- * @property-read float $pivot_price
- * @property-read float $pivot_sub_total
- * @property-read string $pivot_status
- * @property int $country_id
- * @property string|null $currency
- * @property float $average_rating
- * @property-read ShopCountry|null $shopCountry
  * @property int $id
+ * @property int|null $user_id
+ * @property int|null $admin_id
  * @property string $name
- * @property string $image
- * @property string $public_id
- * @property float $discounted_price
- * @property-read ProductVariation|null $productVariations
+ * @property string $slug
+ * @property string $description
+ * @property int $category_id
+ * @property int|null $sub_category_id
+ * @property int|null $brand_id
+ * @property int|null $color_id
+ * @property int|null $unit_id
+ * @property int|null $size_id
+ * @property string|null $product_sku
+ * @property string $product_price
+ * @property string|null $discount_price
+ * @property string $price
+ * @property string|null $discount_type
+ * @property string|null $discount_value
+ * @property string|null $usd_price
+ * @property string $default_currency
+ * @property int $current_stock_quantity
+ * @property int $minimum_order_quantity
+ * @property string|null $image
+ * @property string|null $public_id
+ * @property string|null $added_by
+ * @property int|null $country_id
+ * @property bool $is_featured
+ * @property string $status
+ * @property OrderItemPivot|null $pivot
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property string|null $type
+ * @property string|null $condition
+ * @property string|null $currency
+ * @property float|null $average_rating
+ * @property-read Admin|null $admin
+ * @property-read Brand|null $brand
+ * @property-read Collection<int, Cart> $carts
+ * @property-read int|null $carts_count
  * @property-read Category|null $category
+ * @property-read Color|null $color
+ * @property-read Country|null $country
+ * @property-read mixed $discounted_price
+ * @property-read mixed $is_in_wishlist
+ * @property-read Collection<int, Order> $orders
+ * @property-read int|null $orders_count
+ * @property-read Collection<int, ProductReview> $productReviews
+ * @property-read int|null $product_reviews_count
+ * @property-read Collection<int, ProductVariation> $productVariations
+ * @property-read int|null $product_variations_count
+ * @property-read Collection<int, ProductImage> $productimages
+ * @property-read int|null $productimages_count
+ * @property-read ShopCountry|null $shopCountry
+ * @property-read Size|null $size
+ * @property-read SubCategory|null $subCategory
+ * @property-read Unit|null $unit
+ * @property-read User|null $user
+ * @property-read Collection<int, Wishlist> $wishlists
+ * @property-read int|null $wishlists_count
+ *
+ * @method static \Database\Factories\ProductFactory factory($count = null, $state = [])
+ * @method static Builder<static>|Product mostFavorite()
+ * @method static Builder<static>|Product newModelQuery()
+ * @method static Builder<static>|Product newQuery()
+ * @method static Builder<static>|Product query()
+ * @method static Builder<static>|Product topRated()
+ * @method static Builder<static>|Product whereAddedBy($value)
+ * @method static Builder<static>|Product whereAdminId($value)
+ * @method static Builder<static>|Product whereBrandId($value)
+ * @method static Builder<static>|Product whereCategoryId($value)
+ * @method static Builder<static>|Product whereColorId($value)
+ * @method static Builder<static>|Product whereCondition($value)
+ * @method static Builder<static>|Product whereCountryId($value)
+ * @method static Builder<static>|Product whereCreatedAt($value)
+ * @method static Builder<static>|Product whereCurrentStockQuantity($value)
+ * @method static Builder<static>|Product whereDefaultCurrency($value)
+ * @method static Builder<static>|Product whereDescription($value)
+ * @method static Builder<static>|Product whereDiscountPrice($value)
+ * @method static Builder<static>|Product whereDiscountType($value)
+ * @method static Builder<static>|Product whereDiscountValue($value)
+ * @method static Builder<static>|Product whereId($value)
+ * @method static Builder<static>|Product whereImage($value)
+ * @method static Builder<static>|Product whereIsFeatured($value)
+ * @method static Builder<static>|Product whereMinimumOrderQuantity($value)
+ * @method static Builder<static>|Product whereName($value)
+ * @method static Builder<static>|Product wherePrice($value)
+ * @method static Builder<static>|Product whereProductPrice($value)
+ * @method static Builder<static>|Product whereProductSku($value)
+ * @method static Builder<static>|Product wherePublicId($value)
+ * @method static Builder<static>|Product whereSizeId($value)
+ * @method static Builder<static>|Product whereSlug($value)
+ * @method static Builder<static>|Product whereStatus($value)
+ * @method static Builder<static>|Product whereSubCategoryId($value)
+ * @method static Builder<static>|Product whereType($value)
+ * @method static Builder<static>|Product whereUnitId($value)
+ * @method static Builder<static>|Product whereUpdatedAt($value)
+ * @method static Builder<static>|Product whereUsdPrice($value)
+ * @method static Builder<static>|Product whereUserId($value)
+ *
+ * @mixin \Eloquent
  */
+#[Fillable([
+    'user_id',
+    'admin_id',
+    'name',
+    'slug',
+    'description',
+    'category_id',
+    'sub_category_id',
+    'brand_id',
+    'color_id',
+    'unit_id',
+    'size_id',
+    'product_sku',
+    'product_price',
+    'discount_price',
+    'price',
+    'discount_type',
+    'discount_value',
+    'usd_price',
+    'default_currency',
+    'current_stock_quantity',
+    'minimum_order_quantity',
+    'image',
+    'public_id',
+    'added_by',
+    'country_id',
+    'is_featured',
+    'status',
+    'type',
+    'condition',
+])]
 class Product extends Model
 {
     use ClearsResponseCache, HasFactory;
-
-    protected $fillable = [
-        'user_id',
-        'admin_id',
-        'name',
-        'slug',
-        'description',
-        'category_id',
-        'sub_category_id',
-        'brand_id',
-        'color_id',
-        'unit_id',
-        'size_id',
-        'product_sku',
-        'product_price',
-        'discount_price',
-        'price',
-        'discount_type',
-        'discount_value',
-        'usd_price',
-        'default_currency',
-        'current_stock_quantity',
-        'minimum_order_quantity',
-        'image',
-        'public_id',
-        'added_by',
-        'country_id',
-        'is_featured',
-        'status',
-        'type',
-        'condition',
-    ];
 
     protected static function booted()
     {

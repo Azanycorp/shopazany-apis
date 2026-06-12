@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enum\OrderType;
 use App\Models\Pivots\OrderItemPivot;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -13,35 +14,74 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\Pivot;
+use Illuminate\Support\Carbon;
 
 /**
+ * @property int $id
+ * @property int $user_id
+ * @property int|null $payment_id
+ * @property string $order_no
+ * @property array<array-key, mixed> $shipping_address
+ * @property string $order_date
+ * @property string $total_amount
+ * @property string $payment_method
+ * @property string|null $payment_status
+ * @property string $status
+ * @property int $country_id
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property string $type
+ * @property-read Collection<int, OrderActivity> $orderActivities
+ * @property-read int|null $order_activities_count
+ * @property-read Collection<int, Payment> $payments
+ * @property-read int|null $payments_count
+ * @property-read Product|null $product
+ * @property-read OrderItemPivot|null $pivot
  * @property-read Collection<int, Product> $products
- * @property-read int $id
- * @property-read Pivot $pivot
- * @property-read int $pivot_variation_id
- * @property-read int $pivot_product_quantity
- * @property-read float $pivot_price
- * @property-read float $pivot_sub_total
- * @property-read string $pivot_status
+ * @property-read int|null $products_count
+ * @property-read User|null $seller
+ * @property-read ShopCountry|null $shopCountry
+ * @property-read User|null $user
+ *
+ * @method static \Database\Factories\OrderFactory factory($count = null, $state = [])
+ * @method static Builder<static>|Order filterByType(bool $isAgriEcom)
+ * @method static Builder<static>|Order newModelQuery()
+ * @method static Builder<static>|Order newQuery()
+ * @method static Builder<static>|Order query()
+ * @method static Builder<static>|Order whereCountryId($value)
+ * @method static Builder<static>|Order whereCreatedAt($value)
+ * @method static Builder<static>|Order whereId($value)
+ * @method static Builder<static>|Order whereOrderDate($value)
+ * @method static Builder<static>|Order whereOrderNo($value)
+ * @method static Builder<static>|Order wherePaymentId($value)
+ * @method static Builder<static>|Order wherePaymentMethod($value)
+ * @method static Builder<static>|Order wherePaymentStatus($value)
+ * @method static Builder<static>|Order whereShippingAddress($value)
+ * @method static Builder<static>|Order whereStatus($value)
+ * @method static Builder<static>|Order whereTotalAmount($value)
+ * @method static Builder<static>|Order whereType($value)
+ * @method static Builder<static>|Order whereUpdatedAt($value)
+ * @method static Builder<static>|Order whereUserId($value)
+ *
+ * @mixin \Eloquent
  */
+#[Fillable([
+    'user_id',
+    'payment_id',
+    'product_quantity',
+    'order_no',
+    'shipping_address',
+    'order_date',
+    'total_amount',
+    'payment_method',
+    'payment_status',
+    'status',
+    'country_id',
+    'type',
+])]
 class Order extends Model
 {
     use HasFactory;
-
-    protected $fillable = [
-        'user_id',
-        'payment_id',
-        'product_quantity',
-        'order_no',
-        'shipping_address',
-        'order_date',
-        'total_amount',
-        'payment_method',
-        'payment_status',
-        'status',
-        'country_id',
-        'type',
-    ];
 
     protected function casts(): array
     {

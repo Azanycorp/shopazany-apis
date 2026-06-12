@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware('validate.header')
     ->group(function (): void {
-        Route::middleware(['throttle:apis', 'doNotCacheResponse'])->group(function (): void {
+        Route::middleware(['throttle:apis'])->group(function (): void {
             Route::prefix('connect')
                 ->controller(AuthController::class)
                 ->group(function (): void {
@@ -77,8 +77,7 @@ Route::middleware('validate.header')
 
         Route::get('/user/seller/template', [SellerController::class, 'getTemplate']);
         Route::get('/b2b/seller/template', [B2BSellerController::class, 'getTemplate']);
-        Route::get('/shop/country', [ApiController::class, 'getShopByCountry'])
-            ->middleware('cacheResponse:86400');
+        Route::get('/shop/country', [ApiController::class, 'getShopByCountry']);
         Route::get('/shop-by/country/{shop_country_id}', [ApiController::class, 'userShopByCountry'])
             ->whereNumber('shop_country_id');
 
