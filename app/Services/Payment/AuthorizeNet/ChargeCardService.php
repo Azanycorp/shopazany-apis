@@ -26,20 +26,14 @@ use App\Models\User;
 use App\Models\UserShippingAddress;
 use App\Models\UserWallet;
 use App\Models\Wallet;
+use App\Services\Auth\Auth as ServicesAuth;
+use App\Services\Auth\RequestOptions;
 use App\Trait\HttpResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
-use net\authorize\api\constants\ANetEnvironment;
-use net\authorize\api\contract\v1 as AnetAPI;
-use net\authorize\api\contract\v1\CreateTransactionRequest;
-use net\authorize\api\contract\v1\CustomerAddressType;
-use net\authorize\api\contract\v1\CustomerDataType;
-use net\authorize\api\contract\v1\MerchantAuthenticationType;
-use net\authorize\api\contract\v1\OrderType;
-use net\authorize\api\contract\v1\TransactionRequestType;
-use net\authorize\api\controller\CreateTransactionController;
 
 class ChargeCardService implements PaymentStrategy
 {
@@ -47,7 +41,7 @@ class ChargeCardService implements PaymentStrategy
 
     protected string $orderNo;
 
-    public function __construct()
+    public function __construct(protected ServicesAuth $servicesAuth)
     {
         $this->orderNo = 'ORD-'.now()->timestamp.'-'.Str::random(8);
 
@@ -56,11 +50,10 @@ class ChargeCardService implements PaymentStrategy
         }
     }
 
-    public function processPayment(array $paymentDetails)
+    public function processPayment(array $paymentDetails): JsonResponse|array
     {
         $user = Auth::user();
         $orderNo = $this->orderNo;
-        $orderNum = Str::random(8);
         $requestClass = resolve(Request::class);
         $items = $paymentDetails['lineItems'];
         $productIds = (new Collection($items))->pluck('itemId')->toArray();
@@ -69,155 +62,71 @@ class ChargeCardService implements PaymentStrategy
             return $validateQuantity;
         }
 
-        $merchantAuthentication = $this->getMerchantAuthentication();
-        $payment = $this->getPayment($paymentDetails);
-        $order = $this->getOrder($orderNum);
-        $customerAddress = $this->getCustomerAddress($paymentDetails);
-        $customerData = $this->getCustomerData($paymentDetails, $user);
+        $url = config('services.payment_service.url').'/authorize/initialize';
+        $result = $this->servicesAuth->post($url, new RequestOptions(
+            data: [
+                'data' => $this->buildChargePayload($paymentDetails, $user, $orderNo, $items),
+            ]
+        ));
 
-        $transactionRequestType = $this->getTransactionRequestType($paymentDetails, $order, $payment, $customerAddress, $customerData);
-
-        $this->addLineItems($transactionRequestType, $paymentDetails);
-
-        $request = $this->createTransactionRequest($merchantAuthentication, $transactionRequestType);
-
-        $controller = new CreateTransactionController($request);
-
-        $response = $this->executeTransaction($controller);
-
-        return $this->handleResponse($response, $user, $paymentDetails, $orderNo, $payment, $requestClass);
+        return $this->handleResponse($result, $user, $paymentDetails, $orderNo, $requestClass);
     }
 
-    private function getMerchantAuthentication(): MerchantAuthenticationType
+    /**
+     * @param  array<string, mixed>  $paymentDetails
+     * @param  array<string, mixed>  $items
+     * @return array<string, mixed>
+     */
+    private function buildChargePayload(array $paymentDetails, User $user, string $orderNo, array $items): array
     {
-        $merchantAuthentication = new MerchantAuthenticationType;
-        $merchantAuthentication->setName(config('services.authorizenet.api_login_id'));
-        $merchantAuthentication->setTransactionKey(config('services.authorizenet.transaction_key'));
-
-        return $merchantAuthentication;
-    }
-
-    private function getPayment(array $paymentDetails): AnetAPI\PaymentType
-    {
-        $creditCard = new AnetAPI\CreditCardType;
-        $creditCard->setCardNumber($paymentDetails['payment']['creditCard']['cardNumber']);
-        $creditCard->setExpirationDate($paymentDetails['payment']['creditCard']['expirationDate']);
-        $creditCard->setCardCode($paymentDetails['payment']['creditCard']['cardCode']);
-
-        $payment = new AnetAPI\PaymentType;
-        $payment->setCreditCard($creditCard);
-
-        return $payment;
-    }
-
-    private function getOrder($orderNo): OrderType
-    {
-        $order = new OrderType;
-        $order->setInvoiceNumber($orderNo);
-        $order->setDescription('Purchase of various items');
-
-        return $order;
-    }
-
-    private function getCustomerAddress(array $paymentDetails): CustomerAddressType
-    {
-        $customerAddress = new CustomerAddressType;
-        $customerAddress->setFirstName($paymentDetails['billTo']['firstName']);
-        $customerAddress->setLastName($paymentDetails['billTo']['lastName']);
-        $customerAddress->setCompany($paymentDetails['billTo']['company']);
-        $customerAddress->setAddress($paymentDetails['billTo']['address']);
-        $customerAddress->setCity($paymentDetails['billTo']['city']);
-        $customerAddress->setState($paymentDetails['billTo']['state']);
-        $customerAddress->setZip($paymentDetails['billTo']['zip']);
-        $customerAddress->setCountry($paymentDetails['billTo']['country']);
-
-        return $customerAddress;
-    }
-
-    private function getCustomerData(array $paymentDetails, $user): CustomerDataType
-    {
-        $customerData = new CustomerDataType;
-        $customerData->setType('individual');
-        $customerData->setId($user->id);
-        $customerData->setEmail($paymentDetails['customer']['email']);
-
-        return $customerData;
-    }
-
-    private function getTransactionRequestType(array $paymentDetails, OrderType $order, AnetAPI\PaymentType $payment, CustomerAddressType $customerAddress, CustomerDataType $customerData): TransactionRequestType
-    {
-        $transactionRequestType = new TransactionRequestType;
-        $transactionRequestType->setTransactionType('authCaptureTransaction');
-        $transactionRequestType->setAmount($paymentDetails['amount']);
-        $transactionRequestType->setOrder($order);
-        $transactionRequestType->setPayment($payment);
-        $transactionRequestType->setBillTo($customerAddress);
-        $transactionRequestType->setCustomer($customerData);
-
-        return $transactionRequestType;
-    }
-
-    private function addLineItems(TransactionRequestType $transactionRequestType, array $paymentDetails): void
-    {
-        if (isset($paymentDetails['lineItems']) && is_array($paymentDetails['lineItems'])) {
-            foreach ($paymentDetails['lineItems'] as $item) {
-                $lineItem = new AnetAPI\LineItemType;
-                $lineItem->setItemId($item['itemId']);
-                $lineItem->setName($item['name']);
-                $lineItem->setDescription($item['description']);
-                $lineItem->setQuantity($item['quantity']);
-                $lineItem->setUnitPrice($item['unitPrice']);
-
-                $transactionRequestType->addToLineItems($lineItem);
-            }
-        }
-    }
-
-    private function createTransactionRequest(MerchantAuthenticationType $merchantAuthentication, TransactionRequestType $transactionRequestType): CreateTransactionRequest
-    {
-        $request = new CreateTransactionRequest;
-        $request->setMerchantAuthentication($merchantAuthentication);
-        $request->setRefId('ref'.time());
-        $request->setTransactionRequest($transactionRequestType);
-
-        return $request;
-    }
-
-    private function executeTransaction(CreateTransactionController $controller)
-    {
-        if (app()->environment('production')) {
-            return $controller->executeWithApiResponse(ANetEnvironment::PRODUCTION);
-        }
-
-        return $controller->executeWithApiResponse(ANetEnvironment::SANDBOX);
+        return [
+            'amount' => $paymentDetails['amount'],
+            'reference' => $orderNo,
+            'description' => 'Purchase of various items',
+            'card' => [
+                'number' => $paymentDetails['payment']['creditCard']['cardNumber'],
+                'expiration' => $paymentDetails['payment']['creditCard']['expirationDate'],
+                'cvv' => $paymentDetails['payment']['creditCard']['cardCode'],
+            ],
+            'bill_to' => [
+                'first_name' => $paymentDetails['billTo']['firstName'],
+                'last_name' => $paymentDetails['billTo']['lastName'],
+                'company' => $paymentDetails['billTo']['company'] ?? null,
+                'address' => $paymentDetails['billTo']['address'],
+                'city' => $paymentDetails['billTo']['city'],
+                'state' => $paymentDetails['billTo']['state'],
+                'zip' => $paymentDetails['billTo']['zip'],
+                'country' => $paymentDetails['billTo']['country'],
+            ],
+            'customer' => [
+                'id' => $user->id,
+                'email' => $paymentDetails['customer']['email'],
+            ],
+            'line_items' => array_map(fn ($item) => [
+                'item_id' => $item['itemId'],
+                'name' => $item['name'],
+                'description' => $item['description'] ?? '',
+                'quantity' => $item['quantity'],
+                'unit_price' => $item['unitPrice'],
+            ], $items),
+        ];
     }
 
     private function handleResponse(
-        $response,
+        array $result,
         User $user,
         array $paymentDetails,
         string $orderNo,
-        AnetAPI\PaymentType $payment,
         Request $request
-    ) {
-        if ($response != null) {
-            if ($response->getMessages()->getResultCode() == 'Ok') {
-                $tresponse = $response->getTransactionResponse();
-
-                if ($tresponse != null && $tresponse->getMessages() != null) {
-                    return $this->handleSuccessResponse($response, $tresponse, $user, $paymentDetails, $orderNo, $payment, $request);
-                }
-
-                return $this->handleErrorResponse($tresponse, $response, $user, $request);
-            }
-
-            return $this->handleErrorResponse(null, $response, $user, $request);
+    ): JsonResponse {
+        if ($result['status'] ?? false) {
+            return $this->handleSuccessResponse($result, $user, $paymentDetails, $orderNo, $request);
         }
 
-        return "No response returned \n";
+        return $this->handleErrorResponse($result, $user, $request);
     }
 
-    private function handleSuccessResponse($response, $tresponse, $user, array $paymentDetails, $orderNo, $payment, $request)
+    private function handleSuccessResponse(array $result, User $user, array $paymentDetails, string $orderNo, Request $request)
     {
         $amount = $paymentDetails['amount'];
         $data = (object) [
@@ -237,7 +146,7 @@ class ChargeCardService implements PaymentStrategy
             'status' => 'success',
             'type' => PaymentType::USERORDER,
         ];
-        $pay = (new PaymentLogAction($data, $payment, 'authorizenet', 'success'))->execute();
+        $pay = (new PaymentLogAction($data, $result['data'], 'authorizenet', 'success'))->execute();
 
         $totalAmount = 0;
 
@@ -265,7 +174,6 @@ class ChargeCardService implements PaymentStrategy
             'status' => OrderStatus::PENDING,
         ]);
 
-        // Update order type if agriecom cart exists
         $order->markAsAgriecom($user->id);
 
         $orderedItems = [];
@@ -358,9 +266,7 @@ class ChargeCardService implements PaymentStrategy
         }
 
         UserShippingAddress::updateOrCreate(
-            [
-                'user_id' => $user->id,
-            ],
+            ['user_id' => $user->id],
             [
                 'first_name' => $paymentDetails['billTo']['firstName'],
                 'last_name' => $paymentDetails['billTo']['lastName'],
@@ -385,31 +291,28 @@ class ChargeCardService implements PaymentStrategy
             $request,
             UserLog::PAYMENT,
             'Payment successful',
-            json_encode($response),
+            json_encode($result),
             $user
         ))->run();
 
-        return $this->success(['order_no' => $orderNo], $tresponse->getMessages()[0]->getDescription());
+        return $this->success(['order_no' => $orderNo], $result['message']);
     }
 
-    private function handleErrorResponse($tresponse, $response, $user, Request $request)
+    private function handleErrorResponse(array $result, User $user, Request $request): JsonResponse
     {
-        $msg = $tresponse != null ?
-            "Payment failed: {$tresponse->getErrors()[0]->getErrorText()}" :
-            "Payment failed: {$response->getMessages()->getMessage()[0]->getText()}";
+        $msg = 'Payment failed: '.($result['message'] ?? 'Unknown error');
 
-        (new UserLogAction(
-            $request,
-            UserLog::PAYMENT,
-            $msg,
-            json_encode($response),
-            $user
-        ))->run();
+        (new UserLogAction($request, UserLog::PAYMENT, $msg, json_encode($result), $user))->run();
 
         return $this->error(null, $msg, 403);
     }
 
-    private function validateProductQuantity($productIds, $items)
+    /**
+     * @param  array<int>  $productIds
+     * @param  array<string, mixed>  $items
+     * @return array<string, mixed>|null
+     */
+    private function validateProductQuantity(array $productIds, array $items): ?array
     {
         $products = Product::whereIn('id', $productIds)->get();
 
@@ -451,47 +354,62 @@ class ChargeCardService implements PaymentStrategy
     {
         $user = Auth::user();
         $orderNo = $this->orderNo;
-        $orderNum = Str::random(8);
         $requestClass = resolve(Request::class);
 
-        $merchantAuthentication = $this->getMerchantAuthentication();
-        $payment = $this->getPayment($paymentDetails);
-        $order = $this->getOrder($orderNum);
-        $customerAddress = $this->getCustomerAddress($paymentDetails);
-        $customerData = $this->getCustomerData($paymentDetails, $user);
+        $url = config('services.payment_service.url').'/authorize/initialize';
+        $result = $this->servicesAuth->post($url, new RequestOptions(
+            data: [
+                'data' => [
+                    'amount' => $paymentDetails['amount'],
+                    'reference' => $orderNo,
+                    'description' => 'B2B order payment',
+                    'card' => [
+                        'number' => $paymentDetails['payment']['creditCard']['cardNumber'],
+                        'expiration' => $paymentDetails['payment']['creditCard']['expirationDate'],
+                        'cvv' => $paymentDetails['payment']['creditCard']['cardCode'],
+                    ],
+                    'bill_to' => [
+                        'first_name' => $paymentDetails['billTo']['firstName'],
+                        'last_name' => $paymentDetails['billTo']['lastName'],
+                        'company' => $paymentDetails['billTo']['company'] ?? null,
+                        'address' => $paymentDetails['billTo']['address'],
+                        'city' => $paymentDetails['billTo']['city'],
+                        'state' => $paymentDetails['billTo']['state'],
+                        'zip' => $paymentDetails['billTo']['zip'],
+                        'country' => $paymentDetails['billTo']['country'],
+                    ],
+                    'customer' => [
+                        'id' => $user->id,
+                        'email' => $paymentDetails['customer']['email'],
+                    ],
+                ],
+            ]
+        ));
 
-        $transactionRequestType = $this->getTransactionRequestType($paymentDetails, $order, $payment, $customerAddress, $customerData);
-
-        $request = $this->createTransactionRequest($merchantAuthentication, $transactionRequestType);
-
-        $controller = new CreateTransactionController($request);
-
-        $response = $this->executeTransaction($controller);
-
-        return $this->handleB2bResponse($response, $user, $paymentDetails, $orderNo, $payment, $requestClass);
+        return $this->handleB2bResponse($result, $user, $paymentDetails, $orderNo, $requestClass);
     }
 
-    private function handleB2bResponse($response, $user, array $paymentDetails, string $orderNo, AnetAPI\PaymentType $payment, $request)
-    {
-        if ($response != null) {
-            if ($response->getMessages()->getResultCode() == 'Ok') {
-                $tresponse = $response->getTransactionResponse();
-
-                if ($tresponse != null && $tresponse->getMessages() != null) {
-                    return $this->handleB2bSuccessResponse($response, $tresponse, $user, $paymentDetails, $orderNo, $payment, $request);
-                }
-
-                return $this->handleErrorResponse($tresponse, $response, $user, $request);
-            }
-
-            return $this->handleErrorResponse(null, $response, $user, $request);
+    private function handleB2bResponse(
+        array $result,
+        User $user,
+        array $paymentDetails,
+        string $orderNo,
+        Request $request
+    ): JsonResponse {
+        if ($result['status'] ?? false) {
+            return $this->handleB2bSuccessResponse($result, $user, $paymentDetails, $orderNo, $request);
         }
 
-        return "No response returned \n";
+        return $this->handleErrorResponse($result, $user, $request);
     }
 
-    private function handleB2bSuccessResponse($response, $tresponse, $user, array $paymentDetails, $orderNo, $payment, $request)
-    {
+    private function handleB2bSuccessResponse(
+        array $result,
+        User $user,
+        array $paymentDetails,
+        string $orderNo,
+        Request $request
+    ): JsonResponse {
         $rfqId = $paymentDetails['rfq_id'];
         $centerId = $paymentDetails['centre_id'];
         $type = $paymentDetails['type'];
@@ -518,7 +436,7 @@ class ChargeCardService implements PaymentStrategy
             'type' => PaymentType::B2BUSERORDER,
         ];
 
-        (new PaymentLogAction($data, $payment, 'authorizenet', 'success'))->execute();
+        (new PaymentLogAction($data, $result['data'], 'authorizenet', 'success'))->execute();
 
         if ($shipping_agent_id) {
             $shipping_agent = ShippingAgent::findOrFail($shipping_agent_id);
@@ -574,9 +492,7 @@ class ChargeCardService implements PaymentStrategy
             'order_number' => $orderNo,
         ];
 
-        $orderItemData = [
-            'orderedItems' => $orderedItems,
-        ];
+        $orderItemData = ['orderedItems' => $orderedItems];
 
         $product->availability_quantity -= $rfq->product_quantity;
         $product->sold += $rfq->product_quantity;
@@ -601,10 +517,10 @@ class ChargeCardService implements PaymentStrategy
             $request,
             UserLog::PAYMENT,
             'Payment successful',
-            json_encode($response),
+            json_encode($result),
             $user
         ))->run();
 
-        return $this->success(null, $tresponse->getMessages()[0]->getDescription());
+        return $this->success(null, $result['message']);
     }
 }
