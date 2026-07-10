@@ -14,7 +14,7 @@ class PaystackPaymentProcessor implements PaymentStrategy
     public function processPayment(array $paymentDetails): array
     {
         $url = config('services.payment_service.url').'/paystack/initialize';
-        $service = app(Auth::class);
+        $service = resolve(Auth::class);
 
         try {
             $response = $service->post(

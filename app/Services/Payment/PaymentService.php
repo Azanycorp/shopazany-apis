@@ -8,13 +8,12 @@ use App\Http\Resources\PaymentVerifyResource;
 use App\Models\Bank;
 use App\Models\PaymentService as ModelPaymentService;
 use App\Services\Auth\Auth;
-use App\Services\Curl\GetCurl;
+use App\Services\Auth\RequestOptions;
 use App\Services\Payment\AuthorizeNet\ChargeCardService;
 use App\Trait\HttpResponse;
 use App\Trait\Transfer;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Contracts\Cache\Repository;
-use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Contracts\Routing\ResponseFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -28,7 +27,6 @@ class PaymentService
         protected ChargeCardService $chargeCardService,
         private readonly AuthManager $authManager,
         private readonly Repository $cacheManager,
-        private readonly ConfigRepository $repository,
         private readonly ResponseFactory $responseFactory
     ) {}
 
@@ -84,12 +82,12 @@ class PaymentService
             return $this->error(null, 'Unauthorized action.', 401);
         }
 
-        if ($ref === null || ! preg_match('/^[A-Za-z0-9]{10,30}$/', $ref)) {
+        if ($ref == null || ! preg_match('/^[A-Za-z0-9]{10,30}$/', $ref)) {
             return $this->error(null, 'Invalid payment reference.', 400);
         }
 
         $url = config('services.payment_service.url')."/paystack/verify/{$ref}";
-        $service = app(Auth::class);
+        $service = resolve(Auth::class);
 
         $response = $service->get($url);
 
@@ -189,15 +187,38 @@ class PaymentService
 
     public function accountLookUp(Request $request): array
     {
-        $url = $this->repository->get('services.paystack.bank_base_url').'/resolve?account_number='.$request->account_number.'&bank_code='.$request->bank_code;
+        $httpService = resolve(Auth::class);
+        $url = config('services.payment_service.url').'/paystack/account/lookup';
 
-        $token = $this->repository->get('services.paystack.test_sk');
+        try {
+            $response = $httpService->post(
+                $url,
+                new RequestOptions(
+                    data: [
+                        'account_number' => $request->account_number,
+                        'bank_code' => $request->bank_code,
+                    ],
+                )
+            );
 
-        $headers = [
-            'Accept' => 'application/json',
-            'Authorization' => 'Bearer '.$token,
-        ];
+            if ($response->failed()) {
+                return [
+                    'status' => false,
+                    'message' => $response['message'] ?? 'Invalid response format',
+                ];
+            }
 
-        return (new GetCurl($url, $headers))->execute();
+            $data = $response->json();
+
+            return [
+                'status' => true,
+                'data' => $data,
+            ];
+        } catch (\Throwable $th) {
+            return [
+                'status' => false,
+                'message' => $th->getMessage(),
+            ];
+        }
     }
 }

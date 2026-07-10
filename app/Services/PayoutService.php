@@ -19,7 +19,7 @@ class PayoutService
      */
     public static function paystackTransfer(User $user, array $fields): array
     {
-        $httpService = app(Auth::class);
+        $httpService = resolve(Auth::class);
         $url = config('services.payment_service.url').'/paystack/transfer';
 
         try {
@@ -70,7 +70,7 @@ class PayoutService
      */
     public static function paystackBulkTransfer(array $transfers): array
     {
-        $httpService = app(Auth::class);
+        $httpService = resolve(Auth::class);
         $url = config('services.payment_service.url').'/paystack/transfer/bulk';
 
         $body = [
