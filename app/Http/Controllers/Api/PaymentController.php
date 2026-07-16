@@ -16,7 +16,7 @@ use Illuminate\Http\Request;
 class PaymentController extends Controller
 {
     public function __construct(
-        protected PaymentService $service
+        protected PaymentService $service,
     ) {}
 
     public function getShippingAgents()
@@ -43,7 +43,7 @@ class PaymentController extends Controller
         return $this->service->webhook($request);
     }
 
-    public function verifyPayment($userId, $ref)
+    public function verifyPayment(int $userId, string $ref)
     {
         return $this->service->verifyPayment($userId, $ref);
     }
@@ -58,7 +58,7 @@ class PaymentController extends Controller
         return $this->service->authorizeNetCard($request);
     }
 
-    public function getPaymentMethod($countryId)
+    public function getPaymentMethod(int $countryId)
     {
         return $this->service->getPaymentMethod($countryId);
     }
@@ -75,6 +75,10 @@ class PaymentController extends Controller
 
     public function approveTransfer(Request $request)
     {
+        $request->validate([
+            'data' => ['required', 'array'],
+        ]);
+
         return $this->service->approveTransfer($request);
     }
 }

@@ -5,11 +5,12 @@ namespace App\Trait;
 use App\Models\Bank;
 use App\Models\User;
 use App\Services\Payment\PaystackService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 trait Payment
 {
-    protected function addBankTransfer($request, User $user)
+    protected function addBankTransfer(Request $request, User $user)
     {
         return match ($request->platform) {
             'paystack' => $this->addPaystackMethod($request, $user),
@@ -18,7 +19,7 @@ trait Payment
         };
     }
 
-    protected function addPayPal($request, User $user): bool
+    protected function addPayPal(Request $request, User $user): bool
     {
         try {
             $user->paymentMethods()->create([
@@ -32,7 +33,7 @@ trait Payment
         }
     }
 
-    private function addPaystackMethod($request, User $user)
+    private function addPaystackMethod(Request $request, User $user)
     {
         try {
             DB::beginTransaction();
@@ -77,7 +78,7 @@ trait Payment
         }
     }
 
-    private function addAuthorizeMethod($request, User $user)
+    private function addAuthorizeMethod(Request $request, User $user)
     {
         if ($request->is_default) {
             $user->paymentMethods()->update(['is_default' => false]);

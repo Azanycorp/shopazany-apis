@@ -22,6 +22,7 @@ use App\Models\BuyerShippingAddress;
 use App\Models\Cart;
 use App\Models\Order;
 use App\Models\Payment;
+use App\Models\PaymentMethod;
 use App\Models\Product;
 use App\Models\ProductVariation;
 use App\Models\Rfq;
@@ -32,7 +33,8 @@ use App\Models\UserWallet;
 use App\Models\Wallet;
 use App\Models\WithdrawalRequest;
 use App\Notifications\WithdrawalNotification;
-use App\Services\Curl\PostCurl;
+use App\Services\Auth\Auth;
+use App\Services\Auth\RequestOptions;
 use App\Services\SubscriptionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Date;
@@ -50,7 +52,7 @@ class PaystackService
                 $ref = $paymentData['reference'];
                 $userId = $paymentData['metadata']['user_id'];
                 $amount = $paymentData['amount'];
-                $formattedAmount = number_format($amount / 100, 2, '.', '');
+                $formattedAmount = (float) number_format($amount / 100, 2, '.', '');
                 $channel = $paymentData['channel'];
                 $paid_at = Date::parse($paymentData['paid_at']);
 
@@ -262,7 +264,7 @@ class PaystackService
         }
     }
 
-    public static function handleB2BPaymentSuccess($event, $status): void
+    public static function handleB2BPaymentSuccess(array $event, string $status): void
     {
         try {
             DB::transaction(function () use ($event, $status): void {
@@ -530,16 +532,25 @@ class PaystackService
         }
     }
 
-    public static function createRecipient($fields, $method): void
+    public static function createRecipient(array $fields, PaymentMethod $method): void
     {
-        $url = 'https://api.paystack.co/transferrecipient';
-        $token = config('paystack.secretKey');
-        $headers = [
-            'Accept' => 'application/json',
-            'Authorization' => 'Bearer '.$token,
-        ];
-        $data = (new PostCurl($url, $headers, $fields))->execute();
-        self::logTransfer($data, $method);
+        $url = config('services.payment_service.url').'/paystack/create-recipient';
+        $service = resolve(Auth::class);
+
+        try {
+            $response = $service->post(
+                $url,
+                new RequestOptions(
+                    data: ['data' => $fields],
+                )
+            );
+
+            self::logTransfer($response->json(), $method);
+        } catch (\Throwable $th) {
+            report($th);
+
+            return;
+        }
     }
 
     private static function orderNo(): string
@@ -551,17 +562,17 @@ class PaystackService
         return $uniqueOrderNumber;
     }
 
-    private static function sendSellerOrderEmail($seller, $order, string $orderNo, float $totalAmount): void
+    private static function sendSellerOrderEmail(User $seller, array $order, string $orderNo, float $totalAmount): void
     {
         defer(fn () => sendEmail($seller->email, new SellerOrderMail($seller, $order, $orderNo, $totalAmount)));
     }
 
-    private static function sendOrderConfirmationEmail($user, $orderedItems, string $orderNo, float $totalAmount): void
+    private static function sendOrderConfirmationEmail(User $user, array $orderedItems, string $orderNo, float $totalAmount): void
     {
         defer(fn () => sendEmail($user->email, new CustomerOrderMail($user, $orderedItems, $orderNo, $totalAmount)));
     }
 
-    private static function logTransfer(array $data, $method): void
+    private static function logTransfer(array $data, PaymentMethod $method): void
     {
         $method->update([
             'recipient_code' => $data['recipient_code'],
@@ -569,7 +580,7 @@ class PaystackService
         ]);
     }
 
-    private static function attachProductToOrder($item, $user, $order): array
+    private static function attachProductToOrder(array $item, User $user, Order $order): array
     {
         $variationId = $item['variation_id'] ?? null;
 

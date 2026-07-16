@@ -4,8 +4,9 @@ namespace App\Services;
 
 use App\Enum\TransactionStatus;
 use App\Models\User;
-use App\Services\Curl\CurlService;
-use App\Services\Curl\PostCurl;
+use App\Services\Auth\Auth;
+use App\Services\Auth\RequestOptions;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use net\authorize\api\constants\ANetEnvironment;
 use net\authorize\api\contract\v1 as AnetAPI;
@@ -16,41 +17,52 @@ class PayoutService
     /**
      * @return mixed[]
      */
-    public static function paystackTransfer($user, array $fields): array
+    public static function paystackTransfer(User $user, array $fields): array
     {
-        $url = 'https://api.paystack.co/transfer';
-        $token = config('paystack.secretKey');
+        $httpService = resolve(Auth::class);
+        $url = config('services.payment_service.url').'/paystack/transfer';
 
-        $headers = [
-            'Accept' => 'application/json',
-            'Authorization' => 'Bearer '.$token,
-        ];
+        try {
+            $response = $httpService->post(
+                $url,
+                new RequestOptions(
+                    data: ['data' => $fields],
+                )
+            );
 
-        $data = (new PostCurl($url, $headers, $fields))->execute();
+            if ($response->failed()) {
+                return [
+                    'status' => false,
+                    'message' => $response['message'] ?? 'Failed to initialize payment',
+                    'data' => null,
+                ];
+            }
 
-        if ($data['status'] === false) {
+            $data = $response->json();
+
+            $amount = $fields['amount'];
+            $formattedAmount = number_format($amount / 100, 2, '.', '');
+
+            (new TransactionService(
+                $user,
+                TransactionStatus::TRANSFER,
+                $formattedAmount,
+                $data['status']
+            ))->logTransaction();
+
+            return [
+                'status' => true,
+                'message' => $data['message'] ?? 'Bulk transfer queued',
+                'data' => $data['data'],
+            ];
+
+        } catch (\Throwable $th) {
             return [
                 'status' => false,
-                'message' => null,
+                'message' => $th->getMessage(),
                 'data' => null,
             ];
         }
-
-        $amount = $fields['amount'];
-        $formattedAmount = number_format($amount / 100, 2, '.', '');
-
-        (new TransactionService(
-            $user,
-            TransactionStatus::TRANSFER,
-            $formattedAmount,
-            $data['status']
-        ))->logTransaction();
-
-        return [
-            'status' => true,
-            'message' => null,
-            'data' => $data,
-        ];
     }
 
     /**
@@ -58,14 +70,8 @@ class PayoutService
      */
     public static function paystackBulkTransfer(array $transfers): array
     {
-        $url = 'https://api.paystack.co/transfer/bulk';
-        $token = config('paystack.secretKey');
-
-        $headers = [
-            'Authorization' => 'Bearer '.$token,
-            'Accept' => 'application/json',
-            'Cache-Control' => 'no-cache',
-        ];
+        $httpService = resolve(Auth::class);
+        $url = config('services.payment_service.url').'/paystack/transfer/bulk';
 
         $body = [
             'currency' => 'NGN',
@@ -80,39 +86,55 @@ class PayoutService
             }, $transfers),
         ];
 
-        $response = (new CurlService($url, $headers, $body))->execute();
+        try {
+            $response = $httpService->post(
+                $url,
+                new RequestOptions(
+                    data: ['data' => $body],
+                )
+            );
 
-        if (! isset($response['status']) || $response['status'] === false) {
+            if ($response->failed()) {
+                return [
+                    'status' => false,
+                    'message' => $response['message'] ?? 'Failed to initialize payment',
+                    'data' => null,
+                ];
+            }
+
+            $data = $response->json();
+
+            foreach ($transfers as $transfer) {
+                $user = User::find($transfer['user_id']);
+                if ($user) {
+                    $amount = $transfer['amount'];
+                    $formattedAmount = number_format($amount / 100, 2, '.', '');
+
+                    (new TransactionService(
+                        $user,
+                        TransactionStatus::TRANSFER,
+                        $formattedAmount,
+                        $data['status']
+                    ))->logTransaction();
+                }
+            }
+
+            return [
+                'status' => true,
+                'message' => $data['message'] ?? 'Bulk transfer queued',
+                'data' => $data['data'],
+            ];
+
+        } catch (\Throwable $th) {
             return [
                 'status' => false,
-                'message' => $response['message'],
+                'message' => $th->getMessage(),
                 'data' => null,
             ];
         }
-
-        foreach ($transfers as $transfer) {
-            $user = User::find($transfer['user_id']);
-            if ($user) {
-                $amount = $transfer['amount'];
-                $formattedAmount = number_format($amount / 100, 2, '.', '');
-
-                (new TransactionService(
-                    $user,
-                    TransactionStatus::TRANSFER,
-                    $formattedAmount,
-                    $response['status']
-                ))->logTransaction();
-            }
-        }
-
-        return [
-            'status' => true,
-            'message' => $response['message'] ?? 'Bulk transfer queued',
-            'data' => $response['data'],
-        ];
     }
 
-    public static function authorizeTransfer($request, $user, array $fields): array
+    public static function authorizeTransfer(Request $request, User $user, array $fields): array
     {
         try {
             $merchantAuthentication = new AnetAPI\MerchantAuthenticationType;
