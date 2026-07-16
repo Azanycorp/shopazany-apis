@@ -19,7 +19,7 @@
         "imagekit/imagekit": "^4.0",
         "jenssegers/agent": "^2.6",
         "kreait/laravel-firebase": "^7.2",
-        "laravel/framework": "^13.19",
+        "laravel/framework": "^13.20",
         "laravel/sanctum": "^4.3",
         "laravel/socialite": "^5.27",
         "laravel/tinker": "^3.0",
