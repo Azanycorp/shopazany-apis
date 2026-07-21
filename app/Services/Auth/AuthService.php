@@ -24,6 +24,7 @@ use App\Trait\SignUp;
 use Illuminate\Auth\Passwords\PasswordBrokerManager;
 use Illuminate\Contracts\Routing\ResponseFactory;
 use Illuminate\Hashing\BcryptHasher;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Pipeline;
 
@@ -38,17 +39,17 @@ class AuthService extends Controller
         private readonly AuditLogAction $auditLogAction,
     ) {}
 
-    public function login($request)
+    public function login(Request $request)
     {
         return LoginService::AuthLogin($request);
     }
 
-    public function biometricLogin($request, $auditLogAction)
+    public function biometricLogin(Request $request, AuditLogAction $auditLogAction)
     {
         return LoginService::biometricLogin($request, $auditLogAction);
     }
 
-    public function loginVerify($request)
+    public function loginVerify(Request $request)
     {
         $user = User::where('email', $request->email)
             ->where('login_code', $request->code)

@@ -117,6 +117,7 @@ Route::middleware('validate.header')
 
         // Webhook Route
         Route::post('/payment/webhook', [PaymentController::class, 'webhook'])
+            ->name('payment.webhook')
             ->withoutMiddleware('validate.header');
 
         // Approval URL Route

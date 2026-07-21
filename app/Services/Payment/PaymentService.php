@@ -7,16 +7,16 @@ use App\Enum\Type;
 use App\Http\Resources\PaymentVerifyResource;
 use App\Models\Bank;
 use App\Models\PaymentService as ModelPaymentService;
-use App\Services\Curl\GetCurl;
-use App\Services\Curl\GetCurlService;
+use App\Services\Auth\Auth;
+use App\Services\Auth\RequestOptions;
 use App\Services\Payment\AuthorizeNet\ChargeCardService;
 use App\Trait\HttpResponse;
 use App\Trait\Transfer;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Contracts\Cache\Repository;
-use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Contracts\Routing\ResponseFactory;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class PaymentService
@@ -27,11 +27,10 @@ class PaymentService
         protected ChargeCardService $chargeCardService,
         private readonly AuthManager $authManager,
         private readonly Repository $cacheManager,
-        private readonly ConfigRepository $repository,
         private readonly ResponseFactory $responseFactory
     ) {}
 
-    public function processPayment($request)
+    public function processPayment(Request $request)
     {
         [$processor, $details] = match ($request->payment_method) {
             PaymentType::PAYSTACK => [
@@ -62,19 +61,11 @@ class PaymentService
         return $response;
     }
 
-    public function webhook($request)
+    public function webhook(Request $request)
     {
-        $secretKey = $this->repository->get('paystack.secretKey');
-        $signature = $request->header('x-paystack-signature');
-        $payload = $request->getContent();
+        $event = $request->all();
 
-        if (! $signature || $signature !== hash_hmac('sha512', $payload, $secretKey)) {
-            return $this->error(null, 'Invalid signature', 400);
-        }
-
-        $event = json_decode($payload, true);
-
-        if (! isset($event['event']) || ! isset($event['data'])) {
+        if (! isset($event['data'])) {
             return $this->error(null, 'Invalid payload', 400);
         }
 
@@ -83,36 +74,56 @@ class PaymentService
         return $this->responseFactory->json(['status' => true], 200);
     }
 
-    public function verifyPayment($userId, $ref)
+    public function verifyPayment(int $userId, string $ref)
     {
         $currentUserId = $this->authManager->id();
+
         if ($currentUserId != $userId) {
             return $this->error(null, 'Unauthorized action.', 401);
         }
 
-        if ($ref === null || ! preg_match('/^[A-Za-z0-9]{10,30}$/', $ref)) {
+        if ($ref == null || ! preg_match('/^[A-Za-z0-9]{10,30}$/', $ref)) {
             return $this->error(null, 'Invalid payment reference.', 400);
         }
 
-        $verify = (new GetCurlService($ref))->run();
-        $data = new PaymentVerifyResource($verify);
+        $url = config('services.payment_service.url')."/paystack/verify/{$ref}";
+        $service = resolve(Auth::class);
+
+        $response = $service->get($url);
+
+        if ($response->failed()) {
+            return [
+                'status' => false,
+                'message' => $response['message'] ?? 'Failed to verify payment',
+                'data' => null,
+            ];
+        }
+
+        $data = new PaymentVerifyResource((object) $response->json());
 
         return $this->success($data, 'Payment verify status');
     }
 
-    public function approveTransfer($request)
+    public function approveTransfer(Request $request)
     {
-        $payload = json_decode($request->getContent(), true);
+        $data = $request->data;
 
-        $transfers = data_get($payload, 'data.transfers', []);
+        // $payload = json_decode($request->getContent(), true);
+        // $transfers = data_get($payload, 'data.transfers', []);
 
-        if (blank($transfers) || ! is_array($transfers)) {
-            Log::warning('No transfers found in approval payload:', $payload);
+        // if (blank($transfers) || !is_array($transfers)) {
+        //     Log::warning('No transfers found in approval payload:', $payload);
+
+        //     return $this->responseFactory->json(['message' => 'Invalid transfer request'], 400);
+        // }
+
+        if (blank($data) || ! is_array($data)) {
+            Log::warning('No transfers found in approval payload:', $data);
 
             return $this->responseFactory->json(['message' => 'Invalid transfer request'], 400);
         }
 
-        foreach ($transfers as $transfer) {
+        foreach ($data as $transfer) {
             $isValid = $this->isValidTransferRequest([
                 'reference' => $transfer['reference'] ?? null,
                 'amount' => $transfer['amount'] ?? null,
@@ -127,7 +138,7 @@ class PaymentService
         return $this->responseFactory->json(['message' => 'Transfer approved'], 200);
     }
 
-    public function authorizeNetCard($request)
+    public function authorizeNetCard(Request $request)
     {
         $data = $request->all();
 
@@ -138,7 +149,7 @@ class PaymentService
         return $this->chargeCardService->processPayment($data);
     }
 
-    public function getPaymentMethod($countryId)
+    public function getPaymentMethod(int $countryId)
     {
         $services = ModelPaymentService::whereHas('countries', function (Builder $q) use ($countryId): void {
             $q->where('country_id', $countryId);
@@ -174,17 +185,40 @@ class PaymentService
         return $this->success($banks, 'Banks retrieved successfully');
     }
 
-    public function accountLookUp($request): array
+    public function accountLookUp(Request $request): array
     {
-        $url = $this->repository->get('services.paystack.bank_base_url').'/resolve?account_number='.$request->account_number.'&bank_code='.$request->bank_code;
+        $httpService = resolve(Auth::class);
+        $url = config('services.payment_service.url').'/paystack/account/lookup';
 
-        $token = $this->repository->get('services.paystack.test_sk');
+        try {
+            $response = $httpService->post(
+                $url,
+                new RequestOptions(
+                    data: [
+                        'account_number' => $request->account_number,
+                        'bank_code' => $request->bank_code,
+                    ],
+                )
+            );
 
-        $headers = [
-            'Accept' => 'application/json',
-            'Authorization' => 'Bearer '.$token,
-        ];
+            if ($response->failed()) {
+                return [
+                    'status' => false,
+                    'message' => $response['message'] ?? 'Invalid response format',
+                ];
+            }
 
-        return (new GetCurl($url, $headers))->execute();
+            $data = $response->json();
+
+            return [
+                'status' => true,
+                'data' => $data,
+            ];
+        } catch (\Throwable $th) {
+            return [
+                'status' => false,
+                'message' => $th->getMessage(),
+            ];
+        }
     }
 }
