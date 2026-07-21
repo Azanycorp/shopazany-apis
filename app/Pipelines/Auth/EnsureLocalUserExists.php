@@ -24,11 +24,11 @@ class EnsureLocalUserExists
         $user = User::firstOrCreate(
             ['email' => $request->email],
             [
-                'first_name' => $request->externalUser['first_name'],
-                'last_name' => $request->externalUser['last_name'],
-                'email' => $request->externalUser['email'],
-                'country' => $request->externalUser['country_id'],
-                'state_id' => $request->externalUser['state_id'],
+                'first_name' => $request->externalUser['first_name'] ?? null,
+                'last_name' => $request->externalUser['last_name'] ?? null,
+                'email' => $request->externalUser['email'] ?? null,
+                'country' => $request->externalUser['country_id'] ?? null,
+                'state_id' => $request->externalUser['state_id'] ?? null,
                 'type' => $type,
                 'password' => bcrypt($request->password),
                 'status' => UserStatus::ACTIVE,

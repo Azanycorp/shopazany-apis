@@ -2,38 +2,42 @@
 
 namespace App\Trait;
 
+use App\Actions\AuditLogAction;
 use App\DTO\AuditLog;
 use App\Enum\AuditEvent;
 use App\Enum\MailingEnum;
 use App\Enum\UserLog;
 use App\Enum\UserStatus;
 use App\Mail\LoginVerifyMail;
+use App\Models\User;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 trait Login
 {
     use HttpResponse;
 
-    protected function isAccountUnverifiedOrInactive($user): bool
+    protected function isAccountUnverifiedOrInactive(User $user): bool
     {
         return $user->email_verified_at === null && $user->verification_code !== null;
     }
 
-    protected function isAccountPending($user): bool
+    protected function isAccountPending(User $user): bool
     {
         return $user->status === UserStatus::PENDING;
     }
 
-    protected function isAccountSuspended($user): bool
+    protected function isAccountSuspended(User $user): bool
     {
         return $user->status === UserStatus::SUSPENDED;
     }
 
-    protected function isAccountBlocked($user): bool
+    protected function isAccountBlocked(User $user): bool
     {
         return $user->status === UserStatus::BLOCKED;
     }
 
-    protected function handleAccountIssues($user, $request, $message, $action, $status = null)
+    protected function handleAccountIssues(User $user, Request $request, string $message, $action, $status = null)
     {
         $status = $status ?? 'pending';
         $description = "Account issue for user {$request->email}";
@@ -47,7 +51,7 @@ trait Login
         return $response;
     }
 
-    protected function handleTwoFactorAuthentication($user, $request, $auditLogAction)
+    protected function handleTwoFactorAuthentication(User $user, Request $request, AuditLogAction $auditLogAction): JsonResponse
     {
         if ($user->login_code_expires_at > now()) {
             return $this->error(null, 'Please wait a few minutes before requesting a new code.', 400);
@@ -88,7 +92,7 @@ trait Login
         return $response;
     }
 
-    protected function logUserIn($user, $request, $auditLogAction)
+    protected function logUserIn(User $user, Request $request, AuditLogAction $auditLogAction): JsonResponse
     {
         // $user->tokens()->delete();
         $token = $user->createToken("API Token of {$user->email}", ['b2c:access']);
@@ -119,7 +123,7 @@ trait Login
         return $response;
     }
 
-    protected function handleInvalidCredentials($request)
+    protected function handleInvalidCredentials(Request $request): JsonResponse
     {
         $description = "Credentials do not match {$request->email}";
         $response = $this->error(null, 'Credentials do not match', 401);
@@ -128,7 +132,7 @@ trait Login
         return $response;
     }
 
-    protected function handleBiometricsIssue($request, $message, $code = 400)
+    protected function handleBiometricsIssue(Request $request, string $message, int $code = 400): JsonResponse
     {
         $response = $this->error(null, $message, $code);
         logUserAction($request, UserLog::LOGIN_ATTEMPT, $message, $response);
