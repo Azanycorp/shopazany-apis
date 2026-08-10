@@ -97,4 +97,10 @@ return [
         'key' => env('X_AUTH_KEY'),
         'value' => env('X_AUTH_VALUE'),
     ],
+
+    'payment_service' => [
+        'api_key' => env('PAYMENT_SERVICE_KEY'),
+        'api_secret' => env('PAYMENT_SERVICE_SECRET'),
+        'url' => env('PAYMENT_SERVICE_URL'),
+    ],
 ];

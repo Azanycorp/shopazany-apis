@@ -8,6 +8,7 @@ use App\Enum\UserTypes;
 use App\Models\Product;
 use App\Models\SubscriptionPlan;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 
 class PaymentDetailsService
@@ -98,6 +99,9 @@ class PaymentDetailsService
                 'items' => $request->input('items'),
                 'payment_method' => $request->input('payment_method'),
                 'payment_type' => PaymentType::USERORDER,
+                'provider' => 'paystack',
+                'service' => 'shopazany',
+                'webhook_url' => route('payment.webhook'),
             ]),
             'callback_url' => $request->input('payment_redirect_url'),
         ];
@@ -130,12 +134,15 @@ class PaymentDetailsService
                 'rfq_id' => $request->input('rfq_id'),
                 'payment_method' => $request->input('payment_method'),
                 'payment_type' => PaymentType::B2BUSERORDER,
+                'provider' => 'paystack',
+                'service' => 'shopazany',
+                'webhook_url' => route('payment.webhook'),
             ]),
             'callback_url' => $request->input('payment_redirect_url'),
         ];
     }
 
-    public static function paystackSubcriptionPayDetails($request): array
+    public static function paystackSubcriptionPayDetails(Request $request): array
     {
         $callbackUrl = $request->input('redirect_url');
 
@@ -159,12 +166,15 @@ class PaymentDetailsService
                 'subscription_plan_id' => $request->input('subscription_plan_id'),
                 'payment_method' => PaymentType::PAYSTACK,
                 'payment_type' => PaymentType::RECURRINGCHARGE,
+                'provider' => 'paystack',
+                'service' => 'shopazany',
+                'webhook_url' => route('payment.webhook'),
             ]),
             'callback_url' => $callbackUrl,
         ];
     }
 
-    public static function authorizeNetSubcriptionPayDetails($request): array
+    public static function authorizeNetSubcriptionPayDetails(Request $request): array
     {
         $amount = $request->input('amount');
 
@@ -206,7 +216,7 @@ class PaymentDetailsService
         ];
     }
 
-    private static function validateSubscriptionRequest($request, User $user, string $callbackUrl): ?string
+    private static function validateSubscriptionRequest(Request $request, User $user, string $callbackUrl): ?string
     {
         if (! filter_var($callbackUrl, FILTER_VALIDATE_URL)) {
             return 'Invalid callback URL';

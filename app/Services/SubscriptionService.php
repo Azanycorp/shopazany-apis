@@ -14,6 +14,7 @@ use App\Services\Payment\PaymentDetailsService;
 use App\Services\Payment\PaystackPaymentProcessor;
 use App\Trait\HttpResponse;
 use Illuminate\Auth\AuthManager;
+use Illuminate\Http\Request;
 
 class SubscriptionService
 {
@@ -21,7 +22,7 @@ class SubscriptionService
 
     public function __construct(private readonly AuthManager $authManager) {}
 
-    public function getPlanByCountry($request, $countryId)
+    public function getPlanByCountry(Request $request, int $countryId)
     {
         $type = $request->query('type', PlanType::B2C);
 
@@ -35,7 +36,7 @@ class SubscriptionService
         return $this->success($data, 'Subscription plans');
     }
 
-    public function subscriptionPayment($request)
+    public function subscriptionPayment(Request $request)
     {
         [$processor, $details] = match ($request->type) {
             PaymentType::PAYSTACK => [
@@ -60,7 +61,7 @@ class SubscriptionService
         return $paymentService->process($details);
     }
 
-    public function subscriptionHistory($userId)
+    public function subscriptionHistory(int $userId)
     {
         $currentUserId = $this->authManager->id();
 
@@ -77,7 +78,7 @@ class SubscriptionService
         return $this->success($data, 'Subscription histories');
     }
 
-    public static function creditAffiliate($referrer, $amount, $currency): void
+    public static function creditAffiliate(?User $referrer, float $amount, string $currency): void
     {
         if (! $referrer) {
             return;

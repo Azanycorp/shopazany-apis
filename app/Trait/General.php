@@ -7,7 +7,6 @@ use App\Enum\ProductStatus;
 use App\Http\Resources\CustomerOrderResource;
 use App\Models\Order;
 use App\Models\Product;
-use Illuminate\Support\Collection;
 
 trait General
 {
@@ -15,6 +14,10 @@ trait General
 
     protected function determineOrderStatus($statuses): string
     {
+        $statusValues = $statuses->map(
+            fn ($status) => $status instanceof OrderStatus ? $status : $status
+        );
+
         $priority = [
             OrderStatus::PENDING,
             OrderStatus::CONFIRMED,
@@ -24,10 +27,13 @@ trait General
             OrderStatus::CANCELLED,
         ];
 
-        return (new Collection($priority))->first(
-            $statuses->contains(...),
-            OrderStatus::PENDING
-        );
+        foreach ($priority as $status) {
+            if ($statusValues->contains($status)) {
+                return $status;
+            }
+        }
+
+        return OrderStatus::PENDING;
     }
 
     protected function handleRewardValidation($status, $data)

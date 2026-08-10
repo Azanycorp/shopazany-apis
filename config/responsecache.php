@@ -3,7 +3,7 @@
 use Spatie\ResponseCache\CacheProfiles\CacheAllSuccessfulGetRequests;
 use Spatie\ResponseCache\Hasher\DefaultHasher;
 use Spatie\ResponseCache\Replacers\CsrfTokenReplacer;
-use Spatie\ResponseCache\Serializers\DefaultSerializer;
+use Spatie\ResponseCache\Serializers\JsonSerializer;
 
 return [
     /*
@@ -95,5 +95,5 @@ return [
     /*
      * This class is responsible for serializing responses.
      */
-    'serializer' => DefaultSerializer::class,
+    'serializer' => JsonSerializer::class,
 ];

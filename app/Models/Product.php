@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Models\Pivots\OrderItemPivot;
-use App\Trait\ClearsResponseCache;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
@@ -154,7 +153,7 @@ use Illuminate\Support\Facades\DB;
 ])]
 class Product extends Model
 {
-    use ClearsResponseCache, HasFactory;
+    use HasFactory;
 
     protected static function booted()
     {

@@ -1,138 +1,138 @@
 <?php
 
-namespace Tests\Feature;
-
 use App\Models\Action;
 use App\Models\User;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
-use Tests\TestCase;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 
-class SignUpTest extends TestCase
-{
-    use RefreshDatabase, WithFaker;
+uses(RefreshDatabase::class);
+uses(WithFaker::class);
 
-    /**
-     * @param  non-empty-string  $name
-     *
-     * @internal This method is not covered by the backward compatibility promise for PHPUnit
-     *
-     * @final
-     */
-    public function __construct(string $name, private readonly Repository $repository)
-    {
-        parent::__construct($name);
-    }
+beforeEach(function () {
+    $this->repository = resolve(Repository::class);
 
-    protected function setUp(): void
-    {
-        parent::setUp();
+    Http::fake([
+        '*' => Http::response([
+            'status' => true,
+            'message' => 'Created successfully',
+            'data' => [
+                'id' => 1,
+                'email' => 'test@example.com',
+            ],
+        ], 200),
+    ]);
 
-        Action::factory()->create([
-            'slug' => 'create_account',
-            'points' => 10,
-        ]);
-    }
+    DB::table('countries')->insertOrIgnore([
+        'id' => 160,
+        'name' => 'Nigeria',
+    ]);
+    DB::table('states')->insertOrIgnore([
+        'id' => 1,
+        'country_id' => 160,
+        'name' => 'Lagos',
+    ]);
 
-    /**
-     * Test successful user signup.
-     */
-    public function test_user_can_sign_up_successfully(): void
-    {
-        $headers = [
-            $this->repository->get('security.header_key', 'X-SHPAZY-AUTH') => $this->repository->get('security.header_value'),
-        ];
+    config(['services.payment_service.api_secret' => 'test-secret']);
+    config(['services.payment_service.api_key' => 'test-key']);
+    config(['services.auth_service.url' => 'http://auth.test']);
+    config(['services.auth_service.key' => 'test-key']);
+    config(['services.auth_service.value' => 'test-value']);
 
-        $password = 'ValidPass123!@#';
-        $email = 'test'.rand(00, 99).'@gmail.com';
+    Action::factory()->create([
+        'slug' => 'create_an_account',
+        'points' => 10,
+    ]);
+});
 
-        $payload = [
-            'first_name' => $this->faker->firstName(),
-            'last_name' => $this->faker->lastName(),
-            'email' => $email,
-            'password' => $password,
-            'password_confirmation' => $password,
-            'country_id' => 160,
-            'state_id' => 1,
-            'terms' => true,
-        ];
+test('user can sign up successfully', function () {
+    $headers = [
+        $this->repository->get('security.header_key', 'X-SHPAZY-AUTH') => $this->repository->get('security.header_value'),
+    ];
 
-        $response = $this->postJson('/api/connect/signup', $payload, $headers);
+    $password = 'ValidPass123!@#';
+    $email = 'test'.rand(00, 99).'@gmail.com';
 
-        $response->assertStatus(201)
-            ->assertJson(['message' => 'Created successfully']);
+    $payload = [
+        'first_name' => $this->faker->firstName(),
+        'last_name' => $this->faker->lastName(),
+        'email' => $email,
+        'password' => $password,
+        'password_confirmation' => $password,
+        'country_id' => 160,
+        'state_id' => 1,
+        'terms' => true,
+    ];
 
-        $this->assertDatabaseHas('users', [
-            'email' => $payload['email'],
-            'first_name' => $payload['first_name'],
-            'last_name' => $payload['last_name'],
-            'country_id' => $payload['country_id'],
-            'state_id' => $payload['state_id'],
-            'is_verified' => 0,
-        ]);
-    }
+    $response = $this->postJson('/api/connect/signup', $payload, $headers);
 
-    /**
-     * Test signup validation errors.
-     */
-    public function test_user_signup_validation_errors(): void
-    {
-        $headers = [
-            $this->repository->get('security.header_key', 'X-SHPAZY-AUTH') => $this->repository->get('security.header_value'),
-        ];
+    $response->assertStatus(201)
+        ->assertJson(['message' => 'Created successfully']);
 
-        $payload = [
-            'first_name' => '',
-            'last_name' => '',
-            'email' => 'invalid-email',
-            'password' => 'pass',
-            'password_confirmation' => 'different-pass',
-            'country_id' => 0,
-            'state_id' => 1,
-            'terms' => null,
-        ];
+    $this->assertDatabaseHas('users', [
+        'email' => $payload['email'],
+        'first_name' => $payload['first_name'],
+        'last_name' => $payload['last_name'],
+        'country' => $payload['country_id'],
+        'state_id' => $payload['state_id'],
+        'is_verified' => 0,
+    ]);
+});
 
-        $response = $this->postJson('/api/connect/signup', $payload, $headers);
+test('user signup validation errors', function () {
+    $headers = [
+        $this->repository->get('security.header_key', 'X-SHPAZY-AUTH') => $this->repository->get('security.header_value'),
+    ];
 
-        $response->assertUnprocessable()
-            ->assertJsonValidationErrors(['first_name', 'last_name', 'email', 'password', 'terms']);
-    }
+    $payload = [
+        'first_name' => '',
+        'last_name' => '',
+        'email' => 'invalid-email',
+        'password' => 'pass',
+        'password_confirmation' => 'different-pass',
+        'country_id' => 0,
+        'state_id' => 1,
+        'terms' => null,
+    ];
 
-    /**
-     * Test referral code functionality.
-     */
-    public function test_user_signup_with_referral_code(): void
-    {
-        $headers = [
-            $this->repository->get('security.header_key', 'X-SHPAZY-AUTH') => $this->repository->get('security.header_value'),
-        ];
+    $response = $this->postJson('/api/connect/signup', $payload, $headers);
 
-        User::factory()->create([
-            'referrer_code' => 'REF1234',
-        ]);
+    $response->assertUnprocessable()
+        ->assertJsonValidationErrors(['first_name', 'last_name', 'email', 'password', 'terms']);
+});
 
-        $password = $password = $this->faker->password(16);
-        $email = 'test'.rand(00, 99).'@gmail.com';
+test('user signup with referral code', function () {
+    $headers = [
+        $this->repository->get('security.header_key', 'X-SHPAZY-AUTH') => $this->repository->get('security.header_value'),
+    ];
 
-        $payload = [
-            'first_name' => $this->faker->firstName(),
-            'last_name' => $this->faker->lastName(),
-            'email' => $email,
-            'password' => $password,
-            'password_confirmation' => $password,
-            'country_id' => 160,
-            'state_id' => 1,
-            'terms' => true,
-        ];
+    User::factory()->create([
+        'referrer_code' => 'REF1234',
+    ]);
 
-        $response = $this->postJson('/api/connect/signup?referrer=REF1234', $payload, $headers);
+    $password = 'ValidPass123!@#';
+    $email = 'test'.rand(00, 99).'@gmail.com';
 
-        $response->assertStatus(201)
-            ->assertJson(['message' => 'Created successfully']);
+    $payload = [
+        'first_name' => $this->faker->firstName(),
+        'last_name' => $this->faker->lastName(),
+        'email' => $email,
+        'password' => $password,
+        'password_confirmation' => $password,
+        'country_id' => 160,
+        'state_id' => 1,
+        'terms' => true,
+    ];
 
-        $this->assertDatabaseHas('users', [
-            'email' => $payload['email'],
-        ]);
-    }
-}
+    $response = $this->postJson('/api/connect/signup?referrer=REF1234', $payload, $headers);
+
+    $response->assertStatus(201)
+        ->assertJson(['message' => 'Created successfully']);
+
+    $this->assertDatabaseHas('users', [
+        'email' => $payload['email'],
+        'country' => $payload['country_id'],
+    ]);
+});
