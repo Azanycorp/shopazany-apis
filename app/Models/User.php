@@ -6,7 +6,6 @@ namespace App\Models;
 
 use App\Enum\SubscriptionType;
 use App\Notifications\ResetPasswordNotification;
-use App\Trait\ClearsResponseCache;
 use App\Trait\UserRelationship;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -264,7 +263,7 @@ use Laravel\Sanctum\PersonalAccessToken;
 ])]
 class User extends Authenticatable
 {
-    use ClearsResponseCache, HasApiTokens, HasFactory, Notifiable, SoftDeletes, UserRelationship;
+    use HasApiTokens, HasFactory, Notifiable, SoftDeletes, UserRelationship;
 
     protected function casts(): array
     {
