@@ -4,7 +4,9 @@ namespace App\Services\Auth;
 
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 use Throwable;
 
 class Auth
@@ -33,25 +35,26 @@ class Auth
 
     public function sendRequest(string $method, string $endpoint, RequestOptions|array|null $options = null)
     {
-        if (is_array($options)) {
-            $options = new RequestOptions(data: $options);
-        }
+        $options = is_array($options) ? new RequestOptions(data: $options) : ($options ?? new RequestOptions);
+        $method = strtolower($method);
 
-        $options = $options ?? new RequestOptions;
-
-        try {
-            $client = Http::withHeaders(array_merge([
+        $headers = array_merge(
+            [
                 'Accept' => 'application/json',
                 'Content-Type' => 'application/json',
-            ], $options->getHeaders()))
+            ],
+            $this->getAuthHeaders($method, $endpoint, $options),
+            $options->getHeaders()
+        );
+
+        try {
+            $client = Http::withHeaders($headers)
                 ->timeout($options->getTimeout())
                 ->connectTimeout($options->getConnectTimeout())
                 ->retry(
                     $options->getRetries(),
                     $options->getRetryDelay(),
-                    function (
-                        Throwable $exception,
-                    ): bool {
+                    function (Throwable $exception): bool {
                         return $this->shouldRetry($exception);
                     }
                 );
@@ -123,8 +126,42 @@ class Auth
         return $this->sendRequest('DELETE', $endpoint, $options);
     }
 
-    public function isSuccessful($response): bool
+    public function isSuccessful(Response $response): bool
     {
-        return in_array($response->status(), [200, 201]);
+        return $response->successful();
+    }
+
+    private function getBody(RequestOptions|array|null $options, string $method, string $path, string $timestamp)
+    {
+        $body = json_encode($options->getData());
+
+        return implode("\n", [
+            $timestamp,
+            strtoupper($method),
+            $path,
+            $body,
+        ]);
+    }
+
+    private function getAuthHeaders(string $method, string $endpoint, RequestOptions $options): array
+    {
+        $apiKey = config('services.payment_service.api_key');
+
+        if (! in_array($method, ['post', 'put', 'patch'], true)) {
+            return [
+                'X-API-KEY' => $apiKey,
+            ];
+        }
+
+        $timestamp = (string) time();
+        $body = $this->getBody($options, $method, $endpoint, $timestamp);
+        $secret = config('services.payment_service.api_secret');
+
+        return [
+            'X-API-KEY' => $apiKey,
+            'X-TIMESTAMP' => $timestamp,
+            'X-NONCE' => (string) Str::uuid(),
+            'X-SIGNATURE' => hash_hmac('sha256', $body, $secret),
+        ];
     }
 }

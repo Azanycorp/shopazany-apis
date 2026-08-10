@@ -17,9 +17,12 @@ trait Transfer
     {
         $requests = [];
 
-        User::with(['withdrawalRequests' => function ($query): void {
-            $query->where('status', WithdrawalStatus::PENDING);
-        }, 'paymentMethods'])
+        User::with([
+            'withdrawalRequests' => function ($query): void {
+                $query->where('status', WithdrawalStatus::PENDING);
+            },
+            'paymentMethods',
+        ])
             ->whereHas('withdrawalRequests', function (Builder $query): void {
                 $query->where('status', WithdrawalStatus::PENDING);
             })
@@ -32,7 +35,7 @@ trait Transfer
         return $requests;
     }
 
-    protected function extractUserPaystackRequests($user, array &$requests): void
+    protected function extractUserPaystackRequests(User $user, array &$requests): void
     {
         $paymentMethod = $user->paymentMethods->where('is_default', true)->first();
 

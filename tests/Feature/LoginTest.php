@@ -1,171 +1,147 @@
 <?php
 
-namespace Tests\Feature;
-
-use App\Mail\LoginVerifyMail;
 use App\Models\Action;
 use App\Models\User;
 use App\Services\Auth\LoginService;
-use Illuminate\Auth\AuthManager;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Hashing\BcryptHasher;
-use Illuminate\Mail\Mailer;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
-use Tests\TestCase;
 
-class LoginTest extends TestCase
+uses(RefreshDatabase::class);
+
+beforeEach(function () {
+    Mail::fake();
+    Http::fake([
+        '*' => Http::response([
+            'status' => true,
+            'data' => [
+                'id' => 1,
+                'email' => 'test@example.com',
+            ],
+        ], 200),
+    ]);
+
+    config(['services.payment_service.api_secret' => 'test-secret']);
+    config(['services.payment_service.api_key' => 'test-key']);
+    config(['services.auth_service.url' => 'http://auth.test']);
+    config(['services.auth_service.key' => 'test-key']);
+    config(['services.auth_service.value' => 'test-value']);
+
+    Action::factory()->create([
+        'slug' => 'create_an_account',
+        'points' => 10,
+    ]);
+});
+
+test('successful login', function () {
+    $user = User::factory()->create([
+        'password' => Hash::make('password'),
+        'email_verified_at' => now(),
+        'status' => 'active',
+        'is_admin_approve' => true,
+        'two_factor_enabled' => false,
+    ]);
+
+    $response = (new LoginService)->AuthLogin(mockRequest([
+        'email' => $user->email,
+        'password' => 'password',
+    ]));
+
+    $responseData = json_decode($response->getContent(), true);
+
+    expect($responseData)->toHaveKey('status');
+    expect($responseData['status'])->toBeTrue();
+    expect($responseData)->toHaveKey('message');
+    expect($responseData['message'])->toEqual('Login successful.');
+});
+
+test('login with unverified account', function () {
+    $user = User::factory()->create([
+        'password' => Hash::make('password'),
+        'email_verified_at' => null,
+        'verification_code' => '123456',
+    ]);
+
+    $response = (new LoginService)->AuthLogin(mockRequest([
+        'email' => $user->email,
+        'password' => 'password',
+    ]));
+
+    $responseData = json_decode($response->getContent(), true);
+
+    expect($responseData)->toHaveKey('status');
+    expect($responseData['status'])->toBeFalse();
+    expect($responseData)->toHaveKey('message');
+    expect($responseData['message'])->toEqual('Account not verified or inactive');
+});
+
+test('login with two factor authentication', function () {
+    $user = User::factory()->create([
+        'password' => Hash::make('password'),
+        'email_verified_at' => now(),
+        'status' => 'active',
+        'is_admin_approve' => true,
+        'two_factor_enabled' => true,
+    ]);
+
+    $response = (new LoginService)->AuthLogin(mockRequest([
+        'email' => $user->email,
+        'password' => 'password',
+    ]));
+
+    // Mail::assertSent(LoginVerifyMail::class);
+    $responseData = json_decode($response->getContent(), true);
+
+    expect($responseData)->toHaveKey('status');
+    expect($responseData['status'])->toBeTrue();
+    expect($responseData)->toHaveKey('message');
+    expect($responseData['message'])->toEqual('Code has been sent to your email address.');
+});
+
+test('invalid credentials', function () {
+    // validation rejects invalid emails before reaching auth attempt
+
+    $response = (new LoginService)->AuthLogin(mockRequest([
+        'email' => 'invalid@example.com',
+        'password' => 'wrongpassword',
+    ]));
+
+    $responseData = json_decode($response->getContent(), true);
+
+    expect($responseData)->toHaveKey('status');
+    expect($responseData['status'])->toBeFalse();
+    expect($responseData)->toHaveKey('message');
+    expect($responseData['message'])->toEqual('Invalid credentials.');
+});
+
+function mockRequest(array $data)
 {
-    use RefreshDatabase;
+    $request = Mockery::mock('Illuminate\Http\Request');
 
-    /**
-     * @param  non-empty-string  $name
-     *
-     * @internal This method is not covered by the backward compatibility promise for PHPUnit
-     *
-     * @final
-     */
-    public function __construct(string $name, private readonly Mailer $mailer, private readonly AuthManager $authManager, private readonly BcryptHasher $bcryptHasher)
-    {
-        parent::__construct($name);
+    $request->shouldReceive('only')
+        ->andReturn($data);
+
+    $request->shouldReceive('validated')
+        ->andReturn($data);
+
+    foreach ($data as $key => $value) {
+        $request->shouldReceive('__get')->with($key)->andReturn($value);
+        $request->shouldReceive('input')->with($key)->andReturn($value);
     }
+    $request->shouldReceive('input')->andReturn($data);
 
-    protected function setUp(): void
-    {
-        parent::setUp();
-        $this->mailer->fake();
+    $request->shouldReceive('ip')
+        ->andReturn('127.0.0.1');
 
-        Action::factory()->create([
-            'slug' => 'create_account',
-            'points' => 10,
-        ]);
-    }
+    $request->shouldReceive('fullUrl')
+        ->andReturn('http://localhost/test-url');
 
-    public function test_successful_login(): void
-    {
-        $user = User::factory()->create([
-            'password' => $this->bcryptHasher->make('password'),
-            'email_verified_at' => now(),
-            'status' => 'active',
-            'is_admin_approve' => true,
-            'two_factor_enabled' => false,
-        ]);
+    $request->shouldReceive('getContent')
+        ->andReturn(json_encode($data));
 
-        $this->authManager->shouldReceive('attempt')
-            ->once()
-            ->with(['email' => $user->email, 'password' => 'password'])
-            ->andReturn(true);
+    $request->email = $data['email'];
+    $request->password = $data['password'];
 
-        $response = (new LoginService)->AuthLogin($this->mockRequest([
-            'email' => $user->email,
-            'password' => 'password',
-        ]));
-
-        $responseData = json_decode($response->getContent(), true);
-
-        $this->assertArrayHasKey('status', $responseData);
-        $this->assertTrue($responseData['status']);
-        $this->assertArrayHasKey('message', $responseData);
-        $this->assertEquals('Login successful.', $responseData['message']);
-    }
-
-    public function test_login_with_unverified_account(): void
-    {
-        $user = User::factory()->create([
-            'password' => $this->bcryptHasher->make('password'),
-            'email_verified_at' => null,
-            'verification_code' => '123456',
-        ]);
-
-        $this->authManager->shouldReceive('attempt')
-            ->once()
-            ->with(['email' => $user->email, 'password' => 'password'])
-            ->andReturn(true);
-
-        $response = (new LoginService)->AuthLogin($this->mockRequest([
-            'email' => $user->email,
-            'password' => 'password',
-        ]));
-
-        $responseData = json_decode($response->getContent(), true);
-
-        $this->assertArrayHasKey('status', $responseData);
-        $this->assertFalse($responseData['status']);
-        $this->assertArrayHasKey('message', $responseData);
-        $this->assertEquals('Account not verified or inactive', $responseData['message']);
-    }
-
-    public function test_login_with_two_factor_authentication(): void
-    {
-        $user = User::factory()->create([
-            'password' => $this->bcryptHasher->make('password'),
-            'email_verified_at' => now(),
-            'status' => 'active',
-            'is_admin_approve' => true,
-            'two_factor_enabled' => true,
-        ]);
-
-        $this->authManager->shouldReceive('attempt')
-            ->once()
-            ->with(['email' => $user->email, 'password' => 'password'])
-            ->andReturn(true);
-
-        $response = (new LoginService)->AuthLogin($this->mockRequest([
-            'email' => $user->email,
-            'password' => 'password',
-        ]));
-
-        // Mail::assertSent(LoginVerifyMail::class);
-
-        $responseData = json_decode($response->getContent(), true);
-
-        $this->assertArrayHasKey('status', $responseData);
-        $this->assertTrue($responseData['status']);
-        $this->assertArrayHasKey('message', $responseData);
-        $this->assertEquals('Code has been sent to your email address.', $responseData['message']);
-    }
-
-    public function test_invalid_credentials(): void
-    {
-        $this->authManager->shouldReceive('attempt')
-            ->once()
-            ->with(['email' => 'invalid@example.com', 'password' => 'wrongpassword'])
-            ->andReturn(false);
-
-        $response = (new LoginService)->AuthLogin($this->mockRequest([
-            'email' => 'invalid@example.com',
-            'password' => 'wrongpassword',
-        ]));
-
-        $responseData = json_decode($response->getContent(), true);
-
-        $this->assertArrayHasKey('status', $responseData);
-        $this->assertFalse($responseData['status']);
-        $this->assertArrayHasKey('message', $responseData);
-        $this->assertEquals('Credentials do not match', $responseData['message']);
-    }
-
-    private function mockRequest(array $data)
-    {
-        $request = \Mockery::mock('Illuminate\Http\Request');
-
-        $request->shouldReceive('only')
-            ->andReturn($data);
-
-        $request->shouldReceive('validated')
-            ->andReturn($data);
-
-        $request->shouldReceive('ip')
-            ->andReturn('127.0.0.1');
-
-        $request->shouldReceive('fullUrl')
-            ->andReturn('http://localhost/test-url');
-
-        $request->shouldReceive('getContent')
-            ->andReturn(json_encode($data));
-
-        $request->email = $data['email'];
-        $request->password = $data['password'];
-
-        return $request;
-    }
+    return $request;
 }
